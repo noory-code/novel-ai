@@ -1,0 +1,21 @@
+{
+  "name": "distill",
+  "version": "1.0.0",
+  "description": "Extract and recall reusable knowledge from Claude Code conversations",
+  "author": {
+    "name": "noory-code"
+  },
+  "skills": [
+    {
+      "name": "distill",
+      "path": "skills/distill/SKILL.md"
+    }
+  ],
+  "mcpServers": {
+    "distill": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--directory", "${CLAUDE_PLUGIN_ROOT}", "python", "-m", "distill"]
+    }
+  }
+}
