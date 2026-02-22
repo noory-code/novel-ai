@@ -1,0 +1,22 @@
+{
+  "hooks": {
+    "PreCompact": [
+      {
+        "type": "command",
+        "command": "python -m distill.hooks.distill_hook"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "type": "command",
+        "command": "python -m distill.hooks.distill_hook"
+      }
+    ],
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "python -m distill.hooks.session_start_hook"
+      }
+    ]
+  }
+}
