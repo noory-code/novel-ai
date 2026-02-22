@@ -5,15 +5,9 @@
   "author": {
     "name": "noory-code"
   },
-  "skills": [
-    {
-      "name": "distill",
-      "path": "skills/distill/SKILL.md"
-    }
-  ],
+  "skills": "./skills/",
   "mcpServers": {
     "distill": {
-      "type": "stdio",
       "command": "uv",
       "args": ["run", "--directory", "${CLAUDE_PLUGIN_ROOT}", "python", "-m", "distill"]
     }
