@@ -22,3 +22,6 @@ HANDOFF.md
 .vscode/
 .obsidian/
 *.swp
+
+# Evonest evolution data
+.evonest/
