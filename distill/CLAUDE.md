@@ -46,18 +46,16 @@ src/distill/
 │   ├── store.py           ← Save pre-extracted chunks (no LLM)
 │   └── init.py            ← One-step onboarding
 └── hooks/
-    └── distill_hook.py    ← PreCompact/SessionEnd: Anthropic API or claude -p subprocess
+    └── distill_hook.py    ← PreCompact/SessionEnd: claude -p subprocess
 shared/prompts.md          ← Extraction prompt SSOT (must sync with prompts.py)
 ```
 
 ## Key Patterns
 
-### Two-Path LLM Architecture
+### LLM Architecture
 
-LLM calls use MCP Sampling first, Anthropic API fallback:
-- **MCP Sampling** (`ctx.sample()`): Routes through user's Claude subscription — no API key needed. Primary path.
-- **Anthropic API fallback**: Used when sampling returns "not supported" (CLI/VSCode). Requires `ANTHROPIC_API_KEY`.
-- **`claude -p` subprocess**: Used by hooks when `ANTHROPIC_API_KEY` is not set. Runs extraction immediately at session end — no deferred handoff needed.
+- **MCP Tools** (`learn`, `ingest`, `crystallize`): Use MCP Sampling (`ctx.sample()`) — routes through user's Claude subscription, no API key needed.
+- **Hooks** (`PreCompact`, `SessionEnd`): Run `claude -p --model <model>` subprocess — reads transcript and calls `mcp__distill__store()`.
 
 `init()` installs distill skills and hooks automatically.
 
@@ -65,8 +63,7 @@ LLM calls use MCP Sampling first, Anthropic API fallback:
 
 Hooks run outside the MCP server process. At session end:
 
-1. **If `ANTHROPIC_API_KEY` set**: hook calls Anthropic API directly → extracts + stores
-2. **If no API key**: hook runs `claude -p` subprocess → `claude -p` reads transcript + calls `mcp__distill__store()`
+Hook runs `claude -p` subprocess → Claude reads transcript + calls `mcp__distill__store()`
 
 ## MCP Tools
 

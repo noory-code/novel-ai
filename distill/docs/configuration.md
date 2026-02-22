@@ -17,7 +17,7 @@ Add to `~/.claude/mcp.json`:
 
 Restart Claude Code after updating `mcp.json`.
 
-> **API key optional.** Distill uses MCP Sampling (`ctx.sample()`) as the primary path — routes through your existing Claude subscription (Max, Teams, etc.). If sampling is not supported (CLI/VSCode), set `ANTHROPIC_API_KEY` as a fallback. For hooks, if no API key is set, Distill uses `claude -p` subprocess for immediate extraction.
+> **No API key needed.** MCP tools use MCP Sampling (`ctx.sample()`) — routes through your existing Claude subscription. Hooks use `claude -p` subprocess for automatic extraction.
 
 ## Config File
 
@@ -87,10 +87,10 @@ Hooks enable automatic knowledge extraction across Claude Code sessions.
 
 ### How Hooks Work
 
-At session end, `distill_hook.py` immediately extracts knowledge via one of two paths:
+At session end, `distill_hook.py` extracts knowledge via `claude -p` subprocess:
 
-1. **`ANTHROPIC_API_KEY` set**: calls Anthropic API directly → extracts + stores in SQLite
-2. **No API key**: runs `claude -p` subprocess → Claude reads transcript + calls `mcp__distill__store()`
+1. Loads `extraction_model` from config (default: `claude-haiku-4-5-20251001`)
+2. Runs `claude -p --model <model>` → Claude reads transcript + calls `mcp__distill__store()`
 
 ### Setup
 

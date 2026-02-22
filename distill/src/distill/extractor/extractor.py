@@ -79,7 +79,7 @@ async def call_llm(
     project_name: str | None = None,
     existing_rules: str | None = None,
 ) -> list[dict]:
-    """LLM call — tries MCP Sampling first, falls back to Anthropic API."""
+    """LLM call via MCP Sampling."""
     text = await _call_llm(
         messages=[
             {

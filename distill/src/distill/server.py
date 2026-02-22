@@ -131,8 +131,7 @@ async def store(
 ) -> str:
     """Save pre-extracted knowledge chunks to the knowledge store (no LLM required).
 
-    Used by the distill-learn agent when ANTHROPIC_API_KEY is not available.
-    The agent extracts knowledge itself and calls this tool to persist it.
+    Used by the claude -p subprocess in hooks to persist extracted knowledge.
     """
     return await _store(chunks=chunks, session_id=session_id, trigger=trigger, scope=scope, caller_cwd=caller_cwd)
 

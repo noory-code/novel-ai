@@ -74,8 +74,8 @@ Call `mcp__distill__learn(transcript_path="<path>", session_id="<id>")`.
 → `mcp__distill__learn(transcript_path="~/.claude/projects/my-project/abc123.jsonl", session_id="abc123")`
 
 ## Notes
-- Requires `ANTHROPIC_API_KEY` in shell env.
-- If no API key: hooks use `claude -p` subprocess automatically.
+- Uses MCP Sampling (no API key needed).
+- Hooks use `claude -p` subprocess for auto-extraction.
 """,
 
     "distill-ingest": """\
@@ -96,7 +96,7 @@ Call `mcp__distill__ingest(path="<path>")` to process a directory or file.
 → `mcp__distill__ingest(path="docs/")`
 
 ## Notes
-- Requires `ANTHROPIC_API_KEY`.
+- Uses MCP Sampling (no API key needed).
 - Skips unchanged files automatically (content hash check).
 - Supported: `.md`, `.txt`, `.rst` files.
 """,
@@ -118,7 +118,7 @@ Call `mcp__distill__memory(action="crystallize")`.
 - Reports created/updated/removed files
 
 ## Notes
-- Requires `ANTHROPIC_API_KEY`.
+- Uses MCP Sampling (no API key needed).
 - Run periodically after accumulating 10+ new chunks.
 """,
 
@@ -185,7 +185,6 @@ Call `mcp__distill__memory(action="<action>", id="<id>")`.
 
 ### Crystallize (generate rules from chunks)
 `mcp__distill__memory(action="crystallize")`
-Requires `ANTHROPIC_API_KEY`.
 
 ## Notes
 - Entry IDs are shown in `mcp__distill__profile()` output.

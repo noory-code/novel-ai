@@ -451,7 +451,7 @@ class TestCrystallize:
         ctx = MockContext(error=Exception("Method not found: sampling/createMessage"))
         chunks = [make_knowledge_chunk()]
 
-        with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
+        with pytest.raises(Exception, match="Method not found"):
             await crystallize(ctx=ctx, chunks=chunks, model="test-model", project_root="/tmp/test")
 
     @pytest.mark.asyncio

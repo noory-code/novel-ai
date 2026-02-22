@@ -1,8 +1,7 @@
-"""LLM client: MCP Sampling with Anthropic API fallback."""
+"""LLM client: MCP Sampling only."""
 
 from __future__ import annotations
 
-import os
 from typing import Any
 
 
@@ -15,18 +14,14 @@ async def call_llm(
     ctx: Any = None,
     model_preferences: dict | None = None,
 ) -> str:
-    """Call LLM via MCP Sampling, falling back to Anthropic API if sampling is unavailable.
-
-    Priority:
-    1. MCP Sampling via ctx.sample() — uses existing Claude subscription, no API key needed
-    2. Anthropic API via ANTHROPIC_API_KEY — works in any environment
+    """Call LLM via MCP Sampling.
 
     Args:
         messages: List of {"role": ..., "content": ...} dicts.
         system_prompt: System prompt string.
         model: Model name hint (e.g. "claude-haiku-4-5-20251001").
         max_tokens: Maximum tokens for response.
-        ctx: FastMCP Context object. If None, skips MCP Sampling.
+        ctx: FastMCP Context object. Required.
         model_preferences: Full model_preferences dict for MCP Sampling.
                            Defaults to {"hints": [{"name": model}]}.
 
@@ -34,39 +29,18 @@ async def call_llm(
         LLM response text.
 
     Raises:
-        RuntimeError: If neither MCP Sampling nor ANTHROPIC_API_KEY is available.
+        RuntimeError: If ctx is not provided (MCP Sampling unavailable).
     """
-    # 1. Try MCP Sampling
-    if ctx is not None:
-        try:
-            result = await ctx.sample(
-                messages=messages,
-                system_prompt=system_prompt,
-                model_preferences=model_preferences or {"hints": [{"name": model}]},
-                max_tokens=max_tokens,
-            )
-            return result.text if hasattr(result, "text") else str(result)
-        except Exception as err:
-            msg = str(err)
-            # Only fall through on sampling-not-supported errors
-            if "not supported" not in msg and "Method not found" not in msg:
-                raise
-
-    # 2. Fallback to Anthropic API
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
+    if ctx is None:
         raise RuntimeError(
-            "MCP Sampling is not supported by this client, "
-            "and ANTHROPIC_API_KEY is not set. "
-            "Set the ANTHROPIC_API_KEY environment variable to use Distill."
+            "MCP Sampling context (ctx) is required. "
+            "When running outside MCP, use claude -p subprocess instead."
         )
 
-    import anthropic
-    client = anthropic.AsyncAnthropic(api_key=api_key)
-    response = await client.messages.create(
-        model=model,
+    result = await ctx.sample(
+        messages=messages,
+        system_prompt=system_prompt,
+        model_preferences=model_preferences or {"hints": [{"name": model}]},
         max_tokens=max_tokens,
-        system=system_prompt,
-        messages=messages,  # type: ignore[arg-type]
     )
-    return response.content[0].text  # type: ignore[union-attr]
+    return result.text if hasattr(result, "text") else str(result)

@@ -7,6 +7,14 @@ import pytest
 from distill.tools.store import store
 
 
+@pytest.fixture(autouse=True)
+def isolate_global_store(tmp_path, monkeypatch):
+    """Redirect GLOBAL_DIR to tmp_path so tests never write to ~/.distill/."""
+    store_dir = tmp_path / ".distill-global" / "knowledge"
+    store_dir.mkdir(parents=True)
+    monkeypatch.setattr("distill.store.scope.GLOBAL_DIR", store_dir)
+
+
 class TestStoreValidation:
     @pytest.mark.asyncio
     async def test_empty_chunks_returns_error(self, tmp_path):
@@ -108,17 +116,14 @@ class TestStoreSuccess:
         assert "Stored 1/1" in result
 
     @pytest.mark.asyncio
-    async def test_project_field_populated_from_project_root(self, tmp_path, monkeypatch):
-        """project_root basename이 KnowledgeInput.project에 저장됨."""
+    async def test_project_field_populated_from_project_root(self, tmp_path):
+        """project_root basename is stored in KnowledgeInput.project."""
         from distill.store.metadata import MetadataStore
-        from distill.store.scope import GLOBAL_DIR
 
         project_dir = tmp_path / "my-project"
         project_dir.mkdir()
         store_dir = project_dir / ".distill" / "knowledge"
         store_dir.mkdir(parents=True)
-
-        monkeypatch.setattr("distill.store.scope.GLOBAL_DIR", store_dir)
 
         chunks = [
             {

@@ -15,7 +15,7 @@ graph TB
     Tools --> Skills[".claude/skills/distill-*/SKILL.md"]
     Tools --> Agents[".claude/agents/distill-*.md"]
 
-    Hook1[PreCompact / SessionEnd Hook] -->|claude -p or API| Store
+    Hook1[PreCompact / SessionEnd Hook] -->|claude -p| Store
 
     style CC fill:#f3e8ff,stroke:#7c3aed
     style MCP fill:#dbeafe,stroke:#2563eb
@@ -36,14 +36,10 @@ sequenceDiagram
     participant DB as SQLite Store
     participant Rules as Rule Files
 
-    alt ANTHROPIC_API_KEY set
-        Hook->>MCP: Direct API extraction
-        MCP->>DB: Insert chunks
-    else No API key
-        Hook->>CC: claude -p subprocess
-        CC->>MCP: mcp__distill__store(chunks)
-        MCP->>DB: Insert chunks
-    end
+    Hook->>CC: claude -p --model <extraction_model>
+    CC->>CC: Read transcript
+    CC->>MCP: mcp__distill__store(chunks)
+    MCP->>DB: Insert chunks
 
     CC->>MCP: learn(transcript_path, session_id)
     MCP->>MCP: Parse .jsonl → conversation turns
@@ -123,37 +119,29 @@ sequenceDiagram
 
 ## LLM Call Architecture
 
-Distill uses a two-path approach for LLM calls:
+Distill uses two paths for LLM calls depending on context:
 
-### Path 1: MCP Sampling → Anthropic API fallback
+### Path 1: MCP Sampling (tools)
 
 `learn()`, `ingest()`, `crystallize()` use `call_llm()` in `src/distill/extractor/llm_client.py`:
 
-1. **MCP Sampling** (`ctx.sample()`): Routes through the user's Claude subscription — no API key. Works in Claude Desktop.
-2. **Anthropic API fallback**: When sampling returns "not supported" (CLI/VSCode extension), falls back to `ANTHROPIC_API_KEY` if set.
-3. If neither is available, raises `RuntimeError` with a clear message.
+- Uses MCP Sampling (`ctx.sample()`) — routes through the user's Claude subscription, no API key needed.
+- `ctx` is always available when called as an MCP tool from Claude Code.
+- If `ctx` is not available, raises `RuntimeError`.
 
 ```python
 # llm_client.py — simplified
 async def call_llm(*, ctx, model, messages, system_prompt, ...) -> str:
-    if ctx is not None:
-        try:
-            return await ctx.sample(...)  # MCP Sampling first
-        except Exception as err:
-            if "not supported" not in str(err) and "Method not found" not in str(err):
-                raise  # Real error — don't swallow
-    # Fallback to Anthropic API
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise RuntimeError("MCP Sampling not supported and ANTHROPIC_API_KEY not set")
-    ...
+    if ctx is None:
+        raise RuntimeError("MCP Sampling context required")
+    return await ctx.sample(...)
 ```
 
-### Path 2: claude -p subprocess (no API key needed)
+### Path 2: claude -p subprocess (hooks)
 
-When `ANTHROPIC_API_KEY` is not set, hooks run `claude -p` as a subprocess:
+Hooks run outside the MCP server process and use `claude -p` subprocess:
 
-1. Hook spawns `claude -p "<prompt>" --allowedTools mcp__distill__store,Read --mcp-config <distill-server-json>`
+1. Hook spawns `claude -p "<prompt>" --model <extraction_model> --allowedTools mcp__distill__store,Read --mcp-config <distill-server-json>`
 2. Claude reads the transcript with the Read tool, extracts knowledge as JSON
 3. Calls `mcp__distill__store(chunks=[...], session_id=...)` to persist
 4. Extraction happens immediately at session end — no deferred handoff needed
@@ -224,15 +212,14 @@ The scanner reads the full `.claude/` environment:
 
 | File | Responsibility |
 |------|---------------|
-| `distill_hook.py` | PreCompact/SessionEnd: immediate extraction via API or `claude -p` subprocess |
+| `distill_hook.py` | PreCompact/SessionEnd: extraction via `claude -p --model` subprocess |
 
 **Hook flow:**
 1. PreCompact/SessionEnd fires → `distill_hook.py` runs
-2. Branches on `ANTHROPIC_API_KEY`:
-   - **Key set** → direct Anthropic API call → extracts + stores immediately
-   - **No key** → `claude -p` subprocess with `--mcp-config` → Claude reads transcript + calls `mcp__distill__store()`
+2. Loads config to get `extraction_model` (default: haiku)
+3. Runs `claude -p --model <extraction_model>` subprocess → Claude reads transcript + calls `mcp__distill__store()`
 
-Hooks run outside the MCP server process and cannot use `ctx.sample()`. The `claude -p` subprocess approach enables immediate extraction without requiring an API key or deferring to the next session.
+Hooks run outside the MCP server process and cannot use `ctx.sample()`. The `claude -p` subprocess enables immediate extraction without requiring an API key.
 
 ### Config (`src/distill/config.py`)
 

@@ -94,17 +94,17 @@ class TestCallLlm:
             await call_llm(ctx, "transcript", "model")
 
     @pytest.mark.asyncio
-    async def test_wraps_not_supported_error(self) -> None:
+    async def test_propagates_not_supported_error(self) -> None:
         ctx = MockContext(error=Exception("Method not supported"))
 
-        with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
+        with pytest.raises(Exception, match="Method not supported"):
             await call_llm(ctx, "transcript", "model")
 
     @pytest.mark.asyncio
-    async def test_wraps_method_not_found_error(self) -> None:
+    async def test_propagates_method_not_found_error(self) -> None:
         ctx = MockContext(error=Exception("Method not found: sampling/createMessage"))
 
-        with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
+        with pytest.raises(Exception, match="Method not found"):
             await call_llm(ctx, "transcript", "model")
 
     @pytest.mark.asyncio
