@@ -24,31 +24,39 @@ Each extracted piece of knowledge is classified by type, scope, and confidence, 
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/wooxist/distill.git
-cd distill
+git clone https://github.com/noory-code/noory-ai.git
+cd noory-ai/distill
 uv sync
 ```
 
-### 2. Register as MCP server
+### 2. Register as Claude Code plugin (recommended)
 
-Add to `~/.claude/mcp.json`:
+```
+/install-plugin /absolute/path/to/noory-ai/distill
+```
+
+This registers the MCP server, skills, and hooks automatically via `plugin.json`.
+
+### 3. Or register as standalone MCP server
+
+Add a `.mcp.json` file in your project root:
 
 ```json
 {
   "mcpServers": {
     "distill": {
       "command": "uv",
-      "args": ["--directory", "/absolute/path/to/distill", "run", "python", "-m", "distill"]
+      "args": ["run", "--directory", "/absolute/path/to/noory-ai/distill", "python", "-m", "distill"]
     }
   }
 }
 ```
 
-Restart Claude Code after updating `mcp.json`.
+Restart Claude Code after updating `.mcp.json`.
 
-### 3. Enable automatic extraction (optional)
+### 4. Enable automatic extraction (optional)
 
-Add hooks to `~/.claude/settings.json` for automatic extraction on context compaction, session end, and session start. See [docs/configuration.md](docs/configuration.md) for the full hooks configuration.
+When installed as a plugin, hooks are registered automatically (PreCompact, SessionEnd). See [docs/configuration.md](docs/configuration.md) for the full hooks configuration.
 
 ## MCP Tools
 
@@ -57,10 +65,12 @@ Add hooks to `~/.claude/settings.json` for automatic extraction on context compa
 | `init(scope?)` | One-step onboarding: create config, scan environment, ingest configured dirs |
 | `recall(query)` | Search your knowledge base by semantic query |
 | `learn(transcript_path)` | Extract knowledge from a conversation transcript (auto-crystallize if threshold met) |
+| `store(chunks, session_id)` | Save pre-extracted knowledge chunks (no LLM — used by hooks) |
 | `ingest(path, scope?)` | Extract knowledge from markdown/text files in a directory |
 | `profile()` | View statistics about your accumulated knowledge |
 | `digest()` | Find duplicate entries and analyze patterns |
 | `memory(action, id)` | promote/demote/delete/crystallize knowledge entries |
+| `test_raw_sampling()` | Test MCP sampling connectivity (diagnostic) |
 
 ### Usage Examples
 

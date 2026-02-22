@@ -19,16 +19,6 @@
           }
         ]
       }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python -m distill.hooks.session_start_hook"
-          }
-        ]
-      }
     ]
   }
 }

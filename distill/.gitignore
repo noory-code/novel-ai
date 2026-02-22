@@ -3,19 +3,27 @@
 
 # Python
 __pycache__/
-*.pyc
-*.pyo
-.venv/
+*.py[cod]
 *.egg-info/
+dist/
+build/
+.eggs/
+.venv/
 
-# Distill data
-.distill/
+# Test/coverage
+.coverage
+coverage.json
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# Handoff
-HANDOFF.md
-
-# Claude local settings
-.claude/settings.local.json
+# Env/secrets
+.env
+*.key
+*.pem
+credentials*
+secrets*
 
 # IDE
 .idea/
@@ -23,5 +31,12 @@ HANDOFF.md
 .obsidian/
 *.swp
 
-# Evonest evolution data
+# Claude local settings
+.claude/settings.local.json
+
+# Runtime data
+.distill/
 .evonest/
+
+# Handoff
+HANDOFF.md
