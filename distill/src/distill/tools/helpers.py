@@ -15,6 +15,42 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
+class ScopeContext:
+    """스코프 해석에 필요한 컨텍스트."""
+
+    global_dir: str
+    workspace_dir: str | None
+    project_dir: str | None
+
+
+def _iter_scope_dirs(
+    project_root: str | None, workspace_root: str | None
+) -> list[tuple[KnowledgeScope, str | None, str | None]]:
+    """해석 순서대로 (scope, project_root, workspace_root) 튜플 리스트 반환.
+
+    전역 → 워크스페이스 → 프로젝트 순서로 반환.
+
+    Args:
+        project_root: 프로젝트 루트 경로 또는 None
+        workspace_root: 워크스페이스 루트 경로 또는 None
+
+    Returns:
+        (scope, project_root, workspace_root) 튜플 리스트
+    """
+    result: list[tuple[KnowledgeScope, str | None, str | None]] = [("global", None, None)]
+
+    if workspace_root and not project_root:
+        result.append(("workspace", None, workspace_root))
+    elif project_root and not workspace_root:
+        result.append(("project", project_root, None))
+    elif project_root and workspace_root:
+        result.append(("workspace", None, workspace_root))
+        result.append(("project", project_root, workspace_root))
+
+    return result
+
+
+@dataclass
 class ScopeCallbackContext:
     """Context passed to for_each_scope callback."""
 
@@ -36,29 +72,22 @@ async def for_each_scope(
     Silently skips scopes that don't exist yet.
     """
     if scope_param:
-        scopes: list[KnowledgeScope] = [scope_param]
-    elif project_root and workspace_root:
-        scopes = ["global", "workspace", "project"]
-    elif workspace_root:
-        scopes = ["global", "workspace"]
-    elif project_root:
-        scopes = ["global", "project"]
+        scope_items = [(scope_param, project_root, workspace_root)]
     else:
-        scopes = ["global"]
+        scope_items = _iter_scope_dirs(project_root, workspace_root)
 
-    for scope in scopes:
-        ws_root = workspace_root if scope == "workspace" else None
+    for scope, proj_root, ws_root in scope_items:
         try:
-            with MetadataStore(scope, project_root, ws_root) as meta:
+            with MetadataStore(scope, proj_root, ws_root) as meta:
                 if include_vector:
-                    with VectorStore(scope, project_root, ws_root) as vector:
-                        result = callback(ScopeCallbackContext(scope=scope, meta=meta, vector=vector))
-                        # Support both sync and async callbacks
+                    with VectorStore(scope, proj_root, ws_root) as vector:
+                        ctx = ScopeCallbackContext(scope=scope, meta=meta, vector=vector)
+                        result = callback(ctx)
                         if hasattr(result, "__await__"):
                             await result  # type: ignore[union-attr]
                 else:
-                    result = callback(ScopeCallbackContext(scope=scope, meta=meta, vector=None))
-                    # Support both sync and async callbacks
+                    ctx = ScopeCallbackContext(scope=scope, meta=meta, vector=None)
+                    result = callback(ctx)
                     if hasattr(result, "__await__"):
                         await result  # type: ignore[union-attr]
         except Exception:
@@ -81,13 +110,8 @@ def resolve_scope_context(
 
     if scope_param:
         scopes: list[KnowledgeScope] = [scope_param]
-    elif project_root and workspace_root:
-        scopes = ["global", "workspace", "project"]
-    elif workspace_root:
-        scopes = ["global", "workspace"]
-    elif project_root:
-        scopes = ["global", "project"]
     else:
-        scopes = ["global"]
+        scope_items = _iter_scope_dirs(project_root, workspace_root)
+        scopes = [scope for scope, _, _ in scope_items]
 
     return scopes, project_root, workspace_root

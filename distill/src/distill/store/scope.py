@@ -13,6 +13,28 @@ PROJECT_SUBDIR = ".distill"
 PROJECT_MARKERS = ["pyproject.toml", "pubspec.yaml", "package.json", "CLAUDE.md"]
 
 
+def _walk_up_to_marker(start: Path, marker: str | list[str]) -> Path | None:
+    """주어진 마커를 포함하는 디렉토리를 찾아 상위로 이동.
+
+    Args:
+        start: 탐색 시작 경로
+        marker: 찾을 마커 파일/디렉토리 이름 또는 마커 목록
+
+    Returns:
+        마커를 포함하는 디렉토리 또는 None
+    """
+    directory = start.resolve()
+    markers = [marker] if isinstance(marker, str) else marker
+
+    while True:
+        if any((directory / m).exists() for m in markers):
+            return directory
+        parent = directory.parent
+        if parent == directory:  # 파일시스템 루트
+            return None
+        directory = parent
+
+
 def resolve_store_path(
     scope: KnowledgeScope,
     project_root: str | None = None,
@@ -56,14 +78,9 @@ def detect_project_root(cwd: str | None = None) -> str | None:
     """
     import os
 
-    directory = Path(cwd or os.getcwd())
-    while True:
-        if any((directory / m).exists() for m in PROJECT_MARKERS):
-            return str(directory)
-        parent = directory.parent
-        if parent == directory:  # filesystem root
-            return None
-        directory = parent
+    start = Path(cwd or os.getcwd())
+    result = _walk_up_to_marker(start, PROJECT_MARKERS)
+    return str(result) if result else None
 
 
 def detect_workspace_root(cwd: str | None = None) -> str | None:
@@ -73,11 +90,6 @@ def detect_workspace_root(cwd: str | None = None) -> str | None:
     """
     import os
 
-    directory = Path(cwd or os.getcwd())
-    while True:
-        if (directory / ".git").exists():
-            return str(directory)
-        parent = directory.parent
-        if parent == directory:  # filesystem root
-            return None
-        directory = parent
+    start = Path(cwd or os.getcwd())
+    result = _walk_up_to_marker(start, ".git")
+    return str(result) if result else None
