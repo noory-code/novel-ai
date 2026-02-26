@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 from pydantic import BaseModel, Field
 
@@ -69,12 +70,12 @@ class DistillConfig(BaseModel):
     outputs: OutputsConfig = Field(default_factory=OutputsConfig)
 
 
-def _load_json_file(path: Path) -> dict:
+def _load_json_file(path: Path) -> dict[str, Any]:
     """Load a JSON config file, returning empty dict on any error."""
     if not path.exists():
         return {}
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
     except (json.JSONDecodeError, OSError):
         return {}
 
@@ -86,11 +87,11 @@ def load_config(
     """Load config with priority: project > workspace > global > defaults."""
     global_conf = _load_json_file(Path.home() / ".distill" / "config.json")
 
-    workspace_conf: dict = {}
+    workspace_conf: dict[str, Any] = {}
     if workspace_root:
         workspace_conf = _load_json_file(Path(workspace_root) / ".distill" / "config.json")
 
-    project_conf: dict = {}
+    project_conf: dict[str, Any] = {}
     if project_root:
         project_conf = _load_json_file(Path(project_root) / ".distill" / "config.json")
 

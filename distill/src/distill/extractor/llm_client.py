@@ -7,12 +7,12 @@ from typing import Any
 
 async def call_llm(
     *,
-    messages: list[dict],
+    messages: list[dict[str, Any]],
     system_prompt: str,
     model: str,
     max_tokens: int = 4096,
     ctx: Any = None,
-    model_preferences: dict | None = None,
+    model_preferences: dict[str, Any] | None = None,
 ) -> str:
     """Call LLM via MCP Sampling.
 

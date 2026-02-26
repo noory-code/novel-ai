@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 EXTRACTION_SYSTEM_PROMPT = """You are a knowledge extraction engine. Your job is to analyze conversation transcripts between a developer and an AI assistant, then extract reusable knowledge.
 
 ## Extraction Criteria
@@ -200,7 +202,7 @@ def build_extraction_prompt(
 
 
 def build_crystallize_prompt(
-    entries: list[dict],
+    entries: list[dict[str, Any]],
     existing_rules: str | None = None,
     *,
     confidence_threshold: float = 0.7,
