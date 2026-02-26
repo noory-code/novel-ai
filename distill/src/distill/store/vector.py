@@ -43,6 +43,7 @@ def _get_embedder():
     if _embedder is None:
         from fastembed import TextEmbedding
 
+        # fastembed>=0.7 필수. 0.7에서 model_name= kwarg API 변경됨.
         _embedder = TextEmbedding(model_name=EMBEDDING_MODEL)
     return _embedder
 
