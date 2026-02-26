@@ -7,7 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from distill.tools.init import init, _ensure_config, _format_scan_summary, _install_skills, _install_hooks
+from distill.tools.init import (
+    _ensure_config,
+    _format_scan_summary,
+    _install_hooks,
+    _install_skills,
+    init,
+)
 
 
 class TestEnsureConfig:

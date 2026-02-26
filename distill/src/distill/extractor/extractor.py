@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from distill.config import load_config
-from distill.extractor.parser import ConversationTurn, format_transcript, parse_transcript
 from distill.extractor.llm_client import call_llm as _call_llm
+from distill.extractor.parser import ConversationTurn, format_transcript, parse_transcript
 from distill.extractor.prompts import EXTRACTION_SYSTEM_PROMPT, build_extraction_prompt
 from distill.extractor.rules_reader import read_all_rules
 from distill.store.types import ExtractionTrigger, KnowledgeInput, KnowledgeScope, KnowledgeSource
@@ -42,10 +42,10 @@ async def extract_knowledge(
     # 2. Format and truncate
     formatted = format_transcript(turns)
     if len(formatted) > config.max_transcript_chars:
-        # max_transcript_chars\ub294 \ubb38\uc790 \uc218\uc774\uc9c0 \ud1a0\ud070 \uc218\uac00 \uc544\ub2d9\ub2c8\ub2e4.
-        # \ub2e4\uad6d\uc5b4 \ucf58\ud150\uce20(\ud55c\uad6d\uc5b4/\uc911\uad6d\uc5b4/\uc77c\ubcf8\uc5b4)\uc758 \uacbd\uc6b0 \uc2e4\uc81c \ud1a0\ud070 \uc18c\ube44\ub7c9\uc774
-        # 2-3\ubc30 \ub354 \ub192\uc744 \uc218 \uc788\uc2b5\ub2c8\ub2e4. \ucee8\ud14d\uc2a4\ud2b8 \uc708\ub3c4\uc6b0 \uc624\ub958\uac00 \ubc1c\uc0dd\ud558\uba74
-        # max_transcript_chars\ub97c \uc904\uc774\uc138\uc694.
+        # max_transcript_chars는 문자 수이지 토큰 수가 아닙니다.
+        # 다국어 콘텐츠(한국어/중국어/일본어)의 경우
+        # 실제 토큰 소비량이 2-3배 더 높을 수 있습니다.
+        # 컨텍스트 윈도우 오류가 발생하면 max_transcript_chars를 줄이세요.
         formatted = formatted[:config.max_transcript_chars]
         last_newline = formatted.rfind("\n")
         if last_newline > 0:
@@ -60,7 +60,7 @@ async def extract_knowledge(
         return []
 
     # 5. Convert to KnowledgeInput
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     return [
         KnowledgeInput(
             content=r["content"],
@@ -91,7 +91,9 @@ async def call_llm(
         messages=[
             {
                 "role": "user",
-                "content": build_extraction_prompt(formatted_transcript, project_name, existing_rules),
+                "content": build_extraction_prompt(
+                    formatted_transcript, project_name, existing_rules
+                ),
             },
         ],
         system_prompt=EXTRACTION_SYSTEM_PROMPT,

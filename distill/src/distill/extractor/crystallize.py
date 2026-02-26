@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +17,7 @@ from distill.extractor.prompts import CRYSTALLIZE_SYSTEM_PROMPT, build_crystalli
 from distill.scanner import scan_environment
 from distill.store.metadata import MetadataStore
 from distill.store.scope import detect_workspace_root
-from distill.store.types import KnowledgeChunk, RelationType
+from distill.store.types import KnowledgeChunk
 
 
 class SkillMetadata(BaseModel):
@@ -178,11 +178,17 @@ async def crystallize(
     if not target_rules_dir:
         raise RuntimeError("No rules directory available")
 
-    target_skills_dir = _resolve_skills_dir("project", project_root) or _resolve_skills_dir("global")
+    target_skills_dir = (
+        _resolve_skills_dir("project", project_root)
+        or _resolve_skills_dir("global")
+    )
     if not target_skills_dir:
         raise RuntimeError("No skills directory available")
 
-    target_agents_dir = _resolve_agents_dir("project", project_root) or _resolve_agents_dir("global")
+    target_agents_dir = (
+        _resolve_agents_dir("project", project_root)
+        or _resolve_agents_dir("global")
+    )
     if not target_agents_dir:
         raise RuntimeError("No agents directory available")
 
@@ -396,7 +402,7 @@ def _write_rule_file(
     """Write a rule file in the standard Distill format."""
     os.makedirs(rules_dir, exist_ok=True)
     filename = f"distill-{topic}.md"
-    date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    date = datetime.now(UTC).strftime("%Y-%m-%d")
 
     content = (
         f"# {topic}\n"
@@ -424,7 +430,7 @@ def _write_skill_file(
     skill_dir = os.path.join(skills_dir, skill_dir_name)
     os.makedirs(skill_dir, exist_ok=True)
 
-    date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    date = datetime.now(UTC).strftime("%Y-%m-%d")
     examples_section = ""
     if metadata.examples:
         examples_section = "\n\n## Examples\n\n" + "\n".join(
@@ -462,7 +468,7 @@ def _write_agent_file(
     """Write an agent file in Claude Code agents format."""
     os.makedirs(agents_dir, exist_ok=True)
     filename = f"distill-{topic}.md"
-    date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    date = datetime.now(UTC).strftime("%Y-%m-%d")
 
     tools_str = ", ".join(metadata.tools)
     skills_list = "\n".join(f"- {s}" for s in metadata.skills)

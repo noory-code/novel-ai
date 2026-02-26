@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from distill.store.metadata import MetadataStore
 from distill.tools.helpers import ScopeCallbackContext, for_each_scope
 
 

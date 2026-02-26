@@ -7,9 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from distill.store.metadata import MetadataStore
-from distill.store.vector import VectorStore
-from distill.tools.ingest import ingest, _file_hash, _meta_key, INGEST_EXTENSIONS
+from distill.tools.ingest import INGEST_EXTENSIONS, _file_hash, _meta_key, ingest
 
 
 class MockContext:

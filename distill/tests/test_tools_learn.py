@@ -7,8 +7,6 @@ import os
 
 import pytest
 
-from distill.store.metadata import MetadataStore
-from distill.store.vector import VectorStore
 from distill.tools.learn import learn
 from tests.helpers.mock_server import MockContext
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from distill.store.metadata import MetadataStore
-from distill.tools.digest import digest, _simple_similarity
+from distill.tools.digest import _simple_similarity, digest
 from tests.helpers.factories import make_knowledge_input
 
 

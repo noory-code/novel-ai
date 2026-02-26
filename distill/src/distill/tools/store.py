@@ -6,9 +6,8 @@ knowledge themselves and call this tool to persist it.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal
 
 from distill.extractor.extractor import parse_extraction_response
 from distill.store.metadata import MetadataStore
@@ -46,7 +45,9 @@ async def store(
         workspace_root = None
 
     # Validate trigger
-    effective_trigger: ExtractionTrigger = trigger if trigger in _VALID_TRIGGERS else "manual"  # type: ignore[assignment]
+    effective_trigger: ExtractionTrigger = (
+        trigger if trigger in _VALID_TRIGGERS else "manual"
+    )  # type: ignore[assignment]
 
     # Validate chunks using existing parser
     valid_items = parse_extraction_response(
@@ -56,9 +57,12 @@ async def store(
     )
 
     if not valid_items:
-        return "No valid knowledge chunks to store. Expected: [{content, type, scope, tags, confidence}, ...]"
+        return (
+            "No valid knowledge chunks to store. Expected: "
+            "[{content, type, scope, tags, confidence}, ...]"
+        )
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     source = KnowledgeSource(
         session_id=session_id,
         timestamp=now,
@@ -69,7 +73,9 @@ async def store(
     conflict_warnings: list[str] = []
 
     for item in valid_items:
-        effective_scope: KnowledgeScope = scope or item.get("scope", "project")  # type: ignore[assignment]
+        effective_scope: KnowledgeScope = scope or item.get(
+            "scope", "project"
+        )  # type: ignore[assignment]
         ws_root = workspace_root if effective_scope == "workspace" else None
 
         chunk_input = KnowledgeInput(
@@ -91,14 +97,17 @@ async def store(
                 vector.index(inserted.id, inserted.content, inserted.tags)
 
                 if chunk_input.type == "conflict":
-                    conflict_warnings.append(f"  ⚠ CONFLICT: {chunk_input.content[:100]}")
+                    conflict_warnings.append(
+                        f"  ⚠ CONFLICT: {chunk_input.content[:100]}"
+                    )
 
                 saved += 1
         except Exception:
             pass
 
     summary = "\n".join(
-        f"- [{item['type']}] {item['content'][:80]}{'...' if len(item['content']) > 80 else ''}"
+        f"- [{item['type']}] {item['content'][:80]}"
+        f"{'...' if len(item['content']) > 80 else ''}"
         for item in valid_items
     )
 

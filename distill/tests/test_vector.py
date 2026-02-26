@@ -7,7 +7,6 @@ import pytest
 
 from distill.store.vector import VectorStore, sanitize_fts_query
 
-
 # --- sanitize_fts_query (pure function, no deps) ---
 
 

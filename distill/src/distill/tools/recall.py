@@ -43,7 +43,13 @@ async def recall(
             ctx.meta.touch(hit.id)
             results.append(chunk)
 
-    await for_each_scope(scope, project_root, _search, include_vector=True, workspace_root=workspace_root)
+    await for_each_scope(
+        scope,
+        project_root,
+        _search,
+        include_vector=True,
+        workspace_root=workspace_root,
+    )
 
     # Sort by confidence descending
     results.sort(key=lambda k: k.confidence, reverse=True)
@@ -55,7 +61,8 @@ async def recall(
     def _format_chunk(i: int, k: KnowledgeChunk) -> str:
         project_tag = f" [{k.project}]" if k.project else ""
         return (
-            f"{i + 1}. [{k.type}]{project_tag} ({k.scope}, confidence: {k.confidence})\n"
+            f"{i + 1}. [{k.type}]{project_tag} "
+            f"({k.scope}, confidence: {k.confidence})\n"
             f"   {k.content}\n"
             f"   tags: {', '.join(k.tags)}"
         )

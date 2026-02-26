@@ -223,7 +223,10 @@ def _install_hooks(distill_dir: Path, _settings_path: Path | None = None) -> str
         else:
             settings = {}
     except (json.JSONDecodeError, OSError):
-        return "⚠ Could not read settings.local.json — hooks not installed (check file manually)"
+        return (
+            "⚠ Could not read settings.local.json — "
+            "hooks not installed (check file manually)"
+        )
 
     hooks: dict = settings.setdefault("hooks", {})
     installed: list[str] = []
@@ -233,7 +236,11 @@ def _install_hooks(distill_dir: Path, _settings_path: Path | None = None) -> str
         command = f"uv --directory {distill_dir} run {module}"
         entries: list = hooks.setdefault(event, [])
         # Check for duplicate (any entry containing same module path)
-        if any(isinstance(e, dict) and module in e.get("command", "") for e in entries):
+        has_duplicate = any(
+            isinstance(e, dict) and module in e.get("command", "")
+            for e in entries
+        )
+        if has_duplicate:
             already.append(event)
             continue
         entries.append({"type": "command", "command": command})
@@ -242,7 +249,9 @@ def _install_hooks(distill_dir: Path, _settings_path: Path | None = None) -> str
     # Write back
     try:
         settings_path.parent.mkdir(parents=True, exist_ok=True)
-        settings_path.write_text(json.dumps(settings, indent=2, ensure_ascii=False), "utf-8")
+        settings_path.write_text(
+            json.dumps(settings, indent=2, ensure_ascii=False), "utf-8"
+        )
     except OSError as err:
         return f"⚠ Could not write settings.local.json: {err}"
 
@@ -269,7 +278,9 @@ def _install_skills(project_root: str) -> list[tuple[bool, str, Path]]:
     return results
 
 
-def _ensure_config(project_root: str, scope: KnowledgeScope, workspace_root: str | None = None) -> tuple[bool, Path]:
+def _ensure_config(
+    project_root: str, scope: KnowledgeScope, workspace_root: str | None = None
+) -> tuple[bool, Path]:
     """Create config.json with defaults if it doesn't exist. Returns (created, path)."""
     if scope == "global":
         config_path = Path.home() / ".distill" / "config.json"
@@ -356,9 +367,13 @@ async def init(
         created_skills = [name for created, name, _ in skill_results if created]
         existing_skills = [name for created, name, _ in skill_results if not created]
         if created_skills:
-            lines.append(f"✓ Skills installed: {', '.join(f'/{n}' for n in created_skills)}")
+            lines.append(
+                f"✓ Skills installed: {', '.join(f'/{n}' for n in created_skills)}"
+            )
         if existing_skills:
-            lines.append(f"✓ Skills already exist: {', '.join(f'/{n}' for n in existing_skills)}")
+            lines.append(
+                f"✓ Skills already exist: {', '.join(f'/{n}' for n in existing_skills)}"
+            )
 
     # 4. Install hooks into ~/.claude/settings.local.json
     try:
@@ -376,10 +391,12 @@ async def init(
         lines.append("Run ingest(path) for each directory to extract knowledge from docs.")
     else:
         lines.append(
-            "Distill initialized. Use learn(transcript_path, session_id) to extract knowledge from conversations,"
+            "Distill initialized. Use learn(transcript_path, session_id) "
+            "to extract knowledge from conversations,"
         )
         lines.append(
-            "or add directories to sources.dirs in config.json and run ingest(path) to ingest docs."
+            "or add directories to sources.dirs in config.json "
+            "and run ingest(path) to ingest docs."
         )
 
     return "\n".join(lines)

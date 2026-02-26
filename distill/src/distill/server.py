@@ -1,17 +1,17 @@
 """FastMCP server setup and tool registration."""
 
-from typing import Literal, Optional
+from typing import Literal
 
-from fastmcp import FastMCP, Context
+from fastmcp import Context, FastMCP
 from mcp.types import SamplingMessage, TextContent
 
-from distill.tools.recall import recall as _recall
-from distill.tools.learn import learn as _learn
-from distill.tools.profile import profile as _profile
 from distill.tools.digest import digest as _digest
-from distill.tools.memory import memory as _memory
 from distill.tools.ingest import ingest as _ingest
 from distill.tools.init import init as _init
+from distill.tools.learn import learn as _learn
+from distill.tools.memory import memory as _memory
+from distill.tools.profile import profile as _profile
+from distill.tools.recall import recall as _recall
 from distill.tools.store import store as _store
 
 mcp = FastMCP(
@@ -36,10 +36,10 @@ mcp = FastMCP(
 @mcp.tool()
 async def recall(
     query: str,
-    scope: Optional[Literal["global", "project", "workspace"]] = None,
-    type: Optional[Literal["pattern", "preference", "decision", "mistake", "workaround"]] = None,
+    scope: Literal["global", "project", "workspace"] | None = None,
+    type: Literal["pattern", "preference", "decision", "mistake", "workaround"] | None = None,
     limit: int = 5,
-    caller_cwd: Optional[str] = None,
+    caller_cwd: str | None = None,
 ) -> str:
     """Search accumulated knowledge by semantic similarity."""
     return await _recall(query=query, scope=scope, type=type, limit=limit, caller_cwd=caller_cwd)
@@ -50,8 +50,8 @@ async def learn(
     transcript_path: str,
     session_id: str,
     ctx: Context,
-    scope: Optional[Literal["global", "project", "workspace"]] = None,
-    caller_cwd: Optional[str] = None,
+    scope: Literal["global", "project", "workspace"] | None = None,
+    caller_cwd: str | None = None,
 ) -> str:
     """Extract and save knowledge from a conversation transcript."""
     return await _learn(
@@ -65,15 +65,15 @@ async def learn(
 
 @mcp.tool()
 async def profile(
-    scope: Optional[Literal["global", "project", "workspace"]] = None,
-    caller_cwd: Optional[str] = None,
+    scope: Literal["global", "project", "workspace"] | None = None,
+    caller_cwd: str | None = None,
 ) -> str:
     """View accumulated user knowledge profile and statistics."""
     return await _profile(scope=scope, caller_cwd=caller_cwd)
 
 
 @mcp.tool()
-async def digest(caller_cwd: Optional[str] = None) -> str:
+async def digest(caller_cwd: str | None = None) -> str:
     """Analyze patterns across accumulated knowledge: merge duplicates, update confidence scores."""
     return await _digest(caller_cwd=caller_cwd)
 
@@ -82,8 +82,8 @@ async def digest(caller_cwd: Optional[str] = None) -> str:
 async def memory(
     action: Literal["promote", "demote", "delete", "crystallize"],
     ctx: Context,
-    id: Optional[str] = None,
-    caller_cwd: Optional[str] = None,
+    id: str | None = None,
+    caller_cwd: str | None = None,
 ) -> str:
     """Manage knowledge: promote/demote scope, delete entries, or crystallize rules."""
     return await _memory(action=action, ctx=ctx, id=id, caller_cwd=caller_cwd)
@@ -93,8 +93,8 @@ async def memory(
 async def ingest(
     path: str,
     ctx: Context,
-    scope: Optional[Literal["global", "project", "workspace"]] = None,
-    caller_cwd: Optional[str] = None,
+    scope: Literal["global", "project", "workspace"] | None = None,
+    caller_cwd: str | None = None,
 ) -> str:
     """Extract knowledge from markdown/text files into the knowledge store.
 
@@ -126,8 +126,8 @@ async def store(
     chunks: list[dict],
     session_id: str,
     trigger: str = "manual",
-    scope: Optional[Literal["global", "project", "workspace"]] = None,
-    caller_cwd: Optional[str] = None,
+    scope: Literal["global", "project", "workspace"] | None = None,
+    caller_cwd: str | None = None,
 ) -> str:
     """Save pre-extracted knowledge chunks to the knowledge store (no LLM required).
 
@@ -138,8 +138,8 @@ async def store(
 
 @mcp.tool()
 async def init(
-    scope: Optional[Literal["global", "project", "workspace"]] = None,
-    caller_cwd: Optional[str] = None,
+    scope: Literal["global", "project", "workspace"] | None = None,
+    caller_cwd: str | None = None,
 ) -> str:
     """One-step Distill onboarding for a new project.
 

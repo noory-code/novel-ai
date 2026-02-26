@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal
 
 from distill.config import load_config
@@ -80,7 +80,7 @@ async def _handle_crystallize(
 
         try:
             with MetadataStore("global") as global_meta:
-                global_meta.set_meta("last_crystallize", datetime.now(timezone.utc).isoformat())
+                global_meta.set_meta("last_crystallize", datetime.now(UTC).isoformat())
         except Exception:
             pass
 
@@ -99,7 +99,10 @@ async def _handle_crystallize(
             lines.append("")
             lines.append("⚠ User rule conflicts:")
             for c in report.user_conflicts:
-                lines.append(f"  - {c.user_rule_file}: {c.conflicting_content} → {c.suggestion}")
+                lines.append(
+                    f"  - {c.user_rule_file}: {c.conflicting_content} "
+                    f"→ {c.suggestion}"
+                )
         lines.append(f"Total rules: {report.total_rules}")
 
         return "\n".join(lines)
@@ -167,7 +170,10 @@ def _handle_promote_demote(
         )
 
     if to_scope == "workspace" and not workspace_root:
-        return f"Cannot {action} to workspace scope: no workspace (git) root detected."
+        return (
+            f"Cannot {action} to workspace scope: "
+            "no workspace (git) root detected."
+        )
     if to_scope == "project" and not project_root:
         return f"Cannot {action} to project scope: no project root detected."
 
@@ -176,10 +182,18 @@ def _handle_promote_demote(
 
     try:
         with (
-            MetadataStore(found_scope, project_root, from_ws_root) as from_meta,  # type: ignore[arg-type]
-            VectorStore(found_scope, project_root, from_ws_root) as from_vector,  # type: ignore[arg-type]
-            MetadataStore(to_scope, project_root, to_ws_root) as to_meta,  # type: ignore[arg-type]
-            VectorStore(to_scope, project_root, to_ws_root) as to_vector,  # type: ignore[arg-type]
+            MetadataStore(
+                found_scope, project_root, from_ws_root
+            ) as from_meta,  # type: ignore[arg-type]
+            VectorStore(
+                found_scope, project_root, from_ws_root
+            ) as from_vector,  # type: ignore[arg-type]
+            MetadataStore(
+                to_scope, project_root, to_ws_root
+            ) as to_meta,  # type: ignore[arg-type]
+            VectorStore(
+                to_scope, project_root, to_ws_root
+            ) as to_vector,  # type: ignore[arg-type]
         ):
             from_meta.move(chunk, to_meta)
             to_vector.index(chunk.id, chunk.content, chunk.tags)

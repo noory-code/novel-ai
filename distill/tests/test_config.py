@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from distill.config import load_config, DistillConfig, SourcesConfig, OutputsConfig
+from distill.config import OutputsConfig, SourcesConfig, load_config
 
 
 class TestLoadConfig:

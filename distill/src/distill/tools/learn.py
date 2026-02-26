@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from distill.config import load_config
 from distill.extractor.crystallize import crystallize
@@ -46,7 +46,10 @@ async def learn(
     # scope별로 청크를 그룹화
     chunks_by_scope: dict[str, list[KnowledgeInput]] = {}
     for chunk in chunks:
-        scope_key = f"{chunk.scope}:{workspace_root if chunk.scope == 'workspace' else project_root}"
+        root_for_key = (
+            workspace_root if chunk.scope == "workspace" else project_root
+        )
+        scope_key = f"{chunk.scope}:{root_for_key}"
         if scope_key not in chunks_by_scope:
             chunks_by_scope[scope_key] = []
         chunks_by_scope[scope_key].append(chunk)
@@ -77,7 +80,9 @@ async def learn(
                 # conflict 타입 체크
                 for chunk in scope_chunks:
                     if chunk.type == "conflict":
-                        conflict_warnings.append(f"  ⚠ CONFLICT: {chunk.content[:100]}")
+                        conflict_warnings.append(
+                            f"  ⚠ CONFLICT: {chunk.content[:100]}"
+                        )
                     saved += 1
         except Exception:
             pass
@@ -99,7 +104,10 @@ async def learn(
     if config.auto_crystallize_threshold > 0:
         try:
             with MetadataStore("global") as global_meta:
-                last_crystallize = global_meta.get_meta("last_crystallize") or "1970-01-01T00:00:00.000Z"
+                last_crystallize = (
+                    global_meta.get_meta("last_crystallize")
+                    or "1970-01-01T00:00:00.000Z"
+                )
                 new_count = global_meta.count_since(last_crystallize)
 
             if new_count >= config.auto_crystallize_threshold:
@@ -118,7 +126,7 @@ async def learn(
                 )
 
                 with MetadataStore("global") as gm2:
-                    gm2.set_meta("last_crystallize", datetime.now(timezone.utc).isoformat())
+                    gm2.set_meta("last_crystallize", datetime.now(UTC).isoformat())
 
                 parts = []
                 if report.created:
@@ -137,10 +145,13 @@ async def learn(
                 )
                 if report.user_conflicts:
                     conflict_lines = [
-                        f"  - {c.user_rule_file}: {c.conflicting_content} → {c.suggestion}"
+                        f"  - {c.user_rule_file}: {c.conflicting_content} "
+                        f"→ {c.suggestion}"
                         for c in report.user_conflicts
                     ]
-                    auto_msg += f"\n\n⚠ User rule conflicts:\n" + "\n".join(conflict_lines)
+                    auto_msg += (
+                        "\n\n⚠ User rule conflicts:\n" + "\n".join(conflict_lines)
+                    )
         except Exception as err:
             auto_msg = f"\n\n⚠ Auto-crystallize failed: {err}"
 

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from distill.store.metadata import MetadataStore
 from distill.store.scope import detect_project_root, detect_workspace_root

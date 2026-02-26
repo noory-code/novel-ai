@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from distill.store.scope import resolve_db_path
 from distill.store.types import (
@@ -148,7 +148,7 @@ class MetadataStore:
 
     def insert(self, input: KnowledgeInput) -> KnowledgeChunk:
         """Insert a new knowledge chunk, returns full chunk with generated id/timestamps."""
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         chunk_id = str(uuid.uuid4())
 
         self._conn.execute(
@@ -232,7 +232,7 @@ class MetadataStore:
 
     def touch(self, id: str) -> None:
         """Increment access count and update last_accessed_at."""
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         self._conn.execute(
             "UPDATE knowledge SET access_count = access_count + 1, updated_at = ?, last_accessed_at = ? WHERE id = ?",
             (now, now, id),
@@ -241,7 +241,7 @@ class MetadataStore:
 
     def update_scope(self, id: str, new_scope: KnowledgeScope) -> None:
         """Update scope (promote/demote)."""
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         self._conn.execute(
             "UPDATE knowledge SET scope = ?, updated_at = ? WHERE id = ?",
             (new_scope, now, id),
@@ -342,7 +342,7 @@ class MetadataStore:
         note: str | None = None,
     ) -> LifecycleEvent:
         """Record a lifecycle state transition for a chunk."""
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         event_id = str(uuid.uuid4())
         self._conn.execute(
             """INSERT INTO lifecycle_events
@@ -388,7 +388,7 @@ class MetadataStore:
         confidence: float = 0.8,
     ) -> ChunkRelation:
         """Add a directional relationship between two chunks."""
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         self._conn.execute(
             """INSERT OR REPLACE INTO chunk_relations
                (from_id, to_id, relation_type, confidence, created_at)

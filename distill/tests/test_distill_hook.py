@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 import subprocess
 
-import pytest
-
 from distill.hooks.distill_hook import main
 
 

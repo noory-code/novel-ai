@@ -34,16 +34,21 @@ async def profile(scope: KnowledgeScope | None = None, caller_cwd: str | None = 
             # Show top accessed knowledge
             top_accessed = ctx.meta.search(scope=ctx.scope, limit=5)
             if top_accessed:
-                top = sorted(top_accessed, key=lambda k: k.access_count, reverse=True)[:3]
+                top = sorted(
+                    top_accessed, key=lambda k: k.access_count, reverse=True
+                )[:3]
                 top_lines = "\n".join(
-                    f"  - [{k.type}] (accessed {k.access_count}x) {k.content[:60]}..."
+                    f"  - [{k.type}] (accessed {k.access_count}x) "
+                    f"{k.content[:60]}..."
                     for k in top
                 )
                 sections.append(f"\nMost accessed:\n{top_lines}")
         except Exception:
             sections.append(f"## {ctx.scope.upper()} scope\n(no data yet)")
 
-    await for_each_scope(scope, project_root, _collect, workspace_root=workspace_root)
+    await for_each_scope(
+        scope, project_root, _collect, workspace_root=workspace_root
+    )
 
     # Environment summary
     inventory = scan_environment(project_root)
@@ -66,8 +71,10 @@ async def profile(scope: KnowledgeScope | None = None, caller_cwd: str | None = 
     else:
         env_lines.append("Skills: 0")
     env_lines.append(f"Agents: {summary.total_agents}")
-    env_lines.append(f"Budget: {budget_used}/{budget_max} rule files used ({budget_pct}%)")
+    env_lines.append(
+        f"Budget: {budget_used}/{budget_max} rule files used ({budget_pct}%)"
+    )
 
-    sections.append(f"## ENVIRONMENT\n" + "\n".join(env_lines))
+    sections.append("## ENVIRONMENT\n" + "\n".join(env_lines))
 
     return "\n\n".join(sections) or "No knowledge accumulated yet."

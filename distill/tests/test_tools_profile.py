@@ -38,9 +38,21 @@ def profile_env(tmp_path, monkeypatch):
     )
 
     meta = MetadataStore("global")
-    meta.insert(make_knowledge_input(content="Pattern A", type="pattern", scope="global", confidence=0.9))
-    meta.insert(make_knowledge_input(content="Decision B", type="decision", scope="global", confidence=0.8))
-    meta.insert(make_knowledge_input(content="Preference C", type="preference", scope="global", confidence=0.7))
+    meta.insert(
+        make_knowledge_input(
+            content="Pattern A", type="pattern", scope="global", confidence=0.9
+        )
+    )
+    meta.insert(
+        make_knowledge_input(
+            content="Decision B", type="decision", scope="global", confidence=0.8
+        )
+    )
+    meta.insert(
+        make_knowledge_input(
+            content="Preference C", type="preference", scope="global", confidence=0.7
+        )
+    )
 
     yield meta
     meta.close()

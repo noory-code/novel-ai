@@ -7,7 +7,6 @@ import tempfile
 import pytest
 
 from distill.extractor.crystallize import (
-    AgentMetadata,
     CrystallizeReport,
     crystallize,
     parse_crystallize_response,
