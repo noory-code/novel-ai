@@ -206,7 +206,7 @@ class MetadataStore:
     ) -> list[KnowledgeChunk]:
         """Search by filters (metadata only)."""
         conditions: list[str] = []
-        params: list = []
+        params: list[str | int] = []
 
         if scope:
             conditions.append("scope = ?")
