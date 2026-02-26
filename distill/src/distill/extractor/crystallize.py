@@ -393,14 +393,32 @@ def _resolve_agents_dir(scope: str, project_root: str | None = None) -> str | No
     return None
 
 
+def _write_distill_file(
+    output_dir: Path,
+    filename: str,
+    content: str,
+    encoding: str = "utf-8",
+) -> Path:
+    """output_dir을 생성하고 output_dir/filename에 content를 작성 후 경로를 반환합니다."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / filename
+    output_path.write_text(content, encoding=encoding)
+    return output_path
+
+
+def _make_distill_filename(prefix: str, name: str, date: datetime) -> str:
+    """Distill 파일명을 생성합니다."""
+    date_str = date.strftime("%Y-%m-%d")
+    return f"distill-{prefix}-{date_str}-{name}.md"
+
+
 def _write_rule_file(
     rules_dir: str,
     topic: str,
     rules: list[str],
     source_ids: list[str],
 ) -> str:
-    """Write a rule file in the standard Distill format."""
-    os.makedirs(rules_dir, exist_ok=True)
+    """표준 Distill 형식의 규칙 파일을 작성합니다."""
     filename = f"distill-{topic}.md"
     date = datetime.now(UTC).strftime("%Y-%m-%d")
 
@@ -413,8 +431,7 @@ def _write_rule_file(
         + "\n"
     )
 
-    with open(os.path.join(rules_dir, filename), "w", encoding="utf-8") as f:
-        f.write(content)
+    _write_distill_file(Path(rules_dir), filename, content)
     return filename
 
 
@@ -425,12 +442,11 @@ def _write_skill_file(
     rules: list[str],
     source_ids: list[str],
 ) -> str:
-    """Write a skill file in Claude Code SKILL.md format."""
+    """Claude Code SKILL.md 형식의 스킬 파일을 작성합니다."""
     skill_dir_name = f"distill-{topic}"
-    skill_dir = os.path.join(skills_dir, skill_dir_name)
-    os.makedirs(skill_dir, exist_ok=True)
-
+    skill_dir = Path(skills_dir) / skill_dir_name
     date = datetime.now(UTC).strftime("%Y-%m-%d")
+
     examples_section = ""
     if metadata.examples:
         examples_section = "\n\n## Examples\n\n" + "\n".join(
@@ -455,8 +471,7 @@ def _write_skill_file(
         + "\n"
     )
 
-    with open(os.path.join(skill_dir, "SKILL.md"), "w", encoding="utf-8") as f:
-        f.write(content)
+    _write_distill_file(skill_dir, "SKILL.md", content)
     return skill_dir_name
 
 
@@ -465,8 +480,7 @@ def _write_agent_file(
     topic: str,
     metadata: AgentMetadata,
 ) -> str:
-    """Write an agent file in Claude Code agents format."""
-    os.makedirs(agents_dir, exist_ok=True)
+    """Claude Code 에이전트 형식의 에이전트 파일을 작성합니다."""
     filename = f"distill-{topic}.md"
     date = datetime.now(UTC).strftime("%Y-%m-%d")
 
@@ -485,8 +499,7 @@ def _write_agent_file(
         f"{skills_list}\n"
     )
 
-    with open(os.path.join(agents_dir, filename), "w", encoding="utf-8") as f:
-        f.write(content)
+    _write_distill_file(Path(agents_dir), filename, content)
     return filename
 
 
