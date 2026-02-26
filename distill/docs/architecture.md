@@ -7,7 +7,7 @@ Distill is structured in six layers: **Store**, **Scanner**, **Extractor**, **To
 ```mermaid
 graph TB
     CC[Claude Code] <-->|MCP Protocol| MCP[Distill MCP Server]
-    MCP -->|recall / learn / profile / digest / memory / ingest / init| Tools[Tools Layer]
+    MCP -->|recall / learn / profile / digest / memory / ingest / init / test_raw_sampling / store| Tools[Tools Layer]
     Tools --> Store[(SQLite + FTS5 + sqlite-vec)]
     Tools -->|ctx.sample()| Sampling[MCP Sampling]
     Sampling -->|LLM response| Tools
@@ -207,6 +207,7 @@ The scanner reads the full `.claude/` environment:
 | `digest` | none | Duplicate detection (Jaccard > 0.7), stale entries |
 | `memory` | `action`, `id?` | promote/demote/delete/crystallize |
 | `ingest` | `path`, optional `scope` | Markdown/text dir → LLM extraction → store (mtime-based cache) |
+| `test_raw_sampling` | none | Test MCP sampling connectivity (diagnostic) |
 
 ### Hooks (`src/distill/hooks/`)
 

@@ -13,14 +13,14 @@ See [ROADMAP.md](ROADMAP.md) for Phase 3+ planning.
 |---------|--------|
 | `uv sync` | Install dependencies |
 | `uv run python -m distill` | Start MCP server |
-| `uv run pytest` | Run all tests (311 tests) |
+| `uv run pytest` | Run all tests (316 tests) |
 
 ## Architecture
 
 ```
 src/distill/
 ├── config.py              ← Config loader (.distill/config.json, SourcesConfig, OutputsConfig)
-├── server.py              ← FastMCP server + 8 tool registrations
+├── server.py              ← FastMCP server + 9 tool registrations
 ├── store/                 ← SQLite metadata + FTS5 + sqlite-vec (fastembed embeddings)
 │   ├── metadata.py        ← SQLite CRUD + FTS5 full-text search
 │   ├── vector.py          ← Vector index (fastembed + sqlite-vec)
@@ -36,7 +36,7 @@ src/distill/
 │   ├── crystallize.py     ← Consolidate chunks → distill-*.md rule/skill/agent files
 │   ├── rules_reader.py    ← Read rules from global + project scopes
 │   └── sampling_error.py  ← MCP sampling error wrapping
-├── tools/                 ← 8 MCP Tools
+├── tools/                 ← 9 MCP Tools
 │   ├── recall.py          ← Semantic search
 │   ├── learn.py           ← Extract from transcript (requires LLM)
 │   ├── profile.py         ← Knowledge statistics
@@ -77,6 +77,7 @@ Hook runs `claude -p` subprocess → Claude reads transcript + calls `mcp__disti
 | `digest()` | Duplicate detection + stale analysis |
 | `memory(action, id?)` | promote/demote/delete/crystallize |
 | `ingest(path)` | Extract knowledge from markdown/text files |
+| `test_raw_sampling()` | Test MCP sampling connectivity (diagnostic) |
 
 ## Configuration
 

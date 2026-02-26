@@ -35,7 +35,7 @@ uv sync
 /install-plugin /absolute/path/to/noory-ai/distill
 ```
 
-This registers the MCP server, skills, and hooks automatically via `plugin.json`.
+This registers the MCP server, skills, and hooks automatically via `plugin.json`. Replace `/absolute/path/to/noory-ai/distill` with the actual absolute path to the distill directory on your system.
 
 ### 3. Or register as standalone MCP server
 
