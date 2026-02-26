@@ -10,7 +10,7 @@ from distill.tools.helpers import for_each_scope
 async def recall(
     query: str,
     scope: KnowledgeScope | None = None,
-    type: KnowledgeType | None = None,
+    knowledge_type: KnowledgeType | None = None,
     limit: int = 5,
     min_confidence: float = 0.0,
     visibility: KnowledgeVisibility | None = None,
@@ -32,7 +32,7 @@ async def recall(
             chunk = ctx.meta.get_by_id(hit.id)
             if not chunk:
                 continue
-            if type and chunk.type != type:
+            if knowledge_type and chunk.type != knowledge_type:
                 continue
             if chunk.confidence < min_confidence:
                 continue

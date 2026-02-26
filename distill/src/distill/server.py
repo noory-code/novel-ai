@@ -37,12 +37,22 @@ mcp = FastMCP(
 async def recall(
     query: str,
     scope: Literal["global", "project", "workspace"] | None = None,
-    type: Literal["pattern", "preference", "decision", "mistake", "workaround"] | None = None,
+    knowledge_type: Literal["pattern", "preference", "decision", "mistake", "workaround"] | None = None,
     limit: int = 5,
+    min_confidence: float = 0.0,
     caller_cwd: str | None = None,
 ) -> str:
-    """Search accumulated knowledge by semantic similarity."""
-    return await _recall(query=query, scope=scope, type=type, limit=limit, caller_cwd=caller_cwd)
+    """Search accumulated knowledge by semantic similarity.
+
+    Args:
+        query: Natural language search query.
+        knowledge_type: Filter by type — one of 'pattern', 'preference', 'decision', 'mistake', 'workaround', or None for all.
+        scope: Filter by scope — one of 'global', 'workspace', 'project', or None for all.
+        limit: Maximum number of results to return (max 20).
+        min_confidence: Minimum confidence threshold (0.0–1.0). Default 0.0 (all results).
+        caller_cwd: Caller's working directory for scope resolution.
+    """
+    return await _recall(query=query, scope=scope, knowledge_type=knowledge_type, limit=limit, min_confidence=min_confidence, caller_cwd=caller_cwd)
 
 
 @mcp.tool()

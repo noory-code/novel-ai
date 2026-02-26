@@ -71,7 +71,7 @@ class TestRecall:
 
     @pytest.mark.asyncio
     async def test_respects_type_filter(self, populated_store):
-        result = await recall("sqlite", type="pattern")
+        result = await recall("sqlite", knowledge_type="pattern")
         # Should only include pattern type, not decision
         if "No matching" not in result:
             assert "pattern" in result
