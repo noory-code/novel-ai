@@ -9,7 +9,7 @@ from distill.extractor.crystallize import crystallize
 from distill.extractor.extractor import extract_knowledge
 from distill.store.metadata import MetadataStore
 from distill.store.scope import detect_project_root, detect_workspace_root
-from distill.store.types import KnowledgeChunk, KnowledgeScope
+from distill.store.types import KnowledgeChunk, KnowledgeInput, KnowledgeScope
 from distill.store.vector import VectorStore
 from distill.tools.helpers import for_each_scope
 
@@ -43,24 +43,42 @@ async def learn(
     if not chunks:
         return "No extractable knowledge found in this transcript."
 
-    # Save each chunk to the appropriate store
+    # scope별로 청크를 그룹화
+    chunks_by_scope: dict[str, list[KnowledgeInput]] = {}
+    for chunk in chunks:
+        scope_key = f"{chunk.scope}:{workspace_root if chunk.scope == 'workspace' else project_root}"
+        if scope_key not in chunks_by_scope:
+            chunks_by_scope[scope_key] = []
+        chunks_by_scope[scope_key].append(chunk)
+
+    # 각 scope별로 배치 저장
     saved = 0
     conflict_warnings: list[str] = []
 
-    for chunk in chunks:
+    for scope_key, scope_chunks in chunks_by_scope.items():
         try:
-            ws_root = workspace_root if chunk.scope == "workspace" else None
+            first_chunk = scope_chunks[0]
+            ws_root = workspace_root if first_chunk.scope == "workspace" else None
+
             with (
-                MetadataStore(chunk.scope, project_root, ws_root) as meta,
-                VectorStore(chunk.scope, project_root, ws_root) as vector,
+                MetadataStore(first_chunk.scope, project_root, ws_root) as meta,
+                VectorStore(first_chunk.scope, project_root, ws_root) as vector,
             ):
-                inserted = meta.insert(chunk)
-                vector.index(inserted.id, inserted.content, inserted.tags)
+                # 모든 청크를 메타데이터 스토어에 삽입
+                entry_ids = [meta.insert(chunk).id for chunk in scope_chunks]
 
-                if chunk.type == "conflict":
-                    conflict_warnings.append(f"  ⚠ CONFLICT: {chunk.content[:100]}")
+                # 배치 벡터 인덱싱
+                vector.index_many(
+                    ids=entry_ids,
+                    contents=[c.content for c in scope_chunks],
+                    tags_list=[c.tags for c in scope_chunks],
+                )
 
-                saved += 1
+                # conflict 타입 체크
+                for chunk in scope_chunks:
+                    if chunk.type == "conflict":
+                        conflict_warnings.append(f"  ⚠ CONFLICT: {chunk.content[:100]}")
+                    saved += 1
         except Exception:
             pass
 

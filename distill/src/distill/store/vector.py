@@ -54,11 +54,18 @@ def _reset_embedder() -> None:
 
 
 def _embed(text: str) -> bytes:
-    """Embed text and return as bytes for sqlite-vec."""
+    """단일 텍스트를 임베딩하여 sqlite-vec용 바이트로 반환."""
     embedder = _get_embedder()
     embeddings = list(embedder.embed([text]))
     vec = np.array(embeddings[0], dtype=np.float32)
     return vec.tobytes()
+
+
+def _embed_many(texts: list[str]) -> list[bytes]:
+    """여러 텍스트를 배치로 임베딩하여 sqlite-vec용 바이트 리스트로 반환."""
+    embedder = _get_embedder()
+    embeddings = list(embedder.embed(texts))
+    return [np.array(emb, dtype=np.float32).tobytes() for emb in embeddings]
 
 
 @dataclass
@@ -77,29 +84,41 @@ class VectorStore:
         workspace_root: str | None = None,
     ) -> None:
         db_path = resolve_db_path(scope, project_root, workspace_root)
-        self._conn: sqlite3.Connection | None = sqlite3.connect(str(db_path), check_same_thread=False)
-        self._conn.row_factory = sqlite3.Row
-        self._conn.execute("PRAGMA journal_mode = WAL")
-        self._conn.execute("PRAGMA busy_timeout = 5000")
+        self._conn_impl: sqlite3.Connection | None = sqlite3.connect(str(db_path), check_same_thread=False)
+        self._conn_impl.row_factory = sqlite3.Row
 
-        # Load sqlite-vec extension
-        self._conn.enable_load_extension(True)
-        sqlite_vec.load(self._conn)
-        self._conn.enable_load_extension(False)
+        # WAL 모드가 이미 설정되어 있는지 확인 후 설정
+        row = self._conn_impl.execute("PRAGMA journal_mode").fetchone()
+        if row and row[0].lower() != "wal":
+            self._conn_impl.execute("PRAGMA journal_mode = WAL")
 
-        # Create both tables
-        self._conn.executescript(FTS_SCHEMA)
-        self._conn.executescript(VEC_SCHEMA)
+        self._conn_impl.execute("PRAGMA busy_timeout = 5000")
+
+        # sqlite-vec 확장 로드
+        self._conn_impl.enable_load_extension(True)
+        sqlite_vec.load(self._conn_impl)
+        self._conn_impl.enable_load_extension(False)
+
+        # 테이블 생성
+        self._conn_impl.executescript(FTS_SCHEMA)
+        self._conn_impl.executescript(VEC_SCHEMA)
+
+    @property
+    def _conn(self) -> sqlite3.Connection:
+        """내부 연결 객체 접근 (None 체크 포함)."""
+        if self._conn_impl is None:
+            raise RuntimeError("Database connection is closed")
+        return self._conn_impl
 
     def index(self, id: str, content: str, tags: list[str]) -> None:
-        """Index a knowledge chunk in both FTS5 and vector index."""
-        # FTS5 index
+        """FTS5와 벡터 인덱스 모두에 지식 청크 인덱싱."""
+        # FTS5 인덱스
         self._conn.execute(
             "INSERT OR REPLACE INTO knowledge_fts (id, content, tags) VALUES (?, ?, ?)",
             (id, content, " ".join(tags)),
         )
 
-        # Vector index
+        # 벡터 인덱스
         embedding = _embed(content)
         self._conn.execute(
             "INSERT OR REPLACE INTO knowledge_vec (knowledge_id, embedding) VALUES (?, ?)",
@@ -107,8 +126,30 @@ class VectorStore:
         )
         self._conn.commit()
 
+    def index_many(self, ids: list[str], contents: list[str], tags_list: list[list[str]]) -> None:
+        """여러 지식 청크를 배치로 FTS5와 벡터 인덱스에 인덱싱."""
+        if not ids or len(ids) != len(contents) or len(ids) != len(tags_list):
+            raise ValueError("ids, contents, tags_list의 길이가 일치해야 합니다")
+
+        # 배치 임베딩
+        embeddings = _embed_many(contents)
+
+        # 단일 트랜잭션으로 모든 행 삽입
+        with self._conn:
+            for id, content, tags, embedding in zip(ids, contents, tags_list, embeddings):
+                # FTS5 인덱스
+                self._conn.execute(
+                    "INSERT OR REPLACE INTO knowledge_fts (id, content, tags) VALUES (?, ?, ?)",
+                    (id, content, " ".join(tags)),
+                )
+                # 벡터 인덱스
+                self._conn.execute(
+                    "INSERT OR REPLACE INTO knowledge_vec (knowledge_id, embedding) VALUES (?, ?)",
+                    (id, embedding),
+                )
+
     def search(self, query: str, limit: int = 5) -> list[SearchResult]:
-        """Semantic search using vector similarity (KNN)."""
+        """벡터 유사도(KNN)를 사용한 의미론적 검색."""
         query_embedding = _embed(query)
 
         vec_rows = self._conn.execute(
@@ -122,7 +163,8 @@ class VectorStore:
         if not vec_rows:
             return []
 
-        # Build distance map
+        # TODO: Python 레벨 조인은 sqlite-vec와 FTS5가 별도의 가상 테이블이기 때문에
+        # SQL JOIN으로 최적화하기 어려운 알려진 제약사항. 향후 개선 시 고려 필요.
         distance_map = {row["knowledge_id"]: row["distance"] for row in vec_rows}
         ids = list(distance_map.keys())
         placeholders = ",".join("?" for _ in ids)
@@ -176,11 +218,11 @@ class VectorStore:
         self._conn.commit()
 
     def close(self) -> None:
-        if self._conn is not None:
+        if self._conn_impl is not None:
             try:
-                self._conn.close()
+                self._conn_impl.close()
             finally:
-                self._conn = None
+                self._conn_impl = None
 
     def __enter__(self) -> VectorStore:
         """Context manager entry."""

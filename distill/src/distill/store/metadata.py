@@ -120,7 +120,12 @@ class MetadataStore:
         db_path = resolve_db_path(scope, project_root, workspace_root)
         self._conn_impl: sqlite3.Connection | None = sqlite3.connect(str(db_path), check_same_thread=False)
         self._conn_impl.row_factory = sqlite3.Row
-        self._conn_impl.execute("PRAGMA journal_mode = WAL")
+
+        # WAL 모드가 이미 설정되어 있는지 확인 후 설정
+        row = self._conn_impl.execute("PRAGMA journal_mode").fetchone()
+        if row and row[0].lower() != "wal":
+            self._conn_impl.execute("PRAGMA journal_mode = WAL")
+
         self._conn_impl.execute("PRAGMA busy_timeout = 5000")
         self._conn_impl.executescript(SCHEMA)
         self._apply_migrations()
@@ -431,10 +436,10 @@ class MetadataStore:
     # ── Context manager ───────────────────────────────────────────────────────
 
     def close(self) -> None:
-        """Close the database connection."""
-        if self._conn is not None:
-            self._conn.close()
-            self._conn = None
+        """데이터베이스 연결 종료."""
+        if self._conn_impl is not None:
+            self._conn_impl.close()
+            self._conn_impl = None
 
     def __enter__(self) -> MetadataStore:
         """Context manager entry."""
