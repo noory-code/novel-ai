@@ -4,6 +4,42 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.1.0] — 2026-02-27
+
+### Security
+- **Command injection fix** (`distill_hook.py`): transcript path and session ID are now validated before being passed to subprocess; zombie process cleanup added
+- **SQL injection fix** (`metadata.py`): all dynamic WHERE clauses replaced with parameterized queries
+- **Path traversal fix** (`ingest.py`, `scanner.py`): file paths validated to stay within allowed directories; silent `OSError` now raises with context
+
+### Fixed
+- `MetadataStore` and `VectorStore` connection leaks on exception — `__exit__` now closes connections reliably
+- 19 bare `except Exception: pass` sites replaced with `logger.warning(...)` across `digest.py`, `helpers.py`, `ingest.py`, `memory.py`, `store.py`
+- JSONL parser now recovers per-line on corrupt input instead of failing the entire transcript
+- `extractor.py` truncates at line boundaries, not arbitrary char offsets
+
+### Changed
+- `recall()` parameter renamed `type` → `knowledge_type` (avoids shadowing Python builtin); MCP tool updated accordingly
+- `min_confidence` now exposed as MCP tool parameter on `recall()`
+- Duplicate write logic in `crystallize.py` extracted to `_write_distill_file()` helper
+- Scope detection walk-up logic deduplicated in `scope.py` and `helpers.py`
+
+### Performance
+- `VectorStore`: batch embedding via `index_many()`, batch commits, redundant WAL PRAGMA removed
+- `learn.py`: single-commit batch insert instead of per-chunk commits
+- Search join optimized to avoid Python-level N+1 queries
+
+### Dependencies
+- `fastembed` pinned to `>=0.7,<0.8` (aligns declared minimum with installed version)
+- `ruff` updated to 0.15.2
+- `Pillow` updated to 12.1.1 (security patches)
+
+### Tests
+- 55 new tests across `test_metadata.py`, `test_vector.py`, `test_parser.py`, `test_ingest.py`, `test_distill_hook.py`, `test_tools_recall.py`
+
+**324 tests passing**
+
+---
+
 ## [Phase 2.6] - 2026-02-19
 
 ### Added
