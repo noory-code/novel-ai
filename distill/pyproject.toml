@@ -41,6 +41,9 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
 
+# fastembed 0.7.x는 pillow<12.0을 요구하므로 12.x로 업그레이드 불가
+# fastembed가 pillow 12.x를 지원할 때까지 11.x 유지
+
 [dependency-groups]
 dev = [
     "pytest>=8.0",
