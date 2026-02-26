@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import logging
+
 from distill.store.scope import detect_project_root, detect_workspace_root
 from distill.tools.helpers import for_each_scope
+
+logger = logging.getLogger(__name__)
 
 
 def _simple_similarity(a: str, b: str) -> float:
@@ -64,6 +68,7 @@ async def digest(caller_cwd: str | None = None) -> str:
                     + stale_lines
                 )
         except Exception:
+            logger.debug("Suppressed error in _analyze", exc_info=True)
             report.append(f"## {ctx.scope.upper()} scope\n(no data yet)")
 
     await for_each_scope(None, project_root, _analyze, workspace_root=workspace_root)

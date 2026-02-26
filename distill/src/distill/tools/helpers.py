@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -9,6 +10,8 @@ from distill.store.metadata import MetadataStore
 from distill.store.scope import detect_project_root, detect_workspace_root
 from distill.store.types import KnowledgeScope
 from distill.store.vector import VectorStore
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -59,8 +62,7 @@ async def for_each_scope(
                     if hasattr(result, "__await__"):
                         await result  # type: ignore[union-attr]
         except Exception:
-            # scope may not exist yet — skip
-            pass
+            logger.debug("Skipping item due to error", exc_info=True)
 
 
 def resolve_scope_context(

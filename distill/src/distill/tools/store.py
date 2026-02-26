@@ -6,6 +6,7 @@ knowledge themselves and call this tool to persist it.
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -14,6 +15,8 @@ from distill.store.metadata import MetadataStore
 from distill.store.scope import detect_project_root, detect_workspace_root
 from distill.store.types import ExtractionTrigger, KnowledgeInput, KnowledgeScope, KnowledgeSource
 from distill.store.vector import VectorStore
+
+logger = logging.getLogger(__name__)
 
 _VALID_TRIGGERS = {"pre_compact", "session_end", "manual", "ingest"}
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 from typing import Literal
 
@@ -12,6 +13,8 @@ from distill.store.scope import detect_project_root, detect_workspace_root
 from distill.store.types import KnowledgeChunk
 from distill.store.vector import VectorStore
 from distill.tools.helpers import for_each_scope
+
+logger = logging.getLogger(__name__)
 
 MemoryAction = Literal["promote", "demote", "delete", "crystallize"]
 
@@ -82,7 +85,7 @@ async def _handle_crystallize(
             with MetadataStore("global") as global_meta:
                 global_meta.set_meta("last_crystallize", datetime.now(UTC).isoformat())
         except Exception:
-            pass
+            logger.debug("Suppressed error in _handle_crystallize", exc_info=True)
 
         lines = [f"Crystallized {len(all_chunks)} knowledge chunks."]
         if report.created:
@@ -127,6 +130,7 @@ def _handle_delete(id: str, project_root: str | None, workspace_root: str | None
                     vector.remove(id)
                     return f"Deleted knowledge entry {id} from {scope} scope."
         except Exception:
+            logger.debug("Skipping item due to error", exc_info=True)
             continue
 
     return f"Knowledge entry {id} not found."
@@ -156,6 +160,7 @@ def _handle_promote_demote(
                     found_scope = scope
                     break
         except Exception:
+            logger.debug("Skipping item due to error", exc_info=True)
             continue
 
     if not chunk or not found_scope:

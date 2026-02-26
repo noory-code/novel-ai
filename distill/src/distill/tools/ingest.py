@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,8 @@ from distill.store.metadata import MetadataStore
 from distill.store.scope import detect_project_root, detect_workspace_root
 from distill.store.types import KnowledgeInput, KnowledgeScope, KnowledgeSource
 from distill.store.vector import VectorStore
+
+logger = logging.getLogger(__name__)
 
 INGEST_EXTENSIONS = {".md", ".mdx", ".txt", ".rst"}
 _VALID_TYPES = {"pattern", "preference", "decision", "mistake", "workaround", "conflict"}
@@ -63,7 +66,13 @@ async def _extract_from_text(
 
     try:
         raw = json.loads(json_match.group())
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
+        failed_text = json_match.group() if json_match else "<none>"
+        logger.warning(
+            "JSON parse failed at line %d — input[:200]: %r",
+            exc.lineno,
+            failed_text[:200]
+        )
         return []
 
     now = datetime.now(UTC).isoformat()
@@ -93,6 +102,7 @@ async def _extract_from_text(
                 )
             )
         except Exception:
+            logger.debug("Skipping item due to error", exc_info=True)
             continue
 
     return results
@@ -187,7 +197,7 @@ async def ingest(
                         meta.delete(old_id)
                         vector.remove(old_id)
                 except (json.JSONDecodeError, Exception):
-                    pass
+                    logger.debug("Suppressed error in ingest", exc_info=True)
 
             # Read file
             try:
@@ -219,7 +229,7 @@ async def ingest(
                     chunk_ids.append(inserted.id)
                     saved_total += 1
                 except Exception:
-                    pass
+                    logger.debug("Suppressed error in ingest", exc_info=True)
 
             # Record processing result
             meta.set_meta(
