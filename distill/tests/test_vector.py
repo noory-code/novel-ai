@@ -1,6 +1,7 @@
 """Tests for VectorStore and sanitize_fts_query."""
 
 import tempfile
+import threading
 
 import pytest
 
@@ -106,3 +107,43 @@ class TestVectorSearch:
         results = vec_store.fts_search("keyword search")
         assert len(results) > 0
         assert results[0].id == "v-fts"
+
+
+class TestConcurrentAccess:
+    def test_concurrent_writes_succeed_with_busy_timeout(self) -> None:
+        """두 개의 VectorStore 인스턴스가 동시에 쓰기 작업을 할 때 SQLITE_BUSY 오류가 발생하지 않는지 확인."""
+        with tempfile.TemporaryDirectory(prefix="distill-concurrent-") as tmp:
+            # 먼저 데이터베이스 초기화 (확장 로딩 포함)
+            init_store = VectorStore("project", tmp)
+            init_store.close()
+
+            errors = []
+
+            def write_to_store(store_id: int) -> None:
+                try:
+                    store = VectorStore("project", tmp)
+                    store.index(f"concurrent-{store_id}", f"Concurrent write test content {store_id}", ["test"])
+                    store.close()
+                except Exception as e:
+                    errors.append(e)
+
+            threads = [threading.Thread(target=write_to_store, args=(i,)) for i in range(2)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+
+            assert len(errors) == 0, f"동시 쓰기 중 오류 발생: {errors}"
+
+            # 두 레코드가 모두 성공적으로 저장되었는지 확인
+            store = VectorStore("project", tmp)
+            results = store.search("Concurrent write test", limit=10)
+            assert len(results) == 2
+            store.close()
+
+
+class TestCloseIdempotency:
+    def test_close_is_idempotent(self, vec_store: VectorStore) -> None:
+        """close()를 두 번 호출해도 예외가 발생하지 않는지 확인."""
+        vec_store.close()
+        vec_store.close()  # 두 번째 호출도 안전해야 함

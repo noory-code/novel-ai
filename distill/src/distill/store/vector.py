@@ -77,40 +77,41 @@ class VectorStore:
         workspace_root: str | None = None,
     ) -> None:
         db_path = resolve_db_path(scope, project_root, workspace_root)
-        self.conn = sqlite3.connect(str(db_path))
-        self.conn.row_factory = sqlite3.Row
-        self.conn.execute("PRAGMA journal_mode = WAL")
+        self._conn: sqlite3.Connection | None = sqlite3.connect(str(db_path), check_same_thread=False)
+        self._conn.row_factory = sqlite3.Row
+        self._conn.execute("PRAGMA journal_mode = WAL")
+        self._conn.execute("PRAGMA busy_timeout = 5000")
 
         # Load sqlite-vec extension
-        self.conn.enable_load_extension(True)
-        sqlite_vec.load(self.conn)
-        self.conn.enable_load_extension(False)
+        self._conn.enable_load_extension(True)
+        sqlite_vec.load(self._conn)
+        self._conn.enable_load_extension(False)
 
         # Create both tables
-        self.conn.executescript(FTS_SCHEMA)
-        self.conn.executescript(VEC_SCHEMA)
+        self._conn.executescript(FTS_SCHEMA)
+        self._conn.executescript(VEC_SCHEMA)
 
     def index(self, id: str, content: str, tags: list[str]) -> None:
         """Index a knowledge chunk in both FTS5 and vector index."""
         # FTS5 index
-        self.conn.execute(
+        self._conn.execute(
             "INSERT OR REPLACE INTO knowledge_fts (id, content, tags) VALUES (?, ?, ?)",
             (id, content, " ".join(tags)),
         )
 
         # Vector index
         embedding = _embed(content)
-        self.conn.execute(
+        self._conn.execute(
             "INSERT OR REPLACE INTO knowledge_vec (knowledge_id, embedding) VALUES (?, ?)",
             (id, embedding),
         )
-        self.conn.commit()
+        self._conn.commit()
 
     def search(self, query: str, limit: int = 5) -> list[SearchResult]:
         """Semantic search using vector similarity (KNN)."""
         query_embedding = _embed(query)
 
-        vec_rows = self.conn.execute(
+        vec_rows = self._conn.execute(
             """SELECT knowledge_id, distance
                FROM knowledge_vec
                WHERE embedding MATCH ?
@@ -126,7 +127,7 @@ class VectorStore:
         ids = list(distance_map.keys())
         placeholders = ",".join("?" for _ in ids)
 
-        fts_rows = self.conn.execute(
+        fts_rows = self._conn.execute(
             f"SELECT id, content, tags FROM knowledge_fts WHERE id IN ({placeholders})",
             ids,
         ).fetchall()
@@ -149,7 +150,7 @@ class VectorStore:
         if not sanitized:
             return []
 
-        rows = self.conn.execute(
+        rows = self._conn.execute(
             """SELECT id, content, tags, rank
                FROM knowledge_fts
                WHERE knowledge_fts MATCH ?
@@ -170,18 +171,22 @@ class VectorStore:
 
     def remove(self, id: str) -> None:
         """Remove an entry from both indexes."""
-        self.conn.execute("DELETE FROM knowledge_fts WHERE id = ?", (id,))
-        self.conn.execute("DELETE FROM knowledge_vec WHERE knowledge_id = ?", (id,))
-        self.conn.commit()
+        self._conn.execute("DELETE FROM knowledge_fts WHERE id = ?", (id,))
+        self._conn.execute("DELETE FROM knowledge_vec WHERE knowledge_id = ?", (id,))
+        self._conn.commit()
 
     def close(self) -> None:
-        self.conn.close()
+        if self._conn is not None:
+            try:
+                self._conn.close()
+            finally:
+                self._conn = None
 
     def __enter__(self) -> VectorStore:
         """Context manager entry."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
         """Context manager exit — ensures close() is always called."""
         self.close()
 

@@ -118,18 +118,26 @@ class MetadataStore:
         workspace_root: str | None = None,
     ) -> None:
         db_path = resolve_db_path(scope, project_root, workspace_root)
-        self.conn = sqlite3.connect(str(db_path))
-        self.conn.row_factory = sqlite3.Row
-        self.conn.execute("PRAGMA journal_mode = WAL")
-        self.conn.executescript(SCHEMA)
+        self._conn_impl: sqlite3.Connection | None = sqlite3.connect(str(db_path), check_same_thread=False)
+        self._conn_impl.row_factory = sqlite3.Row
+        self._conn_impl.execute("PRAGMA journal_mode = WAL")
+        self._conn_impl.execute("PRAGMA busy_timeout = 5000")
+        self._conn_impl.executescript(SCHEMA)
         self._apply_migrations()
+
+    @property
+    def _conn(self) -> sqlite3.Connection:
+        """내부 연결 객체 접근 (None 체크 포함)."""
+        if self._conn_impl is None:
+            raise RuntimeError("Database connection is closed")
+        return self._conn_impl
 
     def _apply_migrations(self) -> None:
         """Apply schema migrations that may fail if column already exists."""
         for sql in _MIGRATIONS:
             try:
-                self.conn.execute(sql)
-                self.conn.commit()
+                self._conn.execute(sql)
+                self._conn.commit()
             except sqlite3.OperationalError:
                 pass  # column already exists
 
@@ -138,7 +146,7 @@ class MetadataStore:
         now = datetime.now(timezone.utc).isoformat()
         chunk_id = str(uuid.uuid4())
 
-        self.conn.execute(
+        self._conn.execute(
             """INSERT INTO knowledge
                (id, content, type, scope, visibility, project, tags, session_id, "trigger",
                 source_timestamp, confidence, access_count, created_at, updated_at)
@@ -159,7 +167,7 @@ class MetadataStore:
                 now,
             ),
         )
-        self.conn.commit()
+        self._conn.commit()
 
         return KnowledgeChunk(
             id=chunk_id,
@@ -178,7 +186,7 @@ class MetadataStore:
 
     def get_by_id(self, id: str) -> KnowledgeChunk | None:
         """Get a knowledge chunk by ID."""
-        cur = self.conn.execute("SELECT * FROM knowledge WHERE id = ?", (id,))
+        cur = self._conn.execute("SELECT * FROM knowledge WHERE id = ?", (id,))
         row = cur.fetchone()
         return _row_to_chunk(row) if row else None
 
@@ -211,7 +219,7 @@ class MetadataStore:
         where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
         params.append(limit)
 
-        cur = self.conn.execute(
+        cur = self._conn.execute(
             f"SELECT * FROM knowledge {where} ORDER BY updated_at DESC LIMIT ?",
             params,
         )
@@ -220,24 +228,24 @@ class MetadataStore:
     def touch(self, id: str) -> None:
         """Increment access count and update last_accessed_at."""
         now = datetime.now(timezone.utc).isoformat()
-        self.conn.execute(
+        self._conn.execute(
             "UPDATE knowledge SET access_count = access_count + 1, updated_at = ?, last_accessed_at = ? WHERE id = ?",
             (now, now, id),
         )
-        self.conn.commit()
+        self._conn.commit()
 
     def update_scope(self, id: str, new_scope: KnowledgeScope) -> None:
         """Update scope (promote/demote)."""
         now = datetime.now(timezone.utc).isoformat()
-        self.conn.execute(
+        self._conn.execute(
             "UPDATE knowledge SET scope = ?, updated_at = ? WHERE id = ?",
             (new_scope, now, id),
         )
-        self.conn.commit()
+        self._conn.commit()
 
     def move(self, chunk: KnowledgeChunk, target: MetadataStore) -> None:
         """Move a chunk to target store, preserving id, created_at, and access_count."""
-        target.conn.execute(
+        target._conn.execute(
             """INSERT OR REPLACE INTO knowledge
                (id, content, type, scope, visibility, project, tags, session_id, "trigger",
                 source_timestamp, confidence, access_count, created_at, updated_at,
@@ -261,27 +269,27 @@ class MetadataStore:
                 chunk.last_accessed_at,
             ),
         )
-        target.conn.commit()
+        target._conn.commit()
         self.delete(chunk.id)
 
     def delete(self, id: str) -> bool:
         """Delete a knowledge entry."""
-        cur = self.conn.execute("DELETE FROM knowledge WHERE id = ?", (id,))
-        self.conn.commit()
+        cur = self._conn.execute("DELETE FROM knowledge WHERE id = ?", (id,))
+        self._conn.commit()
         return cur.rowcount > 0
 
     def stats(self) -> dict:
         """Get aggregate statistics."""
-        total = self.conn.execute("SELECT COUNT(*) as cnt FROM knowledge").fetchone()["cnt"]
+        total = self._conn.execute("SELECT COUNT(*) as cnt FROM knowledge").fetchone()["cnt"]
 
         by_type: dict[str, int] = {}
-        for row in self.conn.execute(
+        for row in self._conn.execute(
             "SELECT type, COUNT(*) as cnt FROM knowledge GROUP BY type"
         ):
             by_type[row["type"]] = row["cnt"]
 
         by_scope: dict[str, int] = {}
-        for row in self.conn.execute(
+        for row in self._conn.execute(
             "SELECT scope, COUNT(*) as cnt FROM knowledge GROUP BY scope"
         ):
             by_scope[row["scope"]] = row["cnt"]
@@ -290,12 +298,12 @@ class MetadataStore:
 
     def get_all(self) -> list[KnowledgeChunk]:
         """Get all knowledge chunks."""
-        cur = self.conn.execute("SELECT * FROM knowledge ORDER BY created_at ASC")
+        cur = self._conn.execute("SELECT * FROM knowledge ORDER BY created_at ASC")
         return [_row_to_chunk(row) for row in cur.fetchall()]
 
     def count_since(self, timestamp: str) -> int:
         """Count chunks created after a given timestamp."""
-        row = self.conn.execute(
+        row = self._conn.execute(
             "SELECT COUNT(*) as cnt FROM knowledge WHERE created_at > ?",
             (timestamp,),
         ).fetchone()
@@ -303,19 +311,19 @@ class MetadataStore:
 
     def get_meta(self, key: str) -> str | None:
         """Get a distill_meta value."""
-        row = self.conn.execute(
+        row = self._conn.execute(
             "SELECT value FROM distill_meta WHERE key = ?", (key,)
         ).fetchone()
         return row["value"] if row else None
 
     def set_meta(self, key: str, value: str) -> None:
         """Set a distill_meta value."""
-        self.conn.execute(
+        self._conn.execute(
             "INSERT INTO distill_meta (key, value) VALUES (?, ?) "
             "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
             (key, value),
         )
-        self.conn.commit()
+        self._conn.commit()
 
     # ── Lifecycle events ──────────────────────────────────────────────────────
 
@@ -331,13 +339,13 @@ class MetadataStore:
         """Record a lifecycle state transition for a chunk."""
         now = datetime.now(timezone.utc).isoformat()
         event_id = str(uuid.uuid4())
-        self.conn.execute(
+        self._conn.execute(
             """INSERT INTO lifecycle_events
                (id, chunk_id, event_type, from_scope, to_scope, timestamp, note)
                VALUES (?, ?, ?, ?, ?, ?, ?)""",
             (event_id, chunk_id, event_type, from_scope, to_scope, now, note),
         )
-        self.conn.commit()
+        self._conn.commit()
         return LifecycleEvent(
             chunk_id=chunk_id,
             event_type=event_type,
@@ -349,7 +357,7 @@ class MetadataStore:
 
     def get_lifecycle(self, chunk_id: str) -> list[LifecycleEvent]:
         """Get all lifecycle events for a chunk, ordered by timestamp."""
-        cur = self.conn.execute(
+        cur = self._conn.execute(
             "SELECT * FROM lifecycle_events WHERE chunk_id = ? ORDER BY timestamp ASC",
             (chunk_id,),
         )
@@ -376,13 +384,13 @@ class MetadataStore:
     ) -> ChunkRelation:
         """Add a directional relationship between two chunks."""
         now = datetime.now(timezone.utc).isoformat()
-        self.conn.execute(
+        self._conn.execute(
             """INSERT OR REPLACE INTO chunk_relations
                (from_id, to_id, relation_type, confidence, created_at)
                VALUES (?, ?, ?, ?, ?)""",
             (from_id, to_id, relation_type, confidence, now),
         )
-        self.conn.commit()
+        self._conn.commit()
         return ChunkRelation(
             from_id=from_id,
             to_id=to_id,
@@ -408,7 +416,7 @@ class MetadataStore:
             sql = "SELECT * FROM chunk_relations WHERE from_id = ? OR to_id = ?"
             params = [chunk_id, chunk_id]
 
-        cur = self.conn.execute(sql, params)
+        cur = self._conn.execute(sql, params)
         return [
             ChunkRelation(
                 from_id=row["from_id"],
@@ -424,12 +432,14 @@ class MetadataStore:
 
     def close(self) -> None:
         """Close the database connection."""
-        self.conn.close()
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
 
     def __enter__(self) -> MetadataStore:
         """Context manager entry."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
         """Context manager exit — ensures close() is always called."""
         self.close()

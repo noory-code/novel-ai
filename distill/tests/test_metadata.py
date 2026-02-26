@@ -1,5 +1,8 @@
 """Tests for MetadataStore."""
 
+import tempfile
+import threading
+
 import pytest
 
 from distill.store.metadata import MetadataStore
@@ -304,3 +307,40 @@ class TestChunkRelations:
     def test_get_relations_empty_for_unknown_chunk(self, store: MetadataStore) -> None:
         relations = store.get_relations("nonexistent-id")
         assert relations == []
+
+
+class TestConcurrentAccess:
+    def test_concurrent_writes_succeed_with_busy_timeout(self) -> None:
+        """두 개의 MetadataStore 인스턴스가 동시에 쓰기 작업을 할 때 SQLITE_BUSY 오류가 발생하지 않는지 확인."""
+        with tempfile.TemporaryDirectory(prefix="distill-concurrent-meta-") as tmp:
+            errors = []
+
+            def write_to_store(store_id: int) -> None:
+                try:
+                    store = MetadataStore("project", tmp)
+                    inp = make_knowledge_input(content=f"Concurrent write test {store_id}")
+                    store.insert(inp)
+                    store.close()
+                except Exception as e:
+                    errors.append(e)
+
+            threads = [threading.Thread(target=write_to_store, args=(i,)) for i in range(2)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+
+            assert len(errors) == 0, f"동시 쓰기 중 오류 발생: {errors}"
+
+            # 두 레코드가 모두 성공적으로 저장되었는지 확인
+            store = MetadataStore("project", tmp)
+            all_chunks = store.get_all()
+            assert len(all_chunks) == 2
+            store.close()
+
+
+class TestCloseIdempotency:
+    def test_close_is_idempotent(self, store: MetadataStore) -> None:
+        """close()를 두 번 호출해도 예외가 발생하지 않는지 확인."""
+        store.close()
+        store.close()  # 두 번째 호출도 안전해야 함
