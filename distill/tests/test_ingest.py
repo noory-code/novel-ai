@@ -167,3 +167,20 @@ class TestIngestTool:
 
         assert "1 files processed" in result
         assert "0 chunks saved" in result
+
+    @pytest.mark.asyncio
+    async def test_rejects_path_traversal_attack(self, tmp_path: Path):
+        """경로 순회 공격을 차단하는지 확인"""
+        (tmp_path / ".distill" / "knowledge").mkdir(parents=True)
+        ctx = _make_ctx()
+
+        # /etc/passwd는 tmp_path와 홈 디렉토리 외부이므로 차단되어야 함
+        malicious_path = "/etc/passwd"
+
+        with pytest.raises(ValueError, match="허용된 디렉토리 외부"):
+            await ingest(
+                path=malicious_path,
+                ctx=ctx,
+                scope="project",
+                _project_root=str(tmp_path),
+            )

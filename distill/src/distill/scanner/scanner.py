@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import math
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from distill.scanner.types import (
     EnvironmentInventory,
@@ -88,10 +91,10 @@ def _scan_rules_dir(dir_path: Path) -> list[EnvironmentItem]:
                         content=content,
                     )
                 )
-            except OSError:
-                pass
-    except OSError:
-        pass
+            except OSError as exc:
+                logger.debug("건너뜀 %s: %s", f, exc)
+    except OSError as exc:
+        logger.debug("건너뜀 %s: %s", dir_path, exc)
 
     return items
 
@@ -123,10 +126,10 @@ def _scan_skills_dir(dir_path: Path) -> list[EnvironmentItem]:
                         content=content,
                     )
                 )
-            except OSError:
-                pass
-    except OSError:
-        pass
+            except OSError as exc:
+                logger.debug("건너뜀 %s: %s", skill_file, exc)
+    except OSError as exc:
+        logger.debug("건너뜀 %s: %s", dir_path, exc)
 
     return items
 
@@ -152,9 +155,9 @@ def _scan_agents_dir(dir_path: Path) -> list[EnvironmentItem]:
                         content=content,
                     )
                 )
-            except OSError:
-                pass
-    except OSError:
-        pass
+            except OSError as exc:
+                logger.debug("건너뜀 %s: %s", f, exc)
+    except OSError as exc:
+        logger.debug("건너뜀 %s: %s", dir_path, exc)
 
     return items
