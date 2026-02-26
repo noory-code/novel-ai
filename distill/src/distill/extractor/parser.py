@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -24,14 +27,23 @@ def parse_transcript(file_path: str) -> list[ConversationTurn]:
     with open(file_path, encoding="utf-8") as f:
         raw = f.read()
 
-    lines = [l for l in raw.split("\n") if l.strip()]
     turns: list[ConversationTurn] = []
 
-    for line in lines:
+    for line_num, line in enumerate(raw.splitlines(), start=1):
+        stripped = line.strip()
+        if not stripped:
+            continue
         try:
-            entry = json.loads(line)
-        except (json.JSONDecodeError, ValueError):
-            continue  # skip malformed lines
+            entry = json.loads(stripped)
+        except json.JSONDecodeError as exc:
+            logger.warning(
+                "Skipping malformed JSONL line %d in %s: %s — content[:200]: %r",
+                line_num,
+                file_path,
+                exc,
+                stripped[:200],
+            )
+            continue
 
         # Only process user/assistant messages
         entry_type = entry.get("type")

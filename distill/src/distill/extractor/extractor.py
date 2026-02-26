@@ -42,7 +42,14 @@ async def extract_knowledge(
     # 2. Format and truncate
     formatted = format_transcript(turns)
     if len(formatted) > config.max_transcript_chars:
-        formatted = _truncate_to_recent(turns, config.max_transcript_chars)
+        # max_transcript_chars\ub294 \ubb38\uc790 \uc218\uc774\uc9c0 \ud1a0\ud070 \uc218\uac00 \uc544\ub2d9\ub2c8\ub2e4.
+        # \ub2e4\uad6d\uc5b4 \ucf58\ud150\uce20(\ud55c\uad6d\uc5b4/\uc911\uad6d\uc5b4/\uc77c\ubcf8\uc5b4)\uc758 \uacbd\uc6b0 \uc2e4\uc81c \ud1a0\ud070 \uc18c\ube44\ub7c9\uc774
+        # 2-3\ubc30 \ub354 \ub192\uc744 \uc218 \uc788\uc2b5\ub2c8\ub2e4. \ucee8\ud14d\uc2a4\ud2b8 \uc708\ub3c4\uc6b0 \uc624\ub958\uac00 \ubc1c\uc0dd\ud558\uba74
+        # max_transcript_chars\ub97c \uc904\uc774\uc138\uc694.
+        formatted = formatted[:config.max_transcript_chars]
+        last_newline = formatted.rfind("\n")
+        if last_newline > 0:
+            formatted = formatted[:last_newline]
 
     # 3. Read all rules (user + distill) for conflict detection
     existing_rules = read_all_rules(project_root)
