@@ -47,7 +47,7 @@ The knowledge base grows passively. You work normally; Distill captures what mat
 
 ## Proven on Distill itself
 
-Distill analyzes its own development conversations through the same pipeline. Here are real findings from self-improvement (194 completed proposals):
+Evonest evolves Distill's own codebase through the same cycle. Here are real findings from 194 completed proposals:
 
 | Finding | Persona | Outcome |
 |---------|---------|---------|
@@ -94,6 +94,8 @@ Add to `.mcp.json`:
 }
 ```
 
+> **Note:** Manual installation does not activate hooks automatically. To enable background extraction after each session, add the hooks from `hooks/hooks.json` to your Claude Code settings manually, or use the plugin install method above.
+
 ## Quick Start
 
 ```
@@ -107,7 +109,7 @@ Add to `.mcp.json`:
 3. recall("your question here")
    → searches everything: current project, all past projects, global patterns
 
-4. memory("crystallize")
+4. memory("crystallize")   ← optional, recommended
    → consolidates into .claude/rules/distill-*.md
    → Claude Code loads these automatically in every future session
 ```
