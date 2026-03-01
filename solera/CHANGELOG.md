@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.0] - 2026-03-02
+
+### Added
+- `writing-identity` skill: define service identity (Mission, Core Values, Vision, Goals rough list)
+
 ## [1.1.0] - 2026-03-02
 
 ### Added

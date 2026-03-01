@@ -7,7 +7,7 @@ metadata:
   type: composite
   style: procedural
   triggers: [start work, complete work, current work, next work, progress update, write retrospective]
-  uses: [writing-phase, writing-goal, writing-epic, writing-story, writing-action-item, catalog-transition]
+  uses: [writing-identity, writing-phase, writing-goal, writing-epic, writing-story, writing-action-item, catalog-transition]
 ---
 
 # Workflow Manage (Supervisor)

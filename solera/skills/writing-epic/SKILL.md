@@ -18,7 +18,6 @@ metadata:
 
 - `published/identity/mission.md` exists
   - If not: check `published/identity/mission.md` with Glob tool → invoke `writing-identity` with Skill tool
-  > `writing-identity` is not included in Solera. It is provided by a separate identity plugin, or create `published/identity/mission.md` manually with a brief project description.
 - `_goal.md` exists
   - If not: check `{goal_path}/_goal.md` with Glob tool → invoke `writing-goal` with Skill tool
 - The corresponding Epic must be assigned in _goal.md

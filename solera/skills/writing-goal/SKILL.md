@@ -17,7 +17,6 @@ metadata:
 ## Prerequisites
 
 - `published/identity/mission.md` exists; if not, invoke writing-identity
-  > `writing-identity` is not included in Solera. It is provided by a separate identity plugin, or create `published/identity/mission.md` manually with a brief project description.
 - The corresponding Goal must be assigned in the Phase README; if not, invoke writing-phase
 
 ## Input

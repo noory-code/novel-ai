@@ -74,6 +74,7 @@ Solera verifies all Stories are complete, runs `workflow-pr` to open the PR, han
 
 | Skill | Trigger phrase | Produces |
 |-------|---------------|----------|
+| `writing-identity` | "Define identity", "write mission" | `identity/mission.md`, `core-values.md`, `vision_1.md`, `initiative/{year}/goals.md` |
 | `writing-phase` | "Write the Phase for Q1", "quarterly planning" | `phase/{id}/README.md`, Goal folder structure, `RETRO.md` on close |
 | `writing-goal` | "Write Goal G1", "decompose into Epics" | `_goal.md`, service map, persona(s), `RETRO.md` on close |
 | `writing-epic` | "Start Epic 01-auth", "decompose into Stories" | `_epic.md`, use cases, domain concepts, `RETRO.md` on close |
