@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.0] - 2026-03-02
+
+### Added
+- `meta-skill` skill: create, review, or improve skill files in `.claude/skills/`; includes 4 type templates (unit-guide, unit-procedural, composite-guide, composite-procedural)
+- `meta-rule` skill: create, review, or improve rule files in `.claude/rules/`
+- `meta-command` skill: create, review, or improve slash command files in `.claude/commands/`
+- `meta-subagent` skill: create, review, or improve agent definition files in `.claude/agents/`
+- `docs/work-item-structure.md`: full hierarchy diagram (Identity → Action Item), folder layout, branch mapping, Human vs AI responsibility split
+
 ## [1.2.0] - 2026-03-02
 
 ### Added

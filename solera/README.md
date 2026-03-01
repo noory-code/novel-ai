@@ -85,6 +85,15 @@ Solera verifies all Stories are complete, runs `workflow-pr` to open the PR, han
 | `catalog-transition` | "Complete Goal G1", "Goal completion cleanup" | Artifacts moved from `artifacts/` to `published/` with version tags |
 | `handoff` | "Run handoff", or automatic on session end | `HANDOFF.md` at project root with full session context |
 
+### Meta
+
+| Skill | Trigger phrase | Produces |
+|-------|---------------|----------|
+| `meta-skill` | "Create a skill", "review this skill", "improve the skill" | `.claude/skills/{name}/SKILL.md` + assets |
+| `meta-rule` | "Create a rule", "review this rule", "write a coding rule" | `.claude/rules/{name}.md` |
+| `meta-command` | "Create a command", "review this command", "new slash command" | `.claude/commands/{name}.md` |
+| `meta-subagent` | "Create an agent", "review this agent", "new subagent" | `.claude/agents/{name}.md` |
+
 ## Team Workflow
 
 Solera uses a branch-per-Epic strategy: each Epic gets an `epic-[name]` branch from `dev`/`main`, and each Story gets a `epic-[name]/story-[ID]-[name]` child branch. Solera creates all branches automatically when you start an Epic or Story. When the Epic is complete, `workflow-pr` opens a PR, manages the review cycle, and squash-merges to keep trunk history clean — one entry per Epic rather than dozens of implementation-detail commits. Because `HANDOFF.md` is regenerated on every session end, Contributor B can open the repository cold, read `HANDOFF.md`, and tell Claude to resume without any coordination with Contributor A.
@@ -120,6 +129,7 @@ All skills become available immediately after install. No additional setup is re
 | [docs/quick-start.md](docs/quick-start.md) | Full walkthrough: workspace setup → Goal → Epic → Story → merged PR |
 | [docs/architecture.md](docs/architecture.md) | Skill dependency graph, folder layout, SSOT/lifecycle patterns, Stop hook |
 | [docs/team-workflow.md](docs/team-workflow.md) | Branch strategy, PR workflow, parallel Epics, contributor handoff |
+| [docs/work-item-structure.md](docs/work-item-structure.md) | Full hierarchy diagram: Identity → Action Item, folder layout, branch mapping, Human vs AI |
 
 ## License
 
