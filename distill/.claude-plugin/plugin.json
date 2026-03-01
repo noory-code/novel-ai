@@ -2,8 +2,13 @@
   "name": "distill",
   "version": "1.2.0",
   "description": "Extract and recall reusable knowledge from Claude Code conversations",
+  "homepage": "https://github.com/noory-code/noory-ai/tree/main/distill",
+  "repository": "https://github.com/noory-code/noory-ai",
+  "license": "MIT",
+  "keywords": ["mcp", "knowledge-base", "memory", "claude-code", "extraction"],
   "author": {
-    "name": "noory-code"
+    "name": "noory-code",
+    "url": "https://github.com/noory-code"
   },
   "skills": "./skills/",
   "hooks": "./hooks/hooks.json",
