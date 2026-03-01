@@ -1,90 +1,90 @@
 ---
 name: workflow-manage
-description: 워크플로우 감독자. 일감의 Workflow를 읽고 실행한다.
+description: Workflow supervisor. Reads and executes the Workflow of a work item.
 metadata:
   version: "4.0.0"
   category: workflow
   type: composite
   style: procedural
-  triggers: [작업 시작, 작업 완료, 현재 작업, 다음 작업, progress 업데이트, 회고 작성]
+  triggers: [start work, complete work, current work, next work, progress update, write retrospective]
   uses: [writing-phase, writing-goal, writing-epic, writing-story, writing-action-item, catalog-transition]
 ---
 
-# Workflow Manage (감독자)
+# Workflow Manage (Supervisor)
 
-> 워크플로우 매니저는 **정의하지 않고 읽고 실행**한다.
-> 각 일감 템플릿의 `## Workflow` 섹션이 SSOT이다.
+> The workflow manager **reads and executes — it does not define**.
+> The `## Workflow` section of each work item template is the SSOT.
 
-## 공통 규칙
+## Common Rules
 
-- [conventions.md](assets/conventions.md) (계층, Git 브랜치, 폴더 구조, 상태값)
-- [lifecycle.md](assets/lifecycle.md) (Workflow 패턴 설명)
+- [conventions.md](assets/conventions.md) (hierarchy, Git branches, folder structure, status values)
+- [lifecycle.md](assets/lifecycle.md) (Workflow pattern description)
 
-## 선행조건
+## Prerequisites
 
-- `[project]/progress.md` 존재 → 없으면 초기화 (ref: [assets/progress.md](assets/progress.md))
+- `[project]/progress.md` exists → if not, initialize (ref: [assets/progress.md](assets/progress.md))
 
-## 입력
+## Input
 
-| 파라미터 | 필수 | 설명 | 예시 |
-|----------|------|------|------|
-| **action** | N | 동작 유형 | start \| complete \| check \| next |
-| **work_item** | N | 대상 일감 경로 | _goal.md, _epic.md, _story.md |
+| Parameter | Required | Description | Example |
+|-----------|----------|-------------|---------|
+| **action** | N | Action type | start \| complete \| check \| next |
+| **work_item** | N | Target work item path | _goal.md, _epic.md, _story.md |
 
-## 산출물
+## Output
 
-| 동작 | 산출물 | 경로 |
-|------|--------|------|
-| start / complete | progress.md 갱신 | `{project}/progress.md` |
-| complete (Epic/Goal) | RETRO.md 작성 | `{path}/RETRO.md` |
-| next | 다음 일감 결정 | — |
+| Action | Output | Path |
+|--------|--------|------|
+| start / complete | progress.md update | `{project}/progress.md` |
+| complete (Epic/Goal) | RETRO.md written | `{path}/RETRO.md` |
+| next | Next work item decided | — |
 
-## 절차
+## Procedure
 
-### start — 일감 시작
+### start — Start work item
 
-1. 대상 일감 읽기 (_goal.md | _epic.md | _story.md)
-2. `## Workflow` 섹션 추출
-3. Workflow의 각 단계를 순서대로 실행
-4. 문서 작성이 필요하면 writing-* 스킬 invoke
-5. progress.md 업데이트
+1. Read the target work item (_goal.md | _epic.md | _story.md)
+2. Extract the `## Workflow` section
+3. Execute each step of the Workflow in order
+4. If document writing is required, invoke writing-* skills
+5. Update progress.md
 
-### complete — 일감 완료
+### complete — Complete work item
 
-1. 대상 일감 읽기
-2. `## Workflow` 후반 단계 실행 (완료 확인, 상태 변경 등)
-3. Epic/Goal이면 RETRO.md 작성
-4. progress.md 업데이트
-5. 다음 작업 결정
+1. Read the target work item
+2. Execute the latter steps of `## Workflow` (completion check, status change, etc.)
+3. If Epic/Goal, write RETRO.md
+4. Update progress.md
+5. Decide next work
 
-### check — 현재 상태 확인
+### check — Check current status
 
-1. progress.md 읽기
-2. 현재 Phase, Goal, Epic, Story 반환
+1. Read progress.md
+2. Return current Phase, Goal, Epic, Story
 
-### next — 다음 작업 결정
+### next — Decide next work
 
-1. Story 완료 + Epic에 남은 Story 있음 → 다음 Story start
-2. Epic 완료 + Goal에 남은 Epic 있음 → Epic 회고 → 다음 Epic start
-3. Goal 완료 → Goal 회고 → catalog-transition invoke
-4. 그 외 → 현재 작업 계속
+1. Story complete + Epic has remaining Stories → start next Story
+2. Epic complete + Goal has remaining Epics → Epic retrospective → start next Epic
+3. Goal complete → Goal retrospective → invoke catalog-transition
+4. Otherwise → continue current work
 
-## 역할 분담
+## Responsibilities
 
-| 역할 | 스킬 |
-|------|------|
-| **문서 작성** | writing-identity, writing-phase, writing-goal, writing-epic, writing-story, writing-action-item |
-| **실행 감독** | workflow-manage (이 스킬) |
-| **완료 처리** | catalog-transition |
+| Role | Skill |
+|------|-------|
+| **Document writing** | writing-identity, writing-phase, writing-goal, writing-epic, writing-story, writing-action-item |
+| **Execution supervision** | workflow-manage (this skill) |
+| **Completion handling** | catalog-transition |
 
-## 감독 원칙
+## Supervision Principles
 
-- 일감의 `## Workflow`를 SSOT로 읽는다
-- 직접 절차를 정의하지 않는다 — 템플릿에 정의된 절차를 따른다
-- 문서 작성이 필요하면 writing-* 스킬에 위임한다
-- 개발 작업이 필요하면 frontend-*, dev-* 스킬에 위임한다
+- Reads the work item's `## Workflow` as SSOT
+- Does not define procedures directly — follows procedures defined in the template
+- Delegates document writing to writing-* skills
+- Delegates development work to frontend-*, dev-* skills
 
-## 템플릿
+## Templates
 
 - [assets/progress.md](assets/progress.md)
 - [assets/retro.md](assets/retro.md)
@@ -92,16 +92,16 @@ metadata:
 
 ## References
 
-### 검증
+### Verification
 
-| 파일 | 내용 |
-|------|------|
-| [self-verification.md](assets/self-verification.md) | 스킬 정의 자동 검증 TC (9건) |
+| File | Content |
+|------|---------|
+| [self-verification.md](assets/self-verification.md) | Automated skill definition verification TCs (9 cases) |
 
 ## Completion Checklist
 
-- [ ] 일감의 Workflow 섹션을 읽었는가?
-- [ ] Workflow 단계를 순서대로 실행했는가?
-- [ ] progress.md 업데이트했는가?
-- [ ] 완료 시 회고를 작성했는가? (Epic/Goal)
-- [ ] 다음 작업을 결정했는가?
+- [ ] Read the Workflow section of the work item?
+- [ ] Executed Workflow steps in order?
+- [ ] Updated progress.md?
+- [ ] Wrote a retrospective upon completion? (Epic/Goal)
+- [ ] Decided the next work item?

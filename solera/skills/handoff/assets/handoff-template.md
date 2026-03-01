@@ -1,74 +1,74 @@
-# HANDOFF.md 템플릿 및 가이드
+# HANDOFF.md Template and Guide
 
 ## progress.md vs HANDOFF.md
 
-| 파일 | 목적 | 갱신 주기 |
-|------|------|----------|
-| `progress.md` | 프로젝트 전체 진행 상태 (Phase/Goal/Epic) | Epic 단위 |
-| `HANDOFF.md` | 세션 간 컨텍스트 전달 (임시 상태) | 세션 종료 시 |
+| File | Purpose | Update Frequency |
+|------|---------|-----------------|
+| `progress.md` | Overall project progress status (Phase/Goal/Epic) | Per Epic |
+| `HANDOFF.md` | Cross-session context handoff (transient state) | At session end |
 
-> progress.md는 프로젝트 관리용, HANDOFF.md는 AI 세션 관리용
+> progress.md is for project management; HANDOFF.md is for AI session management
 
 ---
 
-## HANDOFF.md 표준 형식
+## HANDOFF.md Standard Format
 
 ```markdown
 # HANDOFF.md
-> 마지막 업데이트: YYYY-MM-DD HH:MM:SS
+> Last updated: YYYY-MM-DD HH:MM:SS
 
-## 현재 작업
-[진행 중인 작업 1-2줄 요약]
+## Current Work
+[1-2 line summary of work in progress]
 
-## Skill 상태
-- current_skill: [실행 중인 스킬명, 없으면 생략]
-- current_step: [현재 Step, 예: 5-Execute]
+## Skill Status
+- current_skill: [name of skill running, omit if none]
+- current_step: [current Step, e.g. 5-Execute]
 
-## 완료 항목
-- [x] 완료된 작업 1
-- [x] 완료된 작업 2
+## Completed Items
+- [x] completed task 1
+- [x] completed task 2
 
-## 다음 단계
-- [ ] 다음 작업 1
-- [ ] 다음 작업 2
+## Next Steps
+- [ ] next task 1
+- [ ] next task 2
 
-## 중요 결정사항
-- 결정 1: [이유]
+## Key Decisions
+- Decision 1: [reason]
 
-## 참고 파일
+## Reference Files
 - `path/to/file1.dart`
 
-## 주의사항
-[다음 세션에서 알아야 할 특이사항]
+## Caveats
+[Special notes the next session must be aware of]
 ```
 
 ---
 
-## 섹션별 작성 가이드
+## Section-by-Section Writing Guide
 
-### 현재 작업
-- 1-2줄로 간결하게 요약
-- Epic 또는 Story 제목 + 현재 단계 명시
-- 예: "Epic 04-build-roles 진행 중. Story TS-002 (역할 조회 시스템) 구현 완료, TS-003 준비 중"
+### Current Work
+- Summarize concisely in 1-2 lines
+- Specify the Epic or Story title + current step
+- Example: "Progressing through Epic 04-build-roles. Story TS-002 (role lookup system) implementation complete, TS-003 in preparation"
 
-### 완료 항목
-- 이번 세션에서 완료한 구체적인 작업 나열
-- 체크박스는 `[x]` (완료 표시)
-- 커밋 메시지와 일치하게 작성
+### Completed Items
+- List specific tasks completed in this session
+- Use `[x]` for checkboxes (complete)
+- Write to match commit messages
 
-### 다음 단계
-- 다음 세션이 즉시 시작할 수 있도록 명확한 TODO 작성
-- 체크박스는 `[ ]` (미완료)
-- 우선순위 순서로 나열
+### Next Steps
+- Write clear TODOs so the next session can start immediately
+- Use `[ ]` for checkboxes (incomplete)
+- List in priority order
 
-### 중요 결정사항
-- "무엇을 + 왜" 형식으로 작성
-- 다음 세션이 맥락을 이해하는 데 필수적인 결정만 포함
+### Key Decisions
+- Write in "what + why" format
+- Include only decisions essential for the next session to understand the context
 
-### 참고 파일
-- 이번 세션에서 변경된 주요 파일 경로
-- 백틱(`)으로 감싸기
+### Reference Files
+- Key file paths changed in this session
+- Wrap in backticks (`)
 
-### 주의사항
-- 에러, 블로커, 임시방편 등
-- 다음 세션에서 놓치면 안 되는 정보
+### Caveats
+- Errors, blockers, workarounds, etc.
+- Information the next session must not miss

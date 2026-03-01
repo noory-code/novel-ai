@@ -1,99 +1,99 @@
 ---
 name: writing-phase
-description: Phase 문서 작성. Initiative의 Goals를 분기별로 배분 → Goal 실행 추적. Triggers - "Phase 정의", "Phase 시작", "분기 계획".
+description: Phase document writing. Distributes Initiative Goals by quarter → tracks Goal execution. Triggers - "Phase definition", "Phase start", "quarterly planning".
 metadata:
   version: "2.0.0"
   category: writing
   type: composite
   style: procedural
-  triggers: [Phase 정의, Phase 시작, 분기 계획]
+  triggers: [Phase definition, Phase start, quarterly planning]
   uses: [writing-goal]
 ---
 
 # Writing Phase
 
-> Phase README.md를 작성하고, Goal 실행을 추적한다.
+> Writes Phase README.md and tracks Goal execution.
 
-## 선행조건
+## Prerequisites
 
-- `workspace/initiative/[year]/roadmap.md` 존재 → 없으면 사용자에게 요청
+- `workspace/initiative/[year]/roadmap.md` exists → if not, request from user
 
-## 입력
+## Input
 
-| 파라미터 | 필수 | 설명 | 예시 |
-|----------|------|------|------|
+| Parameter | Required | Description | Example |
+|-----------|----------|-------------|---------|
 | **phase_id** | Y | Phase ID | 2026-P1-foundation |
-| **year** | Y | Initiative 연도 | 2026 |
-| **project_path** | Y | 프로젝트 workspace 루트 | banas/workspace |
+| **year** | Y | Initiative year | 2026 |
+| **project_path** | Y | Project workspace root | banas/workspace |
 
-## 산출물
+## Output
 
-| Step | 산출물 | 경로 |
+| Step | Output | Path |
 |------|--------|------|
 | Create | Phase README | `{project_path}/phase/{phase_id}/README.md` |
-| Create | Goal 폴더 구조 | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/` |
-| Wrap-up | Phase 요약 | `{project_path}/phase/{phase_id}/SUMMARY.md` |
-| Wrap-up | Phase 회고 | `{project_path}/phase/{phase_id}/RETRO.md` |
-| Wrap-up | progress.md 갱신 | `{project_path}/progress.md` |
+| Create | Goal folder structure | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/` |
+| Wrap-up | Phase summary | `{project_path}/phase/{phase_id}/SUMMARY.md` |
+| Wrap-up | Phase retrospective | `{project_path}/phase/{phase_id}/RETRO.md` |
+| Wrap-up | progress.md update | `{project_path}/progress.md` |
 
-## 사용 스킬
+## Skills Used
 
-| 스킬 | 용도 | Step |
-|------|------|------|
-| `writing-goal` | 각 Goal 상세화 및 Epic 분해 | Execute |
-| `catalog-transition` | Goal 완료 시 artifacts → catalog 이동 | Execute (Goal 내부) |
+| Skill | Purpose | Step |
+|-------|---------|------|
+| `writing-goal` | Elaborate each Goal and decompose into Epics | Execute |
+| `catalog-transition` | Move artifacts → catalog on Goal completion | Execute (within Goal) |
 
-## 절차
+## Procedure
 
-1. **roadmap 확인**
-   - [ ] `{project_path}/initiative/{year}/roadmap.md` 읽기
-   - [ ] Phase 계획 테이블에서 해당 Phase의 Goals 목록 추출
-   - [ ] Goals 없음 → 사용자에게 확인
+1. **Verify roadmap**
+   - [ ] Read `{project_path}/initiative/{year}/roadmap.md`
+   - [ ] Extract Goals list for this Phase from the Phase planning table
+   - [ ] No Goals → confirm with user
 
-2. **Phase 폴더 생성**
-   - [ ] `{project_path}/phase/{phase_id}/` 생성
-   - [ ] `{project_path}/phase/{phase_id}/goals/` 생성
+2. **Create Phase folder**
+   - [ ] Create `{project_path}/phase/{phase_id}/`
+   - [ ] Create `{project_path}/phase/{phase_id}/goals/`
 
-3. **README.md 작성** → ref: [assets/phase-template.md](assets/phase-template.md)
-   - [ ] 개요 테이블 (기간, 목표)
-   - [ ] Goals 테이블 (roadmap에서 추출한 Goals)
-   - [ ] 완료 조건 (Goal별 핵심 조건)
-   - [ ] Workflow 섹션 (템플릿 그대로)
+3. **Write README.md** → ref: [assets/phase-template.md](assets/phase-template.md)
+   - [ ] Overview table (period, objectives)
+   - [ ] Goals table (Goals extracted from roadmap)
+   - [ ] Completion criteria (key criteria per Goal)
+   - [ ] Workflow section (template as-is)
 
-4. **Goal 폴더 구조 생성**
-   - [ ] 각 Goal에 대해 `goals/{goal_id}-{name}/` 생성
-   - [ ] writing-goal invoke 준비
+4. **Create Goal folder structure**
+   - [ ] Create `goals/{goal_id}-{name}/` for each Goal
+   - [ ] Prepare to invoke writing-goal
 
 5. **Phase Wrap-up**
-   - [ ] 모든 Goal 상태 ✅ 확인
-   - [ ] 각 Goal의 catalog-transition 완료 확인 (`workspace/catalog/` 이동됨)
-   - [ ] SUMMARY.md 작성 (전체 Goal 성과, catalog 산출물 목록, 다음 Phase 전달 사항)
-   - [ ] RETRO.md 작성 → ref: [assets/retro.md](assets/retro.md)
-   - [ ] README.md 상태 → ✅, 진행률 갱신
-   - [ ] progress.md 갱신
+   - [ ] Confirm all Goal statuses ✅
+   - [ ] Confirm catalog-transition completed for each Goal (moved to `workspace/catalog/`)
+   - [ ] Write SUMMARY.md (overall Goal outcomes, catalog artifact list, handoff notes for next Phase)
+   - [ ] Write RETRO.md → ref: [assets/retro.md](assets/retro.md)
+   - [ ] README.md status → ✅, update progress
+   - [ ] Update progress.md
 
-## 폴더 구조
+## Folder Structure
 
 ```
 {project_path}/phase/{phase_id}/
 ├── README.md
-├── SUMMARY.md      # Wrap-up 시 생성 (템플릿 TBD)
-├── RETRO.md        # Wrap-up 시 생성
+├── SUMMARY.md      # Created at Wrap-up (template TBD)
+├── RETRO.md        # Created at Wrap-up
 └── goals/
     ├── {goal_id}-{name}/
     │   ├── _goal.md
-    │   ├── artifacts/    # Goal 진행 중 → catalog-transition으로 이동
+    │   ├── artifacts/    # During Goal → moved via catalog-transition
     │   └── epics/
     └── ...
 ```
 
 ## Completion Checklist
 
-- [ ] README.md 생성 완료
-- [ ] Goals 테이블에 roadmap의 모든 Goal 포함
-- [ ] 각 Goal 폴더 구조 생성
-- [ ] writing-goal 전환 준비
-- [ ] (Wrap-up) 모든 Goal catalog-transition 완료 확인
-- [ ] (Wrap-up) SUMMARY.md 작성
-- [ ] (Wrap-up) RETRO.md 작성
-- [ ] (Wrap-up) progress.md 갱신
+- [ ] README.md created
+- [ ] Goals table includes all Goals from roadmap
+- [ ] Folder structure created for each Goal
+- [ ] writing-goal transition prepared
+- [ ] (Wrap-up) All Goal catalog-transitions confirmed complete
+- [ ] (Wrap-up) SUMMARY.md written
+- [ ] (Wrap-up) RETRO.md written
+- [ ] (Wrap-up) progress.md updated

@@ -1,22 +1,22 @@
 # Template: Concept
 
-도메인 개념(Entity, 속성, 관계)을 정의합니다.
+Defines domain concepts (Entity, attributes, relationships).
 
-## 도메인 개요 템플릿
+## Domain Overview Template
 
 ```markdown
-# Domain: [도메인명]
+# Domain: [domain name]
 
-> 마지막 업데이트: [YYYY-MM-DD]
+> Last updated: [YYYY-MM-DD]
 
-## 핵심 개념
+## Core Concepts
 
-| 개념 | 설명 | 관계 |
-|------|------|------|
-| **[Concept1]** | [설명] | [관계 요약] |
-| **[Concept2]** | [설명] | [관계 요약] |
+| Concept | Description | Relationship |
+|---------|-------------|-------------|
+| **[Concept1]** | [description] | [relationship summary] |
+| **[Concept2]** | [description] | [relationship summary] |
 
-## 관계 다이어그램
+## Relationship Diagram
 
 ```mermaid
 classDiagram
@@ -34,114 +34,114 @@ classDiagram
     }
 ```
 
-## 개념별 상세
+## Concept Details
 
 → [entities/concept1.md](./entities/concept1.md)
 → [entities/concept2.md](./entities/concept2.md)
 
-## Use Case 연결
+## Use Case Links
 
-| 개념 | 관련 Use Case |
-|------|--------------|
+| Concept | Related Use Cases |
+|---------|------------------|
 | Concept1 | UC-001, UC-002 |
 | Concept2 | UC-002, UC-003 |
 ```
 
-## Entity 상세 템플릿
+## Entity Detail Template
 
 ```markdown
-# Entity: [Entity명]
+# Entity: [entity name]
 
-> 마지막 업데이트: [YYYY-MM-DD]
+> Last updated: [YYYY-MM-DD]
 
-## 목적
+## Purpose
 
-[왜 이 Entity가 필요한가?]
+[Why is this Entity needed?]
 
-## 속성
+## Attributes
 
-| 속성 | 설명 | 필수 | 예시 |
-|------|------|------|------|
-| `name` | 이름 | Y | "글렌피딕 12년" |
-| `description` | 설명 | N | "스페이사이드 싱글몰트" |
+| Attribute | Description | Required | Example |
+|-----------|-------------|----------|---------|
+| `name` | Name | Y | "Glenfiddich 12 Year" |
+| `description` | Description | N | "Speyside single malt" |
 
-## 관계
+## Relationships
 
-| 관계 | 대상 Entity | 카디널리티 | 설명 |
-|------|------------|-----------|------|
-| belongs_to | [Entity] | N:1 | [설명] |
-| has_many | [Entity] | 1:N | [설명] |
+| Relationship | Target Entity | Cardinality | Description |
+|-------------|--------------|-------------|-------------|
+| belongs_to | [Entity] | N:1 | [description] |
+| has_many | [Entity] | 1:N | [description] |
 
-## 비즈니스 규칙
+## Business Rules
 
-- [규칙 1]
-- [규칙 2]
+- [rule 1]
+- [rule 2]
 
-## 데이터 예시
+## Data Example
 
 ```json
 {
-  "name": "글렌피딕 12년",
-  "description": "스페이사이드 대표 싱글몰트 위스키",
+  "name": "Glenfiddich 12 Year",
+  "description": "Speyside representative single malt whisky",
   "abv": 40.0
 }
 ```
 
-## 관련 Use Case
+## Related Use Cases
 
-- UC-001: [Use Case 제목]
-- UC-002: [Use Case 제목]
+- UC-001: [Use Case title]
+- UC-002: [Use Case title]
 ```
 
-## 품질 기준
+## Quality Criteria
 
-### 도메인 개요
+### Domain Overview
 
-- [ ] 모든 핵심 개념이 나열되어 있는가?
-- [ ] Class Diagram에 모든 관계가 표현되어 있는가?
-- [ ] Use Case와 연결되어 있는가?
+- [ ] Are all core concepts listed?
+- [ ] Are all relationships represented in the Class Diagram?
+- [ ] Are concepts linked to Use Cases?
 
-### Entity 상세
+### Entity Detail
 
-- [ ] 목적이 명확한가?
-- [ ] 모든 속성에 설명과 예시가 있는가?
-- [ ] 관계에 카디널리티가 명시되어 있는가?
-- [ ] 비즈니스 규칙이 정의되어 있는가?
-- [ ] 데이터 예시가 실제 도메인을 반영하는가?
+- [ ] Is the purpose clear?
+- [ ] Do all attributes have descriptions and examples?
+- [ ] Is cardinality specified in relationships?
+- [ ] Are business rules defined?
+- [ ] Does the data example reflect the actual domain?
 
-## 예시
+## Example
 
 ### liquor-db - Liquor Entity
 
 ```markdown
 # Entity: Liquor
 
-## 목적
+## Purpose
 
-주류 제품의 정보를 저장하고 제공한다.
+Stores and provides information about liquor products.
 
-## 속성
+## Attributes
 
-| 속성 | 설명 | 필수 | 예시 |
-|------|------|------|------|
-| `name` | 제품명 (한글) | Y | "글렌피딕 12년" |
-| `nameEn` | 제품명 (영문) | N | "Glenfiddich 12 Year" |
-| `categoryMain` | 대분류 | Y | "distilled" |
-| `categorySub` | 중분류 | Y | "whisky" |
-| `abv` | 도수 (%) | Y | 40.0 |
-| `age` | 숙성연수 | N | 12 |
+| Attribute | Description | Required | Example |
+|-----------|-------------|----------|---------|
+| `name` | Product name (Korean) | Y | "Glenfiddich 12 Year" |
+| `nameEn` | Product name (English) | N | "Glenfiddich 12 Year" |
+| `categoryMain` | Main category | Y | "distilled" |
+| `categorySub` | Sub-category | Y | "whisky" |
+| `abv` | Alcohol by volume (%) | Y | 40.0 |
+| `age` | Age statement (years) | N | 12 |
 
-## 관계
+## Relationships
 
-| 관계 | 대상 Entity | 카디널리티 | 설명 |
-|------|------------|-----------|------|
-| belongs_to | Brand | N:1 | 브랜드 소속 |
-| belongs_to | Producer | N:1 | 제조사 소속 |
-| has_one | TastingNote | 1:1 | 테이스팅 노트 |
+| Relationship | Target Entity | Cardinality | Description |
+|-------------|--------------|-------------|-------------|
+| belongs_to | Brand | N:1 | Belongs to brand |
+| belongs_to | Producer | N:1 | Belongs to producer |
+| has_one | TastingNote | 1:1 | Has tasting note |
 
-## 비즈니스 규칙
+## Business Rules
 
-- abv는 0~100 사이의 값이어야 함
-- age가 null이면 NAS(No Age Statement)
-- categoryMain과 categorySub는 정해진 enum 값만 허용
+- abv must be a value between 0 and 100
+- If age is null, the product is NAS (No Age Statement)
+- categoryMain and categorySub must use only defined enum values
 ```

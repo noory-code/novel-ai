@@ -1,37 +1,37 @@
 # Validation: workflow-manage
 
-> 이 파일은 workflow-manage 스킬의 고유 검증 규칙을 정의한다.
+> This file defines the unique validation rules for the workflow-manage skill.
 
 ## Structural
 
 ```yaml
 structural:
   - id: S-001
-    name: "공통 규칙 섹션 존재"
+    name: "Common Rules section exists"
     type: section_exists
     target: SKILL.md
-    section: "## 공통 규칙"
+    section: "## Common Rules"
 
   - id: S-002
-    name: "선행조건 섹션 존재"
+    name: "Prerequisites section exists"
     type: section_exists
     target: SKILL.md
-    section: "## 선행조건"
+    section: "## Prerequisites"
 
   - id: S-003
-    name: "절차 섹션 존재"
+    name: "Procedure section exists"
     type: section_exists
     target: SKILL.md
-    section: "## 절차"
+    section: "## Procedure"
 
   - id: S-004
-    name: "Completion Checklist 존재"
+    name: "Completion Checklist exists"
     type: section_exists
     target: SKILL.md
     section: "## Completion Checklist"
 
   - id: S-005
-    name: "assets 파일 존재"
+    name: "assets files exist"
     type: file_exists
     paths:
       - assets/conventions.md
@@ -46,27 +46,27 @@ structural:
 ```yaml
 semantic:
   - id: C-001
-    name: "AI-First 금지 표현 없음"
+    name: "No AI-First banned phrases"
     type: content_not_contains
     target: SKILL.md
     patterns:
-      - "적절히"
-      - "필요시"
-      - "상황에 따라"
-      - "알아서"
+      - "as appropriate"
+      - "if needed"
+      - "depending on the situation"
+      - "as you see fit"
 
   - id: C-002
-    name: "핵심 키워드 포함"
+    name: "Core keywords present"
     type: content_contains
     target: SKILL.md
     patterns:
       - "Workflow"
       - "progress.md"
       - "RETRO.md"
-      - "일감"
+      - "work item"
 
   - id: C-003
-    name: "절차 단계 정의"
+    name: "Procedure steps defined"
     type: content_contains
     target: SKILL.md
     patterns:
@@ -76,7 +76,7 @@ semantic:
       - "### next"
 
   - id: C-004
-    name: "스킬 위임 명시"
+    name: "Skill delegation specified"
     type: content_contains
     target: SKILL.md
     patterns:
@@ -84,14 +84,14 @@ semantic:
       - "invoke"
 
   - id: C-005
-    name: "역할 분담 표 존재"
+    name: "Role assignment table exists"
     type: section_exists
     target: SKILL.md
-    section: "## 역할 분담"
+    section: "## Role Assignment"
 
   - id: C-006
-    name: "감독 원칙 존재"
+    name: "Supervision principle exists"
     type: section_exists
     target: SKILL.md
-    section: "## 감독 원칙"
+    section: "## Supervision Principle"
 ```

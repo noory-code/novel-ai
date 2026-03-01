@@ -1,70 +1,70 @@
 # Lifecycle
 
-모든 일감(Phase, Goal, Epic, Story, Action Item)은 `## Workflow` 섹션에 구체적 절차가 정의되어 있다.
+All work items (Phase, Goal, Epic, Story, Action Item) have their concrete procedures defined in a `## Workflow` section.
 
-## 핵심 원칙
+## Core Principles
 
-- **SSOT**: 각 일감 템플릿의 `## Workflow`가 유일한 절차 원본
-- **워크플로우 매니저는 읽고 실행**: 직접 정의하지 않는다
+- **SSOT**: The `## Workflow` in each work item template is the single authoritative source of procedure
+- **Workflow manager reads and executes**: does not define procedures directly
 
-## Workflow 패턴
+## Workflow Pattern
 
-일감 Workflow는 Named Step 형태로 구성된다. 각 Step은 명확한 역할(Setup/Create/Execute/Wrap-up)을 갖는다.
+Work item Workflows are composed of Named Steps. Each Step has a clear role (Setup/Create/Execute/Wrap-up).
 
 ```markdown
 ## Workflow
 
 ### Step 0. Setup
-- [ ] 선행조건 확인 → 없으면 상위 스킬 invoke
-- [ ] 브랜치 생성 (해당 시)
-- [ ] 상태 → 🔄
+- [ ] Check prerequisites → invoke parent skill if missing
+- [ ] Create branch (if applicable)
+- [ ] Status → 🔄
 
 ### Step 1. Create
-- [ ] ... (writing-* 스킬이 담당)
+- [ ] ... (handled by writing-* skills)
 
 ### Step 2. Execute
-- [ ] ... 구체적 작업 단계들 ...
+- [ ] ... concrete task steps ...
 
 ### Step 3. Wrap-up
-- [ ] 완료 확인
-- [ ] 상태 → ✅
-- [ ] 다음 일감 결정
+- [ ] Confirm completion
+- [ ] Status → ✅
+- [ ] Determine next work item
 ```
 
-## 계층별 Workflow 위치
+## Workflow Location by Hierarchy
 
-| 계층 | 템플릿 | Steps | Step 구성 |
-|------|--------|-------|-----------|
+| Hierarchy | Template | Steps | Step Composition |
+|-----------|----------|-------|-----------------|
 | **Phase** | writing-phase/assets/phase-template.md | 4 | Setup → Create → Execute → Wrap-up |
 | **Goal** | writing-goal/assets/goal-template.md | 4 | Setup → Create → Execute → Wrap-up |
 | **Epic** | writing-epic/assets/epic-template.md | 4 | Setup → Create → Execute → Wrap-up |
 | **Story** | writing-story/assets/story.md | 4 | Setup → Create → Execute → Wrap-up |
 | **Action Item** | writing-action-item/assets/action-item.md | 3 | Setup → Execute → Wrap-up |
 
-## 반복 블록 패턴
+## Repeat Block Pattern
 
-Execute Step에서 하위 일감을 반복 실행할 때, HTML 주석으로 반복 블록을 표기한다:
+When iterating over child work items in the Execute Step, mark repeat blocks with HTML comments:
 
 ```markdown
 ### Step 2. Execute
-<!-- Stories 표의 각 Story에 대해 아래 블록을 반복 -->
-#### Story: {US|TS}-NNN — {제목}
+<!-- Repeat the block below for each Story in the Stories table -->
+#### Story: {US|TS}-NNN — {title}
 - [ ] writing-story invoke
-- [ ] Story 브랜치 생성
-- [ ] 개발 + 완료
-- [ ] Epic 브랜치에 머지
-<!-- /반복 -->
-- [ ] 모든 Story 완료 확인
+- [ ] Create Story branch
+- [ ] Develop + complete
+- [ ] Merge into Epic branch
+<!-- /repeat -->
+- [ ] Confirm all Stories complete
 ```
 
-- **템플릿**: `<!-- 반복 -->` ~ `<!-- /반복 -->` 사이에 1개 블록만 정의
-- **실제 문서**: writing-* 스킬이 일감 생성 시 표의 항목 수만큼 블록을 확장
-- **진행 체크**: 각 하위 일감마다 개별 체크박스가 생성되므로 진행 상황 추적 가능
+- **Template**: Define only 1 block between `<!-- repeat -->` and `<!-- /repeat -->`
+- **Actual document**: writing-* skills expand the block to match the number of items in the table when creating work items
+- **Progress tracking**: Individual checkboxes are created for each child work item, enabling progress tracking
 
-## 워크플로우 매니저의 역할
+## Workflow Manager Role
 
-1. 대상 일감의 `## Workflow` 읽기
-2. 각 Step을 순서대로 실행
-3. 문서 작성 필요 시 writing-* 스킬 invoke
-4. 개발 작업 필요 시 frontend-*, dev-* 스킬 invoke
-5. 완료 후 progress.md 업데이트 + 다음 일감 결정
+1. Read the `## Workflow` of the target work item
+2. Execute each Step in order
+3. Invoke writing-* skills when document creation is needed
+4. Invoke frontend-*, dev-* skills when development work is needed
+5. After completion, update progress.md + determine next work item

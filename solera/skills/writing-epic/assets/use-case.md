@@ -1,81 +1,81 @@
 # Template: Use Case
 
-API/기능 사용 시나리오를 정의합니다.
+Defines API/feature usage scenarios.
 
-## 템플릿
+## Template
 
 ```markdown
-# Use Case: [UC-ID] [제목]
+# Use Case: [UC-ID] [title]
 
-> 마지막 업데이트: [YYYY-MM-DD]
+> Last updated: [YYYY-MM-DD]
 
-## 개요
+## Overview
 
-| 항목 | 내용 |
-|------|------|
+| Item | Details |
+|------|---------|
 | **ID** | UC-[NNN] |
-| **제목** | [Use Case 제목] |
-| **Actor** | [사용자/시스템] |
-| **Goal** | [달성하려는 목표] |
+| **Title** | [Use Case title] |
+| **Actor** | [user/system] |
+| **Goal** | [goal to achieve] |
 
-## 사전 조건 (Preconditions)
+## Preconditions
 
-- [조건 1]
-- [조건 2]
+- [condition 1]
+- [condition 2]
 
-## 기본 흐름 (Basic Flow)
+## Basic Flow
 
-1. [Actor]가 [행동]
-2. 시스템이 [응답]
-3. [Actor]가 [행동]
-4. 시스템이 [결과 반환]
+1. [Actor] [action]
+2. System [response]
+3. [Actor] [action]
+4. System [returns result]
 
-## 대안 흐름 (Alternative Flow)
+## Alternative Flow
 
-### [조건]인 경우
+### When [condition]
 
-1. [대안 행동]
-2. [대안 결과]
+1. [alternative action]
+2. [alternative result]
 
-## 예외 흐름 (Exception Flow)
+## Exception Flow
 
-### [에러 조건]
+### [error condition]
 
-1. 시스템이 [에러 메시지] 표시
-2. [복구 방법]
+1. System displays [error message]
+2. [recovery method]
 
-## 사후 조건 (Postconditions)
+## Postconditions
 
-- [결과 상태 1]
-- [결과 상태 2]
+- [result state 1]
+- [result state 2]
 
-## 필요 데이터
+## Required Data
 
-| 데이터 | Entity | 속성 |
-|--------|--------|------|
-| [데이터1] | [Entity명] | [속성 목록] |
-| [데이터2] | [Entity명] | [속성 목록] |
+| Data | Entity | Attributes |
+|------|--------|-----------|
+| [data1] | [entity name] | [attribute list] |
+| [data2] | [entity name] | [attribute list] |
 
-## 관련 Journey
+## Related Journey
 
-- [Journey명] Step [N]
+- [Journey name] Step [N]
 ```
 
-## Use Case 목록 템플릿
+## Use Case List Template
 
 ```markdown
 # Use Cases
 
-> 마지막 업데이트: [YYYY-MM-DD]
+> Last updated: [YYYY-MM-DD]
 
-## 목록
+## List
 
-| ID | 제목 | Actor | 우선순위 | 상태 |
-|----|------|-------|---------|------|
-| UC-001 | [제목] | [Actor] | High | 정의됨 |
-| UC-002 | [제목] | [Actor] | Medium | 정의됨 |
+| ID | Title | Actor | Priority | Status |
+|----|-------|-------|----------|--------|
+| UC-001 | [title] | [Actor] | High | defined |
+| UC-002 | [title] | [Actor] | Medium | defined |
 
-## Use Case 다이어그램
+## Use Case Diagram
 
 ```mermaid
 flowchart LR
@@ -85,8 +85,8 @@ flowchart LR
     end
 
     subgraph Use Cases
-        UC1((UC-001<br/>제목))
-        UC2((UC-002<br/>제목))
+        UC1((UC-001<br/>title))
+        UC2((UC-002<br/>title))
     end
 
     A1 --> UC1
@@ -94,65 +94,65 @@ flowchart LR
     A2 --> UC2
 ```
 
-## 상세
+## Detail
 
 → [UC-001.md](./UC-001.md)
 → [UC-002.md](./UC-002.md)
 ```
 
-## 품질 기준
+## Quality Criteria
 
-- [ ] Actor가 명확한가? (사람/시스템)
-- [ ] Goal이 측정 가능한가?
-- [ ] 사전 조건이 정의되어 있는가?
-- [ ] 기본 흐름이 단계별로 정의되어 있는가?
-- [ ] 예외 흐름이 정의되어 있는가?
-- [ ] 필요 데이터가 Entity와 연결되어 있는가?
+- [ ] Is the Actor clearly defined? (person/system)
+- [ ] Is the Goal measurable?
+- [ ] Are preconditions defined?
+- [ ] Is the basic flow defined step by step?
+- [ ] Is the exception flow defined?
+- [ ] Is required data linked to Entities?
 
-## 예시
+## Example
 
-### liquor-db - 주류 검색 Use Case
+### liquor-db - Liquor Search Use Case
 
 ```markdown
-# Use Case: UC-001 주류 검색
+# Use Case: UC-001 Liquor Search
 
-## 개요
+## Overview
 
-| 항목 | 내용 |
-|------|------|
+| Item | Details |
+|------|---------|
 | **ID** | UC-001 |
-| **제목** | 주류 검색 |
-| **Actor** | API 소비자 (서비스) |
-| **Goal** | 조건에 맞는 주류 목록 조회 |
+| **Title** | Liquor Search |
+| **Actor** | API consumer (service) |
+| **Goal** | Retrieve a list of liquors matching given conditions |
 
-## 사전 조건
+## Preconditions
 
-- API 인증 완료 (해당되는 경우)
+- API authentication complete (if applicable)
 
-## 기본 흐름
+## Basic Flow
 
-1. 소비자가 검색 조건(이름, 카테고리, 태그)과 함께 API 호출
-2. 시스템이 조건에 맞는 주류 검색
-3. 시스템이 주류 목록 반환 (페이징 적용)
+1. Consumer calls API with search conditions (name, category, tags)
+2. System searches for liquors matching the conditions
+3. System returns the liquor list (with pagination)
 
-## 대안 흐름
+## Alternative Flow
 
-### 검색 결과가 없는 경우
+### When no search results are found
 
-1. 시스템이 빈 배열 반환
-2. 메타 정보에 total: 0 포함
+1. System returns an empty array
+2. Meta information includes total: 0
 
-## 예외 흐름
+## Exception Flow
 
-### 잘못된 파라미터
+### Invalid parameters
 
-1. 시스템이 400 Bad Request 반환
-2. 에러 메시지에 잘못된 파라미터 명시
+1. System returns 400 Bad Request
+2. Error message specifies the invalid parameter
 
-## 필요 데이터
+## Required Data
 
-| 데이터 | Entity | 속성 |
-|--------|--------|------|
-| 주류 정보 | Liquor | name, category, tags, abv |
-| 브랜드 정보 | Brand | name |
+| Data | Entity | Attributes |
+|------|--------|-----------|
+| Liquor info | Liquor | name, category, tags, abv |
+| Brand info | Brand | name |
 ```

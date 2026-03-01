@@ -1,24 +1,24 @@
-# Goal 회고 규칙
+# Goal Retrospective Rules
 
-> Wrap-up Step에서 RETRO.md 작성 시 이 규칙을 따른다.
-> 템플릿: [workflow-manage/assets/retro.md](../../workflow-manage/assets/retro.md) — "비즈니스 회고" 사용.
+> Follow these rules when writing RETRO.md in the Wrap-up Step.
+> Template: [workflow-manage/assets/retro.md](../../workflow-manage/assets/retro.md) — use "Business Retrospective".
 
-## 관점: 비즈니스
+## Perspective: Business
 
-Goal 회고는 **비즈니스 관점**에 집중한다.
+Goal retrospectives focus on the **business perspective**.
 
-## 필수 섹션
+## Required Sections
 
-| 섹션 | 작성 가이드 |
-|------|-----------|
-| **잘한 점 (Keep)** | 사용자 가치 달성, 효과적인 Epic 분해, 일정 준수 |
-| **개선할 점 (Problem)** | 미달성 완료 조건, Epic 간 우선순위 오류, 범위 초과 |
-| **시도할 점 (Try)** | 다음 Goal에서 시도할 전략·프로세스 |
-| **배운 점 (Learned)** | 도메인 인사이트, 사용자 피드백, 기술적 교훈 |
+| Section | Writing Guide |
+|---------|---------------|
+| **Keep** | User value delivered, effective Epic decomposition, schedule adherence |
+| **Problem** | Unmet completion criteria, incorrect Epic prioritization, scope overrun |
+| **Try** | Strategies/processes to try in the next Goal |
+| **Learned** | Domain insights, user feedback, technical lessons |
 
-## Goal 고유 점검 질문
+## Goal-Specific Review Questions
 
-- Epic 분해 전략이 사용자 가치 전달에 효과적이었는가?
-- Journey/Persona 정의가 개발에 충분했는가?
-- 계획 대비 실제 소요가 적절했는가?
-- 완료 조건이 모두 충족되었는가?
+- Was the Epic decomposition strategy effective in delivering user value?
+- Was the Journey/Persona definition sufficient for development?
+- Was the actual effort proportional to the plan?
+- Were all completion criteria met?

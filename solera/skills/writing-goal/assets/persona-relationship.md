@@ -1,99 +1,99 @@
 # Template: Persona Relationship
 
-퍼소나 간 관계도를 정의합니다.
+Defines the relationship map between personas.
 
-## 템플릿
+## Template
 
 ```markdown
 # Persona Relationship
 
-> 마지막 업데이트: [YYYY-MM-DD]
+> Last updated: [YYYY-MM-DD]
 
-## 퍼소나 요약
+## Persona Summary
 
-| 퍼소나 | 역할 | 핵심 목표 |
-|--------|------|----------|
-| [퍼소나1] | [역할] | [목표] |
-| [퍼소나2] | [역할] | [목표] |
+| Persona | Role | Core Goal |
+|---------|------|-----------|
+| [Persona1] | [role] | [goal] |
+| [Persona2] | [role] | [goal] |
 
-## 관계도
+## Relationship Map
 
 ```mermaid
 flowchart TB
-    P1[퍼소나1<br/>역할]
-    P2[퍼소나2<br/>역할]
-    P3[퍼소나3<br/>역할]
+    P1[Persona1<br/>Role]
+    P2[Persona2<br/>Role]
+    P3[Persona3<br/>Role]
 
-    P1 -->|"관계 설명"| P2
-    P2 -->|"관계 설명"| P3
-    P1 -.->|"간접 관계"| P3
+    P1 -->|"relationship description"| P2
+    P2 -->|"relationship description"| P3
+    P1 -.->|"indirect relationship"| P3
 ```
 
-## 관계 상세
+## Relationship Details
 
-### [퍼소나1] ↔ [퍼소나2]
+### [Persona1] ↔ [Persona2]
 
-| 항목 | 내용 |
-|------|------|
-| **관계 유형** | [직접/간접, 상호/일방향] |
-| **상호작용** | [어떻게 상호작용하는가] |
-| **서비스 내 접점** | [서비스에서 만나는 지점] |
+| Item | Details |
+|------|---------|
+| **Relationship Type** | [direct/indirect, mutual/one-way] |
+| **Interaction** | [how they interact] |
+| **Service Touchpoint** | [where they meet in the service] |
 
-### [퍼소나2] ↔ [퍼소나3]
+### [Persona2] ↔ [Persona3]
 
-| 항목 | 내용 |
-|------|------|
-| **관계 유형** | [직접/간접, 상호/일방향] |
-| **상호작용** | [어떻게 상호작용하는가] |
-| **서비스 내 접점** | [서비스에서 만나는 지점] |
+| Item | Details |
+|------|---------|
+| **Relationship Type** | [direct/indirect, mutual/one-way] |
+| **Interaction** | [how they interact] |
+| **Service Touchpoint** | [where they meet in the service] |
 
-## 공통 Journey
+## Shared Journeys
 
-| Journey | 관련 퍼소나 | 설명 |
-|---------|------------|------|
-| [journey1] | P1, P2 | [함께 참여하는 이유] |
+| Journey | Related Personas | Description |
+|---------|-----------------|-------------|
+| [journey1] | P1, P2 | [reason they participate together] |
 
-## 갈등 포인트
+## Conflict Points
 
-| 퍼소나 | 갈등 | 해결 방안 |
-|--------|------|----------|
-| P1 vs P2 | [갈등 상황] | [서비스의 해결 방안] |
+| Persona | Conflict | Resolution |
+|---------|----------|-----------|
+| P1 vs P2 | [conflict situation] | [service's resolution approach] |
 ```
 
-## 품질 기준
+## Quality Criteria
 
-- [ ] 모든 퍼소나가 관계도에 포함되어 있는가?
-- [ ] 관계 유형(직접/간접)이 명시되어 있는가?
-- [ ] 서비스 내 접점이 정의되어 있는가?
-- [ ] 갈등 포인트와 해결 방안이 있는가? (있는 경우)
-- [ ] Mermaid 다이어그램이 렌더링되는가?
+- [ ] Are all personas included in the relationship map?
+- [ ] Are relationship types (direct/indirect) specified?
+- [ ] Are service touchpoints defined?
+- [ ] Are conflict points and resolutions included? (when applicable)
+- [ ] Does the Mermaid diagram render correctly?
 
-## 예시
+## Example
 
 ### BANAS Persona Relationship
 
 ```markdown
-## 관계도
+## Relationship Map
 
 ```mermaid
 flowchart TB
-    BANA[BANA<br/>주류 팬]
-    ALBA[ALBA<br/>바텐더]
-    OWNER[Owner<br/>바 오너]
+    BANA[BANA<br/>Liquor Fan]
+    ALBA[ALBA<br/>Bartender]
+    OWNER[Owner<br/>Bar Owner]
 
-    BANA -->|"주문/질문"| ALBA
-    ALBA -->|"추천/설명"| BANA
-    OWNER -->|"고용/관리"| ALBA
-    ALBA -.->|"운영 지원"| OWNER
+    BANA -->|"order/question"| ALBA
+    ALBA -->|"recommendation/explanation"| BANA
+    OWNER -->|"hire/manage"| ALBA
+    ALBA -.->|"operations support"| OWNER
 ```
 
-## 관계 상세
+## Relationship Details
 
 ### BANA ↔ ALBA
 
-| 항목 | 내용 |
-|------|------|
-| **관계 유형** | 직접, 상호 |
-| **상호작용** | 손님-바텐더 관계, 주문 및 추천 |
-| **서비스 내 접점** | 주류 정보 공유, 추천 기능 |
+| Item | Details |
+|------|---------|
+| **Relationship Type** | Direct, mutual |
+| **Interaction** | Customer-bartender relationship, orders and recommendations |
+| **Service Touchpoint** | Liquor information sharing, recommendation features |
 ```

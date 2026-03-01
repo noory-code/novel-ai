@@ -1,34 +1,34 @@
-# Template: Status (승인 대기)
+# Template: Status (Pending Approval)
 
-사람의 승인을 기다리는 작업의 상태 문서입니다.
+Status document for work awaiting human approval.
 
-## 위치
+## Location
 
 ```
-[project]/workspace/pending/[작업명]/_status.md
+[project]/workspace/pending/[task-name]/_status.md
 ```
 
-## 템플릿
+## Template
 
 ```markdown
-# 승인 대기: [작업명]
+# Pending Approval: [task name]
 
-## 상태
-**사람 승인 대기 중**
+## Status
+**Awaiting human approval**
 
-## 준비된 작업
-- [x] 초안 작성 완료
+## Prepared Work
+- [x] Draft complete
 
-## 사람이 확인해야 할 사항
-- [ ] 목표가 적절한가?
-- [ ] 분해가 적절한가?
+## Items for Human Review
+- [ ] Are the objectives appropriate?
+- [ ] Is the decomposition appropriate?
 
-## 승인 후 다음 단계
-→ [다음 작업]
+## Next Steps After Approval
+→ [next task]
 ```
 
-## 품질 기준
+## Quality Criteria
 
-- [ ] 상태가 명확한가?
-- [ ] 사람이 확인해야 할 사항이 체크리스트로 정리되어 있는가?
-- [ ] 승인 후 다음 단계가 명시되어 있는가?
+- [ ] Is the status clear?
+- [ ] Are the items for human review organized as a checklist?
+- [ ] Are the next steps after approval specified?

@@ -1,24 +1,24 @@
-# Epic 회고 규칙
+# Epic Retrospective Rules
 
-> Wrap-up Step에서 RETRO.md 작성 시 이 규칙을 따른다.
-> 템플릿: [workflow-manage/assets/retro.md](../../workflow-manage/assets/retro.md) — "AI 행동 회고" 사용.
+> Follow these rules when writing RETRO.md in the Wrap-up Step.
+> Template: [workflow-manage/assets/retro.md](../../workflow-manage/assets/retro.md) — use "AI Behavior Retrospective".
 
-## 관점: AI 행동
+## Perspective: AI Behavior
 
-Epic 회고는 **AI 행동**에 집중한다 (비즈니스 회고 아님).
+Epic retrospectives focus on **AI behavior** (not a business retrospective).
 
-## 필수 섹션
+## Required Sections
 
-| 섹션 | 작성 가이드 |
-|------|-----------|
-| **AI 잘한 점** | Story 분해, Use Case/Concept 품질, 스킬 선택 정확도 |
-| **AI 못한 점** | 반복 실수, 컨텍스트 손실, 비효율 구간, 잘못된 판단 |
-| **AI 개선점** | 다음 Epic에서 AI가 바꿔야 할 구체적 행동 |
-| **인스트럭션 시스템 이슈** | 스킬/룰/워크플로우 정의의 누락·모호·오류 |
+| Section | Writing Guide |
+|---------|---------------|
+| **AI Did Well** | Story decomposition, Use Case/Concept quality, skill selection accuracy |
+| **AI Did Poorly** | Repeated mistakes, context loss, inefficient segments, misjudgments |
+| **AI Improvements** | Specific behaviors AI should change in the next Epic |
+| **Instruction System Issues** | Omissions, ambiguities, or errors in skill/rule/workflow definitions |
 
-## Epic 고유 점검 질문
+## Epic-Specific Review Questions
 
-- Story 분해 전략이 효과적이었는가?
-- Use Case/Concept 품질이 개발 단계에서 충분했는가?
-- 반복적으로 버벅인 구간이 있었는가? 원인은?
-- 스킬 invoke 순서가 자연스러웠는가?
+- Was the Story decomposition strategy effective?
+- Was the Use Case/Concept quality sufficient for the development phase?
+- Were there segments where progress repeatedly stalled? What were the causes?
+- Was the skill invoke sequence natural?

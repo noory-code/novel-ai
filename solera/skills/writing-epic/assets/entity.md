@@ -3,21 +3,21 @@
 ## [entity].md
 
 ```markdown
-# Entity: [명]
+# Entity: [name]
 
-## 속성
-| 속성 | 설명 | 필수 | 예시 |
-|------|------|------|------|
+## Attributes
+| Attribute | Description | Required | Example |
+|-----------|-------------|----------|---------|
 
-## 관계
-| 관계 | 대상 | 카디널리티 |
-|------|------|-----------|
+## Relationships
+| Relationship | Target | Cardinality |
+|-------------|--------|------------|
 
-## 비즈니스 규칙
+## Business Rules
 ```
 
-## 품질 기준
+## Quality Criteria
 
-- [ ] 속성에 필수/선택이 구분되어 있는가?
-- [ ] 관계 카디널리티가 명시되어 있는가?
-- [ ] 비즈니스 규칙이 정의되어 있는가?
+- [ ] Are required/optional clearly distinguished in attributes?
+- [ ] Is relationship cardinality specified?
+- [ ] Are business rules defined?

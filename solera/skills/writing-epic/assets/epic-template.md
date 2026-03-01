@@ -3,55 +3,55 @@
 ## _epic.md
 
 ```markdown
-# Epic: [명]
+# Epic: [name]
 
 > Goal: [goal]
-> 상태: ⏳ 대기
+> Status: ⏳ Pending
 
-## 개요
-| 항목 | 내용 |
-|------|------|
-| **유형** | Feature |
-| **Journey** | [journey명] |
+## Overview
+| Item | Details |
+|------|---------|
+| **Type** | Feature |
+| **Journey** | [journey name] |
 
-## 사용자 가치
-**As a** [사용자],
-**I want** [기능],
-**So that** [가치].
+## User Value
+**As a** [user],
+**I want** [feature],
+**So that** [value].
 
 ## Stories
-| ID | Story | 상태 |
-|----|-------|------|
-| US-001 | [제목] | ⏳ |
+| ID | Story | Status |
+|----|-------|--------|
+| US-001 | [title] | ⏳ |
 
-## 완료 조건
-- [ ] 모든 Story 완료
+## Completion Criteria
+- [ ] All Stories complete
 ```
 
 ## Workflow
 
 ### Step 0. Setup
-- [ ] `goals/*/_goal.md` 존재 확인 → 없으면 writing-goal invoke
-- [ ] `epic-[name]` 브랜치 생성 (from dev)
-- [ ] 상태 → 🔄
+- [ ] Confirm `goals/*/_goal.md` exists → invoke writing-goal if missing
+- [ ] Create `epic-[name]` branch (from dev)
+- [ ] Status → 🔄
 
 ### Step 1. Create
-- [ ] Use Case 작성 → `artifacts/use-case/UC-NNN-[name].md`
-- [ ] Concept 도출 → `artifacts/concept/domain.md`
-- [ ] Entity 정의 → `artifacts/concept/entities/*.md`
-- [ ] Story 분해 → `stories/[US|TS]-NNN/_story.md`
-- [ ] `_epic.md` 작성 → Stories 표, 완료 조건
+- [ ] Write Use Cases → `artifacts/use-case/UC-NNN-[name].md`
+- [ ] Derive Concepts → `artifacts/concept/domain.md`
+- [ ] Define Entities → `artifacts/concept/entities/*.md`
+- [ ] Decompose Stories → `stories/[US|TS]-NNN/_story.md`
+- [ ] Write `_epic.md` → Stories table, completion criteria
 
 ### Step 2. Execute
-<!-- Stories 표의 각 Story에 대해 아래 블록을 반복 -->
-#### Story: {US|TS}-NNN — {제목}
-- [ ] writing-story invoke (Create → 브랜치 생성 → Execute → Wrap-up)
-- [ ] Epic 브랜치에 머지
-<!-- /반복 -->
-- [ ] 모든 Story 완료 확인
+<!-- Repeat the block below for each Story in the Stories table -->
+#### Story: {US|TS}-NNN — {title}
+- [ ] writing-story invoke (Create → create branch → Execute → Wrap-up)
+- [ ] Merge into Epic branch
+<!-- /repeat -->
+- [ ] Confirm all Stories complete
 
 ### Step 3. Wrap-up
-- [ ] 회고 작성 → RETRO.md (ref: [assets/retro.md](retro.md))
-- [ ] 상태 → ✅
-- [ ] workflow-pr invoke → 부모 브랜치로 PR 생성 + 머지
-- [ ] 다음 Epic 결정 또는 Goal 완료 처리
+- [ ] Write retrospective → RETRO.md (ref: [assets/retro.md](retro.md))
+- [ ] Status → ✅
+- [ ] workflow-pr invoke → create PR to parent branch + merge
+- [ ] Determine next Epic or process Goal completion

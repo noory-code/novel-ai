@@ -1,40 +1,40 @@
 # Validation: catalog-transition
 
-> 이 파일은 catalog-transition 스킬의 고유 검증 규칙을 정의한다.
+> This file defines the unique validation rules for the catalog-transition skill.
 
 ## Structural
 
 ```yaml
 structural:
   - id: S-001
-    name: "선행조건 섹션 존재"
+    name: "Prerequisites section exists"
     type: section_exists
     target: SKILL.md
-    section: "## 선행조건"
+    section: "## Prerequisites"
 
   - id: S-002
-    name: "절차 섹션 존재"
+    name: "Procedure section exists"
     type: section_exists
     target: SKILL.md
-    section: "## 절차"
+    section: "## Procedure"
 
   - id: S-003
-    name: "Completion Checklist 존재"
+    name: "Completion Checklist exists"
     type: section_exists
     target: SKILL.md
     section: "## Completion Checklist"
 
   - id: S-004
-    name: "버전 형식 섹션 존재"
+    name: "Version format section exists"
     type: section_exists
     target: SKILL.md
-    section: "## 버전 형식"
+    section: "## Version Format"
 
   - id: S-005
-    name: "이동 매핑 섹션 존재"
+    name: "Move mapping section exists"
     type: section_exists
     target: SKILL.md
-    section: "## 이동 매핑"
+    section: "## Move Mapping"
 ```
 
 ## Semantic
@@ -42,35 +42,35 @@ structural:
 ```yaml
 semantic:
   - id: C-001
-    name: "AI-First 금지 표현 없음"
+    name: "No AI-First banned phrases"
     type: content_not_contains
     target: SKILL.md
     patterns:
-      - "적절히"
-      - "필요시"
-      - "상황에 따라"
-      - "알아서"
+      - "as appropriate"
+      - "if needed"
+      - "depending on the situation"
+      - "as you see fit"
 
   - id: C-002
-    name: "핵심 키워드 포함"
+    name: "Core keywords present"
     type: content_contains
     target: SKILL.md
     patterns:
       - "catalog"
       - "artifacts"
-      - "적용 버전"
+      - "applied version"
       - "Goal"
 
   - id: C-003
-    name: "버전 패턴 정의"
+    name: "Version pattern defined"
     type: content_contains
     target: SKILL.md
     patterns:
-      - "[Phase]-[Goal번호]"
+      - "[Phase]-[Goal number]"
       - "H1-G01"
 
   - id: C-004
-    name: "절차 단계 체크리스트"
+    name: "Procedure step checklist"
     type: count_check
     target: SKILL.md
     pattern: "- \\[ \\]"

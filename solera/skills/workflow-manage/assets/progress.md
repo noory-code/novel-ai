@@ -1,39 +1,39 @@
 # Template: Progress
 
-현재 작업 상태를 추적하는 문서입니다.
+Document for tracking current work status.
 
-## 위치
+## Location
 
 ```
 [project]/workspace/progress.md
 ```
 
-## 템플릿
+## Template
 
 ```markdown
 # Progress
 
-> 마지막 업데이트: [YYYY-MM-DD HH:MM]
+> Last updated: [YYYY-MM-DD HH:MM]
 
-## 현재 작업
+## Current Work
 
-| 계층 | 현재 | 상태 |
-|------|------|------|
-| **Phase** | 2026-Q1-mvp | 진행 |
-| **Goal** | G1-liquor-db | 진행 |
-| **Epic** | login | 진행 |
-| **Story** | US-001 | 진행 |
-| **Action Item** | ACT-002 | 진행 |
+| Hierarchy | Current | Status |
+|-----------|---------|--------|
+| **Phase** | 2026-Q1-mvp | In Progress |
+| **Goal** | G1-liquor-db | In Progress |
+| **Epic** | login | In Progress |
+| **Story** | US-001 | In Progress |
+| **Action Item** | ACT-002 | In Progress |
 
-## 진행률 요약
+## Progress Summary
 
 | Phase | Goal | Epic | Story |
 |-------|------|------|-------|
 | 1/4 | 1/2 | 2/5 | 3/8 |
 ```
 
-## 품질 기준
+## Quality Criteria
 
-- [ ] 마지막 업데이트 시간이 정확한가?
-- [ ] 현재 작업 중인 계층이 모두 표시되어 있는가?
-- [ ] 상태값이 올바른가? (대기/진행/완료/취소)
+- [ ] Is the last updated time accurate?
+- [ ] Are all currently active hierarchy levels shown?
+- [ ] Are the status values correct? (Pending/In Progress/Complete/Cancelled)

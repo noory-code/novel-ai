@@ -1,129 +1,129 @@
 ---
 name: writing-epic
-description: Epic 문서 작성. Use Case, Concept 생성 → Story 분해.
+description: Epic document writing. Creates Use Case, Concept → decomposes into Stories.
 metadata:
   version: "4.0.0"
   category: writing
   type: composite
   style: procedural
-  triggers: [Epic 상세화, Epic 시작, Story로 분해, Use Case, Concept]
+  triggers: [Epic elaboration, Epic start, decompose into Stories, Use Case, Concept]
   uses: [writing-story]
 ---
 
 # Writing Epic
 
-> _epic.md를 작성하고, Story로 분해한다.
+> Writes _epic.md and decomposes into Stories.
 
-## 선행조건
+## Prerequisites
 
-- `published/identity/mission.md` 존재
-  - 없으면: Glob tool로 `published/identity/mission.md` 확인 → Skill tool로 `writing-identity` invoke
-- `_goal.md` 존재
-  - 없으면: Glob tool로 `{goal_path}/_goal.md` 확인 → Skill tool로 `writing-goal` invoke
-- _goal.md에 해당 Epic이 배정되어 있을 것
+- `published/identity/mission.md` exists
+  - If not: check `published/identity/mission.md` with Glob tool → invoke `writing-identity` with Skill tool
+- `_goal.md` exists
+  - If not: check `{goal_path}/_goal.md` with Glob tool → invoke `writing-goal` with Skill tool
+- The corresponding Epic must be assigned in _goal.md
 
-## 입력
+## Input
 
-| 파라미터 | 필수 | 설명 | 예시 |
-|----------|------|------|------|
-| **project_path** | Y | 프로젝트 workspace 루트 | banas/workspace |
-| **phase_id** | Y | 소속 Phase ID | 2026-P1-foundation |
-| **goal_id** | Y | 소속 Goal ID | G1-search-liquor |
-| **epic_name** | Y | Epic 이름 | 01-auth |
-| **epic_type** | N | Feature \| Enabler (기본: Feature) | Enabler |
+| Parameter | Required | Description | Example |
+|-----------|----------|-------------|---------|
+| **project_path** | Y | Project workspace root | banas/workspace |
+| **phase_id** | Y | Parent Phase ID | 2026-P1-foundation |
+| **goal_id** | Y | Parent Goal ID | G1-search-liquor |
+| **epic_name** | Y | Epic name | 01-auth |
+| **epic_type** | N | Feature \| Enabler (default: Feature) | Enabler |
 
-## 산출물
+## Output
 
-| Step | 산출물 | 성격 | 경로 |
-|------|--------|------|------|
-| Setup | _epic.md | 최종 | `{goal_path}/epics/{epic_name}/_epic.md` |
-| UseCase | UC-NNN.md (Feature만) | 중간 (artifacts) | `{goal_path}/artifacts/use-case/UC-NNN-{name}.md` |
-| Concept | domain.md | 중간 (artifacts) | `{goal_path}/artifacts/concept/domain.md` |
-| Concept | entities/*.md | 중간 (artifacts) | `{goal_path}/artifacts/concept/entities/{entity}.md` |
-| Story | _story.md | 최종 | `{goal_path}/epics/{epic_name}/stories/{US\|TS}-NNN/_story.md` |
-| Wrap-up | RETRO.md | 최종 | `{goal_path}/epics/{epic_name}/RETRO.md` |
+| Step | Output | Nature | Path |
+|------|--------|--------|------|
+| Setup | _epic.md | Final | `{goal_path}/epics/{epic_name}/_epic.md` |
+| UseCase | UC-NNN.md (Feature only) | Intermediate (artifacts) | `{goal_path}/artifacts/use-case/UC-NNN-{name}.md` |
+| Concept | domain.md | Intermediate (artifacts) | `{goal_path}/artifacts/concept/domain.md` |
+| Concept | entities/*.md | Intermediate (artifacts) | `{goal_path}/artifacts/concept/entities/{entity}.md` |
+| Story | _story.md | Final | `{goal_path}/epics/{epic_name}/stories/{US\|TS}-NNN/_story.md` |
+| Wrap-up | RETRO.md | Final | `{goal_path}/epics/{epic_name}/RETRO.md` |
 
 > `{goal_path}` = `{project_path}/phase/{phase_id}/goals/{goal_id}`
-> artifacts = 중간 산출물. Goal 완료 시 catalog-transition으로 published/에 이동됨.
+> artifacts = intermediate outputs. Moved to published/ via catalog-transition upon Goal completion.
 
-## 사용 스킬
+## Skills Used
 
-| 스킬 | 용도 | Step |
-|------|------|------|
-| `writing-story` | 각 Story 상세화 및 Action Item 분해 | Execute |
-| `workflow-pr` | Story/Epic 완료 시 PR 생성 | Execute, Wrap-up |
+| Skill | Purpose | Step |
+|-------|---------|------|
+| `writing-story` | Elaborate each Story and decompose into Action Items | Execute |
+| `workflow-pr` | Create PR upon Story/Epic completion | Execute, Wrap-up |
 
-## 절차
+## Procedure
 
 1. **Setup**
-   - [ ] Glob tool로 `{goal_path}/_goal.md` 존재 확인
-     - 없으면: Skill tool `skill="writing-goal"` invoke → 완료 후 이 Step 재개
-   - [ ] `epic-{epic_name}` 브랜치 생성 (from Goal 브랜치)
-   - [ ] `{goal_path}/epics/{epic_name}/` 폴더 생성
-   - [ ] _epic.md 초안 생성 → ref: [assets/epic-template.md](assets/epic-template.md)
-   - [ ] 상태 → 🔄
+   - [ ] Confirm `{goal_path}/_goal.md` exists with Glob tool
+     - If not: invoke Skill tool `skill="writing-goal"` → resume this Step after completion
+   - [ ] Create `epic-{epic_name}` branch (from Goal branch)
+   - [ ] Create `{goal_path}/epics/{epic_name}/` folder
+   - [ ] Create _epic.md draft → ref: [assets/epic-template.md](assets/epic-template.md)
+   - [ ] Status → 🔄
 
-2. **Use Case 생성** (Feature만, Enabler는 건너뜀)
-   - [ ] Actor 정의 (사람/시스템)
-   - [ ] Goal 정의 (측정 가능한 목표)
-   - [ ] 기본 흐름 작성 (단계별)
-   - [ ] 대안/예외 흐름 작성
+2. **Create Use Case** (Feature only, skip for Enabler)
+   - [ ] Define Actor (person/system)
+   - [ ] Define Goal (measurable objective)
+   - [ ] Write basic flow (step by step)
+   - [ ] Write alternative/exception flows
    - [ ] → ref: [assets/use-case.md](assets/use-case.md)
 
-3. **Concept 생성**
-   - [ ] 핵심 개념 도출, domain.md 작성/업데이트 → ref: [assets/concept.md](assets/concept.md)
-   - [ ] Entity별 상세 작성 → ref: [assets/entity.md](assets/entity.md)
-   - [ ] 관계 다이어그램 (Mermaid classDiagram)
-   - domain.md 규칙: 첫 Epic이 생성, 이후 Epic은 **업데이트** (덮어쓰기 금지)
-   - concept.md = 풀 버전 템플릿, entity.md = 빠른 참조 스켈레톤
+3. **Create Concept**
+   - [ ] Derive core concepts, write/update domain.md → ref: [assets/concept.md](assets/concept.md)
+   - [ ] Write detailed description per Entity → ref: [assets/entity.md](assets/entity.md)
+   - [ ] Relationship diagram (Mermaid classDiagram)
+   - domain.md rule: first Epic creates it, subsequent Epics **update** (no overwriting)
+   - concept.md = full version template, entity.md = quick reference skeleton
 
-4. **Story 분해 + _epic.md 완성**
-   - [ ] Use Case → Story 매핑 (Feature), 기술 작업 → Story (Enabler)
-   - [ ] Story ID 부여 (US: User Story, TS: Technical Story)
-   - [ ] Story당 예상 커밋 수 추정
-   - [ ] _epic.md Stories 표 완성, 완료 조건 정의
+4. **Story decomposition + complete _epic.md**
+   - [ ] Map Use Case → Story (Feature), technical tasks → Story (Enabler)
+   - [ ] Assign Story IDs (US: User Story, TS: Technical Story)
+   - [ ] Estimate expected commit count per Story
+   - [ ] Complete Stories table in _epic.md, define completion criteria
 
 5. **Execute**
-   - [ ] `_epic.md`의 Stories 표에서 미완료(⏳ 또는 상태 없음) Story 목록 추출
-   - [ ] 각 Story에 대해 순서대로 실행 (모든 Story 완료 전 다음 Step으로 넘어가지 말 것):
+   - [ ] Extract incomplete (⏳ or no status) Stories from Stories table in `_epic.md`
+   - [ ] Execute each Story in order (do not proceed to next Step until all Stories are complete):
      ```
-     Skill tool 호출: skill="writing-story"
+     Skill tool call: skill="writing-story"
        args: story_id={US|TS-NNN}, story_name={name}, epic_name={epic_name},
              goal_id={goal_id}, phase_id={phase_id}, project_path={project_path}
-     → _story.md 생성 + 상태 ✅ 확인 후 다음 Story 진행
+     → Confirm _story.md created + status ✅ before proceeding to next Story
      ```
-   - [ ] Story 완료 시 Epic 브랜치에 머지
-   - [ ] 모든 Story 상태 ✅ 확인 후 Step 6으로 진행
+   - [ ] Merge to Epic branch upon Story completion
+   - [ ] Proceed to Step 6 after confirming all Story statuses ✅
 
 6. **Wrap-up**
-   - [ ] 모든 Story 상태 ✅ 확인 (미완료 있으면 Step 5로 돌아갈 것)
-   - [ ] RETRO.md 작성 → ref: [assets/retro.md](assets/retro.md)
-   - [ ] _epic.md 상태 → ✅
-   - [ ] Skill tool 호출: `skill="workflow-pr"` → 부모 브랜치(Goal)로 PR 생성
+   - [ ] Confirm all Story statuses ✅ (return to Step 5 if any incomplete)
+   - [ ] Write RETRO.md → ref: [assets/retro.md](assets/retro.md)
+   - [ ] _epic.md status → ✅
+   - [ ] Skill tool call: `skill="workflow-pr"` → create PR to parent branch (Goal)
 
-## 폴더 구조
+## Folder Structure
 
 ```
 {goal_path}/
-├── artifacts/                # 중간 산출물
+├── artifacts/                # Intermediate outputs
 │   ├── use-case/UC-NNN-{name}.md
 │   └── concept/
 │       ├── domain.md
 │       └── entities/{entity}.md
 └── epics/{epic_name}/
     ├── _epic.md
-    ├── RETRO.md              # Wrap-up 시 생성
+    ├── RETRO.md              # Created at Wrap-up
     └── stories/{US|TS}-NNN/
         └── _story.md
 ```
 
 ## Completion Checklist
 
-- [ ] _epic.md 생성 완료
-- [ ] Feature인 경우: Use Case 작성 완료
-- [ ] Concept (domain.md, entities) 작성/업데이트 완료
-- [ ] Story 분해 완료
-- [ ] (Execute) 모든 Story에 writing-story invoke 완료
-- [ ] (Wrap-up) RETRO.md 작성
-- [ ] (Wrap-up) _epic.md 상태 ✅
-- [ ] (Wrap-up) workflow-pr invoke 완료
+- [ ] _epic.md created
+- [ ] If Feature: Use Case written
+- [ ] Concept (domain.md, entities) written/updated
+- [ ] Story decomposition complete
+- [ ] (Execute) writing-story invoked for all Stories
+- [ ] (Wrap-up) RETRO.md written
+- [ ] (Wrap-up) _epic.md status ✅
+- [ ] (Wrap-up) workflow-pr invoked

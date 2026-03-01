@@ -6,55 +6,55 @@
 # Phase: [phase-id]
 
 > Initiative: [year]
-> 상태: ⏳ 대기
+> Status: ⏳ Pending
 
-## 개요
+## Overview
 
-| 항목 | 내용 |
-|------|------|
-| **기간** | [YYYY-MM ~ YYYY-MM] |
-| **목표** | [Phase 목표 한 줄 요약] |
+| Item | Details |
+|------|---------|
+| **Period** | [YYYY-MM ~ YYYY-MM] |
+| **Objective** | [One-line summary of Phase objective] |
 
 ## Goals
 
-| Goal | 유형 | 상태 | 진행률 | 폴더 |
-|------|------|------|--------|------|
-| [goal-id]: [name] | [Feature|Enabler] | ⏳ 대기 | 0/N | [→](./goals/[goal-id]-[name]/) |
+| Goal | Type | Status | Progress | Folder |
+|------|------|--------|----------|--------|
+| [goal-id]: [name] | [Feature|Enabler] | ⏳ Pending | 0/N | [→](./goals/[goal-id]-[name]/) |
 
-**Phase 진행률**: 0/N Goals 완료
+**Phase Progress**: 0/N Goals complete
 
-## 완료 조건
+## Completion Criteria
 
-- [ ] [goal별 완료 조건]
+- [ ] [completion criteria per goal]
 ```
 
 ## Workflow
 
 ### Step 0. Setup
-- [ ] `workspace/initiative/[year]/roadmap.md` 존재 확인
-- [ ] roadmap.md에서 Phase에 배정된 Goals 확인
-- [ ] `workspace/phase/[phase-id]/` 폴더 생성
-- [ ] `workspace/phase/[phase-id]/goals/` 폴더 생성
-- [ ] 상태 → 🔄
+- [ ] Confirm `workspace/initiative/[year]/roadmap.md` exists
+- [ ] Review Goals assigned to this Phase in roadmap.md
+- [ ] Create `workspace/phase/[phase-id]/` folder
+- [ ] Create `workspace/phase/[phase-id]/goals/` folder
+- [ ] Status → 🔄
 
 ### Step 1. Create
-- [ ] Phase README.md 작성 (개요, Goals 테이블, 완료 조건)
-- [ ] 각 Goal 폴더 구조 생성 (`goals/[goal-id]-[name]/`)
+- [ ] Write Phase README.md (overview, Goals table, completion criteria)
+- [ ] Create each Goal folder structure (`goals/[goal-id]-[name]/`)
 
 ### Step 2. Execute
-<!-- Goals 표의 각 Goal에 대해 아래 블록을 반복 -->
+<!-- Repeat the block below for each Goal in the Goals table -->
 #### Goal: {goal-id}-{name}
 - [ ] writing-goal invoke
-- [ ] Goal 상세화 + Epic 분해
-- [ ] 모든 Epic 완료
-<!-- /반복 -->
-- [ ] 모든 Goal 완료 확인
+- [ ] Elaborate Goal + decompose Epics
+- [ ] Complete all Epics
+<!-- /repeat -->
+- [ ] Confirm all Goals complete
 
 ### Step 3. Wrap-up
-- [ ] 모든 Goal 상태 ✅ 확인
-- [ ] 각 Goal의 catalog-transition 완료 확인 (`workspace/catalog/` 이동됨)
-- [ ] SUMMARY.md 작성 (전체 Goal 성과, catalog 산출물 목록, 다음 Phase 전달 사항)
-- [ ] RETRO.md 작성 (ref: [retro.md](retro.md))
-- [ ] README.md 상태 → ✅, 진행률 갱신
-- [ ] progress.md 갱신
-- [ ] 다음 Phase 결정
+- [ ] Confirm all Goal statuses are ✅
+- [ ] Confirm catalog-transition complete for each Goal (moved to `workspace/catalog/`)
+- [ ] Write SUMMARY.md (overall Goal outcomes, catalog artifact list, handoff notes for next Phase)
+- [ ] Write RETRO.md (ref: [retro.md](retro.md))
+- [ ] README.md status → ✅, update progress
+- [ ] Update progress.md
+- [ ] Determine next Phase

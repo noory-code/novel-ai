@@ -1,116 +1,116 @@
-# Mermaid 작성 규칙: Service Map
+# Mermaid Authoring Rules: Service Map
 
-> Service Map 문서에서 사용하는 Mermaid 다이어그램 규칙
+> Mermaid diagram rules used in Service Map documents
 
-## Mindmap (구조/계층)
+## Mindmap (structure/hierarchy)
 
 ```mermaid
 mindmap
-  root((중심 주제))
-    분기1
-      하위1
-      하위2
-    분기2
+  root((central topic))
+    branch1
+      sub1
+      sub2
+    branch2
 ```
 
-| 문법 | 형태 | 용도 |
-|------|------|------|
-| `((텍스트))` | 원형 | 루트 노드 |
-| `텍스트` | 기본 | 일반 노드 |
-| `(텍스트)` | 둥근 사각형 | 강조 노드 |
-| `[텍스트]` | 사각형 | 구분 노드 |
+| Syntax | Shape | Purpose |
+|--------|-------|---------|
+| `((text))` | Circle | Root node |
+| `text` | Default | General node |
+| `(text)` | Rounded rectangle | Emphasis node |
+| `[text]` | Rectangle | Separator node |
 
-> 2칸 스페이스로 계층 구분
+> Use 2-space indentation to denote hierarchy levels
 
-## Flowchart (흐름/관계)
+## Flowchart (flow/relationships)
 
 ```mermaid
 flowchart LR
-    A[기능1] -->|관계| B[기능2]
-    B --> C[결과]
+    A[feature1] -->|relationship| B[feature2]
+    B --> C[result]
 
     classDef planned fill:#f5f5f5,stroke:#999,color:#666
     classDef v1 fill:#c8e6c9,stroke:#4caf50
 ```
 
-| 색상 | classDef | 의미 |
-|------|----------|------|
-| 회색 | `planned` | 미구현 |
-| 초록 | `v1` | v1.x 구현됨 |
-| 파랑 | `v2` | v2.x 구현됨 |
+| Color | classDef | Meaning |
+|-------|----------|---------|
+| Gray | `planned` | Not implemented |
+| Green | `v1` | Implemented in v1.x |
+| Blue | `v2` | Implemented in v2.x |
 
-## 버전/상태 표기
+## Version/Status Notation
 
-flowchart에서 상태를 표시하고, **표에서도 관리**합니다.
+Display status in flowchart, and **also manage in a table**.
 
 ```markdown
-| 기능 | 설명 | 상태 | 버전 |
-|------|------|------|------|
-| **기능1** | 설명 | 미구현 | - |
-| **기능2** | 설명 | 구현됨 | v1.0 |
+| Feature | Description | Status | Version |
+|---------|-------------|--------|---------|
+| **feature1** | description | not implemented | - |
+| **feature2** | description | implemented | v1.0 |
 ```
 
-> mindmap = **구조 파악**, flowchart = **흐름/상태 표현**, 표 = **상세 정보**
+> mindmap = **structural overview**, flowchart = **flow/status expression**, table = **detailed information**
 
 ---
 
-## 예시: BANAS
+## Example: BANAS
 
-### 구조 (mindmap)
+### Structure (mindmap)
 
 ```mermaid
 mindmap
   root((BANAS))
     Platform
-      프로필
-      소셜
-      컨텐츠
-      클럽
-      살롱
-      타운
-      평판
+      Profile
+      Social
+      Content
+      Club
+      Salon
+      Town
+      Reputation
     Vertical
       Bartender
-        주류 정보
-        파트너
+        Liquor Info
+        Partner
     Admin
-      사용자 관리
-      컨텐츠 관리
-      데이터 관리
+      User Management
+      Content Management
+      Data Management
 ```
 
-### 흐름 (flowchart)
+### Flow (flowchart)
 
 ```mermaid
 flowchart TB
-    ALBA[ALBA] -->|프로필 관리| PROFILE[프로필]
-    ALBA -->|클럽 운영| CLUB[클럽]
-    BANA[BANA] -->|팔로우| SOCIAL[소셜]
-    BANA -->|클럽 가입| CLUB
-    SOCIAL --> REPUTATION[평판]
+    ALBA[ALBA] -->|profile management| PROFILE[Profile]
+    ALBA -->|club operations| CLUB[Club]
+    BANA[BANA] -->|follow| SOCIAL[Social]
+    BANA -->|join club| CLUB
+    SOCIAL --> REPUTATION[Reputation]
     CLUB --> REPUTATION
 
     classDef planned fill:#f5f5f5,stroke:#999,color:#666
 ```
 
-### BANAS Service Map 폴더 구조
+### BANAS Service Map Folder Structure
 
 ```
 catalog/service-map/
-├── index.md                    # BANAS 전체 그림
-├── admin/                      # 어드민
-│   └── index.md                # 관리 포인트 인덱스
-├── platform/                   # 플랫폼 공통
-│   ├── profile.md              # 프로필
-│   ├── social.md               # 팔로우/좋아요
-│   ├── content.md              # 컨텐츠
-│   ├── club.md                 # 클럽
-│   ├── salon.md                # 살롱
-│   ├── town.md                 # 타운
-│   └── reputation.md           # 평판
-└── vertical/                   # 버티컬 특화
+├── index.md                    # BANAS overall picture
+├── admin/                      # Admin
+│   └── index.md                # Management point index
+├── platform/                   # Platform common
+│   ├── profile.md              # Profile
+│   ├── social.md               # Follow/likes
+│   ├── content.md              # Content
+│   ├── club.md                 # Club
+│   ├── salon.md                # Salon
+│   ├── town.md                 # Town
+│   └── reputation.md           # Reputation
+└── vertical/                   # Vertical-specific
     └── bartender/
-        ├── index.md            # 바텐더 버티컬 개요
-        ├── liquor.md           # 주류 정보
-        └── partner.md          # 파트너
+        ├── index.md            # Bartender vertical overview
+        ├── liquor.md           # Liquor info
+        └── partner.md          # Partner
 ```

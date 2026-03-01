@@ -1,4 +1,4 @@
-# PR 본문 템플릿
+# PR Body Template
 
 ## Epic: {epic_name}
 
@@ -6,17 +6,17 @@
 
 ### Stories
 
-| ID | Story | 상태 |
-|----|-------|------|
-| US-001 | [제목] | ✅ |
-| US-002 | [제목] | ✅ |
+| ID | Story | Status |
+|----|-------|--------|
+| US-001 | [title] | ✅ |
+| US-002 | [title] | ✅ |
 
-### 주요 변경사항
+### Key Changes
 
-- [변경 1]
-- [변경 2]
+- [change 1]
+- [change 2]
 
-### 테스트
+### Tests
 
-- [ ] 빌드 통과
-- [ ] 테스트 통과
+- [ ] Build passes
+- [ ] Tests pass

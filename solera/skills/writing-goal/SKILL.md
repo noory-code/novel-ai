@@ -1,107 +1,107 @@
 ---
 name: writing-goal
-description: Goal 문서 작성. Service Map, Persona, Journey(러프) 생성 → Epic 분해.
+description: Goal document writing. Creates Service Map, Persona, Journey (rough) → decomposes into Epics.
 metadata:
   version: "4.0.0"
   category: writing
   type: composite
   style: procedural
-  triggers: [Goal 상세화, Goal 시작, Epic으로 분해]
+  triggers: [Goal elaboration, Goal start, decompose into Epics]
   uses: [writing-identity, writing-epic, catalog-transition]
 ---
 
 # Writing Goal
 
-> _goal.md를 작성하고, Epic으로 분해한다.
+> Writes _goal.md and decomposes into Epics.
 
-## 선행조건
+## Prerequisites
 
-- `published/identity/mission.md` 존재 → 없으면 writing-identity invoke
-- Phase README에 해당 Goal이 배정되어 있을 것 → 없으면 writing-phase invoke
+- `published/identity/mission.md` exists → if not, invoke writing-identity
+- The corresponding Goal must be assigned in the Phase README → if not, invoke writing-phase
 
-## 입력
+## Input
 
-| 파라미터 | 필수 | 설명 | 예시 |
-|----------|------|------|------|
+| Parameter | Required | Description | Example |
+|-----------|----------|-------------|---------|
 | **goal_id** | Y | Goal ID | G1 |
-| **goal_name** | Y | Goal 이름 | search-liquor |
-| **goal_type** | N | Feature \| Enabler (기본: Feature) | Enabler |
-| **project_path** | Y | 프로젝트 workspace 루트 | banas/workspace |
-| **phase_id** | Y | 소속 Phase ID | 2026-P1-foundation |
+| **goal_name** | Y | Goal name | search-liquor |
+| **goal_type** | N | Feature \| Enabler (default: Feature) | Enabler |
+| **project_path** | Y | Project workspace root | banas/workspace |
+| **phase_id** | Y | Parent Phase ID | 2026-P1-foundation |
 
-## 산출물
+## Output
 
-| Step | 산출물 | 경로 |
+| Step | Output | Path |
 |------|--------|------|
 | Create | _goal.md | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/_goal.md` |
-| Create | Service Map (Feature만) | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/artifacts/service-map/index.md` |
-| Create | Persona (Feature만) | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/artifacts/persona/*.md` |
-| Create | Persona Relationship (Feature, 2명+) | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/artifacts/persona/relationship.md` |
-| Execute | Epic 문서 | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/epics/{NN}-{name}/_epic.md` |
+| Create | Service Map (Feature only) | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/artifacts/service-map/index.md` |
+| Create | Persona (Feature only) | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/artifacts/persona/*.md` |
+| Create | Persona Relationship (Feature, 2+ personas) | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/artifacts/persona/relationship.md` |
+| Execute | Epic document | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/epics/{NN}-{name}/_epic.md` |
 | Wrap-up | RETRO.md | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/RETRO.md` |
 
-## 사용 스킬
+## Skills Used
 
-| 스킬 | 용도 | Step |
-|------|------|------|
-| `writing-identity` | identity 미존재 시 생성 | Setup |
-| `writing-epic` | 각 Epic 상세화 및 Story 분해 | Execute |
-| `catalog-transition` | artifacts → catalog 이동 | Wrap-up |
+| Skill | Purpose | Step |
+|-------|---------|------|
+| `writing-identity` | Create identity if it does not exist | Setup |
+| `writing-epic` | Elaborate each Epic and decompose into Stories | Execute |
+| `catalog-transition` | Move artifacts/ → published/ | Wrap-up |
 
-## 절차
+## Procedure
 
 1. **Setup**
-   - [ ] `published/identity/mission.md` 존재 확인 → 없으면 writing-identity invoke
-   - [ ] Phase README에서 해당 Goal 정보 확인 (기간, 목표)
-   - [ ] `goals/{goal_id}-{name}/` 폴더 생성
-   - [ ] `goals/{goal_id}-{name}/artifacts/` 폴더 생성
+   - [ ] Confirm `published/identity/mission.md` exists → if not, invoke writing-identity
+   - [ ] Confirm Goal information from Phase README (period, objectives)
+   - [ ] Create `goals/{goal_id}-{name}/` folder
+   - [ ] Create `goals/{goal_id}-{name}/artifacts/` folder
 
-2. **Goal 유형 확인**
-   - Feature → 3단계부터 순서대로
-   - Enabler → 3단계 건너뜀, 4단계에서 Journey는 Steps만 간략 작성
+2. **Confirm Goal type**
+   - Feature → proceed in order from step 3
+   - Enabler → skip step 3, write Journey as Steps only (briefly) in step 4
 
-3. **Service Map, Persona 생성** (Feature만)
-   - [ ] Service Map 작성 → ref: [assets/service-map.md](assets/service-map.md)
-   - [ ] Persona 프로필, 목표, Pain Points → ref: [assets/persona.md](assets/persona.md)
-   - [ ] Persona 2명 이상이면 persona-relationship.md 생성 → ref: [assets/persona-relationship.md](assets/persona-relationship.md)
+3. **Create Service Map, Persona** (Feature only)
+   - [ ] Write Service Map → ref: [assets/service-map.md](assets/service-map.md)
+   - [ ] Persona profile, goals, Pain Points → ref: [assets/persona.md](assets/persona.md)
+   - [ ] If 2 or more personas, create persona-relationship.md → ref: [assets/persona-relationship.md](assets/persona-relationship.md)
 
-4. **Journey + Epic 분해 + _goal.md 작성**
-   - [ ] Persona별 Journey 정의 (Enabler는 Steps만 간략 작성)
-   - [ ] Journey → Epic 매핑, 번호 부여 (01, 02, ...)
-   - [ ] _goal.md 작성 → ref: [assets/goal-template.md](assets/goal-template.md)
+4. **Journey + Epic decomposition + write _goal.md**
+   - [ ] Define Journey per Persona (Enabler: write Steps only briefly)
+   - [ ] Map Journey → Epic, assign numbers (01, 02, ...)
+   - [ ] Write _goal.md → ref: [assets/goal-template.md](assets/goal-template.md)
 
 5. **Execute**
-   - [ ] 각 Epic에 writing-epic invoke (Setup → Create → Execute → Wrap-up)
-   - [ ] Epic 완료 시 workflow-pr invoke → 부모 브랜치로 PR
-   - [ ] 모든 Epic 완료 확인
+   - [ ] Invoke writing-epic for each Epic (Setup → Create → Execute → Wrap-up)
+   - [ ] Invoke workflow-pr upon Epic completion → PR to parent branch
+   - [ ] Confirm all Epics complete
 
 6. **Goal Wrap-up**
-   - [ ] 모든 Epic 상태 ✅ 확인
-   - [ ] RETRO.md 작성 → ref: [assets/retro.md](assets/retro.md)
-   - [ ] catalog-transition invoke (artifacts/ → published/)
-   - [ ] _goal.md 상태 → ✅
+   - [ ] Confirm all Epic statuses ✅
+   - [ ] Write RETRO.md → ref: [assets/retro.md](assets/retro.md)
+   - [ ] Invoke catalog-transition (artifacts/ → published/)
+   - [ ] _goal.md status → ✅
 
-## 폴더 구조
+## Folder Structure
 
 ```
 {project_path}/phase/{phase_id}/goals/{goal_id}-{name}/
 ├── _goal.md
-├── RETRO.md          # Wrap-up 시 생성
+├── RETRO.md          # Created at Wrap-up
 ├── artifacts/
-│   ├── service-map/index.md    # Feature만
-│   └── persona/*.md            # Feature만
+│   ├── service-map/index.md    # Feature only
+│   └── persona/*.md            # Feature only
 └── epics/{NN}-{name}/
     └── _epic.md
 ```
 
 ## Completion Checklist
 
-- [ ] _goal.md 생성 완료
-- [ ] Feature인 경우: Service Map, Persona 생성
-- [ ] Feature + Persona 2명 이상: persona-relationship.md 생성
-- [ ] Journey (러프) 작성
-- [ ] Epic 분해 완료
-- [ ] (Execute) 모든 Epic에 writing-epic invoke 완료
-- [ ] (Wrap-up) RETRO.md 작성
-- [ ] (Wrap-up) catalog-transition 완료
-- [ ] (Wrap-up) _goal.md 상태 ✅
+- [ ] _goal.md created
+- [ ] If Feature: Service Map, Persona created
+- [ ] If Feature + 2 or more Personas: persona-relationship.md created
+- [ ] Journey (rough) written
+- [ ] Epic decomposition complete
+- [ ] (Execute) writing-epic invoked for all Epics
+- [ ] (Wrap-up) RETRO.md written
+- [ ] (Wrap-up) catalog-transition complete
+- [ ] (Wrap-up) _goal.md status ✅

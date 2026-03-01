@@ -23,8 +23,8 @@ PROMPT = (
     "1) Run git status --short, git log --oneline -5 to understand current session work. "
     "2) Read HANDOFF.md if it exists, or create it from scratch. "
     "3) Update these sections based on git output and todo list: "
-    "현재 작업, 완료 항목, 다음 단계, 중요 결정사항, 참고 파일, 주의사항. "
-    "4) Add a timestamp '> 마지막 업데이트: YYYY-MM-DD HH:MM' at the top. "
+    "current work, completed items, next steps, key decisions, reference files, caveats. "
+    "4) Add a timestamp '> last updated: YYYY-MM-DD HH:MM' at the top. "
     "5) Save HANDOFF.md to the project root. "
     "Keep it concise — 2-3 lines per section maximum."
 )

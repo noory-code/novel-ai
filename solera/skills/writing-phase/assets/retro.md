@@ -1,24 +1,24 @@
-# Phase 회고 규칙
+# Phase Retrospective Rules
 
-> Wrap-up Step에서 RETRO.md 작성 시 이 규칙을 따른다.
-> 템플릿: [workflow-manage/assets/retro.md](../../workflow-manage/assets/retro.md) — "비즈니스 회고" 사용.
+> Follow these rules when writing RETRO.md in the Wrap-up Step.
+> Template: [workflow-manage/assets/retro.md](../../workflow-manage/assets/retro.md) — use "Business Retrospective".
 
-## 관점: 비즈니스
+## Perspective: Business
 
-Phase 회고는 **비즈니스 관점**에 집중한다.
+Phase retrospectives focus on the **business perspective**.
 
-## 필수 섹션
+## Required Sections
 
-| 섹션 | 작성 가이드 |
-|------|-----------|
-| **잘한 점 (Keep)** | 분기 목표 달성률, 효과적인 Goal 배분, 리소스 활용 |
-| **개선할 점 (Problem)** | 미달성 Goal, 일정 지연, 범위 변경, 리소스 부족 |
-| **시도할 점 (Try)** | 다음 Phase 전략, 프로세스 개선, 새로운 접근법 |
-| **배운 점 (Learned)** | 시장 인사이트, 사용자 반응, 기술 부채 현황 |
+| Section | Writing Guide |
+|---------|---------------|
+| **Keep** | Quarter goal achievement rate, effective Goal allocation, resource utilization |
+| **Problem** | Unmet Goals, schedule delays, scope changes, resource shortfalls |
+| **Try** | Next Phase strategy, process improvements, new approaches |
+| **Learned** | Market insights, user feedback, technical debt status |
 
-## Phase 고유 점검 질문
+## Phase-Specific Review Questions
 
-- 분기 목표 달성률은 어떠한가?
-- Goal 간 우선순위 판단이 적절했는가?
-- 계획 대비 실제 소요가 적절했는가?
-- 다음 Phase를 위해 전략적으로 바꿔야 할 것은?
+- What was the quarter goal achievement rate?
+- Was the prioritization between Goals appropriate?
+- Was the actual effort proportional to the plan?
+- What should be changed strategically for the next Phase?

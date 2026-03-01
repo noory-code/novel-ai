@@ -1,154 +1,154 @@
 # Template: Service Map — Feature & Admin
 
-> 상위: [service-map.md](service-map.md)
+> Parent: [service-map.md](service-map.md)
 
-## 템플릿: feature.md (하위 맵)
+## Template: feature.md (sub-map)
 
 ```markdown
-# Service Map: [기능명]
+# Service Map: [feature name]
 
-> 상위: [서비스명](../index.md)
-> 마지막 업데이트: [YYYY-MM-DD]
+> Parent: [service name](../index.md)
+> Last updated: [YYYY-MM-DD]
 
-## 기능 정의
+## Feature Definition
 
-| 항목 | 내용 |
-|------|------|
-| **목적** | [이 기능이 제공하는 가치] |
-| **대상** | [퍼소나] |
+| Item | Details |
+|------|---------|
+| **Purpose** | [value this feature provides] |
+| **Target** | [persona] |
 
-## 기능 구조
+## Feature Structure
 
 ```mermaid
 mindmap
-  root((기능명))
-    서브 기능1
-      세부1
-      세부2
-    서브 기능2
-      세부3
+  root((feature name))
+    sub-feature1
+      detail1
+      detail2
+    sub-feature2
+      detail3
 ```
 
-## 기능 흐름 (흐름 정의가 필요한 경우)
+## Feature Flow (when flow definition is needed)
 
 ```mermaid
 flowchart LR
-    A[서브 기능1] --> B[서브 기능2]
-    B --> C[결과]
+    A[sub-feature1] --> B[sub-feature2]
+    B --> C[result]
 
     classDef planned fill:#f5f5f5,stroke:#999,color:#666
 ```
 
-## 서브 기능
+## Sub-features
 
-| 서브 기능 | 설명 | 관련 Journey |
-|----------|------|-------------|
-| [서브 기능 1] | [설명] | [journey-name] |
+| Sub-feature | Description | Related Journey |
+|-------------|-------------|----------------|
+| [sub-feature 1] | [description] | [journey-name] |
 
-## 어드민 관리 포인트
+## Admin Management Points
 
-| 관리 항목 | 설명 |
-|----------|------|
-| **[관리 항목 1]** | [설명] |
-| **[관리 항목 2]** | [설명] |
+| Management Item | Description |
+|----------------|-------------|
+| **[management item 1]** | [description] |
+| **[management item 2]** | [description] |
 
-> 상세: [어드민](../admin/)
+> Detail: [admin](../admin/)
 
-## 관련 문서
+## Related Documents
 
-| 유형 | 문서 |
-|------|------|
+| Type | Document |
+|------|----------|
 | Journey | [journey-name](../../journey/planned/journey-name.md) |
 | Use Case | [UC-001](../../use-case/UC-001.md) |
 ```
 
-## 품질 기준: feature.md
+## Quality Criteria: feature.md
 
-- [ ] 상위 맵 링크(breadcrumb)가 있는가?
-- [ ] 기능 목적이 명확한가?
-- [ ] **어드민 관리 포인트** 섹션이 있는가?
-- [ ] 관련 Journey/Use Case 링크가 있는가?
+- [ ] Is there a parent map link (breadcrumb)?
+- [ ] Is the feature purpose clear?
+- [ ] Is there an **Admin Management Points** section?
+- [ ] Are related Journey/Use Case links present?
 
 ---
 
-## 템플릿: admin/index.md (어드민 인덱스)
+## Template: admin/index.md (admin index)
 
 ```markdown
-# Service Map: 어드민
+# Service Map: Admin
 
-> 상위: [서비스명](../index.md)
-> 마지막 업데이트: [YYYY-MM-DD]
+> Parent: [service name](../index.md)
+> Last updated: [YYYY-MM-DD]
 
-## 어드민 정의
+## Admin Definition
 
-| 항목 | 내용 |
-|------|------|
-| **목적** | 서비스 운영 및 관리를 위한 백오피스 |
-| **대상** | 운영자 |
+| Item | Details |
+|------|---------|
+| **Purpose** | Back-office for service operations and management |
+| **Target** | Operators |
 
-## 관리 영역
+## Management Areas
 
 ```mermaid
 flowchart TB
-    subgraph 어드민
-        USER[사용자 관리<br/>planned]:::planned
-        CONTENT[컨텐츠 관리<br/>planned]:::planned
-        DATA[데이터 관리<br/>planned]:::planned
-        SYSTEM[시스템 관리<br/>planned]:::planned
+    subgraph Admin
+        USER[User Management<br/>planned]:::planned
+        CONTENT[Content Management<br/>planned]:::planned
+        DATA[Data Management<br/>planned]:::planned
+        SYSTEM[System Management<br/>planned]:::planned
     end
 
     classDef planned fill:#f5f5f5,stroke:#999,color:#666
     classDef v1 fill:#c8e6c9,stroke:#4caf50
 ```
 
-## 관리 포인트 인덱스
+## Management Point Index
 
-### 사용자 관리
+### User Management
 
-| 관리 포인트 | 관련 기능 | 상세 |
-|------------|----------|------|
-| [관리 포인트] | [기능](../platform/feature.md) | [설명] |
+| Management Point | Related Feature | Detail |
+|-----------------|----------------|--------|
+| [management point] | [feature](../platform/feature.md) | [description] |
 
-### 컨텐츠 관리
+### Content Management
 
-| 관리 포인트 | 관련 기능 | 상세 |
-|------------|----------|------|
-| [관리 포인트] | [기능](../platform/feature.md) | [설명] |
+| Management Point | Related Feature | Detail |
+|-----------------|----------------|--------|
+| [management point] | [feature](../platform/feature.md) | [description] |
 
-### 데이터 관리 (버티컬별)
+### Data Management (by vertical)
 
-| 버티컬 | 관리 데이터 | 상세 |
-|--------|-----------|------|
-| [버티컬명] | [데이터](../vertical/name/feature.md) | [설명] |
+| Vertical | Managed Data | Detail |
+|---------|-------------|--------|
+| [vertical name] | [data](../vertical/name/feature.md) | [description] |
 
-### 시스템 관리
+### System Management
 
-| 관리 포인트 | 설명 |
-|------------|------|
-| 공지사항 | 전체/버티컬별 공지 |
-| FAQ | 자주 묻는 질문 |
-| 약관/정책 | 이용약관, 개인정보처리방침 |
+| Management Point | Description |
+|-----------------|-------------|
+| Announcements | Global/vertical-specific announcements |
+| FAQ | Frequently asked questions |
+| Terms/Policies | Terms of service, privacy policy |
 
-## 자동화 원칙
+## Automation Principles
 
-| 원칙 | 설명 |
-|------|------|
-| **최소 입력** | 관리자는 핵심 값만 입력 |
-| **자동 파생** | 나머지는 시스템이 계산 |
-| **예외 처리** | 수동 개입은 예외 케이스만 |
+| Principle | Description |
+|-----------|-------------|
+| **Minimal input** | Admins enter only essential values |
+| **Auto-derivation** | System calculates the rest |
+| **Exception handling** | Manual intervention only for edge cases |
 
-> 세부 관리 포인트는 각 기능 문서의 "어드민 관리 포인트" 섹션 참조
+> See the "Admin Management Points" section of each feature document for detailed management points
 
-## 관련 문서
+## Related Documents
 
-| 유형 | 문서 |
-|------|------|
-| 플랫폼 | [기능들...](../platform/) |
-| 버티컬 | [버티컬들...](../vertical/) |
+| Type | Document |
+|------|----------|
+| Platform | [features...](../platform/) |
+| Vertical | [verticals...](../vertical/) |
 ```
 
-## 품질 기준: admin/index.md
+## Quality Criteria: admin/index.md
 
-- [ ] 모든 관리 영역이 다이어그램에 표시되어 있는가?
-- [ ] 관리 포인트가 관련 기능과 연결되어 있는가?
-- [ ] 자동화 원칙이 정의되어 있는가?
+- [ ] Are all management areas shown in the diagram?
+- [ ] Are management points linked to related features?
+- [ ] Are automation principles defined?

@@ -1,99 +1,99 @@
 ---
 name: writing-action-item
-description: Action Item 실행. 1 Action Item = 1 커밋.
+description: Action Item execution. 1 Action Item = 1 commit.
 metadata:
   version: "4.0.0"
   category: writing
   type: composite
   style: procedural
-  triggers: [Action Item 시작, Action Item 실행, 커밋 작업, ACT-NNN]
+  triggers: [Action Item start, Action Item execute, commit work, ACT-NNN]
   uses: []
 ---
 
 # Writing Action Item
 
-> Action Item은 가장 작은 워크플로우 단위이다. 1 Action Item = 1 커밋.
+> An Action Item is the smallest workflow unit. 1 Action Item = 1 commit.
 
-## 선행조건
+## Prerequisites
 
-- `_story.md` 존재 → 없으면 writing-story invoke
-- _story.md의 Action Items 표에 해당 ACT가 배정되어 있을 것
-- depends_on에 명시된 선행 ACT가 모두 ✅ 완료일 것
+- `_story.md` exists → if not, invoke writing-story
+- The corresponding ACT must be assigned in the Action Items table of _story.md
+- All prerequisite ACTs listed in depends_on must be ✅ complete
 
-## 입력
+## Input
 
-| 파라미터 | 필수 | 설명 | 예시 |
-|----------|------|------|------|
-| **epic_name** | Y | 소속 Epic 이름 | 01-auth |
-| **story_id** | Y | 소속 Story ID | US-001 |
+| Parameter | Required | Description | Example |
+|-----------|----------|-------------|---------|
+| **epic_name** | Y | Parent Epic name | 01-auth |
+| **story_id** | Y | Parent Story ID | US-001 |
 | **action_item_id** | Y | Action Item ID | ACT-001 |
-| **action_item_name** | Y | Action Item 이름 | setup-project |
+| **action_item_name** | Y | Action Item name | setup-project |
 
-## 산출물
+## Output
 
-| Step | 산출물 | 경로 |
+| Step | Output | Path |
 |------|--------|------|
-| Execute | 코드/문서 변경 | output_paths에 선언된 파일들 |
-| Wrap-up | git commit | `[epic-name][story_id][ACT-NNN] 제목` |
-| Wrap-up | ACT 상태 ✅ | `action-items/ACT-NNN-{name}.md` 내 상태 갱신 |
+| Execute | Code/document changes | Files declared in output_paths |
+| Wrap-up | git commit | `[epic-name][story_id][ACT-NNN] title` |
+| Wrap-up | ACT status ✅ | Status update within `action-items/ACT-NNN-{name}.md` |
 
-## 사용 스킬
+## Skills Used
 
-| 스킬 | 용도 | Step |
-|------|------|------|
-| 개발 스킬 (frontend-*, dev-*, design-* 등) | 실제 코딩/문서 작업 | Execute |
+| Skill | Purpose | Step |
+|-------|---------|------|
+| Development skills (frontend-*, dev-*, design-*, etc.) | Actual coding/documentation work | Execute |
 
-> 개발 스킬 선택: 작업 내용 키워드를 skill-orchestration 트리거와 매칭
+> Development skill selection: match task content keywords with skill-orchestration triggers
 
-## 절차
+## Procedure
 
 1. **Setup**
-   - [ ] `_story.md` 존재 확인 → 없으면 writing-story invoke
-   - [ ] depends_on 선행 ACT 완료 확인
-   - [ ] Action Item 파일 읽기 → ref: [assets/action-item.md](assets/action-item.md)
-   - [ ] 목표 + 작업 내용 체크리스트 확인
-   - [ ] 상태 → 🔄
+   - [ ] Confirm `_story.md` exists → if not, invoke writing-story
+   - [ ] Confirm prerequisite ACTs in depends_on are complete
+   - [ ] Read Action Item file → ref: [assets/action-item.md](assets/action-item.md)
+   - [ ] Confirm objective + task checklist
+   - [ ] Status → 🔄
 
-2. **테스트 작성** (코드 변경 시)
-   - [ ] 인수 조건 기반 테스트 케이스 설계
-   - [ ] Unit/Widget 테스트 코드 작성 (Red — 아직 구현 없으므로 실패)
+2. **Write tests** (if code changes)
+   - [ ] Design test cases based on acceptance criteria
+   - [ ] Write Unit/Widget test code (Red — will fail since implementation not yet done)
 
-3. **개발**
-   - [ ] 작업 키워드 → 개발 스킬 매칭 → invoke
-   - [ ] 실제 코딩/문서 작업 수행
-   - [ ] 작업 내용 체크리스트 전부 완료
+3. **Development**
+   - [ ] Match task keywords → development skill → invoke
+   - [ ] Perform actual coding/documentation work
+   - [ ] Complete all items in task checklist
 
-4. **테스트 검증**
-   - [ ] 빌드 통과
-   - [ ] 테스트 통과 (Green)
-   - [ ] output_paths 파일 존재 확인
+4. **Test verification**
+   - [ ] Build passes
+   - [ ] Tests pass (Green)
+   - [ ] Confirm output_paths files exist
 
 5. **Wrap-up**
-   - [ ] 변경 파일 목록 기록 (Action Item 파일 결과 섹션)
-   - [ ] 커밋 (1 Action Item = 1 커밋, 메시지 형식 준수)
-   - [ ] 상태 → ✅
-   - [ ] 다음 Action Item 결정 또는 Story 완료 처리
+   - [ ] Record list of changed files (Action Item file results section)
+   - [ ] Commit (1 Action Item = 1 commit, follow message format)
+   - [ ] Status → ✅
+   - [ ] Decide next Action Item or process Story completion
 
-## 폴더 구조
+## Folder Structure
 
 ```
 {epic_path}/stories/{story_id}/action-items/
 └── ACT-NNN-{name}.md
 ```
 
-## 커밋 메시지 형식
+## Commit Message Format
 
 ```
-[epic-name][US-NNN][ACT-NNN] 제목
+[epic-name][US-NNN][ACT-NNN] title
 
-- 변경 내용
+- change description
 ```
 
 ## Completion Checklist
 
-- [ ] Action Item 목표 달성
-- [ ] 작업 내용 체크리스트 완료
-- [ ] 결과 (변경 파일, 커밋) 기록
-- [ ] 1 Action Item = 1 커밋 원칙 준수
-- [ ] (Wrap-up) 상태 ✅
-- [ ] (Wrap-up) 다음 Action Item 또는 Story 완료 확인
+- [ ] Action Item objective achieved
+- [ ] Task checklist complete
+- [ ] Results (changed files, commit) recorded
+- [ ] 1 Action Item = 1 commit principle observed
+- [ ] (Wrap-up) Status ✅
+- [ ] (Wrap-up) Next Action Item or Story completion confirmed

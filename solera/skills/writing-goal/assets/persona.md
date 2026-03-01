@@ -1,100 +1,100 @@
 # Template: Persona
 
-사용자 유형을 정의합니다.
+Defines user types.
 
-## 템플릿
+## Template
 
 ```markdown
-# Persona: [이름]
+# Persona: [name]
 
-> 마지막 업데이트: [YYYY-MM-DD]
+> Last updated: [YYYY-MM-DD]
 
-## 프로필
+## Profile
 
-| 항목 | 내용 |
-|------|------|
-| **이름** | [페르소나 이름] |
-| **역할** | [바텐더/팬/개발자/관리자 등] |
-| **한 줄 설명** | [이 사람이 누구인지] |
+| Item | Details |
+|------|---------|
+| **Name** | [persona name] |
+| **Role** | [bartender/fan/developer/admin, etc.] |
+| **One-liner** | [who this person is] |
 
-## 동기와 목표
+## Motivations and Goals
 
-### 왜 이 서비스를 사용하는가?
+### Why do they use this service?
 
-[서비스를 찾게 된 동기]
+[motivation that brought them to the service]
 
-### 달성하려는 목표
+### Goals they want to achieve
 
-- [목표 1]
-- [목표 2]
-- [목표 3]
+- [goal 1]
+- [goal 2]
+- [goal 3]
 
 ## Pain Points
 
-| Pain Point | 현재 해결 방법 | 불만 |
-|------------|---------------|------|
-| [문제 1] | [현재 방법] | [불만/한계] |
-| [문제 2] | [현재 방법] | [불만/한계] |
+| Pain Point | Current Solution | Frustration |
+|------------|-----------------|-------------|
+| [problem 1] | [current method] | [frustration/limitation] |
+| [problem 2] | [current method] | [frustration/limitation] |
 
-## 특성
+## Characteristics
 
-### 행동 패턴
+### Behavioral Patterns
 
-- [패턴 1]
-- [패턴 2]
+- [pattern 1]
+- [pattern 2]
 
-### 선호/비선호
+### Preferences / Dislikes
 
-| 선호 | 비선호 |
-|------|--------|
-| [좋아하는 것] | [싫어하는 것] |
+| Prefers | Dislikes |
+|---------|----------|
+| [things they like] | [things they dislike] |
 
-## 핵심 니즈
+## Core Needs
 
-| 우선순위 | 니즈 | 서비스 대응 |
-|---------|------|------------|
-| 1 | [가장 중요한 니즈] | [우리 서비스의 대응] |
-| 2 | [두 번째 니즈] | [우리 서비스의 대응] |
+| Priority | Need | Service Response |
+|----------|------|-----------------|
+| 1 | [most important need] | [our service's response] |
+| 2 | [second need] | [our service's response] |
 
-## 관련 Journey
+## Related Journeys
 
-| Journey | 목표 | 상태 |
-|---------|------|------|
-| [journey-name] | [목표] | planned/shipped |
+| Journey | Goal | Status |
+|---------|------|--------|
+| [journey-name] | [goal] | planned/shipped |
 ```
 
-## 품질 기준
+## Quality Criteria
 
-- [ ] 프로필이 구체적인가? (추상적이지 않은가?)
-- [ ] 동기와 목표가 명확한가?
-- [ ] Pain Points가 2개 이상 정의되어 있는가?
-- [ ] 핵심 니즈에 서비스 대응이 연결되어 있는가?
-- [ ] 관련 Journey가 연결되어 있는가?
+- [ ] Is the profile specific? (not abstract?)
+- [ ] Are motivations and goals clear?
+- [ ] Are at least 2 Pain Points defined?
+- [ ] Are core needs linked to service responses?
+- [ ] Are related Journeys connected?
 
-## 예시
+## Example
 
-### BANAS - 바텐더 퍼소나
+### BANAS - Bartender Persona
 
 ```markdown
-# Persona: 바텐더 (ALBA)
+# Persona: Bartender (ALBA)
 
-## 프로필
+## Profile
 
-| 항목 | 내용 |
-|------|------|
-| **이름** | ALBA (Alcohol Lover & Bartender Artisan) |
-| **역할** | 현직 바텐더 |
-| **한 줄 설명** | 칵테일과 주류에 전문 지식을 가진 현업 종사자 |
+| Item | Details |
+|------|---------|
+| **Name** | ALBA (Alcohol Lover & Bartender Artisan) |
+| **Role** | Active bartender |
+| **One-liner** | An industry professional with expert knowledge in cocktails and spirits |
 
-## 동기와 목표
+## Motivations and Goals
 
-### 왜 이 서비스를 사용하는가?
+### Why do they use this service?
 
-새로운 주류 정보를 빠르게 파악하고, 손님에게 정확한 정보를 제공하고 싶음
+Wants to quickly grasp new liquor information and provide accurate information to customers
 
-### 달성하려는 목표
+### Goals they want to achieve
 
-- 신규 주류 트렌드 파악
-- 테이스팅 노트 참고
-- 손님 추천용 정보 습득
+- Stay on top of new liquor trends
+- Reference tasting notes
+- Acquire information for customer recommendations
 ```

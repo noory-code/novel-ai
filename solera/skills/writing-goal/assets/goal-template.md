@@ -3,12 +3,12 @@
 ## _goal.md
 
 ```markdown
-# Goal: [명]
+# Goal: [name]
 
 > Phase: [phase]
-> 상태: ⏳ 대기
+> Status: ⏳ Pending
 
-## Journey (러프)
+## Journey (rough)
 
 | Journey | Persona | Steps |
 |---------|---------|-------|
@@ -16,45 +16,45 @@
 
 ## Epics
 
-| Epic | Journey | 상태 |
-|------|---------|------|
+| Epic | Journey | Status |
+|------|---------|--------|
 | 01-[name] | [journey] | ⏳ |
 
-## 완료 조건
+## Completion Criteria
 
-- [ ] 모든 Epic 완료
+- [ ] All Epics complete
 ```
 
 ## Workflow
 
 ### Step 0. Setup
-- [ ] `published/identity/mission.md` 존재 확인 → 없으면 writing-identity invoke
-- [ ] `goals/[goal-id]-[name]/` 폴더 생성
-- [ ] `goals/[goal-id]-[name]/artifacts/` 폴더 생성
-- [ ] 상태 → 🔄
+- [ ] Confirm `published/identity/mission.md` exists → invoke writing-identity if missing
+- [ ] Create `goals/[goal-id]-[name]/` folder
+- [ ] Create `goals/[goal-id]-[name]/artifacts/` folder
+- [ ] Status → 🔄
 
 ### Step 1. Create
-- [ ] Service Map, Persona 생성 (Feature만, Enabler는 건너뜀)
-- [ ] Journey (러프) 작성 → Persona별 Steps 순서
-- [ ] Epic 분해 → Journey와 매핑, 번호 부여 (01, 02, ...)
-- [ ] `_goal.md` 작성 → Journey 표, Epics 표, 완료 조건
+- [ ] Generate Service Map, Persona (Feature only; skip for Enabler)
+- [ ] Write Journey (rough) → Steps sequence per Persona
+- [ ] Decompose Epics → map to Journeys, assign numbers (01, 02, ...)
+- [ ] Write `_goal.md` → Journey table, Epics table, completion criteria
 
 ### Step 2. Execute
-<!-- Epics 표의 각 Epic에 대해 아래 블록을 반복 -->
-#### Epic: {번호}-{name}
+<!-- Repeat the block below for each Epic in the Epics table -->
+#### Epic: {number}-{name}
 - [ ] writing-epic invoke (Setup → Create → Execute → Wrap-up)
-- [ ] workflow-pr invoke → 부모 브랜치로 PR
-<!-- /반복 -->
-- [ ] 모든 Epic 완료 확인
+- [ ] workflow-pr invoke → PR to parent branch
+<!-- /repeat -->
+- [ ] Confirm all Epics complete
 
 ### Step 3. Wrap-up
-- [ ] 회고 작성 → RETRO.md (ref: [assets/retro.md](retro.md))
-- [ ] 상태 → ✅
+- [ ] Write retrospective → RETRO.md (ref: [assets/retro.md](retro.md))
+- [ ] Status → ✅
 - [ ] catalog-transition invoke (artifacts/ → published/)
 
-## Goal 유형
+## Goal Types
 
-| 유형 | 산출물 | 예시 |
-|------|--------|------|
-| **Feature** | Service Map, Persona, Journey → Epic | 주류검색, 프로필 |
-| **Enabler** | Epic (Persona/Journey 생략 가능) | 인프라, DB설계 |
+| Type | Output | Examples |
+|------|--------|---------|
+| **Feature** | Service Map, Persona, Journey → Epic | liquor-search, profile |
+| **Enabler** | Epic (Persona/Journey can be skipped) | infrastructure, DB design |

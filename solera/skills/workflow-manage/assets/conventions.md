@@ -1,29 +1,29 @@
 # Conventions
 
-프로젝트 공통 규칙. 모든 스킬이 이 파일을 참조한다.
+Project-wide rules. All skills reference this file.
 
-## 일감 계층
+## Work Item Hierarchy
 
 ```
 Identity > Initiative > Phase > Goal > Epic > Story > Action Item
-           (연간)      (분기)  (목표) (작업) (일간) (커밋)
+           (annual)    (quarter) (goal) (task) (daily) (commit)
 ```
 
-| 역할 | 계층 | 하는 일 |
-|------|------|---------|
-| **사람** | Identity~Phase | 전략 결정, 승인 |
-| **AI** | Goal~Action Item | 분해, 문서 생성, 구현 |
+| Role | Hierarchy | Responsibility |
+|------|-----------|----------------|
+| **Human** | Identity~Phase | Strategic decisions, approval |
+| **AI** | Goal~Action Item | Decomposition, document generation, implementation |
 
-## Git 브랜치
+## Git Branches
 
-| 계층 | 브랜치명 | 분기 원점 |
-|------|----------|----------|
-| **Epic** | `epic-[name]` | 부모 브랜치 |
-| **Story** | `epic-[name]/story-[ID]-[name]` | Epic 브랜치 |
+| Hierarchy | Branch Name | Branch From |
+|-----------|-------------|-------------|
+| **Epic** | `epic-[name]` | Parent branch |
+| **Story** | `epic-[name]/story-[ID]-[name]` | Epic branch |
 
-> Action Item = 커밋만 (브랜치 없음)
+> Action Item = commit only (no branch)
 
-## 폴더 구조
+## Folder Structure
 
 ```
 [project]/
@@ -39,11 +39,11 @@ Identity > Initiative > Phase > Goal > Epic > Story > Action Item
     └── catalog/
 ```
 
-## 상태값
+## Status Values
 
-| 아이콘 | 상태 | 설명 |
-|--------|------|------|
-| ⏳ | 대기 | 작업 전 |
-| 🔄 | 진행 | 작업 중 |
-| ✅ | 완료 | 작업 완료 |
-| ⏸️ | 보류 | 일시 중단 |
+| Icon | Status | Description |
+|------|--------|-------------|
+| ⏳ | Pending | Not yet started |
+| 🔄 | In Progress | Work in progress |
+| ✅ | Complete | Work complete |
+| ⏸️ | On Hold | Temporarily paused |

@@ -1,24 +1,24 @@
-# Story 회고 규칙
+# Story Retrospective Rules
 
-> Wrap-up Step에서 RETRO.md 작성 시 이 규칙을 따른다.
-> 템플릿: [workflow-manage/assets/retro.md](../../workflow-manage/assets/retro.md) — "AI 행동 회고" 사용.
+> Follow these rules when writing RETRO.md in the Wrap-up Step.
+> Template: [workflow-manage/assets/retro.md](../../workflow-manage/assets/retro.md) — use "AI Behavior Retrospective".
 
-## 관점: AI 행동
+## Perspective: AI Behavior
 
-Story 회고는 **AI 행동**에 집중한다 (비즈니스 회고 아님).
+Story retrospectives focus on **AI behavior** (not a business retrospective).
 
-## 필수 섹션
+## Required Sections
 
-| 섹션 | 작성 가이드 |
-|------|-----------|
-| **AI 잘한 점** | Action Item 분해, 인수 조건 설계, TDD 수행, 팀 협업 |
-| **AI 못한 점** | 커밋 범위 부적절, 테스트 누락, 머지 충돌, 비효율 구간 |
-| **AI 개선점** | 다음 Story에서 AI가 바꿔야 할 구체적 행동 |
-| **인스트럭션 시스템 이슈** | 스킬/룰/워크플로우 정의의 누락·모호·오류 |
+| Section | Writing Guide |
+|---------|---------------|
+| **AI Did Well** | Action Item decomposition, acceptance criteria design, TDD execution, team collaboration |
+| **AI Did Poorly** | Inappropriate commit scope, missing tests, merge conflicts, inefficient segments |
+| **AI Improvements** | Specific behaviors AI should change in the next Story |
+| **Instruction System Issues** | Omissions, ambiguities, or errors in skill/rule/workflow definitions |
 
-## Story 고유 점검 질문
+## Story-Specific Review Questions
 
-- Action Item 분해 전략이 효과적이었는가?
-- 인수 조건이 개발 과정에서 충분히 명확했는가?
-- 각 Action Item의 커밋 범위가 적절했는가?
-- 에이전트 팀 사용 시 충돌 없이 깔끔한 결과를 만들어냈는가?
+- Was the Action Item decomposition strategy effective?
+- Were the acceptance criteria sufficiently clear during development?
+- Was the commit scope for each Action Item appropriate?
+- When using an agent team, were clean results produced without conflicts?
