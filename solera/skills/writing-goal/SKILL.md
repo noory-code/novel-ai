@@ -1,6 +1,6 @@
 ---
 name: writing-goal
-description: Goal document writing. Creates Service Map, Persona, Journey (rough) → decomposes into Epics.
+description: Goal document writing. Creates a Service Map, Personas, and a preliminary Journey, then decomposes them into Epics.
 metadata:
   version: "4.0.0"
   category: writing
@@ -12,12 +12,12 @@ metadata:
 
 # Writing Goal
 
-> Writes _goal.md and decomposes into Epics.
+> Writes the _goal.md file and decomposes the Goal into Epics.
 
 ## Prerequisites
 
-- `published/identity/mission.md` exists → if not, invoke writing-identity
-- The corresponding Goal must be assigned in the Phase README → if not, invoke writing-phase
+- `published/identity/mission.md` exists; if not, invoke writing-identity
+- The corresponding Goal must be assigned in the Phase README; if not, invoke writing-phase
 
 ## Input
 
@@ -45,41 +45,41 @@ metadata:
 | Skill | Purpose | Step |
 |-------|---------|------|
 | `writing-identity` | Create identity if it does not exist | Setup |
-| `writing-epic` | Elaborate each Epic and decompose into Stories | Execute |
-| `catalog-transition` | Move artifacts/ → published/ | Wrap-up |
+| `writing-epic` | Elaborate each Epic and decompose it into Stories | Execute |
+| `catalog-transition` | Move artifacts/ to published/ | Wrap-up |
 
 ## Procedure
 
 1. **Setup**
-   - [ ] Confirm `published/identity/mission.md` exists → if not, invoke writing-identity
-   - [ ] Confirm Goal information from Phase README (period, objectives)
+   - [ ] Confirm `published/identity/mission.md` exists; if not, invoke writing-identity
+   - [ ] Confirm Goal information from the Phase README (period, objectives)
    - [ ] Create `goals/{goal_id}-{name}/` folder
    - [ ] Create `goals/{goal_id}-{name}/artifacts/` folder
 
 2. **Confirm Goal type**
-   - Feature → proceed in order from step 3
-   - Enabler → skip step 3, write Journey as Steps only (briefly) in step 4
+   - For Features, proceed in order from Step 3
+   - For Enablers, skip Step 3 and write the Journey as Steps only (briefly) in Step 4
 
-3. **Create Service Map, Persona** (Feature only)
-   - [ ] Write Service Map → ref: [assets/service-map.md](assets/service-map.md)
-   - [ ] Persona profile, goals, Pain Points → ref: [assets/persona.md](assets/persona.md)
-   - [ ] If 2 or more personas, create persona-relationship.md → ref: [assets/persona-relationship.md](assets/persona-relationship.md)
+3. **Create Service Map and Personas** (Feature only)
+   - [ ] Write the Service Map — ref: [assets/service-map.md](assets/service-map.md)
+   - [ ] Write Persona profile, goals, and Pain Points — ref: [assets/persona.md](assets/persona.md)
+   - [ ] If there are 2 or more Personas, create persona-relationship.md — ref: [assets/persona-relationship.md](assets/persona-relationship.md)
 
-4. **Journey + Epic decomposition + write _goal.md**
-   - [ ] Define Journey per Persona (Enabler: write Steps only briefly)
-   - [ ] Map Journey → Epic, assign numbers (01, 02, ...)
-   - [ ] Write _goal.md → ref: [assets/goal-template.md](assets/goal-template.md)
+4. **Journey, Epic decomposition, and _goal.md**
+   - [ ] Define a Journey for each Persona (for Enablers, write Steps only, briefly)
+   - [ ] Map Journey steps to Epics and assign numbers (01, 02, ...)
+   - [ ] Write _goal.md — ref: [assets/goal-template.md](assets/goal-template.md)
 
 5. **Execute**
    - [ ] Invoke writing-epic for each Epic (Setup → Create → Execute → Wrap-up)
-   - [ ] Invoke workflow-pr upon Epic completion → PR to parent branch
-   - [ ] Confirm all Epics complete
+   - [ ] Invoke workflow-pr upon Epic completion to create a PR to the parent branch
+   - [ ] Confirm all Epics are complete
 
 6. **Goal Wrap-up**
    - [ ] Confirm all Epic statuses ✅
-   - [ ] Write RETRO.md → ref: [assets/retro.md](assets/retro.md)
-   - [ ] Invoke catalog-transition (artifacts/ → published/)
-   - [ ] _goal.md status → ✅
+   - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
+   - [ ] Invoke catalog-transition (artifacts/ to published/)
+   - [ ] Set _goal.md status to ✅
 
 ## Folder Structure
 
@@ -97,9 +97,9 @@ metadata:
 ## Completion Checklist
 
 - [ ] _goal.md created
-- [ ] If Feature: Service Map, Persona created
-- [ ] If Feature + 2 or more Personas: persona-relationship.md created
-- [ ] Journey (rough) written
+- [ ] If Feature: Service Map and Personas created
+- [ ] If Feature with 2 or more Personas: persona-relationship.md created
+- [ ] Preliminary Journey written
 - [ ] Epic decomposition complete
 - [ ] (Execute) writing-epic invoked for all Epics
 - [ ] (Wrap-up) RETRO.md written

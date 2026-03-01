@@ -7,7 +7,7 @@
 | `progress.md` | Overall project progress status (Phase/Goal/Epic) | Per Epic |
 | `HANDOFF.md` | Cross-session context handoff (transient state) | At session end |
 
-> progress.md is for project management; HANDOFF.md is for AI session management
+> `progress.md` is for project management; `HANDOFF.md` is for AI session management
 
 ---
 
@@ -47,28 +47,28 @@
 ## Section-by-Section Writing Guide
 
 ### Current Work
-- Summarize concisely in 1-2 lines
-- Specify the Epic or Story title + current step
-- Example: "Progressing through Epic 04-build-roles. Story TS-002 (role lookup system) implementation complete, TS-003 in preparation"
+- Summarize concisely in 1–2 lines
+- Specify the Epic or Story title and the current step
+- Example: "Progressing through Epic 04-build-roles. Story TS-002 (role lookup system) implementation complete; TS-003 in preparation"
 
 ### Completed Items
-- List specific tasks completed in this session
-- Use `[x]` for checkboxes (complete)
-- Write to match commit messages
+- List the specific tasks completed in this session
+- Use `[x]` for completed checkboxes
+- Write entries to match the corresponding commit messages
 
 ### Next Steps
 - Write clear TODOs so the next session can start immediately
-- Use `[ ]` for checkboxes (incomplete)
+- Use `[ ]` for incomplete checkboxes
 - List in priority order
 
 ### Key Decisions
 - Write in "what + why" format
-- Include only decisions essential for the next session to understand the context
+- Include only decisions the next session needs in order to understand the context
 
 ### Reference Files
 - Key file paths changed in this session
-- Wrap in backticks (`)
+- Wrap paths in backticks (`)
 
 ### Caveats
-- Errors, blockers, workarounds, etc.
+- Errors, blockers, workarounds, and other special notes
 - Information the next session must not miss

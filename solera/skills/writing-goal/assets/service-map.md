@@ -1,10 +1,10 @@
 # Template: Service Map
 
-Defines the overall picture of the service. (Not technical — business/user perspective)
+Defines the overall picture of the service from a business and user perspective, not a technical one.
 
 ## Structure
 
-Service Map is managed in a **hierarchical structure**.
+The Service Map is maintained as a **hierarchical structure**.
 
 ```
 catalog/service-map/
@@ -22,7 +22,7 @@ catalog/service-map/
 
 ### Expandable Folder Structure
 
-When a feature grows, expand the file into a folder:
+When a feature grows large enough, expand the file into a folder:
 
 | Before | After |
 |--------|-------|
@@ -40,9 +40,9 @@ When a feature grows, expand the file into a folder:
 
 | Purpose | Diagram | Description |
 |---------|---------|-------------|
-| **Structure/hierarchy** | mindmap | Understand the overall structure at a glance |
-| **Flow/relationships** | flowchart | Express connections, dependencies, data flows |
-| **Status/version** | table | Manage implementation status, version info |
+| **Structure/hierarchy** | mindmap | Conveys the overall structure at a glance |
+| **Flow/relationships** | flowchart | Expresses connections, dependencies, and data flows |
+| **Status/version** | table | Tracks implementation status and version info |
 
 > mindmap = **structural overview**, flowchart = **relationship/flow expression**, detailed info = **managed in tables**
 > Mermaid authoring rules: [references/mermaid-service-map.md](../references/mermaid-service-map.md)
@@ -135,10 +135,10 @@ flowchart TB
 
 - [ ] Is the service one-liner clear?
 - [ ] Are all personas included?
-- [ ] Are core features organized into 3–7 items?
+- [ ] Are the core features organized into 3–7 items?
 - [ ] Does each feature have a sub-map link?
 - [ ] Are admin items included in the core features?
-- [ ] Are service boundaries (In/Out Scope) clear?
+- [ ] Are the service boundaries (In/Out Scope) clearly stated?
 
 ## Sub-map Templates
 

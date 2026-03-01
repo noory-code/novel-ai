@@ -1,6 +1,6 @@
 ---
 name: writing-epic
-description: Epic document writing. Creates Use Case, Concept → decomposes into Stories.
+description: Epic document writing. Creates a Use Case and Concept, then decomposes them into Stories.
 metadata:
   version: "4.0.0"
   category: writing
@@ -12,7 +12,7 @@ metadata:
 
 # Writing Epic
 
-> Writes _epic.md and decomposes into Stories.
+> Writes _epic.md and decomposes the Epic into Stories.
 
 ## Prerequisites
 
@@ -50,8 +50,8 @@ metadata:
 
 | Skill | Purpose | Step |
 |-------|---------|------|
-| `writing-story` | Elaborate each Story and decompose into Action Items | Execute |
-| `workflow-pr` | Create PR upon Story/Epic completion | Execute, Wrap-up |
+| `writing-story` | Elaborate each Story and decompose it into Action Items | Execute |
+| `workflow-pr` | Create a PR upon Story/Epic completion | Execute, Wrap-up |
 
 ## Procedure
 
@@ -60,45 +60,45 @@ metadata:
      - If not: invoke Skill tool `skill="writing-goal"` → resume this Step after completion
    - [ ] Create `epic-{epic_name}` branch (from Goal branch)
    - [ ] Create `{goal_path}/epics/{epic_name}/` folder
-   - [ ] Create _epic.md draft → ref: [assets/epic-template.md](assets/epic-template.md)
+   - [ ] Create _epic.md draft — ref: [assets/epic-template.md](assets/epic-template.md)
    - [ ] Status → 🔄
 
 2. **Create Use Case** (Feature only, skip for Enabler)
-   - [ ] Define Actor (person/system)
-   - [ ] Define Goal (measurable objective)
-   - [ ] Write basic flow (step by step)
-   - [ ] Write alternative/exception flows
-   - [ ] → ref: [assets/use-case.md](assets/use-case.md)
+   - [ ] Define the Actor (person or system)
+   - [ ] Define the Goal (measurable objective)
+   - [ ] Write the basic flow (step by step)
+   - [ ] Write alternative and exception flows
+   - [ ] Ref: [assets/use-case.md](assets/use-case.md)
 
 3. **Create Concept**
-   - [ ] Derive core concepts, write/update domain.md → ref: [assets/concept.md](assets/concept.md)
-   - [ ] Write detailed description per Entity → ref: [assets/entity.md](assets/entity.md)
-   - [ ] Relationship diagram (Mermaid classDiagram)
-   - domain.md rule: first Epic creates it, subsequent Epics **update** (no overwriting)
+   - [ ] Derive core concepts, then write or update domain.md — ref: [assets/concept.md](assets/concept.md)
+   - [ ] Write a detailed description for each Entity — ref: [assets/entity.md](assets/entity.md)
+   - [ ] Add a relationship diagram (Mermaid classDiagram)
+   - domain.md rule: the first Epic creates it; subsequent Epics **update** it rather than overwrite it
    - concept.md = full version template, entity.md = quick reference skeleton
 
-4. **Story decomposition + complete _epic.md**
-   - [ ] Map Use Case → Story (Feature), technical tasks → Story (Enabler)
+4. **Story decomposition and complete _epic.md**
+   - [ ] Map Use Cases to Stories (Feature) or technical tasks to Stories (Enabler)
    - [ ] Assign Story IDs (US: User Story, TS: Technical Story)
-   - [ ] Estimate expected commit count per Story
-   - [ ] Complete Stories table in _epic.md, define completion criteria
+   - [ ] Estimate the expected commit count for each Story
+   - [ ] Complete the Stories table in _epic.md and define completion criteria
 
 5. **Execute**
-   - [ ] Extract incomplete (⏳ or no status) Stories from Stories table in `_epic.md`
-   - [ ] Execute each Story in order (do not proceed to next Step until all Stories are complete):
+   - [ ] Extract incomplete (⏳ or no status) Stories from the Stories table in `_epic.md`
+   - [ ] Execute each Story in order (do not proceed to the next Step until all Stories are complete):
      ```
      Skill tool call: skill="writing-story"
        args: story_id={US|TS-NNN}, story_name={name}, epic_name={epic_name},
              goal_id={goal_id}, phase_id={phase_id}, project_path={project_path}
      → Confirm _story.md created + status ✅ before proceeding to next Story
      ```
-   - [ ] Merge to Epic branch upon Story completion
+   - [ ] Merge to the Epic branch upon Story completion
    - [ ] Proceed to Step 6 after confirming all Story statuses ✅
 
 6. **Wrap-up**
-   - [ ] Confirm all Story statuses ✅ (return to Step 5 if any incomplete)
-   - [ ] Write RETRO.md → ref: [assets/retro.md](assets/retro.md)
-   - [ ] _epic.md status → ✅
+   - [ ] Confirm all Story statuses ✅ (return to Step 5 if any are incomplete)
+   - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
+   - [ ] Set _epic.md status to ✅
    - [ ] Skill tool call: `skill="workflow-pr"` → create PR to parent branch (Goal)
 
 ## Folder Structure
@@ -121,7 +121,7 @@ metadata:
 
 - [ ] _epic.md created
 - [ ] If Feature: Use Case written
-- [ ] Concept (domain.md, entities) written/updated
+- [ ] Concept (domain.md, entities) written or updated
 - [ ] Story decomposition complete
 - [ ] (Execute) writing-story invoked for all Stories
 - [ ] (Wrap-up) RETRO.md written

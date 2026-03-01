@@ -16,7 +16,7 @@ metadata:
 
 ## Prerequisites
 
-- `_story.md` exists → if not, invoke writing-story
+- `_story.md` exists; if not, invoke writing-story
 - The corresponding ACT must be assigned in the Action Items table of _story.md
 - All prerequisite ACTs listed in depends_on must be ✅ complete
 
@@ -41,38 +41,38 @@ metadata:
 
 | Skill | Purpose | Step |
 |-------|---------|------|
-| Development skills (frontend-*, dev-*, design-*, etc.) | Actual coding/documentation work | Execute |
+| Development skills (frontend-*, dev-*, design-*, etc.) | Actual coding and documentation work | Execute |
 
 > Development skill selection: match task content keywords with skill-orchestration triggers
 
 ## Procedure
 
 1. **Setup**
-   - [ ] Confirm `_story.md` exists → if not, invoke writing-story
-   - [ ] Confirm prerequisite ACTs in depends_on are complete
-   - [ ] Read Action Item file → ref: [assets/action-item.md](assets/action-item.md)
-   - [ ] Confirm objective + task checklist
+   - [ ] Confirm `_story.md` exists; if not, invoke writing-story
+   - [ ] Confirm all prerequisite ACTs in depends_on are complete
+   - [ ] Read the Action Item file — ref: [assets/action-item.md](assets/action-item.md)
+   - [ ] Confirm the objective and task checklist
    - [ ] Status → 🔄
 
-2. **Write tests** (if code changes)
+2. **Write tests** (if code changes are required)
    - [ ] Design test cases based on acceptance criteria
-   - [ ] Write Unit/Widget test code (Red — will fail since implementation not yet done)
+   - [ ] Write Unit/Widget test code (Red — will fail since implementation is not yet done)
 
 3. **Development**
-   - [ ] Match task keywords → development skill → invoke
-   - [ ] Perform actual coding/documentation work
-   - [ ] Complete all items in task checklist
+   - [ ] Match task keywords to a development skill and invoke it
+   - [ ] Perform the actual coding or documentation work
+   - [ ] Complete all items in the task checklist
 
 4. **Test verification**
    - [ ] Build passes
    - [ ] Tests pass (Green)
-   - [ ] Confirm output_paths files exist
+   - [ ] Confirm all files listed in output_paths exist
 
 5. **Wrap-up**
-   - [ ] Record list of changed files (Action Item file results section)
-   - [ ] Commit (1 Action Item = 1 commit, follow message format)
+   - [ ] Record the list of changed files in the Action Item file's results section
+   - [ ] Commit (1 Action Item = 1 commit, following the message format)
    - [ ] Status → ✅
-   - [ ] Decide next Action Item or process Story completion
+   - [ ] Decide the next Action Item or process Story completion
 
 ## Folder Structure
 

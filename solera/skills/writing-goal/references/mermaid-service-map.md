@@ -20,7 +20,7 @@ mindmap
 | `(text)` | Rounded rectangle | Emphasis node |
 | `[text]` | Rectangle | Separator node |
 
-> Use 2-space indentation to denote hierarchy levels
+> Use 2-space indentation to indicate hierarchy levels
 
 ## Flowchart (flow/relationships)
 
@@ -41,7 +41,7 @@ flowchart LR
 
 ## Version/Status Notation
 
-Display status in flowchart, and **also manage in a table**.
+Display status in the flowchart, and **also track it in a table**.
 
 ```markdown
 | Feature | Description | Status | Version |

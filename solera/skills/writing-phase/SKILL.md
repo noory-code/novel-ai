@@ -1,6 +1,6 @@
 ---
 name: writing-phase
-description: Phase document writing. Distributes Initiative Goals by quarter → tracks Goal execution. Triggers - "Phase definition", "Phase start", "quarterly planning".
+description: Phase document writing. Distributes Initiative Goals by quarter and tracks Goal execution. Triggers - "Phase definition", "Phase start", "quarterly planning".
 metadata:
   version: "2.0.0"
   category: writing
@@ -12,11 +12,11 @@ metadata:
 
 # Writing Phase
 
-> Writes Phase README.md and tracks Goal execution.
+> Writes the Phase README.md and tracks Goal execution.
 
 ## Prerequisites
 
-- `workspace/initiative/[year]/roadmap.md` exists → if not, request from user
+- `workspace/initiative/[year]/roadmap.md` exists; if not, request it from the user
 
 ## Input
 
@@ -40,24 +40,24 @@ metadata:
 
 | Skill | Purpose | Step |
 |-------|---------|------|
-| `writing-goal` | Elaborate each Goal and decompose into Epics | Execute |
-| `catalog-transition` | Move artifacts → catalog on Goal completion | Execute (within Goal) |
+| `writing-goal` | Elaborate each Goal and decompose it into Epics | Execute |
+| `catalog-transition` | Move artifacts to the catalog upon Goal completion | Execute (within Goal) |
 
 ## Procedure
 
 1. **Verify roadmap**
    - [ ] Read `{project_path}/initiative/{year}/roadmap.md`
-   - [ ] Extract Goals list for this Phase from the Phase planning table
-   - [ ] No Goals → confirm with user
+   - [ ] Extract the Goals list for this Phase from the Phase planning table
+   - [ ] If no Goals are found, confirm with the user
 
 2. **Create Phase folder**
    - [ ] Create `{project_path}/phase/{phase_id}/`
    - [ ] Create `{project_path}/phase/{phase_id}/goals/`
 
-3. **Write README.md** → ref: [assets/phase-template.md](assets/phase-template.md)
+3. **Write README.md** — ref: [assets/phase-template.md](assets/phase-template.md)
    - [ ] Overview table (period, objectives)
    - [ ] Goals table (Goals extracted from roadmap)
-   - [ ] Completion criteria (key criteria per Goal)
+   - [ ] Completion criteria (key criteria for each Goal)
    - [ ] Workflow section (template as-is)
 
 4. **Create Goal folder structure**
@@ -67,9 +67,9 @@ metadata:
 5. **Phase Wrap-up**
    - [ ] Confirm all Goal statuses ✅
    - [ ] Confirm catalog-transition completed for each Goal (moved to `workspace/catalog/`)
-   - [ ] Write SUMMARY.md (overall Goal outcomes, catalog artifact list, handoff notes for next Phase)
-   - [ ] Write RETRO.md → ref: [assets/retro.md](assets/retro.md)
-   - [ ] README.md status → ✅, update progress
+   - [ ] Write SUMMARY.md (overall Goal outcomes, catalog artifact list, handoff notes for the next Phase)
+   - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
+   - [ ] Set README.md status to ✅ and update progress
    - [ ] Update progress.md
 
 ## Folder Structure
@@ -90,7 +90,7 @@ metadata:
 ## Completion Checklist
 
 - [ ] README.md created
-- [ ] Goals table includes all Goals from roadmap
+- [ ] Goals table includes all Goals from the roadmap
 - [ ] Folder structure created for each Goal
 - [ ] writing-goal transition prepared
 - [ ] (Wrap-up) All Goal catalog-transitions confirmed complete

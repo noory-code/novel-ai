@@ -1,6 +1,6 @@
 # Template: Action Item
 
-Defines the decomposition unit of a Story = the commit unit.
+Defines the decomposition unit of a Story, which corresponds to a single commit.
 
 ## ACT-NNN-[name].md
 
@@ -39,12 +39,12 @@ Defines the decomposition unit of a Story = the commit unit.
 ## Workflow
 
 ### Step 0. Setup
-- [ ] Confirm `stories/[US|TS]-NNN/_story.md` exists → invoke writing-story if missing
+- [ ] Confirm `stories/[US|TS]-NNN/_story.md` exists; if missing, invoke writing-story
 - [ ] Status → 🔄
-- [ ] Confirm goal + task content checklist
+- [ ] Confirm the goal and task content checklist
 
 ### Step 1. Execute
-- [ ] Identify required skills → invoke development skills (frontend-*, dev-*, design-*, etc.)
+- [ ] Identify required skills and invoke the appropriate development skills (frontend-*, dev-*, design-*, etc.)
 - [ ] Perform actual coding/documentation work
 - [ ] Confirm all task content checklist items complete
 
@@ -52,9 +52,9 @@ Defines the decomposition unit of a Story = the commit unit.
 - [ ] Build/tests pass (if applicable)
 - [ ] Record changed file list
 - [ ] Commit (1 Action Item = 1 commit, follow message format)
-- [ ] Write retrospective → RETRO.md (ref: [assets/retro.md](retro.md))
+- [ ] Write retrospective to RETRO.md (ref: [assets/retro.md](retro.md))
 - [ ] Status → ✅
-- [ ] Determine next Action Item or process Story completion
+- [ ] Determine the next Action Item or process Story completion
 
 ## Folder Structure
 
@@ -82,5 +82,5 @@ stories/[US|TS]-NNN/action-items/
 
 | Wrong | Correct |
 |-------|---------|
-| Create a branch per Action Item | Action Item = **commit only** |
-| Multiple Action Items in one commit | 1 Action Item = 1 commit |
+| Creating a branch per Action Item | An Action Item is a **commit only** — no branch |
+| Bundling multiple Action Items in one commit | One Action Item = one commit |

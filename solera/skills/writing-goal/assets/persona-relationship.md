@@ -1,6 +1,6 @@
 # Template: Persona Relationship
 
-Defines the relationship map between personas.
+Defines the relationship map among personas.
 
 ## Template
 
@@ -65,7 +65,7 @@ flowchart TB
 - [ ] Are all personas included in the relationship map?
 - [ ] Are relationship types (direct/indirect) specified?
 - [ ] Are service touchpoints defined?
-- [ ] Are conflict points and resolutions included? (when applicable)
+- [ ] Are conflict points and resolutions included (when applicable)?
 - [ ] Does the Mermaid diagram render correctly?
 
 ## Example

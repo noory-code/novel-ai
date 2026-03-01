@@ -1,6 +1,6 @@
 # Template: Use Case
 
-Defines API/feature usage scenarios.
+Defines API and feature usage scenarios.
 
 ## Template
 
@@ -102,12 +102,12 @@ flowchart LR
 
 ## Quality Criteria
 
-- [ ] Is the Actor clearly defined? (person/system)
+- [ ] Is the Actor clearly defined (person or system)?
 - [ ] Is the Goal measurable?
 - [ ] Are preconditions defined?
 - [ ] Is the basic flow defined step by step?
 - [ ] Is the exception flow defined?
-- [ ] Is required data linked to Entities?
+- [ ] Is the required data linked to Entities?
 
 ## Example
 

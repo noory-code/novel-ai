@@ -20,5 +20,5 @@ Epic retrospectives focus on **AI behavior** (not a business retrospective).
 
 - Was the Story decomposition strategy effective?
 - Was the Use Case/Concept quality sufficient for the development phase?
-- Were there segments where progress repeatedly stalled? What were the causes?
-- Was the skill invoke sequence natural?
+- Were there segments where progress repeatedly stalled, and if so, what were the causes?
+- Was the skill invocation sequence natural?

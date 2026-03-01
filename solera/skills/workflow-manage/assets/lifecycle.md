@@ -5,11 +5,11 @@ All work items (Phase, Goal, Epic, Story, Action Item) have their concrete proce
 ## Core Principles
 
 - **SSOT**: The `## Workflow` in each work item template is the single authoritative source of procedure
-- **Workflow manager reads and executes**: does not define procedures directly
+- **Workflow manager reads and executes**: it does not define procedures directly
 
 ## Workflow Pattern
 
-Work item Workflows are composed of Named Steps. Each Step has a clear role (Setup/Create/Execute/Wrap-up).
+Work item workflows are composed of named steps. Each step has a clear role (Setup/Create/Execute/Wrap-up).
 
 ```markdown
 ## Workflow
@@ -57,7 +57,7 @@ When iterating over child work items in the Execute Step, mark repeat blocks wit
 - [ ] Confirm all Stories complete
 ```
 
-- **Template**: Define only 1 block between `<!-- repeat -->` and `<!-- /repeat -->`
+- **Template**: Define only one block between `<!-- repeat -->` and `<!-- /repeat -->`
 - **Actual document**: writing-* skills expand the block to match the number of items in the table when creating work items
 - **Progress tracking**: Individual checkboxes are created for each child work item, enabling progress tracking
 
@@ -67,4 +67,4 @@ When iterating over child work items in the Execute Step, mark repeat blocks wit
 2. Execute each Step in order
 3. Invoke writing-* skills when document creation is needed
 4. Invoke frontend-*, dev-* skills when development work is needed
-5. After completion, update progress.md + determine next work item
+5. After completion, update progress.md and determine the next work item

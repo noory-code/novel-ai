@@ -13,7 +13,7 @@ Goal retrospectives focus on the **business perspective**.
 |---------|---------------|
 | **Keep** | User value delivered, effective Epic decomposition, schedule adherence |
 | **Problem** | Unmet completion criteria, incorrect Epic prioritization, scope overrun |
-| **Try** | Strategies/processes to try in the next Goal |
+| **Try** | Strategies and processes to try in the next Goal |
 | **Learned** | Domain insights, user feedback, technical lessons |
 
 ## Goal-Specific Review Questions

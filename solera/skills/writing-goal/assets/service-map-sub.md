@@ -65,9 +65,9 @@ flowchart LR
 ## Quality Criteria: feature.md
 
 - [ ] Is there a parent map link (breadcrumb)?
-- [ ] Is the feature purpose clear?
+- [ ] Is the feature purpose clearly stated?
 - [ ] Is there an **Admin Management Points** section?
-- [ ] Are related Journey/Use Case links present?
+- [ ] Are related Journey and Use Case links present?
 
 ---
 
@@ -134,8 +134,8 @@ flowchart TB
 | Principle | Description |
 |-----------|-------------|
 | **Minimal input** | Admins enter only essential values |
-| **Auto-derivation** | System calculates the rest |
-| **Exception handling** | Manual intervention only for edge cases |
+| **Auto-derivation** | The system calculates everything else |
+| **Exception handling** | Manual intervention is reserved for edge cases |
 
 > See the "Admin Management Points" section of each feature document for detailed management points
 
@@ -149,6 +149,6 @@ flowchart TB
 
 ## Quality Criteria: admin/index.md
 
-- [ ] Are all management areas shown in the diagram?
-- [ ] Are management points linked to related features?
+- [ ] Are all management areas represented in the diagram?
+- [ ] Are management points linked to their related features?
 - [ ] Are automation principles defined?

@@ -31,16 +31,16 @@
 ## Workflow
 
 ### Step 0. Setup
-- [ ] Confirm `goals/*/_goal.md` exists → invoke writing-goal if missing
+- [ ] Confirm `goals/*/_goal.md` exists; if missing, invoke writing-goal
 - [ ] Create `epic-[name]` branch (from dev)
 - [ ] Status → 🔄
 
 ### Step 1. Create
-- [ ] Write Use Cases → `artifacts/use-case/UC-NNN-[name].md`
-- [ ] Derive Concepts → `artifacts/concept/domain.md`
-- [ ] Define Entities → `artifacts/concept/entities/*.md`
-- [ ] Decompose Stories → `stories/[US|TS]-NNN/_story.md`
-- [ ] Write `_epic.md` → Stories table, completion criteria
+- [ ] Write Use Cases to `artifacts/use-case/UC-NNN-[name].md`
+- [ ] Derive Concepts to `artifacts/concept/domain.md`
+- [ ] Define Entities in `artifacts/concept/entities/*.md`
+- [ ] Decompose Stories into `stories/[US|TS]-NNN/_story.md`
+- [ ] Write `_epic.md` with the Stories table and completion criteria
 
 ### Step 2. Execute
 <!-- Repeat the block below for each Story in the Stories table -->
@@ -51,7 +51,7 @@
 - [ ] Confirm all Stories complete
 
 ### Step 3. Wrap-up
-- [ ] Write retrospective → RETRO.md (ref: [assets/retro.md](retro.md))
+- [ ] Write retrospective to RETRO.md (ref: [assets/retro.md](retro.md))
 - [ ] Status → ✅
-- [ ] workflow-pr invoke → create PR to parent branch + merge
-- [ ] Determine next Epic or process Goal completion
+- [ ] workflow-pr invoke (create PR to parent branch and merge)
+- [ ] Determine the next Epic or process Goal completion

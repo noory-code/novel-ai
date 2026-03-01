@@ -18,7 +18,7 @@ Action Item retrospectives focus on **AI behavior** (not a business retrospectiv
 
 ## Action Item-Specific Review Questions
 
-- Was the commit scope appropriate? (not too large or too small?)
+- Was the commit scope appropriate — neither too large nor too small?
 - Was the development skill selection appropriate?
-- Was the TDD procedure (Red → Green) followed well?
-- Were there unexpected issues during build/testing?
+- Was the TDD procedure (Red → Green) followed correctly?
+- Were there unexpected issues during build or testing?

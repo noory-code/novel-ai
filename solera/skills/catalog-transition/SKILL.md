@@ -14,8 +14,8 @@ metadata:
 
 ## Prerequisites
 
-- Goal status complete → all Stories must be complete
-- All Epics complete → cannot proceed if any are incomplete
+- Goal status is complete — all Stories must be complete
+- All Epics are complete — cannot proceed if any are incomplete
 
 ## Input
 
@@ -34,10 +34,10 @@ metadata:
 
 1. **Confirm transition targets**
    - [ ] Scan `goals/[goal]/artifacts/`
-   - [ ] Select only files of types defined in the move mapping table (exclude files not in the mapping table)
+   - [ ] Select only files of types defined in the move mapping table (exclude any files not in the mapping table)
 
 2. **Record version**
-   - [ ] Add `Applied version: [Phase]-[Goal number]` to header
+   - [ ] Add `Applied version: [Phase]-[Goal number]` to the header
    - [ ] Format: H1-G01, H1-G02, etc.
 
 3. **Move files**
@@ -47,15 +47,15 @@ metadata:
    - [ ] Fix paths in _goal.md and other artifacts
 
 5. **Obsidian optimization**
-   - [ ] Add applied version to frontmatter
-   - [ ] status/* tags → status/completed
+   - [ ] Add the applied version to frontmatter
+   - [ ] Change status/* tags to status/completed
    - [ ] Update the `updated` date
 
 6. **Verification**
    - [ ] All files moved to published
    - [ ] Version information recorded
-   - [ ] Links working correctly
-   - [ ] artifacts folder is empty
+   - [ ] Links are working correctly
+   - [ ] The artifacts folder is empty
 
 ---
 
@@ -141,9 +141,9 @@ published/
 ## Notes
 
 - Only move types defined in the move mapping table to published (files not in the mapping table remain in artifacts)
-- If the same file exists, replace with the higher version
-- To check a previous version, use `git log --follow -- {file-path}` to view history
-- Transition in bulk per Goal unit (not per Epic unit)
+- If the same file already exists in the destination, replace it with the higher version
+- To review a previous version, use `git log --follow -- {file-path}` to view history
+- Transition in bulk by Goal, not by Epic
 
 ## References
 

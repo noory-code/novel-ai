@@ -28,27 +28,27 @@
 ## Workflow
 
 ### Step 0. Setup
-- [ ] Confirm `published/identity/mission.md` exists → invoke writing-identity if missing
+- [ ] Confirm `published/identity/mission.md` exists; if missing, invoke writing-identity
 - [ ] Create `goals/[goal-id]-[name]/` folder
 - [ ] Create `goals/[goal-id]-[name]/artifacts/` folder
 - [ ] Status → 🔄
 
 ### Step 1. Create
-- [ ] Generate Service Map, Persona (Feature only; skip for Enabler)
-- [ ] Write Journey (rough) → Steps sequence per Persona
-- [ ] Decompose Epics → map to Journeys, assign numbers (01, 02, ...)
-- [ ] Write `_goal.md` → Journey table, Epics table, completion criteria
+- [ ] Generate Service Map and Persona (Feature only; skip for Enabler)
+- [ ] Write Journey (rough): define the steps sequence for each Persona
+- [ ] Decompose Epics: map to Journeys and assign numbers (01, 02, ...)
+- [ ] Write `_goal.md` with the Journey table, Epics table, and completion criteria
 
 ### Step 2. Execute
 <!-- Repeat the block below for each Epic in the Epics table -->
 #### Epic: {number}-{name}
 - [ ] writing-epic invoke (Setup → Create → Execute → Wrap-up)
-- [ ] workflow-pr invoke → PR to parent branch
+- [ ] workflow-pr invoke (PR to parent branch)
 <!-- /repeat -->
 - [ ] Confirm all Epics complete
 
 ### Step 3. Wrap-up
-- [ ] Write retrospective → RETRO.md (ref: [assets/retro.md](retro.md))
+- [ ] Write retrospective to RETRO.md (ref: [assets/retro.md](retro.md))
 - [ ] Status → ✅
 - [ ] catalog-transition invoke (artifacts/ → published/)
 
@@ -56,5 +56,5 @@
 
 | Type | Output | Examples |
 |------|--------|---------|
-| **Feature** | Service Map, Persona, Journey → Epic | liquor-search, profile |
-| **Enabler** | Epic (Persona/Journey can be skipped) | infrastructure, DB design |
+| **Feature** | Service Map, Persona, and Journey leading to Epics | liquor-search, profile |
+| **Enabler** | Epic only (Persona/Journey can be skipped) | infrastructure, DB design |

@@ -1,6 +1,6 @@
 ---
 name: workflow-pr
-description: Creates PR to parent branch upon Epic completion → review → merge.
+description: Upon Epic completion, creates a PR to the parent branch, reviews it, and merges.
 metadata:
   version: "2.0.0"
   category: workflow
@@ -12,12 +12,12 @@ metadata:
 
 # Workflow PR
 
-> Upon Epic completion, creates a PR to the parent branch, reviews, and merges.
+> Upon Epic completion, creates a PR to the parent branch, reviews it, and merges.
 
 ## Prerequisites
 
-- All Stories in the Epic squash merged (status ✅)
-- Build/tests pass on the Epic branch
+- All Stories in the Epic have been squash merged (status ✅)
+- Build and tests pass on the Epic branch
 
 ## Input
 
@@ -30,29 +30,29 @@ metadata:
 
 | Step | Output | Description |
 |------|--------|-------------|
-| Create PR | GitHub PR (URL) | PR per Epic unit |
+| Create PR | GitHub PR (URL) | One PR per Epic |
 | Merge | Merge commit | squash merge |
 
 ## Procedure
 
 1. **Prepare PR**
-   - [ ] Confirm all Stories in Epic are ✅
-   - [ ] Confirm build/tests pass
+   - [ ] Confirm all Stories in the Epic are ✅
+   - [ ] Confirm build and tests pass
    - [ ] Confirm no conflicts against target_branch (rebase if conflicts exist)
 
 2. **Create PR**
    - [ ] `gh pr create --base {target_branch} --head {epic_branch}`
    - [ ] PR title: `[Epic] {epic_name}: {one-line summary}`
-   - [ ] PR body: Stories list, key changes, test results → ref: [assets/pr-template.md](assets/pr-template.md)
+   - [ ] PR body: Stories list, key changes, test results — ref: [assets/pr-template.md](assets/pr-template.md)
 
 3. **Handle review**
    - [ ] Check review comments
-   - [ ] Add commits to Epic branch for fixes
+   - [ ] Add commits to the Epic branch for any fixes
    - [ ] Re-confirm CI passes
 
 4. **Merge**
-   - [ ] Execute PR squash merge
-   - [ ] Confirm source branch deleted
+   - [ ] Execute the PR squash merge
+   - [ ] Confirm the source branch is deleted
 
 ## PR Title Format
 

@@ -1,6 +1,6 @@
 # Template: Persona
 
-Defines user types.
+Defines the user types for a service.
 
 ## Template
 
@@ -65,8 +65,8 @@ Defines user types.
 
 ## Quality Criteria
 
-- [ ] Is the profile specific? (not abstract?)
-- [ ] Are motivations and goals clear?
+- [ ] Is the profile specific rather than abstract?
+- [ ] Are motivations and goals clearly stated?
 - [ ] Are at least 2 Pain Points defined?
 - [ ] Are core needs linked to service responses?
 - [ ] Are related Journeys connected?
@@ -90,7 +90,7 @@ Defines user types.
 
 ### Why do they use this service?
 
-Wants to quickly grasp new liquor information and provide accurate information to customers
+Wants to quickly absorb new liquor information and provide accurate details to customers
 
 ### Goals they want to achieve
 

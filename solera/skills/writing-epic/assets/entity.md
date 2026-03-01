@@ -18,6 +18,6 @@
 
 ## Quality Criteria
 
-- [ ] Are required/optional clearly distinguished in attributes?
+- [ ] Are required and optional attributes clearly distinguished?
 - [ ] Is relationship cardinality specified?
 - [ ] Are business rules defined?

@@ -78,7 +78,7 @@ flowchart LR
 
 ## Quality Criteria: vertical/index.md
 
-- [ ] Is the vertical definition clear?
+- [ ] Is the vertical definition clearly stated?
 - [ ] Is the membership policy defined?
 - [ ] Are admin management points defined?
-- [ ] Are status/version annotated in the feature list?
+- [ ] Are status and version annotated in the feature list?

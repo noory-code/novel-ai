@@ -1,6 +1,6 @@
 # Conventions
 
-Project-wide rules. All skills reference this file.
+This file defines the project-wide rules referenced by all skills.
 
 ## Work Item Hierarchy
 

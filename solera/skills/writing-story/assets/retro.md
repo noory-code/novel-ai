@@ -20,5 +20,5 @@ Story retrospectives focus on **AI behavior** (not a business retrospective).
 
 - Was the Action Item decomposition strategy effective?
 - Were the acceptance criteria sufficiently clear during development?
-- Was the commit scope for each Action Item appropriate?
+- Was the commit scope appropriate for each Action Item?
 - When using an agent team, were clean results produced without conflicts?

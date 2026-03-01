@@ -1,6 +1,6 @@
 # Template: Story
 
-Defines the decomposition unit of an Epic (User Story/Technical Story).
+Defines the decomposition unit of an Epic, covering both User Stories and Technical Stories.
 
 ## _story.md (User Story)
 
@@ -68,17 +68,17 @@ Defines the decomposition unit of an Epic (User Story/Technical Story).
 ## Workflow
 
 ### Step 0. Setup
-- [ ] Confirm `epics/*/_epic.md` exists → invoke writing-epic if missing
+- [ ] Confirm `epics/*/_epic.md` exists; if missing, invoke writing-epic
 - [ ] Status → 🔄
 
 ### Step 1. Create (performed on Epic branch)
 - [ ] Determine Story type (US / TS)
 - [ ] Define acceptance criteria
-- [ ] Write `_story.md` → story/technical goal, acceptance criteria, Action Items table
-- [ ] Create Action Item files (required) → `action-items/ACT-NNN-[name].md`
+- [ ] Write `_story.md` with the story/technical goal, acceptance criteria, and Action Items table
+- [ ] Create Action Item files (required) in `action-items/ACT-NNN-[name].md`
 - [ ] Assign responsible Agent per Action Item (when using agent team)
 - [ ] Define dependencies between Action Items (depends_on)
-- [ ] Phase allocation (Action Items that can run in parallel = same Phase)
+- [ ] Allocate phases (Action Items that can run in parallel belong to the same Phase)
 - [ ] Create `epic-[name]/story-[ID]-[name]` branch (from Epic branch)
 
 ### Step 2. Execute
@@ -86,17 +86,17 @@ Defines the decomposition unit of an Epic (User Story/Technical Story).
 <!-- Repeat the block below for each Action Item in the Action Items table -->
 #### Action Item: ACT-NNN — {title}
 - [ ] writing-action-item invoke or development skill invoke
-- [ ] Perform work + commit
+- [ ] Perform work and commit
 <!-- /repeat -->
 - [ ] Confirm all acceptance criteria are met
 - [ ] Confirm all Action Items complete
 
 ### Step 3. Wrap-up
 - [ ] Build/tests pass
-- [ ] Write retrospective → RETRO.md (ref: [assets/retro.md](retro.md))
+- [ ] Write retrospective to RETRO.md (ref: [assets/retro.md](retro.md))
 - [ ] Status → ✅
 - [ ] Squash merge into Epic branch
-- [ ] Determine next Story or process Epic completion
+- [ ] Determine the next Story or process Epic completion
 
 ## Folder Structure
 
@@ -119,10 +119,10 @@ stories/[US|TS]-NNN/
 
 ## Quality Criteria
 
-- [ ] Does the User Story have As a/I want/So that?
+- [ ] Does the User Story follow the As a / I want / So that format?
 - [ ] Does the Technical Story have a technical goal?
 - [ ] Are acceptance criteria defined?
 - [ ] Have all Action Items been assigned an ID?
 - [ ] Is progress displayed?
-- [ ] Are Agent/Phase/depends_on defined per Action Item?
+- [ ] Are Agent, Phase, and depends_on defined for each Action Item?
 - [ ] Can Action Items in the same Phase run in parallel without output conflicts?

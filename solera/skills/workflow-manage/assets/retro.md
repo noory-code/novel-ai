@@ -1,6 +1,6 @@
 # Template: Retrospective
 
-Write RETRO.md upon completion of a hierarchy level.
+Write a RETRO.md when a hierarchy level is complete.
 
 ## Retrospective Types
 
@@ -87,6 +87,6 @@ Write RETRO.md upon completion of a hierarchy level.
 
 ## Quality Criteria
 
-- [ ] Written from the appropriate perspective (AI behavior vs business)?
-- [ ] Each section contains at least 1 item?
-- [ ] Are improvements actionable for the next task?
+- [ ] Is it written from the appropriate perspective (AI behavior vs. business)?
+- [ ] Does each section contain at least one item?
+- [ ] Are the improvements actionable for the next task?

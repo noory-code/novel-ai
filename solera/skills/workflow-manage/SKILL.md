@@ -22,7 +22,7 @@ metadata:
 
 ## Prerequisites
 
-- `[project]/progress.md` exists → if not, initialize (ref: [assets/progress.md](assets/progress.md))
+- `[project]/progress.md` exists; if not, initialize it (ref: [assets/progress.md](assets/progress.md))
 
 ## Input
 
@@ -53,20 +53,20 @@ metadata:
 
 1. Read the target work item
 2. Execute the latter steps of `## Workflow` (completion check, status change, etc.)
-3. If Epic/Goal, write RETRO.md
+3. If the item is an Epic or Goal, write RETRO.md
 4. Update progress.md
-5. Decide next work
+5. Decide the next work item
 
 ### check — Check current status
 
 1. Read progress.md
-2. Return current Phase, Goal, Epic, Story
+2. Return the current Phase, Goal, Epic, and Story
 
 ### next — Decide next work
 
-1. Story complete + Epic has remaining Stories → start next Story
-2. Epic complete + Goal has remaining Epics → Epic retrospective → start next Epic
-3. Goal complete → Goal retrospective → invoke catalog-transition
+1. Story complete and Epic has remaining Stories → start the next Story
+2. Epic complete and Goal has remaining Epics → write an Epic retrospective, then start the next Epic
+3. Goal complete → write a Goal retrospective, then invoke catalog-transition
 4. Otherwise → continue current work
 
 ## Responsibilities
@@ -74,12 +74,12 @@ metadata:
 | Role | Skill |
 |------|-------|
 | **Document writing** | writing-identity, writing-phase, writing-goal, writing-epic, writing-story, writing-action-item |
-| **Execution supervision** | workflow-manage (this skill) |
+| **Execution supervision** | workflow-manage |
 | **Completion handling** | catalog-transition |
 
 ## Supervision Principles
 
-- Reads the work item's `## Workflow` as SSOT
+- Reads the work item's `## Workflow` as the SSOT
 - Does not define procedures directly — follows procedures defined in the template
 - Delegates document writing to writing-* skills
 - Delegates development work to frontend-*, dev-* skills

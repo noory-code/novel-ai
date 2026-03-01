@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Context transfer between sessions - update HANDOFF.md
+description: Transfer context between sessions by updating HANDOFF.md
 metadata:
   version: "1.0.0"
   category: workflow
@@ -12,7 +12,7 @@ metadata:
 
 # Handoff
 
-> Create/update HANDOFF.md for context transfer between sessions
+> Creates or updates HANDOFF.md to transfer context between sessions.
 
 ## Input
 
@@ -22,7 +22,7 @@ None (auto-detects current session state)
 
 | File | Location | Purpose |
 |------|----------|---------|
-| HANDOFF.md | Project root | Context transfer between sessions (temporary state) |
+| HANDOFF.md | Project root | Transfers context between sessions (temporary state) |
 
 ## Procedure
 
@@ -37,14 +37,14 @@ Collect the following information to understand the current session's work:
    git log --oneline -5
    ```
 
-2. **Check Todo list**: Current session's todo list state
+2. **Check Todo list**: Review the current session's todo list state
 
-3. **Read progress.md**: Check current Phase/Goal/Epic/Story via the [workflow-manage](../workflow-manage/SKILL.md) skill
+3. **Read progress.md**: Check the current Phase/Goal/Epic/Story via the [workflow-manage](../workflow-manage/SKILL.md) skill
 
 ### Step 2: Read HANDOFF.md
 
 1. Attempt to read `HANDOFF.md`
-2. If file does not exist, create a new one referencing [assets/handoff-template.md](assets/handoff-template.md)
+2. If the file does not exist, create a new one referencing [assets/handoff-template.md](assets/handoff-template.md)
 
 ### Step 3: Update sections
 
@@ -68,15 +68,15 @@ Update the following sections based on information collected in Step 1:
 
 | Failure point | Condition | Recovery procedure |
 |---------------|-----------|-------------------|
-| HANDOFF.md read failure | File does not exist | Create new at project root (reference template) |
-| Cannot determine current work | git diff/log is empty | Ask user "Please tell me what you did this session" |
+| HANDOFF.md read failure | File does not exist | Create a new one at the project root (reference template) |
+| Cannot determine current work | git diff/log is empty | Ask the user: "What did you accomplish this session?" |
 | HANDOFF.md write failure | Permission error | Run `chmod 644 HANDOFF.md` and retry |
 
 ## When to Use
 
 - Before interrupting work
-- Before reaching context window limit
-- Mid-save during complex work
+- Before reaching the context window limit
+- As a mid-session save during complex work
 
 ## progress.md vs HANDOFF.md
 
@@ -94,6 +94,6 @@ Update the following sections based on information collected in Step 1:
 - [ ] Understood current work via git status/diff/log?
 - [ ] Confirmed current Phase/Goal/Epic from progress.md?
 - [ ] Read or created HANDOFF.md?
-- [ ] Updated 6 sections (current work, completed items, next steps, decisions, reference files, notes)?
+- [ ] Updated all 6 sections (current work, completed items, next steps, decisions, reference files, notes)?
 - [ ] Added timestamp?
 - [ ] Saved HANDOFF.md?

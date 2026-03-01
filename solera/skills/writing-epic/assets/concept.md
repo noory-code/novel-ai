@@ -1,6 +1,6 @@
 # Template: Concept
 
-Defines domain concepts (Entity, attributes, relationships).
+Defines domain concepts including entities, attributes, and relationships.
 
 ## Domain Overview Template
 
@@ -98,12 +98,12 @@ classDiagram
 ### Domain Overview
 
 - [ ] Are all core concepts listed?
-- [ ] Are all relationships represented in the Class Diagram?
+- [ ] Are all relationships represented in the class diagram?
 - [ ] Are concepts linked to Use Cases?
 
 ### Entity Detail
 
-- [ ] Is the purpose clear?
+- [ ] Is the purpose clearly stated?
 - [ ] Do all attributes have descriptions and examples?
 - [ ] Is cardinality specified in relationships?
 - [ ] Are business rules defined?
