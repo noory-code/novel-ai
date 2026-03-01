@@ -4,6 +4,17 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.2.0] — 2026-03-01
+
+### Changed
+- `init()` no longer installs skills into `.claude/skills/` — skills are provided by the plugin directly
+- `init()` no longer registers hooks into `~/.claude/settings.local.json` — hooks are provided by the plugin directly
+- `init()` now only creates config and scans environment
+
+**309 tests passing**
+
+---
+
 ## [1.1.0] — 2026-02-27
 
 ### Security

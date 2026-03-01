@@ -1,6 +1,6 @@
 {
   "name": "distill",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Extract and recall reusable knowledge from Claude Code conversations",
   "author": {
     "name": "noory-code"

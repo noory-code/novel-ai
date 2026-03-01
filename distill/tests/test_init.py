@@ -10,8 +10,6 @@ import pytest
 from distill.tools.init import (
     _ensure_config,
     _format_scan_summary,
-    _install_hooks,
-    _install_skills,
     init,
 )
 
@@ -50,36 +48,6 @@ class TestEnsureConfig:
         created, config_path = _ensure_config(str(tmp_path), "global")
         assert created is True
         assert config_path == tmp_path / ".distill" / "config.json"
-
-
-class TestInstallSkills:
-    def test_creates_all_skill_files(self, tmp_path: Path):
-        results = _install_skills(str(tmp_path))
-        assert len(results) == 8
-        for created, name, path in results:
-            assert created is True
-            assert path.exists()
-            assert name in path.read_text()
-
-    def test_skips_if_already_exist(self, tmp_path: Path):
-        _install_skills(str(tmp_path))
-        results = _install_skills(str(tmp_path))
-        for created, _, _ in results:
-            assert created is False
-
-    def test_skill_paths_are_correct(self, tmp_path: Path):
-        results = _install_skills(str(tmp_path))
-        for _, name, path in results:
-            expected = tmp_path / ".claude" / "skills" / name / "SKILL.md"
-            assert path == expected
-
-    def test_installs_distill_recall_skill(self, tmp_path: Path):
-        results = _install_skills(str(tmp_path))
-        names = [name for _, name, _ in results]
-        assert "distill-recall" in names
-        assert "distill-init" in names
-        assert "distill-learn" in names
-
 
 
 class TestFormatScanSummary:
@@ -172,33 +140,6 @@ class TestInitTool:
         assert "learn(" in result or "sources.dirs" in result
 
     @pytest.mark.asyncio
-    async def test_installs_skills_on_first_run(self, tmp_path: Path):
-        result = await init(scope="project", _project_root=str(tmp_path))
-
-        skill_path = tmp_path / ".claude" / "skills" / "distill-recall" / "SKILL.md"
-        assert skill_path.exists()
-        assert "Skills installed" in result
-
-    @pytest.mark.asyncio
-    async def test_reports_existing_skills(self, tmp_path: Path):
-        # Pre-create all skills
-        from distill.tools.init import _SKILL_CONTENTS
-        for name in _SKILL_CONTENTS:
-            skill_dir = tmp_path / ".claude" / "skills" / name
-            skill_dir.mkdir(parents=True)
-            (skill_dir / "SKILL.md").write_text("existing")
-
-        result = await init(scope="project", _project_root=str(tmp_path))
-        assert "already exist" in result
-
-    @pytest.mark.asyncio
-    async def test_installs_hooks_on_first_run(self, tmp_path: Path):
-        settings_path = tmp_path / "settings.local.json"
-        result = await init(scope="project", _project_root=str(tmp_path))
-        # init() uses real ~/.claude/settings.local.json — just verify message is present
-        assert "Hook" in result
-
-    @pytest.mark.asyncio
     async def test_guidance_with_dirs(self, tmp_path: Path):
         docs_dir = tmp_path / "docs"
         docs_dir.mkdir()
@@ -257,84 +198,3 @@ class TestMonorepoScopeSelection:
         assert (project / ".distill" / "config.json").exists()
 
 
-class TestInstallHooks:
-    def _settings(self, tmp_path: Path) -> Path:
-        return tmp_path / "settings.local.json"
-
-    def test_creates_settings_file_if_missing(self, tmp_path: Path):
-        settings_path = self._settings(tmp_path)
-        result = _install_hooks(tmp_path / "distill", _settings_path=settings_path)
-        assert settings_path.exists()
-        assert "Hooks installed" in result
-
-    def test_installs_all_hooks(self, tmp_path: Path):
-        settings_path = self._settings(tmp_path)
-        _install_hooks(tmp_path / "distill", _settings_path=settings_path)
-        data = json.loads(settings_path.read_text())
-        assert "PreCompact" in data["hooks"]
-        assert "SessionEnd" in data["hooks"]
-        assert "SessionStart" not in data["hooks"]
-
-    def test_hook_command_contains_distill_dir(self, tmp_path: Path):
-        settings_path = self._settings(tmp_path)
-        distill_dir = tmp_path / "my-distill"
-        _install_hooks(distill_dir, _settings_path=settings_path)
-        data = json.loads(settings_path.read_text())
-        cmd = data["hooks"]["PreCompact"][0]["command"]
-        assert str(distill_dir) in cmd
-
-    def test_skips_already_registered_hooks(self, tmp_path: Path):
-        settings_path = self._settings(tmp_path)
-        distill_dir = tmp_path / "distill"
-        _install_hooks(distill_dir, _settings_path=settings_path)
-        _install_hooks(distill_dir, _settings_path=settings_path)
-
-        data = json.loads(settings_path.read_text())
-        # Should not have duplicates
-        assert len(data["hooks"]["PreCompact"]) == 1
-
-    def test_reports_already_registered(self, tmp_path: Path):
-        settings_path = self._settings(tmp_path)
-        distill_dir = tmp_path / "distill"
-        _install_hooks(distill_dir, _settings_path=settings_path)
-        result = _install_hooks(distill_dir, _settings_path=settings_path)
-        assert "already registered" in result
-
-    def test_preserves_existing_hooks(self, tmp_path: Path):
-        settings_path = self._settings(tmp_path)
-        existing = {
-            "hooks": {
-                "PreCompact": [{"type": "command", "command": "other-tool"}]
-            }
-        }
-        settings_path.write_text(json.dumps(existing))
-
-        _install_hooks(tmp_path / "distill", _settings_path=settings_path)
-
-        data = json.loads(settings_path.read_text())
-        commands = [e["command"] for e in data["hooks"]["PreCompact"]]
-        assert "other-tool" in commands
-        assert any("distill" in c for c in commands)
-
-    def test_handles_malformed_json(self, tmp_path: Path):
-        settings_path = self._settings(tmp_path)
-        settings_path.parent.mkdir(parents=True, exist_ok=True)
-        settings_path.write_text("{not valid json{{")
-
-        result = _install_hooks(tmp_path / "distill", _settings_path=settings_path)
-        assert "Could not read" in result
-        # Original file should be untouched
-        assert settings_path.read_text() == "{not valid json{{"
-
-    def test_partial_install_reports_both(self, tmp_path: Path):
-        settings_path = self._settings(tmp_path)
-        distill_dir = tmp_path / "distill"
-
-        # Pre-install PreCompact only
-        cmd = f"uv --directory {distill_dir} run python -m distill.hooks.distill_hook"
-        existing = {"hooks": {"PreCompact": [{"type": "command", "command": cmd}]}}
-        settings_path.write_text(json.dumps(existing))
-
-        result = _install_hooks(distill_dir, _settings_path=settings_path)
-        assert "Hooks installed" in result
-        assert "SessionEnd" in result
