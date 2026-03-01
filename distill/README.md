@@ -1,14 +1,30 @@
 # Distill
 
-> Automatically distill reusable knowledge from your Claude Code conversations.
+**Short-term memory fades. Distill makes it permanent.**
 
-Distill is an MCP (Model Context Protocol) server that analyzes your AI coding conversations and extracts patterns, preferences, decisions, and lessons learned — so Claude remembers what matters across sessions.
+Claude Code's built-in `/memory` lives in a single session. Distill automatically extracts decisions, patterns, and hard-won insights from every conversation — and makes them available across all your projects, forever.
 
-**No API key needed.** Distill uses MCP Sampling, which routes through your existing Claude subscription.
+**No API key needed.** Distill uses MCP Sampling, routing through your existing Claude subscription.
 
-## How It Works
+## Why Distill?
 
-When you work with Claude Code, valuable knowledge emerges through conversation — corrections you make, patterns you establish, architectural decisions you commit to. Distill captures these automatically.
+Every time you correct Claude, establish a pattern, or choose between approaches, that knowledge disappears when the session ends. The next conversation starts from zero.
+
+Distill captures what matters — automatically, in the background — and builds a permanent, searchable knowledge base that grows with your work.
+
+| | Claude Code `/memory` | `CLAUDE.md` | **Distill** |
+|--|--|--|--|
+| Scope | Single session | Single project | **Global + per-project** |
+| Lifetime | Ephemeral | Manual maintenance | **Permanent, auto-updated** |
+| Extraction | Manual | Manual | **Automatic (hooks)** |
+| Recall | None | Full file always loaded | **Semantic search on demand** |
+| Scale | ~10 items | Grows unwieldy | **Scales with usage** |
+
+After 50 sessions, Distill has extracted your coding patterns, architectural preferences, and project decisions — and Claude automatically has that context in every future conversation.
+
+## What Gets Captured
+
+When you work with Claude Code, valuable knowledge emerges through conversation. Distill captures it automatically.
 
 **Extraction signals** (ordered by confidence):
 
@@ -17,11 +33,47 @@ When you work with Claude Code, valuable knowledge emerges through conversation 
 3. **Error resolutions** — An error occurred, root cause found, solution applied
 4. **Accumulated patterns** — Repeated code/architecture patterns or consistent decision directions
 
-Each extracted piece of knowledge is classified by type, scope, and confidence, then stored locally in SQLite with full-text search.
+Each extracted piece is classified by type, scope, and confidence, then stored locally in SQLite with vector + full-text search.
+
+## What Happens After init()
+
+Run `init()` once. After that:
+
+1. **Hooks activate automatically** — every conversation end triggers extraction in the background
+2. **`recall()` searches everything** — past projects, current project, global patterns — all at once
+3. **`memory("crystallize")`** consolidates chunks into `.claude/rules/distill-*.md` files that Claude Code loads automatically as context in every session
+
+The knowledge base grows passively. You work normally; Distill captures what matters.
+
+## Proven on Distill itself
+
+Distill analyzes its own development conversations through the same pipeline. Here are real findings from self-improvement (194 completed proposals):
+
+| Finding | Persona | Outcome |
+|---------|---------|---------|
+| f-string `WHERE` clauses — SQL injection risk | security-auditor | Fixed: parameterized queries with `?` placeholders throughout |
+| Per-chunk embedding calls — 20+ model runs per ingest | performance-analyst | Fixed: batch embedding via `index_many()` — 10–20× faster |
+| Single corrupt JSONL line drops entire transcript | chaos-engineer | Fixed: per-line error recovery + UTF-8 boundary truncation |
+| `__exit__` doesn't guarantee `close()` on exception | spec-reviewer | Fixed: try/finally + `PRAGMA busy_timeout` for concurrent safety |
+| Bare `except Exception: pass` in 19+ locations | spec-reviewer | Fixed: structured logging with `exc_info=True` throughout |
 
 ## Installation
 
-### 1. Clone and install
+### Claude Code Plugin (recommended)
+
+**1. Add marketplace**
+```
+/plugin marketplace add noory-code/noory-ai
+```
+
+**2. Install plugin**
+```
+/plugin install distill@noory-code/noory-ai
+```
+
+MCP server, hooks (PreCompact, SessionEnd), and skills are registered automatically.
+
+### Manual
 
 ```bash
 git clone https://github.com/noory-code/noory-ai.git
@@ -29,17 +81,7 @@ cd noory-ai/distill
 uv sync
 ```
 
-### 2. Register as Claude Code plugin (recommended)
-
-```
-/install-plugin /absolute/path/to/noory-ai/distill
-```
-
-This registers the MCP server, skills, and hooks automatically via `plugin.json`. Replace `/absolute/path/to/noory-ai/distill` with the actual absolute path to the distill directory on your system.
-
-### 3. Or register as standalone MCP server
-
-Add a `.mcp.json` file in your project root:
+Add to `.mcp.json`:
 
 ```json
 {
@@ -52,11 +94,23 @@ Add a `.mcp.json` file in your project root:
 }
 ```
 
-Restart Claude Code after updating `.mcp.json`.
+## Quick Start
 
-### 4. Enable automatic extraction (optional)
+```
+1. init()
+   → creates config, scans environment, ingests configured dirs
+   → hooks activate: all future conversations auto-extract knowledge
 
-When installed as a plugin, hooks are registered automatically (PreCompact, SessionEnd). See [docs/configuration.md](docs/configuration.md) for the full hooks configuration.
+2. Work normally with Claude Code
+   → Distill runs in the background after each session
+
+3. recall("your question here")
+   → searches everything: current project, all past projects, global patterns
+
+4. memory("crystallize")
+   → consolidates into .claude/rules/distill-*.md
+   → Claude Code loads these automatically in every future session
+```
 
 ## MCP Tools
 
@@ -79,19 +133,14 @@ When installed as a plugin, hooks are registered automatically (PreCompact, Sess
 init()
 ```
 
-**Ingest your documentation:**
-```
-ingest("docs/")
-```
-
 **Search for knowledge:**
 ```
 recall("how to handle authentication in this project")
 ```
 
-**View your knowledge profile:**
+**Crystallize into rule files:**
 ```
-profile()
+memory("crystallize")
 ```
 
 **Manage knowledge scope:**
@@ -99,7 +148,6 @@ profile()
 memory("promote", "chunk-id")      # move one step up (project → workspace → global)
 memory("demote", "chunk-id")       # move one step down (global → workspace → project)
 memory("delete", "chunk-id")       # remove entry
-memory("crystallize")              # consolidate into rule files
 ```
 
 ## Knowledge Types
@@ -115,15 +163,17 @@ memory("crystallize")              # consolidate into rule files
 
 ## Scope
 
-Knowledge is stored in three scopes:
+Knowledge is stored in three scopes — all searched simultaneously by `recall`:
 
 | Scope | Path | Purpose |
 |-------|------|---------|
-| `global` | `~/.distill/knowledge/` | Language/framework patterns (portable across projects) |
-| `workspace` | `<git-root>/.distill/knowledge/` | Shared monorepo conventions (between packages) |
-| `project` | `.distill/knowledge/` | Project-specific conventions and decisions |
+| `global` | `~/.distill/knowledge/` | Language/framework patterns — portable across all projects |
+| `workspace` | `<git-root>/.distill/knowledge/` | Shared monorepo conventions |
+| `project` | `.distill/knowledge/` | Project-specific decisions |
 
-All available scopes are searched simultaneously by `recall`. Use `memory("promote", id)` to move knowledge one step up (project → workspace → global), or `memory("demote", id)` to move it down.
+The global scope is your permanent, cross-project knowledge base. Patterns extracted from project A are available when you start project B.
+
+Use `memory("promote", id)` to move knowledge up (project → workspace → global), or `memory("demote", id)` to move it down.
 
 ## Configuration
 
@@ -135,7 +185,7 @@ See [docs/architecture.md](docs/architecture.md) for technical details and syste
 
 ## Contributing
 
-See [docs/development.md](docs/development.md) for development setup and guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ## License
 
