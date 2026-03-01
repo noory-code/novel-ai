@@ -77,7 +77,7 @@ metadata:
 ```
 {project_path}/phase/{phase_id}/
 ├── README.md
-├── SUMMARY.md      # Created at Wrap-up (template TBD)
+├── SUMMARY.md      # Created at Wrap-up (see phase-template.md Step 3)
 ├── RETRO.md        # Created at Wrap-up
 └── goals/
     ├── {goal_id}-{name}/

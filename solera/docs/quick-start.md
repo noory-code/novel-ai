@@ -343,7 +343,7 @@ The `epic-task-crud` branch is deleted after merge.
 
 ### Catalog transition runs automatically
 
-When the last Epic in a Goal is merged and the Goal is marked complete, Solera runs `catalog-transition`. It moves intermediate design artifacts from `artifacts/` to `published/`, stamping each file with a version tag.
+When the last Epic in a Goal is merged and the Goal is marked complete, Solera runs `catalog-transition`. It moves intermediate design artifacts from `artifacts/` to `workspace/catalog/published/`, stamping each file with a version tag.
 
 Say to Claude:
 
@@ -352,11 +352,11 @@ Say to Claude:
 Solera moves the artifacts:
 
 ```
-Before (artifacts/):                     After (published/):
-goals/G1-task-management/artifacts/      workspace/
-├── service-map/index.md          →      ├── published/service-map/index.md
-├── persona/maya.md               →      ├── published/persona/maya.md
-└── use-case/UC-001-*.md          →      └── published/use-case/UC-001-*.md
+Before (artifacts/):                     After (workspace/catalog/published/):
+goals/G1-task-management/artifacts/      workspace/catalog/published/
+├── service-map/index.md          →      ├── service-map/index.md
+├── persona/maya.md               →      ├── persona/maya.md
+└── use-case/UC-001-*.md          →      └── use-case/UC-001-*.md
 ```
 
 Each moved file receives a version header:
@@ -386,10 +386,11 @@ task-app/
     │           ├── _epic.md                 (status ✅)
     │           ├── RETRO.md
     │           └── stories/...
-    └── published/
-        ├── service-map/index.md
-        ├── persona/maya.md
-        └── use-case/UC-001-create-task.md
+    └── catalog/
+        └── published/
+            ├── service-map/index.md
+            ├── persona/maya.md
+            └── use-case/UC-001-create-task.md
 ```
 
 ---

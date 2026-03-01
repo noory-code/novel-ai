@@ -27,7 +27,7 @@ metadata:
 
 | Step | Output | Path |
 |------|--------|------|
-| File move | Transitioned artifacts | `published/{type}/` |
+| File move | Transitioned artifacts | `workspace/catalog/published/{type}/` |
 | Version record | Version tag | `[Phase]-[Goal number]` in document header |
 
 ## Procedure
@@ -78,14 +78,14 @@ metadata:
 
 | Artifact | Destination |
 |----------|------------|
-| service-map | `published/service-map/` |
-| persona | `published/persona/` |
-| journey | `published/journey/` |
-| use-case | `published/use-case/` |
-| concept | `published/concept/` |
-| erd | `published/schema/` |
-| dto | `published/dto/` |
-| api-spec | `published/api/` |
+| service-map | `workspace/catalog/published/service-map/` |
+| persona | `workspace/catalog/published/persona/` |
+| journey | `workspace/catalog/published/journey/` |
+| use-case | `workspace/catalog/published/use-case/` |
+| concept | `workspace/catalog/published/concept/` |
+| erd | `workspace/catalog/published/schema/` |
+| dto | `workspace/catalog/published/dto/` |
+| api-spec | `workspace/catalog/published/api/` |
 
 ## Obsidian Frontmatter
 
@@ -123,10 +123,10 @@ goals/G1-liquor-search/artifacts/
     └── liquor.md
 ```
 
-### After (published/)
+### After (workspace/catalog/published/)
 
 ```
-published/
+workspace/catalog/published/
 ├── service-map/
 │   └── index.md           # Applied version: H1-G01
 ├── persona/
@@ -142,7 +142,7 @@ published/
 
 ## Notes
 
-- Only move types defined in the move mapping table to published (files not in the mapping table remain in artifacts)
+- Only move types defined in the move mapping table to `workspace/catalog/published/` (files not in the mapping table remain in artifacts)
 - If the same file already exists in the destination, replace it with the higher version
 - To review a previous version, use `git log --follow -- {file-path}` to view history
 - Transition in bulk by Goal, not by Epic

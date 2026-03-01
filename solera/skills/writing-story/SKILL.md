@@ -18,6 +18,7 @@ metadata:
 
 - `published/identity/mission.md` exists
   - If not: check `published/identity/mission.md` with Glob tool → invoke `writing-identity` with Skill tool
+  > `writing-identity` is not included in Solera. It is provided by a separate identity plugin, or create `published/identity/mission.md` manually with a brief project description.
 - `_epic.md` exists
   - If not: check `{epic_path}/_epic.md` with Glob tool → invoke `writing-epic` with Skill tool
 - The corresponding Story must be assigned in the Stories table of _epic.md
@@ -49,7 +50,6 @@ metadata:
 | Skill | Purpose | Step |
 |-------|---------|------|
 | `writing-action-item` | Execute each Action Item (1 ACT = 1 commit) | Execute |
-| `workflow-pr` | Create a PR to the Epic branch upon Story completion | Wrap-up |
 
 ## Procedure
 
@@ -95,7 +95,6 @@ metadata:
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set _story.md status to ✅
    - [ ] Squash merge to the Epic branch
-   - [ ] Skill tool call: `skill="workflow-pr"` (Story to Epic branch)
 
 ## Folder Structure
 
