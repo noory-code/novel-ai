@@ -1,6 +1,6 @@
 ---
 name: writing-phase
-description: Phase document writing. Distributes Initiative Goals by quarter and tracks Goal execution. Triggers - "Phase definition", "Phase start", "quarterly planning".
+description: Phase document writing. Distributes Initiative Goals by quarter and tracks Goal execution.
 metadata:
   version: "2.0.0"
   category: writing

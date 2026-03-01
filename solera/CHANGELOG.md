@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0] - 2026-03-02
+
+### Added
+- `docs/` folder with quick-start, architecture, and team-workflow guides
+- README rewritten with Why Solera, Quick Start, comparison table, and team workflow section
+
+### Changed
+- plugin.json: version 1.1.0, expanded keywords
+
 ## [1.0.0] - 2026-03-01
 
 ### Added

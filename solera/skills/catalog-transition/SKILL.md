@@ -89,6 +89,8 @@ metadata:
 
 ## Obsidian Frontmatter
 
+> **Note:** This section is for teams using Obsidian as a knowledge base. If you are not using Obsidian, skip the frontmatter fields — the file move in step 3 is the only required action.
+
 ```yaml
 ---
 title: [document title]
