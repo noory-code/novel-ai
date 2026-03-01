@@ -170,14 +170,14 @@ class TestIngestTool:
 
     @pytest.mark.asyncio
     async def test_rejects_path_traversal_attack(self, tmp_path: Path):
-        """경로 순회 공격을 차단하는지 확인"""
+        """Verify that path traversal attacks are blocked."""
         (tmp_path / ".distill" / "knowledge").mkdir(parents=True)
         ctx = _make_ctx()
 
-        # /etc/passwd는 tmp_path와 홈 디렉토리 외부이므로 차단되어야 함
+        # /etc/passwd is outside tmp_path and the home directory, so it should be blocked
         malicious_path = "/etc/passwd"
 
-        with pytest.raises(ValueError, match="허용된 디렉토리 외부"):
+        with pytest.raises(ValueError, match="resolves outside the allowed directory"):
             await ingest(
                 path=malicious_path,
                 ctx=ctx,

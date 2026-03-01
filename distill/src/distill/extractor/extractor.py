@@ -42,10 +42,10 @@ async def extract_knowledge(
     # 2. Format and truncate
     formatted = format_transcript(turns)
     if len(formatted) > config.max_transcript_chars:
-        # max_transcript_chars는 문자 수이지 토큰 수가 아닙니다.
-        # 다국어 콘텐츠(한국어/중국어/일본어)의 경우
-        # 실제 토큰 소비량이 2-3배 더 높을 수 있습니다.
-        # 컨텍스트 윈도우 오류가 발생하면 max_transcript_chars를 줄이세요.
+        # max_transcript_chars is a character count, not a token count.
+        # For multilingual content (Korean/Chinese/Japanese),
+        # actual token consumption may be 2-3x higher.
+        # If context window errors occur, reduce max_transcript_chars.
         formatted = formatted[:config.max_transcript_chars]
         last_newline = formatted.rfind("\n")
         if last_newline > 0:

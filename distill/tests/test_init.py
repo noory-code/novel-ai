@@ -158,7 +158,7 @@ class TestInitTool:
 class TestMonorepoScopeSelection:
     @pytest.mark.asyncio
     async def test_monorepo_subpackage_uses_workspace_scope(self, tmp_path, monkeypatch):
-        """서브패키지(project_root != workspace_root)에서 init() → workspace scope."""
+        """In a subpackage (project_root != workspace_root), init() should use workspace scope."""
         workspace = tmp_path / "monorepo"
         project = workspace / "packages" / "app"
         project.mkdir(parents=True)
@@ -168,13 +168,13 @@ class TestMonorepoScopeSelection:
 
         result = await init(_project_root=str(project))
 
-        # config는 workspace에 생성되어야 함
+        # config should be created in workspace
         assert (workspace / ".distill" / "config.json").exists()
         assert not (project / ".distill" / "config.json").exists()
 
     @pytest.mark.asyncio
     async def test_standalone_project_uses_project_scope(self, tmp_path, monkeypatch):
-        """project_root == workspace_root이면 project scope 유지."""
+        """If project_root == workspace_root, project scope should be preserved."""
         monkeypatch.setattr("distill.tools.init.detect_project_root", lambda **_: str(tmp_path))
         monkeypatch.setattr("distill.tools.init.detect_workspace_root", lambda **_: str(tmp_path))
 
@@ -184,7 +184,7 @@ class TestMonorepoScopeSelection:
 
     @pytest.mark.asyncio
     async def test_scope_override_respected_in_monorepo(self, tmp_path, monkeypatch):
-        """명시적 scope 파라미터는 모노레포 감지보다 우선."""
+        """An explicit scope parameter should take precedence over monorepo detection."""
         workspace = tmp_path / "monorepo"
         project = workspace / "packages" / "app"
         project.mkdir(parents=True)
@@ -192,7 +192,7 @@ class TestMonorepoScopeSelection:
         monkeypatch.setattr("distill.tools.init.detect_project_root", lambda **_: str(project))
         monkeypatch.setattr("distill.tools.init.detect_workspace_root", lambda **_: str(workspace))
 
-        # 명시적으로 project scope 요청
+        # Explicitly request project scope
         result = await init(scope="project", _project_root=str(project))
 
         assert (project / ".distill" / "config.json").exists()

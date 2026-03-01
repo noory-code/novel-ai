@@ -43,7 +43,7 @@ async def learn(
     if not chunks:
         return "No extractable knowledge found in this transcript."
 
-    # scope별로 청크를 그룹화
+    # Group chunks by scope
     chunks_by_scope: dict[str, list[KnowledgeInput]] = {}
     for chunk in chunks:
         root_for_key = (
@@ -54,7 +54,7 @@ async def learn(
             chunks_by_scope[scope_key] = []
         chunks_by_scope[scope_key].append(chunk)
 
-    # 각 scope별로 배치 저장
+    # Batch-save chunks per scope
     saved = 0
     conflict_warnings: list[str] = []
 
@@ -67,17 +67,17 @@ async def learn(
                 MetadataStore(first_chunk.scope, project_root, ws_root) as meta,
                 VectorStore(first_chunk.scope, project_root, ws_root) as vector,
             ):
-                # 모든 청크를 메타데이터 스토어에 삽입
+                # Insert all chunks into the metadata store
                 entry_ids = [meta.insert(chunk).id for chunk in scope_chunks]
 
-                # 배치 벡터 인덱싱
+                # Batch vector indexing
                 vector.index_many(
                     ids=entry_ids,
                     contents=[c.content for c in scope_chunks],
                     tags_list=[c.tags for c in scope_chunks],
                 )
 
-                # conflict 타입 체크
+                # Check conflict type
                 for chunk in scope_chunks:
                     if chunk.type == "conflict":
                         conflict_warnings.append(

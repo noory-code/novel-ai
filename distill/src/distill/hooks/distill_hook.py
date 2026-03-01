@@ -27,43 +27,43 @@ def _validate_inputs(
     session_id: str,
     cwd: str | None,
 ) -> tuple[Path, str, Path | None]:
-    """입력 값 검증 및 정규화.
+    """Validate and normalize input values.
 
     Returns:
         (resolved_transcript_path, validated_session_id, resolved_cwd)
 
     Raises:
-        ValueError: 입력이 유효하지 않을 경우
+        ValueError: If any input is invalid
     """
-    # transcript_path 검증
+    # Validate transcript_path
     try:
         resolved_transcript = Path(transcript_path).resolve()
     except (ValueError, OSError) as exc:
-        raise ValueError(f"유효하지 않은 transcript_path: {exc}") from exc
+        raise ValueError(f"Invalid transcript_path: {exc}") from exc
 
     if not resolved_transcript.exists():
-        raise ValueError(f"transcript_path가 존재하지 않음: {resolved_transcript}")
+        raise ValueError(f"transcript_path does not exist: {resolved_transcript}")
 
     if not resolved_transcript.is_file():
-        raise ValueError(f"transcript_path가 파일이 아님: {resolved_transcript}")
+        raise ValueError(f"transcript_path is not a file: {resolved_transcript}")
 
-    # session_id 검증 (영숫자, 하이픈, 언더스코어만 허용)
+    # Validate session_id (only alphanumerics, hyphens, and underscores allowed)
     if not re.match(r'^[a-zA-Z0-9_-]+$', session_id):
         raise ValueError(
-            f"유효하지 않은 session_id 형식: {session_id!r}. "
-            "영숫자, 하이픈, 언더스코어만 허용됩니다."
+            f"Invalid session_id format: {session_id!r}. "
+            "Only alphanumerics, hyphens, and underscores are allowed."
         )
 
-    # cwd 검증
+    # Validate cwd
     resolved_cwd = None
     if cwd is not None:
         try:
             resolved_cwd = Path(cwd).resolve()
         except (ValueError, OSError) as exc:
-            raise ValueError(f"유효하지 않은 cwd: {exc}") from exc
+            raise ValueError(f"Invalid cwd: {exc}") from exc
 
         if not resolved_cwd.is_dir():
-            raise ValueError(f"cwd가 디렉터리가 아님: {resolved_cwd}")
+            raise ValueError(f"cwd is not a directory: {resolved_cwd}")
 
     return resolved_transcript, session_id, resolved_cwd
 
@@ -75,7 +75,7 @@ def _run_claude_p(
     model: str = "haiku",
 ) -> str:
     """Extract knowledge via `claude -p` subprocess."""
-    # 입력 검증
+    # Validate inputs
     resolved_transcript, validated_session_id, resolved_cwd = _validate_inputs(
         transcript_path, session_id, cwd
     )
@@ -117,27 +117,27 @@ def _run_claude_p(
             shell=False,
         )
     except subprocess.TimeoutExpired as exc:
-        # 프로세스 종료
+        # Terminate the process
         process = getattr(exc, "process", None)
         if process is not None:
             process.kill()
             process.wait()
-        raise RuntimeError("Hook이 120초 타임아웃 — 프로세스 강제 종료됨") from exc
+        raise RuntimeError("Hook timed out after 120s — process forcefully terminated") from exc
 
     if result.returncode != 0:
-        # 전체 stderr를 임시 로그 파일에 기록
+        # Write full stderr to a temporary log file
         log_path = Path(f"/tmp/distill-hook-{validated_session_id}.log")
         try:
             log_path.write_text(result.stderr, encoding="utf-8")
             raise RuntimeError(
-                f"claude -p 실행 실패 (exit {result.returncode}). "
-                f"전체 로그: {log_path}"
+                f"claude -p failed (exit {result.returncode}). "
+                f"Full log: {log_path}"
             )
         except OSError:
-            # 로그 파일 쓰기 실패 시 기존 방식 사용
+            # Fall back to inline message if log file write fails
             raise RuntimeError(
-                f"claude -p 실행 실패 (exit {result.returncode}): "
-                f"{result.stderr or '(stderr 없음)'}"
+                f"claude -p failed (exit {result.returncode}): "
+                f"{result.stderr or '(no stderr)'}"
             )
 
     return result.stdout.strip() or "done"

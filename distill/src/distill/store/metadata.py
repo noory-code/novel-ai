@@ -121,7 +121,7 @@ class MetadataStore:
         self._conn_impl: sqlite3.Connection | None = sqlite3.connect(str(db_path), check_same_thread=False)
         self._conn_impl.row_factory = sqlite3.Row
 
-        # WAL 모드가 이미 설정되어 있는지 확인 후 설정
+        # Check if WAL mode is already set before enabling it
         row = self._conn_impl.execute("PRAGMA journal_mode").fetchone()
         if row and row[0].lower() != "wal":
             self._conn_impl.execute("PRAGMA journal_mode = WAL")
@@ -132,7 +132,7 @@ class MetadataStore:
 
     @property
     def _conn(self) -> sqlite3.Connection:
-        """내부 연결 객체 접근 (None 체크 포함)."""
+        """Access the internal connection object (with None check)."""
         if self._conn_impl is None:
             raise RuntimeError("Database connection is closed")
         return self._conn_impl
@@ -436,7 +436,7 @@ class MetadataStore:
     # ── Context manager ───────────────────────────────────────────────────────
 
     def close(self) -> None:
-        """데이터베이스 연결 종료."""
+        """Close the database connection."""
         if self._conn_impl is not None:
             self._conn_impl.close()
             self._conn_impl = None

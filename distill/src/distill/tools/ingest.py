@@ -148,7 +148,7 @@ async def ingest(
 
     target = Path(path).expanduser().resolve()
 
-    # 경로 순회 공격 방지: 허용된 루트 내에 있는지 확인
+    # Path traversal prevention: verify the path is within the allowed root
     allowed_roots = [Path.cwd(), Path.home()]
     if project_root:
         allowed_roots.append(Path(project_root))
@@ -156,7 +156,7 @@ async def ingest(
         allowed_roots.append(Path(workspace_root))
 
     if not any(target.is_relative_to(root) for root in allowed_roots):
-        raise ValueError(f"경로 '{path}'가 허용된 디렉토리 외부로 해석됨: {target}")
+        raise ValueError(f"Path '{path}' resolves outside the allowed directory: {target}")
 
     if not target.exists():
         return f"Path not found: {path}"

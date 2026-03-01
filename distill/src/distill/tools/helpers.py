@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ScopeContext:
-    """스코프 해석에 필요한 컨텍스트."""
+    """Context required for scope resolution."""
 
     global_dir: str
     workspace_dir: str | None
@@ -26,16 +26,16 @@ class ScopeContext:
 def _iter_scope_dirs(
     project_root: str | None, workspace_root: str | None
 ) -> list[tuple[KnowledgeScope, str | None, str | None]]:
-    """해석 순서대로 (scope, project_root, workspace_root) 튜플 리스트 반환.
+    """Return a list of (scope, project_root, workspace_root) tuples in resolution order.
 
-    전역 → 워크스페이스 → 프로젝트 순서로 반환.
+    Returns in order: global -> workspace -> project.
 
     Args:
-        project_root: 프로젝트 루트 경로 또는 None
-        workspace_root: 워크스페이스 루트 경로 또는 None
+        project_root: Project root path or None
+        workspace_root: Workspace root path or None
 
     Returns:
-        (scope, project_root, workspace_root) 튜플 리스트
+        List of (scope, project_root, workspace_root) tuples
     """
     result: list[tuple[KnowledgeScope, str | None, str | None]] = [("global", None, None)]
 

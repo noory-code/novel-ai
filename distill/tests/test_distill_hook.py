@@ -209,22 +209,22 @@ class TestErrorHandling:
 
 
 class TestSecurityValidation:
-    """보안 취약점 검증 테스트."""
+    """Security vulnerability validation tests."""
 
     def test_rejects_shell_injection_in_transcript_path(self, tmp_path):
-        """transcript_path에 셸 인젝션 시도가 포함된 경우 거부해야 함."""
+        """Verify that shell injection attempts in transcript_path are rejected."""
         stdin = json.dumps({
             "session_id": "sess-001",
             "transcript_path": "'; rm -rf / #",
         })
         _, stderr, code = main(stdin)
 
-        # ValueError가 발생하여 hook이 실패해야 함
-        assert code == 0  # hook은 항상 0으로 종료
+        # A ValueError should be raised, causing the hook to fail
+        assert code == 0  # hook always exits 0
         assert "claude -p failed" in stderr or "distill-hook" in stderr
 
     def test_rejects_invalid_session_id_with_special_chars(self, tmp_path, monkeypatch):
-        """session_id에 특수문자가 포함된 경우 거부해야 함."""
+        """Verify that special characters in session_id are rejected."""
         transcript = tmp_path / "test.jsonl"
         transcript.write_text("")
 
@@ -244,10 +244,10 @@ class TestSecurityValidation:
 
         assert code == 0
         assert "claude -p failed" in stderr
-        assert "유효하지 않은 session_id" in stderr
+        assert "Invalid session_id format" in stderr
 
     def test_rejects_nonexistent_transcript_path(self, monkeypatch):
-        """존재하지 않는 transcript_path는 거부해야 함."""
+        """Verify that a nonexistent transcript_path is rejected."""
         mock_result = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="done", stderr=""
         )
@@ -264,10 +264,10 @@ class TestSecurityValidation:
 
         assert code == 0
         assert "claude -p failed" in stderr
-        assert "존재하지 않음" in stderr
+        assert "does not exist" in stderr
 
     def test_rejects_directory_as_transcript_path(self, tmp_path, monkeypatch):
-        """디렉터리를 transcript_path로 전달하면 거부해야 함."""
+        """Verify that passing a directory as transcript_path is rejected."""
         mock_result = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="done", stderr=""
         )
@@ -284,10 +284,10 @@ class TestSecurityValidation:
 
         assert code == 0
         assert "claude -p failed" in stderr
-        assert "파일이 아님" in stderr
+        assert "is not a file" in stderr
 
     def test_rejects_invalid_cwd(self, tmp_path, monkeypatch):
-        """존재하지 않는 cwd는 거부해야 함."""
+        """Verify that a nonexistent cwd is rejected."""
         transcript = tmp_path / "test.jsonl"
         transcript.write_text("")
 
@@ -310,7 +310,7 @@ class TestSecurityValidation:
         assert "claude -p failed" in stderr
 
     def test_timeout_kills_process(self, tmp_path, monkeypatch):
-        """타임아웃 발생 시 프로세스가 강제 종료되어야 함."""
+        """Verify that the process is forcefully terminated on timeout."""
         transcript = tmp_path / "test.jsonl"
         transcript.write_text("")
 
@@ -339,12 +339,12 @@ class TestSecurityValidation:
 
         assert code == 0
         assert "claude -p failed" in stderr
-        assert "타임아웃" in stderr
+        assert "timed out" in stderr
         assert MockProcess.killed
         assert MockProcess.waited
 
     def test_subprocess_failure_logs_to_temp_file(self, tmp_path, monkeypatch):
-        """subprocess 실패 시 전체 stderr가 임시 파일에 기록되어야 함."""
+        """Verify that the full stderr is written to a temp file on subprocess failure."""
         transcript = tmp_path / "test.jsonl"
         transcript.write_text("")
 
@@ -367,15 +367,15 @@ class TestSecurityValidation:
         assert "claude -p failed" in stderr
         assert "/tmp/distill-hook-test-session-123.log" in stderr
 
-        # 로그 파일이 생성되었는지 확인
+        # Verify that the log file was created
         log_path = Path("/tmp/distill-hook-test-session-123.log")
         if log_path.exists():
             log_content = log_path.read_text()
             assert long_stderr in log_content
-            log_path.unlink()  # 정리
+            log_path.unlink()  # cleanup
 
     def test_valid_session_id_accepted(self, tmp_path, monkeypatch):
-        """유효한 session_id는 정상적으로 처리되어야 함."""
+        """Verify that a valid session_id is processed correctly."""
         transcript = tmp_path / "test.jsonl"
         transcript.write_text("")
 

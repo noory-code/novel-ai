@@ -43,7 +43,7 @@ class TestParseTranscript:
         assert len(turns) == 0
 
     def test_partial_recovery_skips_only_corrupt_line(self, tmp_path: pytest.TempPathFactory) -> None:
-        """부분 JSONL 복구: 손상된 줄만 건너뛰고 유효한 줄은 복구"""
+        """Partial JSONL recovery: only the corrupt line is skipped, valid lines are recovered."""
         jsonl_path = tmp_path / "partial.jsonl"
         jsonl_path.write_text(
             '{"type":"user","message":{"role":"user","content":[{"type":"text","text":"First valid"}]},"timestamp":"2024-01-01T00:00:00Z"}\n'

@@ -14,14 +14,14 @@ PROJECT_MARKERS = ["pyproject.toml", "pubspec.yaml", "package.json", "CLAUDE.md"
 
 
 def _walk_up_to_marker(start: Path, marker: str | list[str]) -> Path | None:
-    """주어진 마커를 포함하는 디렉토리를 찾아 상위로 이동.
+    """Walk up the directory tree to find a directory containing the given marker.
 
     Args:
-        start: 탐색 시작 경로
-        marker: 찾을 마커 파일/디렉토리 이름 또는 마커 목록
+        start: Starting path for the search
+        marker: Marker file/directory name or list of marker names to look for
 
     Returns:
-        마커를 포함하는 디렉토리 또는 None
+        Directory containing the marker, or None
     """
     directory = start.resolve()
     markers = [marker] if isinstance(marker, str) else marker
@@ -30,7 +30,7 @@ def _walk_up_to_marker(start: Path, marker: str | list[str]) -> Path | None:
         if any((directory / m).exists() for m in markers):
             return directory
         parent = directory.parent
-        if parent == directory:  # 파일시스템 루트
+        if parent == directory:  # filesystem root
             return None
         directory = parent
 

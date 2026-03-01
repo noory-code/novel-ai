@@ -92,9 +92,9 @@ def _scan_rules_dir(dir_path: Path) -> list[EnvironmentItem]:
                     )
                 )
             except OSError as exc:
-                logger.debug("건너뜀 %s: %s", f, exc)
+                logger.debug("Skipping %s: %s", f, exc)
     except OSError as exc:
-        logger.debug("건너뜀 %s: %s", dir_path, exc)
+        logger.debug("Skipping %s: %s", dir_path, exc)
 
     return items
 
@@ -127,9 +127,9 @@ def _scan_skills_dir(dir_path: Path) -> list[EnvironmentItem]:
                     )
                 )
             except OSError as exc:
-                logger.debug("건너뜀 %s: %s", skill_file, exc)
+                logger.debug("Skipping %s: %s", skill_file, exc)
     except OSError as exc:
-        logger.debug("건너뜀 %s: %s", dir_path, exc)
+        logger.debug("Skipping %s: %s", dir_path, exc)
 
     return items
 
@@ -156,8 +156,8 @@ def _scan_agents_dir(dir_path: Path) -> list[EnvironmentItem]:
                     )
                 )
             except OSError as exc:
-                logger.debug("건너뜀 %s: %s", f, exc)
+                logger.debug("Skipping %s: %s", f, exc)
     except OSError as exc:
-        logger.debug("건너뜀 %s: %s", dir_path, exc)
+        logger.debug("Skipping %s: %s", dir_path, exc)
 
     return items

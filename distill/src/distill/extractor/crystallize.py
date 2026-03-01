@@ -399,7 +399,7 @@ def _write_distill_file(
     content: str,
     encoding: str = "utf-8",
 ) -> Path:
-    """output_dir을 생성하고 output_dir/filename에 content를 작성 후 경로를 반환합니다."""
+    """Create output_dir if needed, write content to output_dir/filename, and return the path."""
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / filename
     output_path.write_text(content, encoding=encoding)
@@ -407,7 +407,7 @@ def _write_distill_file(
 
 
 def _make_distill_filename(prefix: str, name: str, date: datetime) -> str:
-    """Distill 파일명을 생성합니다."""
+    """Generate a Distill filename."""
     date_str = date.strftime("%Y-%m-%d")
     return f"distill-{prefix}-{date_str}-{name}.md"
 
@@ -418,7 +418,7 @@ def _write_rule_file(
     rules: list[str],
     source_ids: list[str],
 ) -> str:
-    """표준 Distill 형식의 규칙 파일을 작성합니다."""
+    """Write a rule file in standard Distill format."""
     filename = f"distill-{topic}.md"
     date = datetime.now(UTC).strftime("%Y-%m-%d")
 
@@ -442,7 +442,7 @@ def _write_skill_file(
     rules: list[str],
     source_ids: list[str],
 ) -> str:
-    """Claude Code SKILL.md 형식의 스킬 파일을 작성합니다."""
+    """Write a skill file in Claude Code SKILL.md format."""
     skill_dir_name = f"distill-{topic}"
     skill_dir = Path(skills_dir) / skill_dir_name
     date = datetime.now(UTC).strftime("%Y-%m-%d")
@@ -480,7 +480,7 @@ def _write_agent_file(
     topic: str,
     metadata: AgentMetadata,
 ) -> str:
-    """Claude Code 에이전트 형식의 에이전트 파일을 작성합니다."""
+    """Write an agent file in Claude Code agent format."""
     filename = f"distill-{topic}.md"
     date = datetime.now(UTC).strftime("%Y-%m-%d")
 

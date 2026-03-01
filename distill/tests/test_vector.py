@@ -29,9 +29,9 @@ class TestSanitizeFtsQuery:
         assert '"config"' in result
 
     def test_handles_unicode_characters(self) -> None:
-        result = sanitize_fts_query("한글 테스트")
-        assert "한글" in result
-        assert "테스트" in result
+        result = sanitize_fts_query("hangul test")
+        assert "hangul" in result
+        assert "test" in result
 
 
 # --- VectorStore ---
@@ -110,9 +110,9 @@ class TestVectorSearch:
 
 class TestConcurrentAccess:
     def test_concurrent_writes_succeed_with_busy_timeout(self) -> None:
-        """두 개의 VectorStore 인스턴스가 동시에 쓰기 작업을 할 때 SQLITE_BUSY 오류가 발생하지 않는지 확인."""
+        """Verify that two VectorStore instances writing concurrently do not raise SQLITE_BUSY."""
         with tempfile.TemporaryDirectory(prefix="distill-concurrent-") as tmp:
-            # 먼저 데이터베이스 초기화 (확장 로딩 포함)
+            # Initialize the database first (including extension loading)
             init_store = VectorStore("project", tmp)
             init_store.close()
 
@@ -132,9 +132,9 @@ class TestConcurrentAccess:
             for t in threads:
                 t.join()
 
-            assert len(errors) == 0, f"동시 쓰기 중 오류 발생: {errors}"
+            assert len(errors) == 0, f"Errors during concurrent writes: {errors}"
 
-            # 두 레코드가 모두 성공적으로 저장되었는지 확인
+            # Verify both records were saved successfully
             store = VectorStore("project", tmp)
             results = store.search("Concurrent write test", limit=10)
             assert len(results) == 2
@@ -143,6 +143,6 @@ class TestConcurrentAccess:
 
 class TestCloseIdempotency:
     def test_close_is_idempotent(self, vec_store: VectorStore) -> None:
-        """close()를 두 번 호출해도 예외가 발생하지 않는지 확인."""
+        """Verify that calling close() twice does not raise an exception."""
         vec_store.close()
-        vec_store.close()  # 두 번째 호출도 안전해야 함
+        vec_store.close()  # Second call should also be safe
