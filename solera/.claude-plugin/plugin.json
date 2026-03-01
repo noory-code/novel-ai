@@ -1,0 +1,15 @@
+{
+  "name": "solera",
+  "version": "1.0.0",
+  "description": "Layered workflow execution — Phase → Goal → Epic → Story → Action Item",
+  "homepage": "https://github.com/noory-code/noory-ai/tree/main/solera",
+  "repository": "https://github.com/noory-code/noory-ai",
+  "license": "MIT",
+  "keywords": ["workflow", "planning", "writing", "claude-code", "project-management"],
+  "author": {
+    "name": "noory-code",
+    "url": "https://github.com/noory-code"
+  },
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}
