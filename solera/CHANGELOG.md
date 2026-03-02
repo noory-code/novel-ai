@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.0] - 2026-03-02
+
+### Changed
+- Renamed 13 skills to verb-first naming for clarity and intent:
+  - `writing-*` → `write-*` (identity, phase, goal, epic, story)
+  - `writing-action-item` → `execute-action-item`
+  - `workflow-manage` → `manage-workflow`
+  - `workflow-pr` → `create-pr`
+  - `catalog-transition` → `transition-catalog`
+  - `meta-skill` → `edit-skill`, `meta-rule` → `edit-rule`, `meta-command` → `edit-command`, `meta-subagent` → `edit-agent`
+- Expanded triggers from 3–4 noun phrases to 5–6 natural English verb phrases per skill
+- Rewrote all skill descriptions from internal-impl view to user-outcome view
+
 ## [1.3.0] - 2026-03-02
 
 ### Added

@@ -1,12 +1,12 @@
 ---
-name: meta-skill
-description: Create, review, or improve a skill file in `.claude/skills/`.
+name: edit-skill
+description: Add, refine, or audit a skill — guides Claude from a blank template to a production-ready SKILL.md.
 metadata:
-  version: "1.0.0"
+  version: "2.0.0"
   category: meta
   type: unit
   style: procedural
-  triggers: [create skill, review skill, improve skill, new skill, skill template]
+  triggers: [create a skill, edit a skill, improve a skill, review a skill, add a new skill, skill template]
   uses: []
 ---
 

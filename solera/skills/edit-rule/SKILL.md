@@ -1,12 +1,12 @@
 ---
-name: meta-rule
-description: Create, review, or improve a rule file in `.claude/rules/`.
+name: edit-rule
+description: Add or refine a project rule — turns a constraint or convention into a structured, unambiguous rule file.
 metadata:
-  version: "1.0.0"
+  version: "2.0.0"
   category: meta
   type: unit
   style: procedural
-  triggers: [create rule, review rule, improve rule, new rule, coding rule]
+  triggers: [create a rule, edit a rule, improve a rule, review a rule, add a coding rule]
   uses: []
 ---
 

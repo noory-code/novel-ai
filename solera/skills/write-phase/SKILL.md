@@ -1,13 +1,13 @@
 ---
-name: writing-phase
-description: Phase document writing. Distributes Initiative Goals by quarter and tracks Goal execution.
+name: write-phase
+description: Plan a quarter — distribute Goals across a Phase and track which ones are in progress or complete.
 metadata:
-  version: "2.0.0"
+  version: "3.0.0"
   category: writing
   type: composite
   style: procedural
-  triggers: [Phase definition, Phase start, quarterly planning]
-  uses: [writing-goal]
+  triggers: [define a Phase, start a Phase, plan the quarter, set up quarterly goals, write Phase README]
+  uses: [write-goal]
 ---
 
 # Writing Phase

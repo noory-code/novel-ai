@@ -1,13 +1,13 @@
 ---
-name: writing-story
-description: Story document writing and Action Item decomposition. 1 Action Item = 1 commit.
+name: write-story
+description: Write a Story with clear acceptance criteria, then break it into atomic Action Items — each one a single commit.
 metadata:
-  version: "5.0.0"
+  version: "6.0.0"
   category: writing
   type: composite
   style: procedural
-  triggers: [Story elaboration, Story start, decompose into Action Items, commit unit]
-  uses: [writing-action-item]
+  triggers: [write a Story, plan a Story, start a Story, break Story into Action Items, define acceptance criteria]
+  uses: [execute-action-item]
 ---
 
 # Writing Story

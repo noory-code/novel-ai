@@ -1,12 +1,12 @@
 ---
-name: meta-command
-description: Create, review, or improve a slash command file in `.claude/commands/`.
+name: edit-command
+description: Add or refine a slash command — packages a repeatable workflow into a single /command invocation.
 metadata:
-  version: "1.0.0"
+  version: "2.0.0"
   category: meta
   type: unit
   style: procedural
-  triggers: [create command, review command, improve command, new command, slash command]
+  triggers: [create a command, edit a command, improve a command, review a command, add a slash command]
   uses: []
 ---
 

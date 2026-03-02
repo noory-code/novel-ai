@@ -1,13 +1,13 @@
 ---
-name: workflow-manage
-description: Workflow supervisor. Reads and executes the Workflow of a work item.
+name: manage-workflow
+description: Know what to work on next — track progress, pick up where you left off, or close out a completed item.
 metadata:
-  version: "4.0.0"
+  version: "5.0.0"
   category: workflow
   type: composite
   style: procedural
-  triggers: [start work, complete work, current work, next work, progress update, write retrospective]
-  uses: [writing-identity, writing-phase, writing-goal, writing-epic, writing-story, writing-action-item, catalog-transition]
+  triggers: [what should I work on, mark work complete, show current progress, update progress, write a retrospective, next task]
+  uses: [write-identity, write-phase, write-goal, write-epic, write-story, execute-action-item, transition-catalog]
 ---
 
 # Workflow Manage (Supervisor)

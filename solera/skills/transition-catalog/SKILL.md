@@ -1,12 +1,12 @@
 ---
-name: catalog-transition
-description: Transitions artifacts to published upon Goal completion
+name: transition-catalog
+description: Mark a Goal as done — move all artifacts to the published catalog and update cross-references.
 metadata:
-  version: "3.0.0"
+  version: "4.0.0"
   category: workflow
   type: composite
   style: procedural
-  triggers: [catalog transition, move artifacts, Goal completion cleanup]
+  triggers: [transition to catalog, archive completed Goal, publish Goal artifacts, wrap up Goal, Goal completion cleanup]
   uses: []
 ---
 

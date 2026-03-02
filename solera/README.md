@@ -34,7 +34,7 @@ flowchart TD
 
 **Phase** defines the quarterly plan and groups Goals by strategic objective. **Goal** produces the design artifacts for one service capability — service map, personas, use cases, and domain concepts. **Epic** scopes one deliverable within a Goal and maps it to Stories on an independent git branch. **Story** implements one user-facing capability as a sequence of Action Items on its own branch. **Action Item** is the smallest unit: one concrete code or documentation change, one commit.
 
-Every level owns its own procedure through a `## Workflow` section in its template file. The `workflow-manage` skill reads and executes those steps — it contains no hardcoded domain logic.
+Every level owns its own procedure through a `## Workflow` section in its template file. The `manage-workflow` skill reads and executes those steps — it contains no hardcoded domain logic.
 
 ## Quick Start
 
@@ -68,31 +68,31 @@ Solera creates the Story branch (`epic-task-crud/story-US-001-create-task-form`)
 
 > The Epic is done. Create a PR for epic-task-crud.
 
-Solera verifies all Stories are complete, runs `workflow-pr` to open the PR, handles the review cycle, and squash-merges into the target branch. On Goal completion, `catalog-transition` moves design artifacts from `artifacts/` to `workspace/catalog/published/`.
+Solera verifies all Stories are complete, runs `create-pr` to open the PR, handles the review cycle, and squash-merges into the target branch. On Goal completion, `transition-catalog` moves design artifacts from `artifacts/` to `workspace/catalog/published/`.
 
 ## Skills
 
 | Skill | Trigger phrase | Produces |
 |-------|---------------|----------|
-| `writing-identity` | "Define identity", "write mission" | `identity/mission.md`, `core-values.md`, `vision_1.md`, `initiative/{year}/goals.md` |
-| `writing-phase` | "Write the Phase for Q1", "quarterly planning" | `phase/{id}/README.md`, Goal folder structure, `RETRO.md` on close |
-| `writing-goal` | "Write Goal G1", "decompose into Epics" | `_goal.md`, service map, persona(s), `RETRO.md` on close |
-| `writing-epic` | "Start Epic 01-auth", "decompose into Stories" | `_epic.md`, use cases, domain concepts, `RETRO.md` on close |
-| `writing-story` | "Start Story US-001", "decompose into Action Items" | `_story.md`, `ACT-NNN-{name}.md` files, `RETRO.md` on close |
-| `writing-action-item` | "Execute ACT-001", "ACT-NNN" | Code/doc changes + one git commit per Action Item |
-| `workflow-manage` | "Start work", "complete work", "what's next" | `progress.md` updates; reads and executes each work item's `## Workflow` |
-| `workflow-pr` | "Create a PR", "Epic is done, open a PR" | GitHub PR via `gh pr create`, squash merge, branch deletion |
-| `catalog-transition` | "Complete Goal G1", "Goal completion cleanup" | Artifacts moved from `artifacts/` to `published/` with version tags |
-| `handoff` | "Run handoff", or automatic on session end | `HANDOFF.md` at project root with full session context |
+| `write-identity` | "Define service identity", "write mission statement" | `identity/mission.md`, `core-values.md`, `vision_1.md`, `initiative/{year}/goals.md` |
+| `write-phase` | "Plan the quarter", "define a Phase" | `phase/{id}/README.md`, Goal folder structure, `RETRO.md` on close |
+| `write-goal` | "Write a Goal", "break Goal into Epics" | `_goal.md`, service map, persona(s), `RETRO.md` on close |
+| `write-epic` | "Write an Epic", "plan an Epic" | `_epic.md`, use cases, domain concepts, `RETRO.md` on close |
+| `write-story` | "Write a Story", "break Story into Action Items" | `_story.md`, `ACT-NNN-{name}.md` files, `RETRO.md` on close |
+| `execute-action-item` | "Start an Action Item", "ACT-NNN" | Code/doc changes + one git commit per Action Item |
+| `manage-workflow` | "What should I work on", "show current progress" | `progress.md` updates; reads and executes each work item's `## Workflow` |
+| `create-pr` | "Open a PR", "merge the Epic" | GitHub PR via `gh pr create`, squash merge, branch deletion |
+| `transition-catalog` | "Wrap up Goal", "archive completed Goal" | Artifacts moved from `artifacts/` to `published/` with version tags |
+| `handoff` | "End session", or automatic on session end | `HANDOFF.md` at project root with full session context |
 
 ### Meta
 
 | Skill | Trigger phrase | Produces |
 |-------|---------------|----------|
-| `meta-skill` | "Create a skill", "review this skill", "improve the skill" | `.claude/skills/{name}/SKILL.md` + assets |
-| `meta-rule` | "Create a rule", "review this rule", "write a coding rule" | `.claude/rules/{name}.md` |
-| `meta-command` | "Create a command", "review this command", "new slash command" | `.claude/commands/{name}.md` |
-| `meta-subagent` | "Create an agent", "review this agent", "new subagent" | `.claude/agents/{name}.md` |
+| `edit-skill` | "Create a skill", "edit a skill", "improve a skill" | `.claude/skills/{name}/SKILL.md` + assets |
+| `edit-rule` | "Create a rule", "edit a rule", "add a coding rule" | `.claude/rules/{name}.md` |
+| `edit-command` | "Create a command", "add a slash command" | `.claude/commands/{name}.md` |
+| `edit-agent` | "Create an agent", "edit an agent", "define a subagent" | `.claude/agents/{name}.md` |
 
 ## Team Workflow
 

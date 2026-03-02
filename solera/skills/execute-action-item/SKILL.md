@@ -1,12 +1,12 @@
 ---
-name: writing-action-item
-description: Action Item execution. 1 Action Item = 1 commit.
+name: execute-action-item
+description: Implement one Action Item end-to-end: write the code, run tests, and commit — one focused change at a time.
 metadata:
-  version: "4.0.0"
+  version: "5.0.0"
   category: writing
   type: composite
   style: procedural
-  triggers: [Action Item start, Action Item execute, commit work, ACT-NNN]
+  triggers: [start an Action Item, execute Action Item, implement and commit, work on ACT-NNN, ACT-NNN]
   uses: []
 ---
 

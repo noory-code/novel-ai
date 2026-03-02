@@ -1,12 +1,12 @@
 ---
-name: workflow-pr
-description: Upon Epic completion, creates a PR to the parent branch, reviews it, and merges.
+name: create-pr
+description: Wrap up an Epic by opening a PR, reviewing the diff, and merging cleanly into the parent branch.
 metadata:
-  version: "2.0.0"
+  version: "3.0.0"
   category: workflow
   type: composite
   style: procedural
-  triggers: [create PR, make PR, Epic merge, merge to parent branch]
+  triggers: [create a pull request, open a PR, merge the Epic, merge into parent branch, submit for review]
   uses: []
 ---
 

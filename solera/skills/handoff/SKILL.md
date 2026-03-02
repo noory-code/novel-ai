@@ -1,13 +1,13 @@
 ---
 name: handoff
-description: Transfer context between sessions by updating HANDOFF.md
+description: Never lose context between sessions — capture current state, open threads, and next steps in HANDOFF.md.
 metadata:
-  version: "1.0.0"
+  version: "2.0.0"
   category: workflow
   type: composite
   style: procedural
-  triggers: [handoff, session end, save context, work handover]
-  uses: [workflow-manage]
+  triggers: [handoff, end session, save work context, hand over to next session, update HANDOFF]
+  uses: [manage-workflow]
 ---
 
 # Handoff

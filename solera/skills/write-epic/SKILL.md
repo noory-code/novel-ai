@@ -1,13 +1,13 @@
 ---
-name: writing-epic
-description: Epic document writing. Creates a Use Case and Concept, then decomposes them into Stories.
+name: write-epic
+description: Scope an Epic — write use cases, define the concept, and decompose into Stories ready to implement.
 metadata:
-  version: "4.0.0"
+  version: "5.0.0"
   category: writing
   type: composite
   style: procedural
-  triggers: [Epic elaboration, Epic start, decompose into Stories, Use Case, Concept]
-  uses: [writing-story]
+  triggers: [write an Epic, plan an Epic, start an Epic, break Epic into Stories, define Epic scope, draft concept]
+  uses: [write-story]
 ---
 
 # Writing Epic

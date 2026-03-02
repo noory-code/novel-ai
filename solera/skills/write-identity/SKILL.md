@@ -1,12 +1,12 @@
 ---
-name: writing-identity
-description: Define the service identity — Mission, Core Values, Vision, and a rough Goals list.
+name: write-identity
+description: Establish what your service stands for — write the Mission, Core Values, Vision, and a first cut of Goals.
 metadata:
-  version: "1.0.0"
+  version: "2.0.0"
   category: writing
   type: composite
   style: guide
-  triggers: [define identity, write mission, service identity, identity setup]
+  triggers: [define service identity, write mission statement, establish core values, set up identity, identity setup]
   uses: []
 ---
 

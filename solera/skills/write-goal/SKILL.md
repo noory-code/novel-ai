@@ -1,13 +1,13 @@
 ---
-name: writing-goal
-description: Goal document writing. Creates a Service Map, Personas, and a preliminary Journey, then decomposes them into Epics.
+name: write-goal
+description: Define what success looks like for a Goal — map the service, identify personas, sketch the journey, and break it into Epics.
 metadata:
-  version: "4.0.0"
+  version: "5.0.0"
   category: writing
   type: composite
   style: procedural
-  triggers: [Goal elaboration, Goal start, decompose into Epics]
-  uses: [writing-identity, writing-epic, catalog-transition]
+  triggers: [write a Goal, start a Goal, plan a Goal, break Goal into Epics, elaborate on a Goal]
+  uses: [write-identity, write-epic, transition-catalog]
 ---
 
 # Writing Goal

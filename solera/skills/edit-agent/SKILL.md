@@ -1,12 +1,12 @@
 ---
-name: meta-subagent
-description: Create, review, or improve an agent definition file in `.claude/agents/`.
+name: edit-agent
+description: Define or improve an agent — specifies role, tools, and boundaries so Claude acts as a focused specialist.
 metadata:
-  version: "1.0.0"
+  version: "2.0.0"
   category: meta
   type: unit
   style: procedural
-  triggers: [create agent, review agent, improve agent, new agent, subagent]
+  triggers: [create an agent, edit an agent, improve an agent, review an agent, define a subagent]
   uses: []
 ---
 
