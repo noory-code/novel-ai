@@ -96,7 +96,7 @@ Solera verifies all Stories are complete, runs `create-pr` to open the PR, handl
 
 ## Team Workflow
 
-Solera uses a branch-per-Epic strategy: each Epic gets an `epic-[name]` branch from `dev`/`main`, and each Story gets a `epic-[name]/story-[ID]-[name]` child branch. Solera creates all branches automatically when you start an Epic or Story. When the Epic is complete, `workflow-pr` opens a PR, manages the review cycle, and squash-merges to keep trunk history clean — one entry per Epic rather than dozens of implementation-detail commits. Because `HANDOFF.md` is regenerated on every session end, Contributor B can open the repository cold, read `HANDOFF.md`, and tell Claude to resume without any coordination with Contributor A.
+Solera uses a branch-per-Epic strategy: each Epic gets an `epic-[name]` branch from `dev`/`main`, and each Story gets a `epic-[name]/story-[ID]-[name]` child branch. Solera creates all branches automatically when you start an Epic or Story. When the Epic is complete, `create-pr` opens a PR, manages the review cycle, and squash-merges to keep trunk history clean — one entry per Epic rather than dozens of implementation-detail commits. Because `HANDOFF.md` is regenerated on every session end, Contributor B can open the repository cold, read `HANDOFF.md`, and tell Claude to resume without any coordination with Contributor A.
 
 | Level | Branch pattern | Created by |
 |-------|---------------|------------|
