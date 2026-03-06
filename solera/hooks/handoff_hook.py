@@ -50,6 +50,9 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
         stderr_parts.append("solera-handoff-hook: invalid JSON on stdin")
         return "", "\n".join(stderr_parts), 1
 
+    if hook_data.get("stop_hook_active"):
+        return "", "", 0  # subagent Stop — skip to prevent recursive loop
+
     cwd = hook_data.get("cwd")
 
     cmd = [
