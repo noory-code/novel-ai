@@ -69,12 +69,15 @@ metadata:
      - US: As a / I want / So that
      - TS: Technical objective + spec
    - [ ] Include acceptance criteria
-   - [ ] Write the Action Items table
-   - [ ] Create a file for each Action Item (`action-items/ACT-NNN-{name}.md`)
-   - [ ] Apply the 1 Action Item = 1 commit principle
+   - [ ] Write the Action Items table (apply 1 Action Item = 1 commit principle)
    - [ ] Assign an Agent for each Action Item (when using agent teams)
    - [ ] Define depends_on to prevent output conflicts
    - [ ] Distribute across phases (same phase = can run in parallel)
+   - [ ] **MUST: Immediately after writing _story.md, create one file per Action Item.**
+     - Parse every row in the Action Items table
+     - For each row: create `action-items/ACT-NNN-{name}.md` using the template in [assets/action-item.md](../execute-action-item/assets/action-item.md)
+     - Do NOT proceed to Step 4 until all files exist
+   - [ ] Verify all Action Item files exist: `Glob action-items/ACT-*.md` — count must match the table row count
 
 4. **Execute**
    - [ ] Extract incomplete (⏳ or no status) Action Items from the Action Items table in `_story.md`
@@ -117,7 +120,7 @@ metadata:
 
 - [ ] _story.md written
 - [ ] Acceptance criteria are verifiable
-- [ ] Action Item files created
+- [ ] All ACT-NNN-{name}.md files exist on disk (verified with Glob tool — count matches Action Items table)
 - [ ] 1 Action Item = 1 commit principle observed
 - [ ] (Execute) writing-action-item invoked for all Action Items
 - [ ] (Wrap-up) RETRO.md written
