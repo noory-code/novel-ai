@@ -34,6 +34,24 @@ Defines the decomposition unit of a Story, which corresponds to a single commit.
 ### Commit
 
 - `abc1234` [epic-name][US-NNN][ACT-NNN] title
+
+## Retrospective (record after completion)
+
+### Did Well
+
+- [effective decisions or execution]
+
+### Did Poorly
+
+- [mistakes, inefficiencies, unnecessary repetition]
+
+### Improvements
+
+- [specific behaviors to change in the next Action Item]
+
+### Instruction Issues
+
+- [omissions or ambiguities found in skills/rules]
 ```
 
 ## Workflow

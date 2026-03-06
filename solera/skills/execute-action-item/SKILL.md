@@ -52,6 +52,7 @@ metadata:
    - [ ] Confirm all prerequisite ACTs in depends_on are complete
    - [ ] Read the Action Item file — ref: [assets/action-item.md](assets/action-item.md)
    - [ ] Confirm the objective and task checklist
+   - [ ] Check for previous ACT retrospectives: `Glob action-items/ACT-*.md` — if any completed ACTs exist, read their `## Retrospective` section and apply any "AI Improvements" noted there
    - [ ] Status → 🔄
 
 2. **Write tests** (if code changes are required)
@@ -71,6 +72,8 @@ metadata:
 5. **Wrap-up**
    - [ ] Record the list of changed files in the Action Item file's results section
    - [ ] Commit (1 Action Item = 1 commit, following the message format)
+   - [ ] Write `## Retrospective` section in the Action Item file — ref: [assets/retro.md](assets/retro.md)
+     - Did well / Did poorly / Improvements / Instruction issues
    - [ ] Status → ✅
    - [ ] Decide the next Action Item or process Story completion
 
@@ -95,5 +98,6 @@ metadata:
 - [ ] Task checklist complete
 - [ ] Results (changed files, commit) recorded
 - [ ] 1 Action Item = 1 commit principle observed
+- [ ] (Wrap-up) Retrospective written in Action Item file
 - [ ] (Wrap-up) Status ✅
 - [ ] (Wrap-up) Next Action Item or Story completion confirmed

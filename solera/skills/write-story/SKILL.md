@@ -55,6 +55,7 @@ metadata:
 1. **Setup**
    - [ ] Confirm `{epic_path}/_epic.md` exists with Glob tool
      - If not: invoke Skill tool `skill="writing-epic"` → resume this Step after completion
+   - [ ] Check for previous Story retrospectives: `Glob {epic_path}/stories/*/RETRO.md` — if any exist, read the most recent one and apply any "AI Improvements" noted there
    - [ ] Create `story-{story_id}-{story_name}` branch (from Epic branch)
    - [ ] Create `{epic_path}/stories/{story_id}/` folder
    - [ ] Status → 🔄

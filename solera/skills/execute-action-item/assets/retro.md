@@ -22,3 +22,11 @@ Action Item retrospectives focus on **AI behavior** (not a business retrospectiv
 - Was the development skill selection appropriate?
 - Was the TDD procedure (Red → Green) followed correctly?
 - Were there unexpected issues during build or testing?
+- Was there unnecessary repetition (retrying the same approach that already failed)?
+- Could a more efficient approach have been taken?
+
+## Location
+
+Write the retrospective as a `## Retrospective` section **inside the Action Item file itself** (`action-items/ACT-NNN-{name}.md`), not as a separate file.
+
+> The next Action Item's Setup step reads previous ACT files to pick up "Improvements" before starting.
