@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Solera hook handler for Stop event.
+"""Solera hook handler for SessionEnd event.
 
 Runs `claude -p` subprocess to automatically execute the handoff skill,
 updating HANDOFF.md with current session context.
 
+SessionEnd fires only when the actual user session ends, not when claude -p
+subprocesses finish — preventing the recursive loop that Stop would cause.
+
 Usage in hooks.json:
-  "Stop": [{
+  "SessionEnd": [{
     "hooks": [{ "type": "command", "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/handoff_hook.py" }]
   }]
 """
@@ -50,9 +53,6 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
         stderr_parts.append("solera-handoff-hook: invalid JSON on stdin")
         return "", "\n".join(stderr_parts), 1
 
-    if hook_data.get("stop_hook_active"):
-        return "", "", 0  # subagent Stop — skip to prevent recursive loop
-
     cwd = hook_data.get("cwd")
 
     cmd = [
@@ -93,7 +93,7 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
             )
         return "", "\n".join(stderr_parts), 0
 
-    stderr_parts.append("solera-handoff-hook: Stop — HANDOFF.md updated")
+    stderr_parts.append("solera-handoff-hook: SessionEnd — HANDOFF.md updated")
     return "", "\n".join(stderr_parts), 0
 
 

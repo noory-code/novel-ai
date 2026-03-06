@@ -111,7 +111,7 @@ See [docs/team-workflow.md](docs/team-workflow.md) for parallel Epic execution, 
 
 | Event | Behavior |
 |-------|----------|
-| `Stop` | Automatically runs the `handoff` skill — overwrites `HANDOFF.md` with current session state: what was done, what is in progress, what to do next, and any open decisions |
+| `SessionEnd` | Automatically runs the `handoff` skill — overwrites `HANDOFF.md` with current session state: what was done, what is in progress, what to do next, and any open decisions |
 
 ## Install
 
