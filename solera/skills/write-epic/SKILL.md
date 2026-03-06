@@ -19,7 +19,11 @@ metadata:
 - `published/identity/mission.md` exists
   - If not: check `published/identity/mission.md` with Glob tool → invoke `writing-identity` with Skill tool
 - `_goal.md` exists
-  - If not: check `{goal_path}/_goal.md` with Glob tool → invoke `writing-goal` with Skill tool
+  - If not: check `{goal_path}/_goal.md` with Glob tool → invoke `write-goal` with Skill tool passing:
+    `goal_id={goal_id}, goal_name={goal_id}, project_path={project_path}, phase_id={phase_id}`
+    (ask user to confirm `goal_name` if it differs from `goal_id`)
+  - If `phase_id` is unknown: ask the user before proceeding
+  - New project: run `write-identity` first to establish `identity/` and `initiative/{year}/goals.md`
 - The corresponding Epic must be assigned in _goal.md
 
 ## Input
@@ -57,7 +61,9 @@ metadata:
 
 1. **Setup**
    - [ ] Confirm `{goal_path}/_goal.md` exists with Glob tool
-     - If not: invoke Skill tool `skill="writing-goal"` → resume this Step after completion
+     - If not: invoke Skill tool `skill="write-goal"` with args:
+       `goal_id={goal_id}, goal_name={goal_id}, project_path={project_path}, phase_id={phase_id}`
+       (ask user to confirm `goal_name` if it differs from `goal_id`) → resume this Step after completion
    - [ ] Create `epic-{epic_name}` branch (from Goal branch)
    - [ ] Create `{goal_path}/epics/{epic_name}/` folder
    - [ ] Create _epic.md draft — ref: [assets/epic-template.md](assets/epic-template.md)
@@ -100,6 +106,20 @@ metadata:
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set _epic.md status to ✅
    - [ ] Skill tool call: `skill="workflow-pr"` → create PR to parent branch (Goal)
+
+## Directory Structure
+
+Epics always live inside the goal directory. Never create a top-level `epics/` directory.
+
+```
+{project_path}/phase/{phase_id}/goals/{goal_id}/   ← created by write-goal
+├── _goal.md
+├── artifacts/
+└── epics/{epic_name}/                              ← created by write-epic
+    ├── _epic.md
+    └── stories/{US|TS}-NNN/
+        └── _story.md
+```
 
 ## Folder Structure
 

@@ -17,7 +17,9 @@ metadata:
 ## Prerequisites
 
 - `published/identity/mission.md` exists; if not, invoke writing-identity
-- The corresponding Goal must be assigned in the Phase README; if not, invoke writing-phase
+- The corresponding Goal must be assigned in the Phase README
+  - If not: invoke `write-phase` with Skill tool passing:
+    `project_path={project_path}, phase_id={phase_id}, year={first 4 chars of phase_id, e.g. "2026-P1-foundation" → "2026"}`
 
 ## Input
 
@@ -52,6 +54,9 @@ metadata:
 
 1. **Setup**
    - [ ] Confirm `published/identity/mission.md` exists; if not, invoke writing-identity
+   - [ ] Confirm `{project_path}/phase/{phase_id}/README.md` exists with Glob tool
+     - If not: invoke Skill tool `skill="write-phase"` with args:
+       `project_path={project_path}, phase_id={phase_id}, year={first 4 chars of phase_id}` → resume after completion
    - [ ] Confirm Goal information from the Phase README (period, objectives)
    - [ ] Create `goals/{goal_id}-{name}/` folder
    - [ ] Create `goals/{goal_id}-{name}/artifacts/` folder
