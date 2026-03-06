@@ -55,7 +55,7 @@ Evonest evolves Distill's own codebase through the same cycle. Real findings fro
 
 ```
 /plugin marketplace add noory-code/noory-ai
-/plugin install distill@noory-code/noory-ai
+/plugin install distill
 ```
 
 MCP server, hooks (PreCompact, SessionEnd), and skills are registered automatically.

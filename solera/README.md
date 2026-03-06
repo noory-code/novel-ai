@@ -117,7 +117,7 @@ See [docs/team-workflow.md](docs/team-workflow.md) for parallel Epic execution, 
 
 ```
 /plugin marketplace add noory-code/noory-ai
-/plugin install solera@noory-code/noory-ai
+/plugin install solera
 ```
 
 All skills become available immediately after install. No additional setup is required for basic use — tell Claude to set up a Solera workspace and it will create the folder structure and roadmap from your description.
