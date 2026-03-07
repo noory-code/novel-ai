@@ -112,6 +112,124 @@ metadata:
 | writing-epic 실패 | 하위 스킬 호출 실패 | 실패한 Epic 기록, 사용자에게 알림 | 해당 Epic 건너뛰고 계속 진행 또는 중단 |
 | catalog-transition 실패 | artifacts 이동 실패 | 실패한 파일 목록 출력, 수동 이동 요청 | Wrap-up 중단, 수동 처리 후 재개 |
 
+## Examples
+
+### 예시: Feature Goal 전체 실행 과정
+
+#### 스킬 호출
+
+```python
+Skill(name="write-goal", args={
+  "project_path": "/Users/myname/workspace/myapp",
+  "year": "2026",
+  "phase_id": "2026-P1-foundation",
+  "goal_id": "G1",
+  "goal_name": "search-liquor",
+  "goal_type": "Feature"
+})
+```
+
+#### 실행 단계별 생성 파일
+
+**1. Setup 완료 후**
+```
+phase/2026-P1-foundation/goals/G1-search-liquor/
+├── _goal.md              (초안, 상태: 🔄)
+└── artifacts/            (빈 폴더)
+```
+
+**2. Service Map & Personas 완료 후**
+```
+phase/2026-P1-foundation/goals/G1-search-liquor/
+├── _goal.md
+└── artifacts/
+    ├── service-map/
+    │   └── index.md
+    └── persona/
+        ├── bartender.md
+        ├── liquor-enthusiast.md
+        └── relationship.md
+```
+
+**3. Epic 분해 완료 후 (_goal.md 업데이트)**
+```markdown
+# _goal.md
+
+...
+## Epics
+
+| ID | Name | Journey Step | Status |
+|----|------|--------------|--------|
+| 01 | search-ui | 검색창 입력 | ⏳ |
+| 02 | filter-logic | 필터 적용 | ⏳ |
+| 03 | result-display | 결과 확인 | ⏳ |
+```
+
+**4. Execute 중간 상태 (Epic 01 완료)**
+```
+phase/2026-P1-foundation/goals/G1-search-liquor/
+├── _goal.md              (Epic 01: ✅, Epic 02: 🔄, Epic 03: ⏳)
+├── artifacts/
+│   ├── service-map/
+│   └── persona/
+└── epics/
+    ├── 01-search-ui/
+    │   ├── _epic.md      (상태: ✅)
+    │   ├── RETRO.md
+    │   └── stories/...
+    └── 02-filter-logic/
+        ├── _epic.md      (상태: 🔄)
+        └── stories/...
+```
+
+**5. Wrap-up 완료 (모든 Epic ✅)**
+```
+phase/2026-P1-foundation/goals/G1-search-liquor/
+├── _goal.md              (상태: ✅)
+├── RETRO.md
+└── epics/
+    ├── 01-search-ui/...  (✅)
+    ├── 02-filter-logic/...(✅)
+    └── 03-result-display/...(✅)
+
+published/
+└── goal/
+    ├── service-map/      (artifacts에서 이동)
+    └── persona/          (artifacts에서 이동)
+```
+
+#### 중간에 호출되는 하위 스킬
+
+```python
+# Epic 01 작성
+Skill(name="write-epic", args={
+  "project_path": "/Users/myname/workspace/myapp",
+  "year": "2026",
+  "phase_id": "2026-P1-foundation",
+  "goal_id": "G1",
+  "goal_name": "search-liquor",
+  "epic_name": "01-search-ui"
+})
+# → _epic.md 생성, stories 분해, 모든 Story 완료 후 ✅
+
+# Epic 01 PR 생성
+Skill(name="create-pr")
+# → Epic 브랜치에서 Goal 브랜치로 PR
+
+# Epic 02, 03 반복...
+
+# Goal 완료 후 아티팩트 전환
+Skill(name="transition-catalog")
+# → artifacts/ → published/goal/
+```
+
+#### 최종 출력 상태
+
+- `_goal.md` 상태: ✅
+- 모든 Epic 상태: ✅
+- `RETRO.md` 존재
+- `artifacts/` 폴더 비어있음 (published/로 이동됨)
+
 ## Completion Checklist
 
 - [ ] _goal.md created

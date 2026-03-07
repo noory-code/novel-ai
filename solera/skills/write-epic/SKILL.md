@@ -161,6 +161,132 @@ Epics always live inside the goal directory. Never create a top-level `epics/` d
 | writing-story 실패 | 하위 스킬 호출 실패 | 실패한 Story 기록, 사용자에게 알림 | 해당 Story 건너뛰고 계속 진행 또는 중단 |
 | workflow-pr 실패 | PR 생성 실패 | PR 생성 오류 출력, 수동 PR 생성 요청 | Wrap-up 중단, 수동 PR 생성 후 완료 |
 
+## Examples
+
+### 예시: Feature Epic 전체 실행 과정
+
+#### 스킬 호출
+
+```python
+Skill(name="write-epic", args={
+  "project_path": "/Users/myname/workspace/myapp",
+  "year": "2026",
+  "phase_id": "2026-P1-foundation",
+  "goal_id": "G1",
+  "goal_name": "search-liquor",
+  "epic_name": "01-search-ui",
+  "epic_type": "Feature"
+})
+```
+
+#### 실행 단계별 생성 파일
+
+**1. Setup 완료 후**
+```
+goals/G1-search-liquor/epics/01-search-ui/
+└── _epic.md              (초안, 상태: 🔄)
+```
+
+**2. Use Case 생성 완료 후**
+```
+goals/G1-search-liquor/
+├── artifacts/
+│   └── use-case/
+│       ├── UC-001-basic-search.md
+│       └── UC-002-filter-search.md
+└── epics/01-search-ui/
+    └── _epic.md
+```
+
+**3. Concept 생성 완료 후**
+```
+goals/G1-search-liquor/
+├── artifacts/
+│   ├── use-case/...
+│   └── concept/
+│       ├── domain.md
+│       └── entities/
+│           ├── search-query.md
+│           ├── filter.md
+│           └── result-set.md
+└── epics/01-search-ui/
+    └── _epic.md
+```
+
+**4. Story 분해 완료 후 (_epic.md 업데이트)**
+```markdown
+# _epic.md
+
+...
+## Stories
+
+| ID | Name | UC | Commits | Status |
+|----|------|----|---------|--------|
+| US-001 | search-input | UC-001 | 3 | ⏳ |
+| US-002 | filter-ui | UC-002 | 2 | ⏳ |
+| TS-001 | api-integration | - | 4 | ⏳ |
+```
+
+**5. Execute 중간 상태 (Story US-001 완료)**
+```
+goals/G1-search-liquor/epics/01-search-ui/
+├── _epic.md              (US-001: ✅, US-002: 🔄, TS-001: ⏳)
+└── stories/
+    ├── US-001/
+    │   ├── _story.md     (상태: ✅)
+    │   ├── RETRO.md
+    │   └── action-items/
+    │       ├── ACT-001-create-component.md
+    │       ├── ACT-002-add-validation.md
+    │       └── ACT-003-write-tests.md
+    └── US-002/
+        ├── _story.md     (상태: 🔄)
+        └── action-items/...
+```
+
+**6. Wrap-up 완료 (모든 Story ✅)**
+```
+goals/G1-search-liquor/epics/01-search-ui/
+├── _epic.md              (상태: ✅)
+├── RETRO.md
+└── stories/
+    ├── US-001/...        (✅)
+    ├── US-002/...        (✅)
+    └── TS-001/...        (✅)
+```
+
+#### 중간에 호출되는 하위 스킬
+
+```python
+# Story US-001 작성
+Skill(name="write-story", args={
+  "project_path": "/Users/myname/workspace/myapp",
+  "year": "2026",
+  "phase_id": "2026-P1-foundation",
+  "goal_id": "G1",
+  "goal_name": "search-liquor",
+  "epic_name": "01-search-ui",
+  "epic_type": "Feature",
+  "story_id": "US-001",
+  "story_name": "search-input",
+  "story_type": "US"
+})
+# → _story.md 생성, Action Items 분해, 모든 ACT 실행 후 ✅
+
+# Story US-002, TS-001 반복...
+
+# Epic 완료 후 PR 생성
+Skill(name="create-pr")
+# → Epic 브랜치에서 Goal 브랜치로 PR
+```
+
+#### 최종 출력 상태
+
+- `_epic.md` 상태: ✅
+- 모든 Story 상태: ✅
+- `RETRO.md` 존재
+- PR이 Goal 브랜치로 생성됨
+
 ## Completion Checklist
 
 - [ ] _epic.md created

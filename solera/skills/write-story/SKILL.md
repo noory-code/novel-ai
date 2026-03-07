@@ -144,6 +144,128 @@ metadata:
 | execute-action-item 실패 | 하위 스킬 호출 실패 | 실패한 Action Item 기록, 사용자에게 알림 | 해당 Action Item 건너뛰고 계속 진행 또는 중단 |
 | Squash merge 실패 | git 충돌 또는 권한 오류 | 충돌 파일 목록 출력, 수동 해결 요청 | Wrap-up 중단, 수동 해결 후 재개 |
 
+## Examples
+
+### 예시: User Story 전체 실행 과정
+
+#### 스킬 호출
+
+```python
+Skill(name="write-story", args={
+  "project_path": "/Users/myname/workspace/myapp",
+  "year": "2026",
+  "phase_id": "2026-P1-foundation",
+  "goal_id": "G1",
+  "goal_name": "search-liquor",
+  "epic_name": "01-search-ui",
+  "epic_type": "Feature",
+  "story_id": "US-001",
+  "story_name": "search-input",
+  "story_type": "US"
+})
+```
+
+#### 실행 단계별 생성 파일
+
+**1. Setup 완료 후**
+```
+epics/01-search-ui/stories/US-001/
+└── _story.md              (초안, 상태: 🔄)
+```
+
+**2. Story 작성 및 Action Items 분해 완료 후**
+```markdown
+# _story.md
+
+## Story
+As a **사용자**
+I want **검색창에 주류 이름을 입력하고 검색**
+So that **원하는 주류 정보를 빠르게 찾을 수 있다**
+
+## Acceptance Criteria
+- [ ] 검색창이 화면에 표시됨
+- [ ] 입력값 실시간 검증
+- [ ] Enter 키로 검색 실행
+
+## Action Items
+
+| ID | Name | Phase | Depends On | Agent | Status |
+|----|------|-------|------------|-------|--------|
+| ACT-001 | create-component | 1 | - | FE | ⏳ |
+| ACT-002 | add-validation | 1 | - | FE | ⏳ |
+| ACT-003 | write-tests | 2 | ACT-001,ACT-002 | QA | ⏳ |
+```
+
+**3. Action Item 파일 생성 완료 후**
+```
+epics/01-search-ui/stories/US-001/
+├── _story.md
+└── action-items/
+    ├── ACT-001-create-component.md
+    ├── ACT-002-add-validation.md
+    └── ACT-003-write-tests.md
+```
+
+**4. Execute 중간 상태 (ACT-001, ACT-002 완료)**
+```
+epics/01-search-ui/stories/US-001/
+├── _story.md             (ACT-001: ✅, ACT-002: ✅, ACT-003: 🔄)
+└── action-items/
+    ├── ACT-001-create-component.md   (커밋: abc1234, 상태: ✅)
+    ├── ACT-002-add-validation.md     (커밋: def5678, 상태: ✅)
+    └── ACT-003-write-tests.md        (상태: 🔄)
+
+git log --oneline:
+def5678 [01-search-ui][US-001][ACT-002] 검색창 입력 검증 추가
+abc1234 [01-search-ui][US-001][ACT-001] 검색 컴포넌트 생성
+```
+
+**5. Wrap-up 완료 (모든 Action Item ✅)**
+```
+epics/01-search-ui/stories/US-001/
+├── _story.md             (상태: ✅)
+├── RETRO.md
+└── action-items/
+    ├── ACT-001-create-component.md   (✅)
+    ├── ACT-002-add-validation.md     (✅)
+    └── ACT-003-write-tests.md        (✅)
+
+git log --oneline:
+9876543 [01-search-ui][US-001][ACT-003] 검색 컴포넌트 테스트 추가
+def5678 [01-search-ui][US-001][ACT-002] 검색창 입력 검증 추가
+abc1234 [01-search-ui][US-001][ACT-001] 검색 컴포넌트 생성
+```
+
+#### 중간에 호출되는 하위 스킬
+
+```python
+# Action Item ACT-001 실행
+Skill(name="execute-action-item", args={
+  "project_path": "/Users/myname/workspace/myapp",
+  "year": "2026",
+  "phase_id": "2026-P1-foundation",
+  "goal_id": "G1",
+  "goal_name": "search-liquor",
+  "epic_name": "01-search-ui",
+  "epic_type": "Feature",
+  "story_id": "US-001",
+  "story_name": "search-input",
+  "action_item_id": "ACT-001",
+  "action_item_name": "create-component"
+})
+# → 코드 작성, 커밋, ACT-001.md 상태 ✅
+
+# ACT-002, ACT-003 반복 (Phase 순서대로)
+```
+
+#### 최종 출력 상태
+
+- `_story.md` 상태: ✅
+- 모든 Action Item 상태: ✅
+- `RETRO.md` 존재
+- 총 3개 커밋 생성됨 (1 ACT = 1 commit)
+- Epic 브랜치로 squash merge 완료
+
 ## Completion Checklist
 
 - [ ] _story.md written
