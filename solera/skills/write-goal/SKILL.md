@@ -6,6 +6,7 @@ metadata:
   category: writing
   type: composite
   style: procedural
+  execution_model: sequential
   triggers: [write a Goal, start a Goal, plan a Goal, break Goal into Epics, elaborate on a Goal]
   uses: [write-identity, write-epic, transition-catalog]
 ---
@@ -54,10 +55,10 @@ metadata:
 ## Procedure
 
 1. **Setup**
-   - [ ] Confirm `published/identity/mission.md` exists; if not, invoke writing-identity
+   - [ ] Confirm `published/identity/mission.md` exists; if not, invoke writing-identity **(BLOCKING: 현재 스킬은 일시 중지되고 identity 생성 완료 후 재개)**
    - [ ] Confirm `{project_path}/phase/{phase_id}/README.md` exists with Glob tool
      - If not: invoke Skill tool `skill="write-phase"` with args:
-       `project_path={project_path}, year={year}, phase_id={phase_id}` → resume after completion
+       `project_path={project_path}, year={year}, phase_id={phase_id}` **(BLOCKING: Phase 생성 완료 후 재개)**
    - [ ] Confirm Goal information from the Phase README (period, objectives)
    - [ ] Create `goals/{goal_id}-{name}/` folder
    - [ ] Create `goals/{goal_id}-{name}/artifacts/` folder
@@ -77,14 +78,14 @@ metadata:
    - [ ] Write _goal.md — ref: [assets/goal-template.md](assets/goal-template.md)
 
 5. **Execute**
-   - [ ] Invoke writing-epic for each Epic (Setup → Create → Execute → Wrap-up)
-   - [ ] Invoke workflow-pr upon Epic completion to create a PR to the parent branch
+   - [ ] Invoke writing-epic for each Epic (Setup → Create → Execute → Wrap-up) **(BLOCKING: 각 Epic이 완료될 때까지 대기, 순차적으로 실행)**
+   - [ ] Invoke workflow-pr upon Epic completion to create a PR to the parent branch **(BLOCKING: PR 생성 완료 후 다음 Epic으로 진행)**
    - [ ] Confirm all Epics are complete
 
 6. **Goal Wrap-up**
    - [ ] Confirm all Epic statuses ✅
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
-   - [ ] Invoke catalog-transition (artifacts/ to published/)
+   - [ ] Invoke catalog-transition (artifacts/ to published/) **(BLOCKING: 카탈로그 전환 완료 후 상태 변경)**
    - [ ] Set _goal.md status to ✅
 
 ## Folder Structure

@@ -6,6 +6,7 @@ metadata:
   category: workflow
   type: composite
   style: procedural
+  execution_model: sequential
   triggers: [what should I work on, mark work complete, show current progress, update progress, write a retrospective, next task]
   uses: [write-identity, write-phase, write-goal, write-epic, write-story, execute-action-item, transition-catalog]
 ---
@@ -45,14 +46,14 @@ metadata:
 
 1. Read the target work item (_goal.md | _epic.md | _story.md)
 2. Extract the `## Workflow` section
-3. Execute each step of the Workflow in order
-4. If document writing is required, invoke writing-* skills
+3. Execute each step of the Workflow in order **(BLOCKING: 각 단계를 순차적으로 실행)**
+4. If document writing is required, invoke writing-* skills **(BLOCKING: 스킬 완료 후 다음 단계 진행)**
 5. Update progress.md
 
 ### complete — Complete work item
 
 1. Read the target work item
-2. Execute the latter steps of `## Workflow` (completion check, status change, etc.)
+2. Execute the latter steps of `## Workflow` (completion check, status change, etc.) **(BLOCKING: 순차적으로 실행)**
 3. If the item is an Epic or Goal, write RETRO.md
 4. Update progress.md
 5. Decide the next work item
@@ -64,9 +65,9 @@ metadata:
 
 ### next — Decide next work
 
-1. Story complete and Epic has remaining Stories → start the next Story
-2. Epic complete and Goal has remaining Epics → write an Epic retrospective, then start the next Epic
-3. Goal complete → write a Goal retrospective, then invoke catalog-transition
+1. Story complete and Epic has remaining Stories → start the next Story **(BLOCKING)**
+2. Epic complete and Goal has remaining Epics → write an Epic retrospective, then start the next Epic **(BLOCKING)**
+3. Goal complete → write a Goal retrospective, then invoke catalog-transition **(BLOCKING: 카탈로그 전환 완료 후 종료)**
 4. Otherwise → continue current work
 
 ## Responsibilities

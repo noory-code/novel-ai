@@ -6,6 +6,7 @@ metadata:
   category: writing
   type: composite
   style: procedural
+  execution_model: sequential
   triggers: [write a Story, plan a Story, start a Story, break Story into Action Items, define acceptance criteria]
   uses: [execute-action-item]
 ---
@@ -57,7 +58,7 @@ metadata:
 
 1. **Setup**
    - [ ] Confirm `{epic_path}/_epic.md` exists with Glob tool
-     - If not: invoke Skill tool `skill="writing-epic"` → resume this Step after completion
+     - If not: invoke Skill tool `skill="writing-epic"` **(BLOCKING: Epic 생성 완료 후 재개)**
    - [ ] Check for previous Story retrospectives: `Glob {epic_path}/stories/*/RETRO.md` — if any exist, read the most recent one and apply any "AI Improvements" noted there
    - [ ] Create `story-{story_id}-{story_name}` branch (from Epic branch)
    - [ ] Create `{epic_path}/stories/{story_id}/` folder
@@ -85,7 +86,7 @@ metadata:
 
 4. **Execute**
    - [ ] Extract incomplete (⏳ or no status) Action Items from the Action Items table in `_story.md`
-   - [ ] Execute each Action Item in phase order (do not proceed to the next Step until all Action Items are complete):
+   - [ ] Execute each Action Item in phase order **(BLOCKING: 각 Action Item이 완료될 때까지 대기, 순차적으로 실행)**:
      ```
      Skill tool call: skill="writing-action-item"
        args: project_path={project_path}, year={year}, phase_id={phase_id},
