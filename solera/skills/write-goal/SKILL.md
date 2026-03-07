@@ -48,9 +48,9 @@ metadata:
 
 | Skill | Purpose | Step |
 |-------|---------|------|
-| `writing-identity` | Create identity if it does not exist | Setup |
-| `writing-epic` | Elaborate each Epic and decompose it into Stories | Execute |
-| `catalog-transition` | Move artifacts/ to published/ | Wrap-up |
+| `write-identity` | Create identity if it does not exist | Setup |
+| `write-epic` | Elaborate each Epic and decompose it into Stories | Execute |
+| `transition-catalog` | Move artifacts/ to published/ | Wrap-up |
 
 ## Procedure
 
@@ -219,8 +219,13 @@ Skill(name="create-pr")
 # Epic 02, 03 반복...
 
 # Goal 완료 후 아티팩트 전환
-Skill(name="transition-catalog")
-# → artifacts/ → published/goal/
+Skill(name="transition-catalog", args={
+  "project_path": "/Users/myname/workspace/myapp",
+  "phase_id": "2026-P1-foundation",
+  "goal_id": "G1",
+  "goal_name": "search-liquor"
+})
+# → artifacts/ → published/
 ```
 
 #### 최종 출력 상태

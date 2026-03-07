@@ -21,7 +21,10 @@ metadata:
 
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
-| **goal_path** | Y | Path of the completed Goal | goals/G1-liquor-search |
+| **project_path** | Y | Project workspace root | banas/workspace |
+| **phase_id** | Y | Parent Phase ID | 2026-P1-foundation |
+| **goal_id** | Y | Goal ID | G1 |
+| **goal_name** | Y | Goal name | search-liquor |
 
 ## Output
 
@@ -33,7 +36,8 @@ metadata:
 ## Procedure
 
 1. **Confirm transition targets**
-   - [ ] Scan `goals/[goal]/artifacts/`
+   - [ ] Compute goal_path: `{project_path}/phase/{phase_id}/goals/{goal_id}-{goal_name}`
+   - [ ] Scan `{goal_path}/artifacts/`
    - [ ] Select only files of types defined in the move mapping table (exclude any files not in the mapping table)
 
 2. **Record version**
@@ -63,14 +67,14 @@ metadata:
 
 | Pattern | Example |
 |---------|---------|
-| `[Phase]-[Goal number]` | H1-G01, H1-G02, H2-G01 |
+| `[Phase]-[Goal number]` | 2026-P1-G01, 2026-P1-G02, 2026-P2-G01 |
 
 **Document header example**:
 ```markdown
 # Journey: alba-first-search
 
 > Persona: ALBA
-> Applied version: H1-G01
+> Applied version: 2026-P1-G01
 > Last updated: 2026-01-15
 ```
 
@@ -100,16 +104,27 @@ tags:
   - relates-to/[related document]
 created: YYYY-MM-DD
 updated: YYYY-MM-DD      # updated to transition date
-applied-version: [Phase]-[Goal number]
+applied-version: [Phase]-[Goal number]  # e.g., 2026-P1-G01
 ---
 ```
 
 ## Example
 
+### 스킬 호출
+
+```python
+Skill(name="transition-catalog", args={
+  "project_path": "/Users/myname/workspace/myapp",
+  "phase_id": "2026-P1-foundation",
+  "goal_id": "G1",
+  "goal_name": "search-liquor"
+})
+```
+
 ### Before (artifacts/)
 
 ```
-goals/G1-liquor-search/artifacts/
+{project_path}/phase/2026-P1-foundation/goals/G1-liquor-search/artifacts/
 ├── service-map/
 │   └── index.md
 ├── persona/
@@ -126,18 +141,18 @@ goals/G1-liquor-search/artifacts/
 ### After (workspace/catalog/published/)
 
 ```
-workspace/catalog/published/
+{project_path}/workspace/catalog/published/
 ├── service-map/
-│   └── index.md           # Applied version: H1-G01
+│   └── index.md           # Applied version: 2026-P1-G01
 ├── persona/
-│   ├── bana.md            # Applied version: H1-G01
-│   └── relationship.md    # Applied version: H1-G01
+│   ├── bana.md            # Applied version: 2026-P1-G01
+│   └── relationship.md    # Applied version: 2026-P1-G01
 ├── journey/
-│   └── first-search.md    # Applied version: H1-G01
+│   └── first-search.md    # Applied version: 2026-P1-G01
 ├── use-case/
-│   └── UC-001-search-liquor.md  # Applied version: H1-G01
+│   └── UC-001-search-liquor.md  # Applied version: 2026-P1-G01
 └── concept/
-    └── liquor.md          # Applied version: H1-G01
+    └── liquor.md          # Applied version: 2026-P1-G01
 ```
 
 ## Notes
@@ -161,7 +176,7 @@ workspace/catalog/published/
 |---------------|-----------|-------------------|---------------|
 | Goal 미완료 | 일부 Story 상태가 ✅ 아님 | 미완료 Story 목록 출력, 완료 요청 | 스킬 중단, 모든 Story 완료 후 재개 |
 | Epic 미완료 | 일부 Epic 상태가 ✅ 아님 | 미완료 Epic 목록 출력, 완료 요청 | 스킬 중단, 모든 Epic 완료 후 재개 |
-| artifacts 폴더 없음 | `goals/{goal}/artifacts/` 없음 | 경고 메시지 출력, 전환 대상 없음으로 처리 | 스킬 완료 (전환 불필요) |
+| artifacts 폴더 없음 | `{goal_path}/artifacts/` 없음 | 경고 메시지 출력, 전환 대상 없음으로 처리 | 스킬 완료 (전환 불필요) |
 | 매핑 테이블 외 파일 발견 | artifacts에 매핑 테이블에 없는 타입 존재 | 제외 파일 목록 출력, artifacts에 남김 | 계속 진행 (매핑된 파일만 이동) |
 | catalog 디렉토리 없음 | `workspace/catalog/published/` 없음 | `mkdir -p` 로 디렉토리 생성 | 디렉토리 생성 후 계속 진행 |
 | 파일 이동 실패 | 권한 오류 또는 경로 문제 | 실패한 파일 목록 출력, 권한 확인 요청 | 스킬 중단, 수동 처리 후 재개 |
