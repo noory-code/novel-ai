@@ -57,8 +57,7 @@ metadata:
 1. **Setup**
    - [ ] Confirm `published/identity/mission.md` exists; if not, invoke writing-identity **(BLOCKING: 현재 스킬은 일시 중지되고 identity 생성 완료 후 재개)**
    - [ ] Confirm `{project_path}/phase/{phase_id}/README.md` exists with Glob tool
-     - If not: invoke Skill tool `skill="write-phase"` with args:
-       `project_path={project_path}, year={year}, phase_id={phase_id}` **(BLOCKING: Phase 생성 완료 후 재개)**
+     - If not: `Skill(name="write-phase", args={"project_path": "{project_path}", "year": "{year}", "phase_id": "{phase_id}"})` **(BLOCKING: Phase 생성 완료 후 재개)**
    - [ ] Confirm Goal information from the Phase README (period, objectives)
    - [ ] Create `goals/{goal_id}-{name}/` folder
    - [ ] Create `goals/{goal_id}-{name}/artifacts/` folder

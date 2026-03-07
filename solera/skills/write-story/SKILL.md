@@ -87,12 +87,20 @@ metadata:
 4. **Execute**
    - [ ] Extract incomplete (⏳ or no status) Action Items from the Action Items table in `_story.md`
    - [ ] Execute each Action Item in phase order **(BLOCKING: 각 Action Item이 완료될 때까지 대기, 순차적으로 실행)**:
-     ```
-     Skill tool call: skill="writing-action-item"
-       args: project_path={project_path}, year={year}, phase_id={phase_id},
-             goal_id={goal_id}, goal_name={goal_name}, epic_name={epic_name},
-             epic_type={epic_type}, story_id={story_id}, story_name={story_name},
-             action_item_id=ACT-NNN, action_item_name={name}
+     ```python
+     Skill(name="execute-action-item", args={
+       "project_path": "{project_path}",
+       "year": "{year}",
+       "phase_id": "{phase_id}",
+       "goal_id": "{goal_id}",
+       "goal_name": "{goal_name}",
+       "epic_name": "{epic_name}",
+       "epic_type": "{epic_type}",
+       "story_id": "{story_id}",
+       "story_name": "{story_name}",
+       "action_item_id": "ACT-NNN",
+       "action_item_name": "{name}"
+     })
      → Confirm ACT-NNN.md committed + status ✅ before proceeding to next Action Item
      ```
    - [ ] Confirm all acceptance criteria are met

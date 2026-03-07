@@ -64,8 +64,7 @@ metadata:
 
 1. **Setup**
    - [ ] Confirm `{goal_path}/_goal.md` exists with Glob tool
-     - If not: invoke Skill tool `skill="write-goal"` with args:
-       `project_path={project_path}, year={year}, phase_id={phase_id}, goal_id={goal_id}, goal_name={goal_name}, goal_type={goal_type 또는 기본값 Feature}`
+     - If not: `Skill(name="write-goal", args={"project_path": "{project_path}", "year": "{year}", "phase_id": "{phase_id}", "goal_id": "{goal_id}", "goal_name": "{goal_name}", "goal_type": "{goal_type 또는 기본값 Feature}"})`
        (ask user to confirm `goal_name` if it differs from `goal_id`) **(BLOCKING: Goal 생성 완료 후 재개)**
    - [ ] Create `epic-{epic_name}` branch (from Goal branch)
    - [ ] Create `{goal_path}/epics/{epic_name}/` folder
@@ -95,11 +94,19 @@ metadata:
 5. **Execute**
    - [ ] Extract incomplete (⏳ or no status) Stories from the Stories table in `_epic.md`
    - [ ] Execute each Story in order **(BLOCKING: 각 Story가 완료될 때까지 대기, 순차적으로 실행)**:
-     ```
-     Skill tool call: skill="writing-story"
-       args: project_path={project_path}, year={year}, phase_id={phase_id},
-             goal_id={goal_id}, goal_name={goal_name}, epic_name={epic_name},
-             epic_type={epic_type}, story_id={US|TS-NNN}, story_name={name}, story_type={US|TS}
+     ```python
+     Skill(name="write-story", args={
+       "project_path": "{project_path}",
+       "year": "{year}",
+       "phase_id": "{phase_id}",
+       "goal_id": "{goal_id}",
+       "goal_name": "{goal_name}",
+       "epic_name": "{epic_name}",
+       "epic_type": "{epic_type}",
+       "story_id": "{US|TS-NNN}",
+       "story_name": "{name}",
+       "story_type": "{US|TS}"
+     })
      → Confirm _story.md created + status ✅ before proceeding to next Story
      ```
    - [ ] Merge to the Epic branch upon Story completion
@@ -109,7 +116,7 @@ metadata:
    - [ ] Confirm all Story statuses ✅ (return to Step 5 if any are incomplete)
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set _epic.md status to ✅
-   - [ ] Skill tool call: `skill="workflow-pr"` **(BLOCKING: PR 생성 완료 후 스킬 종료)** → create PR to parent branch (Goal)
+   - [ ] `Skill(name="create-pr")` **(BLOCKING: PR 생성 완료 후 스킬 종료)** → create PR to parent branch (Goal)
 
 ## Directory Structure
 
