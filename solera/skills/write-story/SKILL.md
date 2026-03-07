@@ -39,11 +39,11 @@ metadata:
 
 ## Output
 
-| Step | Output | Nature | Path |
-|------|--------|--------|------|
-| Create | _story.md | Final | `{epic_path}/stories/{story_id}/_story.md` |
-| Create | ACT-NNN-{name}.md | Final | `{epic_path}/stories/{story_id}/action-items/ACT-NNN-{name}.md` |
-| Wrap-up | RETRO.md | Final | `{epic_path}/stories/{story_id}/RETRO.md` |
+| Step | Output | Path | Nature |
+|------|--------|------|--------|
+| Create | _story.md | `{epic_path}/stories/{story_id}/_story.md` | Final |
+| Create | ACT-NNN-{name}.md | `{epic_path}/stories/{story_id}/action-items/ACT-NNN-{name}.md` | Final |
+| Wrap-up | RETRO.md | `{epic_path}/stories/{story_id}/RETRO.md` | Final |
 
 > `{epic_path}` = `{project_path}/phase/{phase_id}/goals/{goal_id}/epics/{epic_name}`
 

@@ -20,9 +20,9 @@ None (auto-detects current session state)
 
 ## Output
 
-| File | Location | Purpose |
-|------|----------|---------|
-| HANDOFF.md | Project root | Transfers context between sessions (temporary state) |
+| Step | Output | Path | Nature |
+|------|--------|------|--------|
+| Create/Update | HANDOFF.md | Project root | Transient |
 
 ## Procedure
 

@@ -25,10 +25,10 @@ metadata:
 
 ## Output
 
-| Step | Output | Path |
-|------|--------|------|
-| File move | Transitioned artifacts | `workspace/catalog/published/{type}/` |
-| Version record | Version tag | `[Phase]-[Goal number]` in document header |
+| Step | Output | Path | Nature |
+|------|--------|------|--------|
+| File move | Transitioned artifacts | `workspace/catalog/published/{type}/` | Final |
+| Version record | Version tag | `[Phase]-[Goal number]` in document header | Final |
 
 ## Procedure
 

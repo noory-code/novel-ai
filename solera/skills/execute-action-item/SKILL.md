@@ -38,11 +38,11 @@ metadata:
 
 ## Output
 
-| Step | Output | Path |
-|------|--------|------|
-| Execute | Code/document changes | Files declared in output_paths |
-| Wrap-up | git commit | `[epic-name][story_id][ACT-NNN] title` |
-| Wrap-up | ACT status ✅ | Status update within `action-items/ACT-NNN-{name}.md` |
+| Step | Output | Path | Nature |
+|------|--------|------|--------|
+| Execute | Code/document changes | Files declared in output_paths | Final |
+| Wrap-up | git commit | `[epic-name][story_id][ACT-NNN] title` | Final |
+| Wrap-up | ACT status ✅ | Status update within `action-items/ACT-NNN-{name}.md` | Final |
 
 ## Skills Used
 

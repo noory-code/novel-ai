@@ -28,10 +28,10 @@ metadata:
 
 ## Output
 
-| Step | Output | Description |
-|------|--------|-------------|
-| Create PR | GitHub PR (URL) | One PR per Epic |
-| Merge | Merge commit | squash merge |
+| Step | Output | Path | Nature |
+|------|--------|------|--------|
+| Create PR | GitHub PR (URL) | One PR per Epic | Final |
+| Merge | Merge commit | squash merge | Final |
 
 ## Procedure
 
