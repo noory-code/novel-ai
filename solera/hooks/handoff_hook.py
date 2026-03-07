@@ -62,35 +62,23 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
         "--output-format", "text",
     ]
 
+    log_path = Path("/tmp/solera-handoff-hook.log")
     try:
-        result = subprocess.run(
-            cmd,
-            timeout=120,
-            capture_output=True,
-            text=True,
-            cwd=cwd,
-            shell=False,
-        )
-    except subprocess.TimeoutExpired as exc:
-        process = getattr(exc, "process", None)
-        if process is not None:
-            process.kill()
-            process.wait()
-        stderr_parts.append("solera-handoff-hook: timeout after 120s")
+        with log_path.open("w", encoding="utf-8") as log_file:
+            subprocess.run(
+                cmd,
+                stdout=log_file,
+                stderr=log_file,
+                cwd=cwd,
+                shell=False,
+                timeout=60,
+                check=False,
+            )
+    except subprocess.TimeoutExpired:
+        stderr_parts.append("solera-handoff-hook: timeout after 60s")
         return "", "\n".join(stderr_parts), 0
-
-    if result.returncode != 0:
-        log_path = Path("/tmp/solera-handoff-hook.log")
-        try:
-            log_path.write_text(result.stderr, encoding="utf-8")
-            stderr_parts.append(
-                f"solera-handoff-hook: claude -p failed (exit {result.returncode}). "
-                f"Log: {log_path}"
-            )
-        except OSError:
-            stderr_parts.append(
-                f"solera-handoff-hook: claude -p failed (exit {result.returncode})"
-            )
+    except OSError as exc:
+        stderr_parts.append(f"solera-handoff-hook: failed to launch claude -p: {exc}")
         return "", "\n".join(stderr_parts), 0
 
     stderr_parts.append("solera-handoff-hook: SessionEnd — HANDOFF.md updated")

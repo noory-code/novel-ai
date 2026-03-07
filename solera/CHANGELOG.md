@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.9.1] — 2026-03-07
+
+### Fixed
+- `handoff_hook.py`: replace `Popen` + `start_new_session=True` with `subprocess.run(timeout=60)`
+  `start_new_session` has no effect on macOS (setsid not supported), leaving orphan processes
+  on every SessionEnd. Blocking run ensures clean process lifecycle.
+
+---
+
 ## [1.4.0] - 2026-03-02
 
 ### Changed

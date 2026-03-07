@@ -4,6 +4,16 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.3.1] — 2026-03-07
+
+### Fixed
+- `distill_hook.py`: replace `uv run` with direct `.venv/bin/python` in MCP config,
+  eliminating the uv wrapper process spawned on every PreCompact/SessionEnd hook call
+
+**309 tests passing**
+
+---
+
 ## [1.2.0] — 2026-03-01
 
 ### Changed

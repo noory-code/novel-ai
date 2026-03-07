@@ -82,12 +82,13 @@ def _run_claude_p(
 
     distill_repo = str(Path(__file__).parent.parent.parent.parent)
 
+    venv_python = str(Path(distill_repo) / ".venv" / "bin" / "python")
     mcp_config = json.dumps({
         "mcpServers": {
             "distill": {
                 "type": "stdio",
-                "command": "uv",
-                "args": ["--directory", distill_repo, "run", "python", "-m", "distill"],
+                "command": venv_python,
+                "args": ["-m", "distill"],
             }
         }
     })
