@@ -99,6 +99,18 @@ metadata:
     └── _epic.md
 ```
 
+## Error Handling
+
+| Failure point | Condition | Recovery procedure | Exit behavior |
+|---------------|-----------|-------------------|---------------|
+| mission.md 누락 | `published/identity/mission.md` 없음 | Skill tool로 `write-identity` 호출 | identity 생성 후 이 스킬 재개 |
+| Phase README 없음 | `phase/{phase_id}/README.md` 없음 | Skill tool로 `write-phase` 호출 (project_path, phase_id, year 전달) | Phase 생성 후 이 스킬 재개 |
+| Goal 미할당 | Phase README에 Goal 정보 없음 | 오류 메시지 출력, Phase README 업데이트 요청 | 스킬 중단, 수동 수정 후 재개 |
+| goal_type 불명확 | Feature/Enabler 구분 불가 | 기본값 Feature로 진행, 사용자에게 확인 요청 | 사용자 확인 후 필요 시 수정 |
+| 폴더 생성 실패 | 권한 오류 또는 경로 문제 | 오류 메시지 출력, 권한 확인 요청 | 스킬 중단, 오류 상태 반환 |
+| writing-epic 실패 | 하위 스킬 호출 실패 | 실패한 Epic 기록, 사용자에게 알림 | 해당 Epic 건너뛰고 계속 진행 또는 중단 |
+| catalog-transition 실패 | artifacts 이동 실패 | 실패한 파일 목록 출력, 수동 이동 요청 | Wrap-up 중단, 수동 처리 후 재개 |
+
 ## Completion Checklist
 
 - [ ] _goal.md created

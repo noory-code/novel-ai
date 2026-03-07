@@ -155,6 +155,20 @@ workspace/catalog/published/
 |------|---------|
 | [self-verification.md](assets/self-verification.md) | Automated skill definition verification TCs (9 cases) |
 
+## Error Handling
+
+| Failure point | Condition | Recovery procedure | Exit behavior |
+|---------------|-----------|-------------------|---------------|
+| Goal 미완료 | 일부 Story 상태가 ✅ 아님 | 미완료 Story 목록 출력, 완료 요청 | 스킬 중단, 모든 Story 완료 후 재개 |
+| Epic 미완료 | 일부 Epic 상태가 ✅ 아님 | 미완료 Epic 목록 출력, 완료 요청 | 스킬 중단, 모든 Epic 완료 후 재개 |
+| artifacts 폴더 없음 | `goals/{goal}/artifacts/` 없음 | 경고 메시지 출력, 전환 대상 없음으로 처리 | 스킬 완료 (전환 불필요) |
+| 매핑 테이블 외 파일 발견 | artifacts에 매핑 테이블에 없는 타입 존재 | 제외 파일 목록 출력, artifacts에 남김 | 계속 진행 (매핑된 파일만 이동) |
+| catalog 디렉토리 없음 | `workspace/catalog/published/` 없음 | `mkdir -p` 로 디렉토리 생성 | 디렉토리 생성 후 계속 진행 |
+| 파일 이동 실패 | 권한 오류 또는 경로 문제 | 실패한 파일 목록 출력, 권한 확인 요청 | 스킬 중단, 수동 처리 후 재개 |
+| 링크 업데이트 실패 | 상대 경로 변환 오류 | 수정 필요 링크 목록 출력, 수동 수정 요청 | Verification 단계 중단, 수동 수정 후 재개 |
+| frontmatter 파싱 실패 | YAML 형식 오류 | 해당 파일 건너뛰고 경고 출력 | 계속 진행 (frontmatter 업데이트는 선택 사항) |
+| artifacts 폴더 비지 않음 | 매핑되지 않은 파일 남음 | 남은 파일 목록 출력, 의도적인지 확인 요청 | 스킬 완료 (검증 경고 포함) |
+
 ## Completion Checklist
 
 - [ ] Transition targets confirmed

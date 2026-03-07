@@ -137,6 +137,19 @@ Epics always live inside the goal directory. Never create a top-level `epics/` d
         └── _story.md
 ```
 
+## Error Handling
+
+| Failure point | Condition | Recovery procedure | Exit behavior |
+|---------------|-----------|-------------------|---------------|
+| mission.md 누락 | `published/identity/mission.md` 없음 | Glob으로 확인 후 Skill tool로 `write-identity` 호출 | identity 생성 후 이 스킬 재개 |
+| _goal.md 누락 | `{goal_path}/_goal.md` 없음 | Glob으로 확인 후 Skill tool로 `write-goal` 호출 (사용자에게 goal_name 확인) | Goal 생성 후 이 스킬 재개 |
+| phase_id 불명 | phase_id 파라미터 없음 | 사용자에게 phase_id 입력 요청 | 파라미터 입력될 때까지 중단 |
+| Epic 미할당 | _goal.md에 Epic 정보 없음 | 오류 메시지 출력, _goal.md 업데이트 요청 | 스킬 중단, 수동 수정 후 재개 |
+| 브랜치 생성 실패 | git 오류 (충돌, 권한 등) | git 오류 메시지 출력, 수동 해결 요청 | 스킬 중단, 해결 후 재개 |
+| domain.md 업데이트 충돌 | 기존 domain.md와 새 내용 충돌 | 병합 필요 영역 표시, 사용자에게 수동 병합 요청 | Concept 단계 중단, 수동 병합 후 재개 |
+| writing-story 실패 | 하위 스킬 호출 실패 | 실패한 Story 기록, 사용자에게 알림 | 해당 Story 건너뛰고 계속 진행 또는 중단 |
+| workflow-pr 실패 | PR 생성 실패 | PR 생성 오류 출력, 수동 PR 생성 요청 | Wrap-up 중단, 수동 PR 생성 후 완료 |
+
 ## Completion Checklist
 
 - [ ] _epic.md created

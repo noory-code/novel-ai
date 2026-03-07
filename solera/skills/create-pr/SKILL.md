@@ -67,6 +67,19 @@ metadata:
 | [assets/pr-template.md](assets/pr-template.md) | PR body template |
 | [self-verification.md](assets/self-verification.md) | Automated skill definition verification TCs (7 cases) |
 
+## Error Handling
+
+| Failure point | Condition | Recovery procedure | Exit behavior |
+|---------------|-----------|-------------------|---------------|
+| Stories 미완료 | Epic의 일부 Story 상태가 ✅ 아님 | 미완료 Story 목록 출력, 완료 요청 | 스킬 중단, 모든 Story 완료 후 재개 |
+| 빌드/테스트 실패 | Epic 브랜치에서 빌드 또는 테스트 실패 | 오류 출력, 수정 요청 | 스킬 중단, 수정 후 재개 |
+| 브랜치 충돌 | target_branch와 충돌 발생 | 충돌 파일 목록 출력, rebase 후 재시도 요청 | Prepare 단계 중단, rebase 후 재개 |
+| gh CLI 미설치 | `gh` 명령어 없음 | GitHub CLI 설치 안내 출력 | 스킬 중단, 설치 후 재개 |
+| PR 생성 실패 | gh pr create 오류 (권한, 인증 등) | gh 오류 메시지 출력, 인증 확인 요청 | Create PR 단계 중단, 인증 후 재시도 |
+| CI 실패 | PR의 CI 체크 실패 | 실패한 CI 작업 출력, 수정 요청 | Handle review 단계 중단, 수정 커밋 추가 후 재확인 |
+| Merge 실패 | squash merge 오류 | 오류 메시지 출력, 수동 merge 요청 | Merge 단계 중단, 수동 처리 후 확인 |
+| 브랜치 삭제 실패 | 소스 브랜치 삭제 실패 | 경고 메시지 출력, 수동 삭제 요청 | 스킬 완료 (삭제는 필수 아님), 수동 정리 권장 |
+
 ## Completion Checklist
 
 - [ ] PR created

@@ -79,6 +79,16 @@ metadata:
     └── goals.md
 ```
 
+## Error Handling
+
+| Failure point | Condition | Recovery procedure | Exit behavior |
+|---------------|-----------|-------------------|---------------|
+| service_name 누락 | 파라미터가 제공되지 않음 | 사용자에게 "서비스 이름은 무엇입니까?" 질문 | 파라미터 수집 후 계속 진행 |
+| target_user 누락 | 파라미터가 제공되지 않음 | 사용자에게 "주요 사용자는 누구입니까?" 질문 | 파라미터 수집 후 계속 진행 |
+| project_path 없음 | 디렉토리가 존재하지 않음 | `mkdir -p {project_path}` 실행 | 디렉토리 생성 후 계속 진행 |
+| 파일 쓰기 실패 | 권한 오류 또는 디스크 공간 부족 | 오류 메시지 출력, 사용자에게 권한 확인 요청 | 스킬 중단, 오류 상태 반환 |
+| 템플릿 에셋 누락 | assets/ 디렉토리의 템플릿 파일 없음 | 기본 구조로 문서 생성 (템플릿 없이 진행) | 경고 메시지 출력, 작업 계속 진행 |
+
 ## Completion Checklist
 
 - [ ] mission.md created — explains the "why"

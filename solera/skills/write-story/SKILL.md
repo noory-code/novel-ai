@@ -117,6 +117,20 @@ metadata:
 - change description
 ```
 
+## Error Handling
+
+| Failure point | Condition | Recovery procedure | Exit behavior |
+|---------------|-----------|-------------------|---------------|
+| mission.md 누락 | `published/identity/mission.md` 없음 | Glob으로 확인 후 Skill tool로 `write-identity` 호출 | identity 생성 후 이 스킬 재개 |
+| _epic.md 누락 | `{epic_path}/_epic.md` 없음 | Glob으로 확인 후 Skill tool로 `write-epic` 호출 | Epic 생성 후 이 스킬 재개 |
+| Story 미할당 | _epic.md Stories 테이블에 Story 정보 없음 | 오류 메시지 출력, _epic.md 업데이트 요청 | 스킬 중단, 수동 수정 후 재개 |
+| 브랜치 생성 실패 | git 오류 (충돌, 권한 등) | git 오류 메시지 출력, 수동 해결 요청 | 스킬 중단, 해결 후 재개 |
+| Action Item 파일 미생성 | Step 3에서 파일 생성 누락 | Glob으로 확인, 누락된 파일 목록 출력 후 재생성 | 모든 파일 생성 확인될 때까지 Step 4 진입 차단 |
+| Action Item 개수 불일치 | 테이블 행 수와 파일 수 불일치 | 차이 출력, 테이블 또는 파일 수정 요청 | Step 4 진입 차단, 수동 수정 후 재개 |
+| 의존성 순환 참조 | depends_on에 순환 구조 존재 | 순환 의존성 경로 출력, 테이블 수정 요청 | Execute 단계 중단, 수동 수정 후 재개 |
+| execute-action-item 실패 | 하위 스킬 호출 실패 | 실패한 Action Item 기록, 사용자에게 알림 | 해당 Action Item 건너뛰고 계속 진행 또는 중단 |
+| Squash merge 실패 | git 충돌 또는 권한 오류 | 충돌 파일 목록 출력, 수동 해결 요청 | Wrap-up 중단, 수동 해결 후 재개 |
+
 ## Completion Checklist
 
 - [ ] _story.md written

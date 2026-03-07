@@ -87,6 +87,17 @@ metadata:
     └── ...
 ```
 
+## Error Handling
+
+| Failure point | Condition | Recovery procedure | Exit behavior |
+|---------------|-----------|-------------------|---------------|
+| roadmap.md 누락 | `initiative/{year}/roadmap.md` 파일이 없음 | 사용자에게 roadmap.md 제공 요청 | 파일 제공될 때까지 스킬 중단 |
+| Goals 목록 없음 | roadmap.md에서 Phase 계획을 찾을 수 없음 | 사용자에게 확인 요청 | 사용자 확인 후 계속 진행 또는 중단 |
+| phase_id 형식 오류 | phase_id가 규칙에 맞지 않음 (예: YYYY-PX-name) | 올바른 형식 예시와 함께 오류 메시지 출력 | 스킬 중단, 올바른 phase_id 입력 요청 |
+| 폴더 생성 실패 | 권한 오류 또는 경로 문제 | 오류 메시지 출력, 권한 확인 요청 | 스킬 중단, 오류 상태 반환 |
+| writing-goal 실패 | 하위 스킬 호출 실패 | 실패한 Goal 기록, 사용자에게 알림 | 해당 Goal 건너뛰고 계속 진행 또는 중단 |
+| catalog-transition 미완료 | Goal 완료 시 카탈로그 전환 안됨 | 전환되지 않은 Goal 목록 출력, 수동 전환 요청 | Wrap-up 중단, 수동 처리 후 재개 |
+
 ## Completion Checklist
 
 - [ ] README.md created
