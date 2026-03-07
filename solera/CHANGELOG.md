@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.9.2] — 2026-03-07
+
+### Improved
+- Standardized `| Step | Output | Path | Nature |` table format across all skills
+- Added `execution_model` metadata and blocking/non-blocking clarification to write-goal, write-epic, write-story, manage-workflow
+- Unified sub-skill invocation syntax to `Skill(name="...", args={...})` in write-epic, write-goal, write-story
+- Added end-to-end `## Examples` sections to write-epic, write-goal, write-story
+- `refactor`: aligned transition-catalog parameters with write-goal/epic/story pattern
+- `refactor`: standardized hierarchical parameter naming across all skills
+- `docs`: added `## Error Handling` section to all skills
+- `test`: added automated skill parameter validation tests (9 cases)
+
+---
+
 ## [1.9.1] — 2026-03-07
 
 ### Fixed
