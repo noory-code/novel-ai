@@ -31,8 +31,10 @@ metadata:
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
 | **project_path** | Y | Project workspace root | banas/workspace |
+| **year** | Y | Initiative year | 2026 |
 | **phase_id** | Y | Parent Phase ID | 2026-P1-foundation |
-| **goal_id** | Y | Parent Goal ID | G1-search-liquor |
+| **goal_id** | Y | Parent Goal ID | G1 |
+| **goal_name** | Y | Parent Goal name | search-liquor |
 | **epic_name** | Y | Epic name | 01-auth |
 | **epic_type** | N | Feature \| Enabler (default: Feature) | Enabler |
 
@@ -62,7 +64,7 @@ metadata:
 1. **Setup**
    - [ ] Confirm `{goal_path}/_goal.md` exists with Glob tool
      - If not: invoke Skill tool `skill="write-goal"` with args:
-       `goal_id={goal_id}, goal_name={goal_id}, project_path={project_path}, phase_id={phase_id}`
+       `project_path={project_path}, year={year}, phase_id={phase_id}, goal_id={goal_id}, goal_name={goal_name}, goal_type={goal_type 또는 기본값 Feature}`
        (ask user to confirm `goal_name` if it differs from `goal_id`) → resume this Step after completion
    - [ ] Create `epic-{epic_name}` branch (from Goal branch)
    - [ ] Create `{goal_path}/epics/{epic_name}/` folder
@@ -94,8 +96,9 @@ metadata:
    - [ ] Execute each Story in order (do not proceed to the next Step until all Stories are complete):
      ```
      Skill tool call: skill="writing-story"
-       args: story_id={US|TS-NNN}, story_name={name}, epic_name={epic_name},
-             goal_id={goal_id}, phase_id={phase_id}, project_path={project_path}
+       args: project_path={project_path}, year={year}, phase_id={phase_id},
+             goal_id={goal_id}, goal_name={goal_name}, epic_name={epic_name},
+             epic_type={epic_type}, story_id={US|TS-NNN}, story_name={name}, story_type={US|TS}
      → Confirm _story.md created + status ✅ before proceeding to next Story
      ```
    - [ ] Merge to the Epic branch upon Story completion
@@ -142,7 +145,7 @@ Epics always live inside the goal directory. Never create a top-level `epics/` d
 | Failure point | Condition | Recovery procedure | Exit behavior |
 |---------------|-----------|-------------------|---------------|
 | mission.md 누락 | `published/identity/mission.md` 없음 | Glob으로 확인 후 Skill tool로 `write-identity` 호출 | identity 생성 후 이 스킬 재개 |
-| _goal.md 누락 | `{goal_path}/_goal.md` 없음 | Glob으로 확인 후 Skill tool로 `write-goal` 호출 (사용자에게 goal_name 확인) | Goal 생성 후 이 스킬 재개 |
+| _goal.md 누락 | `{goal_path}/_goal.md` 없음 | Glob으로 확인 후 Skill tool로 `write-goal` 호출 (project_path, year, phase_id, goal_id, goal_name, goal_type 전달, 사용자에게 goal_name 확인) | Goal 생성 후 이 스킬 재개 |
 | phase_id 불명 | phase_id 파라미터 없음 | 사용자에게 phase_id 입력 요청 | 파라미터 입력될 때까지 중단 |
 | Epic 미할당 | _goal.md에 Epic 정보 없음 | 오류 메시지 출력, _goal.md 업데이트 요청 | 스킬 중단, 수동 수정 후 재개 |
 | 브랜치 생성 실패 | git 오류 (충돌, 권한 등) | git 오류 메시지 출력, 수동 해결 요청 | 스킬 중단, 해결 후 재개 |

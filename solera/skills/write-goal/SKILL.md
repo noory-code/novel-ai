@@ -25,11 +25,12 @@ metadata:
 
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
+| **project_path** | Y | Project workspace root | banas/workspace |
+| **year** | Y | Initiative year | 2026 |
+| **phase_id** | Y | Parent Phase ID | 2026-P1-foundation |
 | **goal_id** | Y | Goal ID | G1 |
 | **goal_name** | Y | Goal name | search-liquor |
 | **goal_type** | N | Feature \| Enabler (default: Feature) | Enabler |
-| **project_path** | Y | Project workspace root | banas/workspace |
-| **phase_id** | Y | Parent Phase ID | 2026-P1-foundation |
 
 ## Output
 
@@ -56,7 +57,7 @@ metadata:
    - [ ] Confirm `published/identity/mission.md` exists; if not, invoke writing-identity
    - [ ] Confirm `{project_path}/phase/{phase_id}/README.md` exists with Glob tool
      - If not: invoke Skill tool `skill="write-phase"` with args:
-       `project_path={project_path}, phase_id={phase_id}, year={first 4 chars of phase_id}` → resume after completion
+       `project_path={project_path}, year={year}, phase_id={phase_id}` → resume after completion
    - [ ] Confirm Goal information from the Phase README (period, objectives)
    - [ ] Create `goals/{goal_id}-{name}/` folder
    - [ ] Create `goals/{goal_id}-{name}/artifacts/` folder

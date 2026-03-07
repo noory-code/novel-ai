@@ -22,9 +22,9 @@ metadata:
 
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
-| **phase_id** | Y | Phase ID | 2026-P1-foundation |
-| **year** | Y | Initiative year | 2026 |
 | **project_path** | Y | Project workspace root | banas/workspace |
+| **year** | Y | Initiative year | 2026 |
+| **phase_id** | Y | Phase ID | 2026-P1-foundation |
 
 ## Output
 

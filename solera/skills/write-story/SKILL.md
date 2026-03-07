@@ -27,9 +27,12 @@ metadata:
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
 | **project_path** | Y | Project workspace root | banas/workspace |
+| **year** | Y | Initiative year | 2026 |
 | **phase_id** | Y | Parent Phase ID | 2026-P1-foundation |
-| **goal_id** | Y | Parent Goal ID | G1-search-liquor |
+| **goal_id** | Y | Parent Goal ID | G1 |
+| **goal_name** | Y | Parent Goal name | search-liquor |
 | **epic_name** | Y | Parent Epic name | 01-auth |
+| **epic_type** | N | Feature \| Enabler (default: Feature) | Enabler |
 | **story_id** | Y | Story ID | US-001 |
 | **story_name** | Y | Story name | login-form |
 | **story_type** | N | US (User Story) \| TS (Technical Story) (default: US) | TS |
@@ -85,9 +88,10 @@ metadata:
    - [ ] Execute each Action Item in phase order (do not proceed to the next Step until all Action Items are complete):
      ```
      Skill tool call: skill="writing-action-item"
-       args: action_item_id=ACT-NNN, action_item_name={name}, story_id={story_id},
-             epic_name={epic_name}, goal_id={goal_id}, phase_id={phase_id},
-             project_path={project_path}
+       args: project_path={project_path}, year={year}, phase_id={phase_id},
+             goal_id={goal_id}, goal_name={goal_name}, epic_name={epic_name},
+             epic_type={epic_type}, story_id={story_id}, story_name={story_name},
+             action_item_id=ACT-NNN, action_item_name={name}
      → Confirm ACT-NNN.md committed + status ✅ before proceeding to next Action Item
      ```
    - [ ] Confirm all acceptance criteria are met

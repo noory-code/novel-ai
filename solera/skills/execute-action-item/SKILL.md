@@ -24,8 +24,15 @@ metadata:
 
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
+| **project_path** | Y | Project workspace root | banas/workspace |
+| **year** | Y | Initiative year | 2026 |
+| **phase_id** | Y | Parent Phase ID | 2026-P1-foundation |
+| **goal_id** | Y | Parent Goal ID | G1 |
+| **goal_name** | Y | Parent Goal name | search-liquor |
 | **epic_name** | Y | Parent Epic name | 01-auth |
+| **epic_type** | N | Feature \| Enabler (default: Feature) | Enabler |
 | **story_id** | Y | Parent Story ID | US-001 |
+| **story_name** | Y | Parent Story name | login-form |
 | **action_item_id** | Y | Action Item ID | ACT-001 |
 | **action_item_name** | Y | Action Item name | setup-project |
 
