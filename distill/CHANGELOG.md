@@ -4,6 +4,14 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.3.2] — 2026-03-08
+
+### Fixed
+- `hooks.json`: use `python3` instead of `python` in hook commands —
+  macOS does not provide `python` binary, only `python3`
+
+---
+
 ## [1.3.1] — 2026-03-07
 
 ### Fixed

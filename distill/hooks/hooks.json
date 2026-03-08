@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python -m distill.hooks.distill_hook"
+            "command": "python3 -m distill.hooks.distill_hook"
           }
         ]
       }
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python -m distill.hooks.distill_hook"
+            "command": "python3 -m distill.hooks.distill_hook"
           }
         ]
       }
