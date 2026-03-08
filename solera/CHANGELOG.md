@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.9.3] — 2026-03-08
+
+### Fixed
+- `handoff_hook.py`: add `SOLERA_HANDOFF_RUNNING` env guard to prevent recursive
+  SessionEnd invocations — `claude -p` subprocesses also trigger SessionEnd,
+  causing HANDOFF.md to be overwritten repeatedly and processes to accumulate
+
+---
+
 ## [1.9.2] — 2026-03-07
 
 ### Improved

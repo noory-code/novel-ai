@@ -16,6 +16,7 @@ Usage in hooks.json:
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -35,6 +36,11 @@ PROMPT = (
 
 def main(stdin_data: str | None = None) -> tuple[str, str, int]:
     """Run the hook. Returns (stdout, stderr, exit_code)."""
+    # Guard against recursive invocation: claude -p subprocesses also trigger
+    # SessionEnd, which would re-enter this hook indefinitely.
+    if os.environ.get("SOLERA_HANDOFF_RUNNING"):
+        return "", "", 0
+
     stderr_parts: list[str] = []
 
     if stdin_data is None:
@@ -63,12 +69,14 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
     ]
 
     log_path = Path("/tmp/solera-handoff-hook.log")
+    env = {**os.environ, "SOLERA_HANDOFF_RUNNING": "1"}
     try:
         with log_path.open("w", encoding="utf-8") as log_file:
             subprocess.run(
                 cmd,
                 stdout=log_file,
                 stderr=log_file,
+                env=env,
                 cwd=cwd,
                 shell=False,
                 timeout=60,
