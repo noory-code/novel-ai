@@ -4,6 +4,14 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.3.3] — 2026-03-08
+
+### Fixed
+- `hooks.json`: use distill venv python (`${CLAUDE_PLUGIN_ROOT}/../.venv/bin/python3`)
+  instead of system `python3` — system python (Xcode) cannot find distill module
+
+---
+
 ## [1.3.2] — 2026-03-08
 
 ### Fixed
