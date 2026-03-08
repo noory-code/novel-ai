@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.9.6] — 2026-03-08
+
+### Fixed
+- `handoff_hook.py`: add project scope guard — only run in the plugin's
+  home project (noory-ai), skip other projects like flutter-material-kit
+  that have solera enabled. Prevents spurious handoff sessions in unrelated
+  project session folders.
+
+---
+
 ## [1.9.5] — 2026-03-08
 
 ### Fixed

@@ -74,6 +74,12 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
 
     cwd = hook_data.get("cwd")
 
+    # Only run in the plugin's home project — skip other projects that
+    # happen to have solera enabled (e.g. flutter-material-kit).
+    plugin_project_root = Path(__file__).resolve().parent.parent.parent
+    if cwd and not Path(cwd).resolve().is_relative_to(plugin_project_root):
+        return "", "", 0
+
     cmd = [
         "claude", "-p", PROMPT,
         "--model", "haiku",
