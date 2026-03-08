@@ -4,9 +4,6 @@
 Runs `claude -p` subprocess to automatically execute the handoff skill,
 updating HANDOFF.md with current session context.
 
-SessionEnd fires only when the actual user session ends, not when claude -p
-subprocesses finish — preventing the recursive loop that Stop would cause.
-
 Usage in hooks.json:
   "SessionEnd": [{
     "hooks": [{ "type": "command", "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/handoff_hook.py" }]
@@ -16,9 +13,9 @@ Usage in hooks.json:
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -33,18 +30,29 @@ PROMPT = (
     "Keep it concise — 2-3 lines per section maximum."
 )
 
-
 _LOCK_FILE = Path("/tmp/solera-handoff-hook.lock")
+_LOCK_TTL_SECONDS = 120
+
+
+def _is_locked() -> bool:
+    """Check if another handoff hook is running or ran recently."""
+    if not _LOCK_FILE.exists():
+        return False
+    try:
+        age = time.time() - _LOCK_FILE.stat().st_mtime
+        return age < _LOCK_TTL_SECONDS
+    except OSError:
+        return False
 
 
 def main(stdin_data: str | None = None) -> tuple[str, str, int]:
     """Run the hook. Returns (stdout, stderr, exit_code)."""
     # Guard against recursive invocation: claude -p subprocesses also trigger
     # SessionEnd, which would re-enter this hook indefinitely.
-    # Use a lockfile so re-entrant calls exit immediately.
-    if _LOCK_FILE.exists():
+    # Lockfile with TTL — NOT deleted after run, expires after 120s.
+    if _is_locked():
         return "", "", 0
-    _LOCK_FILE.touch()
+    _LOCK_FILE.write_text(str(time.time()), encoding="utf-8")
 
     stderr_parts: list[str] = []
 
@@ -87,10 +95,10 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
             )
     except subprocess.TimeoutExpired:
         stderr_parts.append("solera-handoff-hook: timeout after 60s")
+        return "", "\n".join(stderr_parts), 0
     except OSError as exc:
         stderr_parts.append(f"solera-handoff-hook: failed to launch claude -p: {exc}")
-    finally:
-        _LOCK_FILE.unlink(missing_ok=True)
+        return "", "\n".join(stderr_parts), 0
 
     stderr_parts.append("solera-handoff-hook: SessionEnd — HANDOFF.md updated")
     return "", "\n".join(stderr_parts), 0

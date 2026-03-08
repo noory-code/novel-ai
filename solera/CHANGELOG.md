@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.9.5] — 2026-03-08
+
+### Fixed
+- `handoff_hook.py`: replace ephemeral lockfile with TTL-based lock (120s).
+  Previous lockfile was deleted in `finally`, allowing queued SessionEnd hooks
+  to re-enter immediately after cleanup. Now the lock persists for 120s after
+  creation, blocking all re-entrant calls during that window.
+
+---
+
 ## [1.9.4] — 2026-03-08
 
 ### Fixed
