@@ -34,12 +34,17 @@ PROMPT = (
 )
 
 
+_LOCK_FILE = Path("/tmp/solera-handoff-hook.lock")
+
+
 def main(stdin_data: str | None = None) -> tuple[str, str, int]:
     """Run the hook. Returns (stdout, stderr, exit_code)."""
     # Guard against recursive invocation: claude -p subprocesses also trigger
     # SessionEnd, which would re-enter this hook indefinitely.
-    if os.environ.get("SOLERA_HANDOFF_RUNNING"):
+    # Use a lockfile so re-entrant calls exit immediately.
+    if _LOCK_FILE.exists():
         return "", "", 0
+    _LOCK_FILE.touch()
 
     stderr_parts: list[str] = []
 
@@ -69,14 +74,12 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
     ]
 
     log_path = Path("/tmp/solera-handoff-hook.log")
-    env = {**os.environ, "SOLERA_HANDOFF_RUNNING": "1"}
     try:
         with log_path.open("w", encoding="utf-8") as log_file:
             subprocess.run(
                 cmd,
                 stdout=log_file,
                 stderr=log_file,
-                env=env,
                 cwd=cwd,
                 shell=False,
                 timeout=60,
@@ -84,10 +87,10 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
             )
     except subprocess.TimeoutExpired:
         stderr_parts.append("solera-handoff-hook: timeout after 60s")
-        return "", "\n".join(stderr_parts), 0
     except OSError as exc:
         stderr_parts.append(f"solera-handoff-hook: failed to launch claude -p: {exc}")
-        return "", "\n".join(stderr_parts), 0
+    finally:
+        _LOCK_FILE.unlink(missing_ok=True)
 
     stderr_parts.append("solera-handoff-hook: SessionEnd — HANDOFF.md updated")
     return "", "\n".join(stderr_parts), 0

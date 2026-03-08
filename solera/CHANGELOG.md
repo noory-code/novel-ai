@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.9.4] — 2026-03-08
+
+### Fixed
+- `handoff_hook.py`: replace env var guard with lockfile (`/tmp/solera-handoff-hook.lock`)
+  Env vars are not propagated into hook subprocesses by Claude Code, so the previous
+  `SOLERA_HANDOFF_RUNNING` guard had no effect. Lockfile approach reliably prevents
+  concurrent re-entrant invocations.
+
+---
+
 ## [1.9.3] — 2026-03-08
 
 ### Fixed
