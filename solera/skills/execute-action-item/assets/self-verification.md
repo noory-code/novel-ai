@@ -1,6 +1,6 @@
-# Validation: writing-action-item
+# Validation: execute-action-item
 
-> This file defines the unique validation rules for the writing-action-item skill.
+> This file defines the unique validation rules for the execute-action-item skill.
 
 ## Structural
 

@@ -40,8 +40,8 @@ metadata:
 
 | Skill | Purpose | Step |
 |-------|---------|------|
-| `writing-goal` | Elaborate each Goal and decompose it into Epics | Execute |
-| `catalog-transition` | Move artifacts to the catalog upon Goal completion | Execute (within Goal) |
+| `write-goal` | Elaborate each Goal and decompose it into Epics | Execute |
+| `transition-catalog` | Move artifacts to the catalog upon Goal completion | Execute (within Goal) |
 
 ## Procedure
 
@@ -62,11 +62,11 @@ metadata:
 
 4. **Create Goal folder structure**
    - [ ] Create `goals/{goal_id}-{name}/` for each Goal
-   - [ ] Prepare to invoke writing-goal
+   - [ ] Prepare to invoke write-goal
 
 5. **Phase Wrap-up**
    - [ ] Confirm all Goal statuses ✅
-   - [ ] Confirm catalog-transition completed for each Goal (moved to `workspace/catalog/`)
+   - [ ] Confirm transition-catalog completed for each Goal (moved to `workspace/catalog/`)
    - [ ] Write SUMMARY.md (overall Goal outcomes, catalog artifact list, handoff notes for the next Phase)
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set README.md status to ✅ and update progress
@@ -82,7 +82,7 @@ metadata:
 └── goals/
     ├── {goal_id}-{name}/
     │   ├── _goal.md
-    │   ├── artifacts/    # During Goal → moved via catalog-transition
+    │   ├── artifacts/    # During Goal → moved via transition-catalog
     │   └── epics/
     └── ...
 ```
@@ -95,16 +95,16 @@ metadata:
 | Goals 목록 없음 | roadmap.md에서 Phase 계획을 찾을 수 없음 | 사용자에게 확인 요청 | 사용자 확인 후 계속 진행 또는 중단 |
 | phase_id 형식 오류 | phase_id가 규칙에 맞지 않음 (예: YYYY-PX-name) | 올바른 형식 예시와 함께 오류 메시지 출력 | 스킬 중단, 올바른 phase_id 입력 요청 |
 | 폴더 생성 실패 | 권한 오류 또는 경로 문제 | 오류 메시지 출력, 권한 확인 요청 | 스킬 중단, 오류 상태 반환 |
-| writing-goal 실패 | 하위 스킬 호출 실패 | 실패한 Goal 기록, 사용자에게 알림 | 해당 Goal 건너뛰고 계속 진행 또는 중단 |
-| catalog-transition 미완료 | Goal 완료 시 카탈로그 전환 안됨 | 전환되지 않은 Goal 목록 출력, 수동 전환 요청 | Wrap-up 중단, 수동 처리 후 재개 |
+| write-goal 실패 | 하위 스킬 호출 실패 | 실패한 Goal 기록, 사용자에게 알림 | 해당 Goal 건너뛰고 계속 진행 또는 중단 |
+| transition-catalog 미완료 | Goal 완료 시 카탈로그 전환 안됨 | 전환되지 않은 Goal 목록 출력, 수동 전환 요청 | Wrap-up 중단, 수동 처리 후 재개 |
 
 ## Completion Checklist
 
 - [ ] README.md created
 - [ ] Goals table includes all Goals from the roadmap
 - [ ] Folder structure created for each Goal
-- [ ] writing-goal transition prepared
-- [ ] (Wrap-up) All Goal catalog-transitions confirmed complete
+- [ ] write-goal transition prepared
+- [ ] (Wrap-up) All Goal transition-catalogs confirmed complete
 - [ ] (Wrap-up) SUMMARY.md written
 - [ ] (Wrap-up) RETRO.md written
 - [ ] (Wrap-up) progress.md updated

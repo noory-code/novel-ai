@@ -2,7 +2,7 @@
 
 ## Overview
 
-Solera is built around three interlocking principles. First, every skill is a thin orchestrator: it validates preconditions, delegates work to lower-level skills, and records outcomes — it contains no business logic of its own. Second, every work item (Phase, Goal, Epic, Story, Action Item) owns its own procedure through a `## Workflow` section in its template; the `workflow-manage` skill reads and executes those steps but never defines them. Third, SSOT is enforced structurally: `progress.md` is the single canonical source for the project's current position in the hierarchy, and the `catalog/published/` tree is the single authoritative location for promoted artifacts. Duplication is prevented by convention and by the `catalog-transition` skill, which moves artifacts out of goal-local directories into the shared catalog on Goal completion.
+Solera is built around three interlocking principles. First, every skill is a thin orchestrator: it validates preconditions, delegates work to lower-level skills, and records outcomes — it contains no business logic of its own. Second, every work item (Phase, Goal, Epic, Story, Action Item) owns its own procedure through a `## Workflow` section in its template; the `manage-workflow` skill reads and executes those steps but never defines them. Third, SSOT is enforced structurally: `progress.md` is the single canonical source for the project's current position in the hierarchy, and the `catalog/published/` tree is the single authoritative location for promoted artifacts. Duplication is prevented by convention and by the `transition-catalog` skill, which moves artifacts out of goal-local directories into the shared catalog on Goal completion.
 
 ---
 
@@ -10,14 +10,14 @@ Solera is built around three interlocking principles. First, every skill is a th
 
 ```mermaid
 flowchart TD
-    WM[workflow-manage]
-    WPH[writing-phase]
-    WG[writing-goal]
-    WE[writing-epic]
-    WS[writing-story]
-    WAI[writing-action-item]
-    WPR[workflow-pr]
-    CT[catalog-transition]
+    WM[manage-workflow]
+    WPH[write-phase]
+    WG[write-goal]
+    WE[write-epic]
+    WS[write-story]
+    WAI[execute-action-item]
+    WPR[create-pr]
+    CT[transition-catalog]
     HO[handoff]
     DEV[dev skills]
 
@@ -80,7 +80,7 @@ Each level of the hierarchy corresponds to a progressively shorter time scale an
     │   └── goals/[goal-id]/
     │       ├── _goal.md                 # Goal definition, scope, and Workflow steps
     │       ├── artifacts/               # working copies: service-map, persona, use-case, concept
-    │       │   └── (promoted to published/ on Goal complete via catalog-transition)
+    │       │   └── (promoted to published/ on Goal complete via transition-catalog)
     │       └── epics/[epic-name]/
     │           ├── _epic.md             # Epic definition and Workflow steps
     │           └── stories/[story-id]/
@@ -95,7 +95,7 @@ Each level of the hierarchy corresponds to a progressively shorter time scale an
             └── concept/
 ```
 
-The `artifacts/` directory under each Goal is the in-progress working area. The `catalog/published/` subtree is the SSOT for all completed artifacts across all Goals. No artifact should exist in both locations simultaneously; `catalog-transition` enforces this by moving (not copying) files.
+The `artifacts/` directory under each Goal is the in-progress working area. The `catalog/published/` subtree is the SSOT for all completed artifacts across all Goals. No artifact should exist in both locations simultaneously; `transition-catalog` enforces this by moving (not copying) files.
 
 ---
 
@@ -105,7 +105,7 @@ The `artifacts/` directory under each Goal is the in-progress working area. The 
 
 Every work item template contains a `## Workflow` section that lists the concrete procedural steps for that item type. This is the SSOT for procedure: the definition of "what to do" lives in the template, not in any skill.
 
-`workflow-manage` acts as a supervisor: it reads the `## Workflow` section of the active item and executes each step in order. It has no hardcoded knowledge of what those steps are.
+`manage-workflow` acts as a supervisor: it reads the `## Workflow` section of the active item and executes each step in order. It has no hardcoded knowledge of what those steps are.
 
 All workflows follow a four-phase structure:
 
@@ -124,11 +124,11 @@ For items that own children (Phase owns Goals; Goal owns Epics; Epic owns Storie
 - The termination condition (all children complete, or explicit user stop)
 - Any inter-child actions (e.g., update `progress.md` between Epics)
 
-This means the looping logic is declared in the parent template, not implemented in `workflow-manage`. `workflow-manage` reads the repeat block and drives the loop; it does not decide when the loop ends.
+This means the looping logic is declared in the parent template, not implemented in `manage-workflow`. `manage-workflow` reads the repeat block and drives the loop; it does not decide when the loop ends.
 
-### How workflow-manage Reads Procedures
+### How manage-workflow Reads Procedures
 
-On each invocation, `workflow-manage`:
+On each invocation, `manage-workflow`:
 
 1. Reads `progress.md` to identify the active item.
 2. Locates the item's file (`_goal.md`, `_epic.md`, `_story.md`, etc.).
@@ -136,7 +136,7 @@ On each invocation, `workflow-manage`:
 4. Executes each step; if a step names a child skill, it invokes that skill and awaits completion before proceeding.
 5. On completion, updates `progress.md` and returns control to the caller.
 
-`workflow-manage` does not contain any domain-specific logic about what Goals, Epics, Stories, or Action Items mean. All such logic is encoded in the templates.
+`manage-workflow` does not contain any domain-specific logic about what Goals, Epics, Stories, or Action Items mean. All such logic is encoded in the templates.
 
 ---
 

@@ -1,6 +1,6 @@
-# Validation: workflow-pr
+# Validation: create-pr
 
-> This file defines the unique validation rules for the workflow-pr skill.
+> This file defines the unique validation rules for the create-pr skill.
 
 ## Structural
 

@@ -57,7 +57,7 @@ Defines the decomposition unit of a Story, which corresponds to a single commit.
 ## Workflow
 
 ### Step 0. Setup
-- [ ] Confirm `stories/[US|TS]-NNN/_story.md` exists; if missing, invoke writing-story
+- [ ] Confirm `stories/[US|TS]-NNN/_story.md` exists; if missing, invoke write-story
 - [ ] Status → 🔄
 - [ ] Confirm the goal and task content checklist
 

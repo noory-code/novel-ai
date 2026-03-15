@@ -1,6 +1,6 @@
 # Template: Composite + Procedural
 
-> Multi-skill procedural workflow. Examples: writing-goal, writing-epic.
+> Multi-skill procedural workflow. Examples: write-goal, write-epic.
 
 ## Frontmatter
 

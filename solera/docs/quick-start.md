@@ -306,13 +306,13 @@ epics/01-task-crud/
 
 ## Step 5: Complete the Epic — PR, merge, catalog transition
 
-### Create the PR with workflow-pr
+### Create the PR with create-pr
 
 Say to Claude:
 
 > The Epic is done. Create a PR for epic-task-crud.
 
-Solera runs `workflow-pr`:
+Solera runs `create-pr`:
 
 1. Confirms all Stories are ✅
 2. Confirms build and tests pass on `epic-task-crud`
@@ -343,7 +343,7 @@ The `epic-task-crud` branch is deleted after merge.
 
 ### Catalog transition runs automatically
 
-When the last Epic in a Goal is merged and the Goal is marked complete, Solera runs `catalog-transition`. It moves intermediate design artifacts from `artifacts/` to `workspace/catalog/published/`, stamping each file with a version tag.
+When the last Epic in a Goal is merged and the Goal is marked complete, Solera runs `transition-catalog`. It moves intermediate design artifacts from `artifacts/` to `workspace/catalog/published/`, stamping each file with a version tag.
 
 Say to Claude:
 
@@ -397,5 +397,5 @@ task-app/
 
 ## What's next
 
-- **architecture.md** — How skills chain together, the role of each SKILL.md, and how workflow-manage supervises execution without duplicating procedure definitions.
+- **architecture.md** — How skills chain together, the role of each SKILL.md, and how manage-workflow supervises execution without duplicating procedure definitions.
 - **team-workflow.md** — Running Solera with multiple developers: branch ownership, parallel Story execution with agent assignments, and how `depends_on` prevents output conflicts.

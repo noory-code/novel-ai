@@ -18,7 +18,7 @@ metadata:
 ## Prerequisites
 
 - `published/identity/mission.md` exists
-  - If not: check `published/identity/mission.md` with Glob tool → invoke `writing-identity` with Skill tool
+  - If not: check `published/identity/mission.md` with Glob tool → invoke `write-identity` with Skill tool
 - `_goal.md` exists
   - If not: check `{goal_path}/_goal.md` with Glob tool → invoke `write-goal` with Skill tool passing:
     `goal_id={goal_id}, goal_name={goal_id}, project_path={project_path}, phase_id={phase_id}`
@@ -51,14 +51,14 @@ metadata:
 | Wrap-up | RETRO.md | Final | `{goal_path}/epics/{epic_name}/RETRO.md` |
 
 > `{goal_path}` = `{project_path}/phase/{phase_id}/goals/{goal_id}`
-> artifacts = intermediate outputs. Moved to published/ via catalog-transition upon Goal completion.
+> artifacts = intermediate outputs. Moved to published/ via transition-catalog upon Goal completion.
 
 ## Skills Used
 
 | Skill | Purpose | Step |
 |-------|---------|------|
-| `writing-story` | Elaborate each Story and decompose it into Action Items | Execute |
-| `workflow-pr` | Create a PR upon Story/Epic completion | Execute, Wrap-up |
+| `write-story` | Elaborate each Story and decompose it into Action Items | Execute |
+| `create-pr` | Create a PR upon Story/Epic completion | Execute, Wrap-up |
 
 ## Procedure
 
@@ -158,8 +158,8 @@ Epics always live inside the goal directory. Never create a top-level `epics/` d
 | Epic 미할당 | _goal.md에 Epic 정보 없음 | 오류 메시지 출력, _goal.md 업데이트 요청 | 스킬 중단, 수동 수정 후 재개 |
 | 브랜치 생성 실패 | git 오류 (충돌, 권한 등) | git 오류 메시지 출력, 수동 해결 요청 | 스킬 중단, 해결 후 재개 |
 | domain.md 업데이트 충돌 | 기존 domain.md와 새 내용 충돌 | 병합 필요 영역 표시, 사용자에게 수동 병합 요청 | Concept 단계 중단, 수동 병합 후 재개 |
-| writing-story 실패 | 하위 스킬 호출 실패 | 실패한 Story 기록, 사용자에게 알림 | 해당 Story 건너뛰고 계속 진행 또는 중단 |
-| workflow-pr 실패 | PR 생성 실패 | PR 생성 오류 출력, 수동 PR 생성 요청 | Wrap-up 중단, 수동 PR 생성 후 완료 |
+| write-story 실패 | 하위 스킬 호출 실패 | 실패한 Story 기록, 사용자에게 알림 | 해당 Story 건너뛰고 계속 진행 또는 중단 |
+| create-pr 실패 | PR 생성 실패 | PR 생성 오류 출력, 수동 PR 생성 요청 | Wrap-up 중단, 수동 PR 생성 후 완료 |
 
 ## Examples
 
@@ -293,7 +293,7 @@ Skill(name="create-pr")
 - [ ] If Feature: Use Case written
 - [ ] Concept (domain.md, entities) written or updated
 - [ ] Story decomposition complete
-- [ ] (Execute) writing-story invoked for all Stories
+- [ ] (Execute) write-story invoked for all Stories
 - [ ] (Wrap-up) RETRO.md written
 - [ ] (Wrap-up) _epic.md status ✅
-- [ ] (Wrap-up) workflow-pr invoked
+- [ ] (Wrap-up) create-pr invoked

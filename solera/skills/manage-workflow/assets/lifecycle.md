@@ -20,7 +20,7 @@ Work item workflows are composed of named steps. Each step has a clear role (Set
 - [ ] Status → 🔄
 
 ### Step 1. Create
-- [ ] ... (handled by writing-* skills)
+- [ ] ... (handled by write-* skills)
 
 ### Step 2. Execute
 - [ ] ... concrete task steps ...
@@ -35,11 +35,11 @@ Work item workflows are composed of named steps. Each step has a clear role (Set
 
 | Hierarchy | Template | Steps | Step Composition |
 |-----------|----------|-------|-----------------|
-| **Phase** | writing-phase/assets/phase-template.md | 4 | Setup → Create → Execute → Wrap-up |
-| **Goal** | writing-goal/assets/goal-template.md | 4 | Setup → Create → Execute → Wrap-up |
-| **Epic** | writing-epic/assets/epic-template.md | 4 | Setup → Create → Execute → Wrap-up |
-| **Story** | writing-story/assets/story.md | 4 | Setup → Create → Execute → Wrap-up |
-| **Action Item** | writing-action-item/assets/action-item.md | 3 | Setup → Execute → Wrap-up |
+| **Phase** | write-phase/assets/phase-template.md | 4 | Setup → Create → Execute → Wrap-up |
+| **Goal** | write-goal/assets/goal-template.md | 4 | Setup → Create → Execute → Wrap-up |
+| **Epic** | write-epic/assets/epic-template.md | 4 | Setup → Create → Execute → Wrap-up |
+| **Story** | write-story/assets/story.md | 4 | Setup → Create → Execute → Wrap-up |
+| **Action Item** | execute-action-item/assets/action-item.md | 3 | Setup → Execute → Wrap-up |
 
 ## Repeat Block Pattern
 
@@ -49,7 +49,7 @@ When iterating over child work items in the Execute Step, mark repeat blocks wit
 ### Step 2. Execute
 <!-- Repeat the block below for each Story in the Stories table -->
 #### Story: {US|TS}-NNN — {title}
-- [ ] writing-story invoke
+- [ ] write-story invoke
 - [ ] Create Story branch
 - [ ] Develop + complete
 - [ ] Merge into Epic branch
@@ -58,13 +58,13 @@ When iterating over child work items in the Execute Step, mark repeat blocks wit
 ```
 
 - **Template**: Define only one block between `<!-- repeat -->` and `<!-- /repeat -->`
-- **Actual document**: writing-* skills expand the block to match the number of items in the table when creating work items
+- **Actual document**: write-* skills expand the block to match the number of items in the table when creating work items
 - **Progress tracking**: Individual checkboxes are created for each child work item, enabling progress tracking
 
 ## Workflow Manager Role
 
 1. Read the `## Workflow` of the target work item
 2. Execute each Step in order
-3. Invoke writing-* skills when document creation is needed
+3. Invoke write-* skills when document creation is needed
 4. Invoke frontend-*, dev-* skills when development work is needed
 5. After completion, update progress.md and determine the next work item

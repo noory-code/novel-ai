@@ -31,7 +31,7 @@
 ## Workflow
 
 ### Step 0. Setup
-- [ ] Confirm `goals/*/_goal.md` exists; if missing, invoke writing-goal
+- [ ] Confirm `goals/*/_goal.md` exists; if missing, invoke write-goal
 - [ ] Create `epic-[name]` branch (from dev)
 - [ ] Status → 🔄
 
@@ -45,7 +45,7 @@
 ### Step 2. Execute
 <!-- Repeat the block below for each Story in the Stories table -->
 #### Story: {US|TS}-NNN — {title}
-- [ ] writing-story invoke (Create → create branch → Execute → Wrap-up)
+- [ ] write-story invoke (Create → create branch → Execute → Wrap-up)
 - [ ] Merge into Epic branch
 <!-- /repeat -->
 - [ ] Confirm all Stories complete
@@ -53,5 +53,5 @@
 ### Step 3. Wrap-up
 - [ ] Write retrospective to RETRO.md (ref: [assets/retro.md](retro.md))
 - [ ] Status → ✅
-- [ ] workflow-pr invoke (create PR to parent branch and merge)
+- [ ] create-pr invoke (create PR to parent branch and merge)
 - [ ] Determine the next Epic or process Goal completion

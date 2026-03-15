@@ -1,6 +1,6 @@
-# Validation: writing-story
+# Validation: write-story
 
-> This file defines the unique validation rules for the writing-story skill.
+> This file defines the unique validation rules for the write-story skill.
 
 ## Structural
 
@@ -17,7 +17,7 @@ structural:
 
 ```yaml
 semantic:
-  - {id: C-001, name: "Action Item repeat block", type: content_contains, target: assets/story.md, patterns: ["writing-action-item invoke", "<!-- /repeat -->"]}
+  - {id: C-001, name: "Action Item repeat block", type: content_contains, target: assets/story.md, patterns: ["execute-action-item invoke", "<!-- /repeat -->"]}
   - {id: C-002, name: "US/TS distinction", type: content_contains, target: assets/story.md, patterns: ["User Story", "Technical Story"]}
   - {id: C-003, name: "Quality Criteria section", type: section_exists, target: assets/story.md, section: "## Quality Criteria"}
   - {id: C-004, name: "Story ID Rules", type: section_exists, target: assets/story.md, section: "## Story ID Rules"}

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.9.7] — 2026-03-15
+
+### Fixed
+- Fix stale skill name references across all docs, SKILL.md, asset templates,
+  and self-verification files. Align with v1.5.0 rename: `writing-*` → `write-*`,
+  `writing-action-item` → `execute-action-item`, `workflow-manage` → `manage-workflow`,
+  `workflow-pr` → `create-pr`, `catalog-transition` → `transition-catalog`.
+
+---
+
 ## [1.9.6] — 2026-03-08
 
 ### Fixed

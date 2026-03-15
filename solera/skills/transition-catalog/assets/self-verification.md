@@ -1,6 +1,6 @@
-# Validation: catalog-transition
+# Validation: transition-catalog
 
-> This file defines the unique validation rules for the catalog-transition skill.
+> This file defines the unique validation rules for the transition-catalog skill.
 
 ## Structural
 

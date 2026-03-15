@@ -1,6 +1,6 @@
-# Validation: writing-phase
+# Validation: write-phase
 
-> This file defines the unique validation rules for the writing-phase skill.
+> This file defines the unique validation rules for the write-phase skill.
 
 ## Structural
 
@@ -16,13 +16,13 @@ structural:
 
 ```yaml
 semantic:
-  - {id: C-001, name: "Goal repeat block", type: content_contains, target: assets/phase-template.md, patterns: ["writing-goal invoke", "<!-- /repeat -->"]}
+  - {id: C-001, name: "Goal repeat block", type: content_contains, target: assets/phase-template.md, patterns: ["write-goal invoke", "<!-- /repeat -->"]}
   - {id: C-002, name: "retro.md exists", type: file_exists, paths: [assets/retro.md]}
   - {id: C-003, name: "retro ref exists", type: content_contains, target: assets/phase-template.md, patterns: ["retro.md"]}
   - {id: C-004, name: "Status transition included", type: content_contains, target: assets/phase-template.md, patterns: ["Status →"]}
   - {id: C-005, name: "roadmap prerequisite", type: content_contains, target: SKILL.md, patterns: ["roadmap.md"]}
   - {id: C-006, name: "Phase folder structure", type: section_exists, target: SKILL.md, section: "## Folder Structure"}
   - {id: C-007, name: "Input table", type: content_contains, target: SKILL.md, patterns: ["project_path"]}
-  - {id: C-008, name: "Wrap-up catalog check", type: content_contains, target: assets/phase-template.md, patterns: ["catalog-transition"]}
+  - {id: C-008, name: "Wrap-up catalog check", type: content_contains, target: assets/phase-template.md, patterns: ["transition-catalog"]}
   - {id: C-009, name: "SUMMARY.md mention", type: content_contains, target: assets/phase-template.md, patterns: ["SUMMARY.md"]}
 ```

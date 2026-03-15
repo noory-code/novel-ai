@@ -1,6 +1,6 @@
-# Validation: workflow-manage
+# Validation: manage-workflow
 
-> This file defines the unique validation rules for the workflow-manage skill.
+> This file defines the unique validation rules for the manage-workflow skill.
 
 ## Structural
 
@@ -80,7 +80,7 @@ semantic:
     type: content_contains
     target: SKILL.md
     patterns:
-      - "writing-*"
+      - "write-*"
       - "invoke"
 
   - id: C-005

@@ -44,7 +44,7 @@
 ### Step 2. Execute
 <!-- Repeat the block below for each Goal in the Goals table -->
 #### Goal: {goal-id}-{name}
-- [ ] writing-goal invoke
+- [ ] write-goal invoke
 - [ ] Elaborate Goal and decompose Epics
 - [ ] Complete all Epics
 <!-- /repeat -->
@@ -52,7 +52,7 @@
 
 ### Step 3. Wrap-up
 - [ ] Confirm all Goal statuses are ✅
-- [ ] Confirm catalog-transition complete for each Goal (moved to `workspace/catalog/`)
+- [ ] Confirm transition-catalog complete for each Goal (moved to `workspace/catalog/`)
 - [ ] Write SUMMARY.md covering overall Goal outcomes, the catalog artifact list, and handoff notes for the next Phase
 - [ ] Write RETRO.md (ref: [retro.md](retro.md))
 - [ ] Set README.md status → ✅ and update progress

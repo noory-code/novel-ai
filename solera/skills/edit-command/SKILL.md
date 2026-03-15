@@ -19,7 +19,7 @@ metadata:
 | | Command | Skill |
 |---|---|---|
 | Invocation | User types `/commit` | AI selects automatically |
-| Name style | Short (`/handoff`) | Descriptive (`writing-goal`) |
+| Name style | Short (`/handoff`) | Descriptive (`write-goal`) |
 | Trigger | Explicit user input | Keyword/context match |
 
 ## Input

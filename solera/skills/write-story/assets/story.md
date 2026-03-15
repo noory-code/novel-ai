@@ -68,7 +68,7 @@ Defines the decomposition unit of an Epic, covering both User Stories and Techni
 ## Workflow
 
 ### Step 0. Setup
-- [ ] Confirm `epics/*/_epic.md` exists; if missing, invoke writing-epic
+- [ ] Confirm `epics/*/_epic.md` exists; if missing, invoke write-epic
 - [ ] Status → 🔄
 
 ### Step 1. Create (performed on Epic branch)
@@ -85,7 +85,7 @@ Defines the decomposition unit of an Epic, covering both User Stories and Techni
 <!-- Execute Action Items in Phase N in parallel. Next Phase starts after previous Phase is complete -->
 <!-- Repeat the block below for each Action Item in the Action Items table -->
 #### Action Item: ACT-NNN — {title}
-- [ ] writing-action-item invoke or development skill invoke
+- [ ] execute-action-item invoke or development skill invoke
 - [ ] Perform work and commit
 <!-- /repeat -->
 - [ ] Confirm all acceptance criteria are met

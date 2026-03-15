@@ -2,7 +2,7 @@
 
 ## Overview
 
-Solera organizes all project work into a seven-level hierarchy: Identity, Initiative, Phase, Goal, Epic, Story, and Action Item. The top three levels (Identity through Phase) are owned by humans and represent strategic decisions that cannot be automated — who the team is, what the annual objectives are, and what the quarterly plan delivers. The bottom four levels (Goal through Action Item) are owned by AI and represent the systematic decomposition of strategic intent into executable, traceable units of work down to individual commits. Every level produces a canonical artifact with its own `## Workflow` section, which `workflow-manage` reads and executes — no domain logic is hardcoded in the supervisor skill itself.
+Solera organizes all project work into a seven-level hierarchy: Identity, Initiative, Phase, Goal, Epic, Story, and Action Item. The top three levels (Identity through Phase) are owned by humans and represent strategic decisions that cannot be automated — who the team is, what the annual objectives are, and what the quarterly plan delivers. The bottom four levels (Goal through Action Item) are owned by AI and represent the systematic decomposition of strategic intent into executable, traceable units of work down to individual commits. Every level produces a canonical artifact with its own `## Workflow` section, which `manage-workflow` reads and executes — no domain logic is hardcoded in the supervisor skill itself.
 
 ## Full Hierarchy Diagram
 
@@ -35,13 +35,13 @@ Blue nodes (Identity, Initiative, Phase) are created by humans. Green nodes (Goa
 
 | Level | Cadence | Responsibility | Skill | Produces |
 |---|---|---|---|---|
-| Identity | Once | Human | `writing-identity` | `mission.md`, `core-values.md`, `vision_1.md` |
+| Identity | Once | Human | `write-identity` | `mission.md`, `core-values.md`, `vision_1.md` |
 | Initiative | Annual | Human | (manual) | `initiative/{year}/goals.md` rough list |
-| Phase | Quarterly | Human | `writing-phase` | `phase/{id}/README.md` |
-| Goal | Per goal | AI | `writing-goal` | `_goal.md`, service map, persona(s) |
-| Epic | Per epic | AI | `writing-epic` | `_epic.md`, use cases, domain concepts |
-| Story | Per story | AI | `writing-story` | `_story.md`, `ACT-NNN-{name}.md` files |
-| Action Item | Per commit | AI | `writing-action-item` | Code or doc changes + one git commit |
+| Phase | Quarterly | Human | `write-phase` | `phase/{id}/README.md` |
+| Goal | Per goal | AI | `write-goal` | `_goal.md`, service map, persona(s) |
+| Epic | Per epic | AI | `write-epic` | `_epic.md`, use cases, domain concepts |
+| Story | Per story | AI | `write-story` | `_story.md`, `ACT-NNN-{name}.md` files |
+| Action Item | Per commit | AI | `execute-action-item` | Code or doc changes + one git commit |
 
 ## Folder Layout
 
@@ -80,7 +80,7 @@ Solera creates Epic and Story branches automatically when you start each level. 
 |---|---|---|
 | Levels | Identity, Initiative, Phase | Goal, Epic, Story, Action Item |
 | Role | Strategic decisions, approval | Decomposition, document generation, implementation |
-| Skills | `writing-identity`, `writing-phase` | `writing-goal`, `writing-epic`, `writing-story`, `writing-action-item` |
+| Skills | `write-identity`, `write-phase` | `write-goal`, `write-epic`, `write-story`, `execute-action-item` |
 
 ## Lifecycle: Artifact Promotion
 
@@ -89,4 +89,4 @@ Artifacts produced during Goal work live in the working area until the Goal is c
 - **Working:** `workspace/phase/{phase}/goals/{goal}/artifacts/`
 - **Promoted:** `workspace/catalog/published/{type}/`
 
-When a Goal completes, `workflow-manage` invokes `catalog-transition`, which moves all artifacts from the working `artifacts/` directory into `workspace/catalog/published/` with version tags applied. This keeps the active workspace clean and makes completed work discoverable across phases without duplication.
+When a Goal completes, `manage-workflow` invokes `transition-catalog`, which moves all artifacts from the working `artifacts/` directory into `workspace/catalog/published/` with version tags applied. This keeps the active workspace clean and makes completed work discoverable across phases without duplication.

@@ -18,9 +18,9 @@ metadata:
 ## Prerequisites
 
 - `published/identity/mission.md` exists
-  - If not: check `published/identity/mission.md` with Glob tool → invoke `writing-identity` with Skill tool
+  - If not: check `published/identity/mission.md` with Glob tool → invoke `write-identity` with Skill tool
 - `_epic.md` exists
-  - If not: check `{epic_path}/_epic.md` with Glob tool → invoke `writing-epic` with Skill tool
+  - If not: check `{epic_path}/_epic.md` with Glob tool → invoke `write-epic` with Skill tool
 - The corresponding Story must be assigned in the Stories table of _epic.md
 
 ## Input
@@ -52,13 +52,13 @@ metadata:
 
 | Skill | Purpose | Step |
 |-------|---------|------|
-| `writing-action-item` | Execute each Action Item (1 ACT = 1 commit) | Execute |
+| `execute-action-item` | Execute each Action Item (1 ACT = 1 commit) | Execute |
 
 ## Procedure
 
 1. **Setup**
    - [ ] Confirm `{epic_path}/_epic.md` exists with Glob tool
-     - If not: invoke Skill tool `skill="writing-epic"` **(BLOCKING: Epic 생성 완료 후 재개)**
+     - If not: invoke Skill tool `skill="write-epic"` **(BLOCKING: Epic 생성 완료 후 재개)**
    - [ ] Check for previous Story retrospectives: `Glob {epic_path}/stories/*/RETRO.md` — if any exist, read the most recent one and apply any "AI Improvements" noted there
    - [ ] Create `story-{story_id}-{story_name}` branch (from Epic branch)
    - [ ] Create `{epic_path}/stories/{story_id}/` folder
@@ -272,7 +272,7 @@ Skill(name="execute-action-item", args={
 - [ ] Acceptance criteria are verifiable
 - [ ] All ACT-NNN-{name}.md files exist on disk (verified with Glob tool — count matches Action Items table)
 - [ ] 1 Action Item = 1 commit principle observed
-- [ ] (Execute) writing-action-item invoked for all Action Items
+- [ ] (Execute) execute-action-item invoked for all Action Items
 - [ ] (Wrap-up) RETRO.md written
 - [ ] (Wrap-up) _story.md status ✅
 - [ ] (Wrap-up) Squash merged to Epic branch

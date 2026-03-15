@@ -95,4 +95,4 @@ metadata:
 - [ ] core-values.md created — 3–5 values with decision criteria
 - [ ] vision_1.md created — concrete future state with measurable conditions
 - [ ] goals.md created — Goal IDs assigned, linked to values, Feature/Enabler classified
-- [ ] Ready to hand off to writing-phase or writing-goal
+- [ ] Ready to hand off to write-phase or write-goal

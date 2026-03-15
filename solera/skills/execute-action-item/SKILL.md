@@ -16,7 +16,7 @@ metadata:
 
 ## Prerequisites
 
-- `_story.md` exists; if not, invoke writing-story
+- `_story.md` exists; if not, invoke write-story
 - The corresponding ACT must be assigned in the Action Items table of _story.md
 - All prerequisite ACTs listed in depends_on must be ✅ complete
 
@@ -55,7 +55,7 @@ metadata:
 ## Procedure
 
 1. **Setup**
-   - [ ] Confirm `_story.md` exists; if not, invoke writing-story
+   - [ ] Confirm `_story.md` exists; if not, invoke write-story
    - [ ] Confirm all prerequisite ACTs in depends_on are complete
    - [ ] Read the Action Item file — ref: [assets/action-item.md](assets/action-item.md)
    - [ ] Confirm the objective and task checklist

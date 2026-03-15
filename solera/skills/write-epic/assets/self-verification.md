@@ -1,6 +1,6 @@
-# Validation: writing-epic
+# Validation: write-epic
 
-> This file defines the unique validation rules for the writing-epic skill.
+> This file defines the unique validation rules for the write-epic skill.
 
 ## Structural
 
@@ -16,7 +16,7 @@ structural:
 
 ```yaml
 semantic:
-  - {id: C-001, name: "Story repeat block", type: content_contains, target: assets/epic-template.md, patterns: ["writing-story invoke", "<!-- /repeat -->"]}
+  - {id: C-001, name: "Story repeat block", type: content_contains, target: assets/epic-template.md, patterns: ["write-story invoke", "<!-- /repeat -->"]}
   - {id: C-002, name: "Output templates", type: file_exists, paths: [assets/epic-template.md, assets/use-case.md, assets/entity.md, assets/concept.md]}
   - {id: C-003, name: "retro.md exists", type: file_exists, paths: [assets/retro.md]}
   - {id: C-004, name: "retro ref exists", type: content_contains, target: assets/epic-template.md, patterns: ["retro.md"]}
@@ -24,6 +24,6 @@ semantic:
   - {id: C-006, name: "Use Case output", type: content_contains, target: assets/epic-template.md, patterns: ["use-case"]}
   - {id: C-007, name: "Entity output", type: content_contains, target: assets/epic-template.md, patterns: ["entities"]}
   - {id: C-008, name: "Prerequisite Goal context", type: content_contains, target: SKILL.md, patterns: ["_goal.md", "published/identity/mission.md"]}
-  - {id: C-009, name: "Wrap-up procedure exists", type: content_contains, target: SKILL.md, patterns: ["Wrap-up", "RETRO.md", "workflow-pr"]}
+  - {id: C-009, name: "Wrap-up procedure exists", type: content_contains, target: SKILL.md, patterns: ["Wrap-up", "RETRO.md", "create-pr"]}
   - {id: C-010, name: "Skills used table", type: section_exists, target: SKILL.md, section: "## Skills Used"}
 ```

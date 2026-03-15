@@ -1,7 +1,7 @@
 # Goal Retrospective Rules
 
 > Follow these rules when writing RETRO.md in the Wrap-up Step.
-> Template: [workflow-manage/assets/retro.md](../../workflow-manage/assets/retro.md) — use "Business Retrospective".
+> Template: [manage-workflow/assets/retro.md](../../manage-workflow/assets/retro.md) — use "Business Retrospective".
 
 ## Perspective: Business
 

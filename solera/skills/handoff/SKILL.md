@@ -39,7 +39,7 @@ Collect the following information to understand the current session's work:
 
 2. **Check Todo list**: Review the current session's todo list state
 
-3. **Read progress.md**: Check the current Phase/Goal/Epic/Story via the [workflow-manage](../workflow-manage/SKILL.md) skill
+3. **Read progress.md**: Check the current Phase/Goal/Epic/Story via the [manage-workflow](../manage-workflow/SKILL.md) skill
 
 ### Step 2: Read HANDOFF.md
 

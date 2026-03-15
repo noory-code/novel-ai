@@ -17,7 +17,7 @@ metadata:
 
 ## Prerequisites
 
-- `published/identity/mission.md` exists; if not, invoke writing-identity
+- `published/identity/mission.md` exists; if not, invoke write-identity
 - The corresponding Goal must be assigned in the Phase README
   - If not: invoke `write-phase` with Skill tool passing:
     `project_path={project_path}, phase_id={phase_id}, year={first 4 chars of phase_id, e.g. "2026-P1-foundation" → "2026"}`
@@ -55,7 +55,7 @@ metadata:
 ## Procedure
 
 1. **Setup**
-   - [ ] Confirm `published/identity/mission.md` exists; if not, invoke writing-identity **(BLOCKING: 현재 스킬은 일시 중지되고 identity 생성 완료 후 재개)**
+   - [ ] Confirm `published/identity/mission.md` exists; if not, invoke write-identity **(BLOCKING: 현재 스킬은 일시 중지되고 identity 생성 완료 후 재개)**
    - [ ] Confirm `{project_path}/phase/{phase_id}/README.md` exists with Glob tool
      - If not: `Skill(name="write-phase", args={"project_path": "{project_path}", "year": "{year}", "phase_id": "{phase_id}"})` **(BLOCKING: Phase 생성 완료 후 재개)**
    - [ ] Confirm Goal information from the Phase README (period, objectives)
@@ -77,14 +77,14 @@ metadata:
    - [ ] Write _goal.md — ref: [assets/goal-template.md](assets/goal-template.md)
 
 5. **Execute**
-   - [ ] Invoke writing-epic for each Epic (Setup → Create → Execute → Wrap-up) **(BLOCKING: 각 Epic이 완료될 때까지 대기, 순차적으로 실행)**
-   - [ ] Invoke workflow-pr upon Epic completion to create a PR to the parent branch **(BLOCKING: PR 생성 완료 후 다음 Epic으로 진행)**
+   - [ ] Invoke write-epic for each Epic (Setup → Create → Execute → Wrap-up) **(BLOCKING: 각 Epic이 완료될 때까지 대기, 순차적으로 실행)**
+   - [ ] Invoke create-pr upon Epic completion to create a PR to the parent branch **(BLOCKING: PR 생성 완료 후 다음 Epic으로 진행)**
    - [ ] Confirm all Epics are complete
 
 6. **Goal Wrap-up**
    - [ ] Confirm all Epic statuses ✅
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
-   - [ ] Invoke catalog-transition (artifacts/ to published/) **(BLOCKING: 카탈로그 전환 완료 후 상태 변경)**
+   - [ ] Invoke transition-catalog (artifacts/ to published/) **(BLOCKING: 카탈로그 전환 완료 후 상태 변경)**
    - [ ] Set _goal.md status to ✅
 
 ## Folder Structure
@@ -109,8 +109,8 @@ metadata:
 | Goal 미할당 | Phase README에 Goal 정보 없음 | 오류 메시지 출력, Phase README 업데이트 요청 | 스킬 중단, 수동 수정 후 재개 |
 | goal_type 불명확 | Feature/Enabler 구분 불가 | 기본값 Feature로 진행, 사용자에게 확인 요청 | 사용자 확인 후 필요 시 수정 |
 | 폴더 생성 실패 | 권한 오류 또는 경로 문제 | 오류 메시지 출력, 권한 확인 요청 | 스킬 중단, 오류 상태 반환 |
-| writing-epic 실패 | 하위 스킬 호출 실패 | 실패한 Epic 기록, 사용자에게 알림 | 해당 Epic 건너뛰고 계속 진행 또는 중단 |
-| catalog-transition 실패 | artifacts 이동 실패 | 실패한 파일 목록 출력, 수동 이동 요청 | Wrap-up 중단, 수동 처리 후 재개 |
+| write-epic 실패 | 하위 스킬 호출 실패 | 실패한 Epic 기록, 사용자에게 알림 | 해당 Epic 건너뛰고 계속 진행 또는 중단 |
+| transition-catalog 실패 | artifacts 이동 실패 | 실패한 파일 목록 출력, 수동 이동 요청 | Wrap-up 중단, 수동 처리 후 재개 |
 
 ## Examples
 
@@ -242,7 +242,7 @@ Skill(name="transition-catalog", args={
 - [ ] If Feature with 2 or more Personas: persona-relationship.md created
 - [ ] Preliminary Journey written
 - [ ] Epic decomposition complete
-- [ ] (Execute) writing-epic invoked for all Epics
+- [ ] (Execute) write-epic invoked for all Epics
 - [ ] (Wrap-up) RETRO.md written
-- [ ] (Wrap-up) catalog-transition complete
+- [ ] (Wrap-up) transition-catalog complete
 - [ ] (Wrap-up) _goal.md status ✅

@@ -28,7 +28,7 @@
 ## Workflow
 
 ### Step 0. Setup
-- [ ] Confirm `published/identity/mission.md` exists; if missing, invoke writing-identity
+- [ ] Confirm `published/identity/mission.md` exists; if missing, invoke write-identity
 - [ ] Create `goals/[goal-id]-[name]/` folder
 - [ ] Create `goals/[goal-id]-[name]/artifacts/` folder
 - [ ] Status → 🔄
@@ -42,15 +42,15 @@
 ### Step 2. Execute
 <!-- Repeat the block below for each Epic in the Epics table -->
 #### Epic: {number}-{name}
-- [ ] writing-epic invoke (Setup → Create → Execute → Wrap-up)
-- [ ] workflow-pr invoke (PR to parent branch)
+- [ ] write-epic invoke (Setup → Create → Execute → Wrap-up)
+- [ ] create-pr invoke (PR to parent branch)
 <!-- /repeat -->
 - [ ] Confirm all Epics complete
 
 ### Step 3. Wrap-up
 - [ ] Write retrospective to RETRO.md (ref: [assets/retro.md](retro.md))
 - [ ] Status → ✅
-- [ ] catalog-transition invoke (artifacts/ → published/)
+- [ ] transition-catalog invoke (artifacts/ → published/)
 
 ## Goal Types
 

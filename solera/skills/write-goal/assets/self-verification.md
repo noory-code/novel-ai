@@ -1,6 +1,6 @@
-# Validation: writing-goal
+# Validation: write-goal
 
-> This file defines the unique validation rules for the writing-goal skill.
+> This file defines the unique validation rules for the write-goal skill.
 
 ## Structural
 
@@ -16,13 +16,13 @@ structural:
 
 ```yaml
 semantic:
-  - {id: C-001, name: "Epic repeat block", type: content_contains, target: assets/goal-template.md, patterns: ["writing-epic invoke", "<!-- /repeat -->"]}
+  - {id: C-001, name: "Epic repeat block", type: content_contains, target: assets/goal-template.md, patterns: ["write-epic invoke", "<!-- /repeat -->"]}
   - {id: C-002, name: "Goal type section", type: section_exists, target: assets/goal-template.md, section: "## Goal Types"}
   - {id: C-003, name: "Output templates", type: file_exists, paths: [assets/goal-template.md, assets/persona.md, assets/service-map.md]}
   - {id: C-004, name: "retro.md exists", type: file_exists, paths: [assets/retro.md]}
   - {id: C-005, name: "retro ref exists", type: content_contains, target: assets/goal-template.md, patterns: ["retro.md"]}
   - {id: C-006, name: "Status transition included", type: content_contains, target: assets/goal-template.md, patterns: ["Status →"]}
-  - {id: C-007, name: "catalog-transition reference", type: content_contains, target: assets/goal-template.md, patterns: ["catalog-transition"]}
+  - {id: C-007, name: "transition-catalog reference", type: content_contains, target: assets/goal-template.md, patterns: ["transition-catalog"]}
   - {id: C-008, name: "Enabler branch", type: content_contains, target: assets/goal-template.md, patterns: ["Enabler"]}
   - {id: C-009, name: "Input table", type: content_contains, target: SKILL.md, patterns: ["project_path"]}
   - {id: C-010, name: "Wrap-up procedure", type: content_contains, target: SKILL.md, patterns: ["Wrap-up"]}
