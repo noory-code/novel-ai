@@ -23,6 +23,6 @@ semantic:
   - {id: C-005, name: "roadmap prerequisite", type: content_contains, target: SKILL.md, patterns: ["roadmap.md"]}
   - {id: C-006, name: "Phase folder structure", type: section_exists, target: SKILL.md, section: "## Folder Structure"}
   - {id: C-007, name: "Input table", type: content_contains, target: SKILL.md, patterns: ["project_path"]}
-  - {id: C-008, name: "Wrap-up catalog check", type: content_contains, target: assets/phase-template.md, patterns: ["transition-catalog"]}
+  - {id: C-008, name: "Wrap-up artifacts check", type: content_contains, target: assets/phase-template.md, patterns: ["artifacts/"]}
   - {id: C-009, name: "SUMMARY.md mention", type: content_contains, target: assets/phase-template.md, patterns: ["SUMMARY.md"]}
 ```

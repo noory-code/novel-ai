@@ -41,7 +41,7 @@ metadata:
 | Skill | Purpose | Step |
 |-------|---------|------|
 | `write-goal` | Elaborate each Goal and decompose it into Epics | Execute |
-| `transition-catalog` | Move artifacts to the catalog upon Goal completion | Execute (within Goal) |
+| `transition-catalog` | Promote artifacts incrementally (at Goal Create and Epic Wrap-up) | Execute (within Goal/Epic) |
 
 ## Procedure
 
@@ -66,7 +66,7 @@ metadata:
 
 5. **Phase Wrap-up**
    - [ ] Confirm all Goal statuses ✅
-   - [ ] Confirm transition-catalog completed for each Goal (moved to `workspace/catalog/`)
+   - [ ] Confirm artifacts/ is empty for each Goal (promoted incrementally during Goal Create and Epic Wrap-ups)
    - [ ] Write SUMMARY.md (overall Goal outcomes, catalog artifact list, handoff notes for the next Phase)
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set README.md status to ✅ and update progress
@@ -82,7 +82,7 @@ metadata:
 └── goals/
     ├── {goal_id}-{name}/
     │   ├── _goal.md
-    │   ├── artifacts/    # During Goal → moved via transition-catalog
+    │   ├── artifacts/    # Promoted incrementally at Goal Create and Epic Wrap-up
     │   └── epics/
     └── ...
 ```
@@ -96,15 +96,15 @@ metadata:
 | phase_id 형식 오류 | phase_id가 규칙에 맞지 않음 (예: YYYY-PX-name) | 올바른 형식 예시와 함께 오류 메시지 출력 | 스킬 중단, 올바른 phase_id 입력 요청 |
 | 폴더 생성 실패 | 권한 오류 또는 경로 문제 | 오류 메시지 출력, 권한 확인 요청 | 스킬 중단, 오류 상태 반환 |
 | write-goal 실패 | 하위 스킬 호출 실패 | 실패한 Goal 기록, 사용자에게 알림 | 해당 Goal 건너뛰고 계속 진행 또는 중단 |
-| transition-catalog 미완료 | Goal 완료 시 카탈로그 전환 안됨 | 전환되지 않은 Goal 목록 출력, 수동 전환 요청 | Wrap-up 중단, 수동 처리 후 재개 |
+| artifacts/ 비어있지 않음 | Goal의 artifacts가 완전히 승격되지 않음 | 남은 파일 목록 출력, 수동 확인 요청 | 경고 출력 후 계속 진행 |
 
 ## Completion Checklist
 
 - [ ] README.md created
 - [ ] Goals table includes all Goals from the roadmap
 - [ ] Folder structure created for each Goal
-- [ ] write-goal transition prepared
-- [ ] (Wrap-up) All Goal transition-catalogs confirmed complete
+- [ ] write-goal invoked for all Goals
+- [ ] (Wrap-up) All Goal artifacts/ directories are empty
 - [ ] (Wrap-up) SUMMARY.md written
 - [ ] (Wrap-up) RETRO.md written
 - [ ] (Wrap-up) progress.md updated

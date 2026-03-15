@@ -50,7 +50,7 @@ metadata:
 |-------|---------|------|
 | `write-identity` | Create identity if it does not exist | Setup |
 | `write-epic` | Elaborate each Epic and decompose it into Stories | Execute |
-| `transition-catalog` | Move artifacts/ to published/ | Wrap-up |
+| `transition-catalog` | Promote Goal-level artifacts (service-map, persona, journey) to published/ | Create (after Step 4) |
 
 ## Procedure
 
@@ -75,6 +75,7 @@ metadata:
    - [ ] Define a Journey for each Persona (for Enablers, write Steps only, briefly)
    - [ ] Map Journey steps to Epics and assign numbers (01, 02, ...)
    - [ ] Write _goal.md — ref: [assets/goal-template.md](assets/goal-template.md)
+   - [ ] Invoke transition-catalog to promote Goal-level artifacts (service-map, persona, journey) to published/ **(BLOCKING: 승격 완료 후 Execute 진행)**
 
 5. **Execute**
    - [ ] Invoke write-epic for each Epic (Setup → Create → Execute → Wrap-up) **(BLOCKING: 각 Epic이 완료될 때까지 대기, 순차적으로 실행)**
@@ -83,8 +84,8 @@ metadata:
 
 6. **Goal Wrap-up**
    - [ ] Confirm all Epic statuses ✅
+   - [ ] Confirm artifacts/ is empty (all artifacts promoted during Create and Epic Wrap-up steps)
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
-   - [ ] Invoke transition-catalog (artifacts/ to published/) **(BLOCKING: 카탈로그 전환 완료 후 상태 변경)**
    - [ ] Set _goal.md status to ✅
 
 ## Folder Structure
@@ -110,7 +111,8 @@ metadata:
 | goal_type 불명확 | Feature/Enabler 구분 불가 | 기본값 Feature로 진행, 사용자에게 확인 요청 | 사용자 확인 후 필요 시 수정 |
 | 폴더 생성 실패 | 권한 오류 또는 경로 문제 | 오류 메시지 출력, 권한 확인 요청 | 스킬 중단, 오류 상태 반환 |
 | write-epic 실패 | 하위 스킬 호출 실패 | 실패한 Epic 기록, 사용자에게 알림 | 해당 Epic 건너뛰고 계속 진행 또는 중단 |
-| transition-catalog 실패 | artifacts 이동 실패 | 실패한 파일 목록 출력, 수동 이동 요청 | Wrap-up 중단, 수동 처리 후 재개 |
+| transition-catalog 실패 (Create) | Goal-level artifacts 승격 실패 | 실패한 파일 목록 출력, 수동 이동 요청 | Create 단계 중단, 수동 처리 후 재개 |
+| artifacts/ 비어있지 않음 (Wrap-up) | Epic에서 승격되지 않은 파일 존재 | 남은 파일 목록 출력, 수동 확인 요청 | 경고 출력 후 계속 진행 |
 
 ## Examples
 
@@ -165,13 +167,25 @@ phase/2026-P1-foundation/goals/G1-search-liquor/
 | 03 | result-display | 결과 확인 | ⏳ |
 ```
 
-**4. Execute 중간 상태 (Epic 01 완료)**
+**4. Create 완료 후 (Goal-level artifacts 즉시 승격)**
+```
+phase/2026-P1-foundation/goals/G1-search-liquor/
+├── _goal.md              (상태: 🔄)
+├── artifacts/            (service-map, persona → published/로 이동됨)
+└── epics/                (아직 비어있음)
+
+published/
+├── service-map/index.md           (← artifacts에서 승격)
+└── persona/
+    ├── bartender.md               (← artifacts에서 승격)
+    └── liquor-enthusiast.md       (← artifacts에서 승격)
+```
+
+**5. Execute 중간 상태 (Epic 01 완료, Epic-level artifacts도 승격됨)**
 ```
 phase/2026-P1-foundation/goals/G1-search-liquor/
 ├── _goal.md              (Epic 01: ✅, Epic 02: 🔄, Epic 03: ⏳)
-├── artifacts/
-│   ├── service-map/
-│   └── persona/
+├── artifacts/            (Epic 01 산출물 → published/로 이동됨)
 └── epics/
     ├── 01-search-ui/
     │   ├── _epic.md      (상태: ✅)
@@ -180,27 +194,38 @@ phase/2026-P1-foundation/goals/G1-search-liquor/
     └── 02-filter-logic/
         ├── _epic.md      (상태: 🔄)
         └── stories/...
+
+published/
+├── service-map/...       (Goal Create에서 승격)
+├── persona/...           (Goal Create에서 승격)
+├── use-case/...          (Epic 01 Wrap-up에서 승격)
+└── concept/...           (Epic 01 Wrap-up에서 승격)
 ```
 
-**5. Wrap-up 완료 (모든 Epic ✅)**
+**6. Wrap-up 완료 (모든 Epic ✅, artifacts/ 비어있음)**
 ```
 phase/2026-P1-foundation/goals/G1-search-liquor/
 ├── _goal.md              (상태: ✅)
 ├── RETRO.md
+├── artifacts/            (비어있음 — 모두 이미 승격됨)
 └── epics/
     ├── 01-search-ui/...  (✅)
     ├── 02-filter-logic/...(✅)
     └── 03-result-display/...(✅)
-
-published/
-└── goal/
-    ├── service-map/      (artifacts에서 이동)
-    └── persona/          (artifacts에서 이동)
 ```
 
 #### 중간에 호출되는 하위 스킬
 
 ```python
+# Goal Create 완료 후 — Goal-level artifacts 즉시 승격
+Skill(name="transition-catalog", args={
+  "project_path": "/Users/myname/workspace/myapp",
+  "phase_id": "2026-P1-foundation",
+  "goal_id": "G1",
+  "goal_name": "search-liquor"
+})
+# → service-map, persona, journey → published/
+
 # Epic 01 작성
 Skill(name="write-epic", args={
   "project_path": "/Users/myname/workspace/myapp",
@@ -217,15 +242,7 @@ Skill(name="create-pr")
 # → Epic 브랜치에서 Goal 브랜치로 PR
 
 # Epic 02, 03 반복...
-
-# Goal 완료 후 아티팩트 전환
-Skill(name="transition-catalog", args={
-  "project_path": "/Users/myname/workspace/myapp",
-  "phase_id": "2026-P1-foundation",
-  "goal_id": "G1",
-  "goal_name": "search-liquor"
-})
-# → artifacts/ → published/
+# (각 Epic Wrap-up 시 transition-catalog이 Epic-level artifacts를 승격)
 ```
 
 #### 최종 출력 상태
@@ -233,7 +250,7 @@ Skill(name="transition-catalog", args={
 - `_goal.md` 상태: ✅
 - 모든 Epic 상태: ✅
 - `RETRO.md` 존재
-- `artifacts/` 폴더 비어있음 (published/로 이동됨)
+- `artifacts/` 폴더 비어있음 (Goal Create + 각 Epic Wrap-up에서 점진적으로 승격됨)
 
 ## Completion Checklist
 
@@ -242,7 +259,8 @@ Skill(name="transition-catalog", args={
 - [ ] If Feature with 2 or more Personas: persona-relationship.md created
 - [ ] Preliminary Journey written
 - [ ] Epic decomposition complete
+- [ ] (Create) transition-catalog invoked for Goal-level artifacts
 - [ ] (Execute) write-epic invoked for all Epics
+- [ ] (Wrap-up) artifacts/ is empty
 - [ ] (Wrap-up) RETRO.md written
-- [ ] (Wrap-up) transition-catalog complete
 - [ ] (Wrap-up) _goal.md status ✅

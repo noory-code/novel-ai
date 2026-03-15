@@ -67,7 +67,7 @@ metadata:
 
 1. Story complete and Epic has remaining Stories → start the next Story **(BLOCKING)**
 2. Epic complete and Goal has remaining Epics → write an Epic retrospective, then start the next Epic **(BLOCKING)**
-3. Goal complete → write a Goal retrospective, then invoke transition-catalog **(BLOCKING: 카탈로그 전환 완료 후 종료)**
+3. Goal complete → write a Goal retrospective, confirm artifacts/ is empty (promoted during Goal Create and Epic Wrap-ups)
 4. Otherwise → continue current work
 
 ## Responsibilities
@@ -76,7 +76,7 @@ metadata:
 |------|-------|
 | **Document writing** | write-identity, write-phase, write-goal, write-epic, write-story, execute-action-item |
 | **Execution supervision** | manage-workflow |
-| **Completion handling** | transition-catalog |
+| **Artifact promotion** | transition-catalog (invoked at Goal Create and Epic Wrap-up) |
 
 ## Supervision Principles
 

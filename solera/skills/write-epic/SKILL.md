@@ -8,7 +8,7 @@ metadata:
   style: procedural
   execution_model: sequential
   triggers: [write an Epic, plan an Epic, start an Epic, break Epic into Stories, define Epic scope, draft concept]
-  uses: [write-story]
+  uses: [write-story, transition-catalog]
 ---
 
 # Writing Epic
@@ -51,13 +51,14 @@ metadata:
 | Wrap-up | RETRO.md | Final | `{goal_path}/epics/{epic_name}/RETRO.md` |
 
 > `{goal_path}` = `{project_path}/phase/{phase_id}/goals/{goal_id}`
-> artifacts = intermediate outputs. Moved to published/ via transition-catalog upon Goal completion.
+> artifacts = intermediate outputs. Promoted to published/ via transition-catalog at Epic Wrap-up.
 
 ## Skills Used
 
 | Skill | Purpose | Step |
 |-------|---------|------|
 | `write-story` | Elaborate each Story and decompose it into Action Items | Execute |
+| `transition-catalog` | Promote Epic-level artifacts (use-case, concept) to published/ | Wrap-up |
 | `create-pr` | Create a PR upon Story/Epic completion | Execute, Wrap-up |
 
 ## Procedure
@@ -114,6 +115,7 @@ metadata:
 
 6. **Wrap-up**
    - [ ] Confirm all Story statuses ✅ (return to Step 5 if any are incomplete)
+   - [ ] Invoke transition-catalog to promote Epic-level artifacts (use-case, concept) to published/ **(BLOCKING: 승격 완료 후 다음 단계 진행)**
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set _epic.md status to ✅
    - [ ] `Skill(name="create-pr")` **(BLOCKING: PR 생성 완료 후 스킬 종료)** → create PR to parent branch (Goal)
@@ -159,6 +161,7 @@ Epics always live inside the goal directory. Never create a top-level `epics/` d
 | 브랜치 생성 실패 | git 오류 (충돌, 권한 등) | git 오류 메시지 출력, 수동 해결 요청 | 스킬 중단, 해결 후 재개 |
 | domain.md 업데이트 충돌 | 기존 domain.md와 새 내용 충돌 | 병합 필요 영역 표시, 사용자에게 수동 병합 요청 | Concept 단계 중단, 수동 병합 후 재개 |
 | write-story 실패 | 하위 스킬 호출 실패 | 실패한 Story 기록, 사용자에게 알림 | 해당 Story 건너뛰고 계속 진행 또는 중단 |
+| transition-catalog 실패 | Epic-level artifacts 승격 실패 | 실패한 파일 목록 출력, 수동 이동 요청 | Wrap-up 중단, 수동 처리 후 재개 |
 | create-pr 실패 | PR 생성 실패 | PR 생성 오류 출력, 수동 PR 생성 요청 | Wrap-up 중단, 수동 PR 생성 후 완료 |
 
 ## Examples
@@ -275,7 +278,16 @@ Skill(name="write-story", args={
 
 # Story US-002, TS-001 반복...
 
-# Epic 완료 후 PR 생성
+# Epic 완료 후 Epic-level artifacts 승격
+Skill(name="transition-catalog", args={
+  "project_path": "/Users/myname/workspace/myapp",
+  "phase_id": "2026-P1-foundation",
+  "goal_id": "G1",
+  "goal_name": "search-liquor"
+})
+# → use-case, concept → published/
+
+# PR 생성
 Skill(name="create-pr")
 # → Epic 브랜치에서 Goal 브랜치로 PR
 ```
@@ -294,6 +306,7 @@ Skill(name="create-pr")
 - [ ] Concept (domain.md, entities) written or updated
 - [ ] Story decomposition complete
 - [ ] (Execute) write-story invoked for all Stories
+- [ ] (Wrap-up) transition-catalog invoked for Epic-level artifacts
 - [ ] (Wrap-up) RETRO.md written
 - [ ] (Wrap-up) _epic.md status ✅
 - [ ] (Wrap-up) create-pr invoked

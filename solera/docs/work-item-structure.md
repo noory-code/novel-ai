@@ -84,9 +84,14 @@ Solera creates Epic and Story branches automatically when you start each level. 
 
 ## Lifecycle: Artifact Promotion
 
-Artifacts produced during Goal work live in the working area until the Goal is complete:
+Artifacts are promoted incrementally as work completes, not in bulk at Goal completion:
 
 - **Working:** `workspace/phase/{phase}/goals/{goal}/artifacts/`
 - **Promoted:** `workspace/catalog/published/{type}/`
 
-When a Goal completes, `manage-workflow` invokes `transition-catalog`, which moves all artifacts from the working `artifacts/` directory into `workspace/catalog/published/` with version tags applied. This keeps the active workspace clean and makes completed work discoverable across phases without duplication.
+Promotion happens at two points via `transition-catalog`:
+
+1. **After Goal Create** — Goal-level artifacts (service-map, persona, journey) are promoted immediately, making them available for the first Epic
+2. **At each Epic Wrap-up** — Epic-level artifacts (use-case, concept) are promoted before the PR is created
+
+By Goal Wrap-up, `artifacts/` should be empty. This incremental approach ensures each Epic can reference previously promoted artifacts and reduces the blast radius of any transition failure.

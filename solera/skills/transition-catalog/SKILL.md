@@ -14,8 +14,12 @@ metadata:
 
 ## Prerequisites
 
-- Goal status is complete — all Stories must be complete
-- All Epics are complete — cannot proceed if any are incomplete
+This skill is invoked at two points:
+1. **After Goal Create** — promotes Goal-level artifacts (service-map, persona, journey)
+2. **At Epic Wrap-up** — promotes Epic-level artifacts (use-case, concept)
+
+- The calling work item (Goal Create or Epic) must be complete
+- Only artifacts present in `artifacts/` at the time of invocation are moved
 
 ## Input
 
@@ -160,7 +164,7 @@ Skill(name="transition-catalog", args={
 - Only move types defined in the move mapping table to `workspace/catalog/published/` (files not in the mapping table remain in artifacts)
 - If the same file already exists in the destination, replace it with the higher version
 - To review a previous version, use `git log --follow -- {file-path}` to view history
-- Transition in bulk by Goal, not by Epic
+- Invoked incrementally: after Goal Create (Goal-level artifacts) and at each Epic Wrap-up (Epic-level artifacts), not in bulk at Goal completion
 
 ## References
 
@@ -174,8 +178,7 @@ Skill(name="transition-catalog", args={
 
 | Failure point | Condition | Recovery procedure | Exit behavior |
 |---------------|-----------|-------------------|---------------|
-| Goal 미완료 | 일부 Story 상태가 ✅ 아님 | 미완료 Story 목록 출력, 완료 요청 | 스킬 중단, 모든 Story 완료 후 재개 |
-| Epic 미완료 | 일부 Epic 상태가 ✅ 아님 | 미완료 Epic 목록 출력, 완료 요청 | 스킬 중단, 모든 Epic 완료 후 재개 |
+| 호출 시점 불일치 | Goal Create 또는 Epic Wrap-up이 아닌 시점에 호출 | 현재 상태 출력, 올바른 호출 시점 안내 | 스킬 중단, 올바른 시점에 재호출 |
 | artifacts 폴더 없음 | `{goal_path}/artifacts/` 없음 | 경고 메시지 출력, 전환 대상 없음으로 처리 | 스킬 완료 (전환 불필요) |
 | 매핑 테이블 외 파일 발견 | artifacts에 매핑 테이블에 없는 타입 존재 | 제외 파일 목록 출력, artifacts에 남김 | 계속 진행 (매핑된 파일만 이동) |
 | catalog 디렉토리 없음 | `workspace/catalog/published/` 없음 | `mkdir -p` 로 디렉토리 생성 | 디렉토리 생성 후 계속 진행 |

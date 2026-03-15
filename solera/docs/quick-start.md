@@ -341,22 +341,18 @@ gh pr merge --squash epic-task-crud
 
 The `epic-task-crud` branch is deleted after merge.
 
-### Catalog transition runs automatically
+### Catalog transition happens incrementally
 
-When the last Epic in a Goal is merged and the Goal is marked complete, Solera runs `transition-catalog`. It moves intermediate design artifacts from `artifacts/` to `workspace/catalog/published/`, stamping each file with a version tag.
+Artifacts are promoted to `workspace/catalog/published/` at two points — not in bulk at Goal completion:
 
-Say to Claude:
-
-> Complete Goal G1: task-management.
-
-Solera moves the artifacts:
+1. **After Goal Create** — Goal-level artifacts (service-map, persona, journey) are promoted immediately, so the first Epic can reference them from `published/`
+2. **At each Epic Wrap-up** — Epic-level artifacts (use-case, concept) are promoted before the PR is created
 
 ```
-Before (artifacts/):                     After (workspace/catalog/published/):
-goals/G1-task-management/artifacts/      workspace/catalog/published/
-├── service-map/index.md          →      ├── service-map/index.md
-├── persona/maya.md               →      ├── persona/maya.md
-└── use-case/UC-001-*.md          →      └── use-case/UC-001-*.md
+Goal Create promotes:                    Epic Wrap-up promotes:
+service-map/index.md          →         use-case/UC-001-*.md          →
+persona/maya.md                →         concept/domain.md             →
+  to workspace/catalog/published/          to workspace/catalog/published/
 ```
 
 Each moved file receives a version header:

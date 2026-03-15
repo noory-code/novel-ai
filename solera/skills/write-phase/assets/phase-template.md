@@ -52,7 +52,7 @@
 
 ### Step 3. Wrap-up
 - [ ] Confirm all Goal statuses are ✅
-- [ ] Confirm transition-catalog complete for each Goal (moved to `workspace/catalog/`)
+- [ ] Confirm artifacts/ is empty for each Goal (promoted incrementally during Goal Create and Epic Wrap-ups)
 - [ ] Write SUMMARY.md covering overall Goal outcomes, the catalog artifact list, and handoff notes for the next Phase
 - [ ] Write RETRO.md (ref: [retro.md](retro.md))
 - [ ] Set README.md status → ✅ and update progress

@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.10.0] — 2026-03-15
+
+### Changed
+- **Artifact promotion is now incremental** — `transition-catalog` is invoked at
+  two points instead of once at Goal completion:
+  1. After Goal Create: promotes Goal-level artifacts (service-map, persona, journey)
+  2. At each Epic Wrap-up: promotes Epic-level artifacts (use-case, concept)
+- Goal Wrap-up no longer calls `transition-catalog`; it only confirms `artifacts/`
+  is empty
+- `write-epic` now includes `transition-catalog` in its `uses` and Wrap-up procedure
+- Updated all docs, templates, self-verification files, and error handling to reflect
+  the incremental promotion model
+
+---
+
 ## [1.9.7] — 2026-03-15
 
 ### Fixed

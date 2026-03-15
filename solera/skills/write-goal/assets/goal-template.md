@@ -38,6 +38,7 @@
 - [ ] Write Journey (rough): define the steps sequence for each Persona
 - [ ] Decompose Epics: map to Journeys and assign numbers (01, 02, ...)
 - [ ] Write `_goal.md` with the Journey table, Epics table, and completion criteria
+- [ ] transition-catalog invoke (promote Goal-level artifacts: service-map, persona, journey → published/)
 
 ### Step 2. Execute
 <!-- Repeat the block below for each Epic in the Epics table -->
@@ -48,9 +49,9 @@
 - [ ] Confirm all Epics complete
 
 ### Step 3. Wrap-up
+- [ ] Confirm artifacts/ is empty (all promoted during Create and Epic Wrap-up steps)
 - [ ] Write retrospective to RETRO.md (ref: [assets/retro.md](retro.md))
 - [ ] Status → ✅
-- [ ] transition-catalog invoke (artifacts/ → published/)
 
 ## Goal Types
 

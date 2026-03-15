@@ -68,7 +68,7 @@ Solera creates the Story branch (`epic-task-crud/story-US-001-create-task-form`)
 
 > The Epic is done. Create a PR for epic-task-crud.
 
-Solera verifies all Stories are complete, runs `create-pr` to open the PR, handles the review cycle, and squash-merges into the target branch. On Goal completion, `transition-catalog` moves design artifacts from `artifacts/` to `workspace/catalog/published/`.
+Solera verifies all Stories are complete, runs `create-pr` to open the PR, handles the review cycle, and squash-merges into the target branch. Design artifacts are promoted incrementally via `transition-catalog` — Goal-level artifacts after Goal Create, Epic-level artifacts at each Epic Wrap-up.
 
 ## Skills
 
@@ -82,7 +82,7 @@ Solera verifies all Stories are complete, runs `create-pr` to open the PR, handl
 | `execute-action-item` | "Start an Action Item", "ACT-NNN" | Code/doc changes + one git commit per Action Item |
 | `manage-workflow` | "What should I work on", "show current progress" | `progress.md` updates; reads and executes each work item's `## Workflow` |
 | `create-pr` | "Open a PR", "merge the Epic" | GitHub PR via `gh pr create`, squash merge, branch deletion |
-| `transition-catalog` | "Wrap up Goal", "archive completed Goal" | Artifacts moved from `artifacts/` to `published/` with version tags |
+| `transition-catalog` | "Promote artifacts", "archive completed Epic" | Artifacts promoted incrementally from `artifacts/` to `published/` with version tags |
 | `handoff` | "End session", or automatic on session end | `HANDOFF.md` at project root with full session context |
 
 ### Meta

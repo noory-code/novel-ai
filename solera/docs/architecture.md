@@ -2,7 +2,7 @@
 
 ## Overview
 
-Solera is built around three interlocking principles. First, every skill is a thin orchestrator: it validates preconditions, delegates work to lower-level skills, and records outcomes — it contains no business logic of its own. Second, every work item (Phase, Goal, Epic, Story, Action Item) owns its own procedure through a `## Workflow` section in its template; the `manage-workflow` skill reads and executes those steps but never defines them. Third, SSOT is enforced structurally: `progress.md` is the single canonical source for the project's current position in the hierarchy, and the `catalog/published/` tree is the single authoritative location for promoted artifacts. Duplication is prevented by convention and by the `transition-catalog` skill, which moves artifacts out of goal-local directories into the shared catalog on Goal completion.
+Solera is built around three interlocking principles. First, every skill is a thin orchestrator: it validates preconditions, delegates work to lower-level skills, and records outcomes — it contains no business logic of its own. Second, every work item (Phase, Goal, Epic, Story, Action Item) owns its own procedure through a `## Workflow` section in its template; the `manage-workflow` skill reads and executes those steps but never defines them. Third, SSOT is enforced structurally: `progress.md` is the single canonical source for the project's current position in the hierarchy, and the `catalog/published/` tree is the single authoritative location for promoted artifacts. Duplication is prevented by convention and by the `transition-catalog` skill, which incrementally moves artifacts into the shared catalog — Goal-level artifacts (service-map, persona) after Goal Create, and Epic-level artifacts (use-case, concept) at each Epic Wrap-up.
 
 ---
 
@@ -30,6 +30,7 @@ flowchart TD
     WPH --> WG
     WG --> WE
     WG --> CT
+    WE --> CT
     WE --> WS
     WS --> WAI
     WAI --> DEV
@@ -39,6 +40,7 @@ flowchart TD
 
     WPR -.->|reads| WM
     CT -.->|artifacts to published/| WG
+    CT -.->|artifacts to published/| WE
 ```
 
 Solid arrows indicate direct invocation. Dashed arrows indicate a read or data dependency without direct skill invocation.
@@ -80,7 +82,7 @@ Each level of the hierarchy corresponds to a progressively shorter time scale an
     │   └── goals/[goal-id]/
     │       ├── _goal.md                 # Goal definition, scope, and Workflow steps
     │       ├── artifacts/               # working copies: service-map, persona, use-case, concept
-    │       │   └── (promoted to published/ on Goal complete via transition-catalog)
+    │       │   └── (promoted incrementally: Goal Create → service-map/persona; Epic Wrap-up → use-case/concept)
     │       └── epics/[epic-name]/
     │           ├── _epic.md             # Epic definition and Workflow steps
     │           └── stories/[story-id]/
@@ -95,7 +97,7 @@ Each level of the hierarchy corresponds to a progressively shorter time scale an
             └── concept/
 ```
 
-The `artifacts/` directory under each Goal is the in-progress working area. The `catalog/published/` subtree is the SSOT for all completed artifacts across all Goals. No artifact should exist in both locations simultaneously; `transition-catalog` enforces this by moving (not copying) files.
+The `artifacts/` directory under each Goal is the in-progress working area. The `catalog/published/` subtree is the SSOT for all completed artifacts across all Goals. No artifact should exist in both locations simultaneously; `transition-catalog` enforces this by moving (not copying) files. Promotion happens incrementally: Goal-level artifacts (service-map, persona, journey) after Goal Create, and Epic-level artifacts (use-case, concept) at each Epic Wrap-up.
 
 ---
 

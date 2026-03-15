@@ -51,6 +51,7 @@
 - [ ] Confirm all Stories complete
 
 ### Step 3. Wrap-up
+- [ ] transition-catalog invoke (promote Epic-level artifacts: use-case, concept → published/)
 - [ ] Write retrospective to RETRO.md (ref: [assets/retro.md](retro.md))
 - [ ] Status → ✅
 - [ ] create-pr invoke (create PR to parent branch and merge)
