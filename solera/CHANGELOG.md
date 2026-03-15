@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.11.0] — 2026-03-15
+
+### Added
+- `init` skill: sets up Solera in a new project — installs `.claude/rules/solera-workflow.md`
+  (workflow rules, git branch conventions, artifact promotion, commit format) and creates
+  the workspace folder structure with initial `progress.md`
+- Updated `help` skill to list `init` and guide new users to run it first
+
+---
+
 ## [1.10.0] — 2026-03-15
 
 ### Changed

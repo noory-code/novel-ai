@@ -46,6 +46,7 @@ Each session ends with an auto-updated `HANDOFF.md`, so the next contributor (or
 
 | Skill | Trigger phrase | Produces |
 |-------|---------------|----------|
+| `init` | "Set up solera", "initialize solera" | `.claude/rules/solera-workflow.md`, workspace structure, `progress.md` |
 | `edit-skill` | "Create a skill", "edit a skill" | `.claude/skills/{name}/SKILL.md` |
 | `edit-rule` | "Create a rule", "add a coding rule" | `.claude/rules/{name}.md` |
 | `edit-command` | "Create a command", "add a slash command" | `.claude/commands/{name}.md` |
@@ -53,9 +54,13 @@ Each session ends with an auto-updated `HANDOFF.md`, so the next contributor (or
 
 ## Quick Start
 
-**Brand-new project — say:**
+**First time using Solera — say:**
 
-> Set up the Solera workspace for this project. The initiative is `my-app 2026`. Create the folder structure and write the initiative roadmap.
+> Initialize Solera for this project.
+
+This installs the workflow rule and creates the workspace structure.
+
+**Then define your service identity:**
 
 **Already have a Phase — continue with:**
 
