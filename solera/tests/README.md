@@ -8,8 +8,8 @@
 
 ### 1. 필수 파라미터 검증
 - 스킬이 필수 파라미터 없이 호출되는 것을 방지
-- write-story: project_path, phase_id, goal_id, epic_name, story_id, story_name
-- execute-action-item: epic_name, story_id, action_item_id, action_item_name
+- solera-write-story: project_path, phase_id, goal_id, epic_name, story_id, story_name
+- solera-execute-action-item: epic_name, story_id, action_item_id, action_item_name
 
 ### 2. 파라미터 형식 검증
 - phase_id: `YYYY-PX-name` (예: 2026-P1-foundation)
@@ -19,13 +19,13 @@
 
 ### 3. Prerequisites 검증
 - 스킬 실행 전 필수 조건 확인
-- write-story: mission.md, _epic.md 존재 여부
-- execute-action-item: _story.md 존재, 의존 ACT 완료 여부
+- solera-write-story: mission.md, _epic.md 존재 여부
+- solera-execute-action-item: _story.md 존재, 의존 ACT 완료 여부
 
 ### 4. 출력 검증
 - 스킬이 예상된 출력을 생성하는지 확인
-- write-story: _story.md, ACT-NNN-{name}.md, RETRO.md
-- execute-action-item: 코드 변경, git commit, 상태 업데이트
+- solera-write-story: _story.md, ACT-NNN-{name}.md, RETRO.md
+- solera-execute-action-item: 코드 변경, git commit, 상태 업데이트
 
 ### 5. 커밋 메시지 형식 검증
 - 형식: `[epic-name][US-NNN][ACT-NNN] title`

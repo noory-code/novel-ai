@@ -81,7 +81,7 @@ class SkillValidator:
 
 def test_write_story_required_parameters():
     """write-story: 필수 파라미터 누락 시 검증 실패"""
-    skill_path = Path(__file__).parent.parent / "skills" / "write-story" / "SKILL.md"
+    skill_path = Path(__file__).parent.parent / "skills" / "solera-write-story" / "SKILL.md"
     validator = SkillValidator(skill_path)
 
     required_params = validator.extract_required_parameters()
@@ -99,7 +99,7 @@ def test_write_story_required_parameters():
 
 def test_write_story_parameter_formats():
     """write-story: 파라미터 형식 검증"""
-    skill_path = Path(__file__).parent.parent / "skills" / "write-story" / "SKILL.md"
+    skill_path = Path(__file__).parent.parent / "skills" / "solera-write-story" / "SKILL.md"
     validator = SkillValidator(skill_path)
 
     # phase_id 형식: YYYY-PX-name
@@ -123,7 +123,7 @@ def test_write_story_parameter_formats():
 
 def test_write_story_prerequisites():
     """write-story: Prerequisites 검증"""
-    skill_path = Path(__file__).parent.parent / "skills" / "write-story" / "SKILL.md"
+    skill_path = Path(__file__).parent.parent / "skills" / "solera-write-story" / "SKILL.md"
     validator = SkillValidator(skill_path)
 
     prerequisites = validator.extract_prerequisites()
@@ -144,7 +144,7 @@ def test_write_story_prerequisites():
 
 def test_write_story_expected_outputs():
     """write-story: 예상 출력 검증"""
-    skill_path = Path(__file__).parent.parent / "skills" / "write-story" / "SKILL.md"
+    skill_path = Path(__file__).parent.parent / "skills" / "solera-write-story" / "SKILL.md"
     validator = SkillValidator(skill_path)
 
     outputs = validator.extract_outputs()
@@ -164,7 +164,7 @@ def test_write_story_expected_outputs():
 
 def test_execute_action_item_required_parameters():
     """execute-action-item: 필수 파라미터 누락 시 검증 실패"""
-    skill_path = Path(__file__).parent.parent / "skills" / "execute-action-item" / "SKILL.md"
+    skill_path = Path(__file__).parent.parent / "skills" / "solera-execute-action-item" / "SKILL.md"
     validator = SkillValidator(skill_path)
 
     required_params = validator.extract_required_parameters()
@@ -182,7 +182,7 @@ def test_execute_action_item_required_parameters():
 
 def test_execute_action_item_parameter_formats():
     """execute-action-item: 파라미터 형식 검증"""
-    skill_path = Path(__file__).parent.parent / "skills" / "execute-action-item" / "SKILL.md"
+    skill_path = Path(__file__).parent.parent / "skills" / "solera-execute-action-item" / "SKILL.md"
     validator = SkillValidator(skill_path)
 
     # action_item_id 형식: ACT-NNN
@@ -200,7 +200,7 @@ def test_execute_action_item_parameter_formats():
 
 def test_execute_action_item_prerequisites():
     """execute-action-item: Prerequisites 검증"""
-    skill_path = Path(__file__).parent.parent / "skills" / "execute-action-item" / "SKILL.md"
+    skill_path = Path(__file__).parent.parent / "skills" / "solera-execute-action-item" / "SKILL.md"
     validator = SkillValidator(skill_path)
 
     prerequisites = validator.extract_prerequisites()
@@ -222,7 +222,7 @@ def test_execute_action_item_prerequisites():
 
 def test_execute_action_item_expected_outputs():
     """execute-action-item: 예상 출력 검증"""
-    skill_path = Path(__file__).parent.parent / "skills" / "execute-action-item" / "SKILL.md"
+    skill_path = Path(__file__).parent.parent / "skills" / "solera-execute-action-item" / "SKILL.md"
     validator = SkillValidator(skill_path)
 
     outputs = validator.extract_outputs()

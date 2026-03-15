@@ -34,7 +34,7 @@ flowchart TD
 
 **Phase** defines the quarterly plan and groups Goals by strategic objective. **Goal** produces the design artifacts for one service capability — service map, personas, use cases, and domain concepts. **Epic** scopes one deliverable within a Goal and maps it to Stories on an independent git branch. **Story** implements one user-facing capability as a sequence of Action Items on its own branch. **Action Item** is the smallest unit: one concrete code or documentation change, one commit.
 
-Every level owns its own procedure through a `## Workflow` section in its template file. The `manage-workflow` skill reads and executes those steps — it contains no hardcoded domain logic.
+Every level owns its own procedure through a `## Workflow` section in its template file. The `solera-manage-workflow` skill reads and executes those steps — it contains no hardcoded domain logic.
 
 ## Quick Start
 
@@ -68,35 +68,35 @@ Solera creates the Story branch (`epic-task-crud/story-US-001-create-task-form`)
 
 > The Epic is done. Create a PR for epic-task-crud.
 
-Solera verifies all Stories are complete, runs `create-pr` to open the PR, handles the review cycle, and squash-merges into the target branch. Design artifacts are promoted incrementally via `transition-catalog` — Goal-level artifacts after Goal Create, Epic-level artifacts at each Epic Wrap-up.
+Solera verifies all Stories are complete, runs `solera-create-pr` to open the PR, handles the review cycle, and squash-merges into the target branch. Design artifacts are promoted incrementally via `solera-transition-catalog` — Goal-level artifacts after Goal Create, Epic-level artifacts at each Epic Wrap-up.
 
 ## Skills
 
 | Skill | Trigger phrase | Produces |
 |-------|---------------|----------|
-| `write-identity` | "Define service identity", "write mission statement" | `identity/mission.md`, `core-values.md`, `vision_1.md`, `initiative/{year}/goals.md` |
-| `write-phase` | "Plan the quarter", "define a Phase" | `phase/{id}/README.md`, Goal folder structure, `RETRO.md` on close |
-| `write-goal` | "Write a Goal", "break Goal into Epics" | `_goal.md`, service map, persona(s), `RETRO.md` on close |
-| `write-epic` | "Write an Epic", "plan an Epic" | `_epic.md`, use cases, domain concepts, `RETRO.md` on close |
-| `write-story` | "Write a Story", "break Story into Action Items" | `_story.md`, `ACT-NNN-{name}.md` files, `RETRO.md` on close |
-| `execute-action-item` | "Start an Action Item", "ACT-NNN" | Code/doc changes + one git commit per Action Item |
-| `manage-workflow` | "What should I work on", "show current progress" | `progress.md` updates; reads and executes each work item's `## Workflow` |
-| `create-pr` | "Open a PR", "merge the Epic" | GitHub PR via `gh pr create`, squash merge, branch deletion |
-| `transition-catalog` | "Promote artifacts", "archive completed Epic" | Artifacts promoted incrementally from `artifacts/` to `published/` with version tags |
-| `handoff` | "End session", or automatic on session end | `HANDOFF.md` at project root with full session context |
+| `solera-write-identity` | "Define service identity", "write mission statement" | `identity/mission.md`, `core-values.md`, `vision_1.md`, `initiative/{year}/goals.md` |
+| `solera-write-phase` | "Plan the quarter", "define a Phase" | `phase/{id}/README.md`, Goal folder structure, `RETRO.md` on close |
+| `solera-write-goal` | "Write a Goal", "break Goal into Epics" | `_goal.md`, service map, persona(s), `RETRO.md` on close |
+| `solera-write-epic` | "Write an Epic", "plan an Epic" | `_epic.md`, use cases, domain concepts, `RETRO.md` on close |
+| `solera-write-story` | "Write a Story", "break Story into Action Items" | `_story.md`, `ACT-NNN-{name}.md` files, `RETRO.md` on close |
+| `solera-execute-action-item` | "Start an Action Item", "ACT-NNN" | Code/doc changes + one git commit per Action Item |
+| `solera-manage-workflow` | "What should I work on", "show current progress" | `progress.md` updates; reads and executes each work item's `## Workflow` |
+| `solera-create-pr` | "Open a PR", "merge the Epic" | GitHub PR via `gh pr create`, squash merge, branch deletion |
+| `solera-transition-catalog` | "Promote artifacts", "archive completed Epic" | Artifacts promoted incrementally from `artifacts/` to `published/` with version tags |
+| `solera-handoff` | "End session", or automatic on session end | `HANDOFF.md` at project root with full session context |
 
 ### Meta
 
 | Skill | Trigger phrase | Produces |
 |-------|---------------|----------|
-| `edit-skill` | "Create a skill", "edit a skill", "improve a skill" | `.claude/skills/{name}/SKILL.md` + assets |
-| `edit-rule` | "Create a rule", "edit a rule", "add a coding rule" | `.claude/rules/{name}.md` |
-| `edit-command` | "Create a command", "add a slash command" | `.claude/commands/{name}.md` |
-| `edit-agent` | "Create an agent", "edit an agent", "define a subagent" | `.claude/agents/{name}.md` |
+| `solera-edit-skill` | "Create a skill", "edit a skill", "improve a skill" | `.claude/skills/{name}/SKILL.md` + assets |
+| `solera-edit-rule` | "Create a rule", "edit a rule", "add a coding rule" | `.claude/rules/{name}.md` |
+| `solera-edit-command` | "Create a command", "add a slash command" | `.claude/commands/{name}.md` |
+| `solera-edit-agent` | "Create an agent", "edit an agent", "define a subagent" | `.claude/agents/{name}.md` |
 
 ## Team Workflow
 
-Solera uses a branch-per-Epic strategy: each Epic gets an `epic-[name]` branch from `dev`/`main`, and each Story gets a `epic-[name]/story-[ID]-[name]` child branch. Solera creates all branches automatically when you start an Epic or Story. When the Epic is complete, `create-pr` opens a PR, manages the review cycle, and squash-merges to keep trunk history clean — one entry per Epic rather than dozens of implementation-detail commits. Because `HANDOFF.md` is regenerated on every session end, Contributor B can open the repository cold, read `HANDOFF.md`, and tell Claude to resume without any coordination with Contributor A.
+Solera uses a branch-per-Epic strategy: each Epic gets an `epic-[name]` branch from `dev`/`main`, and each Story gets a `epic-[name]/story-[ID]-[name]` child branch. Solera creates all branches automatically when you start an Epic or Story. When the Epic is complete, `solera-create-pr` opens a PR, manages the review cycle, and squash-merges to keep trunk history clean — one entry per Epic rather than dozens of implementation-detail commits. Because `HANDOFF.md` is regenerated on every session end, Contributor B can open the repository cold, read `HANDOFF.md`, and tell Claude to resume without any coordination with Contributor A.
 
 | Level | Branch pattern | Created by |
 |-------|---------------|------------|
@@ -111,7 +111,7 @@ See [docs/team-workflow.md](docs/team-workflow.md) for parallel Epic execution, 
 
 | Event | Behavior |
 |-------|----------|
-| `SessionEnd` | Automatically runs the `handoff` skill — overwrites `HANDOFF.md` with current session state: what was done, what is in progress, what to do next, and any open decisions |
+| `SessionEnd` | Automatically runs the `solera-handoff` skill — overwrites `HANDOFF.md` with current session state: what was done, what is in progress, what to do next, and any open decisions |
 
 ## Install
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Solera hook handler for SessionEnd event.
 
-Runs `claude -p` subprocess to automatically execute the handoff skill,
+Runs `claude -p` subprocess to automatically execute the solera-handoff skill,
 updating HANDOFF.md with current session context.
 
 Usage in hooks.json:
@@ -20,7 +20,7 @@ from pathlib import Path
 
 
 PROMPT = (
-    "Run the handoff skill: "
+    "Run the solera-handoff skill: "
     "1) Run git status --short, git log --oneline -5 to understand current session work. "
     "2) Read HANDOFF.md if it exists, or create it from scratch. "
     "3) Update these sections based on git output and todo list: "

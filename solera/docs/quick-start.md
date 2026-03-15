@@ -306,13 +306,13 @@ epics/01-task-crud/
 
 ## Step 5: Complete the Epic — PR, merge, catalog transition
 
-### Create the PR with create-pr
+### Create the PR with solera-create-pr
 
 Say to Claude:
 
 > The Epic is done. Create a PR for epic-task-crud.
 
-Solera runs `create-pr`:
+Solera runs `solera-create-pr`:
 
 1. Confirms all Stories are ✅
 2. Confirms build and tests pass on `epic-task-crud`
@@ -393,5 +393,5 @@ task-app/
 
 ## What's next
 
-- **architecture.md** — How skills chain together, the role of each SKILL.md, and how manage-workflow supervises execution without duplicating procedure definitions.
+- **architecture.md** — How skills chain together, the role of each SKILL.md, and how solera-manage-workflow supervises execution without duplicating procedure definitions.
 - **team-workflow.md** — Running Solera with multiple developers: branch ownership, parallel Story execution with agent assignments, and how `depends_on` prevents output conflicts.

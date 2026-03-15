@@ -6,7 +6,7 @@ A practical guide for using Solera in a small team (2–5 contributors).
 
 ## Overview
 
-Solera structures work as Phase → Goal → Epic → Story → Action Item, where each Epic gets its own branch and each Story gets a child branch off that Epic. When an Epic is done, the `create-pr` skill opens a pull request against `dev` or `main`, handles review cycles on the Epic branch, and squash-merges to keep history clean. The `handoff` skill runs automatically at session end and writes `HANDOFF.md` with exactly where work stands — what was done, what is next, and any blockers. This means Contributor B can open the repo cold and know precisely what to do without asking Contributor A, and the same developer returning from a break can resume without reconstructing context from scratch.
+Solera structures work as Phase → Goal → Epic → Story → Action Item, where each Epic gets its own branch and each Story gets a child branch off that Epic. When an Epic is done, the `solera-create-pr` skill opens a pull request against `dev` or `main`, handles review cycles on the Epic branch, and squash-merges to keep history clean. The `solera-handoff` skill runs automatically at session end and writes `HANDOFF.md` with exactly where work stands — what was done, what is next, and any blockers. This means Contributor B can open the repo cold and know precisely what to do without asking Contributor A, and the same developer returning from a break can resume without reconstructing context from scratch.
 
 ---
 
@@ -25,9 +25,9 @@ Solera structures work as Phase → Goal → Epic → Story → Action Item, whe
 
 ```
 main / dev
-  └── epic-auth                        ← squash merge via PR (create-pr skill)
-        ├── epic-auth/story-1-login    ← squash merge into epic-auth (create-pr skill)
-        └── epic-auth/story-2-logout   ← squash merge into epic-auth (create-pr skill)
+  └── epic-auth                        ← squash merge via PR (solera-create-pr skill)
+        ├── epic-auth/story-1-login    ← squash merge into epic-auth (solera-create-pr skill)
+        └── epic-auth/story-2-logout   ← squash merge into epic-auth (solera-create-pr skill)
 ```
 
 ### What Solera does automatically vs. what you do
@@ -42,13 +42,13 @@ flowchart TD
     F -->|Yes| G[Solera: squash merge Story into epic-auth]
     G --> H{All Stories done?}
     H -->|No| C
-    H -->|Yes| I[You: say create-pr to Claude]
+    H -->|Yes| I[You: say solera-create-pr to Claude]
     I --> J[Solera: gh pr create, handle review, squash merge into dev]
 ```
 
 **Solera creates automatically:** Epic branch, Story branches, Action Item commits, squash merges of Stories into Epic.
 
-**You trigger:** Epic start, Story start, `create-pr` when Epic is complete.
+**You trigger:** Epic start, Story start, `solera-create-pr` when Epic is complete.
 
 ---
 
@@ -58,7 +58,7 @@ flowchart TD
 
 **Contributor A — ending a session:**
 
-When A's Claude Code session ends (or A runs the `handoff` skill manually), Solera:
+When A's Claude Code session ends (or A runs the `solera-handoff` skill manually), Solera:
 
 1. Runs `git status --short`, `git diff --stat`, `git log --oneline -5`
 2. Reads `progress.md` to get current Phase / Goal / Epic / Story
@@ -82,7 +82,7 @@ Implementing OAuth login flow (Epic: auth). Story 2 (logout) is in progress —
 session token invalidation is done, redirect after logout is not yet implemented.
 
 ## Skill status
-- Skill: write-story
+- Skill: solera-write-story
 - Step: Execute (2 of 4 Action Items committed)
 
 ## Completed this session
@@ -115,15 +115,15 @@ If Contributor A needs to hand off before the session naturally ends:
 
 > "Run handoff"
 
-Claude executes the `handoff` skill immediately and writes `HANDOFF.md`. A can then commit or push the file if the team keeps it in git (see team setup section below).
+Claude executes the `solera-handoff` skill immediately and writes `HANDOFF.md`. A can then commit or push the file if the team keeps it in git (see team setup section below).
 
 ---
 
 ## PR Workflow
 
-### When to use `create-pr`
+### When to use `solera-create-pr`
 
-Trigger `create-pr` when:
+Trigger `solera-create-pr` when:
 
 - All Stories in the Epic are marked ✅ in `progress.md`
 - Build and tests pass locally
@@ -134,7 +134,7 @@ Do not trigger it mid-Epic or mid-Story. The skill checks that all Stories are c
 
 Tell Claude:
 
-> "Run create-pr"
+> "Run solera-create-pr"
 
 or, equivalently:
 
@@ -180,14 +180,14 @@ Both branches diverge from `dev` independently. Neither blocks the other.
 
 **Merge order:**
 
-Whichever Epic finishes first runs `create-pr` and merges first. The other Epic may need to rebase onto `dev` afterward if there are conflicts:
+Whichever Epic finishes first runs `solera-create-pr` and merges first. The other Epic may need to rebase onto `dev` afterward if there are conflicts:
 
 ```bash
 git checkout epic-dashboard
 git rebase dev
 ```
 
-Solera does not auto-rebase — do this manually before running `create-pr` on the second Epic.
+Solera does not auto-rebase — do this manually before running `solera-create-pr` on the second Epic.
 
 ---
 
@@ -199,5 +199,5 @@ Solera does not auto-rebase — do this manually before running `create-pr` on t
   - Add `HANDOFF.md` to `.gitignore` if each contributor's handoff is private (most teams)
   - Commit `HANDOFF.md` if the team wants shared session state (single active contributor at a time)
 - [ ] Add Epic branch protection: require PR review before merging into `dev`/`main`
-- [ ] Run `uv run pytest` (or equivalent) locally before triggering `create-pr` — Solera checks this but catching it early saves a round-trip
+- [ ] Run `uv run pytest` (or equivalent) locally before triggering `solera-create-pr` — Solera checks this but catching it early saves a round-trip
 - [ ] Name Epics and Stories consistently: lowercase, hyphen-separated, no spaces (`epic-user-auth`, not `epic-UserAuth`)

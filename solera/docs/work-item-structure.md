@@ -2,7 +2,7 @@
 
 ## Overview
 
-Solera organizes all project work into a seven-level hierarchy: Identity, Initiative, Phase, Goal, Epic, Story, and Action Item. The top three levels (Identity through Phase) are owned by humans and represent strategic decisions that cannot be automated — who the team is, what the annual objectives are, and what the quarterly plan delivers. The bottom four levels (Goal through Action Item) are owned by AI and represent the systematic decomposition of strategic intent into executable, traceable units of work down to individual commits. Every level produces a canonical artifact with its own `## Workflow` section, which `manage-workflow` reads and executes — no domain logic is hardcoded in the supervisor skill itself.
+Solera organizes all project work into a seven-level hierarchy: Identity, Initiative, Phase, Goal, Epic, Story, and Action Item. The top three levels (Identity through Phase) are owned by humans and represent strategic decisions that cannot be automated — who the team is, what the annual objectives are, and what the quarterly plan delivers. The bottom four levels (Goal through Action Item) are owned by AI and represent the systematic decomposition of strategic intent into executable, traceable units of work down to individual commits. Every level produces a canonical artifact with its own `## Workflow` section, which `solera-manage-workflow` reads and executes — no domain logic is hardcoded in the supervisor skill itself.
 
 ## Full Hierarchy Diagram
 
@@ -35,13 +35,13 @@ Blue nodes (Identity, Initiative, Phase) are created by humans. Green nodes (Goa
 
 | Level | Cadence | Responsibility | Skill | Produces |
 |---|---|---|---|---|
-| Identity | Once | Human | `write-identity` | `mission.md`, `core-values.md`, `vision_1.md` |
+| Identity | Once | Human | `solera-write-identity` | `mission.md`, `core-values.md`, `vision_1.md` |
 | Initiative | Annual | Human | (manual) | `initiative/{year}/goals.md` rough list |
-| Phase | Quarterly | Human | `write-phase` | `phase/{id}/README.md` |
-| Goal | Per goal | AI | `write-goal` | `_goal.md`, service map, persona(s) |
-| Epic | Per epic | AI | `write-epic` | `_epic.md`, use cases, domain concepts |
-| Story | Per story | AI | `write-story` | `_story.md`, `ACT-NNN-{name}.md` files |
-| Action Item | Per commit | AI | `execute-action-item` | Code or doc changes + one git commit |
+| Phase | Quarterly | Human | `solera-write-phase` | `phase/{id}/README.md` |
+| Goal | Per goal | AI | `solera-write-goal` | `_goal.md`, service map, persona(s) |
+| Epic | Per epic | AI | `solera-write-epic` | `_epic.md`, use cases, domain concepts |
+| Story | Per story | AI | `solera-write-story` | `_story.md`, `ACT-NNN-{name}.md` files |
+| Action Item | Per commit | AI | `solera-execute-action-item` | Code or doc changes + one git commit |
 
 ## Folder Layout
 
@@ -80,7 +80,7 @@ Solera creates Epic and Story branches automatically when you start each level. 
 |---|---|---|
 | Levels | Identity, Initiative, Phase | Goal, Epic, Story, Action Item |
 | Role | Strategic decisions, approval | Decomposition, document generation, implementation |
-| Skills | `write-identity`, `write-phase` | `write-goal`, `write-epic`, `write-story`, `execute-action-item` |
+| Skills | `solera-write-identity`, `solera-write-phase` | `solera-write-goal`, `solera-write-epic`, `solera-write-story`, `solera-execute-action-item` |
 
 ## Lifecycle: Artifact Promotion
 
@@ -89,7 +89,7 @@ Artifacts are promoted incrementally as work completes, not in bulk at Goal comp
 - **Working:** `workspace/phase/{phase}/goals/{goal}/artifacts/`
 - **Promoted:** `workspace/catalog/published/{type}/`
 
-Promotion happens at two points via `transition-catalog`:
+Promotion happens at two points via `solera-transition-catalog`:
 
 1. **After Goal Create** — Goal-level artifacts (service-map, persona, journey) are promoted immediately, making them available for the first Epic
 2. **At each Epic Wrap-up** — Epic-level artifacts (use-case, concept) are promoted before the PR is created

@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0] — 2026-03-15
+
+### Changed (BREAKING)
+- All 16 skills renamed with `solera-` prefix to avoid name collisions with
+  other plugins: `write-goal` → `solera-write-goal`, `create-pr` → `solera-create-pr`,
+  `handoff` → `solera-handoff`, etc.
+- Updated all internal references: SKILL.md files, asset templates, self-verification
+  files, docs, README, tests, and handoff hook
+
+---
+
 ## [1.11.0] — 2026-03-15
 
 ### Added

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Solera is built around three interlocking principles. First, every skill is a thin orchestrator: it validates preconditions, delegates work to lower-level skills, and records outcomes — it contains no business logic of its own. Second, every work item (Phase, Goal, Epic, Story, Action Item) owns its own procedure through a `## Workflow` section in its template; the `manage-workflow` skill reads and executes those steps but never defines them. Third, SSOT is enforced structurally: `progress.md` is the single canonical source for the project's current position in the hierarchy, and the `catalog/published/` tree is the single authoritative location for promoted artifacts. Duplication is prevented by convention and by the `transition-catalog` skill, which incrementally moves artifacts into the shared catalog — Goal-level artifacts (service-map, persona) after Goal Create, and Epic-level artifacts (use-case, concept) at each Epic Wrap-up.
+Solera is built around three interlocking principles. First, every skill is a thin orchestrator: it validates preconditions, delegates work to lower-level skills, and records outcomes — it contains no business logic of its own. Second, every work item (Phase, Goal, Epic, Story, Action Item) owns its own procedure through a `## Workflow` section in its template; the `solera-manage-workflow` skill reads and executes those steps but never defines them. Third, SSOT is enforced structurally: `progress.md` is the single canonical source for the project's current position in the hierarchy, and the `catalog/published/` tree is the single authoritative location for promoted artifacts. Duplication is prevented by convention and by the `solera-transition-catalog` skill, which incrementally moves artifacts into the shared catalog — Goal-level artifacts (service-map, persona) after Goal Create, and Epic-level artifacts (use-case, concept) at each Epic Wrap-up.
 
 ---
 
@@ -10,15 +10,15 @@ Solera is built around three interlocking principles. First, every skill is a th
 
 ```mermaid
 flowchart TD
-    WM[manage-workflow]
-    WPH[write-phase]
-    WG[write-goal]
-    WE[write-epic]
-    WS[write-story]
-    WAI[execute-action-item]
-    WPR[create-pr]
-    CT[transition-catalog]
-    HO[handoff]
+    WM[solera-manage-workflow]
+    WPH[solera-write-phase]
+    WG[solera-write-goal]
+    WE[solera-write-epic]
+    WS[solera-write-story]
+    WAI[solera-execute-action-item]
+    WPR[solera-create-pr]
+    CT[solera-transition-catalog]
+    HO[solera-handoff]
     DEV[dev skills]
 
     WM --> WPH
@@ -97,7 +97,7 @@ Each level of the hierarchy corresponds to a progressively shorter time scale an
             └── concept/
 ```
 
-The `artifacts/` directory under each Goal is the in-progress working area. The `catalog/published/` subtree is the SSOT for all completed artifacts across all Goals. No artifact should exist in both locations simultaneously; `transition-catalog` enforces this by moving (not copying) files. Promotion happens incrementally: Goal-level artifacts (service-map, persona, journey) after Goal Create, and Epic-level artifacts (use-case, concept) at each Epic Wrap-up.
+The `artifacts/` directory under each Goal is the in-progress working area. The `catalog/published/` subtree is the SSOT for all completed artifacts across all Goals. No artifact should exist in both locations simultaneously; `solera-transition-catalog` enforces this by moving (not copying) files. Promotion happens incrementally: Goal-level artifacts (service-map, persona, journey) after Goal Create, and Epic-level artifacts (use-case, concept) at each Epic Wrap-up.
 
 ---
 
@@ -107,7 +107,7 @@ The `artifacts/` directory under each Goal is the in-progress working area. The 
 
 Every work item template contains a `## Workflow` section that lists the concrete procedural steps for that item type. This is the SSOT for procedure: the definition of "what to do" lives in the template, not in any skill.
 
-`manage-workflow` acts as a supervisor: it reads the `## Workflow` section of the active item and executes each step in order. It has no hardcoded knowledge of what those steps are.
+`solera-manage-workflow` acts as a supervisor: it reads the `## Workflow` section of the active item and executes each step in order. It has no hardcoded knowledge of what those steps are.
 
 All workflows follow a four-phase structure:
 
@@ -126,11 +126,11 @@ For items that own children (Phase owns Goals; Goal owns Epics; Epic owns Storie
 - The termination condition (all children complete, or explicit user stop)
 - Any inter-child actions (e.g., update `progress.md` between Epics)
 
-This means the looping logic is declared in the parent template, not implemented in `manage-workflow`. `manage-workflow` reads the repeat block and drives the loop; it does not decide when the loop ends.
+This means the looping logic is declared in the parent template, not implemented in `solera-manage-workflow`. `solera-manage-workflow` reads the repeat block and drives the loop; it does not decide when the loop ends.
 
-### How manage-workflow Reads Procedures
+### How solera-manage-workflow Reads Procedures
 
-On each invocation, `manage-workflow`:
+On each invocation, `solera-manage-workflow`:
 
 1. Reads `progress.md` to identify the active item.
 2. Locates the item's file (`_goal.md`, `_epic.md`, `_story.md`, etc.).
@@ -138,7 +138,7 @@ On each invocation, `manage-workflow`:
 4. Executes each step; if a step names a child skill, it invokes that skill and awaits completion before proceeding.
 5. On completion, updates `progress.md` and returns control to the caller.
 
-`manage-workflow` does not contain any domain-specific logic about what Goals, Epics, Stories, or Action Items mean. All such logic is encoded in the templates.
+`solera-manage-workflow` does not contain any domain-specific logic about what Goals, Epics, Stories, or Action Items mean. All such logic is encoded in the templates.
 
 ---
 
