@@ -19,4 +19,7 @@ semantic:
   - {id: C-002, name: "Review procedure", type: content_contains, target: SKILL.md, patterns: ["review"]}
   - {id: C-003, name: "Merge procedure", type: content_contains, target: SKILL.md, patterns: ["merge"]}
   - {id: C-004, name: "Branch deletion", type: content_contains, target: SKILL.md, patterns: ["delete branch"]}
+  - {id: C-005, name: "Target branch resolution", type: content_contains, target: SKILL.md, patterns: ["Target Branch Resolution", "default_pr_base"]}
+  - {id: C-006, name: "Artifact promotion check", type: content_contains, target: SKILL.md, patterns: ["Artifact promotion check", "solera-transition-catalog"]}
+  - {id: C-007, name: "target_branch optional", type: content_contains, target: SKILL.md, patterns: ["target_branch | N"]}
 ```

@@ -51,3 +51,11 @@ Artifacts are promoted incrementally via `solera-transition-catalog`, not in bul
 | Create artifact directly in `published/` | Create in `artifacts/`, promote via `solera-transition-catalog` |
 | Skip `RETRO.md` at Wrap-up | Write retrospective at every level |
 | Push code without completing all Action Items in a Story | Complete all ACTs, then merge Story branch |
+
+## Project Config
+
+> Optional settings. Skills read these values when present; omit any line to use defaults.
+
+```yaml
+# default_pr_base: dev          # Target branch for solera-create-pr (if omitted: ask user)
+```

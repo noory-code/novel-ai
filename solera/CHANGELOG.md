@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.1.0] — 2026-03-16
+
+### Added
+- **solera-create-pr**: `target_branch` is now optional — resolved from
+  `default_pr_base` in `.claude/rules/solera-workflow.md` Project Config,
+  with fallback to user prompt
+- **solera-create-pr**: Artifact promotion pre-check blocks PR creation when
+  Epic-level artifacts (use-case, concept, erd, dto, api-spec) remain in
+  `artifacts/` — instructs user to run `solera-transition-catalog` first
+- **solera-workflow.md** template: added `## Project Config` section with
+  `default_pr_base` setting (commented out by default)
+
+---
+
 ## [2.0.0] — 2026-03-15
 
 ### Changed (BREAKING)
