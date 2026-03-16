@@ -1,6 +1,6 @@
 {
   "name": "solera",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Layered workflow execution — Phase → Goal → Epic → Story → Action Item",
   "homepage": "https://github.com/noory-code/noory-ai/tree/main/solera",
   "repository": "https://github.com/noory-code/noory-ai",

@@ -47,6 +47,7 @@ Each session ends with an auto-updated `HANDOFF.md`, so the next contributor (or
 | Skill | Trigger phrase | Produces |
 |-------|---------------|----------|
 | `solera-init` | "Set up solera", "initialize solera" | `.claude/rules/solera-workflow.md`, workspace structure, `progress.md` |
+| `solera-help` | "Help", "list skills", "what can solera do" | Skill overview and quick-start guidance |
 | `solera-edit-skill` | "Create a skill", "edit a skill" | `.claude/skills/{name}/SKILL.md` |
 | `solera-edit-rule` | "Create a rule", "add a coding rule" | `.claude/rules/{name}.md` |
 | `solera-edit-command` | "Create a command", "add a slash command" | `.claude/commands/{name}.md` |

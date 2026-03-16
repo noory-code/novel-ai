@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.1] — 2026-03-16
+
+### Fixed
+- README.md: added missing `solera-init` and `solera-help` to Skills table
+- solera-help SKILL.md: added self-reference to Meta skills listing
+
+---
+
 ## [2.3.0] — 2026-03-16
 
 ### Changed (BREAKING)
