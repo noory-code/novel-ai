@@ -6,14 +6,14 @@
 
 | User Intent | Skill |
 |---|---|
-| 새 기능/작업 요청, 뭘 만들어야 해 | `solera-write-epic` (Goal 없으면 `solera-write-goal` 먼저) |
-| 일정/진행 상황 확인, 다음 작업은? | `progress.md` 확인 → `solera-manage-workflow` |
-| 코드/문서 작업 시작 | `solera-execute-action-item` |
-| PR 만들어줘 | `solera-create-pr` |
-| 세션 끝, 마무리 | `solera-handoff` |
-| 새 사용자 유형 언급, 페르소나 추가 | `solera-write-identity` |
-| 새 Goal 시작 | `solera-write-goal` (team-process.md `workflow_gates` 먼저 확인) |
-| 산출물 공유/배포 | `solera-transition-catalog` |
+| New feature / task request, build something | `solera-write-epic` (if no Goal exists, run `solera-write-goal` first) |
+| Check progress / schedule, what's next? | Check `progress.md` → `solera-manage-workflow` |
+| Start code / document work | `solera-execute-action-item` |
+| Create a PR | `solera-create-pr` |
+| End session, wrap up | `solera-handoff` |
+| New user type mentioned, add persona | `solera-write-identity` |
+| Start a new Goal | `solera-write-goal` (check team-process.md `workflow_gates` first) |
+| Publish / share artifacts | `solera-transition-catalog` |
 
 ## Git Rules
 

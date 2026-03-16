@@ -55,9 +55,9 @@ metadata:
 ## Procedure
 
 1. **Setup**
-   - [ ] Confirm `published/identity/mission.md` exists; if not, invoke solera-write-identity **(BLOCKING: 현재 스킬은 일시 중지되고 identity 생성 완료 후 재개)**
+   - [ ] Confirm `published/identity/mission.md` exists; if not, invoke solera-write-identity **(BLOCKING: this skill pauses until identity creation completes)**
    - [ ] Confirm `{project_path}/phase/{phase_id}/README.md` exists with Glob tool
-     - If not: `Skill(name="solera-write-phase", args={"project_path": "{project_path}", "year": "{year}", "phase_id": "{phase_id}"})` **(BLOCKING: Phase 생성 완료 후 재개)**
+     - If not: `Skill(name="solera-write-phase", args={"project_path": "{project_path}", "year": "{year}", "phase_id": "{phase_id}"})` **(BLOCKING: resumes after Phase creation completes)**
    - [ ] Confirm Goal information from the Phase README (period, objectives)
    - [ ] Create `goals/{goal_id}-{name}/` folder
    - [ ] Create `goals/{goal_id}-{name}/artifacts/` folder
@@ -79,11 +79,11 @@ metadata:
      - If a prior journey exists for the same persona, the new file extends it with additional steps
    - [ ] Map Journey steps to Epics and assign numbers (01, 02, ...)
    - [ ] Write _goal.md — ref: [assets/goal-template.md](assets/goal-template.md)
-   - [ ] Invoke solera-transition-catalog to promote Goal-level artifacts (service-map, persona, journey) to published/ **(BLOCKING: 승격 완료 후 Execute 진행)**
+   - [ ] Invoke solera-transition-catalog to promote Goal-level artifacts (service-map, persona, journey) to published/ **(BLOCKING: promotion must complete before Execute)**
 
 5. **Execute**
-   - [ ] Invoke solera-write-epic for each Epic (Setup → Create → Execute → Wrap-up) **(BLOCKING: 각 Epic이 완료될 때까지 대기, 순차적으로 실행)**
-   - [ ] Invoke solera-create-pr upon Epic completion to create a PR to the parent branch **(BLOCKING: PR 생성 완료 후 다음 Epic으로 진행)**
+   - [ ] Invoke solera-write-epic for each Epic (Setup → Create → Execute → Wrap-up) **(BLOCKING: wait for each Epic to complete; execute sequentially)**
+   - [ ] Invoke solera-create-pr upon Epic completion to create a PR to the parent branch **(BLOCKING: PR must be created before proceeding to next Epic)**
    - [ ] Confirm all Epics are complete
 
 6. **Goal Wrap-up**
@@ -109,20 +109,20 @@ metadata:
 
 | Failure point | Condition | Recovery procedure | Exit behavior |
 |---------------|-----------|-------------------|---------------|
-| mission.md 누락 | `published/identity/mission.md` 없음 | Skill tool로 `solera-write-identity` 호출 | identity 생성 후 이 스킬 재개 |
-| Phase README 없음 | `phase/{phase_id}/README.md` 없음 | Skill tool로 `solera-write-phase` 호출 (project_path, phase_id, year 전달) | Phase 생성 후 이 스킬 재개 |
-| Goal 미할당 | Phase README에 Goal 정보 없음 | 오류 메시지 출력, Phase README 업데이트 요청 | 스킬 중단, 수동 수정 후 재개 |
-| goal_type 불명확 | Feature/Enabler 구분 불가 | 기본값 Feature로 진행, 사용자에게 확인 요청 | 사용자 확인 후 필요 시 수정 |
-| 폴더 생성 실패 | 권한 오류 또는 경로 문제 | 오류 메시지 출력, 권한 확인 요청 | 스킬 중단, 오류 상태 반환 |
-| solera-write-epic 실패 | 하위 스킬 호출 실패 | 실패한 Epic 기록, 사용자에게 알림 | 해당 Epic 건너뛰고 계속 진행 또는 중단 |
-| solera-transition-catalog 실패 (Create) | Goal-level artifacts 승격 실패 | 실패한 파일 목록 출력, 수동 이동 요청 | Create 단계 중단, 수동 처리 후 재개 |
-| artifacts/ 비어있지 않음 (Wrap-up) | Epic에서 승격되지 않은 파일 존재 | 남은 파일 목록 출력, 수동 확인 요청 | 경고 출력 후 계속 진행 |
+| mission.md missing | `published/identity/mission.md` not found | Invoke `solera-write-identity` via Skill tool | Resume this skill after identity creation |
+| Phase README missing | `phase/{phase_id}/README.md` not found | Invoke `solera-write-phase` (pass project_path, phase_id, year) | Resume after Phase creation |
+| Goal not assigned | Goal info missing from Phase README | Display error, request Phase README update | Skill halted, resume after manual fix |
+| goal_type unclear | Cannot determine Feature/Enabler | Default to Feature, ask user to confirm | Adjust if user overrides |
+| Folder creation failed | Permission error or path issue | Display error, ask user to check permissions | Skill halted, return error state |
+| solera-write-epic failed | Sub-skill invocation failed | Log failed Epic, notify user | Skip that Epic and continue, or halt |
+| solera-transition-catalog failed (Create) | Goal-level artifact promotion failed | List failed files, request manual move | Create step halted, resume after manual fix |
+| artifacts/ not empty (Wrap-up) | Unpromoted files remain from Epics | List remaining files, request manual check | Show warning, continue |
 
 ## Examples
 
-### 예시: Feature Goal 전체 실행 과정
+### Example: Full Feature Goal execution
 
-#### 스킬 호출
+#### Skill invocation
 
 ```python
 Skill(name="solera-write-goal", args={
@@ -135,16 +135,16 @@ Skill(name="solera-write-goal", args={
 })
 ```
 
-#### 실행 단계별 생성 파일
+#### Files generated per step
 
-**1. Setup 완료 후**
+**1. After Setup**
 ```
 phase/2026-P1-foundation/goals/G1-search-liquor/
-├── _goal.md              (초안, 상태: 🔄)
-└── artifacts/            (빈 폴더)
+├── _goal.md              (draft, status: 🔄)
+└── artifacts/            (empty folder)
 ```
 
-**2. Service Map & Personas 완료 후**
+**2. After Service Map & Personas**
 ```
 phase/2026-P1-foundation/goals/G1-search-liquor/
 ├── _goal.md
@@ -157,7 +157,7 @@ phase/2026-P1-foundation/goals/G1-search-liquor/
         └── relationship.md
 ```
 
-**3. Epic 분해 완료 후 (_goal.md 업데이트)**
+**3. After Epic decomposition (_goal.md updated)**
 ```markdown
 # _goal.md
 
@@ -166,62 +166,62 @@ phase/2026-P1-foundation/goals/G1-search-liquor/
 
 | ID | Name | Journey Step | Status |
 |----|------|--------------|--------|
-| 01 | search-ui | 검색창 입력 | ⏳ |
-| 02 | filter-logic | 필터 적용 | ⏳ |
-| 03 | result-display | 결과 확인 | ⏳ |
+| 01 | search-ui | Search input | ⏳ |
+| 02 | filter-logic | Apply filters | ⏳ |
+| 03 | result-display | View results | ⏳ |
 ```
 
-**4. Create 완료 후 (Goal-level artifacts 즉시 승격)**
+**4. After Create (Goal-level artifacts promoted immediately)**
 ```
 phase/2026-P1-foundation/goals/G1-search-liquor/
-├── _goal.md              (상태: 🔄)
-├── artifacts/            (service-map, persona → published/로 이동됨)
-└── epics/                (아직 비어있음)
+├── _goal.md              (status: 🔄)
+├── artifacts/            (service-map, persona → moved to published/)
+└── epics/                (still empty)
 
 published/
-├── service-map/index.md           (← artifacts에서 승격)
+├── service-map/index.md           (← promoted from artifacts)
 └── persona/
-    ├── bartender.md               (← artifacts에서 승격)
-    └── liquor-enthusiast.md       (← artifacts에서 승격)
+    ├── bartender.md               (← promoted from artifacts)
+    └── liquor-enthusiast.md       (← promoted from artifacts)
 ```
 
-**5. Execute 중간 상태 (Epic 01 완료, Epic-level artifacts도 승격됨)**
+**5. Mid-Execute (Epic 01 complete, Epic-level artifacts also promoted)**
 ```
 phase/2026-P1-foundation/goals/G1-search-liquor/
 ├── _goal.md              (Epic 01: ✅, Epic 02: 🔄, Epic 03: ⏳)
-├── artifacts/            (Epic 01 산출물 → published/로 이동됨)
+├── artifacts/            (Epic 01 artifacts → moved to published/)
 └── epics/
     ├── 01-search-ui/
-    │   ├── _epic.md      (상태: ✅)
+    │   ├── _epic.md      (status: ✅)
     │   ├── RETRO.md
     │   └── US-001-search-input/...
     └── 02-filter-logic/
-        ├── _epic.md      (상태: 🔄)
+        ├── _epic.md      (status: 🔄)
         └── US-001-filter-setup/...
 
 published/
-├── service-map/...       (Goal Create에서 승격)
-├── persona/...           (Goal Create에서 승격)
-├── use-case/...          (Epic 01 Wrap-up에서 승격)
-└── concept/...           (Epic 01 Wrap-up에서 승격)
+├── service-map/...       (promoted at Goal Create)
+├── persona/...           (promoted at Goal Create)
+├── use-case/...          (promoted at Epic 01 Wrap-up)
+└── concept/...           (promoted at Epic 01 Wrap-up)
 ```
 
-**6. Wrap-up 완료 (모든 Epic ✅, artifacts/ 비어있음)**
+**6. After Wrap-up (all Epics ✅, artifacts/ empty)**
 ```
 phase/2026-P1-foundation/goals/G1-search-liquor/
-├── _goal.md              (상태: ✅)
+├── _goal.md              (status: ✅)
 ├── RETRO.md
-├── artifacts/            (비어있음 — 모두 이미 승격됨)
+├── artifacts/            (empty — all promoted)
 └── epics/
     ├── 01-search-ui/...  (✅)
     ├── 02-filter-logic/...(✅)
     └── 03-result-display/...(✅)
 ```
 
-#### 중간에 호출되는 하위 스킬
+#### Sub-skills invoked during execution
 
 ```python
-# Goal Create 완료 후 — Goal-level artifacts 즉시 승격
+# After Goal Create — promote Goal-level artifacts immediately
 Skill(name="solera-transition-catalog", args={
   "project_path": "/Users/myname/workspace/myapp",
   "phase_id": "2026-P1-foundation",
@@ -230,7 +230,7 @@ Skill(name="solera-transition-catalog", args={
 })
 # → service-map, persona, journey → published/
 
-# Epic 01 작성
+# Write Epic 01
 Skill(name="solera-write-epic", args={
   "project_path": "/Users/myname/workspace/myapp",
   "year": "2026",
@@ -239,22 +239,22 @@ Skill(name="solera-write-epic", args={
   "goal_name": "search-liquor",
   "epic_name": "01-search-ui"
 })
-# → _epic.md 생성, stories 분해, 모든 Story 완료 후 ✅
+# → creates _epic.md, decomposes Stories, all Stories completed → ✅
 
-# Epic 01 PR 생성
+# Create PR for Epic 01
 Skill(name="solera-create-pr")
-# → Epic 브랜치에서 Goal 브랜치로 PR
+# → PR from Epic branch to Goal branch
 
-# Epic 02, 03 반복...
-# (각 Epic Wrap-up 시 solera-transition-catalog이 Epic-level artifacts를 승격)
+# Repeat for Epic 02, 03...
+# (solera-transition-catalog promotes Epic-level artifacts at each Epic Wrap-up)
 ```
 
-#### 최종 출력 상태
+#### Final output state
 
-- `_goal.md` 상태: ✅
-- 모든 Epic 상태: ✅
-- `RETRO.md` 존재
-- `artifacts/` 폴더 비어있음 (Goal Create + 각 Epic Wrap-up에서 점진적으로 승격됨)
+- `_goal.md` status: ✅
+- All Epic statuses: ✅
+- `RETRO.md` exists
+- `artifacts/` folder empty (promoted incrementally at Goal Create + each Epic Wrap-up)
 
 ## Completion Checklist
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.8.1] — 2026-03-16
+
+### Fixed
+- **Translate all remaining Korean to English** across 3 files (58+ violations):
+  - `solera-workflow.md`: Intent → Skill Routing table fully translated
+  - `solera-write-identity`: persona interview questions (NN/G 6-field) + Error Handling table
+  - `solera-write-goal`: BLOCKING comments, Error Handling table, and full Examples section
+
+---
+
 ## [2.8.0] — 2026-03-16
 
 ### Changed (BREAKING)

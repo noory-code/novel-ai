@@ -47,16 +47,17 @@ metadata:
      Ask all questions per persona; if the answer is vague, ask a follow-up to get specifics.
 
    **Per-persona interview (NN/G 6-field model):**
+   Ask in the user's language. Fields to collect:
    ```
-   "이 사용자의 역할/직군은 무엇인가요? (예: 바리스타, 프리랜서 개발자, 중소기업 대표)"
-   "기술 수준은 어느 정도인가요? (초보 / 중급 / 전문가)"
-     → 모호하면: "스마트폰 앱을 혼자 설치할 수 있는 수준인가요, 아니면 개발자 수준인가요?"
-   "언제, 어디서, 왜 이 서비스를 쓰나요? (사용 맥락)"
-     → 예: "출퇴근 중 모바일로, 빠르게 재고 확인하려고"
-   "이 서비스로 궁극적으로 달성하려는 목표가 뭔가요?"
-   "지금 겪고 있는 가장 큰 불편함이나 문제는 뭔가요?"
-   "이 사람이 할 법한 말 한 문장을 만들어주세요. (대표 한마디)"
-     → 예: "재고 파악하느라 매일 아침 30분을 낭비하고 있어요."
+   1. Role — "What is this user's role or occupation?" (e.g. barista, freelance developer, small business owner)
+   2. Skill level — "How tech-savvy are they?" (beginner / intermediate / expert)
+      → If vague: "Can they install a smartphone app on their own, or are they a developer-level user?"
+   3. Usage context — "When, where, and why do they use this service?"
+      → e.g. "On mobile during commute, to quickly check inventory"
+   4. Primary goal — "What is their ultimate goal when using this service?"
+   5. Biggest pain point — "What is their biggest frustration or problem right now?"
+   6. Representative quote — "What would this person typically say?" (one sentence)
+      → e.g. "I waste 30 minutes every morning just figuring out my inventory."
    ```
 
    - [ ] Repeat for each persona (2–4 recommended)
@@ -101,11 +102,11 @@ metadata:
 
 | Failure point | Condition | Recovery procedure | Exit behavior |
 |---------------|-----------|-------------------|---------------|
-| service_name 누락 | 파라미터가 제공되지 않음 | 사용자에게 "서비스 이름은 무엇입니까?" 질문 | 파라미터 수집 후 계속 진행 |
-| target_user 누락 | 파라미터가 제공되지 않음 | 사용자에게 "주요 사용자는 누구입니까?" 질문 | 파라미터 수집 후 계속 진행 |
-| project_path 없음 | 디렉토리가 존재하지 않음 | `mkdir -p {project_path}` 실행 | 디렉토리 생성 후 계속 진행 |
-| 파일 쓰기 실패 | 권한 오류 또는 디스크 공간 부족 | 오류 메시지 출력, 사용자에게 권한 확인 요청 | 스킬 중단, 오류 상태 반환 |
-| 템플릿 에셋 누락 | assets/ 디렉토리의 템플릿 파일 없음 | 기본 구조로 문서 생성 (템플릿 없이 진행) | 경고 메시지 출력, 작업 계속 진행 |
+| service_name missing | Parameter not provided | Ask user: "What is the name of your service?" | Collect parameter, then continue |
+| target_user missing | Parameter not provided | Ask user: "Who are the primary users?" | Collect parameter, then continue |
+| project_path missing | Directory does not exist | Run `mkdir -p {project_path}` | Create directory, then continue |
+| File write failure | Permission error or disk full | Display error, ask user to check permissions | Skill halted, return error state |
+| Template asset missing | Template file not found in assets/ | Generate document with default structure (skip template) | Show warning, continue |
 
 ## Completion Checklist
 
