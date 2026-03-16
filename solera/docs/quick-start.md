@@ -287,19 +287,17 @@ Repeat this for US-002 and US-003. After each Story, Solera squash-merges to the
 epics/01-task-crud/
 ├── _epic.md                  (status ✅)
 ├── RETRO.md
-└── stories/
-    ├── US-001/
-    │   ├── _story.md         (status ✅)
-    │   ├── RETRO.md
-    │   └── action-items/
-    │       ├── ACT-001-add-task-model.md
-    │       ├── ACT-002-add-task-api.md
-    │       ├── ACT-003-build-task-form.md
-    │       └── ACT-004-wire-form-to-api.md
-    ├── US-002/
-    │   └── ...
-    └── US-003/
-        └── ...
+├── US-001-create-task/
+│   ├── _story.md             (status ✅)
+│   ├── RETRO.md
+│   ├── ACT-001-add-task-model.md
+│   ├── ACT-002-add-task-api.md
+│   ├── ACT-003-build-task-form.md
+│   └── ACT-004-wire-form-to-api.md
+├── US-002-edit-task/
+│   └── ...
+└── US-003-delete-task/
+    └── ...
 ```
 
 ---
@@ -381,7 +379,7 @@ task-app/
     │       └── epics/01-task-crud/
     │           ├── _epic.md                 (status ✅)
     │           ├── RETRO.md
-    │           └── stories/...
+    │           └── US-001-create-task/...
     └── catalog/
         └── published/
             ├── service-map/index.md

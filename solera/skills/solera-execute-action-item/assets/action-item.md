@@ -58,7 +58,7 @@ Defines the decomposition unit of a Story, which corresponds to a single commit.
 ## Workflow
 
 ### Step 0. Setup
-- [ ] Confirm `stories/[US|TS]-NNN/_story.md` exists; if missing, invoke solera-write-story
+- [ ] Confirm `_story.md` exists in the Story folder; if missing, invoke solera-write-story
 - [ ] Status → 🔄
 - [ ] Confirm the goal and task content checklist
 
@@ -80,8 +80,11 @@ Defines the decomposition unit of a Story, which corresponds to a single commit.
 ## Folder Structure
 
 ```
-stories/[US|TS]-NNN/action-items/
-└── ACT-NNN-[name].md
+{epic_path}/[US|TS]-NNN-[name]/
+├── _story.md
+├── ACT-001-[name].md
+├── ACT-002-[name].md
+└── ACT-003-[name].md
 ```
 
 ## Commit Message Format

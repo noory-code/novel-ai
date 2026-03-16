@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.3.0] — 2026-03-16
+
+### Changed (BREAKING)
+- **Directory structure flattened**: Removed `stories/` and `action-items/`
+  intermediate directories
+  - Before: `epics/{name}/stories/US-001/action-items/ACT-001-xxx.md`
+  - After: `epics/{name}/US-001-login-screen/ACT-001-xxx.md`
+- Story folder naming now includes slug: `{story_id}-{story_name}/`
+  (e.g., `US-001-login-screen/`) for readability
+- Updated all path references across: write-story, write-epic, execute-action-item,
+  manage-workflow, write-goal, architecture.md, quick-start.md
+
+---
+
 ## [2.2.0] — 2026-03-16
 
 ### Added

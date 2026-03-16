@@ -76,7 +76,7 @@ Defines the decomposition unit of an Epic, covering both User Stories and Techni
 - [ ] Define acceptance criteria
 - [ ] Scan available skills: `Glob .claude/skills/*/SKILL.md` and `Glob .claude/plugins/*/skills/*/SKILL.md`
 - [ ] Write `_story.md` with the story/technical goal, acceptance criteria, and Action Items table
-- [ ] Create Action Item files (required) in `action-items/ACT-NNN-[name].md`
+- [ ] Create Action Item files (required) as `ACT-NNN-[name].md` in the Story folder
 - [ ] Assign responsible Agent per Action Item (when using agent team)
 - [ ] Assign Skill per Action Item: match task content against scanned skill triggers; set `-` if no match
 - [ ] Define dependencies between Action Items (depends_on)
@@ -103,10 +103,11 @@ Defines the decomposition unit of an Epic, covering both User Stories and Techni
 ## Folder Structure
 
 ```
-stories/[US|TS]-NNN/
+{epic_path}/[US|TS]-NNN-[name]/
 ├── _story.md
-└── action-items/
-    └── ACT-NNN-[name].md
+├── ACT-001-[name].md
+├── ACT-002-[name].md
+└── ACT-003-[name].md
 ```
 
 ## Story ID Rules

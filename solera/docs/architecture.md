@@ -85,10 +85,9 @@ Each level of the hierarchy corresponds to a progressively shorter time scale an
     │       │   └── (promoted incrementally: Goal Create → service-map/persona; Epic Wrap-up → use-case/concept)
     │       └── epics/[epic-name]/
     │           ├── _epic.md             # Epic definition and Workflow steps
-    │           └── stories/[story-id]/
+    │           └── [story-id]-[name]/
     │               ├── _story.md        # Story definition and Workflow steps
-    │               └── action-items/
-    │                   └── ACT-NNN-[name].md   # single Action Item; one commit per file
+    │               └── ACT-NNN-[name].md   # single Action Item; one commit per file
     └── catalog/
         └── published/                   # canonical artifact store (promoted from artifacts/)
             ├── service-map/

@@ -27,6 +27,6 @@ Action Item retrospectives focus on **AI behavior** (not a business retrospectiv
 
 ## Location
 
-Write the retrospective as a `## Retrospective` section **inside the Action Item file itself** (`action-items/ACT-NNN-{name}.md`), not as a separate file.
+Write the retrospective as a `## Retrospective` section **inside the Action Item file itself** (`ACT-NNN-{name}.md`), not as a separate file.
 
 > The next Action Item's Setup step reads previous ACT files to pick up "Improvements" before starting.

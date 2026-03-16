@@ -83,7 +83,7 @@ Write a RETRO.md when a hierarchy level is complete.
 | **Phase** | `workspace/phase/{phase_id}/RETRO.md` |
 | **Goal** | `workspace/phase/{phase_id}/goals/{goal_id}/RETRO.md` |
 | **Epic** | `workspace/phase/.../epics/{epic_name}/RETRO.md` |
-| **Story** | `workspace/phase/.../stories/{story_id}/RETRO.md` |
+| **Story** | `workspace/phase/.../epics/{epic_name}/{story_id}-{story_name}/RETRO.md` |
 
 ## Quality Criteria
 

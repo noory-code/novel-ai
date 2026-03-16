@@ -2,7 +2,7 @@
 name: solera-write-story
 description: Write a Story with clear acceptance criteria, then break it into atomic Action Items — each one a single commit.
 metadata:
-  version: "7.0.0"
+  version: "8.0.0"
   category: writing
   type: composite
   style: procedural
@@ -42,11 +42,11 @@ metadata:
 
 | Step | Output | Path | Nature |
 |------|--------|------|--------|
-| Create | _story.md | `{epic_path}/stories/{story_id}/_story.md` | Final |
-| Create | ACT-NNN-{name}.md | `{epic_path}/stories/{story_id}/action-items/ACT-NNN-{name}.md` | Final |
-| Wrap-up | RETRO.md | `{epic_path}/stories/{story_id}/RETRO.md` | Final |
+| Create | _story.md | `{epic_path}/{story_id}-{story_name}/_story.md` | Final |
+| Create | ACT-NNN-{name}.md | `{epic_path}/{story_id}-{story_name}/ACT-NNN-{name}.md` | Final |
+| Wrap-up | RETRO.md | `{epic_path}/{story_id}-{story_name}/RETRO.md` | Final |
 
-> `{epic_path}` = `{project_path}/phase/{phase_id}/goals/{goal_id}/epics/{epic_name}`
+> `{epic_path}` = `{project_path}/phase/{phase_id}/goals/{goal_id}-{goal_name}/epics/{epic_name}`
 
 ## Skills Used
 
@@ -59,9 +59,9 @@ metadata:
 1. **Setup**
    - [ ] Confirm `{epic_path}/_epic.md` exists with Glob tool
      - If not: invoke Skill tool `skill="solera-write-epic"` **(BLOCKING: Epic 생성 완료 후 재개)**
-   - [ ] Check for previous Story retrospectives: `Glob {epic_path}/stories/*/RETRO.md` — if any exist, read the most recent one and apply any "AI Improvements" noted there
+   - [ ] Check for previous Story retrospectives: `Glob {epic_path}/*/RETRO.md` — if any exist, read the most recent one and apply any "AI Improvements" noted there
    - [ ] Create `story-{story_id}-{story_name}` branch (from Epic branch)
-   - [ ] Create `{epic_path}/stories/{story_id}/` folder
+   - [ ] Create `{epic_path}/{story_id}-{story_name}/` folder
    - [ ] Status → 🔄
 
 2. **Determine Story type and define acceptance criteria**
@@ -82,9 +82,9 @@ metadata:
    - [ ] Distribute across phases (same phase = can run in parallel)
    - [ ] **MUST: Immediately after writing _story.md, create one file per Action Item.**
      - Parse every row in the Action Items table
-     - For each row: create `action-items/ACT-NNN-{name}.md` using the template in [assets/action-item.md](../solera-execute-action-item/assets/action-item.md)
+     - For each row: create `ACT-NNN-{name}.md` in the Story folder using the template in [assets/action-item.md](../solera-execute-action-item/assets/action-item.md)
      - Do NOT proceed to Step 4 until all files exist
-   - [ ] Verify all Action Item files exist: `Glob action-items/ACT-*.md` — count must match the table row count
+   - [ ] Verify all Action Item files exist: `Glob {story_path}/ACT-*.md` — count must match the table row count
 
 4. **Execute**
    - [ ] Extract incomplete (⏳ or no status) Action Items from the Action Items table in `_story.md`
@@ -117,11 +117,12 @@ metadata:
 ## Folder Structure
 
 ```
-{epic_path}/stories/{story_id}/
+{epic_path}/{story_id}-{story_name}/
 ├── _story.md
 ├── RETRO.md              # Created at Wrap-up
-└── action-items/
-    └── ACT-NNN-{name}.md
+├── ACT-001-{name}.md
+├── ACT-002-{name}.md
+└── ACT-003-{name}.md
 ```
 
 ## Commit Message Format
@@ -171,7 +172,7 @@ Skill(name="solera-write-story", args={
 
 **1. Setup 완료 후**
 ```
-epics/01-search-ui/stories/US-001/
+epics/01-search-ui/US-001-search-input/
 └── _story.md              (초안, 상태: 🔄)
 ```
 
@@ -200,22 +201,20 @@ So that **원하는 주류 정보를 빠르게 찾을 수 있다**
 
 **3. Action Item 파일 생성 완료 후**
 ```
-epics/01-search-ui/stories/US-001/
+epics/01-search-ui/US-001-search-input/
 ├── _story.md
-└── action-items/
-    ├── ACT-001-create-component.md
-    ├── ACT-002-add-validation.md
-    └── ACT-003-write-tests.md
+├── ACT-001-create-component.md
+├── ACT-002-add-validation.md
+└── ACT-003-write-tests.md
 ```
 
 **4. Execute 중간 상태 (ACT-001, ACT-002 완료)**
 ```
-epics/01-search-ui/stories/US-001/
+epics/01-search-ui/US-001-search-input/
 ├── _story.md             (ACT-001: ✅, ACT-002: ✅, ACT-003: 🔄)
-└── action-items/
-    ├── ACT-001-create-component.md   (커밋: abc1234, 상태: ✅)
-    ├── ACT-002-add-validation.md     (커밋: def5678, 상태: ✅)
-    └── ACT-003-write-tests.md        (상태: 🔄)
+├── ACT-001-create-component.md   (커밋: abc1234, 상태: ✅)
+├── ACT-002-add-validation.md     (커밋: def5678, 상태: ✅)
+└── ACT-003-write-tests.md        (상태: 🔄)
 
 git log --oneline:
 def5678 [01-search-ui][US-001][ACT-002] 검색창 입력 검증 추가
@@ -224,13 +223,12 @@ abc1234 [01-search-ui][US-001][ACT-001] 검색 컴포넌트 생성
 
 **5. Wrap-up 완료 (모든 Action Item ✅)**
 ```
-epics/01-search-ui/stories/US-001/
+epics/01-search-ui/US-001-search-input/
 ├── _story.md             (상태: ✅)
 ├── RETRO.md
-└── action-items/
-    ├── ACT-001-create-component.md   (✅)
-    ├── ACT-002-add-validation.md     (✅)
-    └── ACT-003-write-tests.md        (✅)
+├── ACT-001-create-component.md   (✅)
+├── ACT-002-add-validation.md     (✅)
+└── ACT-003-write-tests.md        (✅)
 
 git log --oneline:
 9876543 [01-search-ui][US-001][ACT-003] 검색 컴포넌트 테스트 추가

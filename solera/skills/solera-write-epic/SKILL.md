@@ -47,7 +47,7 @@ metadata:
 | UseCase | UC-NNN.md (Feature only) | Intermediate (artifacts) | `{goal_path}/artifacts/use-case/UC-NNN-{name}.md` |
 | Concept | domain.md | Intermediate (artifacts) | `{goal_path}/artifacts/concept/domain.md` |
 | Concept | entities/*.md | Intermediate (artifacts) | `{goal_path}/artifacts/concept/entities/{entity}.md` |
-| Story | _story.md | Final | `{goal_path}/epics/{epic_name}/stories/{US\|TS}-NNN/_story.md` |
+| Story | _story.md | Final | `{goal_path}/epics/{epic_name}/{US\|TS}-NNN-{name}/_story.md` |
 | Wrap-up | RETRO.md | Final | `{goal_path}/epics/{epic_name}/RETRO.md` |
 
 > `{goal_path}` = `{project_path}/phase/{phase_id}/goals/{goal_id}`
@@ -125,12 +125,12 @@ metadata:
 Epics always live inside the goal directory. Never create a top-level `epics/` directory.
 
 ```
-{project_path}/phase/{phase_id}/goals/{goal_id}/   ← created by solera-write-goal
+{project_path}/phase/{phase_id}/goals/{goal_id}-{goal_name}/   ← created by solera-write-goal
 ├── _goal.md
 ├── artifacts/
-└── epics/{epic_name}/                              ← created by solera-write-epic
+└── epics/{epic_name}/                                          ← created by solera-write-epic
     ├── _epic.md
-    └── stories/{US|TS}-NNN/
+    └── {US|TS}-NNN-{name}/
         └── _story.md
 ```
 
@@ -146,7 +146,7 @@ Epics always live inside the goal directory. Never create a top-level `epics/` d
 └── epics/{epic_name}/
     ├── _epic.md
     ├── RETRO.md              # Created at Wrap-up
-    └── stories/{US|TS}-NNN/
+    └── {US|TS}-NNN-{name}/
         └── _story.md
 ```
 
@@ -234,17 +234,15 @@ goals/G1-search-liquor/
 ```
 goals/G1-search-liquor/epics/01-search-ui/
 ├── _epic.md              (US-001: ✅, US-002: 🔄, TS-001: ⏳)
-└── stories/
-    ├── US-001/
-    │   ├── _story.md     (상태: ✅)
-    │   ├── RETRO.md
-    │   └── action-items/
-    │       ├── ACT-001-create-component.md
-    │       ├── ACT-002-add-validation.md
-    │       └── ACT-003-write-tests.md
-    └── US-002/
-        ├── _story.md     (상태: 🔄)
-        └── action-items/...
+├── US-001-search-input/
+│   ├── _story.md         (상태: ✅)
+│   ├── RETRO.md
+│   ├── ACT-001-create-component.md
+│   ├── ACT-002-add-validation.md
+│   └── ACT-003-write-tests.md
+└── US-002-filter-ui/
+    ├── _story.md         (상태: 🔄)
+    └── ACT-001-filter-component.md
 ```
 
 **6. Wrap-up 완료 (모든 Story ✅)**
@@ -252,10 +250,9 @@ goals/G1-search-liquor/epics/01-search-ui/
 goals/G1-search-liquor/epics/01-search-ui/
 ├── _epic.md              (상태: ✅)
 ├── RETRO.md
-└── stories/
-    ├── US-001/...        (✅)
-    ├── US-002/...        (✅)
-    └── TS-001/...        (✅)
+├── US-001-search-input/...   (✅)
+├── US-002-filter-ui/...      (✅)
+└── TS-001-api-integration/...  (✅)
 ```
 
 #### 중간에 호출되는 하위 스킬

@@ -42,7 +42,7 @@ metadata:
 |------|--------|------|--------|
 | Execute | Code/document changes | Files declared in output_paths | Final |
 | Wrap-up | git commit | `[epic-name][story_id][ACT-NNN] title` | Final |
-| Wrap-up | ACT status ✅ | Status update within `action-items/ACT-NNN-{name}.md` | Final |
+| Wrap-up | ACT status ✅ | Status update within `ACT-NNN-{name}.md` | Final |
 
 ## Skills Used
 
@@ -64,7 +64,7 @@ metadata:
    - [ ] Confirm all prerequisite ACTs in depends_on are complete
    - [ ] Read the Action Item file — ref: [assets/action-item.md](assets/action-item.md)
    - [ ] Confirm the objective and task checklist
-   - [ ] Check for previous ACT retrospectives: `Glob action-items/ACT-*.md` — if any completed ACTs exist, read their `## Retrospective` section and apply any "AI Improvements" noted there
+   - [ ] Check for previous ACT retrospectives: `Glob {story_path}/ACT-*.md` — if any completed ACTs exist, read their `## Retrospective` section and apply any "AI Improvements" noted there
    - [ ] Status → 🔄
 
 2. **Write tests** (if code changes are required)
@@ -92,8 +92,11 @@ metadata:
 ## Folder Structure
 
 ```
-{epic_path}/stories/{story_id}/action-items/
-└── ACT-NNN-{name}.md
+{epic_path}/{story_id}-{story_name}/
+├── _story.md
+├── ACT-001-{name}.md
+├── ACT-002-{name}.md
+└── ACT-003-{name}.md
 ```
 
 ## Commit Message Format
@@ -111,7 +114,7 @@ metadata:
 | _story.md 누락 | `_story.md` 파일 없음 | `solera-write-story` 스킬 호출 | Story 생성 후 이 스킬 재개 |
 | Action Item 미할당 | _story.md Action Items 테이블에 ACT 정보 없음 | 오류 메시지 출력, _story.md 업데이트 요청 | 스킬 중단, 수동 수정 후 재개 |
 | 의존성 미완료 | depends_on의 선행 ACT 상태가 ✅ 아님 | 미완료 ACT 목록 출력, 선행 작업 완료 요청 | 스킬 중단, 선행 작업 완료 후 재개 |
-| Action Item 파일 누락 | `action-items/ACT-NNN-{name}.md` 없음 | 템플릿 참조하여 파일 생성 | 파일 생성 후 계속 진행 |
+| Action Item 파일 누락 | `ACT-NNN-{name}.md` 없음 | 템플릿 참조하여 파일 생성 | 파일 생성 후 계속 진행 |
 | 빌드 실패 | Step 4에서 빌드 커맨드 실패 | 빌드 오류 출력, 코드 수정 요청 | Test verification 단계 중단, 수정 후 재실행 |
 | 테스트 실패 | Step 4에서 테스트 실패 | 실패한 테스트 목록 출력, 코드 수정 요청 | Test verification 단계 중단, 수정 후 재실행 |
 | output_paths 파일 누락 | 선언된 파일이 실제로 생성되지 않음 | 누락 파일 목록 출력, 파일 생성 요청 | Test verification 단계 중단, 파일 생성 후 재실행 |

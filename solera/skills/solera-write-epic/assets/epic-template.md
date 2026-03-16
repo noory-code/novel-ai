@@ -39,7 +39,7 @@
 - [ ] Write Use Cases to `artifacts/use-case/UC-NNN-[name].md`
 - [ ] Derive Concepts to `artifacts/concept/domain.md`
 - [ ] Define Entities in `artifacts/concept/entities/*.md`
-- [ ] Decompose Stories into `stories/[US|TS]-NNN/_story.md`
+- [ ] Decompose Stories into `[US|TS]-NNN-[name]/_story.md`
 - [ ] Write `_epic.md` with the Stories table and completion criteria
 
 ### Step 2. Execute
