@@ -2,7 +2,7 @@
 name: solera-execute-action-item
 description: Implement one Action Item end-to-end: write the code, run tests, and commit — one focused change at a time.
 metadata:
-  version: "5.0.0"
+  version: "6.0.0"
   category: writing
   type: composite
   style: procedural
@@ -48,9 +48,14 @@ metadata:
 
 | Skill | Purpose | Step |
 |-------|---------|------|
-| Development skills (frontend-*, dev-*, design-*, etc.) | Actual coding and documentation work | Execute |
+| `Skill:` field value from ACT file | Primary — auto-invoked when specified | Development |
+| Development skills (frontend-*, dev-*, design-*, etc.) | Fallback — keyword-matched when `Skill:` is `-` | Development |
 
-> Development skill selection: match task content keywords with skill-orchestration triggers
+## Skill Resolution
+
+1. Read the `Skill:` metadata field from the Action Item file
+2. If the field contains a skill name (not `-`): invoke `Skill(name="{skill_name}")` directly
+3. If the field is `-` or missing: fall back to matching task content keywords against available skill triggers
 
 ## Procedure
 
@@ -67,8 +72,8 @@ metadata:
    - [ ] Write Unit/Widget test code (Red — will fail since implementation is not yet done)
 
 3. **Development**
-   - [ ] Match task keywords to a development skill and invoke it
-   - [ ] Perform the actual coding or documentation work
+   - [ ] Resolve skill per Skill Resolution above
+   - [ ] Invoke the resolved skill (or perform manual coding if no skill available)
    - [ ] Complete all items in the task checklist
 
 4. **Test verification**

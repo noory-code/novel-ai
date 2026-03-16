@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.2.0] — 2026-03-16
+
+### Added
+- **solera-write-story**: Scan available project skills (`Glob .claude/skills/*/SKILL.md`
+  and `.claude/plugins/*/skills/*/SKILL.md`) during Action Item decomposition
+- **solera-write-story**: `Skill` column added to Action Items table — matches
+  task content against scanned skill triggers
+- **solera-execute-action-item**: `Skill Resolution` section — reads `Skill:`
+  metadata from ACT file and auto-invokes the specified skill; falls back to
+  keyword matching when set to `-`
+- **action-item.md** template: `Skill:` metadata field added
+- **story.md** template: `Skill` column added to Action Items tables (US & TS)
+
+---
+
 ## [2.1.0] — 2026-03-16
 
 ### Added

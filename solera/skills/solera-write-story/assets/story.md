@@ -23,11 +23,11 @@ Defines the decomposition unit of an Epic, covering both User Stories and Techni
 
 ## Action Items
 
-| ID | Action Item | Agent | Phase | depends_on | Status | Commit |
-|----|-------------|-------|-------|------------|--------|--------|
-| ACT-001 | [Action Item title] | [agent name or -] | 1 | - | ⏳ Pending | - |
-| ACT-002 | [Action Item title] | [agent name or -] | 1 | - | ⏳ Pending | - |
-| ACT-003 | [Action Item title] | [agent name or -] | 2 | ACT-001,ACT-002 | ⏳ Pending | - |
+| ID | Action Item | Skill | Agent | Phase | depends_on | Status | Commit |
+|----|-------------|-------|-------|-------|------------|--------|--------|
+| ACT-001 | [Action Item title] | [skill name or -] | [agent name or -] | 1 | - | ⏳ Pending | - |
+| ACT-002 | [Action Item title] | [skill name or -] | [agent name or -] | 1 | - | ⏳ Pending | - |
+| ACT-003 | [Action Item title] | [skill name or -] | [agent name or -] | 2 | ACT-001,ACT-002 | ⏳ Pending | - |
 
 **Progress**: 0/N Action Items complete
 ```
@@ -58,9 +58,9 @@ Defines the decomposition unit of an Epic, covering both User Stories and Techni
 
 ## Action Items
 
-| ID | Action Item | Agent | Phase | depends_on | Status | Commit |
-|----|-------------|-------|-------|------------|--------|--------|
-| ACT-001 | [Action Item title] | [agent name or -] | 1 | - | ⏳ Pending | - |
+| ID | Action Item | Skill | Agent | Phase | depends_on | Status | Commit |
+|----|-------------|-------|-------|-------|------------|--------|--------|
+| ACT-001 | [Action Item title] | [skill name or -] | [agent name or -] | 1 | - | ⏳ Pending | - |
 
 **Progress**: 0/N Action Items complete
 ```
@@ -74,9 +74,11 @@ Defines the decomposition unit of an Epic, covering both User Stories and Techni
 ### Step 1. Create (performed on Epic branch)
 - [ ] Determine Story type (US / TS)
 - [ ] Define acceptance criteria
+- [ ] Scan available skills: `Glob .claude/skills/*/SKILL.md` and `Glob .claude/plugins/*/skills/*/SKILL.md`
 - [ ] Write `_story.md` with the story/technical goal, acceptance criteria, and Action Items table
 - [ ] Create Action Item files (required) in `action-items/ACT-NNN-[name].md`
 - [ ] Assign responsible Agent per Action Item (when using agent team)
+- [ ] Assign Skill per Action Item: match task content against scanned skill triggers; set `-` if no match
 - [ ] Define dependencies between Action Items (depends_on)
 - [ ] Allocate phases (Action Items that can run in parallel belong to the same Phase)
 - [ ] Create `epic-[name]/story-[ID]-[name]` branch (from Epic branch)
@@ -124,5 +126,5 @@ stories/[US|TS]-NNN/
 - [ ] Are acceptance criteria defined?
 - [ ] Have all Action Items been assigned an ID?
 - [ ] Is progress displayed?
-- [ ] Are Agent, Phase, and depends_on defined for each Action Item?
+- [ ] Are Skill, Agent, Phase, and depends_on defined for each Action Item?
 - [ ] Can Action Items in the same Phase run in parallel without output conflicts?

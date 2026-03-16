@@ -2,7 +2,7 @@
 name: solera-write-story
 description: Write a Story with clear acceptance criteria, then break it into atomic Action Items — each one a single commit.
 metadata:
-  version: "6.0.0"
+  version: "7.0.0"
   category: writing
   type: composite
   style: procedural
@@ -70,12 +70,14 @@ metadata:
    - [ ] Clarify the definition of done
 
 3. **Write _story.md and decompose Action Items**
+   - [ ] **Scan available skills**: Run `Glob .claude/skills/*/SKILL.md` and `Glob .claude/plugins/*/skills/*/SKILL.md` to collect installed skill names and their trigger phrases
    - [ ] Write _story.md — ref: [assets/story.md](assets/story.md)
      - US: As a / I want / So that
      - TS: Technical objective + spec
    - [ ] Include acceptance criteria
    - [ ] Write the Action Items table (apply 1 Action Item = 1 commit principle)
    - [ ] Assign an Agent for each Action Item (when using agent teams)
+   - [ ] **Assign a Skill for each Action Item**: Match the Action Item's task content against the scanned skill triggers. Set the `Skill` column to the matched skill name. If no skill matches, set to `-` (manual execution)
    - [ ] Define depends_on to prevent output conflicts
    - [ ] Distribute across phases (same phase = can run in parallel)
    - [ ] **MUST: Immediately after writing _story.md, create one file per Action Item.**
@@ -189,11 +191,11 @@ So that **원하는 주류 정보를 빠르게 찾을 수 있다**
 
 ## Action Items
 
-| ID | Name | Phase | Depends On | Agent | Status |
-|----|------|-------|------------|-------|--------|
-| ACT-001 | create-component | 1 | - | FE | ⏳ |
-| ACT-002 | add-validation | 1 | - | FE | ⏳ |
-| ACT-003 | write-tests | 2 | ACT-001,ACT-002 | QA | ⏳ |
+| ID | Name | Skill | Phase | Depends On | Agent | Status |
+|----|------|-------|-------|------------|-------|--------|
+| ACT-001 | create-component | dev-flutter | 1 | - | FE | ⏳ |
+| ACT-002 | add-validation | dev-flutter | 1 | - | FE | ⏳ |
+| ACT-003 | write-tests | dev-flutter | 2 | ACT-001,ACT-002 | QA | ⏳ |
 ```
 
 **3. Action Item 파일 생성 완료 후**

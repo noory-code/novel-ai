@@ -9,6 +9,7 @@ Defines the decomposition unit of a Story, which corresponds to a single commit.
 
 > Story: [US|TS]-NNN
 > Status: ⏳ Pending / 🔄 In Progress / ✅ Complete / ❌ Cancelled
+> Skill: [skill name or -]
 > Agent: [fullstack-db | fullstack-domain | fullstack-data | fullstack-presentation | -]
 > Phase: [N]
 > depends_on: [ACT-NNN, ...] or -
@@ -62,7 +63,9 @@ Defines the decomposition unit of a Story, which corresponds to a single commit.
 - [ ] Confirm the goal and task content checklist
 
 ### Step 1. Execute
-- [ ] Identify required skills and invoke the appropriate development skills (frontend-*, dev-*, design-*, etc.)
+- [ ] Read the `Skill:` field from the Action Item metadata
+  - If a skill is specified (not `-`): invoke it via `Skill(name="{skill_name}")`
+  - If `-`: identify required skills from task content keywords and invoke manually
 - [ ] Perform actual coding/documentation work
 - [ ] Confirm all task content checklist items complete
 

@@ -24,7 +24,8 @@ semantic:
   - {id: C-005, name: "Folder Structure section", type: section_exists, target: assets/action-item.md, section: "## Folder Structure"}
   - {id: C-006, name: "Commit Message Format section", type: section_exists, target: assets/action-item.md, section: "## Commit Message Format"}
   - {id: C-007, name: "Retrospective write reference", type: content_contains, target: assets/action-item.md, patterns: ["Write retrospective", "RETRO.md"]}
-  - {id: C-008, name: "Agent assignment metadata", type: content_contains, target: assets/action-item.md, patterns: ["Agent:", "Phase:", "depends_on:"]}
+  - {id: C-008, name: "Metadata fields", type: content_contains, target: assets/action-item.md, patterns: ["Skill:", "Agent:", "Phase:", "depends_on:"]}
+  - {id: C-012, name: "Skill Resolution section", type: section_exists, target: SKILL.md, section: "## Skill Resolution"}
   - {id: C-009, name: "output_paths metadata", type: content_contains, target: assets/action-item.md, patterns: ["output_paths"]}
   - {id: C-010, name: "Prerequisite Story context", type: content_contains, target: SKILL.md, patterns: ["_story.md", "depends_on"]}
   - {id: C-011, name: "Skills used table", type: section_exists, target: SKILL.md, section: "## Skills Used"}
