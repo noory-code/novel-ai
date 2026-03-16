@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.5.0] — 2026-03-16
+
+### Added
+- **Team Customization section** in `solera-workflow.md` template (installed by `solera-init`)
+  - Teams can define workflow gates, artifact conventions, commit/branch conventions,
+    tech stack, and custom rules on top of Solera's work item structure
+  - Solera provides the skeleton; each team wraps it with their own process rules
+
+---
+
 ## [2.4.0] — 2026-03-16
 
 ### Changed
