@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.4.0] — 2026-03-16
+
+### Changed
+- **Branch naming**: Epic branches changed from `epic-[name]` to `epics/[name]`.
+  Story branches changed from `epic-[name]/story-[ID]-[name]` to
+  `epics-[name]/story-[ID]-[name]` (avoids git file/directory conflict).
+- Updated all branch references across skills, docs, and README
+
+---
+
 ## [2.3.1] — 2026-03-16
 
 ### Fixed

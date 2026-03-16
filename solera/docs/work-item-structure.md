@@ -68,8 +68,8 @@ Blue nodes (Identity, Initiative, Phase) are created by humans. Green nodes (Goa
 
 | Level | Branch | Branch From |
 |---|---|---|
-| Epic | `epic-[name]` | parent branch |
-| Story | `epic-[name]/story-[ID]-[name]` | epic branch |
+| Epic | `epics/[name]` | parent branch |
+| Story | `epics-[name]/story-[ID]-[name]` | epic branch |
 | Action Item | — (commit only) | story branch |
 
 Solera creates Epic and Story branches automatically when you start each level. Action Items are committed directly to the active Story branch with no additional branch created.

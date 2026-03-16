@@ -18,8 +18,8 @@ Identity > Initiative > Phase > Goal > Epic > Story > Action Item
 
 | Hierarchy | Branch Name | Branch From |
 |-----------|-------------|-------------|
-| **Epic** | `epic-[name]` | Parent branch |
-| **Story** | `epic-[name]/story-[ID]-[name]` | Epic branch |
+| **Epic** | `epics/[name]` | Parent branch |
+| **Story** | `epics-[name]/story-[ID]-[name]` | Epic branch |
 
 > Action Item = commit only (no branch)
 

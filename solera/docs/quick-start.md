@@ -118,7 +118,7 @@ Then Solera moves into the first Epic. Say:
 Solera creates the Epic branch and scaffolds the Epic:
 
 ```bash
-git checkout -b epic-task-crud
+git checkout -b epics/task-crud
 ```
 
 It writes Use Cases (`artifacts/use-case/UC-001-create-task.md`), domain concepts (`artifacts/concept/domain.md`, `artifacts/concept/entities/task.md`), and then produces `_epic.md`.
@@ -193,7 +193,7 @@ task-app/workspace/phase/2026-P1-foundation/goals/G1-task-management/
 ```
 _goal.md                               ← exists, status 🔄
 epics/01-task-crud/_epic.md            ← exists, status 🔄
-git branch                             → epic-task-crud (current)
+git branch                             → epics/task-crud (current)
 ```
 
 ---
@@ -211,7 +211,7 @@ Say to Claude:
 Solera creates the Story branch:
 
 ```bash
-git checkout -b epic-task-crud/story-US-001-create-task-form
+git checkout -b epics-task-crud/story-US-001-create-task-form
 ```
 
 It writes `_story.md` with the user story, acceptance criteria, and a table of Action Items:
@@ -271,11 +271,11 @@ Solera:
 1. Confirms all acceptance criteria pass
 2. Writes `RETRO.md` for the Story
 3. Sets `_story.md` status to ✅
-4. Squash-merges the Story branch into `epic-task-crud`
+4. Squash-merges the Story branch into `epics/task-crud`
 
 ```bash
-git checkout epic-task-crud
-git merge --squash epic-task-crud/story-US-001-create-task-form
+git checkout epics/task-crud
+git merge --squash epics-task-crud/story-US-001-create-task-form
 git commit -m "[task-crud][US-001] create-task-form"
 ```
 
@@ -308,18 +308,18 @@ epics/01-task-crud/
 
 Say to Claude:
 
-> The Epic is done. Create a PR for epic-task-crud.
+> The Epic is done. Create a PR for epics/task-crud.
 
 Solera runs `solera-create-pr`:
 
 1. Confirms all Stories are ✅
-2. Confirms build and tests pass on `epic-task-crud`
+2. Confirms build and tests pass on `epics/task-crud`
 3. Creates the PR:
 
 ```bash
 gh pr create \
   --base main \
-  --head epic-task-crud \
+  --head epics/task-crud \
   --title "[Epic] task-crud: core create/read/update/delete for tasks"
 ```
 
@@ -334,10 +334,10 @@ After you (or a teammate) reviews and approves the PR, say:
 Solera executes the squash merge:
 
 ```bash
-gh pr merge --squash epic-task-crud
+gh pr merge --squash epics/task-crud
 ```
 
-The `epic-task-crud` branch is deleted after merge.
+The `epics/task-crud` branch is deleted after merge.
 
 ### Catalog transition happens incrementally
 

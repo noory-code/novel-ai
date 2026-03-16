@@ -13,8 +13,8 @@ Phase (quarter) → Goal (weeks) → Epic (days) → Story (hours) → Action It
 
 ## Git Branch Rules
 
-- [ ] Epic: `epic-[name]` branch from parent
-- [ ] Story: `epic-[name]/story-[ID]-[name]` branch from Epic
+- [ ] Epic: `epics/[name]` branch from parent
+- [ ] Story: `epics-[name]/story-[ID]-[name]` branch from Epic
 - [ ] Action Item: commit only, no branch
 - [ ] Commit format: `[epic-name][US|TS-NNN][ACT-NNN] description`
 

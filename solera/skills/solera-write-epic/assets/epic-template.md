@@ -32,7 +32,7 @@
 
 ### Step 0. Setup
 - [ ] Confirm `goals/*/_goal.md` exists; if missing, invoke solera-write-goal
-- [ ] Create `epic-[name]` branch (from dev)
+- [ ] Create `epics/[name]` branch (from dev)
 - [ ] Status → 🔄
 
 ### Step 1. Create

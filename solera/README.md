@@ -56,17 +56,17 @@ Solera reads the roadmap, creates `workspace/phase/2026-P1-foundation/README.md`
 
 > Write Goal G1 for Phase 2026-P1-foundation. The goal is `task-management`.
 
-Solera produces the service map, persona, and journey, then maps journey steps to Epics. It creates the Epic branch (`epic-task-crud`) and writes `_epic.md` with Use Cases and domain concepts.
+Solera produces the service map, persona, and journey, then maps journey steps to Epics. It creates the Epic branch (`epics/task-crud`) and writes `_epic.md` with Use Cases and domain concepts.
 
 **Step 4 — Run Stories and Action Items:**
 
 > Start Story US-001: create-task-form.
 
-Solera creates the Story branch (`epic-task-crud/story-US-001-create-task-form`), writes `_story.md` with acceptance criteria and Action Items, then executes each Action Item as one commit: `[task-crud][US-001][ACT-001] Add Task model`.
+Solera creates the Story branch (`epics-task-crud/story-US-001-create-task-form`), writes `_story.md` with acceptance criteria and Action Items, then executes each Action Item as one commit: `[task-crud][US-001][ACT-001] Add Task model`.
 
 **Step 5 — Complete the Epic:**
 
-> The Epic is done. Create a PR for epic-task-crud.
+> The Epic is done. Create a PR for epics/task-crud.
 
 Solera verifies all Stories are complete, runs `solera-create-pr` to open the PR, handles the review cycle, and squash-merges into the target branch. Design artifacts are promoted incrementally via `solera-transition-catalog` — Goal-level artifacts after Goal Create, Epic-level artifacts at each Epic Wrap-up.
 
@@ -98,13 +98,13 @@ Solera verifies all Stories are complete, runs `solera-create-pr` to open the PR
 
 ## Team Workflow
 
-Solera uses a branch-per-Epic strategy: each Epic gets an `epic-[name]` branch from `dev`/`main`, and each Story gets a `epic-[name]/story-[ID]-[name]` child branch. Solera creates all branches automatically when you start an Epic or Story. When the Epic is complete, `solera-create-pr` opens a PR, manages the review cycle, and squash-merges to keep trunk history clean — one entry per Epic rather than dozens of implementation-detail commits. Because `HANDOFF.md` is regenerated on every session end, Contributor B can open the repository cold, read `HANDOFF.md`, and tell Claude to resume without any coordination with Contributor A.
+Solera uses a branch-per-Epic strategy: each Epic gets an `epics/[name]` branch from `dev`/`main`, and each Story gets an `epics-[name]/story-[ID]-[name]` child branch. Solera creates all branches automatically when you start an Epic or Story. When the Epic is complete, `solera-create-pr` opens a PR, manages the review cycle, and squash-merges to keep trunk history clean — one entry per Epic rather than dozens of implementation-detail commits. Because `HANDOFF.md` is regenerated on every session end, Contributor B can open the repository cold, read `HANDOFF.md`, and tell Claude to resume without any coordination with Contributor A.
 
 | Level | Branch pattern | Created by |
 |-------|---------------|------------|
 | Trunk | `main` or `dev` | Team |
-| Epic | `epic-[name]` | Solera on Epic start |
-| Story | `epic-[name]/story-[ID]-[name]` | Solera on Story start |
+| Epic | `epics/[name]` | Solera on Epic start |
+| Story | `epics-[name]/story-[ID]-[name]` | Solera on Story start |
 | Action Item | commit only — no branch | Solera (committed to Story branch) |
 
 See [docs/team-workflow.md](docs/team-workflow.md) for parallel Epic execution, rebase guidance, and recommended team setup.

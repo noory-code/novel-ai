@@ -23,7 +23,7 @@ metadata:
 
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
-| **epic_branch** | Y | PR source branch | epic-auth |
+| **epic_branch** | Y | PR source branch | epics/auth |
 | **target_branch** | N | Merge target branch (overrides config) | dev, main |
 
 ## Target Branch Resolution

@@ -67,7 +67,7 @@ metadata:
    - [ ] Confirm `{goal_path}/_goal.md` exists with Glob tool
      - If not: `Skill(name="solera-write-goal", args={"project_path": "{project_path}", "year": "{year}", "phase_id": "{phase_id}", "goal_id": "{goal_id}", "goal_name": "{goal_name}", "goal_type": "{goal_type 또는 기본값 Feature}"})`
        (ask user to confirm `goal_name` if it differs from `goal_id`) **(BLOCKING: Goal 생성 완료 후 재개)**
-   - [ ] Create `epic-{epic_name}` branch (from Goal branch)
+   - [ ] Create `epics/{epic_name}` branch (from Goal branch)
    - [ ] Create `{goal_path}/epics/{epic_name}/` folder
    - [ ] Create _epic.md draft — ref: [assets/epic-template.md](assets/epic-template.md)
    - [ ] Status → 🔄

@@ -17,29 +17,29 @@ Solera structures work as Phase → Goal → Epic → Story → Action Item, whe
 | Level | Branch name pattern | Created by |
 |---|---|---|
 | Trunk | `main` or `dev` | Team (pre-existing) |
-| Epic | `epic-[name]` | Solera automatically on Epic start |
-| Story | `epic-[name]/story-[ID]-[name]` | Solera automatically on Story start |
+| Epic | `epics/[name]` | Solera automatically on Epic start |
+| Story | `epics-[name]/story-[ID]-[name]` | Solera automatically on Story start |
 | Action Item | commit only, no branch | Solera (committed to Story branch) |
 
 ### Merge direction
 
 ```
 main / dev
-  └── epic-auth                        ← squash merge via PR (solera-create-pr skill)
-        ├── epic-auth/story-1-login    ← squash merge into epic-auth (solera-create-pr skill)
-        └── epic-auth/story-2-logout   ← squash merge into epic-auth (solera-create-pr skill)
+  └── epics/auth                        ← squash merge via PR (solera-create-pr skill)
+        ├── epics-auth/story-1-login   ← squash merge into epics/auth
+        └── epics-auth/story-2-logout  ← squash merge into epics/auth
 ```
 
 ### What Solera does automatically vs. what you do
 
 ```mermaid
 flowchart TD
-    A[You: start Epic in Claude] --> B[Solera: git checkout -b epic-auth from dev]
+    A[You: start Epic in Claude] --> B[Solera: git checkout -b epics/auth from dev]
     B --> C[You: start Story in Claude]
-    C --> D[Solera: git checkout -b epic-auth/story-1-login from epic-auth]
+    C --> D[Solera: git checkout -b epics-auth/story-1-login from epics/auth]
     D --> E[Solera: commits Action Items to Story branch]
     E --> F{Story done?}
-    F -->|Yes| G[Solera: squash merge Story into epic-auth]
+    F -->|Yes| G[Solera: squash merge Story into epics/auth]
     G --> H{All Stories done?}
     H -->|No| C
     H -->|Yes| I[You: say solera-create-pr to Claude]
@@ -86,7 +86,7 @@ session token invalidation is done, redirect after logout is not yet implemented
 - Step: Execute (2 of 4 Action Items committed)
 
 ## Completed this session
-- story-1-login: squash-merged into epic-auth
+- story-1-login: squash-merged into epics/auth
 - Action items: add login endpoint, add JWT issuance, add session middleware
 
 ## Next steps
@@ -96,12 +96,12 @@ session token invalidation is done, redirect after logout is not yet implemented
 
 ## Key decisions
 - Used httpOnly cookies instead of localStorage for token storage (XSS mitigation)
-- Skipped refresh token for now — deferred to epic-auth-v2
+- Skipped refresh token for now — deferred to epics/auth-v2
 
 ## Reference files
 - src/auth/logout.py
 - tests/test_auth.py
-- epic-auth/story-2-logout (current branch)
+- epics-auth/story-2-logout (current branch)
 
 ## Caveats
 - `pytest tests/test_auth.py` has one flaky test (`test_concurrent_logout`) — skip it for now with `-k "not test_concurrent_logout"`
@@ -144,11 +144,11 @@ or, equivalently:
 
 1. Verifies all Stories in the Epic are ✅
 2. Verifies build and tests pass (`uv run pytest` or equivalent)
-3. Runs: `gh pr create --base dev --head epic-auth --title "[Epic] auth: add OAuth login and logout" --body "..."`
+3. Runs: `gh pr create --base dev --head epics/auth --title "[Epic] auth: add OAuth login and logout" --body "..."`
 4. PR body includes: Stories list with status, key changes, test results
 5. Monitors the PR for review comments
 6. Applies requested fixes as additional commits on the Epic branch
-7. Once approved: squash-merges into `dev`, deletes `epic-auth`
+7. Once approved: squash-merges into `dev`, deletes `epics/auth`
 
 ### What the reviewer does in GitHub
 
@@ -168,8 +168,8 @@ Two contributors can work on separate Epics at the same time because each Epic i
 
 **Example:**
 
-- Contributor A: working on `epic-auth` (login / logout)
-- Contributor B: working on `epic-dashboard` (metrics UI)
+- Contributor A: working on `epics/auth` (login / logout)
+- Contributor B: working on `epics/dashboard` (metrics UI)
 
 Both branches diverge from `dev` independently. Neither blocks the other.
 
@@ -183,7 +183,7 @@ Both branches diverge from `dev` independently. Neither blocks the other.
 Whichever Epic finishes first runs `solera-create-pr` and merges first. The other Epic may need to rebase onto `dev` afterward if there are conflicts:
 
 ```bash
-git checkout epic-dashboard
+git checkout epics/dashboard
 git rebase dev
 ```
 
@@ -200,4 +200,4 @@ Solera does not auto-rebase — do this manually before running `solera-create-p
   - Commit `HANDOFF.md` if the team wants shared session state (single active contributor at a time)
 - [ ] Add Epic branch protection: require PR review before merging into `dev`/`main`
 - [ ] Run `uv run pytest` (or equivalent) locally before triggering `solera-create-pr` — Solera checks this but catching it early saves a round-trip
-- [ ] Name Epics and Stories consistently: lowercase, hyphen-separated, no spaces (`epic-user-auth`, not `epic-UserAuth`)
+- [ ] Name Epics and Stories consistently: lowercase, hyphen-separated, no spaces (`epics/user-auth`, not `epics/UserAuth`)

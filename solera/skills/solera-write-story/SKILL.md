@@ -60,7 +60,7 @@ metadata:
    - [ ] Confirm `{epic_path}/_epic.md` exists with Glob tool
      - If not: invoke Skill tool `skill="solera-write-epic"` **(BLOCKING: Epic 생성 완료 후 재개)**
    - [ ] Check for previous Story retrospectives: `Glob {epic_path}/*/RETRO.md` — if any exist, read the most recent one and apply any "AI Improvements" noted there
-   - [ ] Create `story-{story_id}-{story_name}` branch (from Epic branch)
+   - [ ] Create `epics-{epic_name}/story-{story_id}-{story_name}` branch (from Epic branch)
    - [ ] Create `{epic_path}/{story_id}-{story_name}/` folder
    - [ ] Status → 🔄
 

@@ -81,7 +81,7 @@ Defines the decomposition unit of an Epic, covering both User Stories and Techni
 - [ ] Assign Skill per Action Item: match task content against scanned skill triggers; set `-` if no match
 - [ ] Define dependencies between Action Items (depends_on)
 - [ ] Allocate phases (Action Items that can run in parallel belong to the same Phase)
-- [ ] Create `epic-[name]/story-[ID]-[name]` branch (from Epic branch)
+- [ ] Create `epics-[name]/story-[ID]-[name]` branch (from Epic branch)
 
 ### Step 2. Execute
 <!-- Execute Action Items in Phase N in parallel. Next Phase starts after previous Phase is complete -->
