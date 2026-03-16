@@ -13,7 +13,7 @@
 | End session, wrap up | `solera-handoff` |
 | New user type mentioned, add persona | `solera-write-identity` |
 | Start a new Goal | `solera-write-goal` (check team-process.md `workflow_gates` first) |
-| Publish / share artifacts | `solera-transition-catalog` |
+| Publish / share artifacts | `solera-publish-artifacts` |
 
 ## Git Rules
 

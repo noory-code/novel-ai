@@ -1,5 +1,5 @@
 ---
-name: solera-transition-catalog
+name: solera-publish-artifacts
 description: Mark a Goal as done — move all artifacts to the published catalog and update cross-references.
 metadata:
   version: "4.0.0"
@@ -114,10 +114,10 @@ applied-version: [Phase]-[Goal number]  # e.g., 2026-P1-G01
 
 ## Example
 
-### 스킬 호출
+### Skill invocation
 
 ```python
-Skill(name="solera-transition-catalog", args={
+Skill(name="solera-publish-artifacts", args={
   "project_path": "/Users/myname/workspace/myapp",
   "phase_id": "2026-P1-foundation",
   "goal_id": "G1",
@@ -178,14 +178,14 @@ Skill(name="solera-transition-catalog", args={
 
 | Failure point | Condition | Recovery procedure | Exit behavior |
 |---------------|-----------|-------------------|---------------|
-| 호출 시점 불일치 | Goal Create 또는 Epic Wrap-up이 아닌 시점에 호출 | 현재 상태 출력, 올바른 호출 시점 안내 | 스킬 중단, 올바른 시점에 재호출 |
-| artifacts 폴더 없음 | `{goal_path}/artifacts/` 없음 | 경고 메시지 출력, 전환 대상 없음으로 처리 | 스킬 완료 (전환 불필요) |
-| 매핑 테이블 외 파일 발견 | artifacts에 매핑 테이블에 없는 타입 존재 | 제외 파일 목록 출력, artifacts에 남김 | 계속 진행 (매핑된 파일만 이동) |
-| catalog 디렉토리 없음 | `workspace/catalog/published/` 없음 | `mkdir -p` 로 디렉토리 생성 | 디렉토리 생성 후 계속 진행 |
-| 파일 이동 실패 | 권한 오류 또는 경로 문제 | 실패한 파일 목록 출력, 권한 확인 요청 | 스킬 중단, 수동 처리 후 재개 |
-| 링크 업데이트 실패 | 상대 경로 변환 오류 | 수정 필요 링크 목록 출력, 수동 수정 요청 | Verification 단계 중단, 수동 수정 후 재개 |
-| frontmatter 파싱 실패 | YAML 형식 오류 | 해당 파일 건너뛰고 경고 출력 | 계속 진행 (frontmatter 업데이트는 선택 사항) |
-| artifacts 폴더 비지 않음 | 매핑되지 않은 파일 남음 | 남은 파일 목록 출력, 의도적인지 확인 요청 | 스킬 완료 (검증 경고 포함) |
+| Invocation timing mismatch | Invoked outside of Goal Create or Epic Wrap-up | Display current state, guide to correct invocation timing | Skill halted, re-invoke at correct timing |
+| artifacts folder missing | `{goal_path}/artifacts/` not found | Display warning message, treat as no transition targets | Skill complete (no transition needed) |
+| Files outside mapping table | Artifact types not in the mapping table exist | Display excluded file list, leave in artifacts | Continue (move only mapped files) |
+| catalog directory missing | `workspace/catalog/published/` not found | Create directory with `mkdir -p` | Continue after directory creation |
+| File move failed | Permission error or path issue | Display failed file list, request permission check | Skill halted, resume after manual resolution |
+| Link update failed | Relative path conversion error | Display links requiring fix, request manual correction | Verification step halted, resume after manual fix |
+| Frontmatter parsing failed | YAML format error | Skip the file and display warning | Continue (frontmatter update is optional) |
+| artifacts folder not empty | Unmapped files remain | Display remaining file list, ask if intentional | Skill complete (with verification warning) |
 
 ## Completion Checklist
 

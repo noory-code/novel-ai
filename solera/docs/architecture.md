@@ -2,7 +2,7 @@
 
 ## Overview
 
-Solera is built around three interlocking principles. First, every skill is a thin orchestrator: it validates preconditions, delegates work to lower-level skills, and records outcomes — it contains no business logic of its own. Second, every work item (Phase, Goal, Epic, Story, Action Item) owns its own procedure through a `## Workflow` section in its template; the `solera-manage-workflow` skill reads and executes those steps but never defines them. Third, SSOT is enforced structurally: `progress.md` is the single canonical source for the project's current position in the hierarchy, and the `catalog/published/` tree is the single authoritative location for promoted artifacts. Duplication is prevented by convention and by the `solera-transition-catalog` skill, which incrementally moves artifacts into the shared catalog — Goal-level artifacts (service-map, persona) after Goal Create, and Epic-level artifacts (use-case, concept) at each Epic Wrap-up.
+Solera is built around three interlocking principles. First, every skill is a thin orchestrator: it validates preconditions, delegates work to lower-level skills, and records outcomes — it contains no business logic of its own. Second, every work item (Phase, Goal, Epic, Story, Action Item) owns its own procedure through a `## Workflow` section in its template; the `solera-manage-workflow` skill reads and executes those steps but never defines them. Third, SSOT is enforced structurally: `progress.md` is the single canonical source for the project's current position in the hierarchy, and the `catalog/published/` tree is the single authoritative location for promoted artifacts. Duplication is prevented by convention and by the `solera-publish-artifacts` skill, which incrementally moves artifacts into the shared catalog — Goal-level artifacts (service-map, persona) after Goal Create, and Epic-level artifacts (use-case, concept) at each Epic Wrap-up.
 
 ---
 
@@ -17,7 +17,7 @@ flowchart TD
     WS[solera-write-story]
     WAI[solera-execute-action-item]
     WPR[solera-create-pr]
-    CT[solera-transition-catalog]
+    CT[solera-publish-artifacts]
     HO[solera-handoff]
     DEV[dev skills]
 
@@ -96,7 +96,7 @@ Each level of the hierarchy corresponds to a progressively shorter time scale an
             └── concept/
 ```
 
-The `artifacts/` directory under each Goal is the in-progress working area. The `catalog/published/` subtree is the SSOT for all completed artifacts across all Goals. No artifact should exist in both locations simultaneously; `solera-transition-catalog` enforces this by moving (not copying) files. Promotion happens incrementally: Goal-level artifacts (service-map, persona, journey) after Goal Create, and Epic-level artifacts (use-case, concept) at each Epic Wrap-up.
+The `artifacts/` directory under each Goal is the in-progress working area. The `catalog/published/` subtree is the SSOT for all completed artifacts across all Goals. No artifact should exist in both locations simultaneously; `solera-publish-artifacts` enforces this by moving (not copying) files. Promotion happens incrementally: Goal-level artifacts (service-map, persona, journey) after Goal Create, and Epic-level artifacts (use-case, concept) at each Epic Wrap-up.
 
 ---
 

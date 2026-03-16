@@ -6,7 +6,7 @@ metadata:
   category: meta
   type: reference
   style: guide
-  triggers: [what is solera, solera help, solera skills, how to use solera, solera get started, solera 뭐야, solera 사용법, solera 어떻게 써, solera 스킬 목록, solera 도움말]
+  triggers: [what is solera, solera help, solera skills, how to use solera, solera get started]
   uses: []
 ---
 
@@ -39,7 +39,7 @@ Each session ends with an auto-updated `HANDOFF.md`, so the next contributor (or
 |-------|---------------|----------|
 | `solera-manage-workflow` | "What should I work on", "show current progress" | `progress.md` updates; reads and executes each work item's Workflow |
 | `solera-create-pr` | "Open a PR", "merge the Epic" | GitHub PR via `gh pr create`, squash merge, branch deletion |
-| `solera-transition-catalog` | "Wrap up Goal", "archive completed Goal" | Artifacts moved from `artifacts/` to `published/` |
+| `solera-publish-artifacts` | "Wrap up Goal", "archive completed Goal" | Artifacts moved from `artifacts/` to `published/` |
 | `solera-handoff` | "End session", or automatic on session end | `HANDOFF.md` with full session context |
 
 ### Meta (system skills)

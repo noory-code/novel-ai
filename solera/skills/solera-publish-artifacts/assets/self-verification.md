@@ -1,6 +1,6 @@
-# Validation: solera-transition-catalog
+# Validation: solera-publish-artifacts
 
-> This file defines the unique validation rules for the solera-transition-catalog skill.
+> This file defines the unique validation rules for the solera-publish-artifacts skill.
 
 ## Structural
 

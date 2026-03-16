@@ -1,1 +1,1 @@
-"""스킬 검증 테스트 패키지"""
+"""Skill validation test package"""

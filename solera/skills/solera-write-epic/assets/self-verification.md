@@ -26,5 +26,5 @@ semantic:
   - {id: C-008, name: "Prerequisite Goal context", type: content_contains, target: SKILL.md, patterns: ["_goal.md", "published/identity/mission.md"]}
   - {id: C-009, name: "Wrap-up procedure exists", type: content_contains, target: SKILL.md, patterns: ["Wrap-up", "RETRO.md", "solera-create-pr"]}
   - {id: C-010, name: "Skills used table", type: section_exists, target: SKILL.md, section: "## Skills Used"}
-  - {id: C-011, name: "solera-transition-catalog in Wrap-up", type: content_contains, target: assets/epic-template.md, patterns: ["solera-transition-catalog"]}
+  - {id: C-011, name: "solera-publish-artifacts in Wrap-up", type: content_contains, target: assets/epic-template.md, patterns: ["solera-publish-artifacts"]}
 ```

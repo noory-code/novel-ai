@@ -22,7 +22,7 @@ semantic:
   - {id: C-004, name: "retro.md exists", type: file_exists, paths: [assets/retro.md]}
   - {id: C-005, name: "retro ref exists", type: content_contains, target: assets/goal-template.md, patterns: ["retro.md"]}
   - {id: C-006, name: "Status transition included", type: content_contains, target: assets/goal-template.md, patterns: ["Status →"]}
-  - {id: C-007, name: "solera-transition-catalog reference", type: content_contains, target: assets/goal-template.md, patterns: ["solera-transition-catalog"]}
+  - {id: C-007, name: "solera-publish-artifacts reference", type: content_contains, target: assets/goal-template.md, patterns: ["solera-publish-artifacts"]}
   - {id: C-008, name: "Enabler branch", type: content_contains, target: assets/goal-template.md, patterns: ["Enabler"]}
   - {id: C-009, name: "Input table", type: content_contains, target: SKILL.md, patterns: ["project_path"]}
   - {id: C-010, name: "Wrap-up procedure", type: content_contains, target: SKILL.md, patterns: ["Wrap-up"]}

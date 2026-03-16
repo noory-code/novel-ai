@@ -8,7 +8,7 @@ metadata:
   style: procedural
   execution_model: sequential
   triggers: [what should I work on, mark work complete, show current progress, update progress, write a retrospective, next task]
-  uses: [solera-write-identity, solera-write-phase, solera-write-goal, solera-write-epic, solera-write-story, solera-execute-action-item, solera-transition-catalog]
+  uses: [solera-write-identity, solera-write-phase, solera-write-goal, solera-write-epic, solera-write-story, solera-execute-action-item, solera-publish-artifacts]
 ---
 
 # Workflow Manage (Supervisor)
@@ -46,14 +46,14 @@ metadata:
 
 1. Read the target work item (_goal.md | _epic.md | _story.md)
 2. Extract the `## Workflow` section
-3. Execute each step of the Workflow in order **(BLOCKING: 각 단계를 순차적으로 실행)**
-4. If document writing is required, invoke write-* skills **(BLOCKING: 스킬 완료 후 다음 단계 진행)**
+3. Execute each step of the Workflow in order **(BLOCKING: execute each step sequentially)**
+4. If document writing is required, invoke write-* skills **(BLOCKING: proceed to next step after skill completes)**
 5. Update progress.md
 
 ### complete — Complete work item
 
 1. Read the target work item
-2. Execute the latter steps of `## Workflow` (completion check, status change, etc.) **(BLOCKING: 순차적으로 실행)**
+2. Execute the latter steps of `## Workflow` (completion check, status change, etc.) **(BLOCKING: execute sequentially)**
 3. If the item is an Epic or Goal, write RETRO.md
 4. Update progress.md
 5. Decide the next work item
@@ -76,7 +76,7 @@ metadata:
 |------|-------|
 | **Document writing** | solera-write-identity, solera-write-phase, solera-write-goal, solera-write-epic, solera-write-story, solera-execute-action-item |
 | **Execution supervision** | solera-manage-workflow |
-| **Artifact promotion** | solera-transition-catalog (invoked at Goal Create and Epic Wrap-up) |
+| **Artifact promotion** | solera-publish-artifacts (invoked at Goal Create and Epic Wrap-up) |
 
 ## Supervision Principles
 
@@ -103,14 +103,14 @@ metadata:
 
 | Failure point | Condition | Recovery procedure | Exit behavior |
 |---------------|-----------|-------------------|---------------|
-| progress.md 없음 | `{project}/progress.md` 파일 없음 | [assets/progress.md](assets/progress.md) 템플릿으로 초기화 | 파일 생성 후 계속 진행 |
-| work_item 파일 없음 | 지정된 _goal.md/_epic.md/_story.md 없음 | 오류 메시지 출력, 파일 경로 확인 요청 | 스킬 중단, 올바른 경로 입력 후 재개 |
-| Workflow 섹션 없음 | work item에 `## Workflow` 섹션 없음 | 기본 workflow 패턴 적용 (lifecycle.md 참조) | 계속 진행 (기본 패턴 사용) |
-| write-* 스킬 호출 실패 | 하위 스킬 호출 오류 | 실패한 스킬 이름 출력, 수동 실행 요청 | 해당 단계 중단, 수동 처리 후 재개 |
-| 상태 불일치 | Story ✅인데 Epic이 🔄 | 불일치 항목 출력, 상태 동기화 요청 | 다음 작업 결정 전 중단, 수동 동기화 후 재개 |
-| 다음 작업 없음 | 모든 작업 완료, next 호출 시 | "모든 작업 완료" 메시지 출력 | 스킬 정상 완료 |
-| RETRO.md 작성 실패 | Epic/Goal 완료 시 회고 작성 오류 | 템플릿 경로 확인, 수동 작성 요청 | complete 단계 중단, 수동 작성 후 재개 |
-| progress.md 업데이트 실패 | 파일 쓰기 권한 오류 | 권한 확인, `chmod 644 progress.md` 안내 | 스킬 중단, 권한 수정 후 재시도 |
+| progress.md missing | `{project}/progress.md` file not found | Initialize from [assets/progress.md](assets/progress.md) template | Continue after file creation |
+| work_item file missing | Specified _goal.md/_epic.md/_story.md not found | Display error message, request file path verification | Skill halted, resume after correct path is provided |
+| Workflow section missing | Work item has no `## Workflow` section | Apply default workflow pattern (ref: lifecycle.md) | Continue (using default pattern) |
+| write-* skill invocation failed | Sub-skill invocation error | Display failed skill name, request manual execution | Step halted, resume after manual resolution |
+| Status mismatch | Story is ✅ but Epic is 🔄 | Display mismatched items, request status sync | Halted before next work decision, resume after manual sync |
+| No next work | All work complete, next invoked | Display "All work complete" message | Skill completes normally |
+| RETRO.md writing failed | Retrospective writing error on Epic/Goal completion | Verify template path, request manual writing | Complete step halted, resume after manual writing |
+| progress.md update failed | File write permission error | Verify permissions, instruct `chmod 644 progress.md` | Skill halted, retry after permission fix |
 
 ## Completion Checklist
 

@@ -1,66 +1,66 @@
-# 스킬 검증 테스트
+# Skill Validation Tests
 
-## 개요
+## Overview
 
-이 테스트 스위트는 Solera 워크플로우 스킬의 파라미터 검증을 자동화합니다.
+This test suite automates parameter validation for Solera workflow skills.
 
-## 검증 항목
+## Validation Items
 
-### 1. 필수 파라미터 검증
-- 스킬이 필수 파라미터 없이 호출되는 것을 방지
+### 1. Required Parameter Validation
+- Prevents skills from being invoked without required parameters
 - solera-write-story: project_path, phase_id, goal_id, epic_name, story_id, story_name
 - solera-execute-action-item: epic_name, story_id, action_item_id, action_item_name
 
-### 2. 파라미터 형식 검증
-- phase_id: `YYYY-PX-name` (예: 2026-P1-foundation)
-- goal_id: `GX-name` (예: G1-search-liquor)
-- story_id: `US-NNN` 또는 `TS-NNN` (예: US-001)
-- action_item_id: `ACT-NNN` (예: ACT-001)
+### 2. Parameter Format Validation
+- phase_id: `YYYY-PX-name` (e.g., 2026-P1-foundation)
+- goal_id: `GX-name` (e.g., G1-search-liquor)
+- story_id: `US-NNN` or `TS-NNN` (e.g., US-001)
+- action_item_id: `ACT-NNN` (e.g., ACT-001)
 
-### 3. Prerequisites 검증
-- 스킬 실행 전 필수 조건 확인
-- solera-write-story: mission.md, _epic.md 존재 여부
-- solera-execute-action-item: _story.md 존재, 의존 ACT 완료 여부
+### 3. Prerequisites Validation
+- Verifies required conditions before skill execution
+- solera-write-story: mission.md exists, _epic.md exists
+- solera-execute-action-item: _story.md exists, dependent ACTs complete
 
-### 4. 출력 검증
-- 스킬이 예상된 출력을 생성하는지 확인
+### 4. Output Validation
+- Verifies that skills produce expected outputs
 - solera-write-story: _story.md, ACT-NNN-{name}.md, RETRO.md
-- solera-execute-action-item: 코드 변경, git commit, 상태 업데이트
+- solera-execute-action-item: code changes, git commit, status update
 
-### 5. 커밋 메시지 형식 검증
-- 형식: `[epic-name][US-NNN][ACT-NNN] title`
-- 예: `[01-auth][US-001][ACT-001] 로그인 폼 생성`
+### 5. Commit Message Format Validation
+- Format: `[epic-name][US-NNN][ACT-NNN] title`
+- Example: `[01-auth][US-001][ACT-001] Create login form`
 
-## 실행 방법
+## How to Run
 
-### 직접 실행
+### Direct execution
 ```bash
 python3 tests/test_skill_validation.py
 ```
 
-### pytest로 실행 (권장)
+### Run with pytest (recommended)
 ```bash
 pytest tests/test_skill_validation.py -v
 ```
 
-### 모든 테스트 실행
+### Run all tests
 ```bash
 pytest tests/ -v
 ```
 
-## 테스트 추가
+## Adding Tests
 
-새로운 스킬을 추가할 때는 `test_skill_validation.py`에 해당 스킬의 검증 테스트를 추가하세요:
+When adding a new skill, add validation tests in `test_skill_validation.py`:
 
-1. `test_{skill_name}_required_parameters()` - 필수 파라미터
-2. `test_{skill_name}_parameter_formats()` - 형식 검증
+1. `test_{skill_name}_required_parameters()` - Required parameters
+2. `test_{skill_name}_parameter_formats()` - Format validation
 3. `test_{skill_name}_prerequisites()` - Prerequisites
-4. `test_{skill_name}_expected_outputs()` - 출력 검증
+4. `test_{skill_name}_expected_outputs()` - Output validation
 
-## 의존성
+## Dependencies
 
 - Python 3.8+
-- pytest (선택사항, 더 나은 테스트 리포트를 위해 권장)
+- pytest (optional, recommended for better test reporting)
 
 ```bash
 pip install pytest

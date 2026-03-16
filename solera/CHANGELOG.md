@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.9.0] — 2026-03-16
+
+### Changed (BREAKING)
+- **Skill rename**: `solera-transition-catalog` → `solera-publish-artifacts` across all
+  17 referencing files (SKILL.md, assets, docs, README). Directory renamed accordingly.
+
+### Added
+- **workflow_gates enforcement**: `solera-write-epic` and `solera-write-story` now read
+  `team-process.md` and check gates before proceeding:
+  - `epic.use_case` gate checked before Use Case step
+  - `epic.concept` gate checked before Concept step
+  - `story.execute` gate checked before Execute step
+  - `story.wrap_up` gate checked before Wrap-up step
+  - `solera-write-goal` also enforces unmet gates (blocking)
+  - Previously gates were defined in team-process.md but never enforced (dead code)
+
+### Fixed
+- **Translate all remaining Korean to English**: Error Handling tables in 7 SKILL.md files,
+  Examples sections in write-story and write-epic, 3 test files (test_skill_validation.py,
+  test_handoff_hook.py, tests/README.md), and Korean trigger phrases removed from solera-help
+
+---
+
 ## [2.8.1] — 2026-03-16
 
 ### Fixed

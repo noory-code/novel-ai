@@ -38,7 +38,7 @@
 - [ ] Write Journey (rough): define the steps sequence for each Persona
 - [ ] Decompose Epics: map to Journeys and assign numbers (01, 02, ...)
 - [ ] Write `_goal.md` with the Journey table, Epics table, and completion criteria
-- [ ] solera-transition-catalog invoke (promote Goal-level artifacts: service-map, persona, journey → published/)
+- [ ] solera-publish-artifacts invoke (promote Goal-level artifacts: service-map, persona, journey → published/)
 
 ### Step 2. Execute
 <!-- Repeat the block below for each Epic in the Epics table -->

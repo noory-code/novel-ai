@@ -89,7 +89,7 @@ Artifacts are promoted incrementally as work completes, not in bulk at Goal comp
 - **Working:** `workspace/phase/{phase}/goals/{goal}/artifacts/`
 - **Promoted:** `workspace/catalog/published/{type}/`
 
-Promotion happens at two points via `solera-transition-catalog`:
+Promotion happens at two points via `solera-publish-artifacts`:
 
 1. **After Goal Create** — Goal-level artifacts (service-map, persona, journey) are promoted immediately, making them available for the first Epic
 2. **At each Epic Wrap-up** — Epic-level artifacts (use-case, concept) are promoted before the PR is created

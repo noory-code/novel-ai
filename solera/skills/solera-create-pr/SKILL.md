@@ -46,7 +46,7 @@ Resolve the target branch using this priority order:
 1. **Prepare PR**
    - [ ] Confirm all Stories in the Epic are ✅
    - [ ] **Artifact promotion check**: Scan `{goal_path}/artifacts/` for Epic-level directories: `use-case`, `concept`, `erd`, `dto`, `api-spec`
-     - If any of these directories contain at least one file: **BLOCK** — list the un-promoted files and output: "Run `solera-transition-catalog` before creating the PR. Epic-level artifacts must be promoted to `published/` first."
+     - If any of these directories contain at least one file: **BLOCK** — list the un-promoted files and output: "Run `solera-publish-artifacts` before creating the PR. Epic-level artifacts must be promoted to `published/` first."
      - If none of these directories contain files (or directories do not exist): proceed
    - [ ] **Resolve target_branch** per Target Branch Resolution above
    - [ ] Confirm build and tests pass
@@ -83,16 +83,16 @@ Resolve the target branch using this priority order:
 
 | Failure point | Condition | Recovery procedure | Exit behavior |
 |---------------|-----------|-------------------|---------------|
-| Stories 미완료 | Epic의 일부 Story 상태가 ✅ 아님 | 미완료 Story 목록 출력, 완료 요청 | 스킬 중단, 모든 Story 완료 후 재개 |
-| Artifacts 미승격 | `{goal_path}/artifacts/`에 Epic-level 파일 존재 (use-case, concept, erd, dto, api-spec) | 미승격 파일 목록 출력, `solera-transition-catalog` 실행 안내 | 스킬 중단, promotion 완료 후 재개 |
-| target_branch 미결정 | 파라미터 없음, config 없음, 사용자 미응답 | 사용자에게 target branch 재질문 | Prepare PR 단계 대기, 응답 후 진행 |
-| 빌드/테스트 실패 | Epic 브랜치에서 빌드 또는 테스트 실패 | 오류 출력, 수정 요청 | 스킬 중단, 수정 후 재개 |
-| 브랜치 충돌 | target_branch와 충돌 발생 | 충돌 파일 목록 출력, rebase 후 재시도 요청 | Prepare 단계 중단, rebase 후 재개 |
-| gh CLI 미설치 | `gh` 명령어 없음 | GitHub CLI 설치 안내 출력 | 스킬 중단, 설치 후 재개 |
-| PR 생성 실패 | gh pr create 오류 (권한, 인증 등) | gh 오류 메시지 출력, 인증 확인 요청 | Create PR 단계 중단, 인증 후 재시도 |
-| CI 실패 | PR의 CI 체크 실패 | 실패한 CI 작업 출력, 수정 요청 | Handle review 단계 중단, 수정 커밋 추가 후 재확인 |
-| Merge 실패 | squash merge 오류 | 오류 메시지 출력, 수동 merge 요청 | Merge 단계 중단, 수동 처리 후 확인 |
-| 브랜치 삭제 실패 | 소스 브랜치 삭제 실패 | 경고 메시지 출력, 수동 삭제 요청 | 스킬 완료 (삭제는 필수 아님), 수동 정리 권장 |
+| Stories incomplete | Some Stories in the Epic are not ✅ | Display incomplete Story list, request completion | Skill halted, resume after all Stories complete |
+| Artifacts not promoted | Epic-level files exist in `{goal_path}/artifacts/` (use-case, concept, erd, dto, api-spec) | Display un-promoted file list, instruct to run `solera-publish-artifacts` | Skill halted, resume after promotion complete |
+| target_branch unknown | Parameter not provided, no config, user unresponsive | Re-ask user for target branch | Wait at Prepare PR step, proceed after response |
+| Build/test failed | Build or test failure on Epic branch | Display error message, request fix | Skill halted, resume after fix |
+| Branch conflict | Conflict detected against target_branch | Display conflicting file list, request rebase and retry | Prepare step halted, resume after rebase |
+| gh CLI not installed | `gh` command missing | Display GitHub CLI installation instructions | Skill halted, resume after installation |
+| PR creation failed | gh pr create error (permissions, auth, etc.) | Display gh error message, request auth verification | Create PR step halted, retry after auth |
+| CI failed | PR CI check failed | Display failed CI jobs, request fix | Handle review step halted, re-verify after fix commit |
+| Merge failed | Squash merge error | Display error message, request manual merge | Merge step halted, confirm after manual resolution |
+| Branch deletion failed | Source branch deletion failed | Display warning message, request manual deletion | Skill complete (deletion is not required), recommend manual cleanup |
 
 ## Completion Checklist
 

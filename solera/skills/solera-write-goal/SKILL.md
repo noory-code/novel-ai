@@ -8,7 +8,7 @@ metadata:
   style: procedural
   execution_model: sequential
   triggers: [write a Goal, start a Goal, plan a Goal, break Goal into Epics, elaborate on a Goal]
-  uses: [solera-write-identity, solera-write-epic, solera-transition-catalog]
+  uses: [solera-write-identity, solera-write-epic, solera-publish-artifacts]
 ---
 
 # Writing Goal
@@ -50,7 +50,7 @@ metadata:
 |-------|---------|------|
 | `solera-write-identity` | Create identity if it does not exist | Setup |
 | `solera-write-epic` | Elaborate each Epic and decompose it into Stories | Execute |
-| `solera-transition-catalog` | Promote Goal-level artifacts (service-map, persona, journey) to published/ | Create (after Step 4) |
+| `solera-publish-artifacts` | Promote Goal-level artifacts (service-map, persona, journey) to published/ | Create (after Step 4) |
 
 ## Procedure
 
@@ -73,13 +73,16 @@ metadata:
 
 4. **Journey, Epic decomposition, and _goal.md**
    - [ ] Read `{project_path}/workspace/team-process.md` if it exists — check `workflow_gates` for this Goal's prerequisites
+   - [ ] If any `workflow_gates.*` condition is set and not met:
+     → Display the unmet gate conditions to user
+     → **(BLOCKING: skill pauses until all relevant conditions are fulfilled)**
    - [ ] **Add** a Journey for each relevant Persona for this Goal (for Enablers, write Steps only, briefly)
      - File naming: `artifacts/journey/{goal_id}-{persona_name}.md`
      - **Never modify existing journey files** — each Goal adds new journey files (OCP: open for extension, closed for modification)
      - If a prior journey exists for the same persona, the new file extends it with additional steps
    - [ ] Map Journey steps to Epics and assign numbers (01, 02, ...)
    - [ ] Write _goal.md — ref: [assets/goal-template.md](assets/goal-template.md)
-   - [ ] Invoke solera-transition-catalog to promote Goal-level artifacts (service-map, persona, journey) to published/ **(BLOCKING: promotion must complete before Execute)**
+   - [ ] Invoke solera-publish-artifacts to promote Goal-level artifacts (service-map, persona, journey) to published/ **(BLOCKING: promotion must complete before Execute)**
 
 5. **Execute**
    - [ ] Invoke solera-write-epic for each Epic (Setup → Create → Execute → Wrap-up) **(BLOCKING: wait for each Epic to complete; execute sequentially)**
@@ -115,7 +118,7 @@ metadata:
 | goal_type unclear | Cannot determine Feature/Enabler | Default to Feature, ask user to confirm | Adjust if user overrides |
 | Folder creation failed | Permission error or path issue | Display error, ask user to check permissions | Skill halted, return error state |
 | solera-write-epic failed | Sub-skill invocation failed | Log failed Epic, notify user | Skip that Epic and continue, or halt |
-| solera-transition-catalog failed (Create) | Goal-level artifact promotion failed | List failed files, request manual move | Create step halted, resume after manual fix |
+| solera-publish-artifacts failed (Create) | Goal-level artifact promotion failed | List failed files, request manual move | Create step halted, resume after manual fix |
 | artifacts/ not empty (Wrap-up) | Unpromoted files remain from Epics | List remaining files, request manual check | Show warning, continue |
 
 ## Examples
@@ -222,7 +225,7 @@ phase/2026-P1-foundation/goals/G1-search-liquor/
 
 ```python
 # After Goal Create — promote Goal-level artifacts immediately
-Skill(name="solera-transition-catalog", args={
+Skill(name="solera-publish-artifacts", args={
   "project_path": "/Users/myname/workspace/myapp",
   "phase_id": "2026-P1-foundation",
   "goal_id": "G1",
@@ -246,7 +249,7 @@ Skill(name="solera-create-pr")
 # → PR from Epic branch to Goal branch
 
 # Repeat for Epic 02, 03...
-# (solera-transition-catalog promotes Epic-level artifacts at each Epic Wrap-up)
+# (solera-publish-artifacts promotes Epic-level artifacts at each Epic Wrap-up)
 ```
 
 #### Final output state
@@ -263,7 +266,7 @@ Skill(name="solera-create-pr")
 - [ ] If Feature with 2 or more Personas: persona-relationship.md created
 - [ ] Preliminary Journey written
 - [ ] Epic decomposition complete
-- [ ] (Create) solera-transition-catalog invoked for Goal-level artifacts
+- [ ] (Create) solera-publish-artifacts invoked for Goal-level artifacts
 - [ ] (Execute) solera-write-epic invoked for all Epics
 - [ ] (Wrap-up) artifacts/ is empty
 - [ ] (Wrap-up) RETRO.md written

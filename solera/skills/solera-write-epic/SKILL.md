@@ -8,7 +8,7 @@ metadata:
   style: procedural
   execution_model: sequential
   triggers: [write an Epic, plan an Epic, start an Epic, break Epic into Stories, define Epic scope, draft concept]
-  uses: [solera-write-story, solera-transition-catalog]
+  uses: [solera-write-story, solera-publish-artifacts]
 ---
 
 # Writing Epic
@@ -51,28 +51,33 @@ metadata:
 | Wrap-up | RETRO.md | Final | `{goal_path}/epics/{epic_name}/RETRO.md` |
 
 > `{goal_path}` = `{project_path}/phase/{phase_id}/goals/{goal_id}`
-> artifacts = intermediate outputs. Promoted to published/ via solera-transition-catalog at Epic Wrap-up.
+> artifacts = intermediate outputs. Promoted to published/ via solera-publish-artifacts at Epic Wrap-up.
 
 ## Skills Used
 
 | Skill | Purpose | Step |
 |-------|---------|------|
 | `solera-write-story` | Elaborate each Story and decompose it into Action Items | Execute |
-| `solera-transition-catalog` | Promote Epic-level artifacts (use-case, concept) to published/ | Wrap-up |
+| `solera-publish-artifacts` | Promote Epic-level artifacts (use-case, concept) to published/ | Wrap-up |
 | `solera-create-pr` | Create a PR upon Story/Epic completion | Execute, Wrap-up |
 
 ## Procedure
 
 1. **Setup**
    - [ ] Confirm `{goal_path}/_goal.md` exists with Glob tool
-     - If not: `Skill(name="solera-write-goal", args={"project_path": "{project_path}", "year": "{year}", "phase_id": "{phase_id}", "goal_id": "{goal_id}", "goal_name": "{goal_name}", "goal_type": "{goal_type 또는 기본값 Feature}"})`
-       (ask user to confirm `goal_name` if it differs from `goal_id`) **(BLOCKING: Goal 생성 완료 후 재개)**
+     - If not: `Skill(name="solera-write-goal", args={"project_path": "{project_path}", "year": "{year}", "phase_id": "{phase_id}", "goal_id": "{goal_id}", "goal_name": "{goal_name}", "goal_type": "{goal_type or default Feature}"})`
+       (ask user to confirm `goal_name` if it differs from `goal_id`) **(BLOCKING: resume after Goal creation completes)**
    - [ ] Create `epics/{epic_name}` branch (from Goal branch)
+   - [ ] Read `{project_path}/workspace/team-process.md` if it exists
+     - Extract `workflow_gates` section for gate checks in Steps 2–3
    - [ ] Create `{goal_path}/epics/{epic_name}/` folder
    - [ ] Create _epic.md draft — ref: [assets/epic-template.md](assets/epic-template.md)
    - [ ] Status → 🔄
 
 2. **Create Use Case** (Feature only, skip for Enabler)
+   - [ ] **Gate check**: If `workflow_gates.epic.use_case` is set and condition is not met:
+     → Display the required condition to user
+     → **(BLOCKING: skill pauses until condition is fulfilled)**
    - [ ] Define the Actor (person or system)
    - [ ] Define the Goal (measurable objective)
    - [ ] Write the basic flow (step by step)
@@ -80,6 +85,9 @@ metadata:
    - [ ] Ref: [assets/use-case.md](assets/use-case.md)
 
 3. **Create Concept**
+   - [ ] **Gate check**: If `workflow_gates.epic.concept` is set and condition is not met:
+     → Display the required condition to user
+     → **(BLOCKING: skill pauses until condition is fulfilled)**
    - [ ] Derive core concepts, then write or update domain.md — ref: [assets/concept.md](assets/concept.md)
    - [ ] Write a detailed description for each Entity — ref: [assets/entity.md](assets/entity.md)
    - [ ] Add a relationship diagram (Mermaid classDiagram)
@@ -94,7 +102,7 @@ metadata:
 
 5. **Execute**
    - [ ] Extract incomplete (⏳ or no status) Stories from the Stories table in `_epic.md`
-   - [ ] Execute each Story in order **(BLOCKING: 각 Story가 완료될 때까지 대기, 순차적으로 실행)**:
+   - [ ] Execute each Story in order **(BLOCKING: wait for each Story to complete, execute sequentially)**:
      ```python
      Skill(name="solera-write-story", args={
        "project_path": "{project_path}",
@@ -115,10 +123,10 @@ metadata:
 
 6. **Wrap-up**
    - [ ] Confirm all Story statuses ✅ (return to Step 5 if any are incomplete)
-   - [ ] Invoke solera-transition-catalog to promote Epic-level artifacts (use-case, concept) to published/ **(BLOCKING: 승격 완료 후 다음 단계 진행)**
+   - [ ] Invoke solera-publish-artifacts to promote Epic-level artifacts (use-case, concept) to published/ **(BLOCKING: proceed to next step after promotion completes)**
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set _epic.md status to ✅
-   - [ ] `Skill(name="solera-create-pr")` **(BLOCKING: PR 생성 완료 후 스킬 종료)** → create PR to parent branch (Goal)
+   - [ ] `Skill(name="solera-create-pr")` **(BLOCKING: skill ends after PR creation completes)** → create PR to parent branch (Goal)
 
 ## Directory Structure
 
@@ -154,21 +162,21 @@ Epics always live inside the goal directory. Never create a top-level `epics/` d
 
 | Failure point | Condition | Recovery procedure | Exit behavior |
 |---------------|-----------|-------------------|---------------|
-| mission.md 누락 | `published/identity/mission.md` 없음 | Glob으로 확인 후 Skill tool로 `solera-write-identity` 호출 | identity 생성 후 이 스킬 재개 |
-| _goal.md 누락 | `{goal_path}/_goal.md` 없음 | Glob으로 확인 후 Skill tool로 `solera-write-goal` 호출 (project_path, year, phase_id, goal_id, goal_name, goal_type 전달, 사용자에게 goal_name 확인) | Goal 생성 후 이 스킬 재개 |
-| phase_id 불명 | phase_id 파라미터 없음 | 사용자에게 phase_id 입력 요청 | 파라미터 입력될 때까지 중단 |
-| Epic 미할당 | _goal.md에 Epic 정보 없음 | 오류 메시지 출력, _goal.md 업데이트 요청 | 스킬 중단, 수동 수정 후 재개 |
-| 브랜치 생성 실패 | git 오류 (충돌, 권한 등) | git 오류 메시지 출력, 수동 해결 요청 | 스킬 중단, 해결 후 재개 |
-| domain.md 업데이트 충돌 | 기존 domain.md와 새 내용 충돌 | 병합 필요 영역 표시, 사용자에게 수동 병합 요청 | Concept 단계 중단, 수동 병합 후 재개 |
-| solera-write-story 실패 | 하위 스킬 호출 실패 | 실패한 Story 기록, 사용자에게 알림 | 해당 Story 건너뛰고 계속 진행 또는 중단 |
-| solera-transition-catalog 실패 | Epic-level artifacts 승격 실패 | 실패한 파일 목록 출력, 수동 이동 요청 | Wrap-up 중단, 수동 처리 후 재개 |
-| solera-create-pr 실패 | PR 생성 실패 | PR 생성 오류 출력, 수동 PR 생성 요청 | Wrap-up 중단, 수동 PR 생성 후 완료 |
+| mission.md missing | `published/identity/mission.md` not found | Verify with Glob, then invoke `solera-write-identity` via Skill tool | Resume this skill after identity creation |
+| _goal.md missing | `{goal_path}/_goal.md` not found | Verify with Glob, then invoke `solera-write-goal` via Skill tool (pass project_path, year, phase_id, goal_id, goal_name, goal_type; confirm goal_name with user) | Resume this skill after Goal creation |
+| phase_id unknown | phase_id parameter not provided | Request phase_id input from user | Halted until parameter is provided |
+| Epic unassigned | No Epic entry in _goal.md | Display error message, request _goal.md update | Skill halted, resume after manual fix |
+| Branch creation failed | git error (conflict, permissions, etc.) | Display git error message, request manual resolution | Skill halted, resume after resolution |
+| domain.md update conflict | Conflict between existing domain.md and new content | Highlight areas requiring merge, request manual merge from user | Concept step halted, resume after manual merge |
+| solera-write-story failed | Sub-skill invocation failed | Record the failed Story, notify user | Skip the Story and continue, or halt |
+| solera-publish-artifacts failed | Epic-level artifact promotion failed | Display failed file list, request manual move | Wrap-up halted, resume after manual resolution |
+| solera-create-pr failed | PR creation failed | Display PR creation error, request manual PR creation | Wrap-up halted, complete after manual PR creation |
 
 ## Examples
 
-### 예시: Feature Epic 전체 실행 과정
+### Example: Full Feature Epic execution flow
 
-#### 스킬 호출
+#### Skill invocation
 
 ```python
 Skill(name="solera-write-epic", args={
@@ -182,15 +190,15 @@ Skill(name="solera-write-epic", args={
 })
 ```
 
-#### 실행 단계별 생성 파일
+#### Files created at each step
 
-**1. Setup 완료 후**
+**1. After Setup**
 ```
 goals/G1-search-liquor/epics/01-search-ui/
-└── _epic.md              (초안, 상태: 🔄)
+└── _epic.md              (draft, status: 🔄)
 ```
 
-**2. Use Case 생성 완료 후**
+**2. After Use Case creation**
 ```
 goals/G1-search-liquor/
 ├── artifacts/
@@ -201,7 +209,7 @@ goals/G1-search-liquor/
     └── _epic.md
 ```
 
-**3. Concept 생성 완료 후**
+**3. After Concept creation**
 ```
 goals/G1-search-liquor/
 ├── artifacts/
@@ -216,7 +224,7 @@ goals/G1-search-liquor/
     └── _epic.md
 ```
 
-**4. Story 분해 완료 후 (_epic.md 업데이트)**
+**4. After Story decomposition (_epic.md updated)**
 ```markdown
 # _epic.md
 
@@ -230,35 +238,35 @@ goals/G1-search-liquor/
 | TS-001 | api-integration | - | 4 | ⏳ |
 ```
 
-**5. Execute 중간 상태 (Story US-001 완료)**
+**5. Execute intermediate state (Story US-001 complete)**
 ```
 goals/G1-search-liquor/epics/01-search-ui/
 ├── _epic.md              (US-001: ✅, US-002: 🔄, TS-001: ⏳)
 ├── US-001-search-input/
-│   ├── _story.md         (상태: ✅)
+│   ├── _story.md         (status: ✅)
 │   ├── RETRO.md
 │   ├── ACT-001-create-component.md
 │   ├── ACT-002-add-validation.md
 │   └── ACT-003-write-tests.md
 └── US-002-filter-ui/
-    ├── _story.md         (상태: 🔄)
+    ├── _story.md         (status: 🔄)
     └── ACT-001-filter-component.md
 ```
 
-**6. Wrap-up 완료 (모든 Story ✅)**
+**6. After Wrap-up (all Stories ✅)**
 ```
 goals/G1-search-liquor/epics/01-search-ui/
-├── _epic.md              (상태: ✅)
+├── _epic.md              (status: ✅)
 ├── RETRO.md
 ├── US-001-search-input/...   (✅)
 ├── US-002-filter-ui/...      (✅)
 └── TS-001-api-integration/...  (✅)
 ```
 
-#### 중간에 호출되는 하위 스킬
+#### Sub-skills invoked during execution
 
 ```python
-# Story US-001 작성
+# Write Story US-001
 Skill(name="solera-write-story", args={
   "project_path": "/Users/myname/workspace/myapp",
   "year": "2026",
@@ -271,12 +279,12 @@ Skill(name="solera-write-story", args={
   "story_name": "search-input",
   "story_type": "US"
 })
-# → _story.md 생성, Action Items 분해, 모든 ACT 실행 후 ✅
+# → Create _story.md, decompose Action Items, all ACTs executed then ✅
 
-# Story US-002, TS-001 반복...
+# Repeat for Story US-002, TS-001...
 
-# Epic 완료 후 Epic-level artifacts 승격
-Skill(name="solera-transition-catalog", args={
+# After Epic completion, promote Epic-level artifacts
+Skill(name="solera-publish-artifacts", args={
   "project_path": "/Users/myname/workspace/myapp",
   "phase_id": "2026-P1-foundation",
   "goal_id": "G1",
@@ -284,17 +292,17 @@ Skill(name="solera-transition-catalog", args={
 })
 # → use-case, concept → published/
 
-# PR 생성
+# Create PR
 Skill(name="solera-create-pr")
-# → Epic 브랜치에서 Goal 브랜치로 PR
+# → PR from Epic branch to Goal branch
 ```
 
-#### 최종 출력 상태
+#### Final output state
 
-- `_epic.md` 상태: ✅
-- 모든 Story 상태: ✅
-- `RETRO.md` 존재
-- PR이 Goal 브랜치로 생성됨
+- `_epic.md` status: ✅
+- All Story statuses: ✅
+- `RETRO.md` exists
+- PR created to Goal branch
 
 ## Completion Checklist
 
@@ -303,7 +311,7 @@ Skill(name="solera-create-pr")
 - [ ] Concept (domain.md, entities) written or updated
 - [ ] Story decomposition complete
 - [ ] (Execute) solera-write-story invoked for all Stories
-- [ ] (Wrap-up) solera-transition-catalog invoked for Epic-level artifacts
+- [ ] (Wrap-up) solera-publish-artifacts invoked for Epic-level artifacts
 - [ ] (Wrap-up) RETRO.md written
 - [ ] (Wrap-up) _epic.md status ✅
 - [ ] (Wrap-up) solera-create-pr invoked

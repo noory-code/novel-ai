@@ -58,9 +58,11 @@ metadata:
 
 1. **Setup**
    - [ ] Confirm `{epic_path}/_epic.md` exists with Glob tool
-     - If not: invoke Skill tool `skill="solera-write-epic"` **(BLOCKING: Epic 생성 완료 후 재개)**
+     - If not: invoke Skill tool `skill="solera-write-epic"` **(BLOCKING: resume after Epic creation completes)**
    - [ ] Check for previous Story retrospectives: `Glob {epic_path}/*/RETRO.md` — if any exist, read the most recent one and apply any "AI Improvements" noted there
    - [ ] Create `epics-{epic_name}/story-{story_id}-{story_name}` branch (from Epic branch)
+   - [ ] Read `{project_path}/workspace/team-process.md` if it exists
+     - Extract `workflow_gates` section for gate checks in Steps 4–5
    - [ ] Create `{epic_path}/{story_id}-{story_name}/` folder
    - [ ] Status → 🔄
 
@@ -87,8 +89,11 @@ metadata:
    - [ ] Verify all Action Item files exist: `Glob {story_path}/ACT-*.md` — count must match the table row count
 
 4. **Execute**
+   - [ ] **Gate check**: If `workflow_gates.story.execute` is set and condition is not met:
+     → Display the required condition to user
+     → **(BLOCKING: skill pauses until condition is fulfilled)**
    - [ ] Extract incomplete (⏳ or no status) Action Items from the Action Items table in `_story.md`
-   - [ ] Execute each Action Item in phase order **(BLOCKING: 각 Action Item이 완료될 때까지 대기, 순차적으로 실행)**:
+   - [ ] Execute each Action Item in phase order **(BLOCKING: wait for each Action Item to complete, execute sequentially)**:
      ```python
      Skill(name="solera-execute-action-item", args={
        "project_path": "{project_path}",
@@ -109,6 +114,9 @@ metadata:
    - [ ] Proceed to Step 5 after confirming all Action Item statuses ✅
 
 5. **Wrap-up**
+   - [ ] **Gate check**: If `workflow_gates.story.wrap_up` is set and condition is not met:
+     → Display the required condition to user
+     → **(BLOCKING: skill pauses until condition is fulfilled)**
    - [ ] Confirm all tests pass (if code changes were made)
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set _story.md status to ✅
@@ -137,21 +145,21 @@ metadata:
 
 | Failure point | Condition | Recovery procedure | Exit behavior |
 |---------------|-----------|-------------------|---------------|
-| mission.md 누락 | `published/identity/mission.md` 없음 | Glob으로 확인 후 Skill tool로 `solera-write-identity` 호출 | identity 생성 후 이 스킬 재개 |
-| _epic.md 누락 | `{epic_path}/_epic.md` 없음 | Glob으로 확인 후 Skill tool로 `solera-write-epic` 호출 | Epic 생성 후 이 스킬 재개 |
-| Story 미할당 | _epic.md Stories 테이블에 Story 정보 없음 | 오류 메시지 출력, _epic.md 업데이트 요청 | 스킬 중단, 수동 수정 후 재개 |
-| 브랜치 생성 실패 | git 오류 (충돌, 권한 등) | git 오류 메시지 출력, 수동 해결 요청 | 스킬 중단, 해결 후 재개 |
-| Action Item 파일 미생성 | Step 3에서 파일 생성 누락 | Glob으로 확인, 누락된 파일 목록 출력 후 재생성 | 모든 파일 생성 확인될 때까지 Step 4 진입 차단 |
-| Action Item 개수 불일치 | 테이블 행 수와 파일 수 불일치 | 차이 출력, 테이블 또는 파일 수정 요청 | Step 4 진입 차단, 수동 수정 후 재개 |
-| 의존성 순환 참조 | depends_on에 순환 구조 존재 | 순환 의존성 경로 출력, 테이블 수정 요청 | Execute 단계 중단, 수동 수정 후 재개 |
-| solera-execute-action-item 실패 | 하위 스킬 호출 실패 | 실패한 Action Item 기록, 사용자에게 알림 | 해당 Action Item 건너뛰고 계속 진행 또는 중단 |
-| Squash merge 실패 | git 충돌 또는 권한 오류 | 충돌 파일 목록 출력, 수동 해결 요청 | Wrap-up 중단, 수동 해결 후 재개 |
+| mission.md missing | `published/identity/mission.md` not found | Verify with Glob, then invoke `solera-write-identity` via Skill tool | Resume this skill after identity creation |
+| _epic.md missing | `{epic_path}/_epic.md` not found | Verify with Glob, then invoke `solera-write-epic` via Skill tool | Resume this skill after Epic creation |
+| Story unassigned | No Story entry in the _epic.md Stories table | Display error message, request _epic.md update | Skill halted, resume after manual fix |
+| Branch creation failed | git error (conflict, permissions, etc.) | Display git error message, request manual resolution | Skill halted, resume after resolution |
+| Action Item files not created | File creation missed in Step 3 | Verify with Glob, display missing file list and recreate | Block Step 4 entry until all files are confirmed created |
+| Action Item count mismatch | Table row count does not match file count | Display difference, request table or file correction | Block Step 4 entry, resume after manual fix |
+| Circular dependency | Circular structure in depends_on | Display circular dependency path, request table correction | Execute step halted, resume after manual fix |
+| solera-execute-action-item failed | Sub-skill invocation failed | Record the failed Action Item, notify user | Skip the Action Item and continue, or halt |
+| Squash merge failed | git conflict or permission error | Display conflicting file list, request manual resolution | Wrap-up halted, resume after manual resolution |
 
 ## Examples
 
-### 예시: User Story 전체 실행 과정
+### Example: Full User Story execution flow
 
-#### 스킬 호출
+#### Skill invocation
 
 ```python
 Skill(name="solera-write-story", args={
@@ -168,27 +176,27 @@ Skill(name="solera-write-story", args={
 })
 ```
 
-#### 실행 단계별 생성 파일
+#### Files created at each step
 
-**1. Setup 완료 후**
+**1. After Setup**
 ```
 epics/01-search-ui/US-001-search-input/
-└── _story.md              (초안, 상태: 🔄)
+└── _story.md              (draft, status: 🔄)
 ```
 
-**2. Story 작성 및 Action Items 분해 완료 후**
+**2. After Story writing and Action Items decomposition**
 ```markdown
 # _story.md
 
 ## Story
-As a **사용자**
-I want **검색창에 주류 이름을 입력하고 검색**
-So that **원하는 주류 정보를 빠르게 찾을 수 있다**
+As a **user**
+I want **to enter a liquor name in the search bar and search**
+So that **I can quickly find the liquor information I want**
 
 ## Acceptance Criteria
-- [ ] 검색창이 화면에 표시됨
-- [ ] 입력값 실시간 검증
-- [ ] Enter 키로 검색 실행
+- [ ] Search bar is displayed on screen
+- [ ] Real-time input validation
+- [ ] Execute search with Enter key
 
 ## Action Items
 
@@ -199,7 +207,7 @@ So that **원하는 주류 정보를 빠르게 찾을 수 있다**
 | ACT-003 | write-tests | dev-flutter | 2 | ACT-001,ACT-002 | QA | ⏳ |
 ```
 
-**3. Action Item 파일 생성 완료 후**
+**3. After Action Item file creation**
 ```
 epics/01-search-ui/US-001-search-input/
 ├── _story.md
@@ -208,38 +216,38 @@ epics/01-search-ui/US-001-search-input/
 └── ACT-003-write-tests.md
 ```
 
-**4. Execute 중간 상태 (ACT-001, ACT-002 완료)**
+**4. Execute intermediate state (ACT-001, ACT-002 complete)**
 ```
 epics/01-search-ui/US-001-search-input/
 ├── _story.md             (ACT-001: ✅, ACT-002: ✅, ACT-003: 🔄)
-├── ACT-001-create-component.md   (커밋: abc1234, 상태: ✅)
-├── ACT-002-add-validation.md     (커밋: def5678, 상태: ✅)
-└── ACT-003-write-tests.md        (상태: 🔄)
+├── ACT-001-create-component.md   (commit: abc1234, status: ✅)
+├── ACT-002-add-validation.md     (commit: def5678, status: ✅)
+└── ACT-003-write-tests.md        (status: 🔄)
 
 git log --oneline:
-def5678 [01-search-ui][US-001][ACT-002] 검색창 입력 검증 추가
-abc1234 [01-search-ui][US-001][ACT-001] 검색 컴포넌트 생성
+def5678 [01-search-ui][US-001][ACT-002] Add search input validation
+abc1234 [01-search-ui][US-001][ACT-001] Create search component
 ```
 
-**5. Wrap-up 완료 (모든 Action Item ✅)**
+**5. After Wrap-up (all Action Items ✅)**
 ```
 epics/01-search-ui/US-001-search-input/
-├── _story.md             (상태: ✅)
+├── _story.md             (status: ✅)
 ├── RETRO.md
 ├── ACT-001-create-component.md   (✅)
 ├── ACT-002-add-validation.md     (✅)
 └── ACT-003-write-tests.md        (✅)
 
 git log --oneline:
-9876543 [01-search-ui][US-001][ACT-003] 검색 컴포넌트 테스트 추가
-def5678 [01-search-ui][US-001][ACT-002] 검색창 입력 검증 추가
-abc1234 [01-search-ui][US-001][ACT-001] 검색 컴포넌트 생성
+9876543 [01-search-ui][US-001][ACT-003] Add search component tests
+def5678 [01-search-ui][US-001][ACT-002] Add search input validation
+abc1234 [01-search-ui][US-001][ACT-001] Create search component
 ```
 
-#### 중간에 호출되는 하위 스킬
+#### Sub-skills invoked during execution
 
 ```python
-# Action Item ACT-001 실행
+# Execute Action Item ACT-001
 Skill(name="solera-execute-action-item", args={
   "project_path": "/Users/myname/workspace/myapp",
   "year": "2026",
@@ -253,18 +261,18 @@ Skill(name="solera-execute-action-item", args={
   "action_item_id": "ACT-001",
   "action_item_name": "create-component"
 })
-# → 코드 작성, 커밋, ACT-001.md 상태 ✅
+# → Write code, commit, ACT-001.md status ✅
 
-# ACT-002, ACT-003 반복 (Phase 순서대로)
+# Repeat for ACT-002, ACT-003 (in Phase order)
 ```
 
-#### 최종 출력 상태
+#### Final output state
 
-- `_story.md` 상태: ✅
-- 모든 Action Item 상태: ✅
-- `RETRO.md` 존재
-- 총 3개 커밋 생성됨 (1 ACT = 1 commit)
-- Epic 브랜치로 squash merge 완료
+- `_story.md` status: ✅
+- All Action Item statuses: ✅
+- `RETRO.md` exists
+- 3 commits created in total (1 ACT = 1 commit)
+- Squash merged to Epic branch
 
 ## Completion Checklist
 
