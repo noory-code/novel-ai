@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.8.0] — 2026-03-16
+
+### Changed (BREAKING)
+- **`solera-init` SKILL.md fully rewritten in English** (v2.0.0)
+  - All hardcoded Korean interview questions replaced with principle-based
+    interview structure (Steps A–G), each mapped to a specific `team-process.md` field
+  - Interview is now language-agnostic: AI asks in the user's language
+- **`solera-init` Step 5 kickoff interview**: generalized from software-only to
+  any project type (software / marketing / design / content / other)
+  - Project type detected first; software projects get additional `tech_stack` fields
+  - Stage list examples adapt to project type (software, marketing, design)
+  - Every question traces to a specific output field (no orphan questions)
+
+### Added
+- **`assets/team-process-software.md`**: software development extension template
+  (`tech_stack.backend`, `frontend`, `infra`) — merged into `team-process.md`
+  when `project.type = "software"`
+- **`team-process.md` base template**: redesigned as a universal project template
+  with `project`, `workflow_gates`, `process_stages`, `conventions`, `tools`, `custom_rules`
+
+---
+
 ## [2.7.2] — 2026-03-16
 
 ### Fixed
