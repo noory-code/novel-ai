@@ -72,7 +72,11 @@ metadata:
    - [ ] If there are 2 or more Personas, create persona-relationship.md — ref: [assets/persona-relationship.md](assets/persona-relationship.md)
 
 4. **Journey, Epic decomposition, and _goal.md**
-   - [ ] Define a Journey for each Persona (for Enablers, write Steps only, briefly)
+   - [ ] Read `{project_path}/workspace/team-process.md` if it exists — check `workflow_gates` for this Goal's prerequisites
+   - [ ] **Add** a Journey for each relevant Persona for this Goal (for Enablers, write Steps only, briefly)
+     - File naming: `artifacts/journey/{goal_id}-{persona_name}.md`
+     - **Never modify existing journey files** — each Goal adds new journey files (OCP: open for extension, closed for modification)
+     - If a prior journey exists for the same persona, the new file extends it with additional steps
    - [ ] Map Journey steps to Epics and assign numbers (01, 02, ...)
    - [ ] Write _goal.md — ref: [assets/goal-template.md](assets/goal-template.md)
    - [ ] Invoke solera-transition-catalog to promote Goal-level artifacts (service-map, persona, journey) to published/ **(BLOCKING: 승격 완료 후 Execute 진행)**

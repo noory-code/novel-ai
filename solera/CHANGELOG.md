@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.6.0] — 2026-03-16
+
+### Added
+- **`solera-init`: Team Kickoff Interview** (Step 5) — conversational interview that
+  collects service info, workflow gates, tech stack, and conventions, then generates
+  `{project_path}/workspace/team-process.md`
+- **`team-process.md` template** — YAML format with sections for service, workflow_gates,
+  tech_stack, conventions, custom_rules; read by skills at Goal/Epic level
+
+### Changed
+- **`solera-workflow.md`** (installed rule) — rewritten as a slim Intent → Skill Routing
+  table; removed procedural content; added pointer to `team-process.md`
+- **`solera-write-identity`**: Step 1 expanded to Discovery Interview with NN/G 6-field
+  persona model (role, skill level, context, goal, pain point, quote); personas are additive
+- **`solera-write-goal`**: Journey step now creates new files per Goal (`{goal_id}-{persona}.md`)
+  instead of overwriting — follows OCP (open for extension, closed for modification)
+
+---
+
 ## [2.5.0] — 2026-03-16
 
 ### Added

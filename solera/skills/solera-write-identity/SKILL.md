@@ -39,10 +39,28 @@ metadata:
 
 ## Procedure
 
-1. **Collect context**
+1. **Discovery Interview**
+   - [ ] If `team-process.md` exists at `{project_path}/workspace/team-process.md`, read it and skip questions already answered
    - [ ] If `service_name` is not provided, ask: "What is the name of your service?"
    - [ ] If `target_user` is not provided, ask: "Who are the primary users of this service?"
-   - [ ] Gather any additional context about the problem domain
+   - [ ] Gather persona details for each user type via the following questions.
+     Ask all questions per persona; if the answer is vague, ask a follow-up to get specifics.
+
+   **Per-persona interview (NN/G 6-field model):**
+   ```
+   "이 사용자의 역할/직군은 무엇인가요? (예: 바리스타, 프리랜서 개발자, 중소기업 대표)"
+   "기술 수준은 어느 정도인가요? (초보 / 중급 / 전문가)"
+     → 모호하면: "스마트폰 앱을 혼자 설치할 수 있는 수준인가요, 아니면 개발자 수준인가요?"
+   "언제, 어디서, 왜 이 서비스를 쓰나요? (사용 맥락)"
+     → 예: "출퇴근 중 모바일로, 빠르게 재고 확인하려고"
+   "이 서비스로 궁극적으로 달성하려는 목표가 뭔가요?"
+   "지금 겪고 있는 가장 큰 불편함이나 문제는 뭔가요?"
+   "이 사람이 할 법한 말 한 문장을 만들어주세요. (대표 한마디)"
+     → 예: "재고 파악하느라 매일 아침 30분을 낭비하고 있어요."
+   ```
+
+   - [ ] Repeat for each persona (2–4 recommended)
+   - [ ] **Personas are additive** — when a new user type is discovered later, re-invoke `solera-write-identity` to add a persona without modifying existing ones
 
 2. **Define Mission** — ref: [assets/mission.md](assets/mission.md)
    - [ ] Write a one-sentence mission statement: "For [who], through [how], we build [what]."
