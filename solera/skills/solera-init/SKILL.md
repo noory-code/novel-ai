@@ -86,12 +86,68 @@ Save results to `{project_path}/workspace/team-process.md`.
    - "주요 사용자는 누구인가요?"
      → 모호하면: "어떤 상황에서 이 서비스를 쓰게 되나요? 직군이나 역할이 있나요?"
 
-2. 개발 프로세스 (워크플로우 게이트)
-   - "기능 개발 시 어떤 순서로 진행하나요?"
-     → 예시 제시: "예를 들어 기획 → 디자인 → 엔티티 설계 → 개발 순서인가요,
-       아니면 팀만의 다른 순서가 있나요?"
-     → 순서가 있다면: "각 단계의 완료 기준이 뭔가요? (예: Figma 링크 첨부, 팀장 승인 등)"
-     → 디자인 단계가 있다면: "어떤 디자인 툴을 쓰나요? (Figma / Zeplin / 기타)"
+2. 개발 프로세스
+
+   2-1. 단계 구성
+        "기능 개발 시 어떤 단계를 거치나요? 팀에서 실제로 사용하는 단계를 나열해주세요."
+        → 답이 모호하면 아래 목록을 제시하고 해당하는 것을 선택하게 함:
+          [ ] 기획/요구사항 정의     — 무엇을 만들지 결정
+          [ ] UX 설계 (와이어프레임) — 화면 흐름 설계
+          [ ] UI 디자인 (시각 디자인) — 실제 화면 디자인
+          [ ] 도메인/엔티티 설계     — 데이터 구조 설계
+          [ ] API 설계               — 인터페이스 정의
+          [ ] 백엔드 개발
+          [ ] 프론트엔드 개발
+          [ ] 테스트 (단위/통합/E2E)
+          [ ] 코드 리뷰
+          [ ] QA/검수
+          [ ] 배포
+
+   2-2. 단계별 심화 (선택된 단계에 대해서만 질문)
+
+        기획/요구사항 단계가 있다면:
+          "요구사항의 완료 기준은 무엇인가요?"
+            → 예: "PRD 문서 작성 완료", "팀장 승인", "사용자 스토리 형식으로 작성"
+          "요구사항 문서 형식이 있나요? (PRD / 사용자 스토리 / 없음)"
+
+        UX 설계 단계가 있다면:
+          "UX 설계 완료 기준은 무엇인가요?"
+            → 예: "모든 핵심 플로우의 와이어프레임 완성", "사용자 테스트 1회 이상"
+          "와이어프레임 툴은? (Figma / Balsamiq / 기타)"
+          "UX 설계 결과물이 다음 단계의 게이트 조건인가요? (필수 / 선택)"
+
+        UI 디자인 단계가 있다면:
+          "디자인 완료 기준은 무엇인가요?"
+            → 예: "디자이너 최종 확인", "Figma 링크 _epic.md에 첨부"
+          "디자인 시스템이 있나요? (있음 / 없음 / 구축 중)"
+          "개발 시작 전 디자인이 반드시 완료되어야 하나요? (필수 / 동시 진행 가능)"
+
+        도메인/엔티티 설계 단계가 있다면:
+          "엔티티 설계 완료 기준은 무엇인가요?"
+            → 예: "ERD 작성 완료", "팀 리뷰 통과"
+          "엔티티 설계는 누가 주도하나요? (백엔드 개발자 / 아키텍트 / 팀 전체)"
+          "설계 결과물 형식은? (ERD 다이어그램 / 클래스 다이어그램 / 문서)"
+          "UI 디자인과 엔티티 설계 중 어느 것이 먼저인가요, 아니면 동시인가요?"
+
+        API 설계 단계가 있다면:
+          "API 설계 완료 기준은? (예: OpenAPI spec 작성, Postman collection 공유)"
+          "API 설계는 프론트엔드와 백엔드 협의 후 확정인가요?"
+
+        테스트 단계가 있다면:
+          "테스트 커버리지 기준이 있나요? (예: 80% 이상 / 없음)"
+          "어떤 테스트를 필수로 작성하나요? (단위 / 통합 / E2E / 없음)"
+          "QA는 별도 담당자가 있나요, 아니면 개발자 자체 검수인가요?"
+
+        코드 리뷰 단계가 있다면:
+          "리뷰 기준이 있나요? (체크리스트 / 자유 형식)"
+          "리뷰 통과 기준은? (승인 N명 / 특정 역할 필수)"
+
+   2-3. 게이트 조건 정리
+        수집한 답변을 바탕으로 AI가 workflow_gates를 도출한 뒤 사용자에게 확인:
+        "정리하면 이런 게이트가 있는 것 같은데요, 맞나요?
+         - epic.concept: 'UI 디자인 Figma 링크가 _epic.md에 첨부되어야 함'
+         - story.execute: 'ERD 팀 리뷰 통과 후 개발 시작'
+         확인 또는 수정해주세요."
 
 3. 기술 스택
    백엔드:
@@ -133,10 +189,28 @@ service:
     # - "{페르소나2}"  ← 추가 페르소나는 solera-write-identity로
 
 workflow_gates:
-  # Define prerequisites before entering each step.
-  # Format: "{level}.{step}: {condition}"
-  # epic.concept: "Figma 링크가 _epic.md에 존재해야 함"
-  # story.execute: "테스트 계획이 팀장에게 승인되어야 함"
+  # Solera skills check these gates before entering each step.
+  # Format: "{work-item-level}.{step}: "{condition}"
+  # Populated automatically from kickoff interview answers.
+  epic.use_case:  ""   # e.g. "요구사항 문서(PRD) 팀장 승인 완료"
+  epic.concept:   ""   # e.g. "Figma 디자인 링크 _epic.md에 첨부 필수"
+  story.execute:  ""   # e.g. "ERD 팀 리뷰 통과 후 개발 시작"
+  story.wrap_up:  ""   # e.g. "테스트 커버리지 80% 이상"
+
+process_stages:
+  # Team's actual development stages in order (from kickoff interview).
+  stages: []
+  # e.g.:
+  # - name: "UX 설계"
+  #   tool: "Figma"
+  #   done_when: "핵심 플로우 와이어프레임 완성"
+  #   gate: true        ← required before next stage starts
+  # - name: "엔티티 설계"
+  #   owner: "백엔드 개발자"
+  #   done_when: "ERD 팀 리뷰 통과"
+  #   gate: true
+  # - name: "개발"
+  #   gate: false
 
 tech_stack:
   backend:

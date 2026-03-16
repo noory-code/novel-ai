@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.7.0] — 2026-03-16
+
+### Changed
+- **`solera-init` Step 5 섹션 2**: "개발 프로세스" 인터뷰를 3단계 계층형 구조로 심화
+  - 2-1: 팀이 실제로 사용하는 단계를 체크리스트 형식으로 선택
+    (기획/UX/UI/엔티티/API/개발/테스트/리뷰/QA/배포)
+  - 2-2: 선택된 단계에 대해서만 완료 기준, 툴, 담당자, 게이트 여부를 심화 질문
+  - 2-3: AI가 수집한 답변으로 workflow_gates를 자동 도출 후 사용자 확인
+- **`team-process.md` 템플릿**: `workflow_gates`에 4개 게이트 키 추가
+  (`epic.use_case`, `epic.concept`, `story.execute`, `story.wrap_up`),
+  `process_stages` 섹션 신규 추가 (단계별 name/tool/done_when/gate 구조)
+
+---
+
 ## [2.6.0] — 2026-03-16
 
 ### Added
