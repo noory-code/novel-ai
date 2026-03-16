@@ -92,8 +92,8 @@ Save results to `{project_path}/workspace/team-process.md`.
         "기능 개발 시 어떤 단계를 거치나요? 팀에서 실제로 사용하는 단계를 나열해주세요."
         → 답이 모호하면 아래 목록을 제시하고 해당하는 것을 선택하게 함:
           [ ] 기획/요구사항 정의     — 무엇을 만들지 결정
-          [ ] UX 설계 (와이어프레임) — 화면 흐름 설계
-          [ ] UI 디자인 (시각 디자인) — 실제 화면 디자인
+          [ ] UX 설계 (와이어프레임) — 화면 흐름 설계 (UX와 UI를 구분하지 않는다면 하나로 합쳐도 됨)
+          [ ] UI 디자인 (시각 디자인) — 실제 화면 디자인 (UX와 별도 단계로 진행하는 경우)
           [ ] 도메인/엔티티 설계     — 데이터 구조 설계
           [ ] API 설계               — 인터페이스 정의
           [ ] 백엔드 개발
@@ -102,6 +102,10 @@ Save results to `{project_path}/workspace/team-process.md`.
           [ ] 코드 리뷰
           [ ] QA/검수
           [ ] 배포
+
+        체크리스트 선택 완료 후:
+        → 백엔드와 프론트엔드를 모두 선택한 경우: "백엔드와 프론트엔드 개발은 동시에 진행하나요, 아니면 순서가 있나요?"
+        → UX 설계와 UI 디자인을 모두 선택한 경우: "두 단계를 별도 담당자가 진행하나요, 아니면 동일 담당자가 순서대로 진행하나요?"
 
    2-2. 단계별 심화 (선택된 단계에 대해서만 질문)
 
@@ -120,14 +124,15 @@ Save results to `{project_path}/workspace/team-process.md`.
           "디자인 완료 기준은 무엇인가요?"
             → 예: "디자이너 최종 확인", "Figma 링크 _epic.md에 첨부"
           "디자인 시스템이 있나요? (있음 / 없음 / 구축 중)"
-          "개발 시작 전 디자인이 반드시 완료되어야 하나요? (필수 / 동시 진행 가능)"
+          "개발 시작 전 디자인이 반드시 완료되어야 하나요?"
+            → 필수면: "백엔드/프론트 모두인가요, 아니면 프론트엔드 개발 시작 전만인가요?"
 
         도메인/엔티티 설계 단계가 있다면:
           "엔티티 설계 완료 기준은 무엇인가요?"
             → 예: "ERD 작성 완료", "팀 리뷰 통과"
           "엔티티 설계는 누가 주도하나요? (백엔드 개발자 / 아키텍트 / 팀 전체)"
           "설계 결과물 형식은? (ERD 다이어그램 / 클래스 다이어그램 / 문서)"
-          "UI 디자인과 엔티티 설계 중 어느 것이 먼저인가요, 아니면 동시인가요?"
+          "엔티티 설계 완료가 백엔드 개발 시작 전 조건인가요, 전체 개발 시작 전 조건인가요?"
 
         API 설계 단계가 있다면:
           "API 설계 완료 기준은? (예: OpenAPI spec 작성, Postman collection 공유)"
@@ -142,6 +147,11 @@ Save results to `{project_path}/workspace/team-process.md`.
           "리뷰 기준이 있나요? (체크리스트 / 자유 형식)"
           "리뷰 통과 기준은? (승인 N명 / 특정 역할 필수)"
           → 수집한 승인 수를 pr_approvals로 재사용 (Section 4에서 중복 질문 안 함)
+
+        인프라/배포 단계가 있다면:
+          "CI/CD 파이프라인은 어떻게 구성되어 있나요? (GitHub Actions / Jenkins / 없음 / 기타)"
+          "배포 환경이 여러 개인가요? (dev / staging / prod)"
+          "배포 승인 절차가 있나요? (자동 배포 / 수동 승인 필요)"
 
    2-3. 게이트 조건 정리
         수집한 답변을 바탕으로 AI가 workflow_gates를 도출한 뒤 사용자에게 확인.
@@ -180,6 +190,8 @@ Save results to `{project_path}/workspace/team-process.md`.
    인프라:
    - "어떤 클라우드를 쓰나요? (AWS / GCP / Azure / 없음)"
      → 있다면: "컨테이너를 쓰나요? (Docker / Kubernetes / ECS)"
+   - 배포 단계(2-2)에서 CI/CD를 이미 수집했으면 재사용, 아니면:
+     "CI/CD 파이프라인은 어떻게 구성되어 있나요? (GitHub Actions / Jenkins / 없음)"
 
 4. 협업 규칙
    - "커밋 메시지에 특별한 규칙이 있나요? (예: Jira 티켓 번호 필수)"
@@ -209,10 +221,16 @@ workflow_gates:
   # Solera skills check these gates before entering each step.
   # Format: "{work-item-level}.{step}: "{condition}"
   # Populated automatically from kickoff interview answers.
+  #
+  # Gate levels:
+  #   epic.use_case  — Epic 시작 전 (요구사항/기획 완료 여부)
+  #   epic.concept   — Epic의 Concept 단계 진입 전 (디자인 산출물 확정 여부, Epic 범위)
+  #   story.execute  — Story 개발 시작 직전 (해당 Story 단위 체크, 엔티티/설계 완료 여부)
+  #   story.wrap_up  — Story 완료 전 (테스트/리뷰 기준 충족 여부)
   epic.use_case:  ""   # e.g. "요구사항 문서(PRD) 팀장 승인 완료"
-  epic.concept:   ""   # e.g. "Figma 디자인 링크 _epic.md에 첨부 필수"
-  story.execute:  ""   # e.g. "ERD 팀 리뷰 통과 후 개발 시작"
-  story.wrap_up:  ""   # e.g. "테스트 커버리지 80% 이상"
+  epic.concept:   ""   # e.g. "이 Epic의 Figma 디자인 링크 _epic.md에 첨부 확인"
+  story.execute:  ""   # e.g. "ERD 팀 리뷰 통과 후 백엔드 개발 시작"
+  story.wrap_up:  ""   # e.g. "단위 테스트 작성 및 코드 리뷰 2명 승인"
 
 process_stages:
   # Team's actual development stages in order (from kickoff interview).
