@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -30,7 +31,7 @@ PROMPT = (
     "Keep it concise — 2-3 lines per section maximum."
 )
 
-_LOCK_FILE = Path("/tmp/solera-handoff-hook.lock")
+_LOCK_FILE = Path(tempfile.gettempdir()) / "solera-handoff-hook.lock"
 _LOCK_TTL_SECONDS = 120
 
 
@@ -87,7 +88,7 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
         "--output-format", "text",
     ]
 
-    log_path = Path("/tmp/solera-handoff-hook.log")
+    log_path = Path(tempfile.gettempdir()) / "solera-handoff-hook.log"
     try:
         with log_path.open("w", encoding="utf-8") as log_file:
             subprocess.run(

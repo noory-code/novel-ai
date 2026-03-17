@@ -392,10 +392,12 @@ class TestSecurityValidation:
 
         assert code == 0
         assert "claude -p failed" in stderr
-        assert "/tmp/distill-hook-test-session-123.log" in stderr
+        import tempfile
+        expected_log = str(Path(tempfile.gettempdir()) / "distill-hook-test-session-123.log")
+        assert expected_log in stderr
 
         # Verify that the log file was created
-        log_path = Path("/tmp/distill-hook-test-session-123.log")
+        log_path = Path(expected_log)
         if log_path.exists():
             log_content = log_path.read_text()
             assert long_stderr in log_content

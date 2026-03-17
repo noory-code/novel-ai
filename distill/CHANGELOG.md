@@ -4,6 +4,16 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.7.1] — 2026-03-18
+
+### Fixed
+- **Cross-platform hooks**: replaced hardcoded `.venv/bin/python` with platform-aware path (Windows `Scripts/` vs Unix `bin/`)
+- **Cross-platform temp paths**: replaced hardcoded `/tmp/` with `tempfile.gettempdir()`
+- **Cross-platform file locking**: replaced Unix-only `fcntl` with platform-aware locking (`msvcrt` on Windows)
+- **Hook registration**: added missing `hooks` field in `plugin.json` so PreCompact/SessionEnd hooks are actually loaded
+
+---
+
 ## [1.7.0] — 2026-03-18
 
 ### Changed

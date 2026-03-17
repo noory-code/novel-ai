@@ -2,19 +2,41 @@
 
 Prevents multiple hook instances from running simultaneously,
 avoiding process stacking when PreCompact and SessionEnd fire in rapid succession.
+
+Cross-platform: uses msvcrt on Windows, fcntl on Unix.
 """
 
 from __future__ import annotations
 
-import fcntl
 import json
 import os
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import IO
 
 LOCK_PATH = Path.home() / ".distill" / "hook.lock"
 STATUS_PATH = Path.home() / ".distill" / "hook-status.json"
+
+
+def _try_lock(fh: IO[str]) -> bool:
+    """Try to acquire an exclusive non-blocking lock on the file handle."""
+    if sys.platform == "win32":
+        import msvcrt
+
+        try:
+            msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+            return True
+        except (OSError, IOError):
+            return False
+    else:
+        import fcntl
+
+        try:
+            fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return True
+        except (BlockingIOError, OSError):
+            return False
 
 
 def acquire_hook_lock() -> IO[str] | None:
@@ -26,12 +48,10 @@ def acquire_hook_lock() -> IO[str] | None:
     """
     LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
     fh = open(LOCK_PATH, "w")  # noqa: SIM115
-    try:
-        fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    if _try_lock(fh):
         return fh
-    except (BlockingIOError, OSError):
-        fh.close()
-        return None
+    fh.close()
+    return None
 
 
 def write_status_started(session_id: str, event: str) -> None:

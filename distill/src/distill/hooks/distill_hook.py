@@ -19,6 +19,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -85,7 +86,10 @@ def _run_claude_p(
 
     distill_repo = str(Path(__file__).parent.parent.parent.parent)
 
-    venv_python = str(Path(distill_repo) / ".venv" / "bin" / "python")
+    # Cross-platform: Windows uses Scripts/, Unix uses bin/
+    scripts_dir = "Scripts" if sys.platform == "win32" else "bin"
+    python_name = "python.exe" if sys.platform == "win32" else "python"
+    venv_python = str(Path(distill_repo) / ".venv" / scripts_dir / python_name)
     mcp_config = json.dumps({
         "mcpServers": {
             "distill": {
@@ -130,7 +134,7 @@ def _run_claude_p(
 
     if result.returncode != 0:
         # Write full stderr to a temporary log file
-        log_path = Path(f"/tmp/distill-hook-{validated_session_id}.log")
+        log_path = Path(tempfile.gettempdir()) / f"distill-hook-{validated_session_id}.log"
         try:
             log_path.write_text(result.stderr, encoding="utf-8")
             raise RuntimeError(
