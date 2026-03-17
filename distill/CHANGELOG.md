@@ -4,6 +4,14 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.6.0] — 2026-03-18
+
+### Added
+- **Individual skills**: 7 new slash commands — `/distill:recall`, `/distill:profile`, `/distill:digest`, `/distill:learn`, `/distill:ingest`, `/distill:memory`, `/distill:init`
+- Each skill documents parameters, examples, and follow-up workflows
+
+---
+
 ## [1.5.1] — 2026-03-17
 
 ### Fixed
