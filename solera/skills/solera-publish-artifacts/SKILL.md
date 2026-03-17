@@ -4,7 +4,7 @@ description: Mark a Goal as done — move all artifacts to the published catalog
 metadata:
   version: "4.0.0"
   category: workflow
-  type: composite
+  type: unit
   style: procedural
   triggers: [transition to catalog, archive completed Goal, publish Goal artifacts, wrap up Goal, Goal completion cleanup]
   uses: []

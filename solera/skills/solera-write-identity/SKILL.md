@@ -4,7 +4,7 @@ description: Establish what your service stands for — write the Mission, Core 
 metadata:
   version: "2.0.0"
   category: writing
-  type: composite
+  type: unit
   style: guide
   triggers: [define service identity, write mission statement, establish core values, set up identity, identity setup]
   uses: []

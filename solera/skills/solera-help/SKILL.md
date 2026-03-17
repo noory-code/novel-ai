@@ -4,7 +4,7 @@ description: Explain what Solera is, list all available skills, and guide the fi
 metadata:
   version: "1.0.0"
   category: meta
-  type: reference
+  type: unit
   style: guide
   triggers: [what is solera, solera help, solera skills, how to use solera, solera get started]
   uses: []
