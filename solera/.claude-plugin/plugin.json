@@ -1,6 +1,6 @@
 {
   "name": "solera",
-  "version": "2.10.0",
+  "version": "2.10.1",
   "description": "AI-driven project workflow plugin that structures work into Phase → Goal → Epic → Story → Action Item. Includes team kickoff interviews, persona discovery, workflow gates, artifact lifecycle management, branching strategy, and session handoff — designed for Claude Code to execute project planning deterministically.",
   "homepage": "https://github.com/noory-code/noory-ai/tree/main/solera",
   "repository": "https://github.com/noory-code/noory-ai",

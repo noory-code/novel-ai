@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.10.1] — 2026-03-18
+
+### Fixed
+- `solera-help`: metadata `type: reference` → `type: unit` (reference is not a valid type value)
+- `solera-publish-artifacts`: metadata `type: composite` → `type: unit` (no sub-skill invocations)
+- `solera-write-identity`: metadata `type: composite` → `type: unit` (no sub-skill invocations)
+
+---
+
 ## [2.10.0] — 2026-03-18
 
 ### Removed
