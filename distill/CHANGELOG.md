@@ -13,6 +13,10 @@ All notable changes are documented here, organized by development phase.
 ### Fixed
 - **prompts.md SSOT sync**: added missing "agent" delivery classification to match prompts.py
 
+### Removed
+- **`/distill` umbrella skill**: replaced by individual `/distill-*` skills
+- **`/help` skill**: renamed to `/distill-help` with updated skill list and crystallize workflow docs
+
 ---
 
 ## [1.6.0] — 2026-03-18
