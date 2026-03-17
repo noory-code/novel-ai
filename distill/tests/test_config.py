@@ -14,7 +14,7 @@ class TestLoadConfig:
         assert config.extraction_model == "claude-haiku-4-5-20251001"
         assert config.crystallize_model == "claude-sonnet-4-5-20250929"
         assert config.max_transcript_chars == 100_000
-        assert config.auto_crystallize_threshold == 0
+        assert config.auto_crystallize_threshold == 20
 
     def test_returns_defaults_when_project_root_is_none(self):
         config = load_config(None)

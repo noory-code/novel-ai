@@ -60,7 +60,7 @@ class DistillConfig(BaseModel):
     extraction_model: str = "claude-haiku-4-5-20251001"
     crystallize_model: str = "claude-sonnet-4-5-20250929"
     max_transcript_chars: int = 100_000
-    auto_crystallize_threshold: int = 0
+    auto_crystallize_threshold: int = 20
 
     # Legacy flat fields (kept for backward compatibility)
     rule_budget_max_files: int = 5

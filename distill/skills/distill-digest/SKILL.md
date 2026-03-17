@@ -1,5 +1,5 @@
 ---
-name: digest
+name: distill-digest
 description: Analyze knowledge for duplicates and stale entries.
 metadata:
   version: "1.0.0"
@@ -10,14 +10,14 @@ metadata:
   uses: [mcp__distill__digest]
 ---
 
-# /distill:digest
+# /distill-digest
 
 Analyze accumulated knowledge for duplicate and stale entries.
 
 ## Usage
 
 ```
-/distill:digest
+/distill-digest
 ```
 
 ## MCP Tool

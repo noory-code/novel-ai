@@ -1,5 +1,5 @@
 ---
-name: init
+name: distill-init
 description: One-step Distill onboarding for a new project.
 metadata:
   version: "1.0.0"
@@ -10,14 +10,14 @@ metadata:
   uses: [mcp__distill__init]
 ---
 
-# /distill:init
+# /distill-init
 
 One-step onboarding: creates config, scans environment, and reports directories to ingest.
 
 ## Usage
 
 ```
-/distill:init
+/distill-init
 ```
 
 ## MCP Tool

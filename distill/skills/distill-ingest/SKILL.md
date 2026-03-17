@@ -1,5 +1,5 @@
 ---
-name: ingest
+name: distill-ingest
 description: Extract knowledge from markdown/text files or directories.
 metadata:
   version: "1.0.0"
@@ -10,14 +10,14 @@ metadata:
   uses: [mcp__distill__ingest]
 ---
 
-# /distill:ingest
+# /distill-ingest
 
 Extract knowledge from markdown, MDX, or text files into the knowledge store.
 
 ## Usage
 
 ```
-/distill:ingest <path>
+/distill-ingest <path>
 ```
 
 ## MCP Tool

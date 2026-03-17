@@ -1,5 +1,5 @@
 ---
-name: learn
+name: distill-learn
 description: Extract knowledge from a conversation transcript.
 metadata:
   version: "1.0.0"
@@ -10,14 +10,14 @@ metadata:
   uses: [mcp__distill__learn]
 ---
 
-# /distill:learn
+# /distill-learn
 
 Extract knowledge from a conversation transcript file (.jsonl).
 
 ## Usage
 
 ```
-/distill:learn <transcript_path> <session_id>
+/distill-learn <transcript_path> <session_id>
 ```
 
 ## MCP Tool

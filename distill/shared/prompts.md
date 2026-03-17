@@ -104,7 +104,13 @@ Classify each rule group by delivery mechanism:
    - Requires skill_metadata: description, when_to_use, procedure (array of steps)
    - Examples field is optional but recommended
 
-3. **"store"** — On-demand via recall() (SQLite only, no file)
+3. **"agent"** — Multi-skill workflow (`.claude/agents/distill-*.md`)
+   - 3+ skills always invoked together in the same order for the same goal
+   - Repeatable workflow (not a one-time sequence)
+   - Only when agents_enabled=true in config
+   - Requires agent_metadata: description, skills (list of skill names)
+
+4. **"store"** — On-demand via recall() (SQLite only, no file)
    - Low confidence (< threshold) or niche use case
    - Rarely applicable (specific edge case, one-time decision)
    - Insufficient evidence to justify always-loaded context

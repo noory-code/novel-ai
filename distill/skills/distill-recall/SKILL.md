@@ -1,5 +1,5 @@
 ---
-name: recall
+name: distill-recall
 description: Search accumulated knowledge by semantic + keyword hybrid search.
 metadata:
   version: "1.0.0"
@@ -10,14 +10,14 @@ metadata:
   uses: [mcp__distill__recall]
 ---
 
-# /distill:recall
+# /distill-recall
 
 Search your accumulated knowledge using hybrid semantic + keyword search.
 
 ## Usage
 
 ```
-/distill:recall <query>
+/distill-recall <query>
 ```
 
 ## MCP Tool

@@ -4,6 +4,17 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.7.0] — 2026-03-18
+
+### Changed
+- **Skill rename**: `/distill:recall` → `/distill-recall` (all 7 skills renamed to `distill-*` format)
+- **Auto-crystallize enabled by default**: threshold changed from 0 (disabled) to 20 — after 20 chunks accumulate, crystallize runs automatically to generate rules/skills
+
+### Fixed
+- **prompts.md SSOT sync**: added missing "agent" delivery classification to match prompts.py
+
+---
+
 ## [1.6.0] — 2026-03-18
 
 ### Added

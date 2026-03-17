@@ -1,5 +1,5 @@
 ---
-name: profile
+name: distill-profile
 description: View knowledge statistics and hook status.
 metadata:
   version: "1.0.0"
@@ -10,14 +10,14 @@ metadata:
   uses: [mcp__distill__profile]
 ---
 
-# /distill:profile
+# /distill-profile
 
 View accumulated knowledge statistics, environment summary, and last hook run status.
 
 ## Usage
 
 ```
-/distill:profile
+/distill-profile
 ```
 
 ## MCP Tool

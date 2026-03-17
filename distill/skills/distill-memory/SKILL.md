@@ -1,5 +1,5 @@
 ---
-name: memory
+name: distill-memory
 description: Manage knowledge entries — promote, demote, delete, or crystallize.
 metadata:
   version: "1.0.0"
@@ -10,14 +10,14 @@ metadata:
   uses: [mcp__distill__memory]
 ---
 
-# /distill:memory
+# /distill-memory
 
 Manage knowledge lifecycle: promote/demote scope, delete entries, or crystallize into rules.
 
 ## Usage
 
 ```
-/distill:memory <action> [id]
+/distill-memory <action> [id]
 ```
 
 ## MCP Tool
