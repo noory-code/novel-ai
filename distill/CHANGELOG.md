@@ -4,14 +4,17 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
-## [1.4.1] — 2026-03-17
+## [1.5.0] — 2026-03-17
 
 ### Added
+- **Hybrid search**: `recall()` now combines vector KNN and FTS5 keyword search via Reciprocal Rank Fusion (RRF), improving recall for exact keyword matches that vector search alone may miss
+- **Combined relevance ranking**: results ranked by weighted formula (50% search score + 35% confidence + 15% access frequency) instead of confidence-only sorting
 - **Hook concurrency control**: file-lock (`fcntl.flock`) prevents multiple hook processes from stacking up when PreCompact and SessionEnd fire in rapid succession
 - **Hook status file**: `~/.distill/hook-status.json` provides observability into hook execution (pid, duration, result, errors)
-- 7 new tests for lock acquisition, skip-when-locked behavior, and status file I/O
+- 19 new tests for hybrid search, relevance scoring, lock behavior, and status file I/O
 
 ### Changed
+- `recall()` output now shows `relevance:` (combined score) instead of `confidence:`
 - SQLite `busy_timeout` increased from 5s to 30s for safer concurrent access between MCP server and hook processes
 
 ---

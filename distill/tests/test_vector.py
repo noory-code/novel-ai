@@ -141,6 +141,47 @@ class TestConcurrentAccess:
             store.close()
 
 
+class TestHybridSearch:
+    def test_combines_vector_and_fts_results(self, vec_store: VectorStore) -> None:
+        vec_store.index("h1", "TypeScript strict mode config", ["typescript"])
+        vec_store.index("h2", "Python virtual environments", ["python"])
+
+        results = vec_store.hybrid_search("TypeScript strict mode")
+        assert len(results) > 0
+        assert results[0].id == "h1"
+        assert results[0].score > 0
+
+    def test_fts_contributes_to_ranking(self, vec_store: VectorStore) -> None:
+        """FTS keyword hits should boost results that also match semantically."""
+        vec_store.index("hk1", "Use SQLite WAL mode for concurrency", ["sqlite", "wal"])
+        vec_store.index("hk2", "Database performance tuning guide", ["database"])
+
+        results = vec_store.hybrid_search("SQLite WAL")
+        assert len(results) > 0
+        # The entry with exact keyword match should rank first
+        assert results[0].id == "hk1"
+
+    def test_deduplicates_results(self, vec_store: VectorStore) -> None:
+        """Same entry from vector and FTS should appear only once."""
+        vec_store.index("hd1", "Unique test content for dedup", ["test"])
+        results = vec_store.hybrid_search("Unique test content dedup")
+        ids = [r.id for r in results]
+        assert len(ids) == len(set(ids))
+
+    def test_returns_empty_for_no_data(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="distill-hybrid-") as tmp:
+            s = VectorStore("project", tmp)
+            results = s.hybrid_search("anything")
+            assert len(results) == 0
+            s.close()
+
+    def test_respects_limit(self, vec_store: VectorStore) -> None:
+        for i in range(5):
+            vec_store.index(f"hl{i}", f"Hybrid limit test content {i}", ["limit"])
+        results = vec_store.hybrid_search("Hybrid limit test", limit=2)
+        assert len(results) <= 2
+
+
 class TestCloseIdempotency:
     def test_close_is_idempotent(self, vec_store: VectorStore) -> None:
         """Verify that calling close() twice does not raise an exception."""

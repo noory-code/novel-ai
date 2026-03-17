@@ -213,6 +213,49 @@ class VectorStore:
             for row in rows
         ]
 
+    def hybrid_search(
+        self, query: str, limit: int = 5
+    ) -> list[SearchResult]:
+        """Hybrid search combining vector KNN and FTS5 keyword matching.
+
+        Uses Reciprocal Rank Fusion (RRF) to merge results from both
+        search methods into a single ranked list.
+        """
+        k = 60  # standard RRF constant
+        expanded = limit * 2
+
+        vec_results = self.search(query, expanded)
+        fts_results = self.fts_search(query, expanded)
+
+        # RRF scoring: score = sum(1 / (k + rank)) across result lists
+        scores: dict[str, float] = {}
+        content_map: dict[str, SearchResult] = {}
+
+        for rank, r in enumerate(vec_results):
+            scores[r.id] = scores.get(r.id, 0) + 1 / (k + rank)
+            content_map[r.id] = r
+
+        for rank, r in enumerate(fts_results):
+            scores[r.id] = scores.get(r.id, 0) + 1 / (k + rank)
+            if r.id not in content_map:
+                content_map[r.id] = r
+
+        # Sort by fused score descending
+        ranked_ids = sorted(
+            scores, key=lambda id: scores[id], reverse=True
+        )[:limit]
+
+        return [
+            SearchResult(
+                id=content_map[id].id,
+                content=content_map[id].content,
+                tags=content_map[id].tags,
+                score=scores[id],
+            )
+            for id in ranked_ids
+            if id in content_map
+        ]
+
     def remove(self, id: str) -> None:
         """Remove an entry from both indexes."""
         self._conn.execute("DELETE FROM knowledge_fts WHERE id = ?", (id,))

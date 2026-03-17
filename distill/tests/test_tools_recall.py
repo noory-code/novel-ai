@@ -6,7 +6,7 @@ import pytest
 
 from distill.store.metadata import MetadataStore
 from distill.store.vector import VectorStore
-from distill.tools.recall import recall
+from distill.tools.recall import _relevance_score, recall
 from tests.helpers.factories import make_knowledge_input
 
 
@@ -117,7 +117,9 @@ class TestRecall:
     async def test_min_confidence_zero_returns_all(self, populated_store):
         result_default = await recall("sqlite", min_confidence=0.0)
         result_no_filter = await recall("sqlite")
-        assert result_default == result_no_filter
+        # Both should return results (same set of chunks, access_count may
+        # differ slightly between calls due to touch())
+        assert ("No matching" in result_default) == ("No matching" in result_no_filter)
 
     @pytest.mark.asyncio
     async def test_visibility_filter_excludes_non_matching(self, tmp_path, monkeypatch):
@@ -158,3 +160,47 @@ class TestRecall:
 
         assert "private" in result_private.lower()
         assert "global" in result_global.lower()
+
+
+class TestRelevanceScore:
+    """Tests for the combined relevance scoring formula."""
+
+    def test_weights_sum_to_one(self):
+        from distill.tools.recall import _W_ACCESS, _W_CONFIDENCE, _W_SEARCH
+
+        assert _W_SEARCH + _W_CONFIDENCE + _W_ACCESS == pytest.approx(1.0)
+
+    def test_perfect_scores(self):
+        score = _relevance_score(1.0, 1.0, 10)
+        assert score == pytest.approx(1.0)
+
+    def test_zero_scores(self):
+        score = _relevance_score(0.0, 0.0, 0)
+        assert score == pytest.approx(0.0)
+
+    def test_access_count_capped(self):
+        score_at_cap = _relevance_score(0.5, 0.5, 10)
+        score_over_cap = _relevance_score(0.5, 0.5, 100)
+        assert score_at_cap == pytest.approx(score_over_cap)
+
+    def test_high_search_score_beats_high_confidence(self):
+        """High search relevance with low confidence should beat the opposite."""
+        high_search = _relevance_score(0.9, 0.3, 0)
+        high_confidence = _relevance_score(0.3, 0.9, 0)
+        assert high_search > high_confidence
+
+    def test_access_count_provides_boost(self):
+        no_access = _relevance_score(0.5, 0.5, 0)
+        with_access = _relevance_score(0.5, 0.5, 5)
+        assert with_access > no_access
+
+
+class TestRecallOutputFormat:
+    """Tests for the updated recall output format."""
+
+    @pytest.mark.asyncio
+    async def test_output_shows_relevance(self, populated_store):
+        result = await recall("TypeScript strict mode")
+        if "No matching" not in result:
+            assert "relevance:" in result
+            assert "confidence:" not in result
