@@ -11,6 +11,7 @@
     "url": "https://github.com/noory-code"
   },
   "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
   "mcpServers": {
     "distill": {
       "command": "uv",

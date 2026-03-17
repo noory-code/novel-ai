@@ -212,10 +212,15 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
     return "", "\n".join(stderr_parts), 0
 
 
-if __name__ == "__main__":
+def cli() -> None:
+    """Console script entry point for `distill-hook`."""
     stdout, stderr, code = main()
     if stderr:
         print(stderr, file=sys.stderr)
     if stdout:
         sys.stdout.write(stdout)
     sys.exit(code)
+
+
+if __name__ == "__main__":
+    cli()

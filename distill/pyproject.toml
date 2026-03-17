@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 distill = "distill.__main__:main"
+distill-hook = "distill.hooks.distill_hook:cli"
 
 [build-system]
 requires = ["hatchling"]
