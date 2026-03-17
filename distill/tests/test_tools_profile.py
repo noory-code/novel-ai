@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from distill.store.metadata import MetadataStore
@@ -111,3 +113,63 @@ class TestProfile:
     async def test_respects_scope_filter(self, profile_env):
         result = await profile(scope="global")
         assert "GLOBAL scope" in result
+
+    @pytest.mark.asyncio
+    async def test_shows_hook_status_finished(self, profile_env, tmp_path, monkeypatch):
+        status_path = tmp_path / "hook-status.json"
+        status_path.write_text(json.dumps({
+            "last_run": "2026-03-17T10:00:00Z",
+            "session_id": "sess-abc",
+            "event": "SessionEnd",
+            "result": "success",
+            "duration_s": 12.5,
+        }))
+        monkeypatch.setattr("distill.tools.profile.STATUS_PATH", status_path)
+
+        result = await profile()
+        assert "LAST HOOK" in result
+        assert "SessionEnd" in result
+        assert "success" in result
+        assert "12.5s" in result
+
+    @pytest.mark.asyncio
+    async def test_shows_hook_status_running(self, profile_env, tmp_path, monkeypatch):
+        status_path = tmp_path / "hook-status.json"
+        status_path.write_text(json.dumps({
+            "pid": 12345,
+            "started_at": "2026-03-17T10:00:00Z",
+            "session_id": "sess-abc",
+            "event": "PreCompact",
+        }))
+        monkeypatch.setattr("distill.tools.profile.STATUS_PATH", status_path)
+
+        result = await profile()
+        assert "LAST HOOK" in result
+        assert "Currently running" in result
+        assert "12345" in result
+
+    @pytest.mark.asyncio
+    async def test_shows_hook_error(self, profile_env, tmp_path, monkeypatch):
+        status_path = tmp_path / "hook-status.json"
+        status_path.write_text(json.dumps({
+            "last_run": "2026-03-17T10:00:00Z",
+            "session_id": "sess-abc",
+            "event": "SessionEnd",
+            "result": "error",
+            "duration_s": 120.0,
+            "error": "Hook timed out after 120s",
+        }))
+        monkeypatch.setattr("distill.tools.profile.STATUS_PATH", status_path)
+
+        result = await profile()
+        assert "error" in result.lower()
+        assert "timed out" in result
+
+    @pytest.mark.asyncio
+    async def test_no_hook_status_file(self, profile_env, tmp_path, monkeypatch):
+        monkeypatch.setattr(
+            "distill.tools.profile.STATUS_PATH",
+            tmp_path / "nonexistent.json",
+        )
+        result = await profile()
+        assert "LAST HOOK" not in result

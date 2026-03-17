@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
+
 from distill.config import load_config
+from distill.hooks.lock import STATUS_PATH
 from distill.scanner.scanner import scan_environment
 from distill.store.scope import detect_project_root, detect_workspace_root
 from distill.store.types import KnowledgeScope
@@ -76,5 +79,31 @@ async def profile(scope: KnowledgeScope | None = None, caller_cwd: str | None = 
     )
 
     sections.append("## ENVIRONMENT\n" + "\n".join(env_lines))
+
+    # Hook status
+    try:
+        if STATUS_PATH.exists():
+            status = json.loads(STATUS_PATH.read_text(encoding="utf-8"))
+            hook_lines = []
+            if "last_run" in status:
+                hook_lines.append(f"Last run: {status['last_run']}")
+                hook_lines.append(f"Event: {status.get('event', '?')}")
+                hook_lines.append(f"Result: {status.get('result', '?')}")
+                hook_lines.append(
+                    f"Duration: {status.get('duration_s', '?')}s"
+                )
+                if status.get("error"):
+                    hook_lines.append(f"Error: {status['error']}")
+            elif "started_at" in status:
+                hook_lines.append(
+                    f"Currently running (pid {status.get('pid', '?')}, "
+                    f"started {status['started_at']})"
+                )
+            if hook_lines:
+                sections.append(
+                    "## LAST HOOK\n" + "\n".join(hook_lines)
+                )
+    except Exception:
+        pass  # non-critical — don't break profile if status file is corrupt
 
     return "\n\n".join(sections) or "No knowledge accumulated yet."

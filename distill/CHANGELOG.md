@@ -11,7 +11,8 @@ All notable changes are documented here, organized by development phase.
 - **Combined relevance ranking**: results ranked by weighted formula (50% search score + 35% confidence + 15% access frequency) instead of confidence-only sorting
 - **Hook concurrency control**: file-lock (`fcntl.flock`) prevents multiple hook processes from stacking up when PreCompact and SessionEnd fire in rapid succession
 - **Hook status file**: `~/.distill/hook-status.json` provides observability into hook execution (pid, duration, result, errors)
-- 19 new tests for hybrid search, relevance scoring, lock behavior, and status file I/O
+- **Hook status in profile**: `profile()` now shows last hook run details (event, result, duration, error)
+- 23 new tests for hybrid search, relevance scoring, lock behavior, status file I/O, and profile hook display
 
 ### Changed
 - `recall()` output now shows `relevance:` (combined score) instead of `confidence:`
