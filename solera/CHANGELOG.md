@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.1] — 2026-03-17
+
+### Added
+- **LICENSE file**: MIT license added to plugin root for marketplace submission compliance
+
+---
+
 ## [2.9.0] — 2026-03-16
 
 ### Changed (BREAKING)
