@@ -2,11 +2,38 @@
 
 from __future__ import annotations
 
+import fcntl
+import io
 import json
 import subprocess
+import threading
 from pathlib import Path
 
+import pytest
+
 from distill.hooks.distill_hook import main
+from distill.hooks.lock import acquire_hook_lock
+
+
+@pytest.fixture(autouse=True)
+def _auto_mock_lock(monkeypatch):
+    """Auto-mock the hook lock so existing tests are not affected.
+
+    Individual tests that need to test lock behavior can override this
+    by monkeypatching acquire_hook_lock themselves.
+    """
+    monkeypatch.setattr(
+        "distill.hooks.distill_hook.acquire_hook_lock",
+        lambda: io.StringIO(),  # always succeed
+    )
+    monkeypatch.setattr(
+        "distill.hooks.distill_hook.write_status_started",
+        lambda *a, **kw: None,
+    )
+    monkeypatch.setattr(
+        "distill.hooks.distill_hook.write_status_finished",
+        lambda *a, **kw: None,
+    )
 
 
 class TestClaudePPath:
@@ -408,3 +435,191 @@ class TestSecurityValidation:
             assert code == 0
             assert "auto-learn complete" in stderr
             assert len(calls) == 1
+
+
+class TestHookLock:
+    """Tests for file-lock based concurrency control."""
+
+    def test_acquire_returns_handle_when_free(self, tmp_path, monkeypatch):
+        lock_path = tmp_path / "hook.lock"
+        monkeypatch.setattr("distill.hooks.lock.LOCK_PATH", lock_path)
+
+        handle = acquire_hook_lock()
+        assert handle is not None
+        handle.close()
+
+    def test_acquire_returns_none_when_locked(self, tmp_path, monkeypatch):
+        lock_path = tmp_path / "hook.lock"
+        monkeypatch.setattr("distill.hooks.lock.LOCK_PATH", lock_path)
+
+        # Hold the lock in another thread
+        barrier = threading.Barrier(2, timeout=5)
+        release = threading.Event()
+
+        def hold_lock():
+            fh = open(lock_path, "w")
+            fcntl.flock(fh, fcntl.LOCK_EX)
+            barrier.wait()
+            release.wait(timeout=5)
+            fh.close()
+
+        t = threading.Thread(target=hold_lock)
+        t.start()
+        barrier.wait()
+
+        # Second acquire should fail
+        result = acquire_hook_lock()
+        assert result is None
+
+        release.set()
+        t.join()
+
+    def test_second_hook_skipped_when_lock_held(self, monkeypatch, tmp_path):
+        """When lock is already held, hook should skip with informative message."""
+        transcript = tmp_path / "t.jsonl"
+        transcript.write_text("")
+
+        # Override auto-mock: lock fails
+        monkeypatch.setattr(
+            "distill.hooks.distill_hook.acquire_hook_lock",
+            lambda: None,
+        )
+
+        stdin = json.dumps({
+            "session_id": "sess-001",
+            "transcript_path": str(transcript),
+            "hook_event_name": "SessionEnd",
+        })
+        _, stderr, code = main(stdin)
+
+        assert code == 0
+        assert "skipped" in stderr
+        assert "another hook instance" in stderr
+
+    def test_lock_acquired_runs_normally(self, monkeypatch, tmp_path):
+        """When lock is acquired, hook runs the claude -p subprocess."""
+        transcript = tmp_path / "t.jsonl"
+        transcript.write_text("")
+
+        mock_result = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="done", stderr=""
+        )
+        calls = []
+
+        def mock_run(cmd, **kwargs):
+            calls.append(cmd)
+            return mock_result
+
+        monkeypatch.setattr("distill.hooks.distill_hook.subprocess.run", mock_run)
+        # auto-mock already provides a successful lock
+
+        stdin = json.dumps({
+            "session_id": "sess-001",
+            "transcript_path": str(transcript),
+            "hook_event_name": "PreCompact",
+        })
+        _, stderr, code = main(stdin)
+
+        assert code == 0
+        assert "auto-learn complete" in stderr
+        assert len(calls) == 1
+
+
+class TestHookStatusFile:
+    """Tests for hook status file observability."""
+
+    def test_status_file_written_on_success(self, monkeypatch, tmp_path):
+        transcript = tmp_path / "t.jsonl"
+        transcript.write_text("")
+        mock_result = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="done", stderr=""
+        )
+        monkeypatch.setattr(
+            "distill.hooks.distill_hook.subprocess.run",
+            lambda *a, **kw: mock_result,
+        )
+
+        # Track status writes
+        status_calls = []
+
+        def mock_write_started(session_id, event):
+            status_calls.append(("started", session_id, event))
+
+        def mock_write_finished(session_id, event, result, duration, error=None):
+            status_calls.append(("finished", session_id, event, result, error))
+
+        monkeypatch.setattr(
+            "distill.hooks.distill_hook.write_status_started", mock_write_started
+        )
+        monkeypatch.setattr(
+            "distill.hooks.distill_hook.write_status_finished", mock_write_finished
+        )
+
+        stdin = json.dumps({
+            "session_id": "sess-001",
+            "transcript_path": str(transcript),
+            "hook_event_name": "SessionEnd",
+        })
+        main(stdin)
+
+        assert len(status_calls) == 2
+        assert status_calls[0] == ("started", "sess-001", "SessionEnd")
+        assert status_calls[1][0] == "finished"
+        assert status_calls[1][3] == "success"
+        assert status_calls[1][4] is None  # no error
+
+    def test_status_file_written_on_failure(self, monkeypatch, tmp_path):
+        transcript = tmp_path / "t.jsonl"
+        transcript.write_text("")
+
+        mock_result = subprocess.CompletedProcess(
+            args=[], returncode=1, stdout="", stderr="fail"
+        )
+        monkeypatch.setattr(
+            "distill.hooks.distill_hook.subprocess.run",
+            lambda *a, **kw: mock_result,
+        )
+
+        status_calls = []
+
+        def mock_write_started(session_id, event):
+            status_calls.append(("started",))
+
+        def mock_write_finished(session_id, event, result, duration, error=None):
+            status_calls.append(("finished", result, error))
+
+        monkeypatch.setattr(
+            "distill.hooks.distill_hook.write_status_started", mock_write_started
+        )
+        monkeypatch.setattr(
+            "distill.hooks.distill_hook.write_status_finished", mock_write_finished
+        )
+
+        stdin = json.dumps({
+            "session_id": "sess-001",
+            "transcript_path": str(transcript),
+            "hook_event_name": "SessionEnd",
+        })
+        main(stdin)
+
+        assert len(status_calls) == 2
+        assert status_calls[1][1] == "error"
+        assert status_calls[1][2] is not None  # error message present
+
+    def test_write_status_creates_file(self, tmp_path, monkeypatch):
+        """Verify actual status file I/O."""
+        from distill.hooks.lock import write_status_finished, write_status_started
+
+        monkeypatch.setattr("distill.hooks.lock.STATUS_PATH", tmp_path / "status.json")
+
+        write_status_started("sess-x", "PreCompact")
+        data = json.loads((tmp_path / "status.json").read_text())
+        assert data["session_id"] == "sess-x"
+        assert data["event"] == "PreCompact"
+        assert "pid" in data
+
+        write_status_finished("sess-x", "PreCompact", "success", 1.5)
+        data = json.loads((tmp_path / "status.json").read_text())
+        assert data["result"] == "success"
+        assert data["duration_s"] == 1.5
+        assert "error" not in data

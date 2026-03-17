@@ -19,7 +19,10 @@ import json
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
+
+from distill.hooks.lock import acquire_hook_lock, write_status_finished, write_status_started
 
 
 def _validate_inputs(
@@ -179,15 +182,32 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
     event = hook_data.get("hook_event_name", "unknown")
     cwd = hook_data.get("cwd")
 
+    # Acquire exclusive lock to prevent process stacking
+    lock_handle = acquire_hook_lock()
+    if lock_handle is None:
+        stderr_parts.append(
+            f"distill-hook: {event} — skipped (another hook instance is already running)"
+        )
+        return "", "\n".join(stderr_parts), 0
+
     # Load config to get model name
     from distill.config import load_config
     config = load_config(cwd)
 
+    start_time = time.monotonic()
+    write_status_started(session_id, event)
+
     try:
         _run_claude_p(transcript_path, session_id, cwd, model=config.extraction_model)
+        duration = time.monotonic() - start_time
+        write_status_finished(session_id, event, "success", duration)
         stderr_parts.append(f"distill-hook: {event} — auto-learn complete via claude -p")
     except Exception as err:
+        duration = time.monotonic() - start_time
+        write_status_finished(session_id, event, "error", duration, error=str(err))
         stderr_parts.append(f"distill-hook: {event} — claude -p failed: {err}")
+    finally:
+        lock_handle.close()
 
     return "", "\n".join(stderr_parts), 0
 

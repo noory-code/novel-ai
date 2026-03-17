@@ -4,6 +4,18 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.4.1] — 2026-03-17
+
+### Added
+- **Hook concurrency control**: file-lock (`fcntl.flock`) prevents multiple hook processes from stacking up when PreCompact and SessionEnd fire in rapid succession
+- **Hook status file**: `~/.distill/hook-status.json` provides observability into hook execution (pid, duration, result, errors)
+- 7 new tests for lock acquisition, skip-when-locked behavior, and status file I/O
+
+### Changed
+- SQLite `busy_timeout` increased from 5s to 30s for safer concurrent access between MCP server and hook processes
+
+---
+
 ## [1.4.0] — 2026-03-17
 
 ### Added

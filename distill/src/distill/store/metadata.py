@@ -126,7 +126,7 @@ class MetadataStore:
         if row and row[0].lower() != "wal":
             self._conn_impl.execute("PRAGMA journal_mode = WAL")
 
-        self._conn_impl.execute("PRAGMA busy_timeout = 5000")
+        self._conn_impl.execute("PRAGMA busy_timeout = 30000")
         self._conn_impl.executescript(SCHEMA)
         self._apply_migrations()
 
