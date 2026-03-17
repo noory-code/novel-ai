@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Solera hook handler for SessionEnd event.
+"""Solera hook handler for PreCompact event.
 
-Runs `claude -p` subprocess to automatically execute the solera-handoff skill,
-updating HANDOFF.md with current session context.
+Runs `claude -p` subprocess to automatically update HANDOFF.md
+before context compaction, preserving session state.
 
 Usage in hooks.json:
-  "SessionEnd": [{
+  "PreCompact": [{
     "hooks": [{ "type": "command", "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/handoff_hook.py" }]
   }]
 """
@@ -48,8 +48,7 @@ def _is_locked() -> bool:
 
 def main(stdin_data: str | None = None) -> tuple[str, str, int]:
     """Run the hook. Returns (stdout, stderr, exit_code)."""
-    # Guard against recursive invocation: claude -p subprocesses also trigger
-    # SessionEnd, which would re-enter this hook indefinitely.
+    # Guard against concurrent invocation.
     # Lockfile with TTL — NOT deleted after run, expires after 120s.
     if _is_locked():
         return "", "", 0
@@ -107,7 +106,7 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
         stderr_parts.append(f"solera-handoff-hook: failed to launch claude -p: {exc}")
         return "", "\n".join(stderr_parts), 0
 
-    stderr_parts.append("solera-handoff-hook: SessionEnd — HANDOFF.md updated")
+    stderr_parts.append("solera-handoff-hook: PreCompact — HANDOFF.md updated")
     return "", "\n".join(stderr_parts), 0
 
 

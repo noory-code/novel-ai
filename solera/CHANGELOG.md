@@ -1,10 +1,13 @@
 # Changelog
 
-## [2.9.3] — 2026-03-18
+## [2.9.4] — 2026-03-18
+
+### Changed
+- **Hook trigger**: switched handoff hook from SessionEnd to PreCompact — more reliable, fires before context compaction instead of unreliable session close
 
 ### Fixed
 - **Cross-platform hooks**: replaced hardcoded `/tmp/` paths with `tempfile.gettempdir()` for Windows compatibility
-- **Hook registration**: added missing `hooks` field in `plugin.json` so SessionEnd hook is loaded
+- **Hook registration**: added missing `hooks` field in `plugin.json`
 
 ---
 
