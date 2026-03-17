@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.9.3] — 2026-03-18
+
+### Fixed
+- **Cross-platform hooks**: replaced hardcoded `/tmp/` paths with `tempfile.gettempdir()` for Windows compatibility
+- **Hook registration**: added missing `hooks` field in `plugin.json` so SessionEnd hook is loaded
+
+---
+
 ## [2.9.2] — 2026-03-17
 
 ### Added

@@ -10,5 +10,6 @@
     "name": "noory-code",
     "url": "https://github.com/noory-code"
   },
-  "skills": "./skills/"
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
 }

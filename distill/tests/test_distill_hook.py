@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import fcntl
 import io
 import json
 import subprocess
@@ -459,8 +458,17 @@ class TestHookLock:
         release = threading.Event()
 
         def hold_lock():
+            import sys
+
             fh = open(lock_path, "w")
-            fcntl.flock(fh, fcntl.LOCK_EX)
+            if sys.platform == "win32":
+                import msvcrt
+
+                msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(fh, fcntl.LOCK_EX)
             barrier.wait()
             release.wait(timeout=5)
             fh.close()
