@@ -146,25 +146,10 @@ On each invocation, `solera-manage-workflow`:
 | Property | `progress.md` | `HANDOFF.md` |
 |----------|--------------|--------------|
 | **Scope** | Permanent project state | Transient session state |
-| **Update frequency** | Updated per Epic completion (and at major milestones) | Regenerated every session end via the Stop hook |
+| **Update frequency** | Updated per Epic completion (and at major milestones) | Updated manually via `/solera-handoff` |
 | **Content** | Current Phase ID, Goal ID, Epic ID, Story ID, Action Item ID; completion counts | What was done this session, what is in progress, what to do next, any open decisions |
 | **Audience** | All future sessions and contributors | The next session only |
 | **Authoritative for** | "Where is this project right now?" | "What happened just before this session ended?" |
 | **Lifespan** | Indefinite | Single session boundary |
 
-`progress.md` must never contain session-specific narrative. `HANDOFF.md` must never be treated as a persistent record; it is overwritten unconditionally on every Stop event.
-
----
-
-## Stop Hook
-
-When a Claude Code session ends, the `Stop` lifecycle event fires `hooks/handoff_hook.py`. The hook runs `claude -p` with a structured handoff prompt that instructs Claude to:
-
-- Summarize what was completed during the session.
-- Identify any work currently in progress and its state.
-- List the next concrete steps.
-- Record any open decisions or blockers.
-
-The output is written to `HANDOFF.md`, overwriting any previous content. The hook runs unconditionally — it does not check whether any work was done during the session. This guarantees that `HANDOFF.md` always reflects the most recent session boundary, even if the session produced no changes.
-
-The prompt used by the hook is the SSOT for what `HANDOFF.md` contains. The hook itself contains no handoff logic; it only assembles the prompt and invokes `claude -p`.
+`progress.md` must never contain session-specific narrative. `HANDOFF.md` must never be treated as a persistent record; it is overwritten each time `/solera-handoff` is invoked.

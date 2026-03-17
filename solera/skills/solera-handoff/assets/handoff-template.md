@@ -5,7 +5,7 @@
 | File | Purpose | Update Frequency |
 |------|---------|-----------------|
 | `progress.md` | Overall project progress status (Phase/Goal/Epic) | Per Epic |
-| `HANDOFF.md` | Cross-session context handoff (transient state) | At session end |
+| `HANDOFF.md` | Cross-session context handoff (transient state) | Via `/solera-handoff` |
 
 > `progress.md` is for project management; `HANDOFF.md` is for AI session management
 

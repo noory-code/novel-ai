@@ -10,11 +10,11 @@ Like the solera aging method, where layers of work blend and deepen over time in
 |--|--|--|--|--|
 | **Structure** | Ad-hoc, flat | Flat issue list | Custom hierarchy | **Phase → Goal → Epic → Story → Action Item** |
 | **AI-executable** | Human reads and interprets | Human reads and interprets | Human reads and interprets | **Claude executes deterministically from skill definitions** |
-| **Context persistence** | Lost each session | Lost each session | Lost each session | **HANDOFF.md auto-updated on every session end** |
+| **Context persistence** | Lost each session | Lost each session | Lost each session | **HANDOFF.md via `/solera-handoff` skill** |
 | **Artifact lifecycle** | None | None | Manual archiving | **Artifacts promoted to `published/` on Goal complete** |
 | **Team handoff** | Verbal or manual notes | PR comments | Manual status update | **HANDOFF.md → async resume with zero coordination** |
 
-After a Solera session ends, the next contributor — or the same developer the next morning — opens `HANDOFF.md`, tells Claude "resume where we left off", and work continues from the exact step it stopped at.
+Run `/solera-handoff` before ending a session. The next contributor opens `HANDOFF.md`, tells Claude "resume where we left off", and work continues from the exact step it stopped at.
 
 ## How It Works
 
@@ -83,7 +83,7 @@ Solera verifies all Stories are complete, runs `solera-create-pr` to open the PR
 | `solera-manage-workflow` | "What should I work on", "show current progress" | `progress.md` updates; reads and executes each work item's `## Workflow` |
 | `solera-create-pr` | "Open a PR", "merge the Epic" | GitHub PR via `gh pr create`, squash merge, branch deletion |
 | `solera-publish-artifacts` | "Promote artifacts", "archive completed Epic" | Artifacts promoted incrementally from `artifacts/` to `published/` with version tags |
-| `solera-handoff` | "End session", or automatic on session end | `HANDOFF.md` at project root with full session context |
+| `solera-handoff` | "End session", "save handoff" | `HANDOFF.md` at project root with full session context |
 
 ### Meta
 
@@ -98,7 +98,7 @@ Solera verifies all Stories are complete, runs `solera-create-pr` to open the PR
 
 ## Team Workflow
 
-Solera uses a branch-per-Epic strategy: each Epic gets an `epics/[name]` branch from `dev`/`main`, and each Story gets an `epics-[name]/story-[ID]-[name]` child branch. Solera creates all branches automatically when you start an Epic or Story. When the Epic is complete, `solera-create-pr` opens a PR, manages the review cycle, and squash-merges to keep trunk history clean — one entry per Epic rather than dozens of implementation-detail commits. Because `HANDOFF.md` is regenerated on every session end, Contributor B can open the repository cold, read `HANDOFF.md`, and tell Claude to resume without any coordination with Contributor A.
+Solera uses a branch-per-Epic strategy: each Epic gets an `epics/[name]` branch from `dev`/`main`, and each Story gets an `epics-[name]/story-[ID]-[name]` child branch. Solera creates all branches automatically when you start an Epic or Story. When the Epic is complete, `solera-create-pr` opens a PR, manages the review cycle, and squash-merges to keep trunk history clean — one entry per Epic rather than dozens of implementation-detail commits. Run `/solera-handoff` before ending a session to update `HANDOFF.md` — Contributor B can then open the repository cold, read it, and tell Claude to resume without any coordination with Contributor A.
 
 | Level | Branch pattern | Created by |
 |-------|---------------|------------|
@@ -108,12 +108,6 @@ Solera uses a branch-per-Epic strategy: each Epic gets an `epics/[name]` branch 
 | Action Item | commit only — no branch | Solera (committed to Story branch) |
 
 See [docs/team-workflow.md](docs/team-workflow.md) for parallel Epic execution, rebase guidance, and recommended team setup.
-
-## Hooks
-
-| Event | Behavior |
-|-------|----------|
-| `SessionEnd` | Automatically runs the `solera-handoff` skill — overwrites `HANDOFF.md` with current session state: what was done, what is in progress, what to do next, and any open decisions |
 
 ## Install
 

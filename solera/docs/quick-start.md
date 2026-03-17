@@ -367,7 +367,7 @@ The `artifacts/` folder is now empty. A `RETRO.md` is written for the Goal. `_go
 ```
 task-app/
 ├── progress.md                              (Goal G1 complete)
-├── HANDOFF.md                               (auto-updated on session end)
+├── HANDOFF.md                               (updated via /solera-handoff)
 └── workspace/
     ├── initiative/2026/roadmap.md
     ├── phase/2026-P1-foundation/

@@ -18,7 +18,7 @@ metadata:
 
 Solera turns natural-language project intent into deterministic, AI-executable work items. Every level of the hierarchy owns its own procedure file, so Claude executes without guessing — from a quarterly Phase down to a single git commit.
 
-Each session ends with an auto-updated `HANDOFF.md`, so the next contributor (or the same developer tomorrow) can resume with zero coordination.
+Run `/solera-handoff` before ending a session to update `HANDOFF.md`, so the next contributor (or the same developer tomorrow) can resume with zero coordination.
 
 ## Skills
 
@@ -40,7 +40,7 @@ Each session ends with an auto-updated `HANDOFF.md`, so the next contributor (or
 | `solera-manage-workflow` | "What should I work on", "show current progress" | `progress.md` updates; reads and executes each work item's Workflow |
 | `solera-create-pr` | "Open a PR", "merge the Epic" | GitHub PR via `gh pr create`, squash merge, branch deletion |
 | `solera-publish-artifacts` | "Wrap up Goal", "archive completed Goal" | Artifacts moved from `artifacts/` to `published/` |
-| `solera-handoff` | "End session", or automatic on session end | `HANDOFF.md` with full session context |
+| `solera-handoff` | "End session", "save handoff" | `HANDOFF.md` with full session context |
 
 ### Meta (system skills)
 

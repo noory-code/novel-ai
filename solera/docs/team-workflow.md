@@ -6,7 +6,7 @@ A practical guide for using Solera in a small team (2–5 contributors).
 
 ## Overview
 
-Solera structures work as Phase → Goal → Epic → Story → Action Item, where each Epic gets its own branch and each Story gets a child branch off that Epic. When an Epic is done, the `solera-create-pr` skill opens a pull request against `dev` or `main`, handles review cycles on the Epic branch, and squash-merges to keep history clean. The `solera-handoff` skill runs automatically at session end and writes `HANDOFF.md` with exactly where work stands — what was done, what is next, and any blockers. This means Contributor B can open the repo cold and know precisely what to do without asking Contributor A, and the same developer returning from a break can resume without reconstructing context from scratch.
+Solera structures work as Phase → Goal → Epic → Story → Action Item, where each Epic gets its own branch and each Story gets a child branch off that Epic. When an Epic is done, the `solera-create-pr` skill opens a pull request against `dev` or `main`, handles review cycles on the Epic branch, and squash-merges to keep history clean. Run `/solera-handoff` before ending a session to write `HANDOFF.md` with exactly where work stands — what was done, what is next, and any blockers. This means Contributor B can open the repo cold and know precisely what to do without asking Contributor A, and the same developer returning from a break can resume without reconstructing context from scratch.
 
 ---
 
@@ -58,7 +58,7 @@ flowchart TD
 
 **Contributor A — ending a session:**
 
-When A's Claude Code session ends (or A runs the `solera-handoff` skill manually), Solera:
+When A runs `/solera-handoff` before ending the session, Solera:
 
 1. Runs `git status --short`, `git diff --stat`, `git log --oneline -5`
 2. Reads `progress.md` to get current Phase / Goal / Epic / Story

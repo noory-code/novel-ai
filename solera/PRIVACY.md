@@ -34,4 +34,4 @@ For questions about this privacy policy, open an issue at [github.com/noory-code
 
 ---
 
-*Last updated: 2026-03-17 | Solera v2.9.2*
+*Last updated: 2026-03-18 | Solera v2.10.0*
