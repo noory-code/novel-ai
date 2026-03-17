@@ -1,7 +1,7 @@
 {
   "name": "distill",
-  "version": "1.3.3",
-  "description": "Extract and recall reusable knowledge from Claude Code conversations",
+  "version": "1.4.0",
+  "description": "Knowledge distillation plugin for Claude Code. Automatically extracts reusable patterns, decisions, and solutions from your conversations and recalls them when relevant — building persistent, searchable memory across projects. No API key required.",
   "homepage": "https://github.com/noory-code/noory-ai/tree/main/distill",
   "repository": "https://github.com/noory-code/noory-ai",
   "license": "MIT",

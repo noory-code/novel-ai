@@ -6,7 +6,7 @@ metadata:
   category: meta
   type: reference
   style: guide
-  triggers: [what is distill, distill help, distill commands, how to use distill, distill get started, distill 뭐야, distill 사용법, distill 어떻게 써, distill 도움말]
+  triggers: [what is distill, distill help, distill commands, how to use distill, distill get started]
   uses: []
 ---
 

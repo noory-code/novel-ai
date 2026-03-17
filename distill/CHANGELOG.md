@@ -4,6 +4,19 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.4.0] — 2026-03-17
+
+### Added
+- `PRIVACY.md` — privacy policy for marketplace submission
+- "How It Works" section in README — explains the extraction and recall flow
+- "FAQ" section in README — answers common questions about API keys, debugging, conflicts, offline use, and data storage
+
+### Changed
+- `plugin.json`: updated description for marketplace (explains value proposition and "no API key" clearly)
+- `help` skill: removed Korean trigger phrases — English-only triggers for marketplace compatibility
+
+---
+
 ## [1.3.3] — 2026-03-08
 
 ### Fixed
