@@ -13,7 +13,7 @@ See [ROADMAP.md](ROADMAP.md) for Phase 3+ planning.
 |---------|--------|
 | `uv sync` | Install dependencies |
 | `uv run python -m distill` | Start MCP server |
-| `uv run pytest` | Run all tests (316 tests) |
+| `uv run pytest` | Run all tests (332 tests) |
 
 ## Architecture
 
@@ -44,9 +44,11 @@ src/distill/
 │   ├── memory.py          ← promote/demote/delete/crystallize
 │   ├── ingest.py          ← Extract from markdown/text files
 │   ├── store.py           ← Save pre-extracted chunks (no LLM)
-│   └── init.py            ← One-step onboarding
+│   ├── init.py            ← One-step onboarding
+│   └── helpers.py         ← Shared utilities (for_each_scope)
 └── hooks/
-    └── distill_hook.py    ← PreCompact/SessionEnd: claude -p subprocess
+    ├── distill_hook.py    ← PreCompact/SessionEnd: claude -p subprocess
+    └── lock.py            ← File-lock concurrency control for hooks
 shared/prompts.md          ← Extraction prompt SSOT (must sync with prompts.py)
 ```
 

@@ -18,7 +18,7 @@ def wrap_sampling_error(err: BaseException | str) -> Exception:
         return SamplingNotSupportedError(
             "MCP Sampling is not supported by this client. "
             "Distill requires a client that supports MCP Sampling (server.createMessage). "
-            "See: https://github.com/wooxist/distill#requirements"
+            "See: https://github.com/noory-code/noory-ai/tree/main/distill#requirements"
         )
 
     if isinstance(err, Exception):

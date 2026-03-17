@@ -4,6 +4,19 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.5.1] — 2026-03-17
+
+### Fixed
+- Broken `docs/troubleshooting.md` link in README FAQ
+- Wrong git clone URL (`wooxist/distill` → `noory-code/noory-ai`) in docs and source
+- Outdated version in PRIVACY.md (v1.4.0 → v1.5.0)
+- Missing `lock.py` and `helpers.py` in CLAUDE.md architecture diagram
+- Incorrect tool count in docs/development.md (7 → 9)
+- Outdated test count in CLAUDE.md (316 → 332) and docs/development.md (311 → 332)
+- Inaccurate proposal count in README (194 → 192)
+
+---
+
 ## [1.5.0] — 2026-03-17
 
 ### Added

@@ -8,8 +8,8 @@
 ## Setup
 
 ```bash
-git clone https://github.com/wooxist/distill.git
-cd distill
+git clone https://github.com/noory-code/noory-ai.git
+cd noory-ai/distill
 uv sync
 ```
 
@@ -22,7 +22,7 @@ uv run python -m distill      # Start MCP server
 ## Test
 
 ```bash
-uv run pytest                 # Run all tests (311 tests)
+uv run pytest                 # Run all tests (332 tests)
 uv run pytest -v              # Verbose output
 uv run pytest tests/test_config.py  # Single test file
 ```
@@ -33,9 +33,9 @@ Tests use `pytest` with `pytest-asyncio` for async test support.
 
 ```
 src/distill/
-├── server.py                # FastMCP server entry point + 7 tool registrations
+├── server.py                # FastMCP server entry point + 9 tool registrations
 ├── config.py                # Config loader (DistillConfig, SourcesConfig, OutputsConfig)
-├── tools/                   # 7 MCP tool implementations
+├── tools/                   # 9 MCP tool implementations
 │   ├── init.py              # One-step onboarding
 │   ├── recall.py            # Knowledge search (vector + FTS5 hybrid)
 │   ├── learn.py             # Extraction + auto-crystallize

@@ -104,7 +104,7 @@ describe("callLlm", () => {
       () => callLlm(server, "transcript", "model"),
       (err: Error) => {
         assert.ok(err.message.includes("MCP Sampling is not supported"));
-        assert.ok(err.message.includes("wooxist/distill"));
+        assert.ok(err.message.includes("noory-code/noory-ai"));
         return true;
       },
     );

@@ -45,7 +45,7 @@ The knowledge base grows passively. You work normally; Distill captures what mat
 
 ## Proven on Distill itself
 
-Evonest evolves Distill's own codebase through the same cycle. Real findings from 194 executed proposals:
+Evonest evolves Distill's own codebase through the same cycle. Real findings from 192 executed proposals:
 
 | Finding | Persona | Outcome |
 |---------|---------|---------|
@@ -140,7 +140,7 @@ See [docs/architecture.md](docs/architecture.md) for technical details.
 No. Distill uses MCP Sampling, which routes through your existing Claude subscription (Claude Code, Claude Max, or Claude Teams).
 
 **Q: My session-end hook isn't extracting knowledge. How do I debug?**
-Run `test_raw_sampling` to verify MCP Sampling connectivity. If that fails, check your Claude Code version (1.0.33+ required). See [troubleshooting](docs/troubleshooting.md) for more.
+Run `test_raw_sampling` to verify MCP Sampling connectivity. If that fails, check your Claude Code version (1.0.33+ required). Check your Claude Code version (1.0.33+ required) and review the FAQ above.
 
 **Q: Can Distill's generated rules conflict with my existing rules?**
 Distill detects conflicts during crystallization and surfaces them in the report. It never auto-edits your files — you review and merge manually.

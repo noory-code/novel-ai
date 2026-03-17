@@ -39,4 +39,4 @@ For questions, open an issue at [github.com/noory-code/noory-ai](https://github.
 
 ---
 
-*Last updated: 2026-03-17 | Distill v1.4.0*
+*Last updated: 2026-03-17 | Distill v1.5.0*
