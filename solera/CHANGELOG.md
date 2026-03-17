@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.9.2] — 2026-03-17
+
+### Added
+- **PRIVACY.md**: Privacy policy for marketplace submission — documents that Solera
+  operates entirely locally with no data collection or external transmission
+
+---
+
 ## [2.9.1] — 2026-03-17
 
 ### Added
