@@ -4,6 +4,16 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.7.2] — 2026-03-18
+
+### Fixed
+- `README.md`: remove broken link to non-existent `docs/tools.md`
+- `README.md`: fix duplicate sentence in FAQ debug instructions
+- `docs/development.md`: add missing `store.py` to tools directory tree
+- `docs/configuration.md`: correct `auto_crystallize_threshold` default from `0` to `20` (matches `config.py`)
+
+---
+
 ## [1.7.1] — 2026-03-18
 
 ### Fixed

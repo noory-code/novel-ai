@@ -43,6 +43,7 @@ src/distill/
 │   ├── digest.py            # Duplicate detection
 │   ├── memory.py            # Promote/demote/delete/crystallize
 │   ├── ingest.py            # Markdown/text dir → knowledge store
+│   ├── store.py             # Save pre-extracted chunks directly (no LLM)
 │   └── helpers.py           # Shared utilities (for_each_scope)
 ├── extractor/               # Knowledge extraction pipeline
 │   ├── parser.py            # .jsonl transcript parsing

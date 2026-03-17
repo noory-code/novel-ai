@@ -29,7 +29,7 @@ Priority: project > workspace > global. All fields are optional — Distill work
   "extraction_model": "claude-haiku-4-5-20251001",
   "crystallize_model": "claude-sonnet-4-5-20250929",
   "max_transcript_chars": 100000,
-  "auto_crystallize_threshold": 0,
+  "auto_crystallize_threshold": 20,
   "sources": {
     "transcripts": true,
     "rules": true,
@@ -61,7 +61,7 @@ Priority: project > workspace > global. All fields are optional — Distill work
 | `extraction_model` | `claude-haiku-4-5-20251001` | Model hint for knowledge extraction (advisory — client decides) |
 | `crystallize_model` | `claude-sonnet-4-5-20250929` | Model hint for crystallize (rule generation) |
 | `max_transcript_chars` | `100000` | Max transcript size before truncation (keeps recent turns) |
-| `auto_crystallize_threshold` | `0` (disabled) | Automatically crystallize after N new chunks since last crystallize |
+| `auto_crystallize_threshold` | `20` | Automatically crystallize after N new chunks since last crystallize. Set to `0` to disable. |
 | `sources.dirs` | `[]` | Directories to ingest on `init()` or manually via `ingest(path)` |
 | `outputs.rules.budget_max_files` | `5` | Max number of distill rule files (context budget) |
 | `outputs.rules.split_threshold_tokens` | `500` | Split rule file when topic exceeds this token size |
