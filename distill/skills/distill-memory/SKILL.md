@@ -41,6 +41,6 @@ Call `mcp__distill__memory` with:
 
 ## Typical Workflow
 
-1. Run `/distill:digest` to find duplicates/stale entries
+1. Run `/distill-digest` to find duplicates/stale entries
 2. Delete unwanted: `memory(action="delete", id="<id>")`
 3. Crystallize: `memory(action="crystallize")` to generate rule files

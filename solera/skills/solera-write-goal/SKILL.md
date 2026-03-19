@@ -9,7 +9,7 @@ metadata:
   style: procedural
   execution_model: sequential
   triggers: [write a Goal, start a Goal, plan a Goal, break Goal into Epics, elaborate on a Goal]
-  uses: [solera-write-identity, solera-write-epic, solera-publish-artifacts]
+  uses: [solera-write-identity, solera-write-epic, solera-publish-artifacts, solera-create-pr]
 ---
 
 # Writing Goal

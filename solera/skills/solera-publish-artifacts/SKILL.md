@@ -1,7 +1,7 @@
 ---
 name: solera-publish-artifacts
 user-invocable: false
-description: Mark a Goal as done — move all artifacts to the published catalog and update cross-references.
+description: Promote intermediate artifacts to the published catalog — invoked after Goal creation and at each Epic wrap-up.
 metadata:
   version: "4.0.0"
   category: workflow

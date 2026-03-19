@@ -4,6 +4,14 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.7.4] — 2026-03-20
+
+### Fixed
+- `distill-digest`: fix cross-reference `/distill:memory` → `/distill-memory`
+- `distill-memory`: fix cross-reference `/distill:digest` → `/distill-digest`
+
+---
+
 ## [1.7.3] — 2026-03-20
 
 ### Added

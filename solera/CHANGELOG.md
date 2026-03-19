@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.10.4] — 2026-03-20
+
+### Fixed
+- `solera-write-goal`: add missing `solera-create-pr` to `uses` array
+- `solera-write-epic`: add missing `solera-create-pr` to `uses` array
+- `solera-publish-artifacts`: fix description to reflect dual invocation (Goal Create + Epic Wrap-up)
+- `solera-edit-rule`: normalize H1 from `# Skill: meta-rule` to `# Edit Rule`
+- `solera-write-epic`: remove duplicate Directory Structure section
+
+---
+
 ## [2.10.3] — 2026-03-20
 
 ### Added

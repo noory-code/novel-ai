@@ -11,7 +11,7 @@ metadata:
   uses: []
 ---
 
-# Skill: meta-rule
+# Edit Rule
 
 ## Input
 

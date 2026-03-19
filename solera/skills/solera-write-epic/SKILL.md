@@ -9,7 +9,7 @@ metadata:
   style: procedural
   execution_model: sequential
   triggers: [write an Epic, plan an Epic, start an Epic, break Epic into Stories, define Epic scope, draft concept]
-  uses: [solera-write-story, solera-publish-artifacts]
+  uses: [solera-write-story, solera-publish-artifacts, solera-create-pr]
 ---
 
 # Writing Epic
@@ -128,20 +128,6 @@ metadata:
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set _epic.md status to ✅
    - [ ] `Skill(name="solera-create-pr")` **(BLOCKING: skill ends after PR creation completes)** → create PR to parent branch (Goal)
-
-## Directory Structure
-
-Epics always live inside the goal directory. Never create a top-level `epics/` directory.
-
-```
-{project_path}/phase/{phase_id}/goals/{goal_id}-{goal_name}/   ← created by solera-write-goal
-├── _goal.md
-├── artifacts/
-└── epics/{epic_name}/                                          ← created by solera-write-epic
-    ├── _epic.md
-    └── {US|TS}-NNN-{name}/
-        └── _story.md
-```
 
 ## Folder Structure
 

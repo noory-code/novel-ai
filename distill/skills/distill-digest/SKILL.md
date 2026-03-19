@@ -33,7 +33,7 @@ Call `mcp__distill__digest` — no parameters required.
 
 ## Follow-up
 
-After reviewing duplicates, use `/distill:memory` to delete unwanted entries:
+After reviewing duplicates, use `/distill-memory` to delete unwanted entries:
 ```
 memory(action="delete", id="<chunk-id>")
 ```
