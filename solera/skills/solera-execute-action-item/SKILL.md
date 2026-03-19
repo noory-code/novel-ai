@@ -4,7 +4,7 @@ description: Implement one Action Item end-to-end: write the code, run tests, an
 metadata:
   version: "6.0.0"
   category: writing
-  type: composite
+  type: unit
   style: procedural
   triggers: [start an Action Item, execute Action Item, implement and commit, work on ACT-NNN, ACT-NNN]
   uses: []

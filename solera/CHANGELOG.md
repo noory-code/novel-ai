@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.10.2] — 2026-03-20
+
+### Fixed
+- `solera-create-pr`: metadata `type: composite` → `type: unit` (no sub-skill invocations)
+- `solera-execute-action-item`: metadata `type: composite` → `type: unit` (no sub-skill invocations)
+- `solera-init`: metadata `type: composite` → `type: unit` (no sub-skill invocations)
+
+---
+
 ## [2.10.1] — 2026-03-18
 
 ### Fixed

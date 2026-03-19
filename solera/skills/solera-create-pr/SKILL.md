@@ -4,7 +4,7 @@ description: Wrap up an Epic by opening a PR, reviewing the diff, and merging cl
 metadata:
   version: "4.0.0"
   category: workflow
-  type: composite
+  type: unit
   style: procedural
   triggers: [create a pull request, open a PR, merge the Epic, merge into parent branch, submit for review]
   uses: []

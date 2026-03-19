@@ -4,7 +4,7 @@ description: Set up Solera in a project — install rules, create the workspace 
 metadata:
   version: "2.0.0"
   category: meta
-  type: composite
+  type: unit
   style: procedural
   triggers: [set up solera, initialize solera, install solera, solera init]
   uses: []
