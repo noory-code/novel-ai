@@ -1,5 +1,6 @@
 ---
 name: distill-help
+user-invocable: true
 description: Explain what Distill is, list all available skills, and guide the first step.
 metadata:
   version: "1.0.0"

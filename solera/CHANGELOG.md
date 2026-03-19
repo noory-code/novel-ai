@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.10.3] — 2026-03-20
+
+### Added
+- `user-invocable` frontmatter to all 16 skills (15 true, 1 false for solera-publish-artifacts)
+
+---
+
 ## [2.10.2] — 2026-03-20
 
 ### Fixed

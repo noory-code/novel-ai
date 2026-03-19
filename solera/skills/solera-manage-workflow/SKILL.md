@@ -1,5 +1,6 @@
 ---
 name: solera-manage-workflow
+user-invocable: true
 description: Know what to work on next — track progress, pick up where you left off, or close out a completed item.
 metadata:
   version: "5.0.0"

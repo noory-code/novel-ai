@@ -1,6 +1,6 @@
 [project]
 name = "distill"
-version = "1.7.2"
+version = "1.7.3"
 description = "MCP server that extracts reusable knowledge from Claude Code conversations"
 readme = "README.md"
 license = "MIT"

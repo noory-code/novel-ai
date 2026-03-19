@@ -1,5 +1,6 @@
 ---
 name: solera-write-goal
+user-invocable: true
 description: Define what success looks like for a Goal — map the service, identify personas, sketch the journey, and break it into Epics.
 metadata:
   version: "5.0.0"

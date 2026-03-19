@@ -1,5 +1,6 @@
 ---
 name: solera-publish-artifacts
+user-invocable: false
 description: Mark a Goal as done — move all artifacts to the published catalog and update cross-references.
 metadata:
   version: "4.0.0"

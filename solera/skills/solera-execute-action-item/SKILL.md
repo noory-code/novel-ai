@@ -1,5 +1,6 @@
 ---
 name: solera-execute-action-item
+user-invocable: true
 description: Implement one Action Item end-to-end: write the code, run tests, and commit — one focused change at a time.
 metadata:
   version: "6.0.0"

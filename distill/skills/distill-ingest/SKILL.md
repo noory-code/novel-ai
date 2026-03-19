@@ -1,5 +1,6 @@
 ---
 name: distill-ingest
+user-invocable: true
 description: Extract knowledge from markdown/text files or directories.
 metadata:
   version: "1.0.0"

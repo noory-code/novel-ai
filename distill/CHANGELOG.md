@@ -4,6 +4,13 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.7.3] — 2026-03-20
+
+### Added
+- `user-invocable: true` frontmatter to all 8 skills for explicit /command invocation
+
+---
+
 ## [1.7.2] — 2026-03-18
 
 ### Fixed

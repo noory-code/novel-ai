@@ -1,5 +1,6 @@
 ---
 name: solera-write-story
+user-invocable: true
 description: Write a Story with clear acceptance criteria, then break it into atomic Action Items — each one a single commit.
 metadata:
   version: "8.0.0"

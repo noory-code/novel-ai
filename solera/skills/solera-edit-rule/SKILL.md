@@ -1,5 +1,6 @@
 ---
 name: solera-edit-rule
+user-invocable: true
 description: Add or refine a project rule — turns a constraint or convention into a structured, unambiguous rule file.
 metadata:
   version: "2.0.0"

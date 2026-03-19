@@ -1,5 +1,6 @@
 ---
 name: solera-write-identity
+user-invocable: true
 description: Establish what your service stands for — write the Mission, Core Values, Vision, and a first cut of Goals.
 metadata:
   version: "2.0.0"

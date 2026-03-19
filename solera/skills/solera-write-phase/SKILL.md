@@ -1,5 +1,6 @@
 ---
 name: solera-write-phase
+user-invocable: true
 description: Plan a quarter — distribute Goals across a Phase and track which ones are in progress or complete.
 metadata:
   version: "3.0.0"

@@ -1,5 +1,6 @@
 ---
 name: distill-memory
+user-invocable: true
 description: Manage knowledge entries — promote, demote, delete, or crystallize.
 metadata:
   version: "1.0.0"

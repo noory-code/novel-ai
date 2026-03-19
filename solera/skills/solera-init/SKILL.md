@@ -1,5 +1,6 @@
 ---
 name: solera-init
+user-invocable: true
 description: Set up Solera in a project — install rules, create the workspace structure, and run the team kickoff interview.
 metadata:
   version: "2.0.0"

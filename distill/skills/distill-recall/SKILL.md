@@ -1,5 +1,6 @@
 ---
 name: distill-recall
+user-invocable: true
 description: Search accumulated knowledge by semantic + keyword hybrid search.
 metadata:
   version: "1.0.0"

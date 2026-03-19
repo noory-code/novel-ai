@@ -1,5 +1,6 @@
 ---
 name: solera-create-pr
+user-invocable: true
 description: Wrap up an Epic by opening a PR, reviewing the diff, and merging cleanly into the parent branch.
 metadata:
   version: "4.0.0"

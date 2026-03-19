@@ -1,5 +1,6 @@
 ---
 name: distill-profile
+user-invocable: true
 description: View knowledge statistics and hook status.
 metadata:
   version: "1.0.0"

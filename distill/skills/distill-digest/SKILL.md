@@ -1,5 +1,6 @@
 ---
 name: distill-digest
+user-invocable: true
 description: Analyze knowledge for duplicates and stale entries.
 metadata:
   version: "1.0.0"

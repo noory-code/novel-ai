@@ -1,5 +1,6 @@
 ---
 name: solera-handoff
+user-invocable: true
 description: Never lose context between sessions — capture current state, open threads, and next steps in HANDOFF.md.
 metadata:
   version: "2.0.0"

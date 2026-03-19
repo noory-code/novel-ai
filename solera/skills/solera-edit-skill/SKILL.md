@@ -1,5 +1,6 @@
 ---
 name: solera-edit-skill
+user-invocable: true
 description: Add, refine, or audit a skill — guides Claude from a blank template to a production-ready SKILL.md.
 metadata:
   version: "2.0.0"

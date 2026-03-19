@@ -1,5 +1,6 @@
 ---
 name: solera-edit-agent
+user-invocable: true
 description: Define or improve an agent — specifies role, tools, and boundaries so Claude acts as a focused specialist.
 metadata:
   version: "2.0.0"

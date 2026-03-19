@@ -1,5 +1,6 @@
 ---
 name: solera-edit-command
+user-invocable: true
 description: Add or refine a slash command — packages a repeatable workflow into a single /command invocation.
 metadata:
   version: "2.0.0"

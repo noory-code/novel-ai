@@ -1,5 +1,6 @@
 ---
 name: solera-write-epic
+user-invocable: true
 description: Scope an Epic — write use cases, define the concept, and decompose into Stories ready to implement.
 metadata:
   version: "5.0.0"
