@@ -73,7 +73,7 @@ Defines the decomposition unit of a Story, which corresponds to a single commit.
 - [ ] Build/tests pass (if applicable)
 - [ ] Record changed file list
 - [ ] Commit (1 Action Item = 1 commit, follow message format)
-- [ ] Write retrospective to RETRO.md (ref: [assets/retro.md](retro.md))
+- [ ] Write retrospective to RETROSPECTIVE.md (ref: [assets/retro.md](retro.md))
 - [ ] Status → ✅
 - [ ] Determine the next Action Item or process Story completion
 

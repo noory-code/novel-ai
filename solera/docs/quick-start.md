@@ -269,7 +269,7 @@ After all four Action Items are committed, you have four commits on the Story br
 
 Solera:
 1. Confirms all acceptance criteria pass
-2. Writes `RETRO.md` for the Story
+2. Writes `RETROSPECTIVE.md` for the Story
 3. Sets `_story.md` status to ✅
 4. Squash-merges the Story branch into `epics/task-crud`
 
@@ -286,10 +286,10 @@ Repeat this for US-002 and US-003. After each Story, Solera squash-merges to the
 ```
 epics/01-task-crud/
 ├── _epic.md                  (status ✅)
-├── RETRO.md
+├── RETROSPECTIVE.md
 ├── US-001-create-task/
 │   ├── _story.md             (status ✅)
-│   ├── RETRO.md
+│   ├── RETROSPECTIVE.md
 │   ├── ACT-001-add-task-model.md
 │   ├── ACT-002-add-task-api.md
 │   ├── ACT-003-build-task-form.md
@@ -360,7 +360,7 @@ Each moved file receives a version header:
 > Last updated: 2026-03-02
 ```
 
-The `artifacts/` folder is now empty. A `RETRO.md` is written for the Goal. `_goal.md` status becomes ✅. `progress.md` reflects the completed Goal.
+The `artifacts/` folder is now empty. A `RETROSPECTIVE.md` is written for the Goal. `_goal.md` status becomes ✅. `progress.md` reflects the completed Goal.
 
 **Final workspace snapshot:**
 
@@ -374,11 +374,11 @@ task-app/
     │   ├── README.md
     │   └── goals/G1-task-management/
     │       ├── _goal.md                     (status ✅)
-    │       ├── RETRO.md
+    │       ├── RETROSPECTIVE.md
     │       ├── artifacts/                   (empty — transitioned)
     │       └── epics/01-task-crud/
     │           ├── _epic.md                 (status ✅)
-    │           ├── RETRO.md
+    │           ├── RETROSPECTIVE.md
     │           └── US-001-create-task/...
     └── catalog/
         └── published/

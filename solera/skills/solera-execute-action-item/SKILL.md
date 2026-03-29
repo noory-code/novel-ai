@@ -3,7 +3,7 @@ name: solera-execute-action-item
 user-invocable: true
 description: Implement one Action Item end-to-end: write the code, run tests, and commit — one focused change at a time.
 metadata:
-  version: "7.0.0"
+  version: "7.1.0"
   category: writing
   type: unit
   style: procedural
@@ -97,6 +97,16 @@ metadata:
    - [ ] Commit (1 Action Item = 1 commit, following the message format)
    - [ ] Write `## Retrospective` section in the Action Item file — ref: [assets/retro.md](assets/retro.md)
      - Did well / Did poorly / Improvements / Instruction issues
+   - [ ] **System improvement** (when `## Retrospective` contains "AI Improvements" or "Instruction System Issues"):
+     - For each improvement entry, classify into one of:
+       - `skill_change`: A skill's checklist, forbidden list, or procedure needs updating
+         → Edit the relevant SKILL.md immediately (add checklist item, forbidden pattern, etc.)
+       - `rule_change`: A rule file (`.claude/rules/*.md`) needs updating
+         → Edit the relevant rule file immediately
+       - `framework_change`: Requires a code-level fix beyond skill/rule scope
+         → Record as a new Technical Story (TS) in the parent Epic's backlog
+     - Apply `skill_change` and `rule_change` within this same commit
+     - Log each applied change: "System improvement applied: {file} — {description}"
    - [ ] Status → ✅
    - [ ] Decide the next Action Item or process Story completion
 

@@ -23,7 +23,7 @@ semantic:
   - {id: C-004, name: "Cautions section", type: section_exists, target: assets/action-item.md, section: "## Cautions"}
   - {id: C-005, name: "Folder Structure section", type: section_exists, target: assets/action-item.md, section: "## Folder Structure"}
   - {id: C-006, name: "Commit Message Format section", type: section_exists, target: assets/action-item.md, section: "## Commit Message Format"}
-  - {id: C-007, name: "Retrospective write reference", type: content_contains, target: assets/action-item.md, patterns: ["Write retrospective", "RETRO.md"]}
+  - {id: C-007, name: "Retrospective write reference", type: content_contains, target: assets/action-item.md, patterns: ["Write retrospective", "RETROSPECTIVE.md"]}
   - {id: C-008, name: "Metadata fields", type: content_contains, target: assets/action-item.md, patterns: ["Skill:", "Agent:", "Phase:", "depends_on:"]}
   - {id: C-012, name: "Skill Resolution section", type: section_exists, target: SKILL.md, section: "## Skill Resolution"}
   - {id: C-009, name: "output_paths metadata", type: content_contains, target: assets/action-item.md, patterns: ["output_paths"]}

@@ -3,7 +3,7 @@ name: solera-write-story
 user-invocable: true
 description: Write a Story with clear acceptance criteria, then break it into atomic Action Items — each one a single commit.
 metadata:
-  version: "9.0.0"
+  version: "9.0.1"
   category: writing
   type: composite
   style: procedural
@@ -45,7 +45,7 @@ metadata:
 |------|--------|------|--------|
 | Create | _story.md | `{epic_path}/{story_id}-{story_name}/_story.md` | Final |
 | Create | ACT-NNN-{name}.md | `{epic_path}/{story_id}-{story_name}/ACT-NNN-{name}.md` | Final |
-| Wrap-up | RETRO.md | `{epic_path}/{story_id}-{story_name}/RETRO.md` | Final |
+| Wrap-up | RETROSPECTIVE.md | `{epic_path}/{story_id}-{story_name}/RETROSPECTIVE.md` | Final |
 
 > `{epic_path}` = `{project_path}/phase/{phase_id}/goals/{goal_id}-{goal_name}/epics/{epic_name}`
 
@@ -60,7 +60,7 @@ metadata:
 1. **Setup**
    - [ ] Confirm `{epic_path}/_epic.md` exists with Glob tool
      - If not: invoke Skill tool `skill="solera-write-epic"` **(BLOCKING: resume after Epic creation completes)**
-   - [ ] Check for previous Story retrospectives: `Glob {epic_path}/*/RETRO.md` — if any exist, read the most recent one and apply any "AI Improvements" noted there
+   - [ ] Check for previous Story retrospectives: `Glob {epic_path}/*/RETROSPECTIVE.md` — if any exist, read the most recent one and apply any "AI Improvements" noted there
    - [ ] Create `epics-{epic_name}/story-{story_id}-{story_name}` branch (from Epic branch)
    - [ ] Read `{project_path}/workspace/team-process.md` if it exists
      - Extract `workflow_gates` section for gate checks in Steps 4–5
@@ -148,7 +148,7 @@ metadata:
        → If condition is not met: display the required condition to user
        → **(BLOCKING: skill pauses until condition is fulfilled)**
    - [ ] Confirm all tests pass (if code changes were made)
-   - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
+   - [ ] Write RETROSPECTIVE.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set _story.md status to ✅
    - [ ] Squash merge to the Epic branch
 
@@ -157,7 +157,7 @@ metadata:
 ```
 {epic_path}/{story_id}-{story_name}/
 ├── _story.md
-├── RETRO.md              # Created at Wrap-up
+├── RETROSPECTIVE.md      # Created at Wrap-up
 ├── ACT-001-{name}.md
 ├── ACT-002-{name}.md
 └── ACT-003-{name}.md
@@ -263,7 +263,7 @@ abc1234 [01-search-ui][US-001][ACT-001] Create search component
 ```
 epics/01-search-ui/US-001-search-input/
 ├── _story.md             (status: ✅)
-├── RETRO.md
+├── RETROSPECTIVE.md
 ├── ACT-001-create-component.md   (✅)
 ├── ACT-002-add-validation.md     (✅)
 └── ACT-003-write-tests.md        (✅)
@@ -300,7 +300,7 @@ Skill(name="solera-execute-action-item", args={
 
 - `_story.md` status: ✅
 - All Action Item statuses: ✅
-- `RETRO.md` exists
+- `RETROSPECTIVE.md` exists
 - 3 commits created in total (1 ACT = 1 commit)
 - Squash merged to Epic branch
 
@@ -311,6 +311,6 @@ Skill(name="solera-execute-action-item", args={
 - [ ] All ACT-NNN-{name}.md files exist on disk (verified with Glob tool — count matches Action Items table)
 - [ ] 1 Action Item = 1 commit principle observed
 - [ ] (Execute) solera-execute-action-item invoked for all Action Items
-- [ ] (Wrap-up) RETRO.md written
+- [ ] (Wrap-up) RETROSPECTIVE.md written
 - [ ] (Wrap-up) _story.md status ✅
 - [ ] (Wrap-up) Squash merged to Epic branch

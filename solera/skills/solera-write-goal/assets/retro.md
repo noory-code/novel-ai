@@ -1,6 +1,6 @@
 # Goal Retrospective Rules
 
-> Follow these rules when writing RETRO.md in the Wrap-up Step.
+> Follow these rules when writing RETROSPECTIVE.md in the Wrap-up Step.
 > Template: [solera-manage-workflow/assets/retro.md](../../solera-manage-workflow/assets/retro.md) — use "Business Retrospective".
 
 ## Perspective: Business

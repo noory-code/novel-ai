@@ -50,7 +50,7 @@
 
 ### Step 3. Wrap-up
 - [ ] Confirm artifacts/ is empty (all promoted during Create and Epic Wrap-up steps)
-- [ ] Write retrospective to RETRO.md (ref: [assets/retro.md](retro.md))
+- [ ] Write retrospective to RETROSPECTIVE.md (ref: [assets/retro.md](retro.md))
 - [ ] Status → ✅
 
 ## Goal Types

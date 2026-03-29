@@ -3,7 +3,7 @@ name: solera-write-epic
 user-invocable: true
 description: Scope an Epic — write use cases, define the concept, and decompose into Stories ready to implement.
 metadata:
-  version: "5.0.0"
+  version: "5.0.1"
   category: writing
   type: composite
   style: procedural
@@ -49,7 +49,7 @@ metadata:
 | Concept | domain.md | Intermediate (artifacts) | `{goal_path}/artifacts/concept/domain.md` |
 | Concept | entities/*.md | Intermediate (artifacts) | `{goal_path}/artifacts/concept/entities/{entity}.md` |
 | Story | _story.md | Final | `{goal_path}/epics/{epic_name}/{US\|TS}-NNN-{name}/_story.md` |
-| Wrap-up | RETRO.md | Final | `{goal_path}/epics/{epic_name}/RETRO.md` |
+| Wrap-up | RETROSPECTIVE.md | Final | `{goal_path}/epics/{epic_name}/RETROSPECTIVE.md` |
 
 > `{goal_path}` = `{project_path}/phase/{phase_id}/goals/{goal_id}`
 > artifacts = intermediate outputs. Promoted to published/ via solera-publish-artifacts at Epic Wrap-up.
@@ -125,7 +125,7 @@ metadata:
 6. **Wrap-up**
    - [ ] Confirm all Story statuses ✅ (return to Step 5 if any are incomplete)
    - [ ] Invoke solera-publish-artifacts to promote Epic-level artifacts (use-case, concept) to published/ **(BLOCKING: proceed to next step after promotion completes)**
-   - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
+   - [ ] Write RETROSPECTIVE.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set _epic.md status to ✅
    - [ ] `Skill(name="solera-create-pr")` **(BLOCKING: skill ends after PR creation completes)** → create PR to parent branch (Goal)
 
@@ -140,7 +140,7 @@ metadata:
 │       └── entities/{entity}.md
 └── epics/{epic_name}/
     ├── _epic.md
-    ├── RETRO.md              # Created at Wrap-up
+    ├── RETROSPECTIVE.md              # Created at Wrap-up
     └── {US|TS}-NNN-{name}/
         └── _story.md
 ```
@@ -231,7 +231,7 @@ goals/G1-search-liquor/epics/01-search-ui/
 ├── _epic.md              (US-001: ✅, US-002: 🔄, TS-001: ⏳)
 ├── US-001-search-input/
 │   ├── _story.md         (status: ✅)
-│   ├── RETRO.md
+│   ├── RETROSPECTIVE.md
 │   ├── ACT-001-create-component.md
 │   ├── ACT-002-add-validation.md
 │   └── ACT-003-write-tests.md
@@ -244,7 +244,7 @@ goals/G1-search-liquor/epics/01-search-ui/
 ```
 goals/G1-search-liquor/epics/01-search-ui/
 ├── _epic.md              (status: ✅)
-├── RETRO.md
+├── RETROSPECTIVE.md
 ├── US-001-search-input/...   (✅)
 ├── US-002-filter-ui/...      (✅)
 └── TS-001-api-integration/...  (✅)
@@ -288,7 +288,7 @@ Skill(name="solera-create-pr")
 
 - `_epic.md` status: ✅
 - All Story statuses: ✅
-- `RETRO.md` exists
+- `RETROSPECTIVE.md` exists
 - PR created to Goal branch
 
 ## Completion Checklist
@@ -299,6 +299,6 @@ Skill(name="solera-create-pr")
 - [ ] Story decomposition complete
 - [ ] (Execute) solera-write-story invoked for all Stories
 - [ ] (Wrap-up) solera-publish-artifacts invoked for Epic-level artifacts
-- [ ] (Wrap-up) RETRO.md written
+- [ ] (Wrap-up) RETROSPECTIVE.md written
 - [ ] (Wrap-up) _epic.md status ✅
 - [ ] (Wrap-up) solera-create-pr invoked

@@ -24,7 +24,7 @@ This test suite automates parameter validation for Solera workflow skills.
 
 ### 4. Output Validation
 - Verifies that skills produce expected outputs
-- solera-write-story: _story.md, ACT-NNN-{name}.md, RETRO.md
+- solera-write-story: _story.md, ACT-NNN-{name}.md, RETROSPECTIVE.md
 - solera-execute-action-item: code changes, git commit, status update
 
 ### 5. Commit Message Format Validation

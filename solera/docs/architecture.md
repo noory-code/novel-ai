@@ -78,7 +78,7 @@ Each level of the hierarchy corresponds to a progressively shorter time scale an
     │   └── roadmap.md                   # annual initiative and Phase list
     ├── phase/[phase-id]/
     │   ├── README.md                    # Phase definition and acceptance criteria
-    │   ├── RETRO.md                     # Phase retrospective (written at Phase close)
+    │   ├── RETROSPECTIVE.md                     # Phase retrospective (written at Phase close)
     │   └── goals/[goal-id]/
     │       ├── _goal.md                 # Goal definition, scope, and Workflow steps
     │       ├── artifacts/               # working copies: service-map, persona, use-case, concept

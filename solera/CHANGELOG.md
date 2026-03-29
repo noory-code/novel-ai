@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.12.0] — 2026-03-30
+
+### Added
+- **System improvement step**: `solera-execute-action-item` Wrap-up now classifies
+  retrospective improvements into `skill_change`, `rule_change`, or `framework_change`
+  and applies skill/rule changes immediately within the same commit
+
+### Changed
+- **Rename RETRO.md → RETROSPECTIVE.md** across all skills, templates, docs, and tests
+  — eliminates ambiguity with "retro" (retrospective vs. vintage)
+- Affected skills patched: `solera-write-story` v9.0.1, `solera-write-epic` v5.0.1,
+  `solera-write-goal` v5.0.1, `solera-write-phase` v3.0.1, `solera-manage-workflow` v5.0.1,
+  `solera-execute-action-item` v7.1.0
+
+---
+
 ## [2.11.0] — 2026-03-29
 
 ### Added

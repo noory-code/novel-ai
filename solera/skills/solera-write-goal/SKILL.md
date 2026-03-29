@@ -3,7 +3,7 @@ name: solera-write-goal
 user-invocable: true
 description: Define what success looks like for a Goal — map the service, identify personas, sketch the journey, and break it into Epics.
 metadata:
-  version: "5.0.0"
+  version: "5.0.1"
   category: writing
   type: composite
   style: procedural
@@ -43,7 +43,7 @@ metadata:
 | Create | Persona (Feature only) | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/artifacts/persona/*.md` | Intermediate |
 | Create | Persona Relationship (Feature, 2+ personas) | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/artifacts/persona/relationship.md` | Intermediate |
 | Execute | Epic document | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/epics/{NN}-{name}/_epic.md` | Final |
-| Wrap-up | RETRO.md | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/RETRO.md` | Final |
+| Wrap-up | RETROSPECTIVE.md | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/RETROSPECTIVE.md` | Final |
 
 ## Skills Used
 
@@ -93,7 +93,7 @@ metadata:
 6. **Goal Wrap-up**
    - [ ] Confirm all Epic statuses ✅
    - [ ] Confirm artifacts/ is empty (all artifacts promoted during Create and Epic Wrap-up steps)
-   - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
+   - [ ] Write RETROSPECTIVE.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set _goal.md status to ✅
 
 ## Folder Structure
@@ -101,7 +101,7 @@ metadata:
 ```
 {project_path}/phase/{phase_id}/goals/{goal_id}-{name}/
 ├── _goal.md
-├── RETRO.md          # Created at Wrap-up
+├── RETROSPECTIVE.md          # Created at Wrap-up
 ├── artifacts/
 │   ├── service-map/index.md    # Feature only
 │   └── persona/*.md            # Feature only
@@ -197,7 +197,7 @@ phase/2026-P1-foundation/goals/G1-search-liquor/
 └── epics/
     ├── 01-search-ui/
     │   ├── _epic.md      (status: ✅)
-    │   ├── RETRO.md
+    │   ├── RETROSPECTIVE.md
     │   └── US-001-search-input/...
     └── 02-filter-logic/
         ├── _epic.md      (status: 🔄)
@@ -214,7 +214,7 @@ published/
 ```
 phase/2026-P1-foundation/goals/G1-search-liquor/
 ├── _goal.md              (status: ✅)
-├── RETRO.md
+├── RETROSPECTIVE.md
 ├── artifacts/            (empty — all promoted)
 └── epics/
     ├── 01-search-ui/...  (✅)
@@ -257,7 +257,7 @@ Skill(name="solera-create-pr")
 
 - `_goal.md` status: ✅
 - All Epic statuses: ✅
-- `RETRO.md` exists
+- `RETROSPECTIVE.md` exists
 - `artifacts/` folder empty (promoted incrementally at Goal Create + each Epic Wrap-up)
 
 ## Completion Checklist
@@ -270,5 +270,5 @@ Skill(name="solera-create-pr")
 - [ ] (Create) solera-publish-artifacts invoked for Goal-level artifacts
 - [ ] (Execute) solera-write-epic invoked for all Epics
 - [ ] (Wrap-up) artifacts/ is empty
-- [ ] (Wrap-up) RETRO.md written
+- [ ] (Wrap-up) RETROSPECTIVE.md written
 - [ ] (Wrap-up) _goal.md status ✅

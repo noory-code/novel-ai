@@ -153,7 +153,7 @@ def test_write_story_expected_outputs():
     assert len(outputs) > 0, "No outputs defined"
 
     # Expected output files
-    expected_output_names = ["_story.md", "ACT-NNN-{name}.md", "RETRO.md"]
+    expected_output_names = ["_story.md", "ACT-NNN-{name}.md", "RETROSPECTIVE.md"]
 
     found_outputs = [o["output"] for o in outputs]
 

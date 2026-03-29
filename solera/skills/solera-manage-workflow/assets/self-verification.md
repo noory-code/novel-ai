@@ -62,7 +62,7 @@ semantic:
     patterns:
       - "Workflow"
       - "progress.md"
-      - "RETRO.md"
+      - "RETROSPECTIVE.md"
       - "work item"
 
   - id: C-003

@@ -3,7 +3,7 @@ name: solera-manage-workflow
 user-invocable: true
 description: Know what to work on next — track progress, pick up where you left off, or close out a completed item.
 metadata:
-  version: "5.0.0"
+  version: "5.0.1"
   category: workflow
   type: composite
   style: procedural
@@ -38,7 +38,7 @@ metadata:
 | Action | Output | Path |
 |--------|--------|------|
 | start / complete | progress.md update | `{project}/progress.md` |
-| complete (Epic/Goal) | RETRO.md written | `{path}/RETRO.md` |
+| complete (Epic/Goal) | RETROSPECTIVE.md written | `{path}/RETROSPECTIVE.md` |
 | next | Next work item decided | — |
 
 ## Procedure
@@ -55,7 +55,7 @@ metadata:
 
 1. Read the target work item
 2. Execute the latter steps of `## Workflow` (completion check, status change, etc.) **(BLOCKING: execute sequentially)**
-3. If the item is an Epic or Goal, write RETRO.md
+3. If the item is an Epic or Goal, write RETROSPECTIVE.md
 4. Update progress.md
 5. Decide the next work item
 
@@ -110,7 +110,7 @@ metadata:
 | write-* skill invocation failed | Sub-skill invocation error | Display failed skill name, request manual execution | Step halted, resume after manual resolution |
 | Status mismatch | Story is ✅ but Epic is 🔄 | Display mismatched items, request status sync | Halted before next work decision, resume after manual sync |
 | No next work | All work complete, next invoked | Display "All work complete" message | Skill completes normally |
-| RETRO.md writing failed | Retrospective writing error on Epic/Goal completion | Verify template path, request manual writing | Complete step halted, resume after manual writing |
+| RETROSPECTIVE.md writing failed | Retrospective writing error on Epic/Goal completion | Verify template path, request manual writing | Complete step halted, resume after manual writing |
 | progress.md update failed | File write permission error | Verify permissions, instruct `chmod 644 progress.md` | Skill halted, retry after permission fix |
 
 ## Completion Checklist

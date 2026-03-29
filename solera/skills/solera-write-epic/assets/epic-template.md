@@ -52,7 +52,7 @@
 
 ### Step 3. Wrap-up
 - [ ] solera-publish-artifacts invoke (promote Epic-level artifacts: use-case, concept → published/)
-- [ ] Write retrospective to RETRO.md (ref: [assets/retro.md](retro.md))
+- [ ] Write retrospective to RETROSPECTIVE.md (ref: [assets/retro.md](retro.md))
 - [ ] Status → ✅
 - [ ] solera-create-pr invoke (create PR to parent branch and merge)
 - [ ] Determine the next Epic or process Goal completion

@@ -3,7 +3,7 @@ name: solera-write-phase
 user-invocable: true
 description: Plan a quarter — distribute Goals across a Phase and track which ones are in progress or complete.
 metadata:
-  version: "3.0.0"
+  version: "3.0.1"
   category: writing
   type: composite
   style: procedural
@@ -34,7 +34,7 @@ metadata:
 | Create | Phase README | `{project_path}/phase/{phase_id}/README.md` |
 | Create | Goal folder structure | `{project_path}/phase/{phase_id}/goals/{goal_id}-{name}/` |
 | Wrap-up | Phase summary | `{project_path}/phase/{phase_id}/SUMMARY.md` |
-| Wrap-up | Phase retrospective | `{project_path}/phase/{phase_id}/RETRO.md` |
+| Wrap-up | Phase retrospective | `{project_path}/phase/{phase_id}/RETROSPECTIVE.md` |
 | Wrap-up | progress.md update | `{project_path}/progress.md` |
 
 ## Skills Used
@@ -69,7 +69,7 @@ metadata:
    - [ ] Confirm all Goal statuses ✅
    - [ ] Confirm artifacts/ is empty for each Goal (promoted incrementally during Goal Create and Epic Wrap-ups)
    - [ ] Write SUMMARY.md (overall Goal outcomes, catalog artifact list, handoff notes for the next Phase)
-   - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
+   - [ ] Write RETROSPECTIVE.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set README.md status to ✅ and update progress
    - [ ] Update progress.md
 
@@ -79,7 +79,7 @@ metadata:
 {project_path}/phase/{phase_id}/
 ├── README.md
 ├── SUMMARY.md      # Created at Wrap-up (see phase-template.md Step 3)
-├── RETRO.md        # Created at Wrap-up
+├── RETROSPECTIVE.md        # Created at Wrap-up
 └── goals/
     ├── {goal_id}-{name}/
     │   ├── _goal.md
@@ -107,5 +107,5 @@ metadata:
 - [ ] solera-write-goal invoked for all Goals
 - [ ] (Wrap-up) All Goal artifacts/ directories are empty
 - [ ] (Wrap-up) SUMMARY.md written
-- [ ] (Wrap-up) RETRO.md written
+- [ ] (Wrap-up) RETROSPECTIVE.md written
 - [ ] (Wrap-up) progress.md updated

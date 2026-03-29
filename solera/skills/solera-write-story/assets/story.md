@@ -95,7 +95,7 @@ Defines the decomposition unit of an Epic, covering both User Stories and Techni
 
 ### Step 3. Wrap-up
 - [ ] Build/tests pass
-- [ ] Write retrospective to RETRO.md (ref: [assets/retro.md](retro.md))
+- [ ] Write retrospective to RETROSPECTIVE.md (ref: [assets/retro.md](retro.md))
 - [ ] Status → ✅
 - [ ] Squash merge into Epic branch
 - [ ] Determine the next Story or process Epic completion

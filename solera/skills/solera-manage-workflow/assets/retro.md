@@ -1,6 +1,6 @@
 # Template: Retrospective
 
-Write a RETRO.md when a hierarchy level is complete.
+Write a RETROSPECTIVE.md when a hierarchy level is complete.
 
 ## Retrospective Types
 
@@ -12,7 +12,7 @@ Write a RETRO.md when a hierarchy level is complete.
 | **Story** | AI behavior | What did AI do well? Poorly? Improvements? Instruction issues? |
 | **Action Item** | AI behavior | What did AI do well? Poorly? Improvements? Instruction issues? |
 
-## RETRO.md — AI Behavior Retrospective (Epic / Story / Action Item)
+## RETROSPECTIVE.md — AI Behavior Retrospective (Epic / Story / Action Item)
 
 ```markdown
 # Retrospective: [Epic/Story/ACT name]
@@ -44,7 +44,7 @@ Write a RETRO.md when a hierarchy level is complete.
 - [Improvements to templates, procedures, output definitions]
 ```
 
-## RETRO.md — Business Retrospective (Phase / Goal)
+## RETROSPECTIVE.md — Business Retrospective (Phase / Goal)
 
 ```markdown
 # Retrospective: [Phase/Goal name]
@@ -80,10 +80,10 @@ Write a RETRO.md when a hierarchy level is complete.
 
 | Hierarchy | Location |
 |-----------|----------|
-| **Phase** | `workspace/phase/{phase_id}/RETRO.md` |
-| **Goal** | `workspace/phase/{phase_id}/goals/{goal_id}/RETRO.md` |
-| **Epic** | `workspace/phase/.../epics/{epic_name}/RETRO.md` |
-| **Story** | `workspace/phase/.../epics/{epic_name}/{story_id}-{story_name}/RETRO.md` |
+| **Phase** | `workspace/phase/{phase_id}/RETROSPECTIVE.md` |
+| **Goal** | `workspace/phase/{phase_id}/goals/{goal_id}/RETROSPECTIVE.md` |
+| **Epic** | `workspace/phase/.../epics/{epic_name}/RETROSPECTIVE.md` |
+| **Story** | `workspace/phase/.../epics/{epic_name}/{story_id}-{story_name}/RETROSPECTIVE.md` |
 
 ## Quality Criteria
 

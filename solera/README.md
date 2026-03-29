@@ -75,10 +75,10 @@ Solera verifies all Stories are complete, runs `solera-create-pr` to open the PR
 | Skill | Trigger phrase | Produces |
 |-------|---------------|----------|
 | `solera-write-identity` | "Define service identity", "write mission statement" | `identity/mission.md`, `core-values.md`, `vision_1.md`, `initiative/{year}/goals.md` |
-| `solera-write-phase` | "Plan the quarter", "define a Phase" | `phase/{id}/README.md`, Goal folder structure, `RETRO.md` on close |
-| `solera-write-goal` | "Write a Goal", "break Goal into Epics" | `_goal.md`, service map, persona(s), `RETRO.md` on close |
-| `solera-write-epic` | "Write an Epic", "plan an Epic" | `_epic.md`, use cases, domain concepts, `RETRO.md` on close |
-| `solera-write-story` | "Write a Story", "break Story into Action Items" | `_story.md`, `ACT-NNN-{name}.md` files, `RETRO.md` on close |
+| `solera-write-phase` | "Plan the quarter", "define a Phase" | `phase/{id}/README.md`, Goal folder structure, `RETROSPECTIVE.md` on close |
+| `solera-write-goal` | "Write a Goal", "break Goal into Epics" | `_goal.md`, service map, persona(s), `RETROSPECTIVE.md` on close |
+| `solera-write-epic` | "Write an Epic", "plan an Epic" | `_epic.md`, use cases, domain concepts, `RETROSPECTIVE.md` on close |
+| `solera-write-story` | "Write a Story", "break Story into Action Items" | `_story.md`, `ACT-NNN-{name}.md` files, `RETROSPECTIVE.md` on close |
 | `solera-execute-action-item` | "Start an Action Item", "ACT-NNN" | Code/doc changes + one git commit per Action Item |
 | `solera-manage-workflow` | "What should I work on", "show current progress" | `progress.md` updates; reads and executes each work item's `## Workflow` |
 | `solera-create-pr` | "Open a PR", "merge the Epic" | GitHub PR via `gh pr create`, squash merge, branch deletion |
