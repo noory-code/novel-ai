@@ -16,7 +16,7 @@
 
 ---
 
-## [2.11.0] — 2026-03-29
+## [2.11.0] — 2026-03-30
 
 ### Added
 - **execution_order enforcement**: `solera-write-story` Step 3 validates ACT phase
