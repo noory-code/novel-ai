@@ -170,6 +170,17 @@ After deriving gates, confirm with user:
  - story.wrap_up: '{condition}'
 Please confirm or adjust."
 
+**C-5. Structured gate checks** → `workflow_gates.*.checks[]`
+
+For each gate where `condition` is non-empty, ask:
+- "Can this gate be verified automatically? (e.g., a file must exist, a command must pass, specific ACTs must be complete)"
+  → If yes: map answer to `checks[]` entries:
+    - File/path existence → `type: glob_exists`, `params: { pattern: "..." }`
+    - ACT completion → `type: act_complete`, `params: { ids: [...] }`
+    - Command/test pass → `type: command_passes`, `params: { run: "..." }`
+    - Pattern must not appear → `type: grep_absent`, `params: { pattern: "...", glob: "..." }`
+  → If no: leave `checks` absent (text-based fallback)
+
 ---
 
 #### Step D — Collaboration conventions → `conventions.*`
@@ -199,6 +210,13 @@ Please confirm or adjust."
   → framework → state management → styling
 - "What cloud/infra do you use?" → `tech_stack.infra.*`
   → cloud → container → CI/CD (reuse from deploy stage if already collected) → environments
+- "Does your project follow a layered architecture (e.g., Clean Architecture, Hexagonal)?"
+  → If yes: "In what order should layers be built? (e.g., Domain first, then Data, then Presentation)"
+  → Map answer to `execution_order.groups` — each group is a list of keywords for that layer
+  → Example: `groups: [[entity, usecase, domain-test], [datasource, repository-impl], [flow, page]]`
+- "Are there any layer-boundary rules? (e.g., Domain must not import Presentation)"
+  → If yes: map each rule to `architecture_rules.rules[]` with `scope`, `forbidden_imports`, `message`
+  → If no: leave `rules: []`
 
 ---
 
@@ -228,14 +246,31 @@ project:
 
 workflow_gates:
   # Solera skills check these before entering each step.
-  # epic.use_case:  "" — condition before Epic's use-case step
-  # epic.concept:   "" — condition before Epic's concept step (Epic scope)
-  # story.execute:  "" — condition before Story development starts
-  # story.wrap_up:  "" — condition before Story is marked complete
-  epic.use_case:  ""
-  epic.concept:   ""
-  story.execute:  ""
-  story.wrap_up:  ""
+  # Each gate has `condition` (human-readable) and optional `checks[]` (machine-verifiable).
+  # If `checks` present: ALL checks must pass. If absent: AI evaluates `condition` as text.
+  #
+  # Check types:
+  #   - type: glob_exists    — params: { pattern: "path/glob" }
+  #   - type: act_complete   — params: { ids: [ACT-001, ACT-002] }
+  #   - type: command_passes — params: { run: "flutter analyze" }
+  #   - type: grep_absent    — params: { pattern: "TODO|FIXME", glob: "lib/**/*.dart" }
+  #
+  # Example:
+  #   story.execute:
+  #     condition: "Domain layer tests pass"
+  #     checks:
+  #       - type: command_passes
+  #         params: { run: "flutter test packages/entities" }
+  #       - type: act_complete
+  #         params: { ids: [ACT-001, ACT-002] }
+  epic.use_case:
+    condition: ""
+  epic.concept:
+    condition: ""
+  story.execute:
+    condition: ""
+  story.wrap_up:
+    condition: ""
 
 process_stages:
   # Team's actual stages in order. Generated from kickoff interview.
@@ -246,6 +281,29 @@ process_stages:
   #   tool: ""          # tool used (optional)
   #   parallel: false   # can this run simultaneously with the next stage?
   stages: []
+
+execution_order:
+  # Layer/stage ordering for Action Item phase assignment.
+  # Each group runs after the previous group completes.
+  # Items within the same group can run in parallel.
+  # groups:
+  #   - [entity, usecase, domain-test]      # Phase 1: domain layer first
+  #   - [datasource, repository-impl, dto]  # Phase 2: data layer
+  #   - [flow, page, ui-state]              # Phase 3: presentation layer
+  groups: []
+
+architecture_rules:
+  # Layer-boundary rules enforced during Action Item test verification (Step 4).
+  # Each rule defines a forbidden import pattern within a file scope.
+  #
+  # Example (Clean Architecture):
+  #   - scope: "lib/domain/**/*.dart"
+  #     forbidden_imports: ["package:.*/data/", "package:.*/presentation/"]
+  #     message: "Domain layer must not import Data or Presentation"
+  #   - scope: "lib/presentation/**/*.dart"
+  #     forbidden_imports: ["package:.*/data/"]
+  #     message: "Presentation layer must not import Data directly"
+  rules: []
 
 conventions:
   review_approvals: 1   # number of approvals required

@@ -3,7 +3,7 @@ name: solera-write-story
 user-invocable: true
 description: Write a Story with clear acceptance criteria, then break it into atomic Action Items — each one a single commit.
 metadata:
-  version: "8.0.0"
+  version: "9.0.0"
   category: writing
   type: composite
   style: procedural
@@ -81,8 +81,19 @@ metadata:
    - [ ] Write the Action Items table (apply 1 Action Item = 1 commit principle)
    - [ ] Assign an Agent for each Action Item (when using agent teams)
    - [ ] **Assign a Skill for each Action Item**: Match the Action Item's task content against the scanned skill triggers. Set the `Skill` column to the matched skill name. If no skill matches, set to `-` (manual execution)
+   - [ ] **Layer-aware decomposition** (when `execution_order.groups` is non-empty in team-process.md):
+     - Read `execution_order.groups` from team-process.md
+     - For each Action Item, determine its layer group by matching the assigned Skill name, Agent name, or task keywords against group keyword lists
+     - If an Action Item's layer cannot be determined: assign it to the earliest group (conservative default)
+     - Assign phases respecting group order: group[0] ACTs → earliest phases, group[N] ACTs → later phases
+     - ACTs within the same group may share a phase (parallel OK)
    - [ ] Define depends_on to prevent output conflicts
    - [ ] Distribute across phases (same phase = can run in parallel)
+   - [ ] **Phase ordering validation** (when `execution_order.groups` is non-empty in team-process.md):
+     - For each Action Item in the table, resolve which group it belongs to (by Skill name, Agent name, or task keywords)
+     - Validate: if group[i] appears before group[j] in `execution_order.groups`, then every ACT in group[i] must have phase ≤ every ACT in group[j]
+     - If violation found: reassign phases to satisfy the ordering constraint, preserving parallelism within the same group
+     - Log the reassignment: "Phase reassigned: ACT-NNN moved from phase X to Y (execution_order: {group} must precede {group})"
    - [ ] **MUST: Immediately after writing _story.md, create one file per Action Item.**
      - Parse every row in the Action Items table
      - For each row: create `ACT-NNN-{name}.md` in the Story folder using the template in [assets/action-item.md](../solera-execute-action-item/assets/action-item.md)
@@ -90,9 +101,18 @@ metadata:
    - [ ] Verify all Action Item files exist: `Glob {story_path}/ACT-*.md` — count must match the table row count
 
 4. **Execute**
-   - [ ] **Gate check**: If `workflow_gates.story.execute` is set and condition is not met:
-     → Display the required condition to user
-     → **(BLOCKING: skill pauses until condition is fulfilled)**
+   - [ ] **Gate check**: If `workflow_gates.story.execute` is set:
+     - If `checks` array is present — iterate each check:
+       - `glob_exists`: Run `Glob {params.pattern}` — PASS if ≥1 match
+       - `act_complete`: Read _story.md Action Items table — PASS if all listed ACT IDs have status ✅
+       - `command_passes`: Run command via Bash `{params.run}` — PASS if exit code = 0
+       - `grep_absent`: Run `Grep {params.pattern}` with glob `{params.glob}` — PASS if 0 matches
+     - If ANY check FAILS:
+       → Display: "Gate `story.execute` blocked — check failed: {check.type} with params {check.params}"
+       → **(BLOCKING: skill pauses until all checks pass)**
+     - If `checks` array is absent (backward compat): evaluate `condition` text
+       → If condition is not met: display the required condition to user
+       → **(BLOCKING: skill pauses until condition is fulfilled)**
    - [ ] Extract incomplete (⏳ or no status) Action Items from the Action Items table in `_story.md`
    - [ ] Execute each Action Item in phase order **(BLOCKING: wait for each Action Item to complete, execute sequentially)**:
      ```python
@@ -115,9 +135,18 @@ metadata:
    - [ ] Proceed to Step 5 after confirming all Action Item statuses ✅
 
 5. **Wrap-up**
-   - [ ] **Gate check**: If `workflow_gates.story.wrap_up` is set and condition is not met:
-     → Display the required condition to user
-     → **(BLOCKING: skill pauses until condition is fulfilled)**
+   - [ ] **Gate check**: If `workflow_gates.story.wrap_up` is set:
+     - If `checks` array is present — iterate each check:
+       - `glob_exists`: Run `Glob {params.pattern}` — PASS if ≥1 match
+       - `act_complete`: Read _story.md Action Items table — PASS if all listed ACT IDs have status ✅
+       - `command_passes`: Run command via Bash `{params.run}` — PASS if exit code = 0
+       - `grep_absent`: Run `Grep {params.pattern}` with glob `{params.glob}` — PASS if 0 matches
+     - If ANY check FAILS:
+       → Display: "Gate `story.wrap_up` blocked — check failed: {check.type} with params {check.params}"
+       → **(BLOCKING: skill pauses until all checks pass)**
+     - If `checks` array is absent (backward compat): evaluate `condition` text
+       → If condition is not met: display the required condition to user
+       → **(BLOCKING: skill pauses until condition is fulfilled)**
    - [ ] Confirm all tests pass (if code changes were made)
    - [ ] Write RETRO.md — ref: [assets/retro.md](assets/retro.md)
    - [ ] Set _story.md status to ✅

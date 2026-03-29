@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.11.0] — 2026-03-29
+
+### Added
+- **execution_order enforcement**: `solera-write-story` Step 3 validates ACT phase
+  assignments against `execution_order.groups` from team-process.md — ensures
+  layered architecture ordering (e.g., Domain before Data before Presentation)
+- **Structured gate verification**: `workflow_gates` in team-process.md now supports
+  a `checks[]` array with deterministic check types (`glob_exists`, `act_complete`,
+  `command_passes`, `grep_absent`). `solera-write-story` Steps 4-5 iterate checks
+  programmatically. Falls back to text-based evaluation when `checks` is absent.
+- **Architecture boundary check**: `solera-execute-action-item` Step 4 enforces
+  `architecture_rules` from team-process.md — greps for forbidden import patterns
+  in changed files, blocks completion on violation
+- **Layer-aware ACT decomposition**: `solera-write-story` Step 3 decomposes Action
+  Items by architectural layer when `execution_order.groups` is defined, ensuring
+  correct phase ordering from the start
+
+### Changed
+- **team-process.md template**: added `execution_order`, `architecture_rules` sections
+  and extended `workflow_gates` to support structured `checks[]` array
+- **solera-init interview**: added Step C-5 for automatable gate checks; added Step F
+  questions for layered architecture ordering and boundary rules
+- `solera-write-story` v8.0.0 → v9.0.0
+- `solera-execute-action-item` v6.0.0 → v7.0.0
+
+---
+
 ## [2.10.4] — 2026-03-20
 
 ### Fixed

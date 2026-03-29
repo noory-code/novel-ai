@@ -3,7 +3,7 @@ name: solera-execute-action-item
 user-invocable: true
 description: Implement one Action Item end-to-end: write the code, run tests, and commit — one focused change at a time.
 metadata:
-  version: "6.0.0"
+  version: "7.0.0"
   category: writing
   type: unit
   style: procedural
@@ -81,6 +81,16 @@ metadata:
    - [ ] Build passes
    - [ ] Tests pass (Green)
    - [ ] Confirm all files listed in output_paths exist
+   - [ ] **Architecture check** (when `architecture_rules.rules` is non-empty in team-process.md):
+     - Read `architecture_rules.rules` from `{project_path}/workspace/team-process.md`
+     - For each rule in `rules`:
+       - Collect files matching `rule.scope` using Glob
+       - Intersect with this Action Item's changed files (output_paths + `git diff --name-only`)
+       - For each intersected file, run `Grep {pattern}` for each pattern in `rule.forbidden_imports`
+       - If ANY match found:
+         → Display: "Architecture violation in `{file}`: matched `{pattern}` — {rule.message}"
+         → **(BLOCKING: skill pauses until violation is resolved)**
+     - If `architecture_rules` section is absent or `rules` is empty: skip this check
 
 5. **Wrap-up**
    - [ ] Record the list of changed files in the Action Item file's results section
@@ -119,6 +129,7 @@ metadata:
 | Build failed | Build command failed in Step 4 | Display build error, request code fix | Test verification step halted, re-run after fix |
 | Test failed | Test failure in Step 4 | Display failed test list, request code fix | Test verification step halted, re-run after fix |
 | output_paths files missing | Declared files were not actually created | Display missing file list, request file creation | Test verification step halted, re-run after file creation |
+| Architecture violation | Forbidden import pattern found in changed files | Display violation details (file, pattern, rule message), request code fix | Test verification step halted, re-run after fix |
 | Commit failed | git commit error (pre-commit hook failure, etc.) | Display git error message, request manual resolution | Wrap-up halted, retry commit after resolution |
 | Development skill matching failed | No suitable development skill found via keywords | Request manual implementation from user, or request skill recommendation | Development step halted, resume after manual work or skill assignment |
 
