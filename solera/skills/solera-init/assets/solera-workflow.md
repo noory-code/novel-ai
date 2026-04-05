@@ -10,10 +10,17 @@
 | Check progress / schedule, what's next? | Check `progress.md` → `solera-manage-workflow` |
 | Start code / document work | `solera-execute-action-item` |
 | Create a PR | `solera-create-pr` |
-| End session, wrap up | `solera-handoff` |
+| **Explicitly** requests handoff (`/solera-handoff`, "run handoff", "save handoff") | `solera-handoff` |
 | New user type mentioned, add persona | `solera-write-identity` |
 | Start a new Goal | `solera-write-goal` (check team-process.md `workflow_gates` first) |
 | Publish / share artifacts | `solera-publish-artifacts` |
+
+## Anti-Patterns
+
+- **Never suggest or ask about handoff** after completing a task (Story, Epic, ACT, etc.)
+- **Never ask** "shall we move to the next session?" or "want to save a handoff?"
+- Handoff is a user-initiated action only — execute it when the user explicitly requests it
+- After task completion: proceed to the next work item or ask the user what to do next
 
 ## Git Rules
 

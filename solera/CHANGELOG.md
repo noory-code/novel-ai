@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.13.0] — 2026-04-06
+
+### Fixed
+- **Handoff no longer forced**: `solera-handoff` triggers narrowed to explicit requests
+  only (`handoff`, `save handoff`, `run handoff`, `update HANDOFF`). Removed broad
+  triggers like `end session`, `save work context`, `hand over to next session`
+- **solera-workflow.md**: handoff routing changed from "End session, wrap up" to
+  explicit-only invocation
+- **Anti-pattern guard**: `solera-workflow.md` and `solera-manage-workflow` now
+  explicitly prohibit suggesting handoff after task completion — handoff is
+  user-initiated only
+
+### Changed
+- `solera-handoff` v2.0.0 → v2.1.0
+- `solera-manage-workflow` v5.0.1 → v5.1.0
+
+---
+
 ## [2.12.0] — 2026-03-30
 
 ### Added

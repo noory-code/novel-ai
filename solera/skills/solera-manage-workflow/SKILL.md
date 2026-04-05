@@ -3,7 +3,7 @@ name: solera-manage-workflow
 user-invocable: true
 description: Know what to work on next — track progress, pick up where you left off, or close out a completed item.
 metadata:
-  version: "5.0.1"
+  version: "5.1.0"
   category: workflow
   type: composite
   style: procedural
@@ -71,6 +71,8 @@ metadata:
 3. Goal complete → write a Goal retrospective, confirm artifacts/ is empty (promoted during Goal Create and Epic Wrap-ups)
 4. Otherwise → continue current work
 
+> **Do NOT suggest handoff, session end, or session switch at any point.** Handoff is user-initiated only.
+
 ## Responsibilities
 
 | Role | Skill |
@@ -85,6 +87,7 @@ metadata:
 - Does not define procedures directly — follows procedures defined in the template
 - Delegates document writing to write-* skills
 - Delegates development work to frontend-*, dev-* skills
+- **Never suggest handoff** after completing a work item — proceed to the next item or ask the user what to do next
 
 ## Templates
 

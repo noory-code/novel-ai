@@ -3,11 +3,11 @@ name: solera-handoff
 user-invocable: true
 description: Never lose context between sessions — capture current state, open threads, and next steps in HANDOFF.md.
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
   category: workflow
   type: composite
   style: procedural
-  triggers: [handoff, end session, save work context, hand over to next session, update HANDOFF]
+  triggers: [handoff, save handoff, run handoff, update HANDOFF]
   uses: [solera-manage-workflow]
 ---
 
