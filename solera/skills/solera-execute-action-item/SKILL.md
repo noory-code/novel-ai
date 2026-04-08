@@ -3,7 +3,7 @@ name: solera-execute-action-item
 user-invocable: true
 description: Implement one Action Item end-to-end: write the code, run tests, and commit — one focused change at a time.
 metadata:
-  version: "7.1.0"
+  version: "7.2.0"
   category: writing
   type: unit
   style: procedural
@@ -63,6 +63,18 @@ metadata:
 1. **Setup**
    - [ ] Confirm `_story.md` exists; if not, invoke solera-write-story
    - [ ] Confirm all prerequisite ACTs in depends_on are complete
+   - [ ] **Gate check**: If `workflow_gates.act.start` is set:
+     - If `checks` array is present — iterate each check:
+       - `glob_exists`: Run `Glob {params.pattern}` — PASS if ≥1 match
+       - `act_complete`: Read _story.md Action Items table — PASS if all listed ACT IDs have status ✅
+       - `command_passes`: Run command via Bash `{params.run}` — PASS if exit code = 0
+       - `grep_absent`: Run `Grep {params.pattern}` with glob `{params.glob}` — PASS if 0 matches
+     - If ANY check FAILS:
+       → Display: "Gate `act.start` blocked — check failed: {check.type} with params {check.params}"
+       → **(BLOCKING: skill pauses until all checks pass)**
+     - If `checks` array is absent (backward compat): evaluate `condition` text
+       → If condition is not met: display the required condition to user
+       → **(BLOCKING: skill pauses until condition is fulfilled)**
    - [ ] Read the Action Item file — ref: [assets/action-item.md](assets/action-item.md)
    - [ ] Confirm the objective and task checklist
    - [ ] Check for previous ACT retrospectives: `Glob {story_path}/ACT-*.md` — if any completed ACTs exist, read their `## Retrospective` section and apply any "AI Improvements" noted there
@@ -95,6 +107,18 @@ metadata:
 5. **Wrap-up**
    - [ ] Record the list of changed files in the Action Item file's results section
    - [ ] Commit (1 Action Item = 1 commit, following the message format)
+   - [ ] **Gate check**: If `workflow_gates.act.done` is set:
+     - If `checks` array is present — iterate each check:
+       - `glob_exists`: Run `Glob {params.pattern}` — PASS if ≥1 match
+       - `act_complete`: Read _story.md Action Items table — PASS if all listed ACT IDs have status ✅
+       - `command_passes`: Run command via Bash `{params.run}` — PASS if exit code = 0
+       - `grep_absent`: Run `Grep {params.pattern}` with glob `{params.glob}` — PASS if 0 matches
+     - If ANY check FAILS:
+       → Display: "Gate `act.done` blocked — check failed: {check.type} with params {check.params}"
+       → **(BLOCKING: skill pauses until all checks pass)**
+     - If `checks` array is absent (backward compat): evaluate `condition` text
+       → If condition is not met: display the required condition to user
+       → **(BLOCKING: skill pauses until condition is fulfilled)**
    - [ ] Write `## Retrospective` section in the Action Item file — ref: [assets/retro.md](assets/retro.md)
      - Did well / Did poorly / Improvements / Instruction issues
    - [ ] **System improvement** (when `## Retrospective` contains "AI Improvements" or "Instruction System Issues"):

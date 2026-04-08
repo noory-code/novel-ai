@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.14.0] — 2026-04-09
+
+### Added
+- **Action Item level gates**: `workflow_gates` now supports `act.start` and `act.done`
+  gate keys for per-commit dependency management and automated verification
+- `solera-execute-action-item` v7.2.0: Setup step checks `act.start` gate before
+  execution; Wrap-up step checks `act.done` gate after commit (same structured
+  `checks[]` mechanism as Story-level gates)
+- `solera-init` v2.1.0: kickoff interview and team-process template include
+  `act.start` / `act.done` gate configuration
+
+---
+
 ## [2.13.0] — 2026-04-06
 
 ### Fixed

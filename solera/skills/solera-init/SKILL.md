@@ -3,7 +3,7 @@ name: solera-init
 user-invocable: true
 description: Set up Solera in a project — install rules, create the workspace structure, and run the team kickoff interview.
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
   category: meta
   type: unit
   style: procedural
@@ -161,6 +161,8 @@ Map `gate: true` stages to Solera gate keys:
 | Concept step (design/spec artifact) | `epic.concept` |
 | Story development start | `story.execute` |
 | Story completion (review/test) | `story.wrap_up` |
+| Action Item execution start | `act.start` |
+| Action Item completion (post-commit) | `act.done` |
 
 After deriving gates, confirm with user:
 "Based on what you described, I'll set these gates — does this look right?
@@ -168,6 +170,8 @@ After deriving gates, confirm with user:
  - epic.concept:  '{condition}'
  - story.execute: '{condition}'
  - story.wrap_up: '{condition}'
+ - act.start:     '{condition}'
+ - act.done:      '{condition}'
 Please confirm or adjust."
 
 **C-5. Structured gate checks** → `workflow_gates.*.checks[]`
@@ -270,6 +274,10 @@ workflow_gates:
   story.execute:
     condition: ""
   story.wrap_up:
+    condition: ""
+  act.start:
+    condition: ""
+  act.done:
     condition: ""
 
 process_stages:
