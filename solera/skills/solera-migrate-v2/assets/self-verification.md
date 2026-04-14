@@ -37,4 +37,9 @@ semantic:
   - {id: C-022, name: "Journey subdir handling under identity", type: content_contains, target: SKILL.md, patterns: ["journeys/", "catalog/published/journey/"]}
   - {id: C-023, name: "Unknown catalog type BLOCKING prompt", type: content_contains, target: SKILL.md, patterns: ["unknown catalog type", "_unclassified/{type}/"]}
   - {id: C-024, name: "Standard vs non-standard identity classification", type: content_contains, target: SKILL.md, patterns: ["v3 standard identity", "Non-standard identity files"]}
+
+  - {id: C-025, name: "Step 1 fully-archive policy (no name-based skipping)", type: content_contains, target: SKILL.md, patterns: ["workspace-original", "every direct child of", "archive everything, rebuild from archive"]}
+  - {id: C-026, name: "Concept → domain-model rename covers all source locations", type: content_contains, target: SKILL.md, patterns: ["_v2-archive/workspace-original/catalog/published/concept/", "_v2-archive/extra/*/concept/", "_v2-archive/extra/*/published/concept/"]}
+  - {id: C-027, name: "Loose files handling at vault roots", type: content_contains, target: SKILL.md, patterns: ["Loose files at vault roots", "_unclassified/misc/"]}
+  - {id: C-028, name: "Nested extra vault layouts supported in catalog merge", type: content_contains, target: SKILL.md, patterns: ["_v2-archive/extra/*/published/{type}/"]}
 ```

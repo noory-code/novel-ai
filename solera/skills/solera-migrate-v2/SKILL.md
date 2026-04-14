@@ -3,7 +3,7 @@ name: solera-migrate-v2
 user-invocable: true
 description: Assisted, non-destructive migration from Solera v2 (Phase/Goal/Epic hierarchy) to v3 (three axes). Every step blocks for human approval; reversible via git until committed.
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   category: meta
   type: unit
   style: procedural
@@ -61,34 +61,44 @@ migrate-v2 is a **one-shot transition skill**, not a work item. It runs once (or
 
 ### Step 1 — Freeze
 
+**Policy**: move the **entire** current `{workspace_path}/` contents into an archive, then build v3 fresh in Step 2 by copying selectively from that archive. This avoids ambiguous name-based skipping — `workspace/identity/` may already exist in v2 and still contain v2-only content; deciding to keep or archive it by name alone is wrong. The only safe rule is "archive everything, rebuild from archive."
+
 - [ ] Run `git status --porcelain`. If any output → halt with: "Working tree must be clean. Commit or stash your changes, then re-run."
 - [ ] Report what will be frozen:
-  - list all top-level directories under `{workspace_path}` that are not already v3 names (`identity`, `concepts`, `milestones`, `stories`, `releases`, `catalog`, `team-process.md`)
-  - list any `extra_artifact_dirs`
+  - every direct child of `{workspace_path}/` except `_v2-archive/` itself (file or directory, regardless of name) — these all move to `{workspace_path}/_v2-archive/workspace-original/`
+  - every `extra_artifact_dirs` entry moves to `{workspace_path}/_v2-archive/extra/{basename}/`
 - [ ] **BLOCKING**: show the report and ask `"Freeze these paths to _v2-archive/? (yes/no)"`
 - [ ] On approval:
-  - Create `{workspace_path}/_v2-archive/`
-  - For each path listed: `git mv {path} {workspace_path}/_v2-archive/{basename}` (preserves git history)
-  - For each `extra_artifact_dirs/{name}`: `git mv {extra_dir} {workspace_path}/_v2-archive/extra/{basename}`
+  - Create `{workspace_path}/_v2-archive/workspace-original/`
+  - For every direct child of `{workspace_path}/` (except `_v2-archive`): `git mv {workspace_path}/{child} {workspace_path}/_v2-archive/workspace-original/{child}` (preserves git history)
+  - For each `extra_artifact_dirs/{path}`: create `{workspace_path}/_v2-archive/extra/{basename}` parent if needed, then `git mv {extra_dir} {workspace_path}/_v2-archive/extra/{basename}`
+- [ ] After this step, `{workspace_path}/` contains exactly one entry: `_v2-archive/`.
 - [ ] Commit: `chore(solera): freeze v2 workspace before v3 migration`
-- [ ] Report: `"Frozen. N directories archived. Continuing to Step 2 (skeleton)."`
+- [ ] Report: `"Frozen. Entire workspace archived to _v2-archive/workspace-original/. Continuing to Step 2 (skeleton)."`
 
 ### Step 2 — Skeleton
 
+After Step 1, `{workspace_path}/` contains only `_v2-archive/`. Step 2 builds the fresh v3 layout from scratch and copies selected content back from the archive.
+
 - [ ] Create v3 directories under `{workspace_path}/`:
+  - `identity/` (contents will be filled by Step 2.1)
   - `concepts/` + `_index.md` (from [../solera-write-concept/assets/_index-template.md](../solera-write-concept/assets/_index-template.md))
   - `milestones/` + `_index.md` (from [../solera-write-milestone/assets/_index-template.md](../solera-write-milestone/assets/_index-template.md))
   - `stories/`
   - `releases/` + `_index.md` (from [../solera-release/assets/_index-template.md](../solera-release/assets/_index-template.md))
-  - `catalog/published/` (if not already present)
+  - `catalog/published/`
+
+> All source paths below refer to the archive laid out by Step 1:
+> `{workspace_path}/_v2-archive/workspace-original/` for the former workspace contents,
+> `{workspace_path}/_v2-archive/extra/{name}/` for each former `extra_artifact_dirs` entry.
 
 #### 2.1 Identity copy policy
 
-Identity files may live in multiple locations in v2 Obsidian-style vaults (direct `workspace/identity/` or a separate vault like `{project_path}/published/identity/`). Collect from every plausible source, then classify:
+Identity files may live in multiple locations in v2 Obsidian-style vaults (inside `workspace/identity/` or inside a separate vault root like `{project_path}/published/identity/`). Collect from every plausible source, then classify:
 
 - [ ] Collect identity-source candidates in priority order:
-  1. `_v2-archive/identity/*.md` (direct v2 location — some projects keep identity here)
-  2. `_v2-archive/extra/*/identity/*.md` (from `extra_artifact_dirs` — common in Obsidian vaults)
+  1. `_v2-archive/workspace-original/identity/*.md` (from the former workspace identity directory)
+  2. `_v2-archive/extra/*/identity/*.md` (from each archived extra vault)
 - [ ] For each candidate file, classify:
   - **v3 standard identity** (`mission.md`, `core-values.md`, `vision_*.md`) → stage to copy into `{workspace_path}/identity/`.
   - **Journeys subdir** (`.../identity/journeys/*`) → stage to move into `catalog/published/journey/` — these are journey artifacts that happened to live under identity in v2.
@@ -99,29 +109,37 @@ Identity files may live in multiple locations in v2 Obsidian-style vaults (direc
 
 #### 2.2 team-process.md
 
-- [ ] If `_v2-archive/team-process.md` exists → copy to `{workspace_path}/team-process.md` and **patch only the `workflow_gates` section** to v3 keys (remove `epic.use_case`, `epic.concept`; add `milestone.agree`, `concept.align`). Other sections preserved as-is.
+- [ ] If `_v2-archive/workspace-original/team-process.md` exists → copy to `{workspace_path}/team-process.md` and **patch only the `workflow_gates` section** to v3 keys (remove `epic.use_case`, `epic.concept`; add `milestone.agree`, `concept.align`). Other sections preserved as-is.
 - [ ] If no team-process.md was found in the archive → log a reminder in the eventual MIGRATION-NOTES.md Manual Tasks: run `solera-init` post-migration to populate it via the Kickoff Interview.
 
 #### 2.3 Catalog merge
 
-- [ ] If `_v2-archive/catalog/published/concept/` exists → copy to `catalog/published/domain-model/` (the v3 rename).
-- [ ] Enumerate every `{type}/` subdir from both sources:
-  - `_v2-archive/catalog/published/{type}/`
-  - `_v2-archive/extra/*/{type}/` (and also the top level of `extra/*/` itself, since Obsidian vaults may drop artifact folders directly there)
+Merge archived catalogs from both the original workspace and every extra vault into the fresh `{workspace_path}/catalog/published/`. Handle v2's `concept/` rename, unknown types, and loose files.
+
+- [ ] **Rename v2 `concept/` → v3 `domain-model/` everywhere it appears**. Any of the following source paths should route to `catalog/published/domain-model/`:
+  - `_v2-archive/workspace-original/catalog/published/concept/`
+  - `_v2-archive/extra/*/concept/`
+  - `_v2-archive/extra/*/published/concept/` (nested vault layouts)
+- [ ] Enumerate every `{type}/` subdir from all relevant source locations:
+  - `_v2-archive/workspace-original/catalog/published/{type}/`
+  - `_v2-archive/extra/*/{type}/` (top level of each extra vault)
+  - `_v2-archive/extra/*/published/{type}/` (nested `published/` inside extra vaults — common Obsidian layout)
 - [ ] For each `{type}` found, classify using the `solera-publish-artifacts` Move Mapping table:
   - **Known type** (persona, service-map, journey, use-case, domain-model, erd, dto, api-spec, reference) → destination per that table.
-  - **Unknown type** (e.g., `schema/`, `reference/` if still unknown in your version, any custom folder): **BLOCKING** one-shot prompt per type: `"Found unknown catalog type '{type}' (from {source}). Choose: (1) move to catalog/published/_unclassified/{type}/  (2) map to an existing v3 type (provide target)  (3) skip (leave only in _v2-archive)"`. Apply the decision.
-- [ ] **Filename collision detection during merge**: if the same filename exists in multiple sources for the same destination:
-  - **BLOCKING**: show a short diff summary and ask `"Which version wins? (1) workspace catalog  (2) extra  (3) both (rename extra copy to {name}__extra.md)"`.
+  - **Unknown type** (e.g., `schema/`, any custom folder): **BLOCKING** one-shot prompt per type: `"Found unknown catalog type '{type}' (from {source}). Choose: (1) move to catalog/published/_unclassified/{type}/  (2) map to an existing v3 type (provide target)  (3) skip (leave only in _v2-archive)"`. Apply the decision.
+- [ ] **Loose files at vault roots**: scan for `.md` files that sit **directly** at the root of any extra vault (e.g., `_v2-archive/extra/{name}/README.md`, `_v2-archive/extra/{name}/app-structure.md`) rather than inside a `{type}/` subdir. Also scan `_v2-archive/workspace-original/` for loose `.md` files that aren't `team-process.md`.
+  - **BLOCKING** one-shot prompt per loose file: `"Found loose file '{path}'. Choose: (1) copy to catalog/published/_unclassified/misc/{filename}  (2) provide a target path  (3) skip"`. Apply the decision.
+- [ ] **Filename collision detection during merge**: if the same filename from different sources targets the same destination:
+  - **BLOCKING**: show a short diff summary and ask `"Which version wins? (1) source A  (2) source B  (3) both (rename the later one to {name}__{source_tag}.md)"`.
 
 - [ ] Commit: `chore(solera): scaffold v3 workspace skeleton`
-- [ ] Report: `"Skeleton created. Identity copied (X standard, Y non-standard per choice). Catalog merged (Z known types, W unknown routed to _unclassified/ or mapped). Continuing to Step 3 (concepts)."`
+- [ ] Report: `"Skeleton created. Identity copied (X standard, Y non-standard per choice). Catalog merged (Z known types, W unknown routed to _unclassified/ or mapped, L loose files handled). Continuing to Step 3 (concepts)."`
 
 ### Step 3 — Concept candidate proposal
 
 This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concepts; human approves, merges, splits, or rejects each.
 
-- [ ] **Scan phase**: read every `_goal.md`, `_epic.md`, `_v2-archive/initiative/*/roadmap.md`, `_v2-archive/initiative/*/README.md`, `_v2-archive/phase/*/README.md` in the archive. Also read any `catalog/published/persona/*.md`, `service-map/*.md`, `journey/*.md`, `use-case/*.md`, `domain-model/*.md` for cross-references.
+- [ ] **Scan phase**: read every `_goal.md`, `_epic.md`, `_v2-archive/workspace-original/initiative/*/roadmap.md`, `_v2-archive/workspace-original/initiative/*/README.md`, `_v2-archive/workspace-original/phase/*/README.md` in the archive. Also read any `catalog/published/persona/*.md`, `service-map/*.md`, `journey/*.md`, `use-case/*.md`, `domain-model/*.md` (the v3 locations, already populated by Step 2) for cross-references.
 - [ ] **Cluster phase**: group Goals/Epics by thematic area. Heuristics (apply in order; AI should surface its reasoning):
   - Same `feature/*` tag in frontmatter → same Concept candidate.
   - Same Goal → split only if multiple Epics clearly describe distinct long-lived areas (e.g., G1-auth-onboarding → Authentication + Onboarding).
@@ -183,7 +201,7 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
 
 ### Step 4 — Story relocation with `contributes_to` inference
 
-- [ ] **Discover Stories** in the archive: every directory under `_v2-archive/phase/*/goals/*/epics/*/` whose name matches `US-NNN-*` or `TS-NNN-*` and which contains `_story.md`.
+- [ ] **Discover Stories** in the archive: every directory under `_v2-archive/workspace-original/phase/*/goals/*/epics/*/` whose name matches `US-NNN-*` or `TS-NNN-*` and which contains `_story.md`.
 - [ ] **Propose a global ID strategy**. v2 Story IDs (`US-001`, `TS-001`) are unique only within an Epic, so collisions are expected in v3's flat `stories/`. AI proposes one of:
   - **Renumber**: assign new global IDs (`US-0001`, `US-0002`, …) in discovery order. Loses the original ID — captured in the origin comment.
   - **Prefix by Epic**: `US-auth-001` instead of `US-001`. Preserves original number at the cost of slightly noisier IDs.
@@ -222,7 +240,7 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
     - Replace old `status: completed` → `status: ✅ Complete`.
     - Prepend origin comment:
       ```
-      <!-- v2 origin: _v2-archive/phase/{phase}/goals/{goal}/epics/{epic}/{old_id}-{name}/ -->
+      <!-- v2 origin: _v2-archive/workspace-original/phase/{phase}/goals/{goal}/epics/{epic}/{old_id}-{name}/ -->
       ```
   - Patch each `ACT-NNN-*.md` in the Story: prepend the same origin comment.
   - **Do not** rewrite existing git commit messages from v2 (`[epic-name][US-NNN][ACT-NNN]`). The git log preserves v2-era commits as-is; only the filesystem layout and frontmatter change.
@@ -263,7 +281,7 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   - ID strategy chosen in Step 4
   - List of excluded v2 Goals/Epics from Step 3 with rationale
   - Known manual tasks ("these Stories still have empty contributes_to")
-- [ ] Rewrite `{project_path}/progress.md` to v3 format (from `{workspace_path}/_v2-archive/progress.md` if it exists, otherwise from scratch).
+- [ ] Rewrite `{project_path}/progress.md` to v3 format (reference `{workspace_path}/_v2-archive/workspace-original/progress.md` if present, otherwise start from scratch).
 - [ ] **BLOCKING**: ask `"Delete _v2-archive/? (default: keep. It's safe to keep — git history stores everything.)"`
   - Default: **keep**. The archive is not heavy.
   - If the human chooses delete: `git rm -r _v2-archive/`.

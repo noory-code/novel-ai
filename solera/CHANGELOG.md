@@ -1,5 +1,29 @@
 # Changelog
 
+## [3.0.2] — 2026-04-16
+
+### Fixed
+
+- **`solera-migrate-v2` Step 1 archive policy**: previous versions used a name-based rule ("skip directories whose name matches a v3 name") to decide what to archive. This misfired on v2 projects where `workspace/identity/`, `workspace/catalog/`, or `workspace/team-process.md` already existed but contained v2 data — those paths would be skipped and v2 content would pollute the v3 skeleton. Step 1 now moves the **entire** `workspace/` contents into `_v2-archive/workspace-original/` regardless of name, and Step 2 copies selectively from the archive. Safer and unambiguous.
+- **`solera-migrate-v2` concept → domain-model rename scope**: v1.1.0 only renamed `_v2-archive/catalog/published/concept/`, missing `_v2-archive/extra/*/concept/` and `_v2-archive/extra/*/published/concept/` (nested Obsidian vault layouts). Step 2.3 now enumerates all three source locations for the rename.
+- **`solera-migrate-v2` loose files at vault roots**: v2 Obsidian vaults often contain `.md` files directly at the vault root (e.g., `README.md`, `app-structure.md`) that don't live inside a `{type}/` subdirectory. Previously these were silently left in `_v2-archive/` and lost during migration. Step 2.3 now scans for loose files at both the archived workspace root and every extra vault root, and runs a BLOCKING prompt per file (route to `_unclassified/misc/`, provide target, or skip).
+
+### Changed
+
+- **`solera-migrate-v2`** v1.1.0 → v1.2.0.
+  - Step 1 "Freeze" now archives every direct child of `{workspace_path}/` into `_v2-archive/workspace-original/` — no name-based exceptions.
+  - Step 2 all source paths updated from `_v2-archive/{child}/` to `_v2-archive/workspace-original/{child}/`.
+  - Step 2.3 "Catalog merge" covers three source locations for the concept→domain-model rename and three source locations for type enumeration (workspace catalog, extra root, extra/published nested layout).
+  - Step 2.3 adds the "Loose files at vault roots" subroutine with BLOCKING prompt.
+  - Origin comments injected into migrated Stories (Step 4) now reference the `workspace-original/` path.
+
+### Migration Notes
+
+- Projects migrated with v3.0.0 or v3.0.1 and no surprises are unaffected — v3.0.2 only changes the migration skill.
+- Projects that hit the name-conflict, missing-concept-rename, or lost-loose-file issues during a v3.0.0/v3.0.1 migration can re-run `solera-migrate-v2` after upgrading; Resume Semantics detects Step 2 completion via `catalog/published/` state and lets you replay from the correct step.
+
+---
+
 ## [3.0.1] — 2026-04-16
 
 ### Fixed
