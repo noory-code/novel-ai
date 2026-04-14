@@ -1,6 +1,6 @@
-# Validation: solera-publish-artifacts
+# Validation: solera-publish-artifacts (v3)
 
-> This file defines the unique validation rules for the solera-publish-artifacts skill.
+> Unique validation rules for this skill after the v3 open.
 
 ## Structural
 
@@ -25,16 +25,22 @@ structural:
     section: "## Completion Checklist"
 
   - id: S-004
-    name: "Version format section exists"
+    name: "Version Tag section exists"
     type: section_exists
     target: SKILL.md
-    section: "## Version Format"
+    section: "## Version Tag"
 
   - id: S-005
-    name: "Move mapping section exists"
+    name: "Move Mapping section exists"
     type: section_exists
     target: SKILL.md
     section: "## Move Mapping"
+
+  - id: S-006
+    name: "Related Artifacts Line Format section exists"
+    type: section_exists
+    target: SKILL.md
+    section: "## Related Artifacts Line Format"
 ```
 
 ## Semantic
@@ -52,28 +58,76 @@ semantic:
       - "as you see fit"
 
   - id: C-002
-    name: "Core keywords present"
+    name: "v3 core keywords present"
     type: content_contains
     target: SKILL.md
     patterns:
-      - "catalog"
-      - "artifacts"
-      - "applied version"
-      - "Goal"
+      - "Story Wrap-up"
+      - "catalog/published"
+      - "contributes_to"
+      - "Related Artifacts"
+      - "Applied version"
 
   - id: C-003
-    name: "Version pattern defined"
+    name: "Version tag uses story_id"
     type: content_contains
     target: SKILL.md
     patterns:
-      - "[Phase]-[Goal number]"
-      - "H1-G01"
+      - "{story_id}"
+      - "US-001"
 
   - id: C-004
     name: "Procedure step checklist"
     type: count_check
     target: SKILL.md
     pattern: "- \\[ \\]"
-    min: 5
+    min: 10
     max: 999
+
+  - id: C-005
+    name: "Move mapping includes domain-model"
+    type: content_contains
+    target: SKILL.md
+    patterns:
+      - "domain-model"
+      - "persona"
+      - "service-map"
+      - "journey"
+      - "use-case"
+
+  - id: C-006
+    name: "Idempotency and collision handling documented"
+    type: content_contains
+    target: SKILL.md
+    patterns:
+      - "skipped (identical)"
+      - "Overwrite"
+      - "Rename new"
+      - "Skip"
+
+  - id: C-007
+    name: "git mv preferred"
+    type: content_contains
+    target: SKILL.md
+    patterns:
+      - "git mv"
+
+  - id: C-008
+    name: "user-invocable is false"
+    type: content_contains
+    target: SKILL.md
+    patterns:
+      - "user-invocable: false"
+
+  - id: C-010
+    name: "Removed v2 Goal/Epic promotion references"
+    type: content_not_contains
+    target: SKILL.md
+    patterns:
+      - "Goal Create"
+      - "Epic Wrap-up"
+      - "[Phase]-[Goal number]"
+      - "H1-G01"
+      - "phase_id"
+      - "goal_id"
 ```

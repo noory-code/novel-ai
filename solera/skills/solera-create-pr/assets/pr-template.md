@@ -1,22 +1,37 @@
-# PR Body Template
+# PR Body Template (v3)
 
-## Epic: {epic_name}
+## Story: {story_id} — {story_name}
 
-> Goal: {goal_name}
+> Contributes to: {concept_id_1}, {concept_id_2}
+> Belongs to: {milestone_id or —}
 
-### Stories
+## Acceptance Criteria
 
-| ID | Story | Status |
+- [x] {criterion 1}
+- [x] {criterion 2}
+
+## Action Items
+
+| ID | Title | Commit |
 |----|-------|--------|
-| US-001 | [title] | ✅ |
-| US-002 | [title] | ✅ |
+| ACT-001 | {title} | `{short_hash}` |
+| ACT-002 | {title} | `{short_hash}` |
+| ACT-003 | {title} | `{short_hash}` |
 
-### Key Changes
+## Concept Contribution Summary
 
-- [change 1]
-- [change 2]
+### {concept_name}
+**What this Story left behind**: {1–2 sentences from RETROSPECTIVE.md}
+**Current Shape change**: "{old}" → "{new}"
 
-### Tests
+{Repeat one block per concept in contributes_to.}
 
-- [ ] Build passes
-- [ ] Tests pass
+## Output Artifacts
+
+{List copied from `_story.md`'s # Output Artifacts section.}
+
+## Tests
+
+- [x] Build passes
+- [x] Tests pass
+- [x] Architecture rules pass (if configured)

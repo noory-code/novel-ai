@@ -20,7 +20,7 @@ metadata:
 | | Command | Skill |
 |---|---|---|
 | Invocation | User types `/commit` | AI selects automatically |
-| Name style | Short (`/handoff`) | Descriptive (`solera-write-goal`) |
+| Name style | Short (`/handoff`) | Descriptive (`solera-write-story`) |
 | Trigger | Explicit user input | Keyword/context match |
 
 ## Input

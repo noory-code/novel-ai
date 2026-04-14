@@ -1,9 +1,9 @@
 ---
 name: solera-write-identity
 user-invocable: true
-description: Establish what your service stands for — write the Mission, Core Values, Vision, and a first cut of Goals.
+description: Establish what your service stands for — write the Mission, Core Values, Vision, and an optional rough list of direction candidates that feed the first Concepts.
 metadata:
-  version: "2.0.0"
+  version: "3.0.0"
   category: writing
   type: unit
   style: guide
@@ -11,14 +11,16 @@ metadata:
   uses: []
 ---
 
-# Writing Identity
+# Writing Identity (v3)
 
-> Defines the service identity through Mission, Core Values, Vision, and a rough Goals list.
-> Run this once before starting any Goal-level work.
+> Defines the service identity through Mission, Core Values, Vision, and an optional rough-directions list.
+> Run this once before drawing your first Concept.
+
+In v3, the output of this skill is **all on the Living axis** — it never creates v2-era `initiative/` or Phase/Goal hierarchies. The optional "rough directions" list from Step 5 is a human jotting-pad that feeds into the next step (`solera-write-concept`), not a structured work item.
 
 ## Prerequisites
 
-- Service name and target user known (collected via conversation if not provided)
+- Service name and target user known (collected via conversation if not provided).
 
 ## Input
 
@@ -26,17 +28,16 @@ metadata:
 |-----------|----------|-------------|---------|
 | **service_name** | N | Service name (collected via conversation if omitted) | task-app |
 | **target_user** | N | Target user (collected via conversation if omitted) | freelancers |
-| **project_path** | Y | Project workspace root | banas/workspace |
-| **year** | Y | Initiative year | 2026 |
+| **project_path** | Y | Project workspace root | banas |
 
 ## Output
 
 | Step | Output | Path |
 |------|--------|------|
-| Create | Mission | `{project_path}/identity/mission.md` |
-| Create | Core Values | `{project_path}/identity/core-values.md` |
-| Create | Vision | `{project_path}/identity/vision_1.md` |
-| Create | Goals (rough) | `{project_path}/initiative/{year}/goals.md` |
+| Create | Mission | `{project_path}/workspace/identity/mission.md` |
+| Create | Core Values | `{project_path}/workspace/identity/core-values.md` |
+| Create | Vision | `{project_path}/workspace/identity/vision_1.md` |
+| Create (optional) | Rough directions | `{project_path}/workspace/identity/rough-directions.md` |
 
 ## Procedure
 
@@ -68,35 +69,33 @@ metadata:
    - [ ] Write a one-sentence mission statement: "For [who], through [how], we build [what]."
    - [ ] Define key terms used in the mission
    - [ ] Write the underlying philosophy (beliefs that support the mission)
-   - [ ] Save to `{project_path}/identity/mission.md`
+   - [ ] Save to `{project_path}/workspace/identity/mission.md`
 
 3. **Define Core Values** — ref: [assets/core-values.md](assets/core-values.md)
    - [ ] Define 3–5 core values
    - [ ] For each value, write a decision-making criterion: "When in doubt, ask: [question]"
-   - [ ] Save to `{project_path}/identity/core-values.md`
+   - [ ] Save to `{project_path}/workspace/identity/core-values.md`
 
 4. **Define Vision** — ref: [assets/vision.md](assets/vision.md)
    - [ ] Describe a concrete future state the service aims to reach
    - [ ] Write measurable achievement conditions (checklist format)
-   - [ ] Save to `{project_path}/identity/vision_1.md`
+   - [ ] Save to `{project_path}/workspace/identity/vision_1.md`
 
-5. **Draft Goals list** — ref: [assets/goals.md](assets/goals.md)
-   - [ ] List Goals that contribute to the Vision (rough — will be elaborated later)
-   - [ ] Assign IDs: G1, G2, ...
-   - [ ] Link each Goal to a core value
-   - [ ] Mark each as Feature or Enabler
-   - [ ] Save to `{project_path}/initiative/{year}/goals.md`
+5. **Draft rough directions (optional)** — ref: [assets/goals.md](assets/goals.md)
+   - [ ] Ask the human: "Would you like to jot down rough directions you want this service to go? These are not commitments — they become candidates for the first Concepts you draw."
+   - [ ] If yes: collect a short bulleted list, linked to core values where relevant.
+   - [ ] Save to `{project_path}/workspace/identity/rough-directions.md`.
+   - [ ] If no: skip — directions will emerge as you draw Concepts.
 
 ## Folder Structure
 
 ```
-{project_path}/
-├── identity/
-│   ├── mission.md
-│   ├── core-values.md
-│   └── vision_1.md
-└── initiative/{year}/
-    └── goals.md
+{project_path}/workspace/
+└── identity/
+    ├── mission.md
+    ├── core-values.md
+    ├── vision_1.md
+    └── rough-directions.md       # optional
 ```
 
 ## Error Handling
@@ -114,5 +113,5 @@ metadata:
 - [ ] mission.md created — explains the "why"
 - [ ] core-values.md created — 3–5 values with decision criteria
 - [ ] vision_1.md created — concrete future state with measurable conditions
-- [ ] goals.md created — Goal IDs assigned, linked to values, Feature/Enabler classified
-- [ ] Ready to hand off to solera-write-phase or solera-write-goal
+- [ ] (Optional) rough-directions.md created — candidate seeds for the first Concepts
+- [ ] Ready to hand off to solera-write-concept (draw the first Concept of the project map)

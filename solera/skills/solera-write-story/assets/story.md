@@ -1,33 +1,61 @@
 # Template: Story
 
-Defines the decomposition unit of an Epic, covering both User Stories and Technical Stories.
+Defines the decomposition unit that contributes to Concepts. Covers both User Stories and Technical Stories.
+
+Every Story **must** declare which Concepts it contributes to. It **may** declare which Milestone it belongs to.
 
 ## _story.md (User Story)
 
 ```markdown
-# US-NNN: [title]
+---
+story_id: US-NNN
+story_name: {kebab-case name}
+story_type: US
+status: ⏳ Pending | 🔄 In Progress | ✅ Complete | ❌ Cancelled
+contributes_to: [concept_id_1, concept_id_2]
+belongs_to: {milestone_id or omitted}
+created: {YYYY-MM-DD}
+---
 
-> Epic: [parent Epic name]
-> Status: ⏳ Pending / 🔄 In Progress / ✅ Complete / ❌ Cancelled
+# US-NNN: {title}
+
+> contributes to: {concept names, comma-separated}
+> belongs to: {milestone name or —}
+> Status: 🔄 In Progress
 
 ## User Story
 
-**As a** [persona],
-**I want** [action],
-**So that** [purpose].
+**As a** {persona}
+**I want** {action}
+**So that** {outcome}
 
 ## Acceptance Criteria
 
-- [ ] [criterion 1]
-- [ ] [criterion 2]
+- [ ] {criterion 1}
+- [ ] {criterion 2}
+
+## Input Artifacts
+
+<!-- Materials needed to start this Story. Filled in at Step 2.
+     Keep only lines that actually exist; remove unused placeholders. -->
+
+- Design: {Figma / Pen URL or internal path}
+- Spec: {Notion / docs link or internal path}
+- Reference: {prior Story / existing code path}
+
+## Output Artifacts
+
+<!-- What this Story produces. AI appends entries during Execute; final list is fixed at Wrap-up. -->
+
+(none yet — populated during Execute)
 
 ## Action Items
 
 | ID | Action Item | Skill | Agent | Phase | depends_on | Status | Commit |
 |----|-------------|-------|-------|-------|------------|--------|--------|
-| ACT-001 | [Action Item title] | [skill name or -] | [agent name or -] | 1 | - | ⏳ Pending | - |
-| ACT-002 | [Action Item title] | [skill name or -] | [agent name or -] | 1 | - | ⏳ Pending | - |
-| ACT-003 | [Action Item title] | [skill name or -] | [agent name or -] | 2 | ACT-001,ACT-002 | ⏳ Pending | - |
+| ACT-001 | {Action Item title} | {skill name or -} | {agent name or -} | 1 | - | ⏳ Pending | - |
+| ACT-002 | {Action Item title} | {skill name or -} | {agent name or -} | 1 | - | ⏳ Pending | - |
+| ACT-003 | {Action Item title} | {skill name or -} | {agent name or -} | 2 | ACT-001,ACT-002 | ⏳ Pending | - |
 
 **Progress**: 0/N Action Items complete
 ```
@@ -35,32 +63,52 @@ Defines the decomposition unit of an Epic, covering both User Stories and Techni
 ## _story.md (Technical Story)
 
 ```markdown
-# TS-NNN: [title]
+---
+story_id: TS-NNN
+story_name: {kebab-case name}
+story_type: TS
+status: ⏳ Pending | 🔄 In Progress | ✅ Complete | ❌ Cancelled
+contributes_to: [concept_id_1]
+belongs_to: {milestone_id or omitted}
+created: {YYYY-MM-DD}
+---
 
-> Epic: [parent Epic name]
-> Status: ⏳ Pending / 🔄 In Progress / ✅ Complete / ❌ Cancelled
+# TS-NNN: {title}
+
+> contributes to: {concept names}
+> belongs to: {milestone name or —}
+> Status: 🔄 In Progress
 
 ## Technical Goal
 
-[The technical problem/goal this task resolves]
+{The technical problem this Story resolves and why it advances the contributed Concept(s).}
 
 ## Spec
 
 | Item | Details |
 |------|---------|
-| **Impact Scope** | [which systems are affected] |
-| **Dependencies** | [prerequisite tasks/libraries] |
+| **Impact Scope** | {which systems are affected} |
+| **Dependencies** | {prerequisite Stories / libraries} |
 
 ## Acceptance Criteria
 
-- [ ] [criterion 1]
-- [ ] [criterion 2]
+- [ ] {criterion 1}
+- [ ] {criterion 2}
+
+## Input Artifacts
+
+- Reference: {architecture doc / prior code path}
+- Spec: {design doc link}
+
+## Output Artifacts
+
+(none yet — populated during Execute)
 
 ## Action Items
 
 | ID | Action Item | Skill | Agent | Phase | depends_on | Status | Commit |
 |----|-------------|-------|-------|-------|------------|--------|--------|
-| ACT-001 | [Action Item title] | [skill name or -] | [agent name or -] | 1 | - | ⏳ Pending | - |
+| ACT-001 | {Action Item title} | {skill name or -} | {agent name or -} | 1 | - | ⏳ Pending | - |
 
 **Progress**: 0/N Action Items complete
 ```
@@ -68,46 +116,50 @@ Defines the decomposition unit of an Epic, covering both User Stories and Techni
 ## Workflow
 
 ### Step 0. Setup
-- [ ] Confirm `epics/*/_epic.md` exists; if missing, invoke solera-write-epic
-- [ ] Status → 🔄
+- [ ] Confirm each `contributes_to` Concept exists at `concepts/{id}.md` with `status: active` (gate `concept.align`)
+- [ ] If `belongs_to` is set: milestone status must be `agreed` or `in-progress`
+- [ ] Read previous retrospectives (apply AI Improvements)
+- [ ] Read `team-process.md` (workflow_gates, execution_order, architecture_rules)
+- [ ] Create branch `story/{story_id}-{story_name}` from base
+- [ ] Create Story folder; status → 🔄
 
-### Step 1. Create (performed on Epic branch)
+### Step 1. Define
 - [ ] Determine Story type (US / TS)
-- [ ] Define acceptance criteria
-- [ ] Scan available skills: `Glob .claude/skills/*/SKILL.md` and `Glob .claude/plugins/*/skills/*/SKILL.md`
-- [ ] Write `_story.md` with the story/technical goal, acceptance criteria, and Action Items table
-- [ ] Create Action Item files (required) as `ACT-NNN-[name].md` in the Story folder
-- [ ] Assign responsible Agent per Action Item (when using agent team)
-- [ ] Assign Skill per Action Item: match task content against scanned skill triggers; set `-` if no match
-- [ ] Define dependencies between Action Items (depends_on)
-- [ ] Allocate phases (Action Items that can run in parallel belong to the same Phase)
-- [ ] Create `epics-[name]/story-[ID]-[name]` branch (from Epic branch)
+- [ ] Write story body + acceptance criteria
+- [ ] Collect **Input Artifacts** (human provides up front)
 
-### Step 2. Execute
-<!-- Execute Action Items in Phase N in parallel. Next Phase starts after previous Phase is complete -->
-<!-- Repeat the block below for each Action Item in the Action Items table -->
-#### Action Item: ACT-NNN — {title}
-- [ ] solera-execute-action-item invoke or development skill invoke
-- [ ] Perform work and commit
-<!-- /repeat -->
-- [ ] Confirm all acceptance criteria are met
-- [ ] Confirm all Action Items complete
+### Step 2. Decompose
+- [ ] Scan available skills
+- [ ] Write Action Items table (1 ACT = 1 commit)
+- [ ] Assign Skill / Agent / Phase / depends_on per ACT
+- [ ] Layer-aware decomposition when `execution_order.groups` is defined
+- [ ] Validate Phase ordering against group order
+- [ ] Create one `ACT-NNN-{name}.md` per row; block Step 3 until count matches
 
-### Step 3. Wrap-up
-- [ ] Build/tests pass
-- [ ] Write retrospective to RETROSPECTIVE.md (ref: [assets/retro.md](retro.md))
+### Step 3. Execute
+- [ ] Gate check `story.execute`
+- [ ] Invoke `solera-execute-action-item` per ACT in Phase order (blocking, sequential)
+- [ ] Output Artifacts appended by each ACT completion
+- [ ] Confirm acceptance criteria + all ACTs ✅
+
+### Step 4. Wrap-up
+- [ ] Gate check `story.wrap_up`
+- [ ] Write `RETROSPECTIVE.md` (must include "Concept Contribution Summary")
+- [ ] For each contributed Concept:
+  - AI drafts Current Shape revision → human approves/edits
+  - Append row to `# Contributions`
 - [ ] Status → ✅
-- [ ] Squash merge into Epic branch
-- [ ] Determine the next Story or process Epic completion
+- [ ] Squash-merge to base branch
 
 ## Folder Structure
 
 ```
-{epic_path}/[US|TS]-NNN-[name]/
+{project_path}/workspace/stories/{story_id}-{story_name}/
 ├── _story.md
-├── ACT-001-[name].md
-├── ACT-002-[name].md
-└── ACT-003-[name].md
+├── RETROSPECTIVE.md                  # created at Wrap-up
+├── ACT-001-{name}.md
+├── ACT-002-{name}.md
+└── ACT-003-{name}.md
 ```
 
 ## Story ID Rules
@@ -117,15 +169,25 @@ Defines the decomposition unit of an Epic, covering both User Stories and Techni
 | `US-` | User Story | US-001, US-002 |
 | `TS-` | Technical Story | TS-001, TS-002 |
 
-> **Note**: Story IDs are unique only **within an Epic**.
-> `login/US-001` ≠ `profile/US-001`
+> **v3 change**: Story IDs are unique **globally within `stories/`**, not scoped to an Epic (Epic no longer exists).
+> Use numeric ranges per contributor if needed to avoid collisions.
+
+## Commit Message Format
+
+```
+[{primary_concept}][{story_id}][ACT-NNN] title
+```
+
+Where `{primary_concept}` is `contributes_to[0]`.
 
 ## Quality Criteria
 
-- [ ] Does the User Story follow the As a / I want / So that format?
-- [ ] Does the Technical Story have a technical goal?
-- [ ] Are acceptance criteria defined?
-- [ ] Have all Action Items been assigned an ID?
-- [ ] Is progress displayed?
-- [ ] Are Skill, Agent, Phase, and depends_on defined for each Action Item?
-- [ ] Can Action Items in the same Phase run in parallel without output conflicts?
+- [ ] `contributes_to` is present and non-empty
+- [ ] Every `contributes_to` Concept exists and is active
+- [ ] If `belongs_to` is set, milestone is agreed/in-progress
+- [ ] User Story follows As a / I want / So that format (or TS has technical goal)
+- [ ] Acceptance criteria are verifiable
+- [ ] Every Action Item has ID, Skill, Agent, Phase, depends_on
+- [ ] ACTs in the same Phase can run in parallel without output conflicts
+- [ ] Input Artifacts captured at creation; Output Artifacts captured during Execute
+- [ ] Concept Current Shape updates proposed and approved at Wrap-up

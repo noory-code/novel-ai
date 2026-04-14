@@ -1,6 +1,8 @@
-# Quick Start
+# Quick Start (v3)
 
-This guide walks you through your first Solera project from an empty directory to a merged Epic. It uses a concrete example — a task management app called `task-app` — and shows exactly what you say to Claude at each step.
+This guide walks through your first Solera v3 project from empty directory to a released snapshot. It uses a concrete example — a task management app called `task-app` — and shows exactly what you say to Claude at each step.
+
+For the philosophy behind the three-axis model, see [work-item-structure.md](./work-item-structure.md) and [architecture.md](./architecture.md).
 
 ## Prerequisites
 
@@ -13,383 +15,381 @@ Install the plugin if you haven't yet:
 claude plugin install /path/to/solera
 ```
 
+If you have a **v2 project** to upgrade, stop here and read [migrate-v2-to-v3.md](./migrate-v2-to-v3.md). `solera-init` refuses to overlay v3 on v2 data.
+
 ---
 
-## Step 1: Set up the workspace
-
-You start a fresh project. Solera needs a workspace folder structure and an initiative roadmap before it can plan any work.
+## Step 1 — Initialize the workspace
 
 Say to Claude:
 
-> Set up the Solera workspace for this project. The initiative is `task-app 2026`. We're building a task management app. Create the folder structure and write the initiative roadmap.
+> Initialize Solera for this project. We're building a task management app called task-app.
 
 Solera creates:
 
 ```
 task-app/
-├── progress.md
+├── progress.md                            # v3 three-axis format
 └── workspace/
     ├── identity/
-    └── initiative/
-        └── 2026/
-            └── roadmap.md
-```
-
-The `roadmap.md` captures your annual initiative goals — which quarters they belong to, and a one-line objective for each. Solera will reference this file every time it writes a Phase. If you already have a product vision, describe it when you ask; Solera will draft the roadmap from what you provide.
-
-**Verify you're on track:**
-
-```
-task-app/workspace/initiative/2026/roadmap.md   ← exists
-task-app/progress.md                             ← exists
-```
-
----
-
-## Step 2: Write a Phase
-
-A Phase is a quarterly plan. It lists which Goals you'll pursue that quarter and tracks their completion.
-
-Say to Claude:
-
-> Write the Phase for Q1 2026. The phase ID is `2026-P1-foundation`. Our goal this quarter is to ship the core task management feature.
-
-Solera reads `workspace/initiative/2026/roadmap.md`, extracts the Q1 goals, and creates:
-
-```
-task-app/workspace/phase/2026-P1-foundation/
-├── README.md
-└── goals/
-```
-
-`README.md` contains the phase overview table, a Goals table (with status icons), completion criteria, and a Workflow section that Solera will follow when you start work.
-
-Example `README.md` header:
-
-```markdown
-# Phase: 2026-P1-foundation
-
-> Initiative: 2026
-> Status: 🔄 In Progress
-
-## Overview
-
-| Item       | Details                              |
-|------------|--------------------------------------|
-| **Period** | 2026-01 ~ 2026-03                    |
-| **Objective** | Ship core task management feature |
-
-## Goals
-
-| Goal              | Type    | Status     | Progress | Folder |
-|-------------------|---------|------------|----------|--------|
-| G1: task-management | Feature | ⏳ Pending | 0/2      | [→](./goals/G1-task-management/) |
-```
-
-**Verify you're on track:**
-
-```
-task-app/workspace/phase/2026-P1-foundation/README.md   ← exists
-task-app/workspace/phase/2026-P1-foundation/goals/      ← exists (empty)
-```
-
----
-
-## Step 3: Write a Goal and its first Epic
-
-A Goal is a service-level objective — something a user or the system gains. For a Feature Goal, Solera creates a Service Map, Personas, and a Journey before decomposing into Epics.
-
-Say to Claude:
-
-> Write Goal G1 for Phase 2026-P1-foundation. The goal is `task-management`. Users need to create, organize, and complete tasks.
-
-Solera works through the Goal procedure:
-
-1. Creates the folder structure
-2. Writes a Service Map (`artifacts/service-map/index.md`) describing how the task feature fits the product
-3. Writes a Persona profile (`artifacts/persona/maya.md`) — for example, "Maya, a freelance designer managing client work"
-4. Derives a Journey for Maya: `Browse tasks → Create task → Assign due date → Mark complete`
-5. Maps Journey steps to Epics and writes `_goal.md`
-
-Then Solera moves into the first Epic. Say:
-
-> Start the first Epic: `01-task-crud`. This covers the core create/read/update/delete operations for tasks.
-
-Solera creates the Epic branch and scaffolds the Epic:
-
-```bash
-git checkout -b epics/task-crud
-```
-
-It writes Use Cases (`artifacts/use-case/UC-001-create-task.md`), domain concepts (`artifacts/concept/domain.md`, `artifacts/concept/entities/task.md`), and then produces `_epic.md`.
-
-**Workspace after this step:**
-
-```
-task-app/workspace/phase/2026-P1-foundation/goals/G1-task-management/
-├── _goal.md
-├── artifacts/
-│   ├── service-map/
-│   │   └── index.md
-│   ├── persona/
-│   │   └── maya.md
-│   └── use-case/
-│       └── UC-001-create-task.md
-└── epics/
-    └── 01-task-crud/
-        └── _epic.md
-```
-
-`_goal.md` example:
-
-```markdown
-# Goal: task-management
-
-> Phase: 2026-P1-foundation
-> Status: 🔄 In Progress
-
-## Journey (rough)
-
-| Journey     | Persona | Steps                                          |
-|-------------|---------|------------------------------------------------|
-| task-flow   | Maya    | Browse → Create → Assign due date → Complete   |
-
-## Epics
-
-| Epic         | Journey   | Status     |
-|--------------|-----------|------------|
-| 01-task-crud | task-flow | 🔄 In Progress |
-
-## Completion Criteria
-
-- [ ] All Epics complete
-```
-
-`_epic.md` example:
-
-```markdown
-# Epic: 01-task-crud
-
-> Goal: task-management
-> Status: 🔄 In Progress
-
-## User Value
-
-**As a** freelance designer,
-**I want** to create and manage tasks with due dates,
-**So that** I never miss a client deadline.
-
-## Stories
-
-| ID     | Story               | Status     |
-|--------|---------------------|------------|
-| US-001 | create-task-form    | ⏳ Pending |
-| US-002 | task-list-view      | ⏳ Pending |
-| US-003 | mark-task-complete  | ⏳ Pending |
-```
-
-**Verify you're on track:**
-
-```
-_goal.md                               ← exists, status 🔄
-epics/01-task-crud/_epic.md            ← exists, status 🔄
-git branch                             → epics/task-crud (current)
-```
-
----
-
-## Step 4: Run the workflow — Stories and Action Items
-
-Now you execute the Epic Story by Story. Each Story gets its own branch, and every unit of work inside it is a single commit.
-
-### Write and execute a Story
-
-Say to Claude:
-
-> Start Story US-001: create-task-form.
-
-Solera creates the Story branch:
-
-```bash
-git checkout -b epics-task-crud/story-US-001-create-task-form
-```
-
-It writes `_story.md` with the user story, acceptance criteria, and a table of Action Items:
-
-```markdown
-# US-001: create-task-form
-
-> Epic: 01-task-crud
-> Status: 🔄 In Progress
-
-## User Story
-
-**As a** Maya,
-**I want** a form to create a new task with a title and due date,
-**So that** I can capture work before I forget it.
-
-## Acceptance Criteria
-
-- [ ] Form renders with title input and due-date picker
-- [ ] Submitting a valid form saves the task and clears the form
-- [ ] Submitting with an empty title shows a validation error
-
-## Action Items
-
-| ID      | Action Item              | Agent | Phase | depends_on | Status     | Commit |
-|---------|--------------------------|-------|-------|------------|------------|--------|
-| ACT-001 | Add Task model           | -     | 1     | -          | ⏳ Pending | -      |
-| ACT-002 | Add task creation API    | -     | 2     | ACT-001    | ⏳ Pending | -      |
-| ACT-003 | Build TaskForm component | -     | 2     | ACT-001    | ⏳ Pending | -      |
-| ACT-004 | Wire form to API         | -     | 3     | ACT-002, ACT-003 | ⏳ Pending | - |
-
-**Progress**: 0/4 Action Items complete
-```
-
-### Execute Action Items
-
-Each Action Item is one commit. Solera executes them in phase order (Phase 1 first, then Phase 2 actions in parallel if possible, then Phase 3).
-
-Say to Claude:
-
-> Execute ACT-001: Add Task model.
-
-Solera writes the code, runs tests, and commits:
-
-```
-[task-crud][US-001][ACT-001] Add Task model
-
-- Add Task entity with id, title, dueDate, completed fields
-- Add task repository interface
-```
-
-After all four Action Items are committed, you have four commits on the Story branch. Say:
-
-> Complete Story US-001.
-
-Solera:
-1. Confirms all acceptance criteria pass
-2. Writes `RETROSPECTIVE.md` for the Story
-3. Sets `_story.md` status to ✅
-4. Squash-merges the Story branch into `epics/task-crud`
-
-```bash
-git checkout epics/task-crud
-git merge --squash epics-task-crud/story-US-001-create-task-form
-git commit -m "[task-crud][US-001] create-task-form"
-```
-
-Repeat this for US-002 and US-003. After each Story, Solera squash-merges to the Epic branch. `progress.md` is updated after every state change.
-
-**Workspace after all Stories complete:**
-
-```
-epics/01-task-crud/
-├── _epic.md                  (status ✅)
-├── RETROSPECTIVE.md
-├── US-001-create-task/
-│   ├── _story.md             (status ✅)
-│   ├── RETROSPECTIVE.md
-│   ├── ACT-001-add-task-model.md
-│   ├── ACT-002-add-task-api.md
-│   ├── ACT-003-build-task-form.md
-│   └── ACT-004-wire-form-to-api.md
-├── US-002-edit-task/
-│   └── ...
-└── US-003-delete-task/
-    └── ...
-```
-
----
-
-## Step 5: Complete the Epic — PR, merge, catalog transition
-
-### Create the PR with solera-create-pr
-
-Say to Claude:
-
-> The Epic is done. Create a PR for epics/task-crud.
-
-Solera runs `solera-create-pr`:
-
-1. Confirms all Stories are ✅
-2. Confirms build and tests pass on `epics/task-crud`
-3. Creates the PR:
-
-```bash
-gh pr create \
-  --base main \
-  --head epics/task-crud \
-  --title "[Epic] task-crud: core create/read/update/delete for tasks"
-```
-
-The PR body follows the `pr-template.md` format — Stories list, key changes summary, test results.
-
-### Review and merge
-
-After you (or a teammate) reviews and approves the PR, say:
-
-> Merge the PR.
-
-Solera executes the squash merge:
-
-```bash
-gh pr merge --squash epics/task-crud
-```
-
-The `epics/task-crud` branch is deleted after merge.
-
-### Catalog transition happens incrementally
-
-Artifacts are promoted to `workspace/catalog/published/` at two points — not in bulk at Goal completion:
-
-1. **After Goal Create** — Goal-level artifacts (service-map, persona, journey) are promoted immediately, so the first Epic can reference them from `published/`
-2. **At each Epic Wrap-up** — Epic-level artifacts (use-case, concept) are promoted before the PR is created
-
-```
-Goal Create promotes:                    Epic Wrap-up promotes:
-service-map/index.md          →         use-case/UC-001-*.md          →
-persona/maya.md                →         concept/domain.md             →
-  to workspace/catalog/published/          to workspace/catalog/published/
-```
-
-Each moved file receives a version header:
-
-```markdown
-> Applied version: P1-G01
-> Last updated: 2026-03-02
-```
-
-The `artifacts/` folder is now empty. A `RETROSPECTIVE.md` is written for the Goal. `_goal.md` status becomes ✅. `progress.md` reflects the completed Goal.
-
-**Final workspace snapshot:**
-
-```
-task-app/
-├── progress.md                              (Goal G1 complete)
-├── HANDOFF.md                               (updated via /solera-handoff)
-└── workspace/
-    ├── initiative/2026/roadmap.md
-    ├── phase/2026-P1-foundation/
-    │   ├── README.md
-    │   └── goals/G1-task-management/
-    │       ├── _goal.md                     (status ✅)
-    │       ├── RETROSPECTIVE.md
-    │       ├── artifacts/                   (empty — transitioned)
-    │       └── epics/01-task-crud/
-    │           ├── _epic.md                 (status ✅)
-    │           ├── RETROSPECTIVE.md
-    │           └── US-001-create-task/...
+    ├── concepts/
+    │   └── _index.md
+    ├── milestones/
+    │   └── _index.md
+    ├── stories/
+    ├── releases/
+    │   └── _index.md
+    ├── team-process.md                    # populated via kickoff interview
     └── catalog/
         └── published/
-            ├── service-map/index.md
-            ├── persona/maya.md
-            └── use-case/UC-001-create-task.md
 ```
+
+It also installs `.claude/rules/solera-workflow.md` and conducts a short kickoff interview to populate `team-process.md` (stages, gates, tech stack, architecture rules). You can edit `team-process.md` directly later; nothing is locked.
+
+**Verify:**
+
+```
+task-app/progress.md                     ← exists
+task-app/workspace/concepts/             ← exists
+task-app/workspace/milestones/           ← exists
+task-app/workspace/stories/              ← exists
+task-app/workspace/releases/             ← exists
+task-app/workspace/team-process.md       ← exists
+```
+
+---
+
+## Step 2 — Define identity
+
+Say to Claude:
+
+> Write the identity for this project.
+
+Solera asks about mission, target users, and core values, then writes:
+
+```
+task-app/workspace/identity/
+├── mission.md
+├── core-values.md
+└── vision_1.md
+```
+
+Identity is written once. You can revise a file by hand later; it doesn't have its own update skill.
+
+---
+
+## Step 3 — Draw your first Concept
+
+This is Moment 1. You draw the big-picture area of the project. AI never invents the Intent on your behalf.
+
+Say to Claude:
+
+> Draw a Concept called `task-lifecycle`.
+
+Claude asks for the **Intent** (one or two sentences that rarely change):
+
+> "What does this Concept mean in this project? One or two sentences — a north star that should rarely change."
+
+You answer, for example: "A task exists from capture through completion and is always in exactly one clear state."
+
+Claude then surfaces observations (it scans identity, existing Concepts, any published artifacts — all empty right now) and asks for **Current Design** (the ideal shape you're drawing right now):
+
+You answer: "States: inbox → active → done or archived. A task always has a title and optional due date. No multi-user yet."
+
+Claude writes:
+
+```markdown
+---
+id: task-lifecycle
+name: Task Lifecycle
+status: active
+created: 2026-04-16
+---
+
+# Intent
+A task exists from capture through completion and is always in exactly one clear state.
+
+# Current Design
+States: inbox → active → done or archived. A task always has a title and optional due date. No multi-user yet.
+
+# Current Shape
+(no Stories have contributed yet)
+
+# Horizon
+(not set yet)
+
+# Health
+(no signals yet)
+
+# Contributions
+| Story | What it left behind | Date |
+|-------|---------------------|------|
+
+# Related Artifacts
+
+## Workflow
+(template embedded)
+```
+
+Claude also updates `concepts/_index.md` so `task-lifecycle` appears under `## Active`.
+
+Draw a second Concept the same way, say `quick-capture` — the idea that capturing a task should take no more than one second.
+
+---
+
+## Step 4 — Agree on a Milestone (Moment 2)
+
+This is the critical human–AI agreement moment. You propose scope; Claude pushes back with an analysis; loop until agreed.
+
+Say to Claude:
+
+> Write a Milestone called `mvp` that includes `task-lifecycle` to the "inbox/active/done" depth and `quick-capture` to the "1-second float button" depth. Target date end of Q2 2026.
+
+Claude runs the agreement cycle. **Round 1** — Claude reads the current state of each Concept and emits an analysis:
+
+```
+Analysis for mvp:
+
+task-lifecycle:
+  maturity: far — Current Shape empty.
+  design_gaps: "archived" state not yet in Current Design but implied by Intent.
+  artifact_readiness: no persona or journey yet.
+  health_flags: (no concerns)
+
+quick-capture:
+  maturity: far — Current Shape empty.
+  design_gaps: "1-second" is not measurable — needs an acceptance definition.
+  artifact_readiness: no persona.
+  health_flags: (no concerns)
+
+Cross-concept concerns:
+  dependencies: quick-capture assumes task-lifecycle's inbox state works.
+  contradictions: (no concerns)
+
+Scope sanity:
+  too_ambitious: (no concerns)
+  missing: a "task-list-view" Concept might be needed for MVP — users need to see captured tasks.
+  stretch: (no concerns)
+```
+
+You respond — either revise scope, accept with notes, or agree. Say:
+
+> Good point on task-list-view — draw it as a new Concept first. Then redo the milestone with the three Concepts.
+
+Claude goes back to `solera-write-concept` for `task-list-view`, then resumes the Milestone cycle. **Round 2** runs with three Concepts; you agree.
+
+The file is written:
+
+```markdown
+---
+id: mvp
+name: MVP
+status: agreed
+target_date: 2026-06-30
+created: 2026-04-16
+---
+
+# Scope
+- task-lifecycle: inbox/active/done states working end-to-end
+- quick-capture: float button + one-keystroke save
+- task-list-view: scrollable list of all active tasks
+
+# AI Analysis
+(Round 2 content)
+
+# Agreement Log
+- Round 1 (2026-04-16): human proposed 2 Concepts; AI flagged task-list-view missing; human revised.
+- Round 2 (2026-04-16): three-Concept scope; no new concerns; human agreed.
+
+# Exit Criteria
+- task-lifecycle: Current Shape reflects all three states working.
+- quick-capture: Current Shape reflects 1-second measured capture flow.
+- task-list-view: Current Shape reflects scrollable list of active tasks.
+
+# Accepted Risks
+(none)
+
+## Workflow
+(template embedded)
+```
+
+---
+
+## Step 5 — Plan and execute a Story (Moment 3)
+
+Say to Claude:
+
+> Write Story US-001 `capture-flow` contributing to `quick-capture` and `task-lifecycle`, belonging to `mvp`.
+
+Solera creates:
+
+```
+stories/US-001-capture-flow/
+└── _story.md             (frontmatter: contributes_to, belongs_to; status 🔄)
+```
+
+And branches:
+
+```bash
+git checkout -b story/US-001-capture-flow
+```
+
+Claude asks for acceptance criteria and Input Artifacts (design references, specs, prior code paths), writes the User Story, and decomposes into Action Items. If `team-process.md` has `execution_order.groups` defined, Claude respects layer ordering (Domain → Data → Presentation, for example).
+
+The Action Items table ends up like:
+
+```markdown
+## Action Items
+
+| ID      | Action Item              | Skill         | Agent         | Phase | depends_on | Status | Commit |
+|---------|--------------------------|---------------|---------------|-------|------------|--------|--------|
+| ACT-001 | Add Task entity + tests  | dev-flutter   | domain        | 1     | -          | ⏳     | -      |
+| ACT-002 | CaptureUseCase           | dev-flutter   | domain        | 1     | ACT-001    | ⏳     | -      |
+| ACT-003 | Local repo + persistence | dev-flutter   | data          | 2     | ACT-002    | ⏳     | -      |
+| ACT-004 | Float button + form      | dev-flutter   | presentation  | 3     | ACT-003    | ⏳     | -      |
+```
+
+Claude creates one `ACT-NNN-{name}.md` per row. Then Execute each ACT:
+
+> Execute ACT-001.
+
+For each ACT, Claude writes code, runs tests, and commits with the v3 format:
+
+```
+[quick-capture][US-001][ACT-001] Add Task entity + tests
+
+- Task entity with id, title, createdAt, state fields
+- Unit tests for state transitions
+```
+
+Notice the scope tag `[quick-capture]` — Claude picked `contributes_to[0]`. Since this Story contributes to two Concepts, the commit body includes:
+
+```
+- contributes also to: task-lifecycle
+```
+
+After each ACT completion, Claude appends to `_story.md`'s `# Output Artifacts`:
+
+```markdown
+# Output Artifacts
+
+- ACT-001 commit abc1234: `lib/domain/task/task.dart`, `test/domain/task/task_test.dart`
+- ACT-002 commit def5678: `lib/domain/task/capture_use_case.dart`
+...
+```
+
+---
+
+## Step 6 — Story Wrap-up (결과 확정)
+
+After all four ACTs are ✅, say:
+
+> Wrap up the Story.
+
+Claude runs `story.wrap_up` gate checks, writes `RETROSPECTIVE.md` with the **Concept Contribution Summary** required in v3:
+
+```markdown
+## Concept Contribution Summary
+
+### Quick Capture
+**What this Story left behind**: Float button + form + local persistence. Sub-second save observed in tests.
+**Proposed Current Shape update**: "Float button writes to local store in <1s. No sync yet."
+**Approved Current Shape**: (human edits and approves)
+**Drift note**: (none)
+
+### Task Lifecycle
+**What this Story left behind**: Task entity exists with state enum (inbox/active/done/archived). Only inbox → active transition exercised.
+**Proposed Current Shape update**: "Task entity with state enum; inbox → active transition working."
+**Approved Current Shape**: (human edits and approves)
+**Drift note**: (none)
+```
+
+For each contributed Concept, Claude proposes a **Current Shape** update and **blocks** until you approve. On approval, the Concept file is updated and a row appears in `# Contributions`:
+
+```markdown
+# Contributions
+| Story               | What it left behind                              | Date       |
+|---------------------|--------------------------------------------------|------------|
+| US-001-capture-flow | Float button + form + local persistence          | 2026-04-18 |
+```
+
+Then `solera-publish-artifacts` runs as a hook — if the Story produced any design artifacts under `stories/US-001-capture-flow/artifacts/`, they move to `catalog/published/{type}/` and each contributed Concept's `# Related Artifacts` gains a wikilink. (This Story's a pure-code Story, so zero artifacts move — the skill exits cleanly.)
+
+Finally Claude squash-merges the Story branch into trunk:
+
+```bash
+git checkout dev
+git merge --squash story/US-001-capture-flow
+git commit -m "[quick-capture][US-001] capture-flow"
+```
+
+---
+
+## Step 7 — Run more Stories, reach the Milestone
+
+Repeat Step 5–6 for additional Stories until every Milestone Exit Criterion is met. Claude's `solera-manage-workflow` can help you see what's next:
+
+> What should I work on?
+
+Claude checks `progress.md`, the Milestone, and active Concepts, and surfaces options — never auto-picks when multiple are valid.
+
+---
+
+## Step 8 — Mark the Milestone released
+
+When all Exit Criteria are met:
+
+> Mark milestone mvp as released.
+
+Claude reads each Exit Criterion, compares to the current Concept state, and either sets `status: released` or halts with a list of still-open criteria.
+
+---
+
+## Step 9 — Cut the Release (Moment 4)
+
+This freezes the current Concept state as an immutable snapshot.
+
+> Cut release v0.1-mvp and create a git tag.
+
+Solera runs `solera-release`:
+
+1. Validates the milestone is `released`.
+2. Gathers Stories whose `contributes_to` intersects the milestone's scope (completed by now).
+3. Creates `releases/v0.1-mvp/concepts-snapshot/` and copies each in-scope Concept file, prepending a ❄️ marker.
+4. Writes `stories-manifest.md`.
+5. Drafts `README.md` and **blocks** for your approval. You edit the overview, accept the Follow-up Candidates list, confirm.
+6. Writes `.released` marker and (optionally) runs `git tag -a v0.1-mvp`.
+
+Result:
+
+```
+workspace/releases/
+├── _index.md                             (updated)
+└── v0.1-mvp/
+    ├── .released
+    ├── README.md                         (human-approved)
+    ├── concepts-snapshot/
+    │   ├── _index.md
+    │   ├── task-lifecycle.md             # with ❄️ marker
+    │   ├── quick-capture.md
+    │   └── task-list-view.md
+    └── stories-manifest.md
+```
+
+The original `concepts/*.md` files are untouched — the living axis keeps evolving. The snapshot is the only fixed record of "what MVP was."
+
+---
+
+## Step 10 — Continue to the next Milestone
+
+Back to Step 4. Propose the next Milestone's scope. Claude's analysis this time has more context — Concepts have Current Shape content, Contributions history, Related Artifacts. The agreement cycle will be richer.
+
+Releases accumulate under `releases/`. Each is a frozen historical record. Together with git history and the Contributions log on each Concept, they give you a complete timeline of how the project evolved.
 
 ---
 
 ## What's next
 
-- **architecture.md** — How skills chain together, the role of each SKILL.md, and how solera-manage-workflow supervises execution without duplicating procedure definitions.
-- **team-workflow.md** — Running Solera with multiple developers: branch ownership, parallel Story execution with agent assignments, and how `depends_on` prevents output conflicts.
+- [architecture.md](./architecture.md) — How skills chain, the Workflow-as-SSOT rule, and why the supervisor has no state machine.
+- [team-workflow.md](./team-workflow.md) — Running Solera with 2–5 contributors; branch ownership, parallel Stories, `/solera-handoff`.
+- [migrate-v2-to-v3.md](./migrate-v2-to-v3.md) — Upgrading a v2 project with `solera-migrate-v2`.

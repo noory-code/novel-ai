@@ -4,7 +4,7 @@
 
 | File | Purpose | Update Frequency |
 |------|---------|-----------------|
-| `progress.md` | Overall project progress status (Phase/Goal/Epic) | Per Epic |
+| `progress.md` | Overall project state on all three axes (active Concepts, current Milestone/Story/Action Item, latest Release) | Per state change |
 | `HANDOFF.md` | Cross-session context handoff (transient state) | Via `/solera-handoff` |
 
 > `progress.md` is for project management; `HANDOFF.md` is for AI session management
@@ -48,8 +48,8 @@
 
 ### Current Work
 - Summarize concisely in 1–2 lines
-- Specify the Epic or Story title and the current step
-- Example: "Progressing through Epic 04-build-roles. Story TS-002 (role lookup system) implementation complete; TS-003 in preparation"
+- Specify the Story title (and, if relevant, Milestone) and the current step
+- Example: "Progressing through Story US-001-google-login (contributes to authentication, belongs to mvp). ACT-002 implementation complete; ACT-003 in preparation."
 
 ### Completed Items
 - List the specific tasks completed in this session

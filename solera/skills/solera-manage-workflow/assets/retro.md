@@ -1,92 +1,66 @@
-# Template: Retrospective
+# Template: Retrospective (v3)
 
-Write a RETROSPECTIVE.md when a hierarchy level is complete.
+Retrospectives are written at **Story Wrap-up** and (optionally) **Release cut** — the two points where 결과 확정 happens.
 
-## Retrospective Types
+## Perspective
 
-| Hierarchy | Perspective | Key Questions |
-|-----------|-------------|---------------|
-| **Phase** | Business | Quarter goal achieved? ROI? Next quarter strategy? |
-| **Goal** | Business | User value delivered? Epic prioritization appropriate? |
-| **Epic** | AI behavior | What did AI do well? Poorly? Improvements? Instruction issues? |
-| **Story** | AI behavior | What did AI do well? Poorly? Improvements? Instruction issues? |
-| **Action Item** | AI behavior | What did AI do well? Poorly? Improvements? Instruction issues? |
+| Level | Perspective | Location |
+|-------|-------------|----------|
+| **Story** | AI behavior — how AI decomposed, implemented, handed off | `stories/{story}/RETROSPECTIVE.md` |
+| **Release** | Project retrospective — what this Release represents, what was cut, what's next | `releases/{tag}/README.md` (covers retro content too) |
 
-## RETROSPECTIVE.md — AI Behavior Retrospective (Epic / Story / Action Item)
+v3 does **not** use Phase / Goal / Epic retrospectives (those items were removed). Business retrospectives happen at Milestone / Release boundaries through `solera-release`'s README step.
+
+## Story RETROSPECTIVE.md — AI Behavior
 
 ```markdown
-# Retrospective: [Epic/Story/ACT name]
+# Retrospective: {story_id}-{story_name}
 
-> Completed: [YYYY-MM-DD]
+> Completed: {YYYY-MM-DD}
+> Contributed to: {concept_id_1}, {concept_id_2}
 
 ## Summary
 
 | Item | Details |
 |------|---------|
-| **Objective** | [original objective] |
-| **Result** | [actual result] |
+| **Objective** | {original User Story / Technical Goal} |
+| **Result** | {actual result — what was produced} |
 
 ## AI Did Well
 
-- [Tasks/decisions AI performed effectively]
+- {effective decisions or execution}
 
 ## AI Did Poorly
 
-- [Areas where AI made mistakes/was inefficient/misjudged]
+- {mistakes, inefficiencies, drift from Concept intent}
 
 ## AI Improvements
 
-- [Specific behaviors AI should change in the next task]
+- {specific behaviors AI should change in the next Story}
 
 ## Instruction System Issues
 
-- [Problems found in skills/rules/workflows]
-- [Improvements to templates, procedures, output definitions]
+- {omissions / ambiguities / errors in skills, rules, templates}
+
+## Concept Contribution Summary
+
+<!-- Required. One block per Concept in contributes_to. -->
+
+### {concept_name}
+
+**What this Story left behind**: {1–2 sentences, grounded in Output Artifacts}
+
+**Proposed Current Shape update**: {AI draft revision}
+
+**Approved Current Shape**: {what the human approved}
+
+**Drift note**: {optional — if Story drifted from Intent or Current Design}
 ```
-
-## RETROSPECTIVE.md — Business Retrospective (Phase / Goal)
-
-```markdown
-# Retrospective: [Phase/Goal name]
-
-> Completed: [YYYY-MM-DD]
-
-## Summary
-
-| Item | Details |
-|------|---------|
-| **Plan** | [original plan] |
-| **Result** | [actual result] |
-| **Effort** | [estimated vs actual] |
-
-## Keep
-
-- [What to maintain]
-
-## Problem
-
-- [Issues encountered]
-
-## Try
-
-- [What to try next time]
-
-## Learned
-
-- [Lessons learned]
-```
-
-## Retrospective Location
-
-| Hierarchy | Location |
-|-----------|----------|
-| **Phase** | `workspace/phase/{phase_id}/RETROSPECTIVE.md` |
-| **Goal** | `workspace/phase/{phase_id}/goals/{goal_id}/RETROSPECTIVE.md` |
-| **Epic** | `workspace/phase/.../epics/{epic_name}/RETROSPECTIVE.md` |
-| **Story** | `workspace/phase/.../epics/{epic_name}/{story_id}-{story_name}/RETROSPECTIVE.md` |
 
 ## Quality Criteria
 
-- [ ] Is it written from the appropriate perspective (AI behavior vs. business)?
-- [ ] Does each section contain at least one item?
-- [ ] Are the improvements actionable for the next task?
+- [ ] Written from the correct perspective (AI behavior for Story)
+- [ ] Every section has at least one item (use "(none)" only if truly empty)
+- [ ] Improvements are actionable for the next Story
+- [ ] Concept Contribution Summary present for every `contributes_to` entry
+- [ ] Drift notes flagged where applicable

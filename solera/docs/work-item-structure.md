@@ -1,97 +1,193 @@
-# Work Item Structure
+# Work Item Structure (v3)
 
 ## Overview
 
-Solera organizes all project work into a seven-level hierarchy: Identity, Initiative, Phase, Goal, Epic, Story, and Action Item. The top three levels (Identity through Phase) are owned by humans and represent strategic decisions that cannot be automated — who the team is, what the annual objectives are, and what the quarterly plan delivers. The bottom four levels (Goal through Action Item) are owned by AI and represent the systematic decomposition of strategic intent into executable, traceable units of work down to individual commits. Every level produces a canonical artifact with its own `## Workflow` section, which `solera-manage-workflow` reads and executes — no domain logic is hardcoded in the supervisor skill itself.
+Solera organizes a project on **three axes** rather than a single time-ordered hierarchy. The axes are orthogonal — an item belongs to exactly one of them — and each has a different relationship to time:
 
-## Full Hierarchy Diagram
+| Axis | Characteristic | Items |
+|------|----------------|-------|
+| **Living** | Never ends; evolves continuously | Identity, Concepts |
+| **Time-bound** | Has a start and end | Milestone, Story, Action Item |
+| **Immutable** | Frozen snapshot, write-once | Release |
+
+Humans own the Living axis (the drawing of the project map). AI executes the Time-bound axis (decomposing Stories into commit-sized Action Items). Human and AI collaborate at two critical moments: **Milestone Agreement** (scope) and **Story Wrap-up** (Concept Current Shape updates). Releases freeze the state of in-scope Concepts so the past stays retrievable.
+
+## Three-Axis Diagram
 
 ```mermaid
-graph TD
-    ID[Identity]
-    IN[Initiative<br/>annual]
-    PH[Phase<br/>quarterly]
-    GO[Goal]
-    EP[Epic]
-    ST[Story]
-    AI[Action Item<br/>commit]
+flowchart TD
+    subgraph Living["Living Axis — never ends"]
+        ID[Identity<br/>Mission / Values / Vision]
+        CO[Concepts<br/>Intent / Current Design / Current Shape]
+    end
 
-    ID --> IN
-    IN --> PH
-    PH --> GO
-    GO --> EP
-    EP --> ST
-    ST --> AI
+    subgraph TimeBound["Time-bound Axis — ends"]
+        MS[Milestone<br/>scope agreement]
+        ST[Story<br/>contributes_to Concepts]
+        AI[Action Item<br/>one commit]
+    end
 
-    classDef human fill:#e8f4f8,stroke:#2196F3
-    classDef ai fill:#f0f8e8,stroke:#4CAF50
-    class ID,IN,PH human
-    class GO,EP,ST,AI ai
+    subgraph Immutable["Immutable Axis — frozen"]
+        RE[Release<br/>concepts-snapshot/ + manifest]
+    end
+
+    ID -.-> CO
+    ST -->|contributes_to| CO
+    ST -.->|belongs_to| MS
+    AI --> ST
+    MS --> RE
+
+    classDef living fill:#fff9e6,stroke:#d4a300
+    classDef timebound fill:#e6f4ff,stroke:#2196F3
+    classDef immutable fill:#f0f0f0,stroke:#666
+    class ID,CO living
+    class MS,ST,AI timebound
+    class RE immutable
 ```
 
-Blue nodes (Identity, Initiative, Phase) are created by humans. Green nodes (Goal, Epic, Story, Action Item) are created and executed by AI.
+## Items by Axis
 
-## Level Reference Table
+### Living Axis
 
-| Level | Cadence | Responsibility | Skill | Produces |
-|---|---|---|---|---|
-| Identity | Once | Human | `solera-write-identity` | `mission.md`, `core-values.md`, `vision_1.md` |
-| Initiative | Annual | Human | (manual) | `initiative/{year}/goals.md` rough list |
-| Phase | Quarterly | Human | `solera-write-phase` | `phase/{id}/README.md` |
-| Goal | Per goal | AI | `solera-write-goal` | `_goal.md`, service map, persona(s) |
-| Epic | Per epic | AI | `solera-write-epic` | `_epic.md`, use cases, domain concepts |
-| Story | Per story | AI | `solera-write-story` | `_story.md`, `ACT-NNN-{name}.md` files |
-| Action Item | Per commit | AI | `solera-execute-action-item` | Code or doc changes + one git commit |
+| Item | Cadence | Owner | Status values | Skill |
+|------|---------|-------|---------------|-------|
+| **Identity** | Once | Human | — | `solera-write-identity` |
+| **Concept** | Always active, evolves per Story Wrap-up | Human draws, AI proposes updates | `active` / `deprecated` / `archived` | `solera-write-concept` |
+
+A Concept never enters a "Complete" state. When it is no longer pursued, it is **deprecated** (kept visible for history) or **archived** (hidden from the active index, file preserved). The only path to "change the Intent" is archive-and-new.
+
+### Time-bound Axis
+
+| Item | Cadence | Owner | Status values | Skill |
+|------|---------|-------|---------------|-------|
+| **Milestone** | Per release cycle | Human + AI (agreement cycle) | `proposed` / `agreed` / `in-progress` / `released` | `solera-write-milestone` |
+| **Story** | Days | AI decomposes, human approves scope | ⏳ / 🔄 / ✅ / ⏸️ / ❌ | `solera-write-story` |
+| **Action Item** | One commit | AI | ⏳ / 🔄 / ✅ / ❌ | `solera-execute-action-item` |
+
+Stories carry two mandatory relations:
+- `contributes_to: [concept_id, …]` — at least one active Concept must be named. This is how Stories advance the Living map.
+- `belongs_to: {milestone_id}` — optional. Stories may run outside any Milestone (exploration, research, bug fixes).
+
+Action Items belong to exactly one Story. Their commit messages carry the Story's primary Concept as a tag: `[{primary_concept}][{story_id}][ACT-NNN] title`.
+
+### Immutable Axis
+
+| Item | Cadence | Owner | Skill |
+|------|---------|-------|-------|
+| **Release** | When a Milestone is reached | AI drafts, human approves | `solera-release` |
+
+A Release is a directory at `releases/{tag}/` containing:
+
+- `README.md` — release notes (AI draft, human-approved, human has final word on wording).
+- `concepts-snapshot/*.md` — verbatim copies of every in-scope Concept file at release time, each with a ❄️ immutability marker.
+- `stories-manifest.md` — every Story that contributed, sorted by Story ID, with commit ranges.
+- `.released` — machine-readable marker that tells other skills "do not edit anything here."
+
+No skill edits files inside a written Release. Ever. To correct a mistake, cut a new release with a different tag.
+
+## The Four Moments of Collaboration
+
+Solera's core flow is **계획 → 일 → 결과 확정** (Plan → Work → Confirm). It expands into four moments where humans and AI meet:
+
+```mermaid
+flowchart LR
+    M0[Moment 0<br/>Setup<br/>Identity] --> M1[Moment 1<br/>Draw Concept<br/>human-led]
+    M1 --> M2[Moment 2<br/>Agree Milestone<br/>human + AI]
+    M2 --> M3[Moment 3<br/>Work<br/>AI + human approval at Wrap-up]
+    M3 --> M4[Moment 4<br/>Release reached<br/>freeze snapshot]
+    M4 -.-> M2
+    M3 -.-> M1
+
+    classDef m0 fill:#f5f5f5,stroke:#999
+    classDef m1 fill:#fff9e6,stroke:#d4a300
+    classDef m2 fill:#e8f4fd,stroke:#2196F3
+    classDef m3 fill:#e6f7e6,stroke:#4CAF50
+    classDef m4 fill:#ffe6e6,stroke:#c00
+    class M0 m0
+    class M1 m1
+    class M2 m2
+    class M3 m3
+    class M4 m4
+```
+
+| Moment | What happens | Who decides |
+|--------|--------------|-------------|
+| **0 — Setup** | Identity is written once | Human |
+| **1 — Draw Concept** | Human provides Intent and Current Design; AI offers observations, never invents Intent | Human (AI assists) |
+| **2 — Agree Milestone** | Human proposes scope; AI runs an analysis round (maturity, risks, dependencies, missing items); loop until agreed | Human + AI (AI analysis is non-negotiable) |
+| **3 — Work** | Story is decomposed into Action Items; each commits; at Wrap-up, AI proposes Current Shape updates to each contributed Concept; human approves | AI drafts, human approves at Wrap-up |
+| **4 — Release reached** | All Milestone Exit Criteria met → freeze Concepts into immutable snapshot + release notes | Human approves notes |
 
 ## Folder Layout
 
 ```
 {project}/
-├── progress.md                              <- overall tracking
+├── progress.md                       # current state on all three axes
+├── HANDOFF.md                        # transient session state
 └── workspace/
-    ├── identity/                            <- Identity
-    │   ├── mission.md
-    │   ├── core-values.md
-    │   └── vision_1.md
-    ├── initiative/{year}/                   <- Initiative
-    │   └── goals.md
-    ├── phase/{phase}/                       <- Phase
-    │   └── goals/{goal}/                    <- Goal
-    │       ├── _goal.md
-    │       ├── artifacts/                   <- working artifacts
-    │       └── epics/                       <- Epic, Story, Action Item
+    ├── identity/                     # Mission / Values / Vision
+    ├── concepts/                     # Living Axis — one file per Concept
+    │   ├── _index.md
+    │   └── {concept_id}.md
+    ├── milestones/                   # Time-bound — agreements
+    │   ├── _index.md
+    │   └── {milestone_id}.md
+    ├── stories/                      # Time-bound — flattened
+    │   └── {story_id}-{story_name}/
+    │       ├── _story.md
+    │       ├── ACT-NNN-{name}.md
+    │       ├── RETROSPECTIVE.md
+    │       └── artifacts/            # staging for Story-produced design artifacts
+    ├── releases/                     # Immutable snapshots
+    │   ├── _index.md
+    │   └── {release_tag}/
+    │       ├── .released
+    │       ├── README.md
+    │       ├── concepts-snapshot/
+    │       └── stories-manifest.md
+    ├── team-process.md               # gates, layers, architecture rules
     └── catalog/
-        └── published/                       <- promoted artifacts
+        └── published/                # promoted design artifacts (SSOT)
+            ├── persona/
+            ├── service-map/
+            ├── journey/
+            ├── use-case/
+            └── domain-model/
 ```
 
-## Git Branch Strategy
+**No `phase/`, no `initiative/`, no `goals/`, no `epics/`** — those v2 layers are removed. A v2 project migrates via `solera-migrate-v2`, which freezes the old data to `_v2-archive/` and proposes Concepts from the existing Goals/Epics.
 
-| Level | Branch | Branch From |
-|---|---|---|
-| Epic | `epics/[name]` | parent branch |
-| Story | `epics-[name]/story-[ID]-[name]` | epic branch |
-| Action Item | — (commit only) | story branch |
+## Git Branches
 
-Solera creates Epic and Story branches automatically when you start each level. Action Items are committed directly to the active Story branch with no additional branch created.
+| Level | Branch pattern | Branched from |
+|-------|----------------|---------------|
+| Trunk | `main` or `dev` | — |
+| Story | `story/{story_id}-{story_name}` | trunk |
+| Action Item | **commit only, no branch** | — |
 
-## Human vs AI Responsibilities
+Epic branches (`epics/{name}`) and Story-under-Epic branches (`epics-{name}/story-{id}-{name}`) from v2 are gone. Stories branch directly from trunk.
 
-| | Human | AI |
-|---|---|---|
-| Levels | Identity, Initiative, Phase | Goal, Epic, Story, Action Item |
-| Role | Strategic decisions, approval | Decomposition, document generation, implementation |
-| Skills | `solera-write-identity`, `solera-write-phase` | `solera-write-goal`, `solera-write-epic`, `solera-write-story`, `solera-execute-action-item` |
+## Status Icons (for Stories and Action Items)
 
-## Lifecycle: Artifact Promotion
+| Icon | Status |
+|------|--------|
+| ⏳ | Pending |
+| 🔄 | In Progress |
+| ✅ | Complete |
+| ⏸️ | On Hold |
+| ❌ | Cancelled |
 
-Artifacts are promoted incrementally as work completes, not in bulk at Goal completion:
+Concepts use `active` / `deprecated` / `archived` instead. Milestones use `proposed` / `agreed` / `in-progress` / `released`. These schemes differ deliberately — the Living axis has no "complete"; the Time-bound axis has no "active forever."
 
-- **Working:** `workspace/phase/{phase}/goals/{goal}/artifacts/`
-- **Promoted:** `workspace/catalog/published/{type}/`
+## What Changed from v2
 
-Promotion happens at two points via `solera-publish-artifacts`:
+| v2 | v3 |
+|----|----|
+| Single 7-layer hierarchy: Identity → Initiative → Phase → Goal → Epic → Story → Action Item | Three orthogonal axes: Living / Time-bound / Immutable |
+| All layers below Identity were time-bound and completable | Identity **and** Concepts are living; only Stories / Milestones / Action Items are time-bound |
+| Artifact promotion at Goal Create + Epic Wrap-up (two hooks) | Artifact promotion at Story Wrap-up (one hook), wired into contributed Concepts' Related Artifacts |
+| No immutable past snapshots | Releases freeze Concepts at Milestone completion |
+| `[epic-name][US-NNN][ACT-NNN] title` commit format | `[{primary_concept}][{story_id}][ACT-NNN] title` — history searchable by Concept |
+| Goal produces domain "concept" artifacts | Artifact renamed to **domain-model** to free the word "Concept" for the living axis |
 
-1. **After Goal Create** — Goal-level artifacts (service-map, persona, journey) are promoted immediately, making them available for the first Epic
-2. **At each Epic Wrap-up** — Epic-level artifacts (use-case, concept) are promoted before the PR is created
-
-By Goal Wrap-up, `artifacts/` should be empty. This incremental approach ensures each Epic can reference previously promoted artifacts and reduces the blast radius of any transition failure.
+For migrating v2 data, see the migration guide at [migrate-v2-to-v3.md](./migrate-v2-to-v3.md) and the `solera-migrate-v2` skill.

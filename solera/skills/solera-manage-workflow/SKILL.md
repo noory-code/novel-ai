@@ -1,99 +1,124 @@
 ---
 name: solera-manage-workflow
 user-invocable: true
-description: Know what to work on next — track progress, pick up where you left off, or close out a completed item.
+description: Supervisor skill — know what to work on next, read each work item's Workflow section, drive it to completion.
 metadata:
-  version: "5.1.0"
+  version: "6.0.0"
   category: workflow
   type: composite
   style: procedural
   execution_model: sequential
-  triggers: [what should I work on, mark work complete, show current progress, update progress, write a retrospective, next task]
-  uses: [solera-write-identity, solera-write-phase, solera-write-goal, solera-write-epic, solera-write-story, solera-execute-action-item, solera-publish-artifacts]
+  triggers: [what should I work on, show current progress, update progress, next task, next work, resume work]
+  uses: [solera-write-identity, solera-write-concept, solera-write-milestone, solera-write-story, solera-execute-action-item, solera-release, solera-publish-artifacts]
 ---
 
-# Workflow Manage (Supervisor)
+# Manage Workflow (Supervisor)
 
 > The workflow manager **reads and executes — it does not define**.
 > The `## Workflow` section of each work item template is the SSOT.
+> In v3 the supervisor understands three axes: **Living** (Concepts), **Time-bound** (Milestones, Stories, Action Items), and **Immutable** (Releases).
 
 ## Common Rules
 
-- [conventions.md](assets/conventions.md) (hierarchy, Git branches, folder structure, status values)
-- [lifecycle.md](assets/lifecycle.md) (Workflow pattern description)
+- [conventions.md](assets/conventions.md) — hierarchy, folder structure, branches, status values
+- [lifecycle.md](assets/lifecycle.md) — Workflow pattern description
 
 ## Prerequisites
 
-- `[project]/progress.md` exists; if not, initialize it (ref: [assets/progress.md](assets/progress.md))
+- `{project_path}/progress.md` exists; if not, initialize from [assets/progress.md](assets/progress.md).
 
 ## Input
 
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
 | **action** | N | Action type | start \| complete \| check \| next |
-| **work_item** | N | Target work item path | _goal.md, _epic.md, _story.md |
+| **work_item** | N | Target work item path | `stories/US-001-google-login/_story.md` |
 
 ## Output
 
 | Action | Output | Path |
 |--------|--------|------|
-| start / complete | progress.md update | `{project}/progress.md` |
-| complete (Epic/Goal) | RETROSPECTIVE.md written | `{path}/RETROSPECTIVE.md` |
+| start / complete | progress.md update | `{project_path}/progress.md` |
+| complete (Story) | RETROSPECTIVE.md written | `{story_path}/RETROSPECTIVE.md` |
 | next | Next work item decided | — |
+| check | Current state report | — |
 
 ## Procedure
 
+> This skill's own Procedure below describes **how the supervisor drives other work items' `## Workflow` sections**. It is meta-procedure, not domain procedure. Domain procedures live in the target work item's template (Concept / Milestone / Story / Action Item).
+
 ### start — Start work item
 
-1. Read the target work item (_goal.md | _epic.md | _story.md)
-2. Extract the `## Workflow` section
-3. Execute each step of the Workflow in order **(BLOCKING: execute each step sequentially)**
-4. If document writing is required, invoke write-* skills **(BLOCKING: proceed to next step after skill completes)**
-5. Update progress.md
+1. Read the target work item (`_story.md` or `{milestone_id}.md` or `{concept_id}.md`).
+2. Extract the `## Workflow` section.
+3. Execute each step in order **(BLOCKING: sequential)**.
+4. If document writing is required, invoke the appropriate write-* skill **(BLOCKING: wait for completion)**.
+5. Update `progress.md`.
 
 ### complete — Complete work item
 
-1. Read the target work item
-2. Execute the latter steps of `## Workflow` (completion check, status change, etc.) **(BLOCKING: execute sequentially)**
-3. If the item is an Epic or Goal, write RETROSPECTIVE.md
-4. Update progress.md
-5. Decide the next work item
+1. Read the target work item.
+2. Execute the Wrap-up step(s) of `## Workflow` (gate checks, status change, etc.).
+3. For a Story: confirm RETROSPECTIVE.md written with Concept Contribution Summary, confirm each contributed Concept's Current Shape was updated with human approval.
+4. Update `progress.md`.
+5. Decide next work item.
 
 ### check — Check current status
 
-1. Read progress.md
-2. Return the current Phase, Goal, Epic, and Story
+1. Read `progress.md`.
+2. Read `concepts/_index.md` and `milestones/_index.md` (if they exist) for the Living / Time-bound view.
+3. Return: active Concepts, active Milestone (if any), current Story + Action Item.
 
 ### next — Decide next work
 
-1. Story complete and Epic has remaining Stories → start the next Story **(BLOCKING)**
-2. Epic complete and Goal has remaining Epics → write an Epic retrospective, then start the next Epic **(BLOCKING)**
-3. Goal complete → write a Goal retrospective, confirm artifacts/ is empty (promoted during Goal Create and Epic Wrap-ups)
-4. Otherwise → continue current work
+The supervisor is state-aware. Branch on current state:
 
-> **Do NOT suggest handoff, session end, or session switch at any point.** Handoff is user-initiated only.
+1. **ACT in progress** → resume that ACT via `solera-execute-action-item`.
+2. **Story in progress, ACTs remaining** → start the next incomplete ACT.
+3. **Story all ACTs complete, Wrap-up pending** → drive Story Wrap-up (RETROSPECTIVE + Concept Current Shape updates).
+4. **Story complete, Milestone has more Stories pending** → suggest the next Story (do not auto-pick; the human decides).
+5. **Milestone Exit Criteria all met** → advise `solera-write-milestone --mode=mark-released`, then `solera-release`.
+6. **No active Milestone but Concepts exist** → advise `solera-write-milestone` to agree on next scope.
+7. **No Concepts yet** → advise `solera-write-concept` to draw the first one.
+8. **No Identity yet** → advise `solera-write-identity`.
+
+> **Do NOT suggest handoff, session end, or session switch at any point.** Handoff is user-initiated only (via `solera-handoff`).
 
 ## Responsibilities
 
 | Role | Skill |
 |------|-------|
-| **Document writing** | solera-write-identity, solera-write-phase, solera-write-goal, solera-write-epic, solera-write-story, solera-execute-action-item |
-| **Execution supervision** | solera-manage-workflow |
-| **Artifact promotion** | solera-publish-artifacts (invoked at Goal Create and Epic Wrap-up) |
+| **Identity writing** | solera-write-identity |
+| **Concept drawing / updating** | solera-write-concept |
+| **Milestone agreement / release marking** | solera-write-milestone |
+| **Story planning + execution** | solera-write-story, solera-execute-action-item |
+| **Release snapshotting** | solera-release |
+| **Execution supervision** | solera-manage-workflow (this skill) |
+| **Artifact promotion** | solera-publish-artifacts (invoked at Story Wrap-up) |
 
 ## Supervision Principles
 
-- Reads the work item's `## Workflow` as the SSOT
-- Does not define procedures directly — follows procedures defined in the template
-- Delegates document writing to write-* skills
-- Delegates development work to frontend-*, dev-* skills
-- **Never suggest handoff** after completing a work item — proceed to the next item or ask the user what to do next
+- Reads the work item's `## Workflow` as the SSOT.
+- Does not define procedures directly — follows the procedures defined in the template.
+- Delegates document writing to write-* skills.
+- Delegates development work to frontend-*, dev-* skills.
+- **Never suggests handoff** after completing a work item — proceeds to the next item or asks the user what to do next.
+- **State-aware but not opinionated** — when multiple valid next steps exist, the supervisor surfaces the options and lets the human choose.
+
+## Human–AI Protocol
+
+| AI does | AI does not |
+|---------|-------------|
+| Read progress.md and the relevant Workflow section | Decide what to work on when multiple Stories are open |
+| Drive each Workflow step in order | Skip Wrap-up steps (gate checks, Concept Current Shape updates) |
+| Surface state-based options at decision points | Auto-start the next Story without human signal |
+| Delegate writing / development to specialized skills | Invent procedures not declared in templates |
 
 ## Templates
 
-- [assets/progress.md](assets/progress.md)
-- [assets/retro.md](assets/retro.md)
-- [assets/status.md](assets/status.md)
+- [assets/progress.md](assets/progress.md) — progress.md template (v3 format)
+- [assets/retro.md](assets/retro.md) — retrospective base
+- [assets/status.md](assets/status.md) — status convention
 
 ## References
 
@@ -101,25 +126,26 @@ metadata:
 
 | File | Content |
 |------|---------|
-| [self-verification.md](assets/self-verification.md) | Automated skill definition verification TCs (9 cases) |
+| [self-verification.md](assets/self-verification.md) | Automated skill definition verification |
 
 ## Error Handling
 
-| Failure point | Condition | Recovery procedure | Exit behavior |
-|---------------|-----------|-------------------|---------------|
-| progress.md missing | `{project}/progress.md` file not found | Initialize from [assets/progress.md](assets/progress.md) template | Continue after file creation |
-| work_item file missing | Specified _goal.md/_epic.md/_story.md not found | Display error message, request file path verification | Skill halted, resume after correct path is provided |
-| Workflow section missing | Work item has no `## Workflow` section | Apply default workflow pattern (ref: lifecycle.md) | Continue (using default pattern) |
-| write-* skill invocation failed | Sub-skill invocation error | Display failed skill name, request manual execution | Step halted, resume after manual resolution |
-| Status mismatch | Story is ✅ but Epic is 🔄 | Display mismatched items, request status sync | Halted before next work decision, resume after manual sync |
-| No next work | All work complete, next invoked | Display "All work complete" message | Skill completes normally |
-| RETROSPECTIVE.md writing failed | Retrospective writing error on Epic/Goal completion | Verify template path, request manual writing | Complete step halted, resume after manual writing |
-| progress.md update failed | File write permission error | Verify permissions, instruct `chmod 644 progress.md` | Skill halted, retry after permission fix |
+| Failure point | Condition | Recovery | Exit behavior |
+|---|---|---|---|
+| progress.md missing | File not found | Initialize from template | Continue after creation |
+| Work item file missing | Named path has no file | Report; request correct path | Halted |
+| Workflow section missing | No `## Workflow` in template | Report template bug; apply default 4-phase pattern from lifecycle.md | Continue (degraded) |
+| write-* invocation failed | Sub-skill error | Report; request manual execution | Halted |
+| Status mismatch | Story ✅ but parent Milestone not updated | Report and sync | Halted before next decision |
+| Concept Current Shape never updated | Wrap-up skipped the loop | Halt until updates are drafted and approved | Blocking |
+| Gate failure | workflow_gate check blocks | Report failing check | Blocking |
+| No next work | All Milestones released, no Concepts pending | Report "no active work; draw a new Concept or agree a new Milestone" | Completes normally |
 
 ## Completion Checklist
 
-- [ ] Read the Workflow section of the work item?
-- [ ] Executed Workflow steps in order?
-- [ ] Updated progress.md?
-- [ ] Wrote a retrospective upon completion? (Epic/Goal)
-- [ ] Decided the next work item?
+- [ ] Read the Workflow section of the work item
+- [ ] Executed Workflow steps in order
+- [ ] Updated progress.md
+- [ ] (Story) Wrote RETROSPECTIVE with Concept Contribution Summary
+- [ ] (Story) Each contributed Concept's Current Shape updated with human approval
+- [ ] Decided the next work item or surfaced options

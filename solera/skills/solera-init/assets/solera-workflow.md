@@ -1,42 +1,75 @@
-# Rule: Solera Workflow
+# Rule: Solera Workflow (v3)
 
-> **Scope**: When working on any task in this project that uses the Solera plugin for work management.
+> **Scope**: When working on any task in a project that uses the Solera v3 plugin.
+> Solera organizes work on three axes: **Living** (Identity, Concepts), **Time-bound** (Milestones, Stories, Action Items), **Immutable** (Releases).
 
 ## Intent → Skill Routing
 
 | User Intent | Skill |
 |---|---|
-| New feature / task request, build something | `solera-write-epic` (if no Goal exists, run `solera-write-goal` first) |
-| Check progress / schedule, what's next? | Check `progress.md` → `solera-manage-workflow` |
-| Start code / document work | `solera-execute-action-item` |
+| New project, not set up yet | `solera-init` |
+| Establish mission / values / vision | `solera-write-identity` |
+| Draw a new Concept, update an existing one, deprecate / archive | `solera-write-concept` |
+| Agree on next release scope with AI analysis | `solera-write-milestone` |
+| Plan a new Story, decompose into Action Items | `solera-write-story` |
+| Start code/document work on an Action Item | `solera-execute-action-item` |
+| Check progress / what's next | `solera-manage-workflow` (action: check or next) |
+| Freeze an achieved Milestone into an immutable Release | `solera-release` |
 | Create a PR | `solera-create-pr` |
-| **Explicitly** requests handoff (`/solera-handoff`, "run handoff", "save handoff") | `solera-handoff` |
-| New user type mentioned, add persona | `solera-write-identity` |
-| Start a new Goal | `solera-write-goal` (check team-process.md `workflow_gates` first) |
-| Publish / share artifacts | `solera-publish-artifacts` |
+| **Explicitly** requests handoff (`/solera-handoff`, "save handoff") | `solera-handoff` |
+| Migrate a v2 project | `solera-migrate-v2` |
+
+## Axis Discipline
+
+- **Concepts are living and should never have a "done" state.** They evolve via Story contributions. Only `deprecate` or `archive` — never "complete".
+- **Every Story must declare `contributes_to`** (≥1 active Concept) and may declare `belongs_to` (a Milestone with status `agreed`/`in-progress`).
+- **Releases are immutable.** Once `releases/{tag}/` is written, no skill edits files inside it.
 
 ## Anti-Patterns
 
-- **Never suggest or ask about handoff** after completing a task (Story, Epic, ACT, etc.)
+- **Never suggest or ask about handoff** after completing a task (Story, ACT, etc.). Handoff is user-initiated only.
 - **Never ask** "shall we move to the next session?" or "want to save a handoff?"
-- Handoff is a user-initiated action only — execute it when the user explicitly requests it
-- After task completion: proceed to the next work item or ask the user what to do next
+- After task completion, proceed to the next work item or ask the user what to do next.
+- **Never auto-agree a Milestone** without producing at least one AI analysis round.
+- **Never edit a Concept's Current Shape** at Story Wrap-up without human approval.
+- **Never skip the Output Artifacts append** at Action Item Wrap-up — Story Wrap-up depends on it.
+- **Never edit files inside `releases/{tag}/`** after the release is cut.
 
 ## Git Rules
 
-- Epic branch: `epics/[name]`
-- Story branch: `epics-[name]/story-[ID]-[name]`
-- Action Item: commit only
-- Commit format: `[epic-name][US|TS-NNN][ACT-NNN] description`
+- **Story branch**: `story/{story_id}-{story_name}` (from trunk — usually `main`/`dev`)
+- **Action Item**: commit only — no branch
+- **Commit format**: `[{primary_concept}][{story_id}][ACT-NNN] description`
+  where `{primary_concept}` = `contributes_to[0]` from `_story.md`.
+  If the Story contributes to multiple Concepts, add a body line: `- contributes also to: {other_concept_ids}`.
+
+v2 branch patterns (`epics/`, `epics-*/story-*`) are gone — do not create them.
 
 ## Status Values
 
-⏳ Pending · 🔄 In Progress · ✅ Complete · ⏸️ On Hold
+### Work items (Story, Action Item)
+
+⏳ Pending · 🔄 In Progress · ✅ Complete · ⏸️ On Hold · ❌ Cancelled
+
+### Living Axis
+
+- **Concept**: `active` / `deprecated` / `archived`
+
+### Time-bound Axis
+
+- **Milestone**: `proposed` / `agreed` / `in-progress` / `released`
+
+### Immutable Axis
+
+- **Release**: no status field; presence of `releases/{tag}/.released` marker = immutable.
 
 ## Artifact Promotion
 
-- After Goal Create: service-map, persona, journey → `published/`
-- At each Epic Wrap-up: use-case, concept → `published/`
+At **Story Wrap-up** (invoked via `solera-publish-artifacts`):
+- Story-produced design artifacts (persona, service-map, journey, use-case, domain-model) move to `catalog/published/{type}/`.
+- Each contributed Concept's `# Related Artifacts` section gains the new links.
+
+There are no Goal-Create or Epic-Wrap-up promotion hooks in v3 (those levels are removed).
 
 ## Project Config
 
@@ -46,6 +79,6 @@
 
 ## Team Process
 
-> Read `{project_path}/workspace/team-process.md` before starting any Goal or Epic.
-> It defines this team's workflow gates, tech stack, and conventions.
+> Read `{project_path}/workspace/team-process.md` before starting any Story or Action Item.
+> It defines this team's workflow gates, tech stack, and architecture rules.
 > Generated by `solera-init`. Edit freely to update.

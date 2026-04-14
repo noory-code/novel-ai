@@ -1,6 +1,6 @@
 # Template: Composite + Procedural
 
-> Multi-skill procedural workflow. Examples: solera-write-goal, solera-write-epic.
+> Multi-skill procedural workflow. Examples: solera-write-story, solera-write-milestone.
 
 ## Frontmatter
 

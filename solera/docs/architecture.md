@@ -1,8 +1,14 @@
-# Solera Architecture
+# Solera Architecture (v3)
 
 ## Overview
 
-Solera is built around three interlocking principles. First, every skill is a thin orchestrator: it validates preconditions, delegates work to lower-level skills, and records outcomes — it contains no business logic of its own. Second, every work item (Phase, Goal, Epic, Story, Action Item) owns its own procedure through a `## Workflow` section in its template; the `solera-manage-workflow` skill reads and executes those steps but never defines them. Third, SSOT is enforced structurally: `progress.md` is the single canonical source for the project's current position in the hierarchy, and the `catalog/published/` tree is the single authoritative location for promoted artifacts. Duplication is prevented by convention and by the `solera-publish-artifacts` skill, which incrementally moves artifacts into the shared catalog — Goal-level artifacts (service-map, persona) after Goal Create, and Epic-level artifacts (use-case, concept) at each Epic Wrap-up.
+Solera v3 is built around three interlocking principles:
+
+1. **Three orthogonal axes.** Work lives on exactly one of Living (Identity, Concepts), Time-bound (Milestones, Stories, Action Items), or Immutable (Releases). The axes have different relationships to time — Living never ends, Time-bound always does, Immutable is frozen at one moment and never modified again. See [work-item-structure.md](./work-item-structure.md) for the shape; this document covers the wiring.
+
+2. **Workflow-as-SSOT.** Every work item that has a lifecycle (Concept, Milestone, Story, Action Item) declares its procedure in a `## Workflow` section of its **template**. The `solera-manage-workflow` supervisor reads that section and executes it. No skill hardcodes procedure it didn't declare. Release and `solera-publish-artifacts` are the two exceptions — they are hooks, not work items, and have no Workflow section.
+
+3. **Collaboration is structural, not optional.** Four moments require explicit human–AI collaboration: Setup, Concept Drawing, Milestone Agreement, Work Wrap-up. Each moment has a BLOCKING step in the relevant skill that refuses to advance without human input. This is how Solera guarantees that scope and direction are never decided silently.
 
 ---
 
@@ -10,146 +16,263 @@ Solera is built around three interlocking principles. First, every skill is a th
 
 ```mermaid
 flowchart TD
-    WM[solera-manage-workflow]
-    WPH[solera-write-phase]
-    WG[solera-write-goal]
-    WE[solera-write-epic]
+    WM[solera-manage-workflow<br/>supervisor]
+
+    WI[solera-write-identity]
+    WC[solera-write-concept]
+    WMS[solera-write-milestone]
     WS[solera-write-story]
     WAI[solera-execute-action-item]
-    WPR[solera-create-pr]
-    CT[solera-publish-artifacts]
-    HO[solera-handoff]
-    DEV[dev skills]
+    WR[solera-release]
+    PA[solera-publish-artifacts]
 
-    WM --> WPH
-    WM --> WG
-    WM --> WE
+    PR[solera-create-pr]
+    HO[solera-handoff]
+    MIG[solera-migrate-v2]
+
+    WM --> WI
+    WM --> WC
+    WM --> WMS
     WM --> WS
     WM --> WAI
-
-    WPH --> WG
-    WG --> WE
-    WG --> CT
-    WE --> CT
-    WE --> WS
-    WS --> WAI
-    WAI --> DEV
-
+    WM --> WR
     WM --> HO
-    HO --> WM
 
-    WPR -.->|reads| WM
-    CT -.->|artifacts to published/| WG
-    CT -.->|artifacts to published/| WE
+    WS --> WAI
+    WS --> PA
+
+    WMS -.->|consumes| WC
+    WR -.->|consumes| WMS
+    WR -.->|snapshots| WC
+    PA -.->|links into| WC
+
+    WI -.->|prerequisite| WC
+    WC -.->|prerequisite| WMS
+    WC -.->|prerequisite| WS
+
+    PR -.->|reads| WM
+    MIG -.->|produces| WC
+    MIG -.->|produces| WS
+
+    classDef supervisor fill:#ffe6f2,stroke:#cc0066
+    classDef living fill:#fff9e6,stroke:#d4a300
+    classDef timebound fill:#e6f4ff,stroke:#2196F3
+    classDef immutable fill:#f0f0f0,stroke:#666
+    classDef utility fill:#f0f8e8,stroke:#4CAF50
+
+    class WM supervisor
+    class WI,WC living
+    class WMS,WS,WAI timebound
+    class WR immutable
+    class PA,PR,HO,MIG utility
 ```
 
-Solid arrows indicate direct invocation. Dashed arrows indicate a read or data dependency without direct skill invocation.
+**Solid arrows** = direct skill invocation.
+**Dashed arrows** = data dependency (reads/produces files the other skill consumes) without direct invocation.
 
 ---
 
-## Work Item Hierarchy
+## Axis Wiring
 
 ```mermaid
-flowchart TD
-    PH["Phase\n(months)"]
-    G["Goal\n(weeks)"]
-    E["Epic\n(days)"]
-    S["Story\n(hours)"]
-    AI["Action Item\n(minutes)"]
+flowchart LR
+    subgraph Living["Living Axis"]
+        ID[identity/<br/>mission, values, vision]
+        CO[concepts/<br/>Intent, Current Design,<br/>Current Shape, Contributions]
+    end
 
-    PH --> G
-    G --> E
-    E --> S
-    S --> AI
+    subgraph TimeBound["Time-bound Axis"]
+        MS[milestones/<br/>Scope, Agreement Log,<br/>Exit Criteria]
+        ST[stories/<br/>contributes_to, belongs_to,<br/>Input/Output Artifacts]
+        AI[Action Items<br/>inside each Story]
+    end
+
+    subgraph Immutable["Immutable Axis"]
+        RE[releases/{tag}/<br/>concepts-snapshot/,<br/>stories-manifest.md]
+    end
+
+    CAT[catalog/published/<br/>persona, service-map, journey,<br/>use-case, domain-model]
+
+    ID --> CO
+    CO -->|referenced by| MS
+    CO -->|referenced by| ST
+    MS -->|frames scope for| ST
+    ST -->|updates at Wrap-up| CO
+    ST -->|Story artifacts move to| CAT
+    CAT -->|linked from| CO
+    MS -->|when Exit Criteria met| RE
+    CO -->|copied at release time| RE
+
+    AI --> ST
 ```
 
-Each level of the hierarchy corresponds to a progressively shorter time scale and a progressively narrower scope. A Phase groups Goals that share a strategic objective. A Goal produces a coherent set of artifacts (service-map, personas, use-cases, concepts). An Epic groups the Stories needed to implement one deliverable within a Goal. A Story groups the Action Items that implement one user-facing capability. An Action Item produces exactly one atomic code or documentation change plus its git commit.
+Key flows:
+- **Story → Concept (Wrap-up):** AI proposes updates to each contributed Concept's `# Current Shape`; human approves.
+- **Story artifacts → catalog → Concept (Story Wrap-up hook):** `solera-publish-artifacts` moves design artifacts from `stories/{id}/artifacts/` to `catalog/published/{type}/`, then registers wikilinks on each contributed Concept's `# Related Artifacts`.
+- **Milestone Exit Criteria met → Release:** `solera-release` reads the milestone's scope, snapshots each in-scope Concept, lists contributing Stories, freezes the result.
 
 ---
 
-## Folder Layout
+## `## Workflow` Section as SSOT
+
+This is the most important architectural rule: **the procedure for any work item lives in that work item's template, not in the skill that creates it.**
+
+```mermaid
+flowchart LR
+    TPL[template.md<br/>has ## Workflow section]
+    SKILL[skill<br/>SKILL.md]
+    SUP[solera-manage-workflow]
+
+    TPL -->|declares steps| SUP
+    SKILL -->|writes file<br/>from template| TPL
+    SUP -->|reads Workflow,<br/>drives steps| TPL
+```
+
+- When `solera-write-story` creates `_story.md`, it copies the Workflow section from `story.md` template into the file.
+- When `solera-manage-workflow` needs to drive that Story, it reads `_story.md`'s Workflow section and executes each step in order.
+- If a skill wants to change the procedure, it **edits the template**. Never the supervisor.
+
+This is why the supervisor has zero domain logic. It can drive any new work item type by simply reading its Workflow section — no code change needed.
+
+### Four-phase pattern
+
+Most Workflows are 4-phase:
+
+```markdown
+## Workflow
+
+### Step 0. Setup
+- [ ] Prerequisites; branch/folder/status initialization
+
+### Step 1. Create
+- [ ] Write the primary file from template
+
+### Step 2. Execute
+- [ ] Do the substantive work (often invokes child skills)
+
+### Step 3. Wrap-up
+- [ ] Gate checks; status → ✅; decide next
+```
+
+Action Items use 3-phase (no Create — the file already exists when the ACT runs). Concept and Milestone use mode-driven shapes (`create` / `update` / `deprecate` / `archive` for Concept; `create` / `update` / `mark-released` for Milestone).
+
+### Repeat block pattern
+
+When a work item loops over children (Story over Action Items, Milestone scope over Concepts):
+
+```markdown
+### Step 2. Execute
+<!-- Repeat the block below for each Action Item in the Action Items table -->
+#### Action Item: ACT-NNN — {title}
+- [ ] Invoke solera-execute-action-item
+- [ ] Confirm status ✅ before next ACT
+<!-- /repeat -->
+```
+
+The write-* skill expands the block to match actual rows when it creates the document. The supervisor sees per-child checkboxes and can track progress.
+
+---
+
+## Folder Layout (SSOT view)
 
 ```
 [project]/
-├── progress.md                          # current Phase / Goal / Epic / Story / ACT pointers
-├── HANDOFF.md                           # transient session state; regenerated each Stop
+├── progress.md                         # current pointers on all three axes
+├── HANDOFF.md                          # transient per-session state
 └── workspace/
-    ├── initiative/[year]/
-    │   └── roadmap.md                   # annual initiative and Phase list
-    ├── phase/[phase-id]/
-    │   ├── README.md                    # Phase definition and acceptance criteria
-    │   ├── RETROSPECTIVE.md                     # Phase retrospective (written at Phase close)
-    │   └── goals/[goal-id]/
-    │       ├── _goal.md                 # Goal definition, scope, and Workflow steps
-    │       ├── artifacts/               # working copies: service-map, persona, use-case, concept
-    │       │   └── (promoted incrementally: Goal Create → service-map/persona; Epic Wrap-up → use-case/concept)
-    │       └── epics/[epic-name]/
-    │           ├── _epic.md             # Epic definition and Workflow steps
-    │           └── [story-id]-[name]/
-    │               ├── _story.md        # Story definition and Workflow steps
-    │               └── ACT-NNN-[name].md   # single Action Item; one commit per file
+    ├── identity/                       # Living — one-time
+    ├── concepts/                       # Living — evolves
+    │   ├── _index.md
+    │   └── {concept_id}.md
+    ├── milestones/                     # Time-bound — agreement
+    │   ├── _index.md
+    │   └── {milestone_id}.md
+    ├── stories/                        # Time-bound — execution
+    │   └── {story_id}-{story_name}/
+    │       ├── _story.md
+    │       ├── ACT-NNN-{name}.md
+    │       ├── RETROSPECTIVE.md
+    │       └── artifacts/              # staging before publish
+    ├── releases/                       # Immutable
+    │   ├── _index.md
+    │   └── {release_tag}/
+    │       ├── .released
+    │       ├── README.md
+    │       ├── concepts-snapshot/
+    │       └── stories-manifest.md
+    ├── team-process.md                 # gates, layers, arch rules
     └── catalog/
-        └── published/                   # canonical artifact store (promoted from artifacts/)
-            ├── service-map/
+        └── published/                  # SSOT for promoted artifacts
             ├── persona/
+            ├── service-map/
+            ├── journey/
             ├── use-case/
-            └── concept/
+            └── domain-model/
 ```
 
-The `artifacts/` directory under each Goal is the in-progress working area. The `catalog/published/` subtree is the SSOT for all completed artifacts across all Goals. No artifact should exist in both locations simultaneously; `solera-publish-artifacts` enforces this by moving (not copying) files. Promotion happens incrementally: Goal-level artifacts (service-map, persona, journey) after Goal Create, and Epic-level artifacts (use-case, concept) at each Epic Wrap-up.
+**SSOT invariants:**
+
+- `progress.md` is the single source for "where this project is right now" — which Concepts are active, which Milestone is in flight, which Story and Action Item are current.
+- `catalog/published/` is the only authoritative location for a promoted design artifact. The same file is never duplicated between `stories/{id}/artifacts/` and `catalog/published/` — `solera-publish-artifacts` moves (not copies).
+- Each Concept owns its own `# Contributions` and `# Related Artifacts` — the single canonical record of "what advanced this Concept."
+- A written Release is immutable. `releases/{tag}/.released` marks this for other skills and humans.
 
 ---
 
-## SSOT / Lifecycle Pattern
+## Workflow Gates
 
-### The Workflow Section
+Every team has policies Solera must enforce at specific points. These are declared in `team-process.md` under `workflow_gates`:
 
-Every work item template contains a `## Workflow` section that lists the concrete procedural steps for that item type. This is the SSOT for procedure: the definition of "what to do" lives in the template, not in any skill.
+```yaml
+workflow_gates:
+  concept.align:          # before Story creation
+  milestone.agree:        # at Milestone agreement
+  story.execute:          # before Story execution
+  story.wrap_up:          # before Story completion
+  act.start:              # before Action Item execution
+  act.done:               # after Action Item commit
+```
 
-`solera-manage-workflow` acts as a supervisor: it reads the `## Workflow` section of the active item and executes each step in order. It has no hardcoded knowledge of what those steps are.
+Each gate may declare `checks[]`, a list of deterministic assertions. The execution model is identical across all six gates; see the **Gate check execution** section of `solera-write-story`, `solera-execute-action-item`, or `solera-write-milestone` for the dispatch table.
 
-All workflows follow a four-phase structure:
+Available check types:
 
-| Phase | Purpose |
-|-------|---------|
-| **Setup** | Validate preconditions; locate or create the working directory |
-| **Create** | Generate the item's primary output file(s) from the template |
-| **Execute** | Do the substantive work: invoke child skills, produce artifacts |
-| **Wrap-up** | Update `progress.md`, record completion, trigger any promotions |
+| Type | Purpose |
+|------|---------|
+| `glob_exists` | A file path pattern matches ≥1 file |
+| `act_complete` | Named Action Items are all ✅ |
+| `command_passes` | Shell command exits 0 |
+| `grep_absent` | A pattern does NOT appear in a scope |
+| `concept_exists` | Named (or inferred from `contributes_to`) Concepts exist and are `active` |
+| `milestone_status` | A named Milestone has the expected status |
 
-### The Repeat Block Pattern
-
-For items that own children (Phase owns Goals; Goal owns Epics; Epic owns Stories; Story owns Action Items), the `## Workflow` section contains a repeat block in the Execute phase. The repeat block specifies:
-
-- The child skill to invoke
-- The termination condition (all children complete, or explicit user stop)
-- Any inter-child actions (e.g., update `progress.md` between Epics)
-
-This means the looping logic is declared in the parent template, not implemented in `solera-manage-workflow`. `solera-manage-workflow` reads the repeat block and drives the loop; it does not decide when the loop ends.
-
-### How solera-manage-workflow Reads Procedures
-
-On each invocation, `solera-manage-workflow`:
-
-1. Reads `progress.md` to identify the active item.
-2. Locates the item's file (`_goal.md`, `_epic.md`, `_story.md`, etc.).
-3. Parses the `## Workflow` section.
-4. Executes each step; if a step names a child skill, it invokes that skill and awaits completion before proceeding.
-5. On completion, updates `progress.md` and returns control to the caller.
-
-`solera-manage-workflow` does not contain any domain-specific logic about what Goals, Epics, Stories, or Action Items mean. All such logic is encoded in the templates.
+Gates with `checks[]` absent fall back to text-based evaluation of the `condition` field — the AI reads the human-written condition and judges. Falling back should be rare; prefer structured checks.
 
 ---
 
-## progress.md vs HANDOFF.md
+## `progress.md` vs `HANDOFF.md`
 
 | Property | `progress.md` | `HANDOFF.md` |
-|----------|--------------|--------------|
-| **Scope** | Permanent project state | Transient session state |
-| **Update frequency** | Updated per Epic completion (and at major milestones) | Updated manually via `/solera-handoff` |
-| **Content** | Current Phase ID, Goal ID, Epic ID, Story ID, Action Item ID; completion counts | What was done this session, what is in progress, what to do next, any open decisions |
+|----------|---------------|--------------|
+| **Scope** | Permanent project state (three axes) | Transient session state |
+| **Update frequency** | After each state transition (Story complete, Milestone agreed, Release cut) | On `/solera-handoff` invocation (user-initiated) |
+| **Content** | Active Concepts, active Milestone, current Story/ACT, latest Release | What was done this session, in progress, next steps, open decisions |
 | **Audience** | All future sessions and contributors | The next session only |
 | **Authoritative for** | "Where is this project right now?" | "What happened just before this session ended?" |
 | **Lifespan** | Indefinite | Single session boundary |
 
 `progress.md` must never contain session-specific narrative. `HANDOFF.md` must never be treated as a persistent record; it is overwritten each time `/solera-handoff` is invoked.
+
+---
+
+## Why no supervisor state machine?
+
+A common urge in systems like this is to give `solera-manage-workflow` a state machine: "if in Moment 1, route to write-concept; if Concept has N artifacts, force a Milestone; …"
+
+v3 deliberately doesn't do this. The supervisor surfaces the **current situation** and **available next steps** and lets the human pick. Reasons:
+
+1. **The axes are not linear.** A team might draw a new Concept mid-Milestone (response to discovery). Forcing a state machine would block that.
+2. **The human is the strategist.** Concept Drawing, Milestone Agreement, Release Approval — these are human decisions. A state machine would push AI into those.
+3. **The Workflow-as-SSOT rule.** If the supervisor carried domain state, that state would duplicate what's already in templates and `progress.md`. SSOT violation.
+
+The supervisor asks "what do you want to work on?" and drives the chosen work item's Workflow. Everything else is state-awareness, not state-control.

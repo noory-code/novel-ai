@@ -1,198 +1,302 @@
 ---
 name: solera-publish-artifacts
 user-invocable: false
-description: Promote intermediate artifacts to the published catalog — invoked after Goal creation and at each Epic wrap-up.
+description: Promote a Story's produced design artifacts to the published catalog and wire them into the contributed Concepts' Related Artifacts sections. Invoked automatically at Story Wrap-up.
 metadata:
-  version: "4.0.0"
+  version: "5.0.0"
   category: workflow
   type: unit
   style: procedural
-  triggers: [transition to catalog, archive completed Goal, publish Goal artifacts, wrap up Goal, Goal completion cleanup]
+  triggers: [publish story artifacts, promote artifacts to catalog, story wrap-up artifact promotion]
   uses: []
 ---
 
-# Catalog Transition
+# Publish Artifacts (v3)
+
+> Invoked at **Story Wrap-up** (not Goal Create / Epic Wrap-up — those don't exist in v3).
+> Moves design artifacts (persona, service-map, journey, use-case, domain-model, …) from the Story's staging area to `catalog/published/`, then registers the new links on every Concept the Story contributed to.
+
+## Philosophy
+
+In v2, artifacts were promoted at Goal Create and Epic Wrap-up — two separate hooks tied to now-removed layers. In v3 there is exactly one promotion hook: **Story Wrap-up**. This is where the Time-bound axis transfers its durable output to the Living axis (Concepts' Related Artifacts) and the project-wide catalog.
+
+Key invariants:
+
+1. **Story ID is the version tag.** An artifact promoted by `US-001-google-login` gets `applied-version: US-001` in its header / frontmatter. There are no Phase/Goal numbers in v3.
+2. **The Story's `artifacts/` staging directory is the discovery source.** Files in `{story_path}/artifacts/{type}/` are candidates for promotion. `# Output Artifacts` on `_story.md` is a different record (commits from Action Items) — it is not read by this skill.
+3. **Concepts get the links, not the files.** Files move to `catalog/published/{type}/`. Each contributed Concept's `# Related Artifacts` section gains a markdown link pointing to the canonical catalog location.
+4. **No promotion = no error.** A Story that produced only code (no design artifacts) invokes this skill and it completes cleanly with zero moves.
+
+### Why no `## Workflow` section
+
+This skill is a **hook**, not a work item. It runs once as part of `solera-write-story`'s Wrap-up step. It doesn't represent an item that lives on any axis, doesn't hold state between invocations, and doesn't decompose into child work. The procedure below lives entirely in this SKILL.md — there is no template-level `## Workflow` to drive, which is why `solera-manage-workflow` never invokes it directly. (Same pattern as `solera-release`.)
 
 ## Prerequisites
 
-This skill is invoked at two points:
-1. **After Goal Create** — promotes Goal-level artifacts (service-map, persona, journey)
-2. **At Epic Wrap-up** — promotes Epic-level artifacts (use-case, concept)
-
-- The calling work item (Goal Create or Epic) must be complete
-- Only artifacts present in `artifacts/` at the time of invocation are moved
+- Called by `solera-write-story` during Step 5 (Wrap-up), after all ACTs are ✅ and RETROSPECTIVE.md is written.
+- The Story folder `{project_path}/workspace/stories/{story_id}-{story_name}/` exists.
+- The Story's `_story.md` frontmatter has non-empty `contributes_to`.
 
 ## Input
 
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
-| **project_path** | Y | Project workspace root | banas/workspace |
-| **phase_id** | Y | Parent Phase ID | 2026-P1-foundation |
-| **goal_id** | Y | Goal ID | G1 |
-| **goal_name** | Y | Goal name | search-liquor |
+| **project_path** | Y | Project workspace root | banas |
+| **story_id** | Y | Parent Story ID (used as the version tag) | US-001 |
+| **story_name** | Y | Parent Story name | google-login |
 
 ## Output
 
 | Step | Output | Path | Nature |
 |------|--------|------|--------|
-| File move | Transitioned artifacts | `workspace/catalog/published/{type}/` | Final |
-| Version record | Version tag | `[Phase]-[Goal number]` in document header | Final |
+| Move | Promoted artifact files | `{project_path}/workspace/catalog/published/{type}/` | Final |
+| Tag | Version header line | Each promoted file's header | Final |
+| Link | `# Related Artifacts` row | Each contributed `concepts/{id}.md` | Final |
 
 ## Procedure
 
-1. **Confirm transition targets**
-   - [ ] Compute goal_path: `{project_path}/phase/{phase_id}/goals/{goal_id}-{goal_name}`
-   - [ ] Scan `{goal_path}/artifacts/`
-   - [ ] Select only files of types defined in the move mapping table (exclude any files not in the mapping table)
+### 1. Discover artifacts to publish
 
-2. **Record version**
-   - [ ] Add `Applied version: [Phase]-[Goal number]` to the header
-   - [ ] Format: H1-G01, H1-G02, etc.
+- [ ] Read `{project_path}/workspace/stories/{story_id}-{story_name}/_story.md`.
+- [ ] Extract `contributes_to` from frontmatter (list of concept IDs; must be non-empty).
+- [ ] Scan the Story's staging directory for design artifacts:
+  - Path: `{story_path}/artifacts/{type}/`
+  - `{type}` = the directory name directly under `artifacts/`.
+  - Every file under a `{type}/` directory is a candidate.
+- [ ] For each candidate, classify its `{type}` against the Move Mapping table:
+  - **Known type** → promote in Step 3.
+  - **Unknown type** → listed in the final summary as "left in place: {path} (type '{type}' has no mapping)". Not moved.
+- [ ] If zero candidates: log `"no artifacts to publish for {story_id}"` and exit cleanly with status success.
 
-3. **Move files**
-   - [ ] Move files according to the move mapping table
+**Note**: This skill does **not** read `# Output Artifacts` from the Story. That section tracks **code/doc commits** produced by Action Items. Design artifacts for publication live in `{story_path}/artifacts/`, written there by write-* skills or the human during Story execution.
 
-4. **Update links**
-   - [ ] Fix paths in _goal.md and other artifacts
+### 2. Verify destination
 
-5. **Obsidian optimization**
-   - [ ] Add the applied version to frontmatter
-   - [ ] Change status/* tags to status/completed
-   - [ ] Update the `updated` date
+- [ ] Ensure `{project_path}/workspace/catalog/published/` exists; `mkdir -p` if not.
+- [ ] For each artifact type in the batch: ensure `catalog/published/{type}/` exists; `mkdir -p` if not.
 
-6. **Verification**
-   - [ ] All files moved to published
-   - [ ] Version information recorded
-   - [ ] Links are working correctly
-   - [ ] The artifacts folder is empty
+### 3. Tag + move each artifact
 
----
+For each claimed artifact:
 
-## Version Format
+- [ ] Compute destination path using the Move Mapping table. Preserve the source filename.
+- [ ] Collision check:
+  - If the destination does not exist: proceed.
+  - If it exists with **identical content** (byte-identical or diff-clean modulo the `> Applied version:` header line): skip the move; log `"skipped (identical): {filename}"`.
+  - If it exists with **different content**: **BLOCKING** — show the human a short diff summary and three options:
+    1. **Overwrite** — the Story's version replaces the existing catalog file. Previous version recorded in `<!-- prev-version: {prior_story_id} -->` comment.
+    2. **Rename new** — the new file lands as `{name}__{story_id}.{ext}` alongside the old. Both remain; human can merge later.
+    3. **Skip** — the new file stays in staging; no catalog update for this file.
+  - Log the human's choice in the final summary.
+  - Never overwrite silently.
+- [ ] Insert/update the version line in the file header (below any frontmatter):
+  ```
+  > Applied version: {story_id}
+  > Updated: {YYYY-MM-DD}
+  ```
+  If the file already had `Applied version: ...` from a previous Story, replace with the new Story ID and record the prior one in a comment: `<!-- prev-version: US-00X -->`.
+- [ ] If the file has Obsidian-style YAML frontmatter and the team uses Obsidian, update:
+  - `applied-version: {story_id}`
+  - `updated: {today}`
+  - Leave other fields alone.
+- [ ] Move the file (git-aware if possible: use `git mv` when inside a git repo to preserve history).
+
+### 4. Wire Related Artifacts on each contributed Concept
+
+For each `concept_id` in `contributes_to`:
+
+- [ ] Read `{project_path}/workspace/concepts/{concept_id}.md`.
+- [ ] Locate the `# Related Artifacts` section.
+- [ ] For each artifact moved in Step 3, ensure a link line exists under the appropriate category (Personas / Service Map / Journey / Use Cases / Domain Model / External):
+  ```
+  - Personas: [[persona/{filename-without-ext}]]
+  ```
+  - If a line with the same target already exists: skip (idempotent).
+  - If the category header doesn't exist yet in the Concept file: add the full line with its header.
+- [ ] Preserve any human-curated entries (notes, External links) — only add, never remove.
+
+### 5. Verify
+
+- [ ] Every claimed artifact file is now under `catalog/published/{type}/` (or explicitly logged as skipped-identical / renamed on collision).
+- [ ] The Story's staging directory (`{story_path}/artifacts/`) is empty of types in the mapping table (unknown types remain).
+- [ ] Each contributed Concept's `# Related Artifacts` section includes the newly promoted items.
+- [ ] Emit summary: `"Published {N} artifacts from {story_id} to catalog; wired into {M} Concepts."`
+
+## Version Tag
 
 | Pattern | Example |
 |---------|---------|
-| `[Phase]-[Goal number]` | 2026-P1-G01, 2026-P1-G02, 2026-P2-G01 |
+| `{story_id}` | `US-001`, `TS-014` |
 
-**Document header example**:
+**File header example** (after promotion):
 ```markdown
-# Journey: alba-first-search
+# Journey: first-explore
 
-> Persona: ALBA
-> Applied version: 2026-P1-G01
-> Last updated: 2026-01-15
+> Applied version: US-001
+> Updated: 2026-04-16
+
+...rest of the file...
 ```
 
 ## Move Mapping
 
-| Artifact | Destination |
-|----------|------------|
-| service-map | `workspace/catalog/published/service-map/` |
-| persona | `workspace/catalog/published/persona/` |
-| journey | `workspace/catalog/published/journey/` |
-| use-case | `workspace/catalog/published/use-case/` |
-| concept | `workspace/catalog/published/concept/` |
-| erd | `workspace/catalog/published/schema/` |
-| dto | `workspace/catalog/published/dto/` |
-| api-spec | `workspace/catalog/published/api/` |
+| Artifact type (source dir) | Destination |
+|---|---|
+| `persona/` | `workspace/catalog/published/persona/` |
+| `service-map/` | `workspace/catalog/published/service-map/` |
+| `journey/` | `workspace/catalog/published/journey/` |
+| `use-case/` | `workspace/catalog/published/use-case/` |
+| `domain-model/` | `workspace/catalog/published/domain-model/` |
+| `erd/` | `workspace/catalog/published/schema/` |
+| `dto/` | `workspace/catalog/published/dto/` |
+| `api-spec/` | `workspace/catalog/published/api/` |
 
-## Obsidian Frontmatter
+> Types not listed here are **left in place** and logged — they are not moved. If a Story needs a new type, extend this mapping (ship with a version bump).
 
-> **Note:** This section is for teams using Obsidian as a knowledge base. If you are not using Obsidian, skip the frontmatter fields — the file move in step 3 is the only required action.
+## Related Artifacts Line Format
+
+On each contributed Concept, links are grouped by category:
+
+```markdown
+# Related Artifacts
+
+- Personas: [[persona/bana]], [[persona/hero]]
+- Service Map: [[service-map/admin]]
+- Journey: [[journey/first-explore]]
+- Use Cases: [[use-case/UC-001-google-login]]
+- Domain Model: [[domain-model/user-session]]
+- External: (human-curated, preserved as-is)
+```
+
+One category line, comma-separated link targets. Links are wikilinks so they resolve in Obsidian and most markdown viewers.
+
+## Obsidian Frontmatter (optional)
+
+If promoted files use Obsidian-style YAML frontmatter, update these keys:
 
 ```yaml
 ---
-title: [document title]
-type: [journey|persona|service|concept|schema|use-case]
+title: {unchanged}
+type: {unchanged — persona / service / journey / use-case / domain-model / ...}
 tags:
-  - status/completed    # changed to completed status
-  - relates-to/[related document]
-created: YYYY-MM-DD
-updated: YYYY-MM-DD      # updated to transition date
-applied-version: [Phase]-[Goal number]  # e.g., 2026-P1-G01
+  - status/published
+  - relates-to/{concept_id}          # one per contributed Concept
+created: {unchanged}
+updated: {YYYY-MM-DD}                 # updated to promotion date
+applied-version: {story_id}           # Story ID
 ---
 ```
 
+Teams not using Obsidian can skip this step — the plain-text `> Applied version:` line at the top of the file is the canonical record.
+
+## Human–AI Protocol
+
+This skill is a **handoff from Time-bound to Living** — at Story Wrap-up, the work turns into durable knowledge. Rules:
+
+| AI does | AI does not |
+|---------|-------------|
+| Move files claimed by the Story | Move files the Story didn't produce |
+| Tag files with the Story ID | Invent a version tag unrelated to the Story |
+| Add Related Artifacts links to contributed Concepts | Remove or reorder human-curated entries |
+| Rename on content collision (never overwrite) | Silently overwrite an existing published file |
+| Log skipped / renamed files so humans can reconcile | Hide a skip/rename from the summary |
+
+## Error Handling
+
+| Failure point | Condition | Recovery | Exit behavior |
+|---|---|---|---|
+| Story file missing | `_story.md` not found | Halt; report Story path | Skill halts |
+| contributes_to empty | Frontmatter lacks the field | Halt; Story must be fixed first | Skill halts |
+| No claimed artifacts | Story produced only code | Log "no artifacts to publish"; exit success | Skill completes |
+| Unknown artifact type | Source dir not in mapping | Log and skip (do not move); listed in summary | Continue |
+| Destination missing | `catalog/published/{type}/` absent | `mkdir -p` | Continue |
+| Content collision | Same filename, different content exists | Rename new file to `{name}__{story_id}.{ext}`, log | Continue |
+| Git mv failure | Not in a git repo, or permission error | Fall back to plain move; log the fallback | Continue |
+| Concept file missing | `concepts/{id}.md` absent | Halt; contributes_to references invalid Concept | Skill halts |
+| Related Artifacts category absent in Concept | Category header missing | Add the header line and the new entry | Continue |
+
+## Completion Checklist
+
+- [ ] Claimed artifacts all relocated (or explicitly logged as skipped / renamed)
+- [ ] Each promoted file has `> Applied version: {story_id}` in its header
+- [ ] Obsidian frontmatter updated (if applicable)
+- [ ] Each contributed Concept's `# Related Artifacts` section includes the new promotions
+- [ ] Human-curated entries in Related Artifacts untouched
+- [ ] Summary emitted with counts and any skip/rename log
+
 ## Example
 
-### Skill invocation
+### Invocation (called by solera-write-story at Wrap-up)
 
 ```python
 Skill(name="solera-publish-artifacts", args={
-  "project_path": "/Users/myname/workspace/myapp",
-  "phase_id": "2026-P1-foundation",
-  "goal_id": "G1",
-  "goal_name": "search-liquor"
+  "project_path": "banas",
+  "story_id": "US-001",
+  "story_name": "google-login"
 })
 ```
 
-### Before (artifacts/)
+### Before
 
+`_story.md` frontmatter:
+```yaml
+contributes_to: [authentication, onboarding]
 ```
-{project_path}/phase/2026-P1-foundation/goals/G1-liquor-search/artifacts/
-├── service-map/
-│   └── index.md
+
+Story staging:
+```
+stories/US-001-google-login/artifacts/
 ├── persona/
-│   ├── bana.md
-│   └── relationship.md
+│   └── bana.md           # new
 ├── journey/
-│   └── first-search.md
-├── use-case/
-│   └── UC-001-search-liquor.md
-└── concept/
-    └── liquor.md
+│   └── first-login.md    # new
+└── use-case/
+    └── UC-001-google-login.md
 ```
 
-### After (workspace/catalog/published/)
-
+Catalog published (prior state):
 ```
-{project_path}/workspace/catalog/published/
-├── service-map/
-│   └── index.md           # Applied version: 2026-P1-G01
+catalog/published/
+├── persona/              # empty
+├── journey/              # empty
+└── use-case/             # empty
+```
+
+### After
+
+Catalog published:
+```
+catalog/published/
 ├── persona/
-│   ├── bana.md            # Applied version: 2026-P1-G01
-│   └── relationship.md    # Applied version: 2026-P1-G01
+│   └── bana.md           # header: > Applied version: US-001
 ├── journey/
-│   └── first-search.md    # Applied version: 2026-P1-G01
-├── use-case/
-│   └── UC-001-search-liquor.md  # Applied version: 2026-P1-G01
-└── concept/
-    └── liquor.md          # Applied version: 2026-P1-G01
+│   └── first-login.md    # header: > Applied version: US-001
+└── use-case/
+    └── UC-001-google-login.md   # header: > Applied version: US-001
+```
+
+`concepts/authentication.md` → `# Related Artifacts`:
+```markdown
+- Personas: [[persona/bana]]
+- Journey: [[journey/first-login]]
+- Use Cases: [[use-case/UC-001-google-login]]
+```
+
+`concepts/onboarding.md` → `# Related Artifacts`:
+```markdown
+- Personas: [[persona/bana]]
+- Journey: [[journey/first-login]]
+```
+
+(Same files referenced by both Concepts — one canonical location, two references.)
+
+Summary emitted:
+```
+Published 3 artifacts from US-001 to catalog; wired into 2 Concepts.
 ```
 
 ## Notes
 
-- Only move types defined in the move mapping table to `workspace/catalog/published/` (files not in the mapping table remain in artifacts)
-- If the same file already exists in the destination, replace it with the higher version
-- To review a previous version, use `git log --follow -- {file-path}` to view history
-- Invoked incrementally: after Goal Create (Goal-level artifacts) and at each Epic Wrap-up (Epic-level artifacts), not in bulk at Goal completion
-
-## References
-
-### Verification
-
-| File | Content |
-|------|---------|
-| [self-verification.md](assets/self-verification.md) | Automated skill definition verification TCs (9 cases) |
-
-## Error Handling
-
-| Failure point | Condition | Recovery procedure | Exit behavior |
-|---------------|-----------|-------------------|---------------|
-| Invocation timing mismatch | Invoked outside of Goal Create or Epic Wrap-up | Display current state, guide to correct invocation timing | Skill halted, re-invoke at correct timing |
-| artifacts folder missing | `{goal_path}/artifacts/` not found | Display warning message, treat as no transition targets | Skill complete (no transition needed) |
-| Files outside mapping table | Artifact types not in the mapping table exist | Display excluded file list, leave in artifacts | Continue (move only mapped files) |
-| catalog directory missing | `workspace/catalog/published/` not found | Create directory with `mkdir -p` | Continue after directory creation |
-| File move failed | Permission error or path issue | Display failed file list, request permission check | Skill halted, resume after manual resolution |
-| Link update failed | Relative path conversion error | Display links requiring fix, request manual correction | Verification step halted, resume after manual fix |
-| Frontmatter parsing failed | YAML format error | Skip the file and display warning | Continue (frontmatter update is optional) |
-| artifacts folder not empty | Unmapped files remain | Display remaining file list, ask if intentional | Skill complete (with verification warning) |
-
-## Completion Checklist
-
-- [ ] Transition targets confirmed
-- [ ] Version record added
-- [ ] File move complete
-- [ ] Links updated
-- [ ] Obsidian frontmatter optimized
-- [ ] Verification complete (links working, artifacts empty)
+- This skill is `user-invocable: false` — it's only called by `solera-write-story` internally. Humans who want to publish something manually should invoke write-story's Wrap-up or move files by hand.
+- `git mv` is preferred over plain move so `git log --follow` continues to work on promoted files.
+- Previous Story versions of a file are preserved via git history and the `<!-- prev-version: ... -->` comment. There's no per-file version folder.

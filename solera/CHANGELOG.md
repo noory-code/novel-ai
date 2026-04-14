@@ -1,5 +1,71 @@
 # Changelog
 
+## [3.0.0] — 2026-04-16
+
+### ⚠️ BREAKING CHANGES
+
+v3 is a full architectural rework. The v2 single-hierarchy model (Identity → Initiative → Phase → Goal → Epic → Story → Action Item) is replaced with a three-axis model:
+
+- **Living** — Identity, Concepts (never end; evolve continuously)
+- **Time-bound** — Milestones, Stories, Action Items (have a start and end)
+- **Immutable** — Releases (frozen snapshots, write-once)
+
+**v2 projects cannot be opened directly by v3.** Use `solera-migrate-v2` to migrate.
+
+### Removed
+
+- `solera-write-phase` — Phase layer eliminated
+- `solera-write-goal` — Goal layer eliminated
+- `solera-write-epic` — Epic layer eliminated
+- `workspace/initiative/` and `workspace/phase/` directory conventions
+- Epic branches (`epics/{name}`) and Story-under-Epic branches (`epics-{name}/story-{id}-{name}`)
+- `[epic-name][US-NNN][ACT-NNN]` commit scope tag
+- Artifact promotion at Goal Create + Epic Wrap-up (two hooks collapsed into one)
+
+### Added
+
+- **`solera-write-concept`** v1.0.0 — draw / update / deprecate / archive Concepts with human-led Intent and Current Design; AI proposes Current Shape updates at Story Wrap-up. Modes: `create` / `update` / `deprecate` / `archive`. BLOCKING on Intent entry — AI must never invent it.
+- **`solera-write-milestone`** v1.0.0 — the Moment 2 skill. Human proposes scope; AI runs a mandatory analysis round (maturity, risks, dependencies, missing prerequisites, cross-concept contradictions); loop until agreed. Modes: `create` / `update` / `mark-released`. Analysis round is **non-negotiable** — even "skip analysis" requests produce at least a one-liner.
+- **`solera-release`** v1.0.0 — Moment 4 skill. Freezes an achieved Milestone into `releases/{tag}/` with a `concepts-snapshot/` (verbatim Concept copies with ❄️ markers), a `stories-manifest.md`, and a human-approved `README.md`. Refuses to overwrite an existing release directory. Optional `git tag` creation.
+- **`solera-migrate-v2`** v1.0.0 — 7-step assisted migration skill. Non-destructive freeze of v2 data to `_v2-archive/`, v3 skeleton creation, AI-proposed Concept candidates from v2 Goals/Epics (human approval required), Story flattening with `contributes_to` inference (sample-reviewed), `releases/v2-final/` as the first immutable snapshot.
+- **Three-axis `progress.md` format** — Living / Time-bound / Immutable sections instead of Phase/Goal/Epic/Story/ACT pointers.
+- **Concept Contribution Summary** — required section in every Story `RETROSPECTIVE.md`, with Drift note capability.
+- **Input Artifacts / Output Artifacts** — two distinct sections on every Story. Input provided by human at Step 2; Output appended by `solera-execute-action-item` during Execute.
+- **Gate `concept.align`** — checks `contributes_to` is present, each Concept exists and is `active`.
+- **Gate `milestone.agree`** — fires at Milestone agreement boundary.
+- **Check type `concept_exists`** — for each concept_id (or `contributes_to` if empty), Glob `concepts/{id}.md`; PASS if all exist with `status: active`.
+- **Check type `milestone_status`** — read `milestones/{id}.md`; PASS if `status` matches `equals`.
+- **Gate check execution** — dispatch table inlined into each gate-running skill (`solera-write-story`, `solera-execute-action-item`, `solera-write-milestone`) for the 6 check types.
+
+### Changed
+
+- **`solera-write-story`** v9.0.1 → v10.0.0. Parameters simplified: removed `year`, `phase_id`, `goal_id`, `goal_name`, `epic_name`, `epic_type`; added `contributes_to` (required ≥1) and `belongs_to` (optional). Path flattened from `phase/.../epics/.../stories/{id}` to `stories/{id}-{name}/`. Branch: `story/{id}-{name}` from trunk. Commit scope tag uses `contributes_to[0]` (the primary_concept). New Step 5 subroutine at Wrap-up: AI proposes Current Shape update for each contributed Concept; BLOCKING on human approval; Contributions row appended.
+- **`solera-execute-action-item`** v7.2.0 → v8.0.0. Parameters simplified: removed `year`, `phase_id`, `goal_id`, `goal_name`, `epic_name`, `epic_type`. Commit scope tag reads `_story.md` frontmatter `contributes_to[0]`. New Wrap-up obligation: append each completed ACT to the parent Story's `# Output Artifacts` section (required for Story Wrap-up's Current Shape draft). System improvements (`skill_change` / `rule_change`) now commit as a separate follow-up commit (`chore(solera): apply improvements from …`) instead of amending the ACT commit — preserves Atomic Commits.
+- **`solera-manage-workflow`** v5.1.0 → v6.0.0. `uses` list updated to v3 skills. New 8-branch `next` action surfaces options based on three-axis state (ACT in progress → Story has ACTs → Story Wrap-up pending → Milestone Stories pending → Milestone Exit Criteria met → no Milestone but Concepts → no Concepts → no Identity). Supervisor explicitly state-aware but not opinionated; auto-picks only when one path is obvious (resume).
+- **`solera-init`** v2.1.0 → v3.0.0. Detects v2 projects (`workspace/initiative/`, `workspace/phase/`, `_goal.md`, `_epic.md`) and refuses to overlay v3 — advises `solera-migrate-v2` instead. Creates v3 skeleton: `identity/`, `concepts/`, `milestones/`, `stories/`, `releases/`, `catalog/published/` + three `_index.md` seeds. Kickoff interview C-4 gate mapping updated to v3 gate keys.
+- **`solera-publish-artifacts`** v4.0.0 → v5.0.0. Rewritten as a **Story Wrap-up hook** (v2 had two hooks: Goal Create + Epic Wrap-up — collapsed to one). Discovery source is `stories/{story_id}/artifacts/`. Version tag is `{story_id}`. New responsibility: wire the promoted files into each contributed Concept's `# Related Artifacts` section. Collision handling is now BLOCKING with three explicit options (Overwrite / Rename new / Skip) — no automatic rename.
+- **Artifact rename: `concept` → `domain-model`**. The v2 Epic-level "concept" artifact (domain entity modeling) is renamed to `domain-model` so the word "Concept" can be used for the living axis. `catalog/published/concept/` → `catalog/published/domain-model/`. The v2 template is archived at `docs/reference/domain-model-template.md`.
+- **`solera-help`** v1.0.0 → v3.0.0 — full rewrite with v3 skill table grouped by axis.
+- **`solera-write-identity`** — minor update: the handoff suggestion at the end of Identity creation now points to `solera-write-concept` instead of `solera-write-phase`/`solera-write-goal`.
+
+### Documentation
+
+- `docs/work-item-structure.md` — rewritten around the three axes and four moments.
+- `docs/architecture.md` — rewritten. New sections: Three-Axis Wiring, Why no supervisor state machine.
+- `docs/quick-start.md` — rewritten end-to-end for v3 (Identity → Concept → Milestone → Story → Release).
+- `docs/team-workflow.md` — rewritten. Stories are now the sole branching unit; Concept-level coordination and drift-detection mechanics explained.
+- `docs/migrate-v2-to-v3.md` — new. Migration guide for `solera-migrate-v2`.
+- `docs/reference/domain-model-template.md` — new. v2 concept template archived for reference.
+- `README.md` — rewritten. Three-axis diagram, four-moments summary, v2 migration pointer.
+
+### Migration Notes
+
+- **v2 projects**: run `solera-migrate-v2` from a clean git state. Every step blocks for your approval; automatic destruction is impossible. Reversible via `git reset` if mid-flight.
+- **No automatic v2 → v3 fallback**: `solera-init` refuses to touch existing v2 data.
+- **v2 maintenance**: stay on v2.14.0 if you need to maintain a v2 project without migrating. v3 will not add features backported to v2.
+
+---
+
 ## [2.14.0] — 2026-04-09
 
 ### Added

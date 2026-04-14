@@ -40,7 +40,7 @@ Collect the following information to understand the current session's work:
 
 2. **Check Todo list**: Review the current session's todo list state
 
-3. **Read progress.md**: Check the current Phase/Goal/Epic/Story via the [solera-manage-workflow](../solera-manage-workflow/SKILL.md) skill
+3. **Read progress.md**: Check the current state on all three axes (active Concepts, active Milestone, current Story, current Action Item, latest Release) via the [solera-manage-workflow](../solera-manage-workflow/SKILL.md) skill
 
 ### Step 2: Read HANDOFF.md
 
@@ -93,7 +93,7 @@ Update the following sections based on information collected in Step 1:
 ## Completion Checklist
 
 - [ ] Understood current work via git status/diff/log?
-- [ ] Confirmed current Phase/Goal/Epic from progress.md?
+- [ ] Confirmed current state (active Concepts, Milestone, Story, Action Item) from progress.md?
 - [ ] Read or created HANDOFF.md?
 - [ ] Updated all 6 sections (current work, completed items, next steps, decisions, reference files, notes)?
 - [ ] Added timestamp?

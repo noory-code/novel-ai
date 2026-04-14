@@ -1,4 +1,4 @@
-# Solera Team Workflow Guide
+# Solera Team Workflow Guide (v3)
 
 A practical guide for using Solera in a small team (2–5 contributors).
 
@@ -6,7 +6,9 @@ A practical guide for using Solera in a small team (2–5 contributors).
 
 ## Overview
 
-Solera structures work as Phase → Goal → Epic → Story → Action Item, where each Epic gets its own branch and each Story gets a child branch off that Epic. When an Epic is done, the `solera-create-pr` skill opens a pull request against `dev` or `main`, handles review cycles on the Epic branch, and squash-merges to keep history clean. Run `/solera-handoff` before ending a session to write `HANDOFF.md` with exactly where work stands — what was done, what is next, and any blockers. This means Contributor B can open the repo cold and know precisely what to do without asking Contributor A, and the same developer returning from a break can resume without reconstructing context from scratch.
+In v3, Solera work happens on three axes: **Living** (Concepts you draw and evolve), **Time-bound** (Milestones you agree on and Stories you execute), **Immutable** (Releases you freeze). Each Story gets its own branch off trunk; Action Items commit to that branch. When a Story is complete, Solera squash-merges it into trunk and, at Wrap-up, updates the relevant Concepts' Current Shape (with your approval). Run `/solera-handoff` before ending a session to write `HANDOFF.md` so the next contributor resumes exactly where you stopped.
+
+There is no Epic branch, no Goal branch, no Phase branch in v3. Stories are the only branching unit.
 
 ---
 
@@ -14,41 +16,62 @@ Solera structures work as Phase → Goal → Epic → Story → Action Item, whe
 
 ### Branch hierarchy
 
-| Level | Branch name pattern | Created by |
+| Level | Branch pattern | Created by |
 |---|---|---|
 | Trunk | `main` or `dev` | Team (pre-existing) |
-| Epic | `epics/[name]` | Solera automatically on Epic start |
-| Story | `epics-[name]/story-[ID]-[name]` | Solera automatically on Story start |
+| Story | `story/{story_id}-{story_name}` | Solera automatically on Story start |
 | Action Item | commit only, no branch | Solera (committed to Story branch) |
 
 ### Merge direction
 
 ```
 main / dev
-  └── epics/auth                        ← squash merge via PR (solera-create-pr skill)
-        ├── epics-auth/story-1-login   ← squash merge into epics/auth
-        └── epics-auth/story-2-logout  ← squash merge into epics/auth
+  ├── story/US-001-capture-flow           ← squash merge at Story Wrap-up
+  ├── story/US-002-task-list              ← squash merge at Story Wrap-up
+  └── story/TS-014-fts5-index             ← squash merge at Story Wrap-up
 ```
+
+Every Story branch diverges directly from trunk and squash-merges back. No intermediate branches.
 
 ### What Solera does automatically vs. what you do
 
 ```mermaid
 flowchart TD
-    A[You: start Epic in Claude] --> B[Solera: git checkout -b epics/auth from dev]
-    B --> C[You: start Story in Claude]
-    C --> D[Solera: git checkout -b epics-auth/story-1-login from epics/auth]
-    D --> E[Solera: commits Action Items to Story branch]
-    E --> F{Story done?}
-    F -->|Yes| G[Solera: squash merge Story into epics/auth]
-    G --> H{All Stories done?}
-    H -->|No| C
-    H -->|Yes| I[You: say solera-create-pr to Claude]
-    I --> J[Solera: gh pr create, handle review, squash merge into dev]
+    A[You: start Story in Claude] --> B[Solera: git checkout -b story/US-001-name from dev]
+    B --> C[Solera: commits Action Items to Story branch]
+    C --> D{All ACTs done?}
+    D -->|No| C
+    D -->|Yes| E[You: wrap up Story]
+    E --> F[Solera: RETROSPECTIVE + Current Shape updates<br/>BLOCKING on human approval]
+    F --> G[Solera: squash merge into dev]
+    G --> H{Milestone Exit<br/>Criteria met?}
+    H -->|No| I[Continue with next Story]
+    H -->|Yes| J[You: mark milestone released, cut release]
 ```
 
-**Solera creates automatically:** Epic branch, Story branches, Action Item commits, squash merges of Stories into Epic.
+**Solera creates automatically:** Story branch, Action Item commits, squash merge of Story into trunk, Current Shape update drafts (pending your approval), Release directory structure.
 
-**You trigger:** Epic start, Story start, `solera-create-pr` when Epic is complete.
+**You trigger:** Story start, ACT execution, Story Wrap-up, Current Shape approval, Milestone agreement and release marking, Release cut.
+
+---
+
+## Commit Message Format
+
+Every commit from Solera follows:
+
+```
+[{primary_concept}][{story_id}][ACT-NNN] title
+
+- change description
+```
+
+Where `{primary_concept}` = the Story's `contributes_to[0]`. If the Story contributes to multiple Concepts, the body includes:
+
+```
+- contributes also to: {other_concept_ids}
+```
+
+This keeps `git log --grep="[authentication]"` searchable by Concept — even across many Milestones and Releases.
 
 ---
 
@@ -58,17 +81,17 @@ flowchart TD
 
 **Contributor A — ending a session:**
 
-When A runs `/solera-handoff` before ending the session, Solera:
+When A runs `/solera-handoff` before ending:
 
-1. Runs `git status --short`, `git diff --stat`, `git log --oneline -5`
-2. Reads `progress.md` to get current Phase / Goal / Epic / Story
-3. Overwrites `HANDOFF.md` at the project root
+1. Solera runs `git status --short`, `git diff --stat`, `git log --oneline -5`.
+2. Reads `progress.md` to get the current state on all three axes.
+3. Overwrites `HANDOFF.md` at the project root.
 
 **Contributor B — starting a session:**
 
-1. Pull the latest changes: `git pull`
-2. Open `HANDOFF.md` at the project root
-3. Tell Claude: "Read HANDOFF.md and resume where A left off"
+1. `git pull`
+2. Open `HANDOFF.md`.
+3. Tell Claude: "Read HANDOFF.md and resume where A left off."
 
 Claude reads the file, checks out the correct branch, and continues from the exact step A stopped at.
 
@@ -78,126 +101,166 @@ Claude reads the file, checks out the correct branch, and continues from the exa
 # Handoff
 
 ## Current work
-Implementing OAuth login flow (Epic: auth). Story 2 (logout) is in progress —
-session token invalidation is done, redirect after logout is not yet implemented.
+Implementing capture flow (Story US-001 contributing to `quick-capture` and
+`task-lifecycle`, belongs_to mvp). ACT-003 (local persistence) is in progress —
+Drift repository interface done, Hive adapter not yet registered.
 
 ## Skill status
-- Skill: solera-write-story
-- Step: Execute (2 of 4 Action Items committed)
+- Skill: solera-execute-action-item
+- Step: Execute (3 of 4 Action Items committed)
 
 ## Completed this session
-- story-1-login: squash-merged into epics/auth
-- Action items: add login endpoint, add JWT issuance, add session middleware
+- ACT-001: Task entity + state enum
+- ACT-002: CaptureUseCase with tests
+- Squash-merged nothing yet — Story still in progress
 
 ## Next steps
-- Implement redirect-after-logout (Action Item 3 of story-2-logout)
-- Add logout integration test (Action Item 4)
-- Run `uv run pytest` before committing
+- Register Hive adapter in ACT-003 (see `lib/data/task/local_store.dart:42`)
+- Run `flutter test packages/data` — should pass after adapter registered
+- Commit ACT-003 with `[quick-capture][US-001][ACT-003]` format
+- Then ACT-004 (float button + form)
 
 ## Key decisions
-- Used httpOnly cookies instead of localStorage for token storage (XSS mitigation)
-- Skipped refresh token for now — deferred to epics/auth-v2
+- Chose Hive over SharedPreferences for persistence — acceptance criterion "1-second
+  save" requires sync write and Hive's typed boxes are faster.
+- Kept the form in a `showModalBottomSheet` rather than a full route — matches
+  Current Design's "float button" framing.
 
 ## Reference files
-- src/auth/logout.py
-- tests/test_auth.py
-- epics-auth/story-2-logout (current branch)
+- lib/domain/task/capture_use_case.dart  (committed in ACT-002)
+- lib/data/task/local_store.dart         (current work)
+- story/US-001-capture-flow              (current branch)
 
 ## Caveats
-- `pytest tests/test_auth.py` has one flaky test (`test_concurrent_logout`) — skip it for now with `-k "not test_concurrent_logout"`
+- `flutter analyze` shows 2 warnings about null-safety in legacy files — unrelated
+  to this Story; do not fix them here.
 
-> Last updated: 2026-03-02 14:32:07
+> Last updated: 2026-04-17 14:32:07
 ```
 
 ### Triggering handoff manually mid-session
 
-If Contributor A needs to hand off before the session naturally ends:
-
 > "Run handoff"
 
-Claude executes the `solera-handoff` skill immediately and writes `HANDOFF.md`. A can then commit or push the file if the team keeps it in git (see team setup section below).
+Claude executes `solera-handoff` immediately and writes `HANDOFF.md`. Commit or push if the team keeps it in git (see team setup below).
 
 ---
 
 ## PR Workflow
 
+In v3 each **Story** is the PR unit — not Epic, because Epic no longer exists.
+
 ### When to use `solera-create-pr`
 
-Trigger `solera-create-pr` when:
+Trigger it when:
 
-- All Stories in the Epic are marked ✅ in `progress.md`
-- Build and tests pass locally
+- All Action Items in the Story are marked ✅ in `_story.md`.
+- Build and tests pass locally.
+- The Story has been wrapped up (RETROSPECTIVE written, Current Shape updates approved).
 
-Do not trigger it mid-Epic or mid-Story. The skill checks that all Stories are complete before opening the PR and will block if any are unfinished.
+Do not trigger it mid-Story. The skill blocks if any ACT is unfinished.
 
-### How to trigger it
+### How to trigger
 
-Tell Claude:
-
-> "Run solera-create-pr"
-
-or, equivalently:
-
-> "The epic is done, open a PR"
+> "Create a PR for this Story."
 
 ### What Solera does
 
-1. Verifies all Stories in the Epic are ✅
-2. Verifies build and tests pass (`uv run pytest` or equivalent)
-3. Runs: `gh pr create --base dev --head epics/auth --title "[Epic] auth: add OAuth login and logout" --body "..."`
-4. PR body includes: Stories list with status, key changes, test results
-5. Monitors the PR for review comments
-6. Applies requested fixes as additional commits on the Epic branch
-7. Once approved: squash-merges into `dev`, deletes `epics/auth`
-
-### What the reviewer does in GitHub
-
-- Reviews the PR as normal (comments, request changes, approve)
-- Does not need to touch branches directly — Solera handles fix commits
-- Clicks "Merge" only if the team skips Solera's auto-merge; otherwise Solera merges after approval
+1. Verifies all ACTs in the Story are ✅ and the Story status is ✅.
+2. Verifies build and tests pass.
+3. Runs: `gh pr create --base dev --head story/US-001-capture-flow --title "[quick-capture][US-001] capture-flow" --body "..."`
+4. PR body includes: Story summary, acceptance criteria with status, Action Items list with commit hashes, Concept Contribution Summary from RETROSPECTIVE, Test results.
+5. Monitors the PR for review comments.
+6. Applies requested fixes as additional commits on the Story branch.
+7. Once approved: squash-merges into `dev`, deletes `story/US-001-capture-flow`.
 
 ### Why squash merge
 
-Each Epic branch accumulates many small Action Item commits (one per atomic change). Squash merge collapses them into a single commit on `dev`/`main`, so the trunk history reads as one entry per Epic rather than dozens of implementation-detail commits. The full commit history remains on the Epic branch until it is deleted.
+Each Story branch accumulates many small ACT commits (one per atomic change). Squash merge collapses them into a single commit on trunk — history reads as one entry per Story, tagged with the Concept. The full per-ACT history remains on the Story branch until deletion; the final squash commit on trunk preserves the ACT list in its body.
 
 ---
 
-## Parallel Work Across Epics
+## Parallel Work Across Stories
 
-Two contributors can work on separate Epics at the same time because each Epic is an independent branch.
+Two contributors can work on separate Stories at the same time because each Story is an independent branch off trunk.
 
 **Example:**
 
-- Contributor A: working on `epics/auth` (login / logout)
-- Contributor B: working on `epics/dashboard` (metrics UI)
+- Contributor A: `story/US-001-capture-flow` (contributes to `quick-capture`, `task-lifecycle`)
+- Contributor B: `story/US-002-task-list` (contributes to `task-list-view`, `task-lifecycle`)
 
 Both branches diverge from `dev` independently. Neither blocks the other.
 
-**`progress.md` and `HANDOFF.md` in parallel work:**
+### Concept-level coordination
 
-- `progress.md` tracks the single canonical project state (Phase / Goal / Epic / Story). It is committed to git and shared. Each contributor reads it to understand where they are in the overall plan.
-- `HANDOFF.md` is per-session and per-contributor. It reflects only one contributor's session. If both A and B write `HANDOFF.md` at the same time, they overwrite each other — this is expected if `HANDOFF.md` is kept out of git (see team setup below).
+Both Stories contribute to `task-lifecycle`. At Wrap-up, **whichever Story wraps up first updates `concepts/task-lifecycle.md`'s Current Shape first**. The second Story's Wrap-up sees the already-updated Current Shape as its starting point and proposes a further update.
 
-**Merge order:**
+If two Stories produce contradictory Current Shape updates (A says "states are inbox → active → done → archived", B says "states are captured → scheduled → done"), this will be caught at B's Wrap-up — Claude shows the current Current Shape (A's) alongside B's proposal, and you decide whether to merge, refine, or flag as drift in RETROSPECTIVE.md.
 
-Whichever Epic finishes first runs `solera-create-pr` and merges first. The other Epic may need to rebase onto `dev` afterward if there are conflicts:
+This is Solera's drift-detection mechanism. It only works if both contributors honor the BLOCKING approval step — do not rubber-stamp.
+
+### `progress.md` and `HANDOFF.md` in parallel work
+
+- `progress.md` tracks the single canonical project state (active Concepts, active Milestone, current Story, latest Release). Committed to git and shared. Each contributor reads it to understand where the project is.
+- `HANDOFF.md` is per-session and per-contributor. If both A and B write to it concurrently they overwrite each other — expected if kept out of git.
+
+### Merge order
+
+Whichever Story wraps up first squash-merges into trunk first. The other Story may need to rebase:
 
 ```bash
-git checkout epics/dashboard
+git checkout story/US-002-task-list
 git rebase dev
 ```
 
-Solera does not auto-rebase — do this manually before running `solera-create-pr` on the second Epic.
+Solera does not auto-rebase — do this manually before `solera-create-pr` on the second Story.
+
+---
+
+## Milestone-Level Coordination
+
+A Milestone defines scope. Several Stories may `belongs_to` the same Milestone and run in parallel or sequence.
+
+When a Milestone Exit Criterion asks for something specific (e.g., "Current Shape of `task-lifecycle` reflects all four states working end-to-end"), Stories in that Milestone collectively drive toward it. No single Story needs to satisfy the criterion — multiple Stories each advance a piece of the Current Shape, and the criterion becomes true cumulatively.
+
+Use `solera-manage-workflow` to see progress:
+
+> "What's the status of mvp?"
+
+Claude reads the Milestone's Exit Criteria, compares each to the current Concept Current Shape, and reports what's satisfied / still open.
 
 ---
 
 ## Recommended Team Setup
 
-- [ ] Keep `workspace/initiative/` in git — roadmap (`progress.md`), identity docs, and shared context that all contributors read
-- [ ] Commit `progress.md` after each Epic is merged — it reflects permanent project state
+- [ ] Keep `workspace/identity/`, `workspace/concepts/`, `workspace/milestones/`, `workspace/releases/`, `workspace/team-process.md` in git — these are the shared project truth.
+- [ ] Commit `progress.md` after each significant state change (Story complete, Milestone agreed, Release cut).
 - [ ] Decide on `HANDOFF.md` handling:
-  - Add `HANDOFF.md` to `.gitignore` if each contributor's handoff is private (most teams)
-  - Commit `HANDOFF.md` if the team wants shared session state (single active contributor at a time)
-- [ ] Add Epic branch protection: require PR review before merging into `dev`/`main`
-- [ ] Run `uv run pytest` (or equivalent) locally before triggering `solera-create-pr` — Solera checks this but catching it early saves a round-trip
-- [ ] Name Epics and Stories consistently: lowercase, hyphen-separated, no spaces (`epics/user-auth`, not `epics/UserAuth`)
+  - Add `HANDOFF.md` to `.gitignore` if each contributor's handoff is private (most teams).
+  - Commit `HANDOFF.md` if the team wants shared session state (single active contributor at a time).
+- [ ] Add trunk branch protection: require PR review before merging Story PRs into `dev`/`main`.
+- [ ] Run the project's test command (`flutter test`, `uv run pytest`, …) locally before `solera-create-pr` — Solera checks this but catching early saves a round-trip.
+- [ ] Name Stories consistently: lowercase kebab-case (`story/US-001-capture-flow`, not `story/US-001-CaptureFlow`).
+- [ ] Standardize `contributes_to` values in the team — when multiple contributors might tag work against a Concept, agree on the exact concept_ids up front. A typo creates a second ghost Concept.
+
+---
+
+## Anti-Patterns
+
+- **Rubber-stamping Current Shape updates at Wrap-up.** The BLOCKING approval exists because Concept evolution has to be deliberate. Auto-approving defeats the point.
+- **Skipping `contributes_to` ("I'll tag it later").** The `concept.align` gate blocks this. Don't disable it.
+- **Writing Stories for a Milestone that's still `proposed`.** Agree the Milestone first. The `belongs_to` field on Stories rejects non-`agreed` Milestones.
+- **Editing a file inside `releases/{tag}/` after the release is cut.** Never. Cut a new release with a different tag instead.
+- **Using `git commit --no-verify` to bypass failing hooks.** Investigate the hook. Solera's `act.done` gate uses commit hooks; bypassing them bypasses the check.
+- **Adding Concepts mid-Story without a pause.** If you discover a new Concept while executing a Story, **pause the Story**, draw the Concept via `solera-write-concept`, then resume. Don't retrofit it into the Story's `contributes_to` silently.
+
+---
+
+## Reference
+
+| Document | Contents |
+|----------|----------|
+| [quick-start.md](./quick-start.md) | End-to-end walkthrough: setup → Concept → Milestone → Story → Release |
+| [work-item-structure.md](./work-item-structure.md) | Three-axis model, folder layout, status conventions |
+| [architecture.md](./architecture.md) | Skill graph, Workflow-as-SSOT rule, gate model |
+| [migrate-v2-to-v3.md](./migrate-v2-to-v3.md) | Upgrading a v2 project via `solera-migrate-v2` |

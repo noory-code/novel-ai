@@ -1,6 +1,6 @@
-# Validation: solera-manage-workflow
+# Validation: solera-manage-workflow (v3)
 
-> This file defines the unique validation rules for the solera-manage-workflow skill.
+> Unique validation rules for this skill.
 
 ## Structural
 
@@ -56,17 +56,21 @@ semantic:
       - "as you see fit"
 
   - id: C-002
-    name: "Core keywords present"
+    name: "Core v3 keywords present"
     type: content_contains
     target: SKILL.md
     patterns:
       - "Workflow"
       - "progress.md"
-      - "RETROSPECTIVE.md"
-      - "work item"
+      - "Concept"
+      - "Milestone"
+      - "Release"
+      - "Living"
+      - "Time-bound"
+      - "Immutable"
 
   - id: C-003
-    name: "Procedure steps defined"
+    name: "Procedure actions defined"
     type: content_contains
     target: SKILL.md
     patterns:
@@ -80,18 +84,32 @@ semantic:
     type: content_contains
     target: SKILL.md
     patterns:
-      - "solera-write-*"
-      - "invoke"
+      - "solera-write-concept"
+      - "solera-write-milestone"
+      - "solera-write-story"
+      - "solera-execute-action-item"
+      - "solera-release"
 
   - id: C-005
-    name: "Role assignment table exists"
+    name: "Responsibilities section exists"
     type: section_exists
     target: SKILL.md
-    section: "## Role Assignment"
+    section: "## Responsibilities"
 
   - id: C-006
-    name: "Supervision principle exists"
+    name: "Supervision Principles section exists"
     type: section_exists
     target: SKILL.md
-    section: "## Supervision Principle"
+    section: "## Supervision Principles"
+
+  - id: C-007
+    name: "Removed v2 hierarchy references"
+    type: content_not_contains
+    target: SKILL.md
+    patterns:
+      - "solera-write-phase"
+      - "solera-write-goal"
+      - "solera-write-epic"
+      - "epics/"
+      - "phase/"
 ```

@@ -1,9 +1,9 @@
 ---
 name: solera-write-story
 user-invocable: true
-description: Write a Story with clear acceptance criteria, then break it into atomic Action Items — each one a single commit.
+description: Write a Story that contributes to one or more Concepts, decompose it into atomic Action Items, and execute each as a single commit.
 metadata:
-  version: "9.0.1"
+  version: "10.0.0"
   category: writing
   type: composite
   style: procedural
@@ -14,40 +14,48 @@ metadata:
 
 # Writing Story
 
-> Writes _story.md and decomposes the Story into Action Items.
+> A Story is the unit of executable work.
+> Every Story **contributes to at least one Concept** and may belong to a Milestone.
+> Each Action Item inside a Story is one commit.
+
+## Philosophy
+
+Stories live on the **Time-bound Axis** — they end. But their effect is not lost when they end: a Story's completion updates the Current Shape of the Concepts it contributed to. This is how Solera keeps the Living Axis alive without losing the record of what actually happened.
+
+Two artifact lanes inside a Story:
+- **Input Artifacts** — materials the Story needs to start (design links, specs, references). The human provides these up front.
+- **Output Artifacts** — what the Story produces (PRs, Figma outputs, docs). Filled in during execution; finalized at Wrap-up.
+
+At Wrap-up the AI proposes updates to each contributed Concept's Current Shape; the human approves.
 
 ## Prerequisites
 
-- `published/identity/mission.md` exists
-  - If not: check `published/identity/mission.md` with Glob tool → invoke `solera-write-identity` with Skill tool
-- `_epic.md` exists
-  - If not: check `{epic_path}/_epic.md` with Glob tool → invoke `solera-write-epic` with Skill tool
-- The corresponding Story must be assigned in the Stories table of _epic.md
+- `{project_path}/workspace/concepts/_index.md` exists with at least one active Concept.
+- Each Concept in `contributes_to` must exist at `concepts/{id}.md` with `status: active`.
+- If `belongs_to` is provided: the Milestone file exists with `status: agreed` or `in-progress`.
 
 ## Input
 
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
-| **project_path** | Y | Project workspace root | banas/workspace |
-| **year** | Y | Initiative year | 2026 |
-| **phase_id** | Y | Parent Phase ID | 2026-P1-foundation |
-| **goal_id** | Y | Parent Goal ID | G1 |
-| **goal_name** | Y | Parent Goal name | search-liquor |
-| **epic_name** | Y | Parent Epic name | 01-auth |
-| **epic_type** | N | Feature \| Enabler (default: Feature) | Enabler |
-| **story_id** | Y | Story ID | US-001 |
-| **story_name** | Y | Story name | login-form |
-| **story_type** | N | US (User Story) \| TS (Technical Story) (default: US) | TS |
+| **project_path** | Y | Project workspace root | banas |
+| **story_id** | Y | Prefix + number; globally unique within `stories/` | US-001, TS-014 |
+| **story_name** | Y | Kebab-case short name | google-login |
+| **story_type** | N | `US` (User Story) \| `TS` (Technical Story). Default: US. | TS |
+| **contributes_to** | Y | List of Concept IDs this Story advances (≥1) | [authentication, onboarding] |
+| **belongs_to** | N | Milestone ID this Story is running toward | mvp |
 
 ## Output
 
 | Step | Output | Path | Nature |
 |------|--------|------|--------|
-| Create | _story.md | `{epic_path}/{story_id}-{story_name}/_story.md` | Final |
-| Create | ACT-NNN-{name}.md | `{epic_path}/{story_id}-{story_name}/ACT-NNN-{name}.md` | Final |
-| Wrap-up | RETROSPECTIVE.md | `{epic_path}/{story_id}-{story_name}/RETROSPECTIVE.md` | Final |
+| Create | `_story.md` | `{project_path}/workspace/stories/{story_id}-{story_name}/_story.md` | Final |
+| Create | `ACT-NNN-{name}.md` (one per Action Item) | `{story_path}/ACT-NNN-{name}.md` | Final |
+| Wrap-up | `RETROSPECTIVE.md` | `{story_path}/RETROSPECTIVE.md` | Final |
+| Wrap-up | Concept Current Shape updates | `concepts/{id}.md` (each contributed) | Final |
+| Wrap-up | Concept Contributions row | `concepts/{id}.md` | Final |
 
-> `{epic_path}` = `{project_path}/phase/{phase_id}/goals/{goal_id}-{goal_name}/epics/{epic_name}`
+> `{story_path}` = `{project_path}/workspace/stories/{story_id}-{story_name}`
 
 ## Skills Used
 
@@ -57,260 +65,187 @@ metadata:
 
 ## Procedure
 
-1. **Setup**
-   - [ ] Confirm `{epic_path}/_epic.md` exists with Glob tool
-     - If not: invoke Skill tool `skill="solera-write-epic"` **(BLOCKING: resume after Epic creation completes)**
-   - [ ] Check for previous Story retrospectives: `Glob {epic_path}/*/RETROSPECTIVE.md` — if any exist, read the most recent one and apply any "AI Improvements" noted there
-   - [ ] Create `epics-{epic_name}/story-{story_id}-{story_name}` branch (from Epic branch)
-   - [ ] Read `{project_path}/workspace/team-process.md` if it exists
-     - Extract `workflow_gates` section for gate checks in Steps 4–5
-   - [ ] Create `{epic_path}/{story_id}-{story_name}/` folder
-   - [ ] Status → 🔄
+### 1. Setup
 
-2. **Determine Story type and define acceptance criteria**
-   - [ ] Decide US (User Story) vs TS (Technical Story)
-   - [ ] Define verifiable acceptance criteria
-   - [ ] Clarify the definition of done
+- [ ] Confirm `{project_path}/workspace/concepts/_index.md` exists; stop otherwise and advise `solera-write-concept`.
+- [ ] **Gate `concept.align` check** (blocking):
+  - Built-in validation (always runs): `contributes_to` is present and non-empty; for each `concept_id` in `contributes_to`, Glob `concepts/{concept_id}.md` must exist and have `status: active`. On failure: halt with a clear error listing missing IDs.
+  - Additional `checks[]` from team-process.md (if configured): run each entry as described in **Gate check execution** below. Halt on any failure.
+- [ ] If `belongs_to` is provided: read `milestones/{belongs_to}.md`; status must be `agreed` or `in-progress`. Halt otherwise.
+- [ ] Check for previous Story retrospectives: `Glob stories/*/RETROSPECTIVE.md` — if any exist, read the most recent and apply any "AI Improvements" noted there.
+- [ ] Read `{project_path}/workspace/team-process.md` if it exists; extract `workflow_gates` for Steps 4–5 and `execution_order.groups` / `architecture_rules` for Step 3.
+- [ ] Create branch `story/{story_id}-{story_name}` from the current base branch (usually `main` or `dev`).
+- [ ] Create `{story_path}/` folder.
+- [ ] Status → 🔄.
 
-3. **Write _story.md and decompose Action Items**
-   - [ ] **Scan available skills**: Run `Glob .claude/skills/*/SKILL.md` and `Glob .claude/plugins/*/skills/*/SKILL.md` to collect installed skill names and their trigger phrases
-   - [ ] Write _story.md — ref: [assets/story.md](assets/story.md)
-     - US: As a / I want / So that
-     - TS: Technical objective + spec
-   - [ ] Include acceptance criteria
-   - [ ] Write the Action Items table (apply 1 Action Item = 1 commit principle)
-   - [ ] Assign an Agent for each Action Item (when using agent teams)
-   - [ ] **Assign a Skill for each Action Item**: Match the Action Item's task content against the scanned skill triggers. Set the `Skill` column to the matched skill name. If no skill matches, set to `-` (manual execution)
-   - [ ] **Layer-aware decomposition** (when `execution_order.groups` is non-empty in team-process.md):
-     - Read `execution_order.groups` from team-process.md
-     - For each Action Item, determine its layer group by matching the assigned Skill name, Agent name, or task keywords against group keyword lists
-     - If an Action Item's layer cannot be determined: assign it to the earliest group (conservative default)
-     - Assign phases respecting group order: group[0] ACTs → earliest phases, group[N] ACTs → later phases
-     - ACTs within the same group may share a phase (parallel OK)
-   - [ ] Define depends_on to prevent output conflicts
-   - [ ] Distribute across phases (same phase = can run in parallel)
-   - [ ] **Phase ordering validation** (when `execution_order.groups` is non-empty in team-process.md):
-     - For each Action Item in the table, resolve which group it belongs to (by Skill name, Agent name, or task keywords)
-     - Validate: if group[i] appears before group[j] in `execution_order.groups`, then every ACT in group[i] must have phase ≤ every ACT in group[j]
-     - If violation found: reassign phases to satisfy the ordering constraint, preserving parallelism within the same group
-     - Log the reassignment: "Phase reassigned: ACT-NNN moved from phase X to Y (execution_order: {group} must precede {group})"
-   - [ ] **MUST: Immediately after writing _story.md, create one file per Action Item.**
-     - Parse every row in the Action Items table
-     - For each row: create `ACT-NNN-{name}.md` in the Story folder using the template in [assets/action-item.md](../solera-execute-action-item/assets/action-item.md)
-     - Do NOT proceed to Step 4 until all files exist
-   - [ ] Verify all Action Item files exist: `Glob {story_path}/ACT-*.md` — count must match the table row count
+### 2. Define the Story
 
-4. **Execute**
-   - [ ] **Gate check**: If `workflow_gates.story.execute` is set:
-     - If `checks` array is present — iterate each check:
-       - `glob_exists`: Run `Glob {params.pattern}` — PASS if ≥1 match
-       - `act_complete`: Read _story.md Action Items table — PASS if all listed ACT IDs have status ✅
-       - `command_passes`: Run command via Bash `{params.run}` — PASS if exit code = 0
-       - `grep_absent`: Run `Grep {params.pattern}` with glob `{params.glob}` — PASS if 0 matches
-     - If ANY check FAILS:
-       → Display: "Gate `story.execute` blocked — check failed: {check.type} with params {check.params}"
-       → **(BLOCKING: skill pauses until all checks pass)**
-     - If `checks` array is absent (backward compat): evaluate `condition` text
-       → If condition is not met: display the required condition to user
-       → **(BLOCKING: skill pauses until condition is fulfilled)**
-   - [ ] Extract incomplete (⏳ or no status) Action Items from the Action Items table in `_story.md`
-   - [ ] Execute each Action Item in phase order **(BLOCKING: wait for each Action Item to complete, execute sequentially)**:
-     ```python
-     Skill(name="solera-execute-action-item", args={
-       "project_path": "{project_path}",
-       "year": "{year}",
-       "phase_id": "{phase_id}",
-       "goal_id": "{goal_id}",
-       "goal_name": "{goal_name}",
-       "epic_name": "{epic_name}",
-       "epic_type": "{epic_type}",
-       "story_id": "{story_id}",
-       "story_name": "{story_name}",
-       "action_item_id": "ACT-NNN",
-       "action_item_name": "{name}"
-     })
-     → Confirm ACT-NNN.md committed + status ✅ before proceeding to next Action Item
-     ```
-   - [ ] Confirm all acceptance criteria are met
-   - [ ] Proceed to Step 5 after confirming all Action Item statuses ✅
+- [ ] Determine Story type (US / TS).
+- [ ] Write the story body:
+  - **US** — As a {persona} / I want {action} / So that {outcome}.
+  - **TS** — Technical Goal + Spec table.
+- [ ] Define verifiable acceptance criteria.
+- [ ] Collect **Input Artifacts**: design links, specs, references. Ask the human if any are missing but expected (e.g., "this Story mentions UI, is there a Figma link?").
+- [ ] **Output Artifacts** section is initialized with placeholders — filled during Execute.
 
-5. **Wrap-up**
-   - [ ] **Gate check**: If `workflow_gates.story.wrap_up` is set:
-     - If `checks` array is present — iterate each check:
-       - `glob_exists`: Run `Glob {params.pattern}` — PASS if ≥1 match
-       - `act_complete`: Read _story.md Action Items table — PASS if all listed ACT IDs have status ✅
-       - `command_passes`: Run command via Bash `{params.run}` — PASS if exit code = 0
-       - `grep_absent`: Run `Grep {params.pattern}` with glob `{params.glob}` — PASS if 0 matches
-     - If ANY check FAILS:
-       → Display: "Gate `story.wrap_up` blocked — check failed: {check.type} with params {check.params}"
-       → **(BLOCKING: skill pauses until all checks pass)**
-     - If `checks` array is absent (backward compat): evaluate `condition` text
-       → If condition is not met: display the required condition to user
-       → **(BLOCKING: skill pauses until condition is fulfilled)**
-   - [ ] Confirm all tests pass (if code changes were made)
-   - [ ] Write RETROSPECTIVE.md — ref: [assets/retro.md](assets/retro.md)
-   - [ ] Set _story.md status to ✅
-   - [ ] Squash merge to the Epic branch
+### 3. Decompose into Action Items
 
-## Folder Structure
+- [ ] **Scan available skills**: `Glob .claude/skills/*/SKILL.md` and `Glob .claude/plugins/*/skills/*/SKILL.md` to collect installed skill names and trigger phrases.
+- [ ] Write the Action Items table (ref: [assets/story.md](assets/story.md)):
+  - 1 Action Item = 1 commit.
+  - Each row: `ID, Action Item, Skill, Agent, Phase, depends_on, Status, Commit`.
+- [ ] **Assign Skill per Action Item**: match task content against scanned skill triggers. If no match, set `-` (manual execution).
+- [ ] **Assign Agent per Action Item** if agent teams are used; else `-`.
+- [ ] **Layer-aware decomposition** (when `execution_order.groups` is non-empty in team-process.md):
+  - For each ACT, determine its layer group by matching its Skill name / Agent name / task keywords against group keyword lists.
+  - Unresolvable → assign to earliest group (conservative default).
+  - Assign Phases respecting group order; ACTs in the same group may share a Phase.
+- [ ] Define `depends_on` to prevent output conflicts.
+- [ ] **Phase-ordering validation** (same trigger): verify group[i]'s max Phase ≤ group[j]'s min Phase whenever group[i] precedes group[j]; reassign Phases if violated and log each reassignment.
+- [ ] **MUST: immediately after writing _story.md, create one file per Action Item.** Parse every table row; create `ACT-NNN-{name}.md` using [../solera-execute-action-item/assets/action-item.md](../solera-execute-action-item/assets/action-item.md). Block entry to Step 4 until Glob `{story_path}/ACT-*.md` count matches table row count.
 
-```
-{epic_path}/{story_id}-{story_name}/
-├── _story.md
-├── RETROSPECTIVE.md      # Created at Wrap-up
-├── ACT-001-{name}.md
-├── ACT-002-{name}.md
-└── ACT-003-{name}.md
-```
+### 4. Execute
+
+- [ ] **Gate check `story.execute`** (if defined in team-process.md): run each configured check per **Gate check execution** below; halt on any failure.
+- [ ] Extract incomplete Action Items (⏳ or no status) from the Action Items table.
+- [ ] Execute each ACT in Phase order via Skill tool (blocking, sequential):
+  ```python
+  Skill(name="solera-execute-action-item", args={
+    "project_path": "{project_path}",
+    "story_id": "{story_id}",
+    "story_name": "{story_name}",
+    "action_item_id": "ACT-NNN",
+    "action_item_name": "{name}"
+  })
+  ```
+  After each ACT: confirm status ✅ and commit present before proceeding.
+- [ ] After each ACT completion, the Action Item's output paths (PR URL, commit hash, new doc paths, etc.) are captured — `solera-execute-action-item` appends them to the Story's `# Output Artifacts` section.
+- [ ] Confirm all acceptance criteria met.
+- [ ] Confirm all ACT statuses ✅.
+
+### 5. Wrap-up
+
+- [ ] **Gate check `story.wrap_up`** (if defined in team-process.md): same check types as `story.execute`; halt on failure.
+- [ ] Confirm tests pass (if code changes were made).
+- [ ] Write `RETROSPECTIVE.md` — ref: [assets/retro.md](assets/retro.md). Must include the **"Concept Contribution Summary"** section (see that asset).
+- [ ] **Concept Current Shape update loop** — for each `concept_id` in `contributes_to`:
+  - Read the current `concepts/{id}.md`.
+  - AI drafts a proposed revision of `# Current Shape` reflecting what this Story actually produced, based on Output Artifacts and the acceptance criteria that were met.
+  - Show the existing Current Shape and the proposed revision side-by-side to the human.
+  - **BLOCKING**: human approves, edits, or rejects. On approval, write the updated Current Shape.
+  - Append a row to `# Contributions` in the Concept file:
+    ```
+    | {story_id}-{story_name} | {1-line summary of what the Story left behind} | {YYYY-MM-DD} |
+    ```
+- [ ] Set `_story.md` Status → ✅.
+- [ ] Squash-merge the `story/{story_id}-{story_name}` branch into the base branch (usually `main`/`dev`). Do not force-push; if the merge fails, report and pause.
+
+## Gate check execution
+
+All `workflow_gates.*.checks[]` entries in `team-process.md` share the same execution model. For each check object, dispatch by `type`:
+
+| `type` | What it does | `params` |
+|---|---|---|
+| `glob_exists` | Run `Glob {pattern}` — PASS if ≥1 match | `{ pattern: "path/glob" }` |
+| `act_complete` | Read `_story.md` Action Items table — PASS if every listed ACT ID has status ✅ | `{ ids: [ACT-001, ACT-002] }` |
+| `command_passes` | Run command via Bash — PASS if exit code = 0 | `{ run: "npm test" }` |
+| `grep_absent` | Run `Grep {pattern}` restricted to `{glob}` — PASS if 0 matches | `{ pattern: "TODO\|FIXME", glob: "src/**/*.ts" }` |
+| `concept_exists` | For each `concept_id` in params (or `contributes_to` if params empty), Glob `concepts/{id}.md`; PASS if all exist with `status: active` | `{ ids: [authentication, onboarding] }` or `{}` (defaults to this Story's `contributes_to`) |
+| `milestone_status` | Read `milestones/{id}.md`; PASS if its `status` matches `equals` | `{ id: "mvp", equals: "agreed" }` |
+
+Rules:
+- A gate with `checks: []` or no `checks` key falls back to text evaluation of the `condition` field.
+- ALL checks must pass for a gate to pass. Any failure → halt with the failing check's `type` and `params` in the error message.
+- Unknown `type` values → halt with `"unknown gate check type: {type}"` (do not silently skip).
 
 ## Commit Message Format
 
 ```
-[epic-name][US-NNN][ACT-NNN] title
+[{primary_concept}][{story_id}][ACT-NNN] title
 
 - change description
 ```
 
+Where `{primary_concept}` is the first entry in `contributes_to`. This keeps commit history searchable by Concept.
+
+## Human–AI Protocol
+
+This skill operates across **Moment 3 (Work)** and participates in **결과 확정** at Wrap-up. Rules:
+
+| AI does | AI does not |
+|---------|-------------|
+| Propose Action Item decomposition | Invent acceptance criteria the human didn't ask for |
+| Match Action Items to skills and agents | Silently skip Concept Current Shape update at Wrap-up |
+| Draft Current Shape revisions for each contributed Concept | Overwrite an existing Current Shape without human approval |
+| Capture Output Artifacts automatically during Execute | Drop or reshape human-provided Input Artifacts |
+
 ## Error Handling
 
-| Failure point | Condition | Recovery procedure | Exit behavior |
-|---------------|-----------|-------------------|---------------|
-| mission.md missing | `published/identity/mission.md` not found | Verify with Glob, then invoke `solera-write-identity` via Skill tool | Resume this skill after identity creation |
-| _epic.md missing | `{epic_path}/_epic.md` not found | Verify with Glob, then invoke `solera-write-epic` via Skill tool | Resume this skill after Epic creation |
-| Story unassigned | No Story entry in the _epic.md Stories table | Display error message, request _epic.md update | Skill halted, resume after manual fix |
-| Branch creation failed | git error (conflict, permissions, etc.) | Display git error message, request manual resolution | Skill halted, resume after resolution |
-| Action Item files not created | File creation missed in Step 3 | Verify with Glob, display missing file list and recreate | Block Step 4 entry until all files are confirmed created |
-| Action Item count mismatch | Table row count does not match file count | Display difference, request table or file correction | Block Step 4 entry, resume after manual fix |
-| Circular dependency | Circular structure in depends_on | Display circular dependency path, request table correction | Execute step halted, resume after manual fix |
-| solera-execute-action-item failed | Sub-skill invocation failed | Record the failed Action Item, notify user | Skip the Action Item and continue, or halt |
-| Squash merge failed | git conflict or permission error | Display conflicting file list, request manual resolution | Wrap-up halted, resume after manual resolution |
-
-## Examples
-
-### Example: Full User Story execution flow
-
-#### Skill invocation
-
-```python
-Skill(name="solera-write-story", args={
-  "project_path": "/Users/myname/workspace/myapp",
-  "year": "2026",
-  "phase_id": "2026-P1-foundation",
-  "goal_id": "G1",
-  "goal_name": "search-liquor",
-  "epic_name": "01-search-ui",
-  "epic_type": "Feature",
-  "story_id": "US-001",
-  "story_name": "search-input",
-  "story_type": "US"
-})
-```
-
-#### Files created at each step
-
-**1. After Setup**
-```
-epics/01-search-ui/US-001-search-input/
-└── _story.md              (draft, status: 🔄)
-```
-
-**2. After Story writing and Action Items decomposition**
-```markdown
-# _story.md
-
-## Story
-As a **user**
-I want **to enter a liquor name in the search bar and search**
-So that **I can quickly find the liquor information I want**
-
-## Acceptance Criteria
-- [ ] Search bar is displayed on screen
-- [ ] Real-time input validation
-- [ ] Execute search with Enter key
-
-## Action Items
-
-| ID | Name | Skill | Phase | Depends On | Agent | Status |
-|----|------|-------|-------|------------|-------|--------|
-| ACT-001 | create-component | dev-flutter | 1 | - | FE | ⏳ |
-| ACT-002 | add-validation | dev-flutter | 1 | - | FE | ⏳ |
-| ACT-003 | write-tests | dev-flutter | 2 | ACT-001,ACT-002 | QA | ⏳ |
-```
-
-**3. After Action Item file creation**
-```
-epics/01-search-ui/US-001-search-input/
-├── _story.md
-├── ACT-001-create-component.md
-├── ACT-002-add-validation.md
-└── ACT-003-write-tests.md
-```
-
-**4. Execute intermediate state (ACT-001, ACT-002 complete)**
-```
-epics/01-search-ui/US-001-search-input/
-├── _story.md             (ACT-001: ✅, ACT-002: ✅, ACT-003: 🔄)
-├── ACT-001-create-component.md   (commit: abc1234, status: ✅)
-├── ACT-002-add-validation.md     (commit: def5678, status: ✅)
-└── ACT-003-write-tests.md        (status: 🔄)
-
-git log --oneline:
-def5678 [01-search-ui][US-001][ACT-002] Add search input validation
-abc1234 [01-search-ui][US-001][ACT-001] Create search component
-```
-
-**5. After Wrap-up (all Action Items ✅)**
-```
-epics/01-search-ui/US-001-search-input/
-├── _story.md             (status: ✅)
-├── RETROSPECTIVE.md
-├── ACT-001-create-component.md   (✅)
-├── ACT-002-add-validation.md     (✅)
-└── ACT-003-write-tests.md        (✅)
-
-git log --oneline:
-9876543 [01-search-ui][US-001][ACT-003] Add search component tests
-def5678 [01-search-ui][US-001][ACT-002] Add search input validation
-abc1234 [01-search-ui][US-001][ACT-001] Create search component
-```
-
-#### Sub-skills invoked during execution
-
-```python
-# Execute Action Item ACT-001
-Skill(name="solera-execute-action-item", args={
-  "project_path": "/Users/myname/workspace/myapp",
-  "year": "2026",
-  "phase_id": "2026-P1-foundation",
-  "goal_id": "G1",
-  "goal_name": "search-liquor",
-  "epic_name": "01-search-ui",
-  "epic_type": "Feature",
-  "story_id": "US-001",
-  "story_name": "search-input",
-  "action_item_id": "ACT-001",
-  "action_item_name": "create-component"
-})
-# → Write code, commit, ACT-001.md status ✅
-
-# Repeat for ACT-002, ACT-003 (in Phase order)
-```
-
-#### Final output state
-
-- `_story.md` status: ✅
-- All Action Item statuses: ✅
-- `RETROSPECTIVE.md` exists
-- 3 commits created in total (1 ACT = 1 commit)
-- Squash merged to Epic branch
+| Failure point | Condition | Recovery | Exit behavior |
+|---|---|---|---|
+| Missing Concept | `contributes_to` names a non-existent Concept | Halt; list missing IDs | Skill halts |
+| Inactive Concept | Concept exists but `status: deprecated`/`archived` | Halt; ask the human to revise scope or revive | Skill halts |
+| Milestone not agreed | `belongs_to` milestone is `proposed` or `released` | Halt; ask the human to resolve | Skill halts |
+| Gate failure | `concept.align` / `story.execute` / `story.wrap_up` | Report failing checks | Blocking |
+| ACT count mismatch | Table rows ≠ ACT files | List difference; halt Step 4 | Blocking until fixed |
+| Circular dependency | `depends_on` cycle | Display cycle path; halt Step 4 | Blocking until fixed |
+| Current Shape reject | Human rejects AI's draft at Wrap-up | Accept human's alternative or loop | Continue after resolution |
+| Squash merge failure | git conflict / permission | Report; pause Wrap-up | Resume after manual fix |
 
 ## Completion Checklist
 
-- [ ] _story.md written
-- [ ] Acceptance criteria are verifiable
-- [ ] All ACT-NNN-{name}.md files exist on disk (verified with Glob tool — count matches Action Items table)
+- [ ] `_story.md` written with `contributes_to` (≥1) and optional `belongs_to`
+- [ ] Acceptance criteria verifiable
+- [ ] All `ACT-NNN-{name}.md` files present (Glob-verified count matches table)
+- [ ] Input Artifacts captured up front; Output Artifacts captured during Execute
 - [ ] 1 Action Item = 1 commit principle observed
-- [ ] (Execute) solera-execute-action-item invoked for all Action Items
-- [ ] (Wrap-up) RETROSPECTIVE.md written
-- [ ] (Wrap-up) _story.md status ✅
-- [ ] (Wrap-up) Squash merged to Epic branch
+- [ ] All gate checks passed
+- [ ] `RETROSPECTIVE.md` written with "Concept Contribution Summary" section
+- [ ] Each contributed Concept's `# Current Shape` updated (human-approved) and `# Contributions` row appended
+- [ ] `_story.md` status ✅
+- [ ] `story/{id}` branch squash-merged into base
+
+## Examples
+
+### Example: executing STORY-001-google-login on banas
+
+Invocation:
+```python
+Skill(name="solera-write-story", args={
+  "project_path": "banas",
+  "story_id": "US-001",
+  "story_name": "google-login",
+  "story_type": "US",
+  "contributes_to": ["authentication"],
+  "belongs_to": "mvp"
+})
+```
+
+After Setup:
+```
+stories/US-001-google-login/
+└── _story.md  (draft, status: 🔄)
+
+# branch: story/US-001-google-login
+```
+
+After Step 3 (decomposition):
+```
+stories/US-001-google-login/
+├── _story.md
+├── ACT-001-google-provider-config.md
+├── ACT-002-login-screen.md
+└── ACT-003-callback-handler.md
+```
+
+Commit messages follow:
+```
+[authentication][US-001][ACT-001] Configure Google provider
+[authentication][US-001][ACT-002] Add login screen
+[authentication][US-001][ACT-003] Wire callback handler
+```
+
+After Wrap-up:
+- `concepts/authentication.md` updated — Current Shape now reflects Google login end-to-end; Contributions table gains one row.
+- `RETROSPECTIVE.md` written with Concept Contribution Summary.
+- `story/US-001-google-login` squash-merged.

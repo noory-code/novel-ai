@@ -1,9 +1,9 @@
 ---
 name: solera-init
 user-invocable: true
-description: Set up Solera in a project — install rules, create the workspace structure, and run the team kickoff interview.
+description: Set up Solera v3 in a project — install rules, create the three-axis workspace, and run the team kickoff interview.
 metadata:
-  version: "2.1.0"
+  version: "3.0.0"
   category: meta
   type: unit
   style: procedural
@@ -11,10 +11,12 @@ metadata:
   uses: []
 ---
 
-# Solera Init
+# Solera Init (v3)
 
-> Sets up Solera in the current project by installing rules, creating the workspace structure,
-> and collecting the team's process through a kickoff interview.
+> Sets up Solera v3 in the current project:
+> - installs the workflow rule,
+> - creates the three-axis workspace (Living / Time-bound / Immutable),
+> - and runs the team kickoff interview to populate `team-process.md`.
 
 ## Input
 
@@ -35,45 +37,63 @@ metadata:
 
 ### Step 1. Check existing setup
 
-- [ ] Check if `.claude/rules/solera-workflow.md` already exists
-  - If exists: ask user whether to overwrite or skip
-- [ ] Check if `{project_path}/workspace/` already exists
-  - If exists: skip folder creation, proceed to rule installation
+- [ ] Check if `.claude/rules/solera-workflow.md` already exists.
+  - If exists: ask user whether to overwrite or skip.
+- [ ] Check if `{project_path}/workspace/` already exists.
+  - If exists: this is either a v2 project needing migration, or a partial v3 setup.
+  - **v2 detection** — any of: `workspace/initiative/`, `workspace/phase/`, a `_goal.md` or `_epic.md` anywhere under `workspace/`.
+  - If v2 detected: stop and advise `solera-migrate-v2`. Do NOT attempt to overlay v3 on top of v2 data.
+  - If v3 partial (has `concepts/` or `milestones/`): skip folder creation, continue to rule installation.
 
 ### Step 2. Install rules
 
-- [ ] Create `.claude/rules/` directory (if not exists)
-- [ ] Write `.claude/rules/solera-workflow.md` — ref: [assets/solera-workflow.md](assets/solera-workflow.md)
-  - Copy the asset content as-is (no variable substitution needed)
+- [ ] Create `.claude/rules/` directory if not present.
+- [ ] Write `.claude/rules/solera-workflow.md` — ref: [assets/solera-workflow.md](assets/solera-workflow.md). Copy content as-is (no substitution).
 
 ### Step 3. Create workspace structure
 
-- [ ] Create folder structure:
+- [ ] Create the v3 folder layout:
   ```
   {project_path}/
   ├── progress.md
   └── workspace/
       ├── identity/
-      ├── initiative/
+      ├── concepts/
+      ├── milestones/
+      ├── stories/
+      ├── releases/
       └── catalog/
           └── published/
   ```
+- [ ] Seed `concepts/_index.md` from [../solera-write-concept/assets/_index-template.md](../solera-write-concept/assets/_index-template.md).
+- [ ] Seed `milestones/_index.md` from [../solera-write-milestone/assets/_index-template.md](../solera-write-milestone/assets/_index-template.md).
+- [ ] Seed `releases/_index.md` from [../solera-release/assets/_index-template.md](../solera-release/assets/_index-template.md).
 - [ ] Write initial `progress.md`:
   ```markdown
   # Progress
 
-  > Phase: (none)
-  > Goal: (none)
-  > Epic: (none)
-  > Story: (none)
-  > Action Item: (none)
+  > Last updated: {today}
+
+  ## Living Axis
+  **Active Concepts** (0): (none yet — run `solera-write-concept`)
+
+  ## Time-bound Axis
+  | Level | Current | Status |
+  |-------|---------|--------|
+  | Milestone | (none) | — |
+  | Story | (none) | — |
+  | Action Item | (none) | — |
+
+  ## Immutable Axis
+  **Latest Release**: (none yet)
   ```
 
 ### Step 4. Verify
 
-- [ ] `.claude/rules/solera-workflow.md` exists and is non-empty
-- [ ] `{project_path}/workspace/` directory exists
-- [ ] `{project_path}/progress.md` exists
+- [ ] `.claude/rules/solera-workflow.md` exists and is non-empty.
+- [ ] `{project_path}/workspace/` with all v3 subdirectories exists.
+- [ ] `progress.md` exists.
+- [ ] Three `_index.md` files exist (concepts, milestones, releases).
 
 ### Step 5. Team Kickoff Interview
 
@@ -82,8 +102,7 @@ Conduct a conversational interview to understand the team's work process.
 Every question maps to a specific field in `team-process.md`.
 Save results to `{project_path}/workspace/team-process.md`.
 
-If `project.type` is `software`, also merge fields from
-`assets/team-process-software.md` into the output file.
+If `project.type` is `software`, also merge fields from [assets/team-process-software.md](assets/team-process-software.md) into the output.
 
 ---
 
@@ -96,15 +115,15 @@ Ask what kind of project this is:
 - `content` — writing, media, editorial
 - `other` — anything else
 
-The answer determines which follow-up questions are relevant (Step F).
+The answer determines which follow-up questions apply (Step F).
 
 ---
 
 #### Step B — Project basics → `project.description`, `project.target_users`
 
-- "What are you building or creating? One sentence."  → `project.description`
-- "Who are the primary users or audience?"  → `project.target_users`
-  → If vague: ask about role, context, or situation of use
+- "What are you building or creating? One sentence." → `project.description`
+- "Who are the primary users or audience?" → `project.target_users`
+  → If vague: ask about role, context, or situation of use.
 
 ---
 
@@ -114,84 +133,75 @@ The answer determines which follow-up questions are relevant (Step F).
 
 Ask: "What stages does your team go through to deliver a feature or deliverable?"
 
-If the answer is vague, offer a stage list based on project type:
+If the answer is vague, offer an example list by project type:
 
 Software example:
 ```
 Planning → UX Design → UI Design → Entity Design → API Design
 → Backend Dev → Frontend Dev → Testing → Code Review → QA → Deploy
 ```
+
 Marketing example:
 ```
 Brief → Research → Concept → Content Creation → Review → Approval → Launch → Reporting
 ```
+
 Design example:
 ```
 Brief → Research → Concept → Wireframe → Visual Design → Review → Handoff
 ```
 
-Confirm the final list.
-If a stage was mentioned early but dropped from the final list:
-→ "You mentioned [stage] earlier but didn't include it — is it out of scope for Solera tracking?"
+Confirm the final list. If a stage was mentioned earlier but dropped from the final list, ask whether it is truly out of scope.
 
 **C-2. Stage details** → remaining `process_stages[]` fields
 
-For each confirmed stage, ask:
-- "What is the done-criteria for [stage]?" → `done_when`
-- "Is [stage] a gate — must it finish before the next stage begins?" → `gate: true/false`
-- "Who owns [stage]?" → `owner` (optional, skip if obvious)
-- "What tool is used for [stage]?" → `tool` (optional, skip if not applicable)
+For each confirmed stage:
+- "What is the done-criterion for {stage}?" → `done_when`
+- "Is {stage} a gate — must it finish before the next stage begins?" → `gate: true/false`
+- "Who owns {stage}?" → `owner` (optional)
+- "What tool is used for {stage}?" → `tool` (optional)
 
-If multiple stages have `gate: true` and both block the same Solera step:
-→ "Does [stage A] block all work, or only a specific part (e.g. frontend only)?"
+If multiple gate-true stages could block the same Solera step, ask whether a stage blocks all work or only a specific part.
 
-**C-3. Parallel stages** → `parallel: true` annotation
+**C-3. Parallel stages** → `parallel: true`
 
-If two stages can run simultaneously:
-→ "Do [stage A] and [stage B] run in parallel or in sequence?"
-→ Mark parallel stages with `parallel: true`
+If two stages can run simultaneously, mark them `parallel: true`.
 
 **C-4. Gate derivation** → `workflow_gates`
 
-Map `gate: true` stages to Solera gate keys:
+Map `gate: true` stages to v3 Solera gate keys:
 
 | Stage blocks... | Gate key |
 |---|---|
-| Epic entry (planning/requirements) | `epic.use_case` |
-| Concept step (design/spec artifact) | `epic.concept` |
+| Milestone agreement (needs review/analysis before agreeing) | `milestone.agree` |
+| Story creation (requires Concept alignment) | `concept.align` |
 | Story development start | `story.execute` |
 | Story completion (review/test) | `story.wrap_up` |
 | Action Item execution start | `act.start` |
 | Action Item completion (post-commit) | `act.done` |
 
-After deriving gates, confirm with user:
-"Based on what you described, I'll set these gates — does this look right?
- - epic.use_case: '{condition}'
- - epic.concept:  '{condition}'
- - story.execute: '{condition}'
- - story.wrap_up: '{condition}'
- - act.start:     '{condition}'
- - act.done:      '{condition}'
-Please confirm or adjust."
+After deriving, confirm with the user:
+> "기반해서 다음 gate들을 설정할게요 — 맞나요?"
 
 **C-5. Structured gate checks** → `workflow_gates.*.checks[]`
 
 For each gate where `condition` is non-empty, ask:
-- "Can this gate be verified automatically? (e.g., a file must exist, a command must pass, specific ACTs must be complete)"
-  → If yes: map answer to `checks[]` entries:
+- "이 gate를 자동으로 검증할 수 있나요? (파일 존재, 명령 실행, 특정 ACT 완료 등)"
+  → If yes, map to `checks[]`:
     - File/path existence → `type: glob_exists`, `params: { pattern: "..." }`
     - ACT completion → `type: act_complete`, `params: { ids: [...] }`
     - Command/test pass → `type: command_passes`, `params: { run: "..." }`
     - Pattern must not appear → `type: grep_absent`, `params: { pattern: "...", glob: "..." }`
-  → If no: leave `checks` absent (text-based fallback)
+    - Concept existence check → `type: concept_exists`, `params: { ids: [...] }` (omit `ids` to read `contributes_to` from the calling Story)
+    - Milestone status check → `type: milestone_status`, `params: { id: "...", equals: "agreed" }`
+  → If no, leave `checks` absent (text-based fallback).
 
 ---
 
 #### Step D — Collaboration conventions → `conventions.*`
 
 - "How many approvals are required to merge/complete work?" → `review_approvals`
-  (reuse value from C-2 if already collected from a review stage)
-- "Any naming conventions for commits or tasks (e.g. ticket numbers)?" → `naming_prefix`
+- "Any naming conventions for commits or tasks (e.g., ticket numbers)?" → `naming_prefix`
 - "What is your iteration cycle?" → `iteration_cycle`
 
 ---
@@ -205,22 +215,15 @@ For each gate where `condition` is non-empty, ask:
 
 #### Step F — Project-type specific fields
 
-**Software only** → merges `assets/team-process-software.md` fields:
+**Software only** → merges fields from [assets/team-process-software.md](assets/team-process-software.md):
 
-- "What is your backend stack?" → `tech_stack.backend.*`
-  → Ask layer by layer: framework → ORM → auth → database
-  → If answer covers multiple fields at once, parse and map accordingly
-- "What is your frontend stack?" → `tech_stack.frontend.*`
-  → framework → state management → styling
-- "What cloud/infra do you use?" → `tech_stack.infra.*`
-  → cloud → container → CI/CD (reuse from deploy stage if already collected) → environments
+- "What is your backend stack?" → `tech_stack.backend.*` (framework → ORM → auth → database)
+- "What is your frontend stack?" → `tech_stack.frontend.*` (framework → state → styling)
+- "What cloud/infra do you use?" → `tech_stack.infra.*` (cloud → container → CI/CD → environments)
 - "Does your project follow a layered architecture (e.g., Clean Architecture, Hexagonal)?"
-  → If yes: "In what order should layers be built? (e.g., Domain first, then Data, then Presentation)"
-  → Map answer to `execution_order.groups` — each group is a list of keywords for that layer
-  → Example: `groups: [[entity, usecase, domain-test], [datasource, repository-impl], [flow, page]]`
-- "Are there any layer-boundary rules? (e.g., Domain must not import Presentation)"
-  → If yes: map each rule to `architecture_rules.rules[]` with `scope`, `forbidden_imports`, `message`
-  → If no: leave `rules: []`
+  → If yes: "In what order should layers be built?" → `execution_order.groups` (list of keyword lists per layer)
+- "Any layer-boundary rules? (e.g., Domain must not import Presentation)"
+  → If yes: map to `architecture_rules.rules[]` with `scope`, `forbidden_imports`, `message`.
 
 ---
 
@@ -233,12 +236,11 @@ For each gate where `condition` is non-empty, ask:
 #### team-process.md template
 
 Fill all collected values. Leave commented examples for empty optional fields.
-Ref: [assets/team-process-software.md](assets/team-process-software.md) for software extension.
 
 ```yaml
 # team-process.md
 # Generated by solera-init on {date}. Edit freely to update team conventions.
-# Skills read this file at the start of Goal and Epic level work.
+# Skills read this file at the start of Story and Action Item work.
 
 project:
   name: "{project name}"
@@ -246,31 +248,27 @@ project:
   description: ""       # one-sentence description
   target_users:
     - ""                # brief: role + context
-    # - ""              # add more; use solera-write-identity for full persona profiles
 
 workflow_gates:
   # Solera skills check these before entering each step.
   # Each gate has `condition` (human-readable) and optional `checks[]` (machine-verifiable).
-  # If `checks` present: ALL checks must pass. If absent: AI evaluates `condition` as text.
+  # If `checks` is present: ALL checks must pass. If absent: AI evaluates `condition` as text.
   #
-  # Check types:
-  #   - type: glob_exists    — params: { pattern: "path/glob" }
-  #   - type: act_complete   — params: { ids: [ACT-001, ACT-002] }
-  #   - type: command_passes — params: { run: "flutter analyze" }
-  #   - type: grep_absent    — params: { pattern: "TODO|FIXME", glob: "lib/**/*.dart" }
+  # v3 Check types:
+  #   - type: glob_exists       — params: { pattern: "path/glob" }
+  #   - type: act_complete      — params: { ids: [ACT-001, ACT-002] }
+  #   - type: command_passes    — params: { run: "flutter analyze" }
+  #   - type: grep_absent       — params: { pattern: "TODO|FIXME", glob: "lib/**/*.dart" }
+  #   - type: concept_exists    — params: { ids: [authentication] } (omit ids to use contributes_to)
+  #   - type: milestone_status  — params: { id: "mvp", equals: "agreed" }
   #
-  # Example:
-  #   story.execute:
-  #     condition: "Domain layer tests pass"
-  #     checks:
-  #       - type: command_passes
-  #         params: { run: "flutter test packages/entities" }
-  #       - type: act_complete
-  #         params: { ids: [ACT-001, ACT-002] }
-  epic.use_case:
+  milestone.agree:
     condition: ""
-  epic.concept:
-    condition: ""
+  concept.align:
+    condition: "Story's contributes_to references only active Concepts"
+    checks:
+      - type: concept_exists
+        params: {}          # empty → read contributes_to from calling Story
   story.execute:
     condition: ""
   story.wrap_up:
@@ -301,21 +299,18 @@ execution_order:
   groups: []
 
 architecture_rules:
-  # Layer-boundary rules enforced during Action Item test verification (Step 4).
+  # Layer-boundary rules enforced during Action Item test verification.
   # Each rule defines a forbidden import pattern within a file scope.
   #
   # Example (Clean Architecture):
   #   - scope: "lib/domain/**/*.dart"
   #     forbidden_imports: ["package:.*/data/", "package:.*/presentation/"]
-  #     message: "Domain layer must not import Data or Presentation"
-  #   - scope: "lib/presentation/**/*.dart"
-  #     forbidden_imports: ["package:.*/data/"]
-  #     message: "Presentation layer must not import Data directly"
+  #     message: "Domain must not import Data or Presentation"
   rules: []
 
 conventions:
   review_approvals: 1   # number of approvals required
-  naming_prefix: ""     # e.g. "[JIRA-{id}]" — prepended to every commit/task
+  naming_prefix: ""     # e.g. "[JIRA-{id}]"
   iteration_cycle: ""   # e.g. "2-week sprint" / "continuous"
 
 tools:
@@ -330,8 +325,9 @@ custom_rules:
 ## Completion Checklist
 
 - [ ] Rule file installed at `.claude/rules/solera-workflow.md`
-- [ ] Workspace folder structure created
-- [ ] `progress.md` initialized
+- [ ] v3 workspace folder structure created (`identity/`, `concepts/`, `milestones/`, `stories/`, `releases/`, `catalog/published/`)
+- [ ] Three `_index.md` seed files present
+- [ ] `progress.md` initialized with v3 three-axis format
 - [ ] Kickoff interview completed (Steps A–G)
-- [ ] `{project_path}/workspace/team-process.md` written with all collected values
-- [ ] User informed of next step: "Run `solera-write-identity` to define your service identity and personas"
+- [ ] `team-process.md` written with v3 gate keys (no `epic.*` gates)
+- [ ] User informed of next step: "Run `solera-write-identity` to establish project identity, then `solera-write-concept` to draw your first Concept."
