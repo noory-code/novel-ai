@@ -85,7 +85,7 @@ semantic:
     max: 999
 
   - id: C-005
-    name: "Move mapping includes domain-model"
+    name: "Move mapping includes v3 types + reference + fallback"
     type: content_contains
     target: SKILL.md
     patterns:
@@ -94,6 +94,16 @@ semantic:
       - "service-map"
       - "journey"
       - "use-case"
+      - "reference"
+      - "_unclassified"
+
+  - id: C-005b
+    name: "Unknown type BLOCKING prompt at Discovery"
+    type: content_contains
+    target: SKILL.md
+    patterns:
+      - "unknown artifact type"
+      - "_unclassified/{type}/"
 
   - id: C-006
     name: "Idempotency and collision handling documented"

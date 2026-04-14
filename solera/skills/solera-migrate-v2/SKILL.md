@@ -3,7 +3,7 @@ name: solera-migrate-v2
 user-invocable: true
 description: Assisted, non-destructive migration from Solera v2 (Phase/Goal/Epic hierarchy) to v3 (three axes). Every step blocks for human approval; reversible via git until committed.
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   category: meta
   type: unit
   style: procedural
@@ -81,15 +81,41 @@ migrate-v2 is a **one-shot transition skill**, not a work item. It runs once (or
   - `stories/`
   - `releases/` + `_index.md` (from [../solera-release/assets/_index-template.md](../solera-release/assets/_index-template.md))
   - `catalog/published/` (if not already present)
-- [ ] Copy surviving content:
-  - If `_v2-archive/identity/` exists → copy **files only** (not subdirs beyond what v3 expects) to `{workspace_path}/identity/`. Leave the archive copy intact.
-  - If `_v2-archive/team-process.md` exists → copy to `{workspace_path}/team-process.md` and **patch only the `workflow_gates` section** to v3 keys (remove `epic.use_case`, `epic.concept`; add `milestone.agree`, `concept.align`). Other sections preserved as-is.
-  - If `_v2-archive/catalog/published/concept/` exists → copy to `catalog/published/domain-model/` (rename per v3). Other `published/{type}/` subdirs copy verbatim.
-  - If `_v2-archive/extra/*/` contains artifact subdirs → merge into `catalog/published/{type}/` with **conflict detection** (see below).
-- [ ] **Conflict detection during catalog merge**: if the same filename exists in both `_v2-archive/catalog/published/{type}/foo.md` and `_v2-archive/extra/{name}/{type}/foo.md`:
-  - **BLOCKING**: show a short diff summary and ask: `"Which version wins? (1) workspace catalog  (2) extra  (3) both (rename 'extra' copy to foo__extra.md)"`
+
+#### 2.1 Identity copy policy
+
+Identity files may live in multiple locations in v2 Obsidian-style vaults (direct `workspace/identity/` or a separate vault like `{project_path}/published/identity/`). Collect from every plausible source, then classify:
+
+- [ ] Collect identity-source candidates in priority order:
+  1. `_v2-archive/identity/*.md` (direct v2 location — some projects keep identity here)
+  2. `_v2-archive/extra/*/identity/*.md` (from `extra_artifact_dirs` — common in Obsidian vaults)
+- [ ] For each candidate file, classify:
+  - **v3 standard identity** (`mission.md`, `core-values.md`, `vision_*.md`) → stage to copy into `{workspace_path}/identity/`.
+  - **Journeys subdir** (`.../identity/journeys/*`) → stage to move into `catalog/published/journey/` — these are journey artifacts that happened to live under identity in v2.
+  - **Non-standard identity files** (`tone-and-manner.md`, `README.md`, and any other `.md` under an identity dir that is not standard): gather into a list for the BLOCKING prompt below.
+- [ ] **BLOCKING** (only if non-standard files found): for each non-standard file, ask `"Found '{filename}' under identity. Choose: (1) keep at workspace/identity/{filename}  (2) move to catalog/published/_unclassified/identity/{filename}  (3) skip"`. Record decisions in the step log.
+- [ ] Apply all decisions: copy standard files to `workspace/identity/`, move journeys to `catalog/published/journey/`, handle non-standard per human choice. Leave archive copies intact (the archive is the full record).
+- [ ] If **no** standard identity files were found in any source → warn the human: `"No standard identity files found. You may need to run solera-write-identity manually after migration. Continue?"` — require confirmation.
+
+#### 2.2 team-process.md
+
+- [ ] If `_v2-archive/team-process.md` exists → copy to `{workspace_path}/team-process.md` and **patch only the `workflow_gates` section** to v3 keys (remove `epic.use_case`, `epic.concept`; add `milestone.agree`, `concept.align`). Other sections preserved as-is.
+- [ ] If no team-process.md was found in the archive → log a reminder in the eventual MIGRATION-NOTES.md Manual Tasks: run `solera-init` post-migration to populate it via the Kickoff Interview.
+
+#### 2.3 Catalog merge
+
+- [ ] If `_v2-archive/catalog/published/concept/` exists → copy to `catalog/published/domain-model/` (the v3 rename).
+- [ ] Enumerate every `{type}/` subdir from both sources:
+  - `_v2-archive/catalog/published/{type}/`
+  - `_v2-archive/extra/*/{type}/` (and also the top level of `extra/*/` itself, since Obsidian vaults may drop artifact folders directly there)
+- [ ] For each `{type}` found, classify using the `solera-publish-artifacts` Move Mapping table:
+  - **Known type** (persona, service-map, journey, use-case, domain-model, erd, dto, api-spec, reference) → destination per that table.
+  - **Unknown type** (e.g., `schema/`, `reference/` if still unknown in your version, any custom folder): **BLOCKING** one-shot prompt per type: `"Found unknown catalog type '{type}' (from {source}). Choose: (1) move to catalog/published/_unclassified/{type}/  (2) map to an existing v3 type (provide target)  (3) skip (leave only in _v2-archive)"`. Apply the decision.
+- [ ] **Filename collision detection during merge**: if the same filename exists in multiple sources for the same destination:
+  - **BLOCKING**: show a short diff summary and ask `"Which version wins? (1) workspace catalog  (2) extra  (3) both (rename extra copy to {name}__extra.md)"`.
+
 - [ ] Commit: `chore(solera): scaffold v3 workspace skeleton`
-- [ ] Report: `"Skeleton created. Identity copied. Catalog merged. Continuing to Step 3 (concepts)."`
+- [ ] Report: `"Skeleton created. Identity copied (X standard, Y non-standard per choice). Catalog merged (Z known types, W unknown routed to _unclassified/ or mapped). Continuing to Step 3 (concepts)."`
 
 ### Step 3 — Concept candidate proposal
 
@@ -260,7 +286,8 @@ If re-invoked on a workspace that has both `_v2-archive/` and partial v3 structu
 
 | Signal | Step already done |
 |---|---|
-| `_v2-archive/` exists, `concepts/_index.md` has entries | Step 1, 2, 3 |
+| `_v2-archive/` exists, `workspace/catalog/published/` populated (possibly with `_unclassified/`) | Step 1, 2 |
+| `concepts/_index.md` has entries | Step 1, 2, 3 |
 | `stories/` has Stories with `contributes_to` | Step 4 |
 | `milestones/pre-v3.md` exists | Step 5 |
 | `releases/v2-final/.released` exists | Step 6 |

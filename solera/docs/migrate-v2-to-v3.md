@@ -98,11 +98,15 @@ Keep `_v2-archive/` (default) or delete it. Deletion is a normal `git rm` — hi
 
 | Data | After migration |
 |------|-----------------|
-| `workspace/identity/` files | Copied to `workspace/identity/` (v3 location) + kept in archive |
+| Standard identity files (`mission.md`, `core-values.md`, `vision_*.md`) from any source (workspace or extra dir) | Copied to `workspace/identity/` (v3 location) + kept in archive |
+| Non-standard identity files (e.g., `tone-and-manner.md`, `README.md`) | **BLOCKING prompt** at Step 2 — you choose: keep at `workspace/identity/`, route to `catalog/published/_unclassified/identity/`, or skip |
+| `identity/journeys/*` | Moved to `catalog/published/journey/` (journeys are journey artifacts, not identity) |
 | `workspace/initiative/` | Archived only |
 | `workspace/phase/` (all Goals, Epics, Stories) | Archived; **completed Stories** relocated to `workspace/stories/` with updated frontmatter |
 | `workspace/catalog/published/` | Merged into `workspace/catalog/published/` (v3 location); `concept/` renamed to `domain-model/` |
 | `extra_artifact_dirs/` contents | Same merge treatment as `catalog/published/` |
+| Catalog types in the v3 mapping (persona, service-map, journey, use-case, domain-model, erd, dto, api-spec, reference) | Moved to their mapped destinations |
+| Unknown catalog types (e.g., a custom `schema/` folder) | **BLOCKING prompt** per type — you choose: `_unclassified/{type}/` fallback, or map to an existing v3 type, or skip |
 | `workspace/team-process.md` | Copied to v3 location; `workflow_gates` section patched to v3 keys; other sections untouched |
 | `progress.md` | Overwritten with v3 three-axis format |
 | `HANDOFF.md` | Untouched |

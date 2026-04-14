@@ -1,5 +1,35 @@
 # Changelog
 
+## [3.0.1] — 2026-04-16
+
+### Fixed
+
+- **`solera-migrate-v2` identity source discovery**: v2 Obsidian-style vaults sometimes keep identity files outside `workspace/identity/` (e.g., in a separate vault root like `{project_path}/published/identity/`). Step 2 now collects candidate identity files from both `_v2-archive/identity/` and `_v2-archive/extra/*/identity/`, classifies standard vs non-standard, and asks the human about non-standard files instead of silently keeping or dropping them. Issues a warning if no standard identity files are found in any source.
+- **Catalog merge for unknown artifact types**: v2 projects may contain artifact folders not in the v3 mapping (e.g., `schema/`, `reference/`, custom folders). Step 2.3 now runs a BLOCKING one-shot prompt per unknown type, letting the human route it to `catalog/published/_unclassified/{type}/`, map it to an existing v3 type, or skip. Previously unknown types relied on ad-hoc judgment at execution time.
+- **Journey detection**: If an archived identity dir contains a `journeys/` subdir, Step 2.1 now moves its contents to `catalog/published/journey/` instead of treating them as identity.
+
+### Changed
+
+- **`solera-publish-artifacts`** v5.0.0 → v5.1.0.
+  - Move Mapping table adds `reference/ → catalog/published/reference/`.
+  - New **fallback row**: unknown types go to `catalog/published/_unclassified/{type}/` (previously "left in place + logged"). Step 1 Discovery now asks a BLOCKING one-shot prompt per unknown type before routing to fallback.
+  - Error Handling row for "Unknown artifact type" updated to describe the BLOCKING fallback flow.
+
+- **`solera-migrate-v2`** v1.0.0 → v1.1.0.
+  - Step 2 expanded into three subsections (2.1 Identity copy policy, 2.2 team-process.md, 2.3 Catalog merge) with explicit policies for identity classification and unknown catalog types.
+  - Resume Semantics table adds a signal row for Step 2 completion (`catalog/published/` populated).
+
+### Documentation
+
+- `docs/migrate-v2-to-v3.md` "What happens to your v2 data" table expanded to describe the new non-standard identity and unknown catalog type flows.
+
+### Migration Notes
+
+- Projects migrated with v3.0.0 are unaffected — v3.0.1 only changes behavior of the migration skill itself, not the resulting v3 workspace layout.
+- If you ran the v3.0.0 migration and ended up with missing identity files or dropped artifact folders, re-run `solera-migrate-v2` after v3.0.1 to resume from Step 2; the skill's Resume Semantics will skip already-completed steps.
+
+---
+
 ## [3.0.0] — 2026-04-16
 
 ### ⚠️ BREAKING CHANGES

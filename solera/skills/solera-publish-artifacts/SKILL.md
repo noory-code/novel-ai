@@ -3,7 +3,7 @@ name: solera-publish-artifacts
 user-invocable: false
 description: Promote a Story's produced design artifacts to the published catalog and wire them into the contributed Concepts' Related Artifacts sections. Invoked automatically at Story Wrap-up.
 metadata:
-  version: "5.0.0"
+  version: "5.1.0"
   category: workflow
   type: unit
   style: procedural
@@ -64,8 +64,8 @@ This skill is a **hook**, not a work item. It runs once as part of `solera-write
   - `{type}` = the directory name directly under `artifacts/`.
   - Every file under a `{type}/` directory is a candidate.
 - [ ] For each candidate, classify its `{type}` against the Move Mapping table:
-  - **Known type** → promote in Step 3.
-  - **Unknown type** → listed in the final summary as "left in place: {path} (type '{type}' has no mapping)". Not moved.
+  - **Known type** → promote in Step 3 to its mapped destination.
+  - **Unknown type** → promote in Step 3 to the fallback `catalog/published/_unclassified/{type}/`, **after** a one-shot BLOCKING prompt: `"Found unknown artifact type '{type}' under {source}. Move to _unclassified/{type}/ for now? (yes / skip this type / abort)"`. Record the human's decision in the final summary.
 - [ ] If zero candidates: log `"no artifacts to publish for {story_id}"` and exit cleanly with status success.
 
 **Note**: This skill does **not** read `# Output Artifacts` from the Story. That section tracks **code/doc commits** produced by Action Items. Design artifacts for publication live in `{story_path}/artifacts/`, written there by write-* skills or the human during Story execution.
@@ -150,8 +150,10 @@ For each `concept_id` in `contributes_to`:
 | `erd/` | `workspace/catalog/published/schema/` |
 | `dto/` | `workspace/catalog/published/dto/` |
 | `api-spec/` | `workspace/catalog/published/api/` |
+| `reference/` | `workspace/catalog/published/reference/` |
+| **(unknown type)** | `workspace/catalog/published/_unclassified/{type}/` (requires BLOCKING confirmation at Step 1) |
 
-> Types not listed here are **left in place** and logged — they are not moved. If a Story needs a new type, extend this mapping (ship with a version bump).
+> Types not on this table go to `_unclassified/` as a fallback so no artifact is silently dropped. If `_unclassified/` fills with a recurring type, extend this mapping (bump the skill version) so future Stories route that type to a proper home.
 
 ## Related Artifacts Line Format
 
@@ -208,7 +210,7 @@ This skill is a **handoff from Time-bound to Living** — at Story Wrap-up, the 
 | Story file missing | `_story.md` not found | Halt; report Story path | Skill halts |
 | contributes_to empty | Frontmatter lacks the field | Halt; Story must be fixed first | Skill halts |
 | No claimed artifacts | Story produced only code | Log "no artifacts to publish"; exit success | Skill completes |
-| Unknown artifact type | Source dir not in mapping | Log and skip (do not move); listed in summary | Continue |
+| Unknown artifact type | Source dir not in mapping | BLOCKING prompt at Step 1 → move to `_unclassified/{type}/` on approval, skip on rejection; logged in summary | Continue after decision |
 | Destination missing | `catalog/published/{type}/` absent | `mkdir -p` | Continue |
 | Content collision | Same filename, different content exists | Rename new file to `{name}__{story_id}.{ext}`, log | Continue |
 | Git mv failure | Not in a git repo, or permission error | Fall back to plain move; log the fallback | Continue |

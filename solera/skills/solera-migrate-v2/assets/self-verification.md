@@ -32,4 +32,9 @@ semantic:
   - {id: C-019, name: "Batch Concept authoring (no per-invoke)", type: content_contains, target: SKILL.md, patterns: ["Batch-processing constraint", "grounding every sentence"]}
 
   - {id: C-020, name: "No Workflow section (rationale stated)", type: content_contains, target: SKILL.md, patterns: ["one-shot transition skill", "no template-level Workflow"]}
+
+  - {id: C-021, name: "Step 2 Identity copy policy present", type: content_contains, target: SKILL.md, patterns: ["Identity copy policy", "mission.md", "core-values.md", "vision_", "tone-and-manner"]}
+  - {id: C-022, name: "Journey subdir handling under identity", type: content_contains, target: SKILL.md, patterns: ["journeys/", "catalog/published/journey/"]}
+  - {id: C-023, name: "Unknown catalog type BLOCKING prompt", type: content_contains, target: SKILL.md, patterns: ["unknown catalog type", "_unclassified/{type}/"]}
+  - {id: C-024, name: "Standard vs non-standard identity classification", type: content_contains, target: SKILL.md, patterns: ["v3 standard identity", "Non-standard identity files"]}
 ```
