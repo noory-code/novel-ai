@@ -1,5 +1,31 @@
 # Changelog
 
+## [3.0.3] — 2026-04-17
+
+### Fixed
+
+- **`solera-migrate-v2` banned phrase leak**: Step 1 Procedure contained `"if needed"` — one of the five AI-First banned phrases its own self-verification rule (C-001) forbids. The ambiguous instruction is replaced with an explicit condition (`when the parent does not exist`).
+- **Test suite validated v2 schema**: `tests/test_skill_validation.py` still required `phase_id`, `goal_id`, `epic_name`, and `_epic.md` prerequisites — parameters that v3.0.0 removed. The suite passed regardless of whether `solera-write-story` or `solera-execute-action-item` followed v3. Tests now pin the v3 contract (`story_id`, `contributes_to`, Concept-based prerequisites, `[primary_concept][story_id][ACT-NNN]` commit format) and actively guard against v2 regression by asserting forbidden parameters are absent.
+
+### Changed
+
+- **Three-axis and status SSOT centralised** in the new canonical reference `docs/reference/axes-and-status.md`. Four files that previously defined (or redefined) axis tables and status values now link to it: `docs/work-item-structure.md`, `skills/solera-manage-workflow/assets/conventions.md`, `skills/solera-init/assets/solera-workflow.md`, and the five core writing-skill SKILL.md files which gained a `<!-- SSOT: docs/reference/axes-and-status.md -->` marker. Renaming an axis or adding a status value is now a one-file edit.
+- **Self-verification schema centralised** in `docs/reference/self-verification-schema.md`. The `## Structural` / `## Semantic` format with `id:`-addressable rules is declared canonical; `C-001` is reserved across all skills for the AI-First banned phrases check with `"handle accordingly"` added to the canonical pattern list. Every `skills/*/assets/self-verification.md` was aligned:
+  - `solera-handoff/assets/self-verification.md` converted from the legacy TC### format to the canonical schema.
+  - `solera-execute-action-item`, `solera-write-story`, and `solera-create-pr` gained the canonical `C-001` rule; their prior `C-001` content was renumbered to `C-040` to preserve meaning.
+  - The six skills that already had `C-001` now include `"handle accordingly"`, matching the canonical list.
+- **`solera-migrate-v2`** v1.2.0 → v1.3.0.
+  - Resume Semantics now derives the last completed step **deterministically** from `Solera-Migrate-Step: N-name` commit trailers; filesystem signals are the fallback. Each of the seven step commits adds the trailer.
+  - `"if needed"` (Step 1) replaced with an explicit precondition.
+- **`retro.md` → `retrospective.md`** asset file rename across three skills (`solera-write-story`, `solera-manage-workflow`, `solera-execute-action-item`). Filename now matches the document it targets (`RETROSPECTIVE.md`). All cross-references updated.
+
+### Notes
+
+- This release is entirely maintenance — no user-facing behaviour changes. Existing workspaces do not need any action.
+- The canonical references under `docs/reference/` are the single source of truth for axes, status values, and self-verification schema. Future edits to those concepts start there.
+
+---
+
 ## [3.0.2] — 2026-04-16
 
 ### Fixed
