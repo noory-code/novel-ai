@@ -1,14 +1,12 @@
 # Work Item Structure (v3)
 
+<!-- SSOT: docs/reference/axes-and-status.md — do not redefine axes or status values here -->
+
 ## Overview
 
-Solera organizes a project on **three axes** rather than a single time-ordered hierarchy. The axes are orthogonal — an item belongs to exactly one of them — and each has a different relationship to time:
+Solera organizes a project on **three axes** rather than a single time-ordered hierarchy. The axes are orthogonal — an item belongs to exactly one of them — and each has a different relationship to time.
 
-| Axis | Characteristic | Items |
-|------|----------------|-------|
-| **Living** | Never ends; evolves continuously | Identity, Concepts |
-| **Time-bound** | Has a start and end | Milestone, Story, Action Item |
-| **Immutable** | Frozen snapshot, write-once | Release |
+**→ See [reference/axes-and-status.md](reference/axes-and-status.md) for the canonical axis and status definitions.** This document focuses on folder layout, branches, and the v2→v3 diff.
 
 Humans own the Living axis (the drawing of the project map). AI executes the Time-bound axis (decomposing Stories into commit-sized Action Items). Human and AI collaborate at two critical moments: **Milestone Agreement** (scope) and **Story Wrap-up** (Concept Current Shape updates). Releases freeze the state of in-scope Concepts so the past stays retrievable.
 
@@ -47,22 +45,24 @@ flowchart TD
 
 ## Items by Axis
 
+Status values, transitions, and ownership tables live in [reference/axes-and-status.md](reference/axes-and-status.md). The cadence + skill mapping below is the only thing this file owns.
+
 ### Living Axis
 
-| Item | Cadence | Owner | Status values | Skill |
-|------|---------|-------|---------------|-------|
-| **Identity** | Once | Human | — | `solera-write-identity` |
-| **Concept** | Always active, evolves per Story Wrap-up | Human draws, AI proposes updates | `active` / `deprecated` / `archived` | `solera-write-concept` |
+| Item | Cadence | Skill |
+|------|---------|-------|
+| **Identity** | Once | `solera-write-identity` |
+| **Concept** | Always active, evolves per Story Wrap-up | `solera-write-concept` |
 
 A Concept never enters a "Complete" state. When it is no longer pursued, it is **deprecated** (kept visible for history) or **archived** (hidden from the active index, file preserved). The only path to "change the Intent" is archive-and-new.
 
 ### Time-bound Axis
 
-| Item | Cadence | Owner | Status values | Skill |
-|------|---------|-------|---------------|-------|
-| **Milestone** | Per release cycle | Human + AI (agreement cycle) | `proposed` / `agreed` / `in-progress` / `released` | `solera-write-milestone` |
-| **Story** | Days | AI decomposes, human approves scope | ⏳ / 🔄 / ✅ / ⏸️ / ❌ | `solera-write-story` |
-| **Action Item** | One commit | AI | ⏳ / 🔄 / ✅ / ❌ | `solera-execute-action-item` |
+| Item | Cadence | Skill |
+|------|---------|-------|
+| **Milestone** | Per release cycle | `solera-write-milestone` |
+| **Story** | Days | `solera-write-story` |
+| **Action Item** | One commit | `solera-execute-action-item` |
 
 Stories carry two mandatory relations:
 - `contributes_to: [concept_id, …]` — at least one active Concept must be named. This is how Stories advance the Living map.
@@ -72,9 +72,9 @@ Action Items belong to exactly one Story. Their commit messages carry the Story'
 
 ### Immutable Axis
 
-| Item | Cadence | Owner | Skill |
-|------|---------|-------|-------|
-| **Release** | When a Milestone is reached | AI drafts, human approves | `solera-release` |
+| Item | Cadence | Skill |
+|------|---------|-------|
+| **Release** | When a Milestone is reached | `solera-release` |
 
 A Release is a directory at `releases/{tag}/` containing:
 
@@ -167,17 +167,9 @@ flowchart LR
 
 Epic branches (`epics/{name}`) and Story-under-Epic branches (`epics-{name}/story-{id}-{name}`) from v2 are gone. Stories branch directly from trunk.
 
-## Status Icons (for Stories and Action Items)
+## Status Values
 
-| Icon | Status |
-|------|--------|
-| ⏳ | Pending |
-| 🔄 | In Progress |
-| ✅ | Complete |
-| ⏸️ | On Hold |
-| ❌ | Cancelled |
-
-Concepts use `active` / `deprecated` / `archived` instead. Milestones use `proposed` / `agreed` / `in-progress` / `released`. These schemes differ deliberately — the Living axis has no "complete"; the Time-bound axis has no "active forever."
+See [reference/axes-and-status.md](reference/axes-and-status.md) for the authoritative status tables, transition rules, and icon legend. Short version: Stories/Action Items use emoji icons (⏳🔄✅⏸️❌), Concepts use `active`/`deprecated`/`archived`, Milestones use `proposed`/`agreed`/`in-progress`/`released`. These schemes differ deliberately — the Living axis has no "complete"; the Time-bound axis has no "active forever."
 
 ## What Changed from v2
 

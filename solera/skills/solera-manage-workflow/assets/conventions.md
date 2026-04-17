@@ -1,25 +1,8 @@
 # Conventions (v3)
 
-Project-wide rules referenced by all Solera skills.
+<!-- SSOT: ../../../docs/reference/axes-and-status.md — do not redefine axes, status, or ownership here -->
 
-## Axes
-
-Solera organizes a project on three axes:
-
-| Axis | Characteristic | Items |
-|------|----------------|-------|
-| **Living** | Never ends, evolves continuously | Identity, Concepts |
-| **Time-bound** | Has a start and end | Milestone, Story, Action Item |
-| **Immutable** | Frozen snapshot, write-once | Release |
-
-## Human vs AI Role
-
-| Role | Owned items | Primary responsibility |
-|------|-------------|------------------------|
-| **Human** | Identity, Concepts, Milestone agreement, Release approval | Direction, Intent, scope agreement, final say |
-| **AI** | Story, Action Item; drafts for Milestone analysis / Release notes | Decomposition, implementation, proposals |
-
-Both collaborate at **Milestone Agreement** (Moment 2) and **Story Wrap-up** (결과 확정 of Moment 3).
+Project-wide rules referenced by all Solera skills. Axis definitions, ownership, and status values live in [axes-and-status.md](../../../docs/reference/axes-and-status.md). This file owns folder layout, branches, and operator quick cards only.
 
 ## Folder Structure
 
@@ -68,20 +51,4 @@ Both collaborate at **Milestone Agreement** (Moment 2) and **Story Wrap-up** (�
 
 ## Status Values
 
-| Icon | Status | Meaning |
-|------|--------|---------|
-| ⏳ | Pending | Not yet started |
-| 🔄 | In Progress | Work in progress |
-| ✅ | Complete | Work complete |
-| ⏸️ | On Hold | Temporarily paused |
-| ❌ | Cancelled | Abandoned |
-
-## Concept / Milestone Status
-
-Concepts and Milestones use a different status scheme aligned with their axis:
-
-| Item | Status values |
-|------|---------------|
-| Concept | `active` / `deprecated` / `archived` |
-| Milestone | `proposed` / `agreed` / `in-progress` / `released` |
-| Release | always immutable once written (no status field beyond `.released` marker) |
+See [axes-and-status.md](../../../docs/reference/axes-and-status.md) for the authoritative tables and transition rules. Do not duplicate them here.

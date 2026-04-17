@@ -47,20 +47,11 @@ v2 branch patterns (`epics/`, `epics-*/story-*`) are gone — do not create them
 
 ## Status Values
 
-### Work items (Story, Action Item)
+Quick reference (see [axes-and-status.md](../../../docs/reference/axes-and-status.md) for transitions and full rules):
 
-⏳ Pending · 🔄 In Progress · ✅ Complete · ⏸️ On Hold · ❌ Cancelled
-
-### Living Axis
-
+- **Story / Action Item**: ⏳ Pending · 🔄 In Progress · ✅ Complete · ⏸️ On Hold · ❌ Cancelled
 - **Concept**: `active` / `deprecated` / `archived`
-
-### Time-bound Axis
-
 - **Milestone**: `proposed` / `agreed` / `in-progress` / `released`
-
-### Immutable Axis
-
 - **Release**: no status field; presence of `releases/{tag}/.released` marker = immutable.
 
 ## Artifact Promotion

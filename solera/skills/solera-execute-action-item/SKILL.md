@@ -11,6 +11,8 @@ metadata:
   uses: []
 ---
 
+<!-- SSOT: ../../docs/reference/axes-and-status.md — Action Item status icons, transitions, and commit scope tag invariant live there -->
+
 # Executing Action Item
 
 > An Action Item is the smallest workflow unit. **1 Action Item = 1 commit.**
@@ -113,7 +115,7 @@ This skill is the bridge between **일** (the commit-sized unit of work) and **�
   This is a must-do, not an optional step — the Story's Wrap-up depends on this accumulated list to update Concept Current Shape.
 - [ ] Record the commit line in the ACT file's `## Result → Commit` section: `` `{short_hash}` {commit message title} ``.
 - [ ] **Gate `act.done`** (if defined): iterate `checks[]` per **Gate check execution** below; halt on any failure.
-- [ ] Write the ACT file's `## Retrospective` section — ref: [assets/retro.md](assets/retro.md).
+- [ ] Write the ACT file's `## Retrospective` section — ref: [assets/retrospective.md](assets/retrospective.md).
   - Did well / Did poorly / Improvements / Instruction issues.
 - [ ] **System improvement** (when retrospective has "Improvements" or "Instruction System Issues"):
   - Classify each entry:

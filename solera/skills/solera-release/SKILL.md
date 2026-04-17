@@ -11,6 +11,8 @@ metadata:
   uses: []
 ---
 
+<!-- SSOT: ../../docs/reference/axes-and-status.md — Release immutability (`.released` marker) and `in_scope` relation live there -->
+
 # Release
 
 > A Release is the **immutable snapshot** of a project at one moment.

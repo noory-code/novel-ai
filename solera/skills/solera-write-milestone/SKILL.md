@@ -11,6 +11,8 @@ metadata:
   uses: []
 ---
 
+<!-- SSOT: ../../docs/reference/axes-and-status.md — Milestone status values (`proposed`/`agreed`/`in-progress`/`released`) and transitions live there -->
+
 # Writing Milestone
 
 > A Milestone is a **human–AI agreement** on scope, not a deadline.

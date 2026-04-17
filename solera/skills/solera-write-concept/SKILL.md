@@ -11,6 +11,8 @@ metadata:
   uses: []
 ---
 
+<!-- SSOT: ../../docs/reference/axes-and-status.md — Concept status values (`active`/`deprecated`/`archived`) and transitions live there -->
+
 # Writing Concept
 
 > A Concept is a living, unfinished region of the project map.

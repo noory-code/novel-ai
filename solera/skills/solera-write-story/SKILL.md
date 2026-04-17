@@ -12,6 +12,8 @@ metadata:
   uses: [solera-execute-action-item]
 ---
 
+<!-- SSOT: ../../docs/reference/axes-and-status.md — Story status icons, transitions, and `contributes_to` invariant live there -->
+
 # Writing Story
 
 > A Story is the unit of executable work.
@@ -127,7 +129,7 @@ At Wrap-up the AI proposes updates to each contributed Concept's Current Shape; 
 
 - [ ] **Gate check `story.wrap_up`** (if defined in team-process.md): same check types as `story.execute`; halt on failure.
 - [ ] Confirm tests pass (if code changes were made).
-- [ ] Write `RETROSPECTIVE.md` — ref: [assets/retro.md](assets/retro.md). Must include the **"Concept Contribution Summary"** section (see that asset).
+- [ ] Write `RETROSPECTIVE.md` — ref: [assets/retrospective.md](assets/retrospective.md). Must include the **"Concept Contribution Summary"** section (see that asset).
 - [ ] **Concept Current Shape update loop** — for each `concept_id` in `contributes_to`:
   - Read the current `concepts/{id}.md`.
   - AI drafts a proposed revision of `# Current Shape` reflecting what this Story actually produced, based on Output Artifacts and the acceptance criteria that were met.
