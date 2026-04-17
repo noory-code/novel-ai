@@ -1,7 +1,7 @@
 # Action Item Retrospective Rules
 
 > Follow these rules when writing RETROSPECTIVE.md in the Wrap-up Step.
-> Template: [solera-manage-workflow/assets/retro.md](../../solera-manage-workflow/assets/retro.md) — use "AI Behavior Retrospective".
+> Template: [solera-manage-workflow/assets/retrospective.md](../../solera-manage-workflow/assets/retrospective.md) — use "AI Behavior Retrospective".
 
 ## Perspective: AI Behavior
 

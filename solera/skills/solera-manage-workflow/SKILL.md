@@ -117,7 +117,7 @@ The supervisor is state-aware. Branch on current state:
 ## Templates
 
 - [assets/progress.md](assets/progress.md) — progress.md template (v3 format)
-- [assets/retro.md](assets/retro.md) — retrospective base
+- [assets/retrospective.md](assets/retrospective.md) — retrospective base
 - [assets/status.md](assets/status.md) — status convention
 
 ## References

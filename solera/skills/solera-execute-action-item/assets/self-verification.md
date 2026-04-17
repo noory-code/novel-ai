@@ -10,14 +10,16 @@ structural:
   - {id: S-002, name: "Step 0 Setup", type: content_contains, target: assets/action-item.md, patterns: ["### Step 0. Setup"]}
   - {id: S-003, name: "Four workflow steps (0..3)", type: count_check, target: assets/action-item.md, pattern: "### Step \\d+", min: 4, max: 4}
   - {id: S-004, name: "action-item template exists", type: file_exists, paths: [assets/action-item.md]}
-  - {id: S-005, name: "retro template exists", type: file_exists, paths: [assets/retro.md]}
+  - {id: S-005, name: "retrospective template exists", type: file_exists, paths: [assets/retrospective.md]}
 ```
 
 ## Semantic
 
 ```yaml
 semantic:
-  - {id: C-001, name: "1 ACT = 1 commit principle", type: content_contains, target: SKILL.md, patterns: ["1 Action Item = 1 commit"]}
+  - {id: C-001, name: "No AI-First banned phrases", type: content_not_contains, target: SKILL.md, patterns: ["as appropriate", "if needed", "depending on the situation", "as you see fit", "handle accordingly"]}
+
+  - {id: C-040, name: "1 ACT = 1 commit principle", type: content_contains, target: SKILL.md, patterns: ["1 Action Item = 1 commit"]}
   - {id: C-002, name: "v3 commit scope tag uses primary_concept", type: content_contains, target: assets/action-item.md, patterns: ["[{primary_concept}]", "contributes_to"]}
   - {id: C-003, name: "Status transition included", type: content_contains, target: assets/action-item.md, patterns: ["Status →"]}
   - {id: C-004, name: "Cautions section", type: section_exists, target: assets/action-item.md, section: "## Cautions"}

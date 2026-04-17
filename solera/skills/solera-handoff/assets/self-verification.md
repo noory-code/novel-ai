@@ -1,62 +1,37 @@
-# Self-Verification
+# Validation: solera-handoff (v3)
 
-> Automated validation TCs (Test Cases) for skill definition
+> Unique validation rules for this skill. Schema: [docs/reference/self-verification-schema.md](../../../docs/reference/self-verification-schema.md).
 
-## TC001: Input section exists
+## Structural
+
 ```yaml
-type: section_exists
-section: "## Input"
+structural:
+  - {id: S-001, name: "Input section", type: section_exists, target: SKILL.md, section: "## Input"}
+  - {id: S-002, name: "Output section", type: section_exists, target: SKILL.md, section: "## Output"}
+  - {id: S-003, name: "Procedure section", type: section_exists, target: SKILL.md, section: "## Procedure"}
+  - {id: S-004, name: "Completion Checklist", type: section_exists, target: SKILL.md, section: "## Completion Checklist"}
+  - {id: S-005, name: "Handoff template exists", type: file_exists, paths: [assets/handoff-template.md]}
 ```
 
-## TC002: Output section exists
-```yaml
-type: section_exists
-section: "## Output"
-```
+## Semantic
 
-## TC003: Procedure section exists
 ```yaml
-type: section_exists
-section: "## Procedure"
-```
+semantic:
+  - {id: C-001, name: "No AI-First banned phrases", type: content_not_contains, target: SKILL.md,
+     patterns: ["as appropriate", "if needed", "depending on the situation", "as you see fit", "handle accordingly"]}
 
-## TC004: Completion Checklist exists
-```yaml
-type: section_exists
-section: "## Completion Checklist"
-```
+  - {id: C-002, name: "triggers array has 2+ entries", type: pattern_match, target: SKILL.md,
+     pattern: "triggers: \\[[^\\]]+,[^\\]]+\\]"}
 
-## TC005: metadata.triggers has 2 or more items
-```yaml
-type: pattern_match
-pattern: "triggers: \\[[^\\]]+,[^\\]]+\\]"
-description: "triggers array requires at least 2 keywords"
-```
+  - {id: C-003, name: "composite skill declares uses", type: pattern_match, target: SKILL.md,
+     pattern: "uses: \\[.*\\]"}
 
-## TC006: uses field exists (composite type)
-```yaml
-type: pattern_match
-pattern: "uses: \\[.*\\]"
-description: "composite type requires uses field"
-```
+  - {id: C-010, name: "Auto-detects current state", type: content_contains, target: SKILL.md,
+     patterns: ["auto-detects", "current session"]}
 
-## TC007: No AI-First banned phrases
-```yaml
-type: content_not_contains
-forbidden_words: ["as appropriate", "if needed", "depending on the situation", "as you see fit", "handle accordingly", "depending on the case"]
-description: "AI-First banned phrases must not be used"
-```
+  - {id: C-011, name: "HANDOFF.md target declared", type: content_contains, target: SKILL.md,
+     patterns: ["HANDOFF.md"]}
 
-## TC008: Procedure steps exist
-```yaml
-type: content_contains
-required_patterns: ["### Step 1", "### Step 2", "### Step 3", "### Step 4"]
-description: "Steps 1–4 exist in the Procedure section"
-```
-
-## TC009: assets file references
-```yaml
-type: cross_reference
-referenced_files: ["assets/handoff-template.md", "assets/self-verification.md"]
-description: "Confirm referenced assets files actually exist"
+  - {id: C-020, name: "Removed v2 hierarchy references", type: content_not_contains, target: SKILL.md,
+     patterns: ["_epic.md", "epic_name", "goal_id", "phase_id", "solera-write-epic"]}
 ```

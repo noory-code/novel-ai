@@ -1,7 +1,7 @@
 # Story Retrospective Rules
 
 > Follow these rules when writing `RETROSPECTIVE.md` at Story Wrap-up.
-> Template base: [solera-manage-workflow/assets/retro.md](../../solera-manage-workflow/assets/retro.md) — use the "AI Behavior Retrospective" form.
+> Template base: [solera-manage-workflow/assets/retrospective.md](../../solera-manage-workflow/assets/retrospective.md) — use the "AI Behavior Retrospective" form.
 
 ## Perspective: AI Behavior
 

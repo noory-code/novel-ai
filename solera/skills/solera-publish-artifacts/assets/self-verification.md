@@ -56,6 +56,7 @@ semantic:
       - "if needed"
       - "depending on the situation"
       - "as you see fit"
+      - "handle accordingly"
 
   - id: C-002
     name: "v3 core keywords present"

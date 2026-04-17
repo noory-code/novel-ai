@@ -18,7 +18,7 @@ structural:
 
 ```yaml
 semantic:
-  - {id: C-001, name: "No AI-First banned phrases", type: content_not_contains, target: SKILL.md, patterns: ["as appropriate", "if needed", "depending on the situation", "as you see fit"]}
+  - {id: C-001, name: "No AI-First banned phrases", type: content_not_contains, target: SKILL.md, patterns: ["as appropriate", "if needed", "depending on the situation", "as you see fit", "handle accordingly"]}
 
   - {id: C-010, name: "Four modes documented", type: content_contains, target: SKILL.md, patterns: ["create", "update", "deprecate", "archive"]}
   - {id: C-011, name: "Living Axis framing", type: content_contains, target: SKILL.md, patterns: ["Living Axis", "Moment 1"]}

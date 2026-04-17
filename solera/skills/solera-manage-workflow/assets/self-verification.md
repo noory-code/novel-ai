@@ -37,7 +37,7 @@ structural:
       - assets/conventions.md
       - assets/lifecycle.md
       - assets/progress.md
-      - assets/retro.md
+      - assets/retrospective.md
       - assets/status.md
 ```
 
@@ -54,6 +54,7 @@ semantic:
       - "if needed"
       - "depending on the situation"
       - "as you see fit"
+      - "handle accordingly"
 
   - id: C-002
     name: "Core v3 keywords present"
