@@ -3,7 +3,7 @@ name: solera-migrate-v2
 user-invocable: true
 description: Assisted, non-destructive migration from Solera v2 (Phase/Goal/Epic hierarchy) to v3 (three axes). Every step blocks for human approval; reversible via git until committed.
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   category: meta
   type: unit
   style: procedural
@@ -71,9 +71,14 @@ migrate-v2 is a **one-shot transition skill**, not a work item. It runs once (or
 - [ ] On approval:
   - Create `{workspace_path}/_v2-archive/workspace-original/`
   - For every direct child of `{workspace_path}/` (except `_v2-archive`): `git mv {workspace_path}/{child} {workspace_path}/_v2-archive/workspace-original/{child}` (preserves git history)
-  - For each `extra_artifact_dirs/{path}`: create `{workspace_path}/_v2-archive/extra/{basename}` parent if needed, then `git mv {extra_dir} {workspace_path}/_v2-archive/extra/{basename}`
+  - For each `extra_artifact_dirs/{path}`: when `{workspace_path}/_v2-archive/extra/{basename}` parent does not exist, `mkdir -p` it; then `git mv {extra_dir} {workspace_path}/_v2-archive/extra/{basename}`
 - [ ] After this step, `{workspace_path}/` contains exactly one entry: `_v2-archive/`.
-- [ ] Commit: `chore(solera): freeze v2 workspace before v3 migration`
+- [ ] Commit with resume trailer:
+  ```
+  chore(solera): freeze v2 workspace before v3 migration
+
+  Solera-Migrate-Step: 1-freeze
+  ```
 - [ ] Report: `"Frozen. Entire workspace archived to _v2-archive/workspace-original/. Continuing to Step 2 (skeleton)."`
 
 ### Step 2 — Skeleton
@@ -132,7 +137,12 @@ Merge archived catalogs from both the original workspace and every extra vault i
 - [ ] **Filename collision detection during merge**: if the same filename from different sources targets the same destination:
   - **BLOCKING**: show a short diff summary and ask `"Which version wins? (1) source A  (2) source B  (3) both (rename the later one to {name}__{source_tag}.md)"`.
 
-- [ ] Commit: `chore(solera): scaffold v3 workspace skeleton`
+- [ ] Commit with resume trailer:
+  ```
+  chore(solera): scaffold v3 workspace skeleton
+
+  Solera-Migrate-Step: 2-skeleton
+  ```
 - [ ] Report: `"Skeleton created. Identity copied (X standard, Y non-standard per choice). Catalog merged (Z known types, W unknown routed to _unclassified/ or mapped, L loose files handled). Continuing to Step 3 (concepts)."`
 
 ### Step 3 — Concept candidate proposal
@@ -197,7 +207,12 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   Batch-processing constraint: the skill writes each accepted Concept file directly (matching the v3 template) rather than invoking `solera-write-concept` per candidate. This honors the "AI must not invent Intent" rule by **grounding every sentence in an explicit v2 source**, not by relying on the interactive-Intent BLOCKING gate.
 
 - [ ] After all approved/rewritten Concepts are written: update `concepts/_index.md`.
-- [ ] Commit: `chore(solera): migrate concepts from v2 (N concepts drafted)`
+- [ ] Commit with resume trailer:
+  ```
+  chore(solera): migrate concepts from v2 (N concepts drafted)
+
+  Solera-Migrate-Step: 3-concepts
+  ```
 
 ### Step 4 — Story relocation with `contributes_to` inference
 
@@ -245,7 +260,12 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   - Patch each `ACT-NNN-*.md` in the Story: prepend the same origin comment.
   - **Do not** rewrite existing git commit messages from v2 (`[epic-name][US-NNN][ACT-NNN]`). The git log preserves v2-era commits as-is; only the filesystem layout and frontmatter change.
 - [ ] Report progress: `"Relocated X/Y Stories. Z flagged for human review (empty contributes_to)."`
-- [ ] Commit: `chore(solera): migrate N stories to v3 stories/`
+- [ ] Commit with resume trailer:
+  ```
+  chore(solera): migrate N stories to v3 stories/
+
+  Solera-Migrate-Step: 4-stories
+  ```
 
 ### Step 5 — `pre-v3` synthetic Milestone (required)
 
@@ -259,7 +279,12 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   - `# Exit Criteria`: one entry per Concept: `"Current Shape reflects whatever the v2 era had produced."` (All treated as met by construction.)
   - `# Accepted Risks`: the list of Stories flagged with empty `contributes_to` from Step 4.
 - [ ] Update `milestones/_index.md` — add `pre-v3` under `## Released`.
-- [ ] Commit: `chore(solera): create pre-v3 synthetic milestone`
+- [ ] Commit with resume trailer:
+  ```
+  chore(solera): create pre-v3 synthetic milestone
+
+  Solera-Migrate-Step: 5-milestone
+  ```
 
 ### Step 6 — `releases/v2-final/` snapshot
 
@@ -271,7 +296,12 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   - Accepted risks: "IDs renamed / contributes_to inferred by AI for some Stories — see `MIGRATION-NOTES.md`"
 - [ ] **BLOCKING**: human reviews and edits the README draft; approves before the release is finalized.
 - [ ] `solera-release` writes `releases/v2-final/` (immutable snapshot, ❄️ markers on concept copies, `.released` marker).
-- [ ] Commit: `chore(solera): freeze v2 era as release v2-final`
+- [ ] Commit with resume trailer:
+  ```
+  chore(solera): freeze v2 era as release v2-final
+
+  Solera-Migrate-Step: 6-release
+  ```
 
 ### Step 7 — Cleanup + migration notes
 
@@ -285,7 +315,12 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
 - [ ] **BLOCKING**: ask `"Delete _v2-archive/? (default: keep. It's safe to keep — git history stores everything.)"`
   - Default: **keep**. The archive is not heavy.
   - If the human chooses delete: `git rm -r _v2-archive/`.
-- [ ] Commit: `chore(solera): complete v2→v3 migration (see MIGRATION-NOTES.md)`
+- [ ] Commit with resume trailer:
+  ```
+  chore(solera): complete v2→v3 migration (see MIGRATION-NOTES.md)
+
+  Solera-Migrate-Step: 7-cleanup
+  ```
 - [ ] Final report:
   ```
   Migration complete.
@@ -300,9 +335,17 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
 
 ## Resume Semantics
 
-If re-invoked on a workspace that has both `_v2-archive/` and partial v3 structure, the skill detects the furthest completed step by filesystem signals:
+If re-invoked on a workspace with partial v3 state, the skill determines the last completed step **deterministically** from commit trailers, then falls back to filesystem signals only if the trailers are absent (e.g., amended commits, repo rebased).
 
-| Signal | Step already done |
+**Primary signal — `Solera-Migrate-Step` trailer in recent commits**:
+
+- [ ] Run `git log --grep="Solera-Migrate-Step:" --format="%H %s%n%b" -n 20` on the current branch.
+- [ ] The highest-numbered step found (`7-cleanup` > `6-release` > … > `1-freeze`) = last completed step.
+- [ ] Next step = that number + 1. If `7-cleanup` is present, the migration is already complete → halt with `"Migration already complete (commit {hash}). To revise, edit files directly or cut a new release."`.
+
+**Fallback signal — filesystem state** (only when no trailer is found):
+
+| Signal | Step inferred complete |
 |---|---|
 | `_v2-archive/` exists, `workspace/catalog/published/` populated (possibly with `_unclassified/`) | Step 1, 2 |
 | `concepts/_index.md` has entries | Step 1, 2, 3 |
@@ -311,7 +354,9 @@ If re-invoked on a workspace that has both `_v2-archive/` and partial v3 structu
 | `releases/v2-final/.released` exists | Step 6 |
 | `MIGRATION-NOTES.md` exists | Step 7 |
 
-The skill asks `"Resume from Step {N+1}? (or restart from earlier step)"` before proceeding.
+If the trailer-derived step and filesystem-derived step disagree (e.g., trailer says Step 3 done but `stories/` already has tagged Stories), trust the filesystem and warn: `"Commit trailer says step {N}, but filesystem suggests step {M}. Resuming from step {max(N,M)+1}."`
+
+In all cases the skill asks `"Resume from Step {N+1}? (or restart from earlier step)"` before proceeding.
 
 ## Human–AI Protocol
 

@@ -170,7 +170,7 @@ created: {YYYY-MM-DD}
 | `TS-` | Technical Story | TS-001, TS-002 |
 
 > **v3 change**: Story IDs are unique **globally within `stories/`**, not scoped to an Epic (Epic no longer exists).
-> Use numeric ranges per contributor if needed to avoid collisions.
+> When multiple contributors pick IDs in parallel, assign numeric ranges per contributor (e.g., contributor A uses 001–099, B uses 100–199) to avoid collisions.
 
 ## Commit Message Format
 
