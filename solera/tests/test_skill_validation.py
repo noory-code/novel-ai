@@ -1,13 +1,14 @@
 """Automated skill parameter validation tests
 
-Validates required parameters, formats, and prerequisites for write-story and execute-action-item skills.
+Validates required parameters, formats, prerequisites, and outputs for v3 skills
+(solera-write-story and solera-execute-action-item). Anchored to the v3.0.0
+three-axis model: Stories contribute to Concepts (no phases/goals/epics).
 """
 
 from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any
 
 
 class SkillValidator:
@@ -50,7 +51,7 @@ class SkillValidator:
             if in_prerequisites and line.startswith("##"):
                 break
             if in_prerequisites and line.strip().startswith("- "):
-                prereq = line.strip()[2:].split(":")[0] if ":" in line else line.strip()[2:]
+                prereq = line.strip()[2:]
                 prerequisites.append(prereq.strip())
 
         return prerequisites
@@ -72,74 +73,79 @@ class SkillValidator:
                     outputs.append({
                         "step": parts[1],
                         "output": parts[2],
-                        "nature": parts[3] if len(parts) > 3 else "",
-                        "path": parts[4] if len(parts) > 4 else "",
+                        "path": parts[3] if len(parts) > 3 else "",
+                        "nature": parts[4] if len(parts) > 4 else "",
                     })
 
         return outputs
 
 
+# ---------------------------------------------------------------------------
+# solera-write-story (v3: Story → Concepts, no phase/goal/epic)
+# ---------------------------------------------------------------------------
+
 def test_write_story_required_parameters():
-    """write-story: validation fails when required parameters are missing"""
+    """write-story: required parameters match v3 three-axis model"""
     skill_path = Path(__file__).parent.parent / "skills" / "solera-write-story" / "SKILL.md"
     validator = SkillValidator(skill_path)
 
     required_params = validator.extract_required_parameters()
 
-    # Verify required parameters exist
     assert len(required_params) > 0, "No required parameters defined"
 
-    # Expected required parameters
-    expected_params = {"project_path", "phase_id", "goal_id", "epic_name", "story_id", "story_name"}
+    # v3 required set — Story contributes to Concepts, no phase/goal/epic
+    expected_params = {"project_path", "story_id", "story_name", "contributes_to"}
     found_params = set(required_params)
 
     assert expected_params.issubset(found_params), \
         f"Missing required parameters: {expected_params - found_params}"
 
+    # Guard against regression to v2 schema
+    forbidden_params = {"phase_id", "goal_id", "epic_name", "epic_branches"}
+    leaked = forbidden_params & found_params
+    assert not leaked, \
+        f"v2 parameters leaked back into write-story: {leaked}"
+
 
 def test_write_story_parameter_formats():
     """write-story: parameter format validation"""
-    skill_path = Path(__file__).parent.parent / "skills" / "solera-write-story" / "SKILL.md"
-    validator = SkillValidator(skill_path)
-
-    # phase_id format: YYYY-PX-name
-    phase_id_pattern = r"^\d{4}-P\d+-[\w-]+$"
-    example_phase_id = "2026-P1-foundation"
-    assert re.match(phase_id_pattern, example_phase_id), \
-        f"Invalid phase_id format: {example_phase_id}"
-
-    # goal_id format: GX-name
-    goal_id_pattern = r"^G\d+-[\w-]+$"
-    example_goal_id = "G1-search-liquor"
-    assert re.match(goal_id_pattern, example_goal_id), \
-        f"Invalid goal_id format: {example_goal_id}"
-
     # story_id format: US-NNN or TS-NNN
     story_id_pattern = r"^(US|TS)-\d{3}$"
-    example_story_id = "US-001"
-    assert re.match(story_id_pattern, example_story_id), \
-        f"Invalid story_id format: {example_story_id}"
+    for valid in ("US-001", "TS-014"):
+        assert re.match(story_id_pattern, valid), \
+            f"Valid story_id failed format check: {valid}"
+
+    for invalid in ("US-1", "STORY-001", "us-001"):
+        assert not re.match(story_id_pattern, invalid), \
+            f"Invalid story_id passed format check: {invalid}"
+
+    # story_name: kebab-case
+    story_name_pattern = r"^[a-z][a-z0-9-]*[a-z0-9]$"
+    assert re.match(story_name_pattern, "google-login")
+    assert not re.match(story_name_pattern, "GoogleLogin")
 
 
 def test_write_story_prerequisites():
-    """write-story: prerequisites validation"""
+    """write-story: prerequisites reference v3 Concepts, not epics"""
     skill_path = Path(__file__).parent.parent / "skills" / "solera-write-story" / "SKILL.md"
     validator = SkillValidator(skill_path)
 
     prerequisites = validator.extract_prerequisites()
 
-    # Verify prerequisites exist
     assert len(prerequisites) > 0, "No prerequisites defined"
 
-    # Expected prerequisites
-    expected_prereqs = [
-        "`published/identity/mission.md` exists",
-        "`_epic.md` exists",
-    ]
+    joined = "\n".join(prerequisites)
 
-    for expected in expected_prereqs:
-        assert any(expected in prereq for prereq in prerequisites), \
-            f"Missing required prerequisite: {expected}"
+    # Must mention Concept-oriented prerequisites
+    assert "concepts/_index.md" in joined, \
+        "Prerequisites must reference concepts/_index.md"
+    assert "concepts/{id}" in joined or "concepts/{id}.md" in joined or "status: active" in joined, \
+        "Prerequisites must require each contributed Concept to exist/be active"
+
+    # Guard against v2 remnants
+    assert "_epic.md" not in joined, "v2 _epic.md prerequisite must not appear in v3"
+    assert "phase" not in joined.lower() or "contributes_to" in joined.lower(), \
+        "v2 phase/goal language must not reappear"
 
 
 def test_write_story_expected_outputs():
@@ -149,53 +155,59 @@ def test_write_story_expected_outputs():
 
     outputs = validator.extract_outputs()
 
-    # Verify outputs exist
     assert len(outputs) > 0, "No outputs defined"
 
-    # Expected output files
-    expected_output_names = ["_story.md", "ACT-NNN-{name}.md", "RETROSPECTIVE.md"]
-
     found_outputs = [o["output"] for o in outputs]
+    joined = " ".join(found_outputs)
 
-    for expected in expected_output_names:
-        assert any(expected in output for output in found_outputs), \
-            f"Missing required output: {expected}"
+    # Core v3 outputs
+    assert "_story.md" in joined, "_story.md output must be declared"
+    assert "ACT-NNN" in joined or "ACT-" in joined, "Action Item files must be declared as output"
+    assert "RETROSPECTIVE.md" in joined, "RETROSPECTIVE.md output must be declared"
 
+    # v3-specific: Concept Current Shape updates
+    assert "Current Shape" in joined or "concepts/" in joined, \
+        "write-story Wrap-up must declare Concept updates as output"
+
+
+# ---------------------------------------------------------------------------
+# solera-execute-action-item (v3: no epic_name, ACT is a commit)
+# ---------------------------------------------------------------------------
 
 def test_execute_action_item_required_parameters():
-    """execute-action-item: validation fails when required parameters are missing"""
+    """execute-action-item: required parameters match v3 (no epic_name)"""
     skill_path = Path(__file__).parent.parent / "skills" / "solera-execute-action-item" / "SKILL.md"
     validator = SkillValidator(skill_path)
 
     required_params = validator.extract_required_parameters()
 
-    # Verify required parameters exist
     assert len(required_params) > 0, "No required parameters defined"
 
-    # Expected required parameters
-    expected_params = {"epic_name", "story_id", "action_item_id", "action_item_name"}
+    expected_params = {
+        "project_path", "story_id", "story_name",
+        "action_item_id", "action_item_name",
+    }
     found_params = set(required_params)
 
     assert expected_params.issubset(found_params), \
         f"Missing required parameters: {expected_params - found_params}"
 
+    # Guard against v2 regression
+    assert "epic_name" not in found_params, \
+        "v2 epic_name parameter must not reappear in execute-action-item"
+
 
 def test_execute_action_item_parameter_formats():
     """execute-action-item: parameter format validation"""
-    skill_path = Path(__file__).parent.parent / "skills" / "solera-execute-action-item" / "SKILL.md"
-    validator = SkillValidator(skill_path)
-
     # action_item_id format: ACT-NNN
     action_item_id_pattern = r"^ACT-\d{3}$"
-    example_action_item_id = "ACT-001"
-    assert re.match(action_item_id_pattern, example_action_item_id), \
-        f"Invalid action_item_id format: {example_action_item_id}"
+    assert re.match(action_item_id_pattern, "ACT-001")
+    assert not re.match(action_item_id_pattern, "ACT-1")
 
     # story_id format: US-NNN or TS-NNN
     story_id_pattern = r"^(US|TS)-\d{3}$"
-    example_story_id = "US-001"
-    assert re.match(story_id_pattern, example_story_id), \
-        f"Invalid story_id format: {example_story_id}"
+    assert re.match(story_id_pattern, "US-001")
+    assert re.match(story_id_pattern, "TS-014")
 
 
 def test_execute_action_item_prerequisites():
@@ -205,19 +217,13 @@ def test_execute_action_item_prerequisites():
 
     prerequisites = validator.extract_prerequisites()
 
-    # Verify prerequisites exist
     assert len(prerequisites) > 0, "No prerequisites defined"
 
-    # Expected prerequisites
-    expected_prereqs = [
-        "`_story.md` exists",
-        "The corresponding ACT must be assigned in the Action Items table of _story.md",
-        "All prerequisite ACTs listed in depends_on must be ✅ complete",
-    ]
+    joined = "\n".join(prerequisites)
 
-    for expected in expected_prereqs:
-        assert any(expected in prereq for prereq in prerequisites), \
-            f"Missing required prerequisite: {expected}"
+    assert "_story.md" in joined, "Must require parent _story.md"
+    assert "Action Items table" in joined, "Must require ACT to appear in Story's Action Items table"
+    assert "depends_on" in joined, "Must require depends_on ACTs to be complete"
 
 
 def test_execute_action_item_expected_outputs():
@@ -227,38 +233,42 @@ def test_execute_action_item_expected_outputs():
 
     outputs = validator.extract_outputs()
 
-    # Verify outputs exist
     assert len(outputs) > 0, "No outputs defined"
 
-    # Expected outputs
-    expected_output_steps = ["Execute", "Wrap-up"]
-
     found_steps = [o["step"] for o in outputs]
+    joined_outputs = " ".join(o["output"] for o in outputs)
 
-    for expected in expected_output_steps:
-        assert any(expected in step for step in found_steps), \
-            f"Missing required output step: {expected}"
+    assert any("Execute" in s for s in found_steps), "Execute step must declare outputs"
+    assert any("Wrap-up" in s for s in found_steps), "Wrap-up step must declare outputs"
+    assert "commit" in joined_outputs.lower(), "Wrap-up must declare a git commit as output"
+    assert "Output Artifacts" in joined_outputs, \
+        "Wrap-up must append Output Artifacts to parent Story (v3 invariant)"
 
+
+# ---------------------------------------------------------------------------
+# Commit message format (v3: [primary_concept][story_id][ACT-NNN])
+# ---------------------------------------------------------------------------
 
 def test_commit_message_format_validation():
-    """Commit message format validation"""
-    # Valid format
+    """Commit message follows v3 three-axis scope tag: [concept_id][story_id][ACT-NNN]"""
     valid_format = r"^\[[\w-]+\]\[(US|TS)-\d{3}\]\[ACT-\d{3}\] .+$"
 
+    # v3 valid examples — scope tag is a Concept ID (contributes_to[0])
     valid_messages = [
-        "[01-auth][US-001][ACT-001] Create login form",
-        "[api-design][TS-002][ACT-005] Add auth endpoint",
+        "[authentication][US-001][ACT-001] Add GoogleLoginUseCase",
+        "[liquor-search][TS-014][ACT-003] Write FTS5 index migration",
+        "[onboarding][US-002][ACT-005] Wire welcome screen",
     ]
 
     for msg in valid_messages:
         assert re.match(valid_format, msg), \
             f"Valid commit message failed format validation: {msg}"
 
-    # Invalid format
     invalid_messages = [
-        "[01-auth][US-001] message",  # ACT-NNN missing
-        "[US-001][ACT-001] message",  # epic-name missing
-        "[01-auth][US-001][ACT-1] message",  # ACT format error
+        "[authentication][US-001] message",      # ACT-NNN missing
+        "[US-001][ACT-001] message",             # concept tag missing
+        "[authentication][US-001][ACT-1] message",  # ACT format error
+        "authentication][US-001][ACT-001] message",  # malformed brackets
     ]
 
     for msg in invalid_messages:
@@ -267,17 +277,16 @@ def test_commit_message_format_validation():
 
 
 if __name__ == "__main__":
-    # Simple runner for when pytest is not available
     import sys
 
     tests = [
         ("write-story required parameters", test_write_story_required_parameters),
         ("write-story parameter formats", test_write_story_parameter_formats),
-        ("write-story Prerequisites", test_write_story_prerequisites),
+        ("write-story prerequisites", test_write_story_prerequisites),
         ("write-story expected outputs", test_write_story_expected_outputs),
         ("execute-action-item required parameters", test_execute_action_item_required_parameters),
         ("execute-action-item parameter formats", test_execute_action_item_parameter_formats),
-        ("execute-action-item Prerequisites", test_execute_action_item_prerequisites),
+        ("execute-action-item prerequisites", test_execute_action_item_prerequisites),
         ("execute-action-item expected outputs", test_execute_action_item_expected_outputs),
         ("commit message format", test_commit_message_format_validation),
     ]
