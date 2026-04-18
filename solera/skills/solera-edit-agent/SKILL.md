@@ -3,7 +3,7 @@ name: solera-edit-agent
 user-invocable: true
 description: Use this skill when the user asks to "create an agent", "define a subagent", "add a specialist agent (task or team mode)", "improve an agent's triggering description", or "audit an agent against official frontmatter requirements". Produces .claude/agents/{name}.md with the full required frontmatter (name, description with <example> blocks, model, color, tools-whitelist) and either the task or team body template.
 metadata:
-  version: "2.1.0"
+  version: "2.2.0"
   category: meta
   type: unit
   style: procedural
@@ -71,7 +71,7 @@ Every agent file is a Markdown document with **required YAML frontmatter** follo
 - team: define persistent role, SendMessage protocol, include shutdown_response handling
 - both: include both task and team sections
 
-**Step 3: Write frontmatter (required)** — every agent file MUST start with YAML frontmatter
+**Step 3: Write frontmatter (required)** — every agent file MUST start with YAML frontmatter. For worked examples of good/bad `description` blocks, see [references/description-examples.md](references/description-examples.md).
 
 - [ ] `name`: hyphen-case, matches filename
 - [ ] `description`: starts with `"Use this agent when ..."`, includes ≥2 `<example>` blocks (Context / user / assistant / commentary). Concrete trigger phrases, not "as needed".
@@ -79,7 +79,9 @@ Every agent file is a Markdown document with **required YAML frontmatter** follo
 - [ ] `color`: a distinct color so the agent is visually identifiable (blue/cyan/green/yellow/magenta/red)
 - [ ] `tools`: minimal whitelist — only what this role actually uses. Never "all tools".
 
-**Step 4: Write agent body** — ref: [assets/task-agent-template.md](assets/task-agent-template.md) | [assets/team-agent-template.md](assets/team-agent-template.md)
+**Step 4: Write agent body** — the body becomes the agent's system prompt at runtime. Use the template that matches `agent_mode` and follow the design rules in [references/system-prompt-design.md](references/system-prompt-design.md).
+
+- ref: [assets/task-agent-template.md](assets/task-agent-template.md) | [assets/team-agent-template.md](assets/team-agent-template.md)
 
 - [ ] Role section (one line)
 - [ ] Instructions with explicit `condition → action` rules
@@ -143,5 +145,17 @@ Every agent file is a Markdown document with **required YAML frontmatter** follo
 - [ ] `description` starts with `"Use this agent when ..."` and includes ≥2 `<example>` blocks
 - [ ] `tools` is a minimal whitelist
 - [ ] Role and Instructions sections present in body
+- [ ] Body follows the six-section structure from [references/system-prompt-design.md](references/system-prompt-design.md)
 - [ ] CLAUDE.md Agents table updated
 - [ ] team mode → shutdown protocol included
+
+## References
+
+Deep dives live next to this skill; load them on demand rather than inlining here.
+
+| File | When to load |
+|------|---------------|
+| [references/system-prompt-design.md](references/system-prompt-design.md) | Writing the Markdown body (system prompt). Has the six-section structure, three Solera-common patterns (Analysis / Generation / Team-lead), and the length budget. |
+| [references/description-examples.md](references/description-examples.md) | Writing or reviewing the `description` frontmatter field. Has good/bad `<example>` catalogs and a calibration checklist. |
+
+For the full official catalogue (6+ system prompt patterns, extended validation rules), read [`plugin-dev/skills/agent-development`](https://github.com/anthropics/claude-plugins/tree/main/plugins/plugin-dev/skills/agent-development) directly.
