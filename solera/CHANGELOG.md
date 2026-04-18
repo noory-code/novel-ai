@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.12] — 2026-04-18
+
+### Fixed
+
+- **Iteration 25 defect 42 — primary-feature derivation final fallback**. The v3.4.7 rule said "extract from directory suffix → else first `feature/*` tag" but gave no explicit behaviour when both fail (directory name has no extractable token AND the Epic has no `feature/*` tags at all). Banas does not trigger this because every Epic has both a sensible directory name and multiple tags, but an imported v2 vault without disciplined tagging could. Step 3 now runs a BLOCKING prompt per affected Epic asking the human for a one-word kebab-case primary feature (or `skip`), instead of silently dropping the Epic from Concept proposals.
+
+---
+
 ## [3.4.11] — 2026-04-18
 
 ### Fixed
