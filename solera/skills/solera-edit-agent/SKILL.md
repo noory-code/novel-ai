@@ -1,9 +1,9 @@
 ---
 name: solera-edit-agent
 user-invocable: true
-description: Define or improve an agent — specifies role, tools, and boundaries so Claude acts as a focused specialist.
+description: Use this skill when the user asks to "create an agent", "define a subagent", "add a specialist agent (task or team mode)", "improve an agent's triggering description", or "audit an agent against official frontmatter requirements". Produces .claude/agents/{name}.md with the full required frontmatter (name, description with <example> blocks, model, color, tools-whitelist) and either the task or team body template.
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
   category: meta
   type: unit
   style: procedural

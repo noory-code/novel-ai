@@ -1,9 +1,9 @@
 ---
 name: solera-edit-command
 user-invocable: true
-description: Add or refine a slash command — packages a repeatable workflow into a single /command invocation.
+description: Use this skill when the user asks to "create a slash command", "add a /command", "package this workflow into a reusable command", "write a command that takes an argument", or "audit a slash command". Produces .claude/commands/{name}.md with frontmatter (description, allowed-tools, argument-hint) and updates the CLAUDE.md command list.
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
   category: meta
   type: unit
   style: procedural

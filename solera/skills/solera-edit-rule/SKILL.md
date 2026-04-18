@@ -1,9 +1,9 @@
 ---
 name: solera-edit-rule
 user-invocable: true
-description: Add or refine a project rule — turns a constraint or convention into a structured, unambiguous rule file.
+description: Use this skill when the user asks to "create a rule", "add a coding rule", "write a project convention as a rule", "turn this constraint into a rule file", or "audit a rule for clarity". Produces a structured .claude/rules/{name}.md with YAML frontmatter (name, description, version, applies_to), Scope, verifiable Checklist, and concrete Good/Bad examples — line count capped at 200.
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
   category: meta
   type: unit
   style: procedural

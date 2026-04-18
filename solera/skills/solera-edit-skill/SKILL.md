@@ -1,9 +1,9 @@
 ---
 name: solera-edit-skill
 user-invocable: true
-description: Add, refine, or audit a skill — guides Claude from a blank template to a production-ready SKILL.md.
+description: Use this skill when the user asks to "create a skill", "add a skill to this plugin/project", "improve a skill's triggering description", "organize SKILL.md content", "split a skill by type (unit vs composite)", or "audit a skill against Solera conventions". Produces or reviews .claude/skills/{name}/SKILL.md using the Solera taxonomy (unit|composite × guide|procedural) and keeps the file under 200 lines by moving reference content to assets/.
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
   category: meta
   type: unit
   style: procedural
