@@ -3,7 +3,7 @@ name: solera-init
 user-invocable: true
 description: Set up Solera v3 in a project — install rules, create the three-axis workspace, and run the team kickoff interview.
 metadata:
-  version: "3.0.0"
+  version: "3.1.0"
   category: meta
   type: unit
   style: procedural
@@ -233,6 +233,33 @@ For each gate where `condition` is non-empty, ask:
 
 ---
 
+### Step 6. Project-Tailored Tooling (optional, BLOCKING)
+
+> Propose agent/skill candidates that would serve this specific project, and let the human pick which to create.
+> Catalog SSOT: [../../docs/reference/tooling-catalog.md](../../docs/reference/tooling-catalog.md) — read that first for the full candidate list and extension rules.
+
+- [ ] Read `project.type` from the `team-process.md` just written.
+- [ ] **If `project.type` has no candidates in the catalog** (currently everything except `software`):
+  - Report: `"Tooling catalog does not yet list candidates for project.type={type}. Skipping Step 6 — you can run solera-edit-agent / solera-edit-skill manually when you identify concrete roles you want."`
+  - Skip to Completion Checklist.
+- [ ] **Otherwise, gather file-system evidence** per the catalog's "Evidence patterns" table. Use `Glob` for pattern matches; use `Bash(command="git rev-list --count HEAD")` only where the catalog requires it.
+- [ ] **Resolve the candidate set**: for each candidate whose "Propose when" condition holds against the gathered evidence, include it. Skip the rest.
+- [ ] **If the resolved candidate set is empty**: report `"No tooling candidates matched evidence. Skipping Step 6."` and skip to Completion Checklist.
+- [ ] **BLOCKING multi-select prompt**: present the candidate set to the human. For each candidate, show:
+  - Name (e.g. `test-runner` agent)
+  - One-line role description (from catalog's "Role" field)
+  - Evidence that triggered the proposal (e.g. `pyproject.toml`, `tests/`)
+  - Three options per candidate: `create now` / `decline (with reason)` / `defer (revisit later)`
+- [ ] **For each `create now` selection**:
+  - Invoke the matching meta-skill with catalog-supplied defaults:
+    - agent candidate → `Skill(name="solera-edit-agent", args={"action": "create", "agent_name": "{candidate_name}", "agent_mode": "task"})` — the invocation passes along `model`, `color`, `tools` defaults from the catalog.
+    - skill candidate → `Skill(name="solera-edit-skill", args={"action": "create", "skill_name": "{project-name}-{candidate_name}"})`.
+  - After each creation: verify the output file exists at the expected path.
+- [ ] **Record decisions** in `team-process.md` under the new `tooling:` section (see template below). Every candidate ends in exactly one of `created` / `declined` / `deferred`.
+- [ ] Report: `"Step 6 complete. Created: N. Declined: M. Deferred: K. Catalog: docs/reference/tooling-catalog.md."`
+
+---
+
 #### team-process.md template
 
 Fill all collected values. Leave commented examples for empty optional fields.
@@ -320,6 +347,22 @@ tools:
 
 custom_rules:
   # - "..."
+
+tooling:
+  # Step 6 output — project-tailored agent/skill decisions.
+  # See docs/reference/tooling-catalog.md for the candidate catalog.
+  # Every Step 6 proposal ends in exactly one of these lists:
+  created:
+    # - name: test-runner
+    #   kind: agent                # agent | skill
+    #   created_at: "2026-04-18"
+    #   evidence: [pyproject.toml, tests/]
+  declined:
+    # - name: pr-reviewer
+    #   reason: "solo project, no PR workflow"
+  deferred:
+    # - name: convention-guard
+    #   reason: "architecture_rules is empty today; revisit after writing them"
 ```
 
 ## Completion Checklist
@@ -330,4 +373,5 @@ custom_rules:
 - [ ] `progress.md` initialized with v3 three-axis format
 - [ ] Kickoff interview completed (Steps A–G)
 - [ ] `team-process.md` written with v3 gate keys (no `epic.*` gates)
+- [ ] Step 6 (Project-Tailored Tooling) completed: either skipped with a report, or ran to yield `tooling.created/.declined/.deferred` in `team-process.md`
 - [ ] User informed of next step: "Run `solera-write-identity` to establish project identity, then `solera-write-concept` to draw your first Concept."

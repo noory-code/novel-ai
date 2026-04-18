@@ -1,0 +1,122 @@
+# Project-Tailored Tooling Catalog
+
+> **SSOT.** `solera-init` Step 6 reads this file to propose project-specific agent/skill candidates based on `project.type` (collected in Step 5) and file-system evidence.
+>
+> **Scope today**: `software` project type with a focused candidate set. Other project types are placeholders — extend this file when real user pull requests warrant them. YAGNI.
+
+## How Step 6 uses this catalog
+
+```
+1. Read project.type from team-process.md (set in Step 5).
+2. Scan project_path for file-system evidence (see "Evidence patterns" per type).
+3. Look up the candidate set for (type, evidence) in this catalog.
+4. Present candidates to the user with BLOCKING multi-select prompt.
+5. For each selected candidate, invoke solera-edit-agent or solera-edit-skill.
+6. Record selections (created / declined / deferred) to team-process.md under `tooling:`.
+```
+
+Candidates listed here are **proposals** — the user always decides whether to create, skip, or defer each one. No candidate is auto-generated without explicit confirmation.
+
+## Evidence patterns → Candidate map
+
+### `project.type: software`
+
+Step 6 performs these Glob scans at `{project_path}/`:
+
+| Evidence signal | Glob pattern |
+|---|---|
+| Python project | `pyproject.toml`, `requirements.txt`, `uv.lock`, `poetry.lock` |
+| Node/JS project | `package.json`, `pnpm-lock.yaml`, `yarn.lock` |
+| TypeScript | `tsconfig.json`, `*.ts`, `*.tsx` |
+| Flutter | `pubspec.yaml`, `lib/**/*.dart` |
+| Go | `go.mod` |
+| Rust | `Cargo.toml` |
+| Docker | `Dockerfile`, `docker-compose.yml`, `compose.yaml` |
+| CI present | `.github/workflows/*.yml`, `.gitlab-ci.yml`, `.circleci/config.yml` |
+| DB migrations | `migrations/`, `db/migrations/`, `alembic/` |
+| Tests present | `tests/`, `**/*_test.go`, `**/*.spec.ts`, `test/` |
+| Architecture rules configured | `team-process.md` → `architecture_rules.rules[]` non-empty |
+
+### Candidate set — `software`
+
+For each candidate below, the catalog states: **when to propose**, **what it does**, and **which meta-skill creates it** (`solera-edit-agent` or `solera-edit-skill`). Proposals are **always shown with source evidence** so the user can judge.
+
+#### 1. `test-runner` agent
+
+- **Propose when**: Tests present AND at least one of (Python / Node / Flutter / Go / Rust) detected.
+- **Role**: Runs the project's test suite, parses failures, reports a focused list. Read/Bash only — never edits code.
+- **Frontmatter defaults** (filled in by `solera-edit-agent` when created):
+  - `model: inherit`
+  - `color: green`
+  - `tools: [Read, Bash, Grep]`
+- **Detection → command mapping** (pre-filled in the agent's system prompt):
+  - `pyproject.toml` → `uv run pytest` or `pytest`
+  - `package.json` → `npm test` or `pnpm test` (read `scripts.test`)
+  - `pubspec.yaml` → `flutter test`
+  - `go.mod` → `go test ./...`
+  - `Cargo.toml` → `cargo test`
+- **Why it's worth it**: saves the user from re-explaining the project's test command every session.
+
+#### 2. `pr-reviewer` agent
+
+- **Propose when**: CI present OR project has >50 commits (Bash: `git rev-list --count HEAD`). The signal is "team workflow is mature enough that PRs exist".
+- **Role**: Reviews a diff / PR / staged changes for correctness, style, and security. Produces a prioritized findings list (critical / major / minor). Read-only.
+- **Frontmatter defaults**:
+  - `model: inherit`
+  - `color: blue`
+  - `tools: [Read, Grep, Glob, Bash]` (Bash only for `git diff`-style commands)
+- **Why it's worth it**: codifies the team's review rubric as a reusable agent rather than re-discovered every PR.
+
+#### 3. `convention-guard` skill
+
+- **Propose when**: `team-process.md → architecture_rules.rules[]` is non-empty OR `team-process.md → custom_rules[]` is non-empty.
+- **Produces**: `.claude/skills/{project-name}-convention-guard/SKILL.md` — a project-specific Solera skill that wraps the architecture/custom rules into a pre-commit / pre-PR checklist.
+- **Why a skill, not an agent**: this is a rule-application procedure, not an autonomous role. Skills compose better with the rest of Solera's gate framework (it can be invoked inside `act.done` gate checks).
+- **Frontmatter defaults** (handled by `solera-edit-skill`):
+  - `type: unit`, `style: procedural`
+  - `triggers: [check conventions, run convention guard, verify architecture rules]`
+
+### Candidate set — `marketing`, `design`, `content`, `other`
+
+**Placeholders for now.** Step 6 currently reports:
+
+> "Tooling catalog does not yet list candidates for project.type={type}. Skipping Step 6 — you can run `solera-edit-agent` / `solera-edit-skill` manually when you identify concrete roles you want."
+
+This is deliberate (YAGNI): propose only candidates we can justify with real examples. Extend this file when a real project surfaces the need.
+
+## Recording user decisions in `team-process.md`
+
+After Step 6 completes, append a `tooling:` block to `team-process.md`:
+
+```yaml
+tooling:
+  # Generated by solera-init Step 6. Edit freely to keep this up to date.
+  # This is a historical record + the source of truth for "what does this project have".
+  created:
+    - name: test-runner            # agent or skill name
+      kind: agent                  # agent | skill
+      created_at: 2026-04-18
+      evidence: [pyproject.toml, tests/]
+  declined:
+    - name: pr-reviewer
+      reason: "solo project, no PR workflow"
+  deferred:
+    - name: convention-guard
+      reason: "architecture_rules is empty today; revisit when we write them"
+```
+
+**Invariants**:
+- Every Step 6 candidate ends in exactly one of `created` / `declined` / `deferred`.
+- User can move entries between these at any time by editing the file directly.
+- The `tooling.created[]` list is what other Solera skills can rely on to check "is there a test-runner agent for this project?".
+
+## Extending the catalog
+
+To add a new candidate:
+
+1. Add a numbered section under the relevant `project.type` with the four required subsections (**Propose when**, **Role**, **Frontmatter defaults**, **Why worth it**).
+2. If the candidate is a skill, document which `solera-edit-skill` template it uses.
+3. If the candidate is an agent, document which `solera-edit-agent` template (task / team) and the frontmatter color choice.
+4. Update this catalog's "Candidate set" header to reflect the count.
+
+Do **not** add candidates you cannot justify with real usage. YAGNI is stronger than completeness for this file.
