@@ -3,7 +3,7 @@ name: solera-init
 user-invocable: true
 description: Set up Solera v3 in a project — install rules, create the three-axis workspace, and run the team kickoff interview.
 metadata:
-  version: "3.1.0"
+  version: "3.2.0"
   category: meta
   type: unit
   style: procedural
@@ -233,30 +233,68 @@ For each gate where `condition` is non-empty, ask:
 
 ---
 
-### Step 6. Project-Tailored Tooling (optional, BLOCKING)
+### Step 6. Project-Tailored Tooling (BLOCKING, direct-write)
 
-> Propose agent/skill candidates that would serve this specific project, and let the human pick which to create.
-> Catalog SSOT: [../../docs/reference/tooling-catalog.md](../../docs/reference/tooling-catalog.md) — read that first for the full candidate list and extension rules.
+> Propose project-specific agent/skill candidates to the human, and — on per-candidate approval — **write the files directly** using the pre-baked specs in the catalog.
+> Catalog SSOT: [../../docs/reference/tooling-catalog.md](../../docs/reference/tooling-catalog.md). Read it first for the full specs and integrity rules.
+>
+> **Important**: Step 6 does not invoke `solera-edit-agent` / `solera-edit-skill`. Those skills exist for manual, interview-driven creation. Step 6 is automated and copies catalog-specified content with variable substitution, nothing more.
 
-- [ ] Read `project.type` from the `team-process.md` just written.
-- [ ] **If `project.type` has no candidates in the catalog** (currently everything except `software`):
-  - Report: `"Tooling catalog does not yet list candidates for project.type={type}. Skipping Step 6 — you can run solera-edit-agent / solera-edit-skill manually when you identify concrete roles you want."`
+- [ ] Read `project.type` from the freshly written `team-process.md`. Compute `{project_name}` and `{project_slug}` per the catalog's **Variable substitution rules** table (including the noise-word guard on `{project_name}` and the 3–50 char validity check on `{project_slug}` — halt and prompt the user if either check fails).
+- [ ] **Idempotency check — re-run mode**: if `team-process.md` already contains a `tooling:` block with any non-empty list, ask AskUserQuestion:
+  - `(1) skip Step 6 entirely` — default. Leave the existing `tooling:` block untouched and skip to Completion Checklist.
+  - `(2) only offer candidates not already listed` — compute the skip-set = union of names in `tooling.created[].name ∪ tooling.declined[].name ∪ tooling.deferred[].name`. Continue Step 6 but drop any candidate whose name (after `{project_slug}` substitution) is in the skip-set. When merging, append to the existing lists — never remove or rewrite existing entries.
+  - `(3) restart from scratch` — replace the existing `tooling:` block entirely. Warn that existing `created` entries are listed records of past creations and the files on disk are untouched by this choice.
+- [ ] **If `project.type` has no candidates in the catalog** (currently anything except `software`):
+  - Report: `"Tooling catalog does not yet list candidates for project.type={type}. Skipping Step 6 — invoke solera-edit-agent / solera-edit-skill manually when you identify concrete roles."`
+  - Append an empty `tooling:` block to `team-process.md` (all three lists empty).
   - Skip to Completion Checklist.
-- [ ] **Otherwise, gather file-system evidence** per the catalog's "Evidence patterns" table. Use `Glob` for pattern matches; use `Bash(command="git rev-list --count HEAD")` only where the catalog requires it.
-- [ ] **Resolve the candidate set**: for each candidate whose "Propose when" condition holds against the gathered evidence, include it. Skip the rest.
-- [ ] **If the resolved candidate set is empty**: report `"No tooling candidates matched evidence. Skipping Step 6."` and skip to Completion Checklist.
-- [ ] **BLOCKING multi-select prompt**: present the candidate set to the human. For each candidate, show:
-  - Name (e.g. `test-runner` agent)
-  - One-line role description (from catalog's "Role" field)
-  - Evidence that triggered the proposal (e.g. `pyproject.toml`, `tests/`)
-  - Three options per candidate: `create now` / `decline (with reason)` / `defer (revisit later)`
-- [ ] **For each `create now` selection**:
-  - Invoke the matching meta-skill with catalog-supplied defaults:
-    - agent candidate → `Skill(name="solera-edit-agent", args={"action": "create", "agent_name": "{candidate_name}", "agent_mode": "task"})` — the invocation passes along `model`, `color`, `tools` defaults from the catalog.
-    - skill candidate → `Skill(name="solera-edit-skill", args={"action": "create", "skill_name": "{project-name}-{candidate_name}"})`.
-  - After each creation: verify the output file exists at the expected path.
-- [ ] **Record decisions** in `team-process.md` under the new `tooling:` section (see template below). Every candidate ends in exactly one of `created` / `declined` / `deferred`.
-- [ ] Report: `"Step 6 complete. Created: N. Declined: M. Deferred: K. Catalog: docs/reference/tooling-catalog.md."`
+- [ ] **Gather evidence** per the catalog's "Evidence patterns" table:
+  - Use `Glob` for each pattern.
+  - Use `Bash(command="git rev-list --count HEAD")` only when a candidate's Propose-when rule requires the commit count.
+  - Record the matched patterns per-candidate — they feed the `evidence` field in the recorded decision.
+- [ ] **Resolve the candidate set**: include every candidate whose "Propose when" condition holds against the gathered evidence. Drop the rest.
+- [ ] **Filter by specification status**: for each included candidate, grep the catalog for a header line matching the exact pattern `^### \d+\. .+ (agent|skill)  \((FULLY SPECIFIED|placeholder — coming soon)\)$` that names the candidate:
+  - `(FULLY SPECIFIED)` → eligible for creation.
+  - `(placeholder — coming soon)` → keep for user review but non-creatable. The AskUserQuestion for it must omit the `create now` option; only `decline` and `defer` are offered; the default recommendation is `defer` with reason `"catalog entry not yet fully specified"`.
+  - Header missing or ambiguous → halt Step 6 with the error `"Catalog section for {candidate_name} has no valid status header. Fix docs/reference/tooling-catalog.md before re-running."`
+- [ ] **If the resolved set is empty**: report `"No tooling candidates matched evidence for project.type=software. Skipping Step 6."`, write an empty `tooling:` block, skip to Completion Checklist.
+- [ ] **Per-candidate prompt loop** — for each candidate, sequentially:
+  - Read the candidate's **Kind** (`agent` | `skill`) and **Role** from its catalog section.
+  - Compute `candidate_evidence`: the subset of the gathered evidence globs that the candidate's Propose-when rule actually referenced. Record this subset for later (it goes into the `evidence` field on `created` entries).
+  - **Primary AskUserQuestion**:
+    - `header`: `"{candidate_name}"` (≤12 chars — truncate with `…` if longer)
+    - `question`: `"Create {Kind} `{candidate_name}` — {Role}? Evidence: {candidate_evidence joined by ', '}."`
+    - `options`:
+      - `create now` (omit if placeholder)
+      - `decline — not needed`
+      - `defer — revisit later`
+  - **Follow-up AskUserQuestion for reason** (only when answer is `decline` or `defer`):
+    - `header`: `"Reason"`
+    - `question`: `"Briefly, why {decline|defer}?"`
+    - `options`: three common reasons from the catalog entry if provided, plus the inherent `Other` for free text. If the catalog entry lists no stock reasons, rely on `Other`.
+  - Record the result in an in-memory `decisions` list before moving to the next candidate.
+  - **If the user interrupts** (no answer received, e.g. `Esc`): record this candidate as `deferred` with reason `"interrupted during Step 6"` and continue to the next candidate. Never silently skip.
+- [ ] **For each `create now` decision** (iterate `decisions` in order):
+  1. Load the candidate's catalog entry. If the catalog requires `{test_command}` and it cannot be resolved from evidence, **demote this decision to `declined`** with reason `"test command could not be resolved from evidence"` and continue to the next candidate. (Do **not** halt the whole Step 6.)
+  2. Substitute every `{variable}` in the catalog's Frontmatter + System prompt body per the catalog's "Variable substitution rules" table.
+  3. Compute the final file path:
+     - agent → `.claude/agents/{final_name}.md` where `{final_name}` is the catalog's Final name after `{project_slug}` substitution (e.g. `test-runner`, `billing-api-convention-guard`).
+     - skill → `.claude/skills/{final_name}/SKILL.md` plus any declared assets.
+  4. **Ensure the parent directory exists**: run `mkdir -p .claude/agents/` (for agents) or `mkdir -p .claude/skills/{final_name}/` (for skills) before writing. `.claude/` itself is guaranteed by Step 2 (`.claude/rules/` exists), but the `agents/` / `skills/` subdirectory is not.
+  5. **If the target path already exists**: AskUserQuestion — `(1) skip this candidate` / `(2) overwrite` / `(3) write as {final_name}-new.md for human review`. Apply the choice and record the decision as:
+     - `skip` → move this decision from `create now` to `declined` with `reason: "file already exists; user chose to keep existing"`. Do not write anything.
+     - `overwrite` → write the file; record in `created` with `note: "overwrote existing file"`.
+     - `write as {final_name}-new.md` → write to the `-new` path; record in `created` with `note: "written as {final_name}-new.md for human review (existing file untouched)"` and the actual path used.
+  6. Write the file directly (frontmatter + body). Do **not** invoke any other Solera skill.
+  7. **For agent candidates**: append the catalog-specified CLAUDE.md row to `CLAUDE.md`.
+     - If `{project_path}/CLAUDE.md` does not exist: create it with a minimal header `# CLAUDE.md\n\n## Agents\n\n| Agent | Purpose | Tools |\n|---|---|---|\n` plus the row.
+     - If CLAUDE.md exists but has no `## Agents` section: append the section + header row + new row at the end of the file.
+     - If `## Agents` exists and is a markdown table: check whether a row with the same agent name already exists. If it does → replace that row. If not → append the new row as the last row.
+     - If `## Agents` exists but is **not** a markdown table (e.g. bullets or prose): do not rewrite the existing content. Append the table-formatted row as a new block immediately after the non-table content, preceded by a blank line and the standard header row (`| Agent | Purpose | Tools |` + separator). Record a `note: "CLAUDE.md ## Agents section was non-table; appended a new table block below existing content"` on the decision entry.
+  8. Verify the file exists by reading it back; if the read fails, demote this decision to `declined` with reason `"file write failed — see skill output"` and continue to the next candidate. Do not halt Step 6.
+- [ ] **Write the `tooling:` block to `team-process.md`** per the catalog's recording template. Every candidate appears in exactly one of `created` / `declined` / `deferred`. `created` entries include `source: docs/reference/tooling-catalog.md`.
+- [ ] **Final report**: `"Step 6 complete. Created: N. Declined: M. Deferred: K. Files written: {list of paths}. Catalog: docs/reference/tooling-catalog.md."`
 
 ---
 

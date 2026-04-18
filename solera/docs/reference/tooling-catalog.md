@@ -2,121 +2,238 @@
 
 > **SSOT.** `solera-init` Step 6 reads this file to propose project-specific agent/skill candidates based on `project.type` (collected in Step 5) and file-system evidence.
 >
-> **Scope today**: `software` project type with a focused candidate set. Other project types are placeholders — extend this file when real user pull requests warrant them. YAGNI.
+> **Pre-baked specs, no sub-interview.** Each candidate is fully specified here — name pattern, full frontmatter, system prompt template with variables, and variable substitution rules. Step 6 writes the file directly after user approval; it does **not** invoke `solera-edit-agent` / `solera-edit-skill` (those remain for manual, interview-driven creation).
+>
+> **Scope today**: `project.type: software`. Other types list placeholders. YAGNI — extend when real usage warrants.
 
 ## How Step 6 uses this catalog
 
 ```
 1. Read project.type from team-process.md (set in Step 5).
-2. Scan project_path for file-system evidence (see "Evidence patterns" per type).
-3. Look up the candidate set for (type, evidence) in this catalog.
-4. Present candidates to the user with BLOCKING multi-select prompt.
-5. For each selected candidate, invoke solera-edit-agent or solera-edit-skill.
-6. Record selections (created / declined / deferred) to team-process.md under `tooling:`.
+2. Scan project_path for file-system evidence per the "Evidence patterns" table.
+3. Resolve the candidate set: for each candidate whose "Propose when" rule holds, include it.
+4. Per candidate, ask the user via AskUserQuestion: create now | decline | defer.
+   If decline or defer → follow up with AskUserQuestion for reason (free text).
+5. For each "create now":
+   a. Load the candidate's catalog entry.
+   b. Apply variable substitution rules to produce the final frontmatter + body.
+   c. Write the file directly:
+      - agent → .claude/agents/{final_name}.md
+      - skill → .claude/skills/{final_name}/SKILL.md (plus assets/ if catalog specifies)
+   d. For agents: append a row to the `## Agents` table in CLAUDE.md.
+6. Record every proposal's outcome in team-process.md under `tooling:` (created / declined / deferred).
 ```
 
-Candidates listed here are **proposals** — the user always decides whether to create, skip, or defer each one. No candidate is auto-generated without explicit confirmation.
+Step 6 never mutates an existing file without prompting — if `.claude/agents/test-runner.md` already exists, it asks.
 
-## Evidence patterns → Candidate map
+## Variable substitution rules (shared across all candidates)
 
-### `project.type: software`
+Variables wrapped in `{curly_braces}` inside a catalog entry are substituted at Step 6 time **only if they appear in the table below**. Any other `{...}` token is a runtime placeholder the agent/skill fills during execution (e.g. `{count}`, `{duration}`, `{file:line}`, `{test_name}`) and MUST be left verbatim in the written file.
 
-Step 6 performs these Glob scans at `{project_path}/`:
+| Variable | Source | Example |
+|---|---|---|
+| `{project_name}` | `project.name` from team-process.md. **If empty or whitespace**: fall back to `basename({project_path})`. **If the basename is a generic noise word** (`src`, `workspace`, `repo`, `app`, `root`, `workbench`): halt Step 6 and ask the user for a project name via AskUserQuestion before continuing. | `billing-api` |
+| `{project_slug}` | `{project_name}` normalized: (1) unicode-NFC, (2) lowercase, (3) replace `_` and whitespace (`\s+`) with single `-`, (4) strip any character not matching `[a-z0-9-]`, (5) collapse consecutive `-`, (6) strip leading/trailing `-`. Result must match `^[a-z][a-z0-9-]*[a-z0-9]$` and be 3–50 chars. If it doesn't, halt and ask the user for a slug. | `billing-api-service-v2` from `Billing_API Service v2` |
+| `{test_command}` | Resolved from evidence per the **Test command resolution** table below | `uv run pytest` |
+| `{today}` | Current date, ISO format `YYYY-MM-DD` | `2026-04-18` |
 
-| Evidence signal | Glob pattern |
+### Test command resolution
+
+| Evidence | Candidate `{test_command}` |
 |---|---|
-| Python project | `pyproject.toml`, `requirements.txt`, `uv.lock`, `poetry.lock` |
-| Node/JS project | `package.json`, `pnpm-lock.yaml`, `yarn.lock` |
-| TypeScript | `tsconfig.json`, `*.ts`, `*.tsx` |
+| `pyproject.toml` + `uv.lock` | `uv run pytest` |
+| `pyproject.toml` (no `uv.lock`) | `pytest` |
+| `package.json` with `scripts.test` | `npm test` (→ `pnpm test` when `pnpm-lock.yaml` exists; `yarn test` when `yarn.lock` exists) |
+| `pubspec.yaml` | `flutter test` |
+| `go.mod` | `go test ./...` |
+| `Cargo.toml` | `cargo test` |
+
+**Conflict resolution** (multiple rows match the evidence, e.g. a monorepo with both `pyproject.toml` and `package.json`):
+
+1. Compute the set of all matching `{test_command}` candidates.
+2. If exactly one matches → use it.
+3. If two or more match → Step 6 MUST ask the user via AskUserQuestion which command to bake into the agent (options: the matching commands verbatim). Do **not** silently pick one by table order.
+4. If zero match → demote the candidate's creation to `declined` with reason `"no test command resolvable from evidence"`. The candidate's Propose-when rule should already have prevented this branch, but keep it as a safety net.
+
+## Evidence patterns
+
+Step 6 performs these scans at `{project_path}/`:
+
+| Signal | Glob |
+|---|---|
+| Python | `pyproject.toml`, `requirements.txt`, `uv.lock`, `poetry.lock` |
+| Node / JS / TS | `package.json`, `pnpm-lock.yaml`, `yarn.lock`, `tsconfig.json` |
 | Flutter | `pubspec.yaml`, `lib/**/*.dart` |
 | Go | `go.mod` |
 | Rust | `Cargo.toml` |
 | Docker | `Dockerfile`, `docker-compose.yml`, `compose.yaml` |
-| CI present | `.github/workflows/*.yml`, `.gitlab-ci.yml`, `.circleci/config.yml` |
+| CI | `.github/workflows/*.yml`, `.gitlab-ci.yml`, `.circleci/config.yml` |
 | DB migrations | `migrations/`, `db/migrations/`, `alembic/` |
-| Tests present | `tests/`, `**/*_test.go`, `**/*.spec.ts`, `test/` |
-| Architecture rules configured | `team-process.md` → `architecture_rules.rules[]` non-empty |
+| Tests | `tests/`, `**/*_test.go`, `**/*.spec.ts`, `test/` |
+| Architecture rules | `team-process.md` → `architecture_rules.rules[]` non-empty |
+| Custom rules | `team-process.md` → `custom_rules[]` non-empty |
 
-### Candidate set — `software`
+## Candidate set — `project.type: software`
 
-For each candidate below, the catalog states: **when to propose**, **what it does**, and **which meta-skill creates it** (`solera-edit-agent` or `solera-edit-skill`). Proposals are **always shown with source evidence** so the user can judge.
+### 1. `test-runner` agent  (FULLY SPECIFIED)
 
-#### 1. `test-runner` agent
+**Propose when**: tests detected (`tests/` OR `**/*_test.go` OR `**/*.spec.ts` OR `test/`) AND at least one of (Python / Node / Flutter / Go / Rust) detected AND `{test_command}` resolves successfully.
 
-- **Propose when**: Tests present AND at least one of (Python / Node / Flutter / Go / Rust) detected.
-- **Role**: Runs the project's test suite, parses failures, reports a focused list. Read/Bash only — never edits code.
-- **Frontmatter defaults** (filled in by `solera-edit-agent` when created):
-  - `model: inherit`
-  - `color: green`
-  - `tools: [Read, Bash, Grep]`
-- **Detection → command mapping** (pre-filled in the agent's system prompt):
-  - `pyproject.toml` → `uv run pytest` or `pytest`
-  - `package.json` → `npm test` or `pnpm test` (read `scripts.test`)
-  - `pubspec.yaml` → `flutter test`
-  - `go.mod` → `go test ./...`
-  - `Cargo.toml` → `cargo test`
-- **Why it's worth it**: saves the user from re-explaining the project's test command every session.
+**Kind**: `agent`  
+**Final name**: `test-runner` (no `{project_slug}` in this name — a project has one test suite)
 
-#### 2. `pr-reviewer` agent
+**Role (one-line description for the Step 6 prompt)**: `"Run the project's test suite and report the first failure"`
 
-- **Propose when**: CI present OR project has >50 commits (Bash: `git rev-list --count HEAD`). The signal is "team workflow is mature enough that PRs exist".
-- **Role**: Reviews a diff / PR / staged changes for correctness, style, and security. Produces a prioritized findings list (critical / major / minor). Read-only.
-- **Frontmatter defaults**:
-  - `model: inherit`
-  - `color: blue`
-  - `tools: [Read, Grep, Glob, Bash]` (Bash only for `git diff`-style commands)
-- **Why it's worth it**: codifies the team's review rubric as a reusable agent rather than re-discovered every PR.
+**Evidence fields recorded** (when created): `[pyproject.toml-or-package.json-or-pubspec.yaml-or-go.mod-or-Cargo.toml, tests-dir]` — only the specific globs that matched.
 
-#### 3. `convention-guard` skill
+**Frontmatter**:
 
-- **Propose when**: `team-process.md → architecture_rules.rules[]` is non-empty OR `team-process.md → custom_rules[]` is non-empty.
-- **Produces**: `.claude/skills/{project-name}-convention-guard/SKILL.md` — a project-specific Solera skill that wraps the architecture/custom rules into a pre-commit / pre-PR checklist.
-- **Why a skill, not an agent**: this is a rule-application procedure, not an autonomous role. Skills compose better with the rest of Solera's gate framework (it can be invoked inside `act.done` gate checks).
-- **Frontmatter defaults** (handled by `solera-edit-skill`):
-  - `type: unit`, `style: procedural`
-  - `triggers: [check conventions, run convention guard, verify architecture rules]`
+```yaml
+---
+name: test-runner
+description: |
+  Use this agent when the user asks to "run tests", "run the test suite", "check if tests pass", or asks to diagnose a failing test. Runs the project's test command, parses failures, and returns a focused report.
 
-### Candidate set — `marketing`, `design`, `content`, `other`
+  <example>
+  Context: User just finished a change and wants to verify.
+  user: "run tests"
+  assistant: "I'll use the test-runner agent to execute the suite and report results."
+  <commentary>
+  Routine verification request — test-runner executes the test command this project uses.
+  </commentary>
+  </example>
 
-**Placeholders for now.** Step 6 currently reports:
+  <example>
+  Context: CI reported a failure.
+  user: "why is CI red?"
+  assistant: "I'll launch test-runner locally to reproduce the failure and report the first failing test."
+  <commentary>
+  Reproduction-driven debugging — same agent, different entry point.
+  </commentary>
+  </example>
+model: inherit
+color: green
+tools: [Read, Bash, Grep]
+---
+```
+
+**System prompt body** (written under the frontmatter):
+
+```markdown
+You are the test-runner agent for {project_name}.
+
+## Core Responsibilities
+1. Run the project's test suite using the detected command
+2. Parse failures and surface the first (or most diagnostic) failing test
+3. Report concisely — file:line, assertion, expected vs actual
+
+## Process
+1. Run the test command: `{test_command}`
+2. If exit code == 0 → report `All tests passed ({count} tests, {duration})` and stop
+3. If exit code != 0:
+   - Parse output to find failing test names and `file:line` references
+   - For the first failure: extract assertion message, expected, actual
+   - For subsequent failures: list name + `file:line` only
+
+## Quality Standards
+- Never modify source code or test files — you only read and report
+- If the test command itself fails to start (missing dependency, config error), report the environment issue, do not paper over it
+- Never run with `--no-verify` or similar bypass flags
+
+## Output Format
+## Test Run: {project_name}
+- Command: `{test_command}`
+- Result: PASS | FAIL ({N} failures)
+- Duration: {duration}
+
+### First failure
+- File: `{file:line}`
+- Test: `{test_name}`
+- Message: {assertion message}
+- Expected: {expected}
+- Actual: {actual}
+
+### Other failures
+- `{file:line}` — `{test_name}`
+- ...
+
+## Edge Cases
+- `no tests found` → report "No tests matched the command. Check discovery config." and stop
+- `test command not installed` → report the missing tool by name and stop; do not offer to install silently
+- `flaky test suspected (passes on retry)` → flag the test with "FLAKY" but still report the first failure verbatim
+```
+
+**CLAUDE.md row** (appended to the `## Agents` table):
+
+```
+| test-runner | Run the project's test suite and report failures | Read, Bash, Grep |
+```
+
+---
+
+### 2. `pr-reviewer` agent  (placeholder — coming soon)
+
+**Propose when**: CI detected OR `git rev-list --count HEAD >= 50`.
+
+**Status**: catalog entry is a placeholder. Step 6 **skips** this candidate with a note: `"pr-reviewer candidate not yet fully specified in tooling-catalog.md — skipping. Track issue to complete the spec."` Add the full frontmatter + system prompt to this section to enable creation.
+
+---
+
+### 3. `{project_slug}-convention-guard` skill  (placeholder — coming soon)
+
+**Propose when**: `team-process.md → architecture_rules.rules[]` non-empty OR `custom_rules[]` non-empty.
+
+**Status**: placeholder. Skills produced here would wrap the project's architecture/custom rules into a reusable checklist skill under `.claude/skills/{project_slug}-convention-guard/`. The skill-per-project shape + trigger-uniquification rules need design before this is safe to auto-generate (every created skill must have unique trigger phrases — see constraint below).
+
+**Constraint to bake in before enabling**: a skill's `triggers` must contain at least one phrase that includes `{project_slug}` so two projects' convention-guards don't collide in auto-triggering.
+
+---
+
+## Candidate set — `marketing`, `design`, `content`, `other`
+
+**Placeholders only.** Step 6 reports:
 
 > "Tooling catalog does not yet list candidates for project.type={type}. Skipping Step 6 — you can run `solera-edit-agent` / `solera-edit-skill` manually when you identify concrete roles you want."
 
-This is deliberate (YAGNI): propose only candidates we can justify with real examples. Extend this file when a real project surfaces the need.
+Extend this file when real usage surfaces concrete needs.
 
 ## Recording user decisions in `team-process.md`
 
-After Step 6 completes, append a `tooling:` block to `team-process.md`:
+Step 6 appends a `tooling:` block:
 
 ```yaml
 tooling:
-  # Generated by solera-init Step 6. Edit freely to keep this up to date.
-  # This is a historical record + the source of truth for "what does this project have".
+  # Generated by solera-init Step 6. Edit freely.
   created:
-    - name: test-runner            # agent or skill name
-      kind: agent                  # agent | skill
-      created_at: 2026-04-18
+    - name: test-runner
+      kind: agent
+      created_at: "2026-04-18"
       evidence: [pyproject.toml, tests/]
+      source: docs/reference/tooling-catalog.md
   declined:
     - name: pr-reviewer
       reason: "solo project, no PR workflow"
   deferred:
-    - name: convention-guard
-      reason: "architecture_rules is empty today; revisit when we write them"
+    - name: billing-api-convention-guard
+      reason: "architecture_rules empty today"
 ```
 
 **Invariants**:
-- Every Step 6 candidate ends in exactly one of `created` / `declined` / `deferred`.
-- User can move entries between these at any time by editing the file directly.
-- The `tooling.created[]` list is what other Solera skills can rely on to check "is there a test-runner agent for this project?".
+- Every candidate presented ends in exactly one of `created` / `declined` / `deferred`.
+- `created` entries include `source: docs/reference/tooling-catalog.md` so the provenance is tracked.
+- User may move entries between lists by editing the file.
 
 ## Extending the catalog
 
-To add a new candidate:
+To promote a placeholder to fully-specified:
 
-1. Add a numbered section under the relevant `project.type` with the four required subsections (**Propose when**, **Role**, **Frontmatter defaults**, **Why worth it**).
-2. If the candidate is a skill, document which `solera-edit-skill` template it uses.
-3. If the candidate is an agent, document which `solera-edit-agent` template (task / team) and the frontmatter color choice.
-4. Update this catalog's "Candidate set" header to reflect the count.
+1. Fill in the full **Frontmatter** block (for agents) or **Skill body + assets** block (for skills).
+2. Provide the complete **System prompt body** or **Skill procedure**.
+3. Define any candidate-specific variable substitution rules.
+4. Update the candidate section header from `(placeholder — coming soon)` to `(FULLY SPECIFIED)`.
 
-Do **not** add candidates you cannot justify with real usage. YAGNI is stronger than completeness for this file.
+Do not auto-generate a candidate whose spec is incomplete. Step 6 must treat placeholders as "skip with note", never "do our best".
+
+## Integrity rule
+
+Only candidates marked **`(FULLY SPECIFIED)`** are eligible for Step 6 creation. Placeholders are proposed — so users see the roadmap — but always end in `deferred` with reason `"catalog entry not yet fully specified"`, not in `created`.
