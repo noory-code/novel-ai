@@ -152,9 +152,13 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
 
 - [ ] **Scan phase**: read every `_goal.md`, `_epic.md`, `_v2-archive/workspace-original/initiative/*/roadmap.md`, `_v2-archive/workspace-original/initiative/*/README.md`, `_v2-archive/workspace-original/phase/*/README.md` in the archive. Also read any `catalog/published/persona/*.md`, `service-map/*.md`, `journey/*.md`, `use-case/*.md`, `domain-model/*.md` (the v3 locations, already populated by Step 2) for cross-references.
 - [ ] **Cluster phase**: group Goals/Epics by thematic area. Heuristics (apply in order; AI should surface its reasoning):
-  - Same `feature/*` tag in frontmatter → same Concept candidate.
-  - Same Goal → split only if multiple Epics clearly describe distinct long-lived areas (e.g., G1-auth-onboarding → Authentication + Onboarding).
-  - Cross-Goal Epics with the same theme → merge into one Concept even if they lived under different Goals.
+  - **Primary feature derivation for each Epic** (required first step when Epics carry multiple `feature/*` tags, which is common in Obsidian-tag vaults):
+    1. Extract the primary feature from the Epic **directory name** after the numeric prefix. Examples: `02-build-auth` → `auth`, `03-build-admin` → `admin`, `03-app-onboarding` → `onboarding`, `09-build-design-system` → `design-system`.
+    2. If the directory name does not yield a clear feature token (no recognisable verb+noun pattern), fall back to the **first** `feature/*` tag in the frontmatter. Flag this fallback in the rationale so the human sees it.
+    3. **All other `feature/*` tags on the same Epic are secondary themes**. Record them under the Epic's entry as `secondary_features: [tag1, tag2, ...]`. They surface in the candidate rationale as "Epic X touches also: admin, profile, social" but do not split the Epic across Concepts.
+  - Same primary feature across Epics → same Concept candidate.
+  - Same Goal → split only if multiple Epics clearly describe distinct long-lived areas (e.g., G1-auth-onboarding → Authentication + Onboarding when the primary features differ).
+  - Cross-Goal Epics with the same primary feature → merge into one Concept even if they lived under different Goals.
   - Persona/service-map linkage as tiebreaker: if two Epic candidates reference the same persona, prefer merging.
 - [ ] **Draft proposal**: for each candidate, produce:
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.4.7] — 2026-04-18
+
+### Fixed
+
+- **Iteration 17 defect 34 — `solera-migrate-v2` Step 3 multi-tag Epic handling**. Real v2 projects (banas) carry multiple `feature/*` tags per Epic (e.g. `02-build-auth` declares `feature/auth`, `feature/admin`, `feature/profile`, `feature/search`, `feature/social`). The existing Step 3 heuristic said "same `feature/*` tag → same Concept candidate" without saying which tag wins when an Epic has several — so clustering would be effectively random. Added an explicit three-step primary-feature derivation rule:
+  1. Extract from the Epic directory name suffix (`02-build-auth` → `auth`, `09-build-design-system` → `design-system`) — deterministic.
+  2. Fallback to the first `feature/*` tag, flagged in rationale.
+  3. All other `feature/*` tags become `secondary_features` on the Epic entry — visible in candidate rationale but do not split the Epic.
+
+  Critical for real-project clustering quality; without this rule, banas' 16+ multi-tag Epics would have produced incoherent Concept proposals.
+
+---
+
 ## [3.4.6] — 2026-04-18
 
 ### Fixed
