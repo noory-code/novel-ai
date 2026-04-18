@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.4.10] — 2026-04-18
+
+### Fixed
+
+Banas simulation surfaced two more Step 3 gaps:
+
+- **Iteration 21 defect 38 — initiative scan missed `goals.md`**. Step 3's scan list for `_v2-archive/workspace-original/initiative/*/` only named `roadmap.md` and `README.md`. Real projects (banas) keep a third overview file `goals.md` at the same level, and the fixed-filename list missed it. Replaced with a glob over every `.md` directly inside each `initiative/*/` so future overview files (e.g. `north-star.md`, `priorities.md`) are picked up automatically.
+
+- **Iteration 21 defect 40 — Goal-without-Epic handling**. Real projects have Goals that have not yet been decomposed into Epics (banas G3-vertical, G4-growth). The existing cluster heuristics operated on Epics only — such Goals would have been silently dropped from Concept proposals even though their `_goal.md` files were read during the scan phase. Added explicit handling: the Goal itself becomes a Concept candidate with primary feature from its frontmatter `feature/*` tag (or title fallback), marked `confidence: low` and `origin: goal-only` so the human sees why Epic-level evidence is absent.
+
+Defect 39 (subdir-level loose files like `phase/README.md` not migrated to catalog) was evaluated and intentionally left alone — those files remain preserved in the archive, so there is no data loss; the human can promote them manually if needed.
+
+---
+
 ## [3.4.9] — 2026-04-18
 
 ### Fixed

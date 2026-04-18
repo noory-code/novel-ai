@@ -150,7 +150,7 @@ Merge archived catalogs from both the original workspace and every extra vault i
 
 This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concepts; human approves, merges, splits, or rejects each.
 
-- [ ] **Scan phase**: read every `_goal.md`, `_epic.md`, `_v2-archive/workspace-original/initiative/*/roadmap.md`, `_v2-archive/workspace-original/initiative/*/README.md`, `_v2-archive/workspace-original/phase/*/README.md` in the archive. Also read any `catalog/published/persona/*.md`, `service-map/*.md`, `journey/*.md`, `use-case/*.md`, `domain-model/*.md` (the v3 locations, already populated by Step 2) for cross-references.
+- [ ] **Scan phase**: read every `_goal.md`, `_epic.md`, and every `.md` directly inside `_v2-archive/workspace-original/initiative/*/` (covers `roadmap.md`, `README.md`, `goals.md`, and any other initiative-level overview files the project keeps — enumerate with a glob, not a fixed filename list). Also read `_v2-archive/workspace-original/phase/*/README.md`. Also read any `catalog/published/persona/*.md`, `service-map/*.md`, `journey/*.md`, `use-case/*.md`, `domain-model/*.md` (the v3 locations, already populated by Step 2) for cross-references.
 - [ ] **Cluster phase**: group Goals/Epics by thematic area. Heuristics (apply in order; AI should surface its reasoning):
   - **Primary feature derivation for each Epic** (required first step when Epics carry multiple `feature/*` tags, which is common in Obsidian-tag vaults):
     1. Extract the primary feature from the Epic **directory name** after the numeric prefix. Examples: `02-build-auth` → `auth`, `03-build-admin` → `admin`, `03-app-onboarding` → `onboarding`, `09-build-design-system` → `design-system`.
@@ -160,6 +160,7 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   - Same Goal → split only if multiple Epics clearly describe distinct long-lived areas (e.g., G1-auth-onboarding → Authentication + Onboarding when the primary features differ).
   - Cross-Goal Epics with the same primary feature → merge into one Concept even if they lived under different Goals.
   - Persona/service-map linkage as tiebreaker: if two Epic candidates reference the same persona, prefer merging.
+  - **Goal-without-Epic handling**: if a Goal has zero Epics (e.g. a newly-written Goal where Epics were never decomposed), propose the Goal itself as a Concept candidate. Its primary feature is the first `feature/*` tag in the Goal's frontmatter; if none, use the Goal's `title` or the directory-suffix token. Mark such candidates with `confidence: low` in the proposal and tag them `origin: goal-only` so the human reviewing the batch sees why there is no Epic-level evidence.
 - [ ] **Draft proposal**: for each candidate, produce:
 
   ```
