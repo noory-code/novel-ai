@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.13] — 2026-04-18
+
+### Fixed
+
+- **Iterations 26–27 defect 44 — batch resolve Story names before relocation**. Reading banas's actual `_epic.md` exposed that ID-only Stories with Korean/non-ASCII titles would each trigger a separate BLOCKING prompt — banas has 27+ Stories, most with Korean titles, which would mean 20+ consecutive BLOCKING prompts in the middle of Step 4. UX was unworkable. Added a **pre-pass**: derive `{story_name}` deterministically where possible (directory suffix or ASCII-decodable title), collect every unresolved Story into a `pending_names` list, then run a **single batch BLOCKING prompt** at the end with all Stories at once. The human pastes one name per line; blank lines fall back to ID-only with a MIGRATION-NOTES warning; invalid kebab-case rejects the whole batch with line-specific flags. Moves Step 4 from "N BLOCKING prompts per migration" to "at most one batch prompt per migration".
+
+---
+
 ## [3.4.12] — 2026-04-18
 
 ### Fixed

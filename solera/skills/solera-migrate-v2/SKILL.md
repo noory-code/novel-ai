@@ -256,8 +256,24 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   ...
   ```
 - [ ] **BLOCKING sample review**: ask the human to review 3–5 random samples from the plan. If approved, process all; if corrections needed, accept per-entry overrides.
-- [ ] **Execute the batch**:
-  - For each Story: determine `{story_name}` from the original directory name. If the directory is `{old_id}-{name}` (e.g. `TS-003-partner-role`) → `{story_name}` is `partner-role`. If the directory is only `{old_id}` (e.g. `TS-003`) → `{story_name}` is derived by inferring a slug from `_story.md`'s `title` or first heading; if inference yields nothing usable, halt this Story with a BLOCKING prompt asking the human for a 1–3-word kebab-case name. Never relocate a Story to a directory whose name ends with a trailing `-`.
+- [ ] **Pre-pass — resolve `{story_name}` for every Story** (do this before any `git mv`):
+  - For each discovered Story, determine `{story_name}` in priority order:
+    1. If the directory is `{old_id}-{name}` (e.g. `TS-003-partner-role`) → `{story_name}` = `partner-role`.
+    2. Else if the directory is only `{old_id}` (e.g. `TS-003`) → try to derive a slug from `_story.md`'s `title` frontmatter or first heading: unicode-NFC, lowercase, replace whitespace with `-`, strip non-`[a-z0-9-]`, collapse consecutive `-`, strip edges, cap at 50 chars. If the result is a non-empty valid kebab-case slug → use it.
+    3. Else → add this Story to a `pending_names` list with its ID, the v2 source path, and the raw (non-ASCII) title/heading for human reference.
+  - **After the pre-pass**: if `pending_names` is non-empty, run a **single BLOCKING batch prompt**:
+    ```
+    {N} Stories need a kebab-case name (1-3 words each):
+
+    TS-001  "익명 인증 시스템"        — workspace/phase/…/02-build-auth/stories/TS-001/
+    TS-002  "Google OAuth"            — …/TS-002/   (hint: slug inferable as "google-oauth")
+    TS-004  "역할 조회 시스템"        — …/TS-004/
+    ...
+
+    Provide names one per line, same order as above (blank line → use the `{old_id}` as-is without a name suffix):
+    ```
+    The human pastes the list in one shot. Parse it — one name per Story, in order. Empty lines → use `{old_id}` as-is and record a note in MIGRATION-NOTES.md under "Stories without descriptive names". Lines that do not match `^[a-z][a-z0-9-]{0,48}[a-z0-9]$` → reject the whole batch and re-prompt with the specific lines flagged.
+  - **Never relocate a Story to a directory whose name ends with a trailing `-`**.
   - Target path: `{workspace_path}/stories/{new_id}-{story_name}/` (always `{new_id}-{story_name}`, never `{new_id}-` with empty name).
   - `git mv {archive_story_path} {target_path}/` (preserves git history).
   - Patch `_story.md`:
