@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.4.6] — 2026-04-18
+
+### Fixed
+
+Walk-through simulation of `solera-migrate-v2` against an actual v2 project (banas — 4 phases, 5 goals, 16+ epics, 27 stories, a separate `published/` Obsidian vault with subtree content in `concept/liquor/` and `schema/liquor/`) exposed two migrate-v2 defects:
+
+- **Iteration 16 defect 32 — subtree handling in Step 2.3**. The catalog merge assumed `{type}/` directories contain flat `.md` files. Real v2 Obsidian vaults often store nested content (`concept/liquor/foo.md`). Added an explicit rule: move the entire subtree via `git mv`, preserving nested structure; run collision detection per entry when the destination is not empty. Never flatten.
+- **Iteration 16 defect 31 — journey collision in Step 2.1**. Journey files can exist in both `workspace/identity/journeys/` and `extra/*/identity/journeys/`. The Step 2.1 journey-move flow had no collision handling (Step 2.3's collision detection runs only inside the catalog-merge loop). Step 2.1 now explicitly defers to the Step 2.3 filename-collision BLOCKING prompt when a journey filename already exists at the destination.
+
+---
+
 ## [3.4.5] — 2026-04-18
 
 ### Fixed
