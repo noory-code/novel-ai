@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.19] — 2026-04-18
+
+### Fixed
+
+- **Defect 52 (surfaced during live banas migration)** — Step 2.1 non-standard identity BLOCKING prompt only offered three destinations: `keep at workspace/identity/`, `_unclassified/`, or `skip`. In the real banas migration, `tone-and-manner.md` turned out to be a genuine brand-voice rule that belonged at `.claude/rules/tone-and-manner.md`, not inside any identity or catalog destination. The procedure had no way to promote an identity file into a rule / skill / other Claude Code artifact. Added **option (3) move to a custom target path** — user provides a `{project_path}`-relative path (e.g. `.claude/rules/tone-and-manner.md`), validated to end in `.md` and stay within the project. Makes identity classification flexible enough for real vaults that mixed identity, rules, and skills into one folder.
+
+---
+
 ## [3.4.18] — 2026-04-18
 
 ### Notes
