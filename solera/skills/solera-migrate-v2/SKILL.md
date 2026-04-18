@@ -355,7 +355,7 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   - ID strategy chosen in Step 4
   - List of excluded v2 Goals/Epics from Step 3 with rationale
   - Known manual tasks ("these Stories still have empty contributes_to")
-- [ ] Rewrite `{project_path}/progress.md` to v3 format. Find the **reference source** by trying these locations in order:
+- [ ] Rewrite `{project_path}/progress.md` to v3 format. The canonical v3 progress.md template lives inside `solera-init/SKILL.md` **Step 3 "Create workspace structure"** (look for the `progress.md` code block with `## Living Axis` / `## Time-bound Axis` / `## Immutable Axis` sections) — use it as the shape source. Find the **reference source** (v2 content to translate) by trying these locations in order:
   1. `{workspace_path}/_v2-archive/workspace-original/progress.md` — when the v2 project kept progress.md inside `workspace/` (the stock Solera v2 convention). Archived by Step 1.
   2. `{project_path}/progress.md` — when the project kept progress.md at the project root instead of inside workspace (real v2 projects like banas). This file was **not** archived by Step 1 because it lived outside `workspace/`. Use its current content as the reference, then overwrite it in place with the v3 rewrite.
   3. Neither exists → start from scratch using the v3 template (three-axis format).

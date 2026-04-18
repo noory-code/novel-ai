@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.17] — 2026-04-18
+
+### Fixed
+
+- **Iteration 35 defect 51 — Step 7 progress.md v3 template SSOT link**. Reading banas' actual project-root progress.md (v2 format with Phase/Goal/Epic/Story 4-level table) made clear the rewrite needed a target-shape reference, not just a v2 input. The canonical v3 progress.md template already lives in `solera-init/SKILL.md` Step 3 (with `## Living Axis` / `## Time-bound Axis` / `## Immutable Axis` sections). Step 7 now explicitly points to it so AI does not re-invent the shape each migration.
+
+---
+
 ## [3.4.16] — 2026-04-18
 
 ### Fixed
