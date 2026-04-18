@@ -224,14 +224,15 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
 - [ ] **Discover Stories** in the archive: every directory under `_v2-archive/workspace-original/phase/*/goals/*/epics/*/stories/` whose directory name matches the regex `^(US|TS)-\d{3}(-.*)?$` (both `TS-003` with no name suffix and `TS-003-partner-role` with a name suffix are valid) AND which contains `_story.md`. Real v2 projects mix both shapes — missing either shape loses Stories silently.
 - [ ] **Propose a global ID strategy**. v2 Story IDs (`US-001`, `TS-001`) are unique only within an Epic, so collisions are expected in v3's flat `stories/`. AI proposes one of:
   - **Renumber**: assign new global IDs (`US-0001`, `US-0002`, …) in discovery order. Loses the original ID — captured in the origin comment.
-  - **Prefix by Epic**: `US-auth-001` instead of `US-001`. Preserves original number at the cost of slightly noisier IDs.
-  - **Keep and suffix on collision**: keep `US-001` for the first, use `US-001__{epic}` for later conflicts. Minimally invasive but inconsistent.
-- [ ] **BLOCKING**: ask the human which strategy to use. Default recommendation: **Prefix by Epic** (reads well in `git log`).
-- [ ] **Infer `contributes_to` for each Story**. Heuristics:
-  - Read the Epic's `_epic.md` frontmatter tags (`feature/auth` → `authentication` Concept if that was approved in Step 3).
-  - Cross-check `_story.md` body for explicit Concept-relevant language.
-  - If the Story is `TS-*` (technical), often maps to the same Concept as its sibling `US-*` Stories in the same Epic.
-  - If no clear match: tag as `contributes_to: []` (empty) and flag for human review.
+  - **Prefix by Epic**: `US-{epic_primary_feature}-001` instead of `US-001`, where `{epic_primary_feature}` is the primary feature derived in Step 3 (e.g. Epic directory `02-build-auth` → `auth`, `09-build-design-system` → `design-system`). Preserves original number; keeps IDs short; aligns with the Concept clustering. (Not `02-build-auth` verbatim — the numeric prefix and verb are dropped.)
+  - **Keep and suffix on collision**: keep `US-001` for the first, use `US-001__{epic_primary_feature}` for later conflicts. Minimally invasive but inconsistent.
+- [ ] **BLOCKING**: ask the human which strategy to use. Default recommendation: **Prefix by Epic** (reads well in `git log` and matches the Concept that owns the Story).
+- [ ] **Infer `contributes_to` for each Story** — use the Step 3 clustering output as the source of truth so Stories land on the Concepts that Step 3 actually created:
+  - Look up the parent Epic's **primary feature** (set by Step 3's primary-feature derivation rule). If that primary feature mapped to a Concept the human approved in Step 3, `contributes_to: [{that_concept_id}]`.
+  - If Step 3 approved multiple Concepts that this Epic touches (primary + one or more secondary features), propose `contributes_to: [{primary_concept_id}]` and list the secondaries in the batch-report's rationale as candidates the human can add during sample review.
+  - Cross-check `_story.md` body for explicit Concept-relevant language — override the Epic-level default only when the Story clearly belongs to a different Concept.
+  - If the Story is `TS-*` (technical), keep the same `contributes_to` as its sibling `US-*` Stories in the same Epic unless the body says otherwise.
+  - If no clear match (e.g. the Epic's primary feature had no approved Concept): tag as `contributes_to: []` and flag for human review.
 - [ ] Assemble a **batch report**:
   ```
   Story relocation plan (42 stories discovered):

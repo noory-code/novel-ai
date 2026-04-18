@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.4.9] — 2026-04-18
+
+### Fixed
+
+Banas simulation exposed that Step 3 and Step 4 were not wired to each other — Step 4 was re-inferring clustering signals that Step 3 had already decided, risking Stories landing on Concepts the human did not actually approve:
+
+- **Iteration 19 defect 36 — Step 4 `contributes_to` inference now consumes Step 3 output.** The Epic's primary feature (derived in Step 3) maps to an approved Concept, and that Concept becomes the default `contributes_to`. Secondary features surface in the batch-report's rationale as additions the human can pick during sample review. Sibling `TS-*` Stories inherit the parent Epic's default unless their body says otherwise. Stories whose Epic primary feature had no approved Concept are tagged `contributes_to: []` and flagged.
+
+- **Iteration 20 defect 37 — Step 4 "Prefix by Epic" ID strategy now uses `{epic_primary_feature}`**. Previously the strategy said `US-auth-001` as an example without defining how `auth` was chosen from a directory named `02-build-auth`. Rule: drop the numeric prefix and the verb (build/setup/app), keep the suffix which is the primary feature (`02-build-auth` → `auth`; `09-build-design-system` → `design-system`). Matches Step 3 clustering so Stories in the `authentication` Concept all share the `US-auth-*` ID prefix.
+
+---
+
 ## [3.4.8] — 2026-04-18
 
 ### Fixed
