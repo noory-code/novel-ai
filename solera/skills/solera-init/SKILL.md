@@ -286,7 +286,7 @@ For each gate where `condition` is non-empty, ask:
      - `skip` → move this decision from `create now` to `declined` with `reason: "file already exists; user chose to keep existing"`. Do not write anything.
      - `overwrite` → write the file; record in `created` with `note: "overwrote existing file"`.
      - `write as {final_name}-new.md` → write to the `-new` path; record in `created` with `note: "written as {final_name}-new.md for human review (existing file untouched)"` and the actual path used.
-  6. Write the file directly (frontmatter + body). Do **not** invoke any other Solera skill.
+  6. Write the file directly (frontmatter + body). Do **not** invoke any other Solera skill. **If the write raises any error** (permission denied, disk full, invalid path): catch it; demote this decision to `declined` with reason `"file write failed: {short error message}"`; record the path attempted; continue to the next candidate. Never halt the whole Step 6 on one candidate's write error.
   7. **For agent candidates**: append the catalog-specified CLAUDE.md row to `CLAUDE.md`.
      - If `{project_path}/CLAUDE.md` does not exist: create it with a minimal header `# CLAUDE.md\n\n## Agents\n\n| Agent | Purpose | Tools |\n|---|---|---|\n` plus the row.
      - If CLAUDE.md exists but has no `## Agents` section: append the section + header row + new row at the end of the file.

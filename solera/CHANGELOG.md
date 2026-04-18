@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.1] — 2026-04-18
+
+### Fixed
+
+- **Iteration 6 defect** — `solera-init` Step 6 procedure specified how to handle a verify-after-read failure but had no branch for the write step itself raising an exception (permission denied, disk full, invalid path). Added an explicit `catch → demote to declined with reason → continue` rule so a single candidate's write error never halts the whole Step 6 run.
+
+---
+
 ## [3.4.0] — 2026-04-18
 
 ### Changed (structural — `solera-init` Step 6 / tooling catalog)
