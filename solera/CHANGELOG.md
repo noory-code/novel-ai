@@ -1,5 +1,44 @@
 # Changelog
 
+## [3.1.0] — 2026-04-18
+
+### Fixed
+
+- **`solera-help` advertised a non-existent handoff trigger**: the Workflow table at [skills/solera-help/SKILL.md:57](skills/solera-help/SKILL.md#L57) listed `"End session"` as an invocation phrase for `solera-handoff`, but v2.13.0 removed that trigger. Users following the help table could not invoke handoff. Replaced with `"Run handoff"`, which is in the skill's actual trigger list.
+- **Inconsistent H1 titles across the four `solera-edit-*` skills** (`# Meta Skill`, `# Edit Rule`, `# Meta Command`, `# meta-subagent`). Standardised to `# Edit {Skill|Rule|Command|Agent}` matching the `name` field in each skill's frontmatter.
+- **`solera-write-concept`**, **`solera-write-milestone`**, **`solera-release`** metadata.version bumped `1.0.0` → `1.0.1`. These SKILL.md files received SSOT markers in v3.0.3 ([994b2c6](https://github.com/noory-code/noory-ai/commit/994b2c6)) without a version bump; this corrects the metadata to match `solera-migrate-v2`'s precedent of bumping on any non-trivial SKILL.md edit.
+
+### Changed
+
+- **`solera-edit-*` meta skills upgraded toward the official skill-creator standard.** Gap analysis against `plugin-dev/skills/{skill,agent,command}-development` and the `skill-creator` skill found three concrete shortfalls, now addressed:
+
+  1. **Rule and agent templates had no YAML frontmatter at all.** `assets/rule-template.md` and both `assets/{task,team}-agent-template.md` opened straight into Markdown body, so generated files could not be reliably loaded by Claude Code and lacked the description/trigger metadata other tooling relies on. Each template's inner code block now opens with the required frontmatter:
+     - **Rule template**: `name`, `description` (must name 2-3 concrete triggers), `version`, `applies_to`.
+     - **Agent templates (task & team)**: `name`, `description` with `"Use this agent when ..."` preamble and ≥2 `<example>` blocks (Context / user / assistant / commentary), `model` (`inherit`/`sonnet`/`opus`/`haiku`), `color` (6-colour whitelist), `tools` (minimal whitelist — never "all tools").
+     - Associated Quality Criteria, Procedure steps, and Completion Checklists in the owning SKILL.md files were extended to enforce frontmatter presence.
+
+  2. **All four edit-\* skill descriptions were generic**. Every description was a one-line `"Add/Define/Edit or {refine|improve} a {skill|rule|command|agent}"` — poor for Claude's auto-triggering. Each now opens with `"Use this skill when the user asks to ..."` followed by 4-5 concrete trigger phrases and the output contract (where the file lands, which frontmatter fields). Lengths went from ~80-90 chars to 349-458 chars.
+
+  3. **`solera-edit-agent/SKILL.md` lacked an explicit frontmatter-writing step.** The Procedure now splits "Write agent" into "Step 3: frontmatter (required fields)" + "Step 4: body", renumbers downstream steps, and extends Common Mistakes and the Completion Checklist to cover frontmatter anti-patterns (skipping it, invalid `color` values, over-broad `tools`).
+
+- **`solera-edit-skill`, `solera-edit-rule`, `solera-edit-command`, `solera-edit-agent`** metadata.version bumped `2.0.0` → `2.1.0`.
+
+### Deferred
+
+The gap analysis identified further improvements that are intentionally out of scope for this release:
+
+- **Progressive disclosure** (moving deep reference content from SKILL.md into `references/`). Current SKILL.md files are still within the 200-line budget; restructuring now would risk link breakage without immediate benefit.
+- **System prompt design guide** for `solera-edit-agent`. Requires a new reference document; the frontmatter fix took priority.
+- **Eval framework** in the style of `skill-creator`. Solera already has `self-verification.md`; the two need a coherent design before adopting another layer.
+- **Full argument/bash/plugin-context coverage** in `solera-edit-command`. Solera itself rarely authors slash commands, so the shortfall does not block current users.
+
+### Notes
+
+- No user-facing behaviour change for existing workspaces. `solera-edit-*` now produce richer files going forward.
+- CHANGELOG entries for v2.7.0–v2.7.1 remain in Korean (preserved as historical record).
+
+---
+
 ## [3.0.3] — 2026-04-17
 
 ### Fixed
