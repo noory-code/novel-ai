@@ -1,5 +1,40 @@
 # Changelog
 
+## [3.4.0] — 2026-04-18
+
+### Changed (structural — `solera-init` Step 6 / tooling catalog)
+
+Five rounds of end-to-end thought experiments against the v3.3.0 Step 6 design surfaced 22 defects. The most severe — the Step 6 → `solera-edit-agent` proxy flow — was architecturally incorrect: it would have triggered a nested interactive interview every time, breaking init UX, and the catalog's frontmatter defaults had no path to reach the meta-skill's Input schema. v3.4.0 replaces the proxy flow with a **direct-write** design and rewrites both files to close the full defect set.
+
+#### `docs/reference/tooling-catalog.md`
+
+- **Pre-baked specs**. Each candidate now carries its full frontmatter, system-prompt body, CLAUDE.md row, Kind (`agent`|`skill`), Role (one-line), and recorded-evidence spec — everything Step 6 needs to write the file directly. `test-runner` is now **FULLY SPECIFIED** with a green/`[Read, Bash, Grep]` agent body including Core Responsibilities, Process, Quality Standards, Output Format, and Edge Cases. `pr-reviewer` and `{project_slug}-convention-guard` remain marked `(placeholder — coming soon)` — Step 6 proposes them but routes any decision to `deferred`.
+- **Variable substitution rules table** clearly separates Step-6-substituted variables (`{project_name}`, `{project_slug}`, `{test_command}`, `{today}`) from runtime placeholders the agent/skill fills during execution (`{count}`, `{file:line}`, …). Runtime placeholders must be left verbatim.
+- **`{project_name}` noise-word guard**: if the derived name is `src`, `workspace`, `repo`, `app`, `root`, or `workbench`, Step 6 halts and prompts the user for a real name. `{project_slug}` has an explicit 6-step normalisation (unicode-NFC → lowercase → replace `_`/whitespace with `-` → strip non-`[a-z0-9-]` → collapse consecutive `-` → strip edges) and must match `^[a-z][a-z0-9-]*[a-z0-9]$`, 3–50 chars.
+- **Test command conflict resolution**: when multiple language evidence rows match (monorepo case), Step 6 MUST ask the user via AskUserQuestion which command to bake in. No silent priority-order pick.
+- **Integrity rule**: only `(FULLY SPECIFIED)` entries are eligible for creation. `(placeholder — coming soon)` entries are always routed to `deferred` with reason `"catalog entry not yet fully specified"`.
+
+#### `solera-init/SKILL.md` Step 6
+
+- **Direct-write flow**: Step 6 no longer invokes `solera-edit-agent` / `solera-edit-skill`. It substitutes catalog variables and writes `.claude/agents/{name}.md` (or `.claude/skills/{name}/SKILL.md`) directly. The meta-skills remain for manual, interview-driven creation.
+- **Idempotency on re-run**: if `team-process.md` already has a `tooling:` block, Step 6 asks the user `(1) skip Step 6` / `(2) only offer candidates not already listed` / `(3) restart from scratch`. Existing `created` entries are never silently rewritten.
+- **Per-candidate prompt loop** with a primary AskUserQuestion (`create now` | `decline` | `defer`, with `create now` omitted for placeholder entries) and a follow-up AskUserQuestion for the reason on decline/defer. Interrupted prompts → `deferred` with reason `"interrupted during Step 6"`.
+- **Pre-write guards**: `mkdir -p` the parent dir; check for target-path collision and offer skip / overwrite / write-as-new; record each outcome with a discriminating `note` on the `created` / `declined` entry.
+- **CLAUDE.md fallback matrix**: no CLAUDE.md → create it with a minimal header + `## Agents` table; section absent → append section + header + row; section exists as a markdown table → replace row with same agent name, else append; section exists as non-table content → append a new table block below preserving existing content, and record a note.
+- **Candidate status header parsing** pins to the exact regex `^### \d+\. .+ (agent|skill)  \((FULLY SPECIFIED|placeholder — coming soon)\)$`. Ambiguous/missing headers halt Step 6 with a clear error pointing to the catalog file.
+- **Failure isolation**: any single candidate's failure (test-command unresolvable, file write failed, etc.) demotes that candidate to `declined` with a specific reason and continues to the next candidate — Step 6 never halts the whole run on one candidate.
+
+### Metadata
+
+- `solera-init` metadata.version `3.1.0` → `3.2.0`.
+- Plugin version `3.3.1` → `3.4.0`.
+
+### Why minor (not patch)
+
+The catalog and Step 6 procedure are semantically re-designed from the v3.3.0 shape. Behaviour on user-facing invariants (no candidate created without explicit consent, decisions recorded in `team-process.md`) is preserved, but the internal contract between init and meta-skills changed. Treating this as a minor bump makes the shift visible to anyone tracking Solera's release notes.
+
+---
+
 ## [3.3.1] — 2026-04-18
 
 ### Changed (docs only)
