@@ -1,5 +1,33 @@
 # Changelog
 
+## [3.3.0] — 2026-04-18
+
+### Added
+
+- **`solera-init` Step 6 — Project-Tailored Tooling** (optional, BLOCKING). After the kickoff interview (Step 5) captures `project.type` and writes `team-process.md`, Step 6 proposes project-specific agent/skill candidates, lets the human multi-select via a BLOCKING prompt, and invokes the meta skills (`solera-edit-agent` / `solera-edit-skill`) to create the selected ones. No candidate is ever created without explicit user confirmation. Every proposal ends in exactly one of `created` / `declined` / `deferred`, recorded in `team-process.md` under a new `tooling:` block.
+
+- **`docs/reference/tooling-catalog.md`** (SSOT for Step 6). Defines:
+  - The **Evidence patterns** table (Glob patterns for Python / Node / TypeScript / Flutter / Go / Rust / Docker / CI / migrations / tests / architecture rules).
+  - Three `project.type: software` candidates with full specs — **propose-when** rule, role description, meta-skill used, frontmatter defaults (`model`, `color`, `tools`):
+    1. **`test-runner` agent** (green, `[Read, Bash, Grep]`) — maps detected lockfile to the right test command (`uv run pytest` / `npm test` / `flutter test` / `go test ./...` / `cargo test`).
+    2. **`pr-reviewer` agent** (blue, `[Read, Grep, Glob, Bash]`) — codifies the project's review rubric as a reusable agent.
+    3. **`{project}-convention-guard` skill** — wraps the project's `architecture_rules` + `custom_rules` into a pre-commit / pre-PR checklist skill.
+  - Placeholder candidate sets for `marketing` / `design` / `content` / `other` (YAGNI — extended only when real usage warrants).
+  - Extension rules so future candidates stay consistent.
+
+### Changed
+
+- `solera-init` metadata.version bumped `3.0.0` → `3.1.0` (minor — new user-facing feature).
+- `team-process.md` template gains a `tooling:` block at the bottom with commented examples for `created` / `declined` / `deferred`.
+- `solera-init` Completion Checklist gains an item covering Step 6.
+
+### Notes
+
+- **No existing workspace is affected** — Step 6 runs only during fresh `solera-init`. Existing projects can opt in by manually invoking `solera-edit-agent` or `solera-edit-skill` with the catalog as reference.
+- **MVP scope**: only `project.type: software` ships with a non-empty candidate set today. This is deliberate. Extend `docs/reference/tooling-catalog.md` when real projects surface the need for marketing/design/content/other-type candidates.
+
+---
+
 ## [3.2.0] — 2026-04-18
 
 ### Added
