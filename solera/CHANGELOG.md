@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.4.18] — 2026-04-18
+
+### Notes
+
+Marketplace refresh tag to close the **v3.4.1–v3.4.17 simulation hardening cycle**. No behavioural changes vs. v3.4.17 — this bump exists so downstream projects that were on v1.9.6 / v2.12.0 see a clearly higher patch number when running `/plugin update solera@noory-ai`, and so the "final" tag in this cycle is unambiguous before the real `solera-migrate-v2` run against a live v2 project.
+
+Total simulation cycle summary (v3.3.0 baseline → v3.4.18):
+- 35 thought-experiment iterations (25 general + 10 reading actual v2 project files).
+- 51 defects identified; ~42 fixed; remaining intentionally noted as no-issue / YAGNI / preserved-by-archive.
+- Step 6 (init) re-designed to direct-write (v3.4.0 structural refactor).
+- `solera-migrate-v2` reshaped across Steps 1, 2.1, 2.2, 2.3, 3, 4, 7 — ready for real-project execution with safety branch and per-step commit trailers.
+
+---
+
 ## [3.4.17] — 2026-04-18
 
 ### Fixed
