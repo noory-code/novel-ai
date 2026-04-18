@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.3.1] — 2026-04-18
+
+### Changed (docs only)
+
+- **README.md** updated to reflect the v3.0.3–v3.3.0 releases:
+  - `solera-publish-artifacts` row in the Skills table now notes it is not user-invocable and runs automatically at Story Wrap-up — clearer than the previous awkward `"(automatic hook)"` entry in the trigger column.
+  - `solera-init` row now lists the full output set including `team-process.md` (kickoff interview result) and project-tailored agent/skill proposals (Step 6, v3.3.0), linking to `docs/reference/tooling-catalog.md`.
+  - Reference section gained three entries:
+    - `docs/reference/axes-and-status.md` (SSOT for three-axis model + status values, v3.0.3)
+    - `docs/reference/self-verification-schema.md` (canonical schema for every skill's `assets/self-verification.md`, v3.0.3)
+    - `docs/reference/tooling-catalog.md` (Step 6 candidates, v3.3.0)
+
+No code, skill, or behaviour changes.
+
+---
+
 ## [3.3.0] — 2026-04-18
 
 ### Added

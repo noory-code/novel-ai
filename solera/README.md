@@ -116,7 +116,7 @@ The in-scope Concepts are snapshotted into `releases/v0.1-mvp/`. Future edits to
 |-------|----------------|----------|
 | `solera-manage-workflow` | "What should I work on", "show progress" | `progress.md` updates; reads and drives each work item's `## Workflow` section |
 | `solera-create-pr` | "Open a PR for this Story" | GitHub PR via `gh pr create`, squash merge, branch deletion |
-| `solera-publish-artifacts` | (automatic hook at Story Wrap-up) | Story artifacts promoted to `catalog/published/{type}/`; Concept Related Artifacts updated |
+| `solera-publish-artifacts` | — *(not user-invocable; runs automatically at Story Wrap-up)* | Story artifacts promoted to `catalog/published/{type}/`; Concept Related Artifacts updated |
 | `solera-handoff` | "Run handoff", "save handoff" | `HANDOFF.md` with full session context |
 
 ### Migration (from v2)
@@ -129,7 +129,7 @@ The in-scope Concepts are snapshotted into `releases/v0.1-mvp/`. Future edits to
 
 | Skill | Trigger phrase | Produces |
 |-------|----------------|----------|
-| `solera-init` | "Set up solera", "initialize solera" | `.claude/rules/solera-workflow.md`, v3 workspace structure, `progress.md` |
+| `solera-init` | "Set up solera", "initialize solera" | `.claude/rules/solera-workflow.md`, v3 workspace, `progress.md`, `team-process.md` (kickoff interview), and project-tailored agent/skill proposals ([Step 6](docs/reference/tooling-catalog.md)) |
 | `solera-help` | "Help", "what can solera do" | Skill overview and quick-start guidance |
 | `solera-edit-skill` | "Create a skill", "edit a skill" | `.claude/skills/{name}/SKILL.md` |
 | `solera-edit-rule` | "Create a rule" | `.claude/rules/{name}.md` |
@@ -180,6 +180,9 @@ All skills become available immediately after install. Tell Claude to set up a S
 | [docs/architecture.md](docs/architecture.md) | Skill dependency graph, Workflow-as-SSOT rule, gate model |
 | [docs/team-workflow.md](docs/team-workflow.md) | Branch strategy, parallel Stories, Concept coordination, handoff |
 | [docs/migrate-v2-to-v3.md](docs/migrate-v2-to-v3.md) | Upgrading a v2 project via `solera-migrate-v2` |
+| [docs/reference/axes-and-status.md](docs/reference/axes-and-status.md) | **SSOT** for the three-axis model, status values, and allowed transitions |
+| [docs/reference/self-verification-schema.md](docs/reference/self-verification-schema.md) | Canonical schema every skill's `assets/self-verification.md` follows |
+| [docs/reference/tooling-catalog.md](docs/reference/tooling-catalog.md) | Project-tailored agent/skill candidates proposed by `solera-init` Step 6 |
 | [docs/reference/domain-model-template.md](docs/reference/domain-model-template.md) | Archived v2 "concept" template, now known as domain-model |
 
 ## License
