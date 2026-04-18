@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.4.8] — 2026-04-18
+
+### Fixed
+
+- **Iteration 18 defect 35 — `solera-migrate-v2` Step 4 Story discovery + rename**. Real v2 projects (banas) mix two Story-directory shapes: `TS-003` (ID-only) and `TS-003-partner-role` (ID + name). The previous discovery pattern `US-NNN-*`/`TS-NNN-*` required a trailing dash + name, so ID-only directories would have been silently skipped — losing Stories from the migration without warning. The rename step also would have produced trailing-dash directory names (`TS-003-`) when name was empty. Fixes:
+  - Discovery pattern is now the regex `^(US|TS)-\d{3}(-.*)?$`, matching both shapes.
+  - Rename now derives `{story_name}` from the directory suffix when present, else infers a slug from `_story.md`'s title/heading, else runs a BLOCKING prompt asking the human for a 1–3-word kebab-case name.
+  - Target path is always `{new_id}-{story_name}` — never `{new_id}-` with empty name.
+
+---
+
 ## [3.4.7] — 2026-04-18
 
 ### Fixed

@@ -221,7 +221,7 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
 
 ### Step 4 — Story relocation with `contributes_to` inference
 
-- [ ] **Discover Stories** in the archive: every directory under `_v2-archive/workspace-original/phase/*/goals/*/epics/*/` whose name matches `US-NNN-*` or `TS-NNN-*` and which contains `_story.md`.
+- [ ] **Discover Stories** in the archive: every directory under `_v2-archive/workspace-original/phase/*/goals/*/epics/*/stories/` whose directory name matches the regex `^(US|TS)-\d{3}(-.*)?$` (both `TS-003` with no name suffix and `TS-003-partner-role` with a name suffix are valid) AND which contains `_story.md`. Real v2 projects mix both shapes — missing either shape loses Stories silently.
 - [ ] **Propose a global ID strategy**. v2 Story IDs (`US-001`, `TS-001`) are unique only within an Epic, so collisions are expected in v3's flat `stories/`. AI proposes one of:
   - **Renumber**: assign new global IDs (`US-0001`, `US-0002`, …) in discovery order. Loses the original ID — captured in the origin comment.
   - **Prefix by Epic**: `US-auth-001` instead of `US-001`. Preserves original number at the cost of slightly noisier IDs.
@@ -254,13 +254,15 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   ```
 - [ ] **BLOCKING sample review**: ask the human to review 3–5 random samples from the plan. If approved, process all; if corrections needed, accept per-entry overrides.
 - [ ] **Execute the batch**:
-  - For each Story: `git mv {archive_story_path} {workspace_path}/stories/{new_id}-{name}/` (preserves git history).
+  - For each Story: determine `{story_name}` from the original directory name. If the directory is `{old_id}-{name}` (e.g. `TS-003-partner-role`) → `{story_name}` is `partner-role`. If the directory is only `{old_id}` (e.g. `TS-003`) → `{story_name}` is derived by inferring a slug from `_story.md`'s `title` or first heading; if inference yields nothing usable, halt this Story with a BLOCKING prompt asking the human for a 1–3-word kebab-case name. Never relocate a Story to a directory whose name ends with a trailing `-`.
+  - Target path: `{workspace_path}/stories/{new_id}-{story_name}/` (always `{new_id}-{story_name}`, never `{new_id}-` with empty name).
+  - `git mv {archive_story_path} {target_path}/` (preserves git history).
   - Patch `_story.md`:
-    - Add/replace frontmatter fields: `story_id: {new_id}`, `story_name: {name}`, `contributes_to: [...]`, `belongs_to: pre-v3` (default — may be changed later).
+    - Add/replace frontmatter fields: `story_id: {new_id}`, `story_name: {story_name}`, `contributes_to: [...]`, `belongs_to: pre-v3` (default — may be changed later).
     - Replace old `status: completed` → `status: ✅ Complete`.
     - Prepend origin comment:
       ```
-      <!-- v2 origin: _v2-archive/workspace-original/phase/{phase}/goals/{goal}/epics/{epic}/{old_id}-{name}/ -->
+      <!-- v2 origin: _v2-archive/workspace-original/phase/{phase}/goals/{goal}/epics/{epic}/{old_dirname}/ -->
       ```
   - Patch each `ACT-NNN-*.md` in the Story: prepend the same origin comment.
   - **Do not** rewrite existing git commit messages from v2 (`[epic-name][US-NNN][ACT-NNN]`). The git log preserves v2-era commits as-is; only the filesystem layout and frontmatter change.
