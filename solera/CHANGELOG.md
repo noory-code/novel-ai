@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.4.11] — 2026-04-18
+
+### Fixed
+
+- **Iteration 24 defect 41 — Step 7 progress.md rewrite source**. The rewrite step assumed the v2 progress.md was inside `workspace/` and therefore archived by Step 1 at `_v2-archive/workspace-original/progress.md`. Real v2 projects (banas) keep progress.md at the project root, not inside workspace, which means Step 1 never archives it (Freeze only touches `workspace/` direct children) and Step 7 would have had nowhere to read the v2 content from. Added an explicit two-location lookup:
+  1. Archived workspace copy (if it was inside `workspace/`).
+  2. Project-root copy (if it lived outside `workspace/`) — used in place, overwritten by the v3 rewrite.
+  3. Neither → start from scratch.
+  
+  The v3 rewrite is always written to `{project_path}/progress.md` (v3 convention) regardless of where the v2 copy lived.
+
+Iterations 22 (Step 5 pre-v3 synthetic milestone) and 23 (Step 6 release v2-final) were walked through against banas with no defects surfacing — included here only to close the simulation log.
+
+---
+
 ## [3.4.10] — 2026-04-18
 
 ### Fixed

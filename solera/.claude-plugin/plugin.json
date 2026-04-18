@@ -1,6 +1,6 @@
 {
   "name": "solera",
-  "version": "3.4.10",
+  "version": "3.4.11",
   "description": "AI-driven project workflow plugin with a three-axis model: Living (Identity, Concepts), Time-bound (Milestones, Stories, Action Items), and Immutable (Releases). Humans draw Concepts and agree on Milestones; AI decomposes Stories into commit-sized Action Items and proposes updates to the Living map at wrap-up. Supports v2→v3 assisted migration.",
   "homepage": "https://github.com/noory-code/noory-ai/tree/main/solera",
   "repository": "https://github.com/noory-code/noory-ai",

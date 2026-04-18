@@ -320,7 +320,12 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   - ID strategy chosen in Step 4
   - List of excluded v2 Goals/Epics from Step 3 with rationale
   - Known manual tasks ("these Stories still have empty contributes_to")
-- [ ] Rewrite `{project_path}/progress.md` to v3 format (reference `{workspace_path}/_v2-archive/workspace-original/progress.md` if present, otherwise start from scratch).
+- [ ] Rewrite `{project_path}/progress.md` to v3 format. Find the **reference source** by trying these locations in order:
+  1. `{workspace_path}/_v2-archive/workspace-original/progress.md` — when the v2 project kept progress.md inside `workspace/` (the stock Solera v2 convention). Archived by Step 1.
+  2. `{project_path}/progress.md` — when the project kept progress.md at the project root instead of inside workspace (real v2 projects like banas). This file was **not** archived by Step 1 because it lived outside `workspace/`. Use its current content as the reference, then overwrite it in place with the v3 rewrite.
+  3. Neither exists → start from scratch using the v3 template (three-axis format).
+
+  The v3 rewrite is always written to `{project_path}/progress.md` (v3 convention). If Step 1 archived a workspace-internal progress.md, do not recreate it inside `workspace/` — v3 keeps progress.md at the project root.
 - [ ] **BLOCKING**: ask `"Delete _v2-archive/? (default: keep. It's safe to keep — git history stores everything.)"`
   - Default: **keep**. The archive is not heavy.
   - If the human chooses delete: `git rm -r _v2-archive/`.
