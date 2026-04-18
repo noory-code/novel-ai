@@ -1,5 +1,28 @@
 # Changelog
 
+## [3.2.0] — 2026-04-18
+
+### Added
+
+- **`solera-edit-agent` gets progressive-disclosure references.** Deep guidance no longer lives inline in SKILL.md — two new files in `skills/solera-edit-agent/references/` are loaded on demand:
+
+  - **`references/system-prompt-design.md`** (217 lines) — the six-section structure (role → responsibilities → process → quality → output → edges), three Solera-common patterns (Analysis / Generation / Team-lead), a length budget, and a Solera-specific mistakes table. Distilled from the official `plugin-dev/skills/agent-development/references/system-prompt-design.md` with the two Solera layers added: **AI-First banned phrases** and **explicit `condition → action`** format for Process and Edge Cases.
+  - **`references/description-examples.md`** (181 lines) — worked good/bad examples of the `description` frontmatter field for analysis, generation, and team-lead agents; an anti-pattern catalogue (generic one-liner, missing commentary, duplicated examples, over-broad triggers, banned phrases in the description itself); and a calibration checklist.
+
+- SKILL.md Procedure Step 3 (frontmatter) now links to `references/description-examples.md`; Step 4 (body) links to `references/system-prompt-design.md`. A new `## References` section at the end of SKILL.md indexes both files with "when to load" guidance.
+
+### Changed
+
+- `solera-edit-agent` metadata.version bumped `2.1.0` → `2.2.0` (minor — new feature: on-demand reference docs).
+- SKILL.md Completion Checklist gained a new item: "Body follows the six-section structure from references/system-prompt-design.md".
+
+### Deferred (still)
+
+- Progressive disclosure for the other three meta skills (`solera-edit-skill`, `-rule`, `-command`). SKILL.md sizes are still within the 200-line budget; duplicating the pattern now would be premature.
+- Eval framework. Same reasoning as v3.1.0 — needs a design session on coexistence with `self-verification.md` first.
+
+---
+
 ## [3.1.0] — 2026-04-18
 
 ### Fixed
