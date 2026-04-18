@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.2] — 2026-04-18
+
+### Fixed
+
+- **Iteration 7 defect** — `solera-init` Step 6 assumed the tooling catalog file was always present. If `docs/reference/tooling-catalog.md` is missing, unreadable, or obviously truncated, Step 6 now halts with a clear error pointing to the file instead of silently falling back or skipping. Fail-fast on SSOT loss.
+
+---
+
 ## [3.4.1] — 2026-04-18
 
 ### Fixed
