@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.5] — 2026-04-18
+
+### Fixed
+
+- **Iteration 10 defect** — the tooling catalog's `{project_slug}` row now spells out what to show the user when normalisation fails (e.g. a project name written in non-ASCII collapses to empty after stripping). Previously Step 6 just said "halt and ask"; the user could see a prompt without understanding why. The prompt text now explains that slugs feed file names and trigger phrases, so ASCII-only is required.
+
+---
+
 ## [3.4.4] — 2026-04-18
 
 ### Fixed
