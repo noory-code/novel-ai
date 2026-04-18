@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.4.16] — 2026-04-18
+
+### Fixed
+
+- **Iteration 31 defect 49 — Step 2.2 team-process.md gate patch converts v2 text-based `checks`**. Reading banas' actual `workspace/team-process.md` revealed that v2 projects store `workflow_gates.*.checks` as a **list of plain strings** (e.g. `- "Domain test 작성되어 있고 통과"`). v3 expects `checks[]` to be a list of `{type, params}` objects, and a v3 skill parsing the raw v2 list would either error or silently ignore the gate. Step 2.2 now converts v2 text-based checks: merge every string into the gate's `description`/`condition` field (joined with ` · `), remove the v2 `checks` key, and log a Manual Task in MIGRATION-NOTES.md to upgrade to typed checks later. v3 write-story's Gate execution already falls back to text evaluation of `condition` when `checks` is absent, so the gate remains enforceable after the downgrade.
+
+- **Also clarified**: other team-process.md sections (`process_stages`, `tech_stack`, `conventions`, `tools`, `custom_rules`, project-specific keys like banas' `package_paths`) are preserved as-is — v3 skills either consume them or ignore them, but never reject the file for unknown keys.
+
+---
+
 ## [3.4.15] — 2026-04-18
 
 ### Fixed

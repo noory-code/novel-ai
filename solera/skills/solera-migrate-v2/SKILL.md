@@ -114,7 +114,14 @@ Identity files may live in multiple locations in v2 Obsidian-style vaults (insid
 
 #### 2.2 team-process.md
 
-- [ ] If `_v2-archive/workspace-original/team-process.md` exists → copy to `{workspace_path}/team-process.md` and **patch only the `workflow_gates` section** to v3 keys (remove `epic.use_case`, `epic.concept`; add `milestone.agree`, `concept.align`). Other sections preserved as-is.
+- [ ] If `_v2-archive/workspace-original/team-process.md` exists → copy to `{workspace_path}/team-process.md` and patch the `workflow_gates` section:
+  1. **Remove v2-only keys**: `epic.use_case`, `epic.concept`.
+  2. **Add v3 keys**: `milestone.agree` (empty `condition`), `concept.align` (with the standard `concept_exists` check that defaults to the calling Story's `contributes_to`).
+  3. **Convert v2 text-based `checks` arrays to v3 shape**. v2 projects often have `checks:` as a list of plain strings (human-readable check descriptions, e.g. `- "Domain test 작성되어 있고 통과"`). v3 expects `checks[]` to be a list of `{type, params}` objects. For each v2 gate where `checks` is a list of strings:
+     - Merge every string into the gate's `description` (or `condition`) field, joined with ` · `.
+     - Remove the old `checks` key. v3 write-story's Gate check execution falls back to text evaluation of `condition`/`description` when `checks` is absent — so the gate remains enforceable, just as a text-based check until the human upgrades it to typed checks.
+     - Record the downgrade as a Manual Task in MIGRATION-NOTES.md: `"team-process.md gate {name}: v2 text-based checks were merged into the description. Upgrade to typed checks (glob_exists / command_passes / etc) when convenient."`
+  4. Other sections of team-process.md (`process_stages`, `tech_stack`, `conventions`, `tools`, `custom_rules`, project-specific keys like `package_paths`) are preserved **as-is** — v3 skills either use them or ignore them, but never reject the file for unknown keys.
 - [ ] If no team-process.md was found in the archive → log a reminder in the eventual MIGRATION-NOTES.md Manual Tasks: run `solera-init` post-migration to populate it via the Kickoff Interview.
 
 #### 2.3 Catalog merge
