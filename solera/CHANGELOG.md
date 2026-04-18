@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.3] — 2026-04-18
+
+### Fixed
+
+- **Iteration 8 defect** — `solera-init` Step 6 now runs a catalog integrity check before prompting the user: if the tooling catalog defines the same candidate name twice (under any `project.type` section), Step 6 halts with a clear error. Prevents duplicate prompts and ambiguous decision records when the catalog is extended carelessly.
+
+---
+
 ## [3.4.2] — 2026-04-18
 
 ### Fixed
