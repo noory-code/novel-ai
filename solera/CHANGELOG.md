@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.4.20] — 2026-04-18
+
+### Fixed
+
+- **Defect 55 (surfaced during live banas migration Step 4)** — `_story.md` files without any YAML frontmatter. Nine banas v2 Stories (P2/G1/03-app-onboarding DS-001/002/003, US-001/002/003/004, TS-001-admin-user-management; P2/G1/04-clean-architecture TS-001/002) were authored without frontmatter at all. The previous Step 4 "patch frontmatter" rule assumed a frontmatter block already exists — frontmatterless files silently escaped patching, so the relocated Story had no `story_id`, `story_name`, `contributes_to`, or `belongs_to` in v3. Added an explicit branch:
+  - No frontmatter present → **inject a new block** at the top with `title` (from first Markdown heading, else `{new_id}: {story_name}`), `story_id`, `story_name`, `contributes_to`, `belongs_to`, `status`, `created` (from earliest git commit date, else today).
+  - Frontmatter present → existing add/replace behaviour.
+  Also spelled out the full v2→v3 status mapping (`completed`/`in-progress`/`pending`/`on-hold`/`cancelled`) and added `value/`, `status/`, `origin/` to the list of v2-only tag prefixes to strip.
+
+---
+
 ## [3.4.19] — 2026-04-18
 
 ### Fixed

@@ -294,9 +294,10 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   - Target path: `{workspace_path}/stories/{new_id}-{story_name}/` (always `{new_id}-{story_name}`, never `{new_id}-` with empty name).
   - `git mv {archive_story_path} {target_path}/` (preserves git history).
   - Patch `_story.md`:
-    - Add/replace frontmatter fields: `story_id: {new_id}`, `story_name: {story_name}`, `contributes_to: [...]`, `belongs_to: pre-v3` (default — may be changed later).
-    - Replace old `status: completed` → `status: ✅ Complete`.
-    - **Remove v2-only frontmatter that has no v3 meaning**: `aliases`, any `tags` starting with `phase/`, `implements/`, `vision/`, `relates-to/` (these v2 Obsidian-style tags are no longer meaningful in v3). Keep `feature/*` tags untouched — they are the audit trail for Step 3's clustering decisions.
+    - **If the file has no YAML frontmatter at all** (some v2 Stories were written without one): **inject** a new frontmatter block at the very top of the file with the required v3 fields (`title`, `story_id`, `story_name`, `contributes_to`, `belongs_to`, `status`, `created`). Derive `title` from the first Markdown heading if present, else `{new_id}: {story_name}`. Derive `created` from the file's earliest git commit date if available, else today's date.
+    - **If the file already has frontmatter**: add or replace the required fields (`story_id: {new_id}`, `story_name: {story_name}`, `contributes_to: [...]`, `belongs_to: pre-v3` default, `status` mapped per below).
+    - Replace old `status: completed` → `status: ✅ Complete`. Map other statuses: `in-progress` → `🔄 In Progress`, `pending` → `⏳ Pending`, `on-hold` → `⏸️ On Hold`, `cancelled` → `❌ Cancelled`. Unknown → `⏳ Pending` with a MIGRATION-NOTES entry naming the Story.
+    - **Remove v2-only frontmatter that has no v3 meaning**: `aliases`, any `tags` starting with `phase/`, `implements/`, `vision/`, `relates-to/`, `value/`, `status/`, `origin/` (these v2 Obsidian-style tags are no longer meaningful in v3). Keep `feature/*` tags untouched — they are the audit trail for Step 3's clustering decisions.
     - Prepend origin comment:
       ```
       <!-- v2 origin: _v2-archive/workspace-original/phase/{phase}/goals/{goal}/epics/{epic}/{old_dirname}/ -->
