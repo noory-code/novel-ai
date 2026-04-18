@@ -259,7 +259,11 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
 - [ ] **Pre-pass — resolve `{story_name}` for every Story** (do this before any `git mv`):
   - For each discovered Story, determine `{story_name}` in priority order:
     1. If the directory is `{old_id}-{name}` (e.g. `TS-003-partner-role`) → `{story_name}` = `partner-role`.
-    2. Else if the directory is only `{old_id}` (e.g. `TS-003`) → try to derive a slug from `_story.md`'s `title` frontmatter or first heading: unicode-NFC, lowercase, replace whitespace with `-`, strip non-`[a-z0-9-]`, collapse consecutive `-`, strip edges, cap at 50 chars. If the result is a non-empty valid kebab-case slug → use it.
+    2. Else if the directory is only `{old_id}` (e.g. `TS-003`) → try to derive a slug from `_story.md`'s `title` frontmatter or first heading, in this order:
+       - Take the raw title string (e.g. `"TS-001: 익명 인증 시스템"`).
+       - **Strip the ID prefix**: remove any leading occurrence of `{old_id}` followed by optional `:`/`-`/whitespace (e.g. `"TS-001: 익명 인증 시스템"` → `"익명 인증 시스템"`). This prevents the ID from leaking into the slug and masking that the meaningful part is non-ASCII.
+       - Normalise: unicode-NFC, lowercase, replace whitespace with `-`, strip non-`[a-z0-9-]`, collapse consecutive `-`, strip edges, cap at 50 chars.
+       - If the result is a non-empty valid kebab-case slug (matches `^[a-z][a-z0-9-]{0,48}[a-z0-9]$`) AND is not just the `{old_id}` repeated (e.g. slug `ts-001` is rejected) → use it.
     3. Else → add this Story to a `pending_names` list with its ID, the v2 source path, and the raw (non-ASCII) title/heading for human reference.
   - **After the pre-pass**: if `pending_names` is non-empty, run a **single BLOCKING batch prompt**:
     ```
@@ -279,6 +283,7 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   - Patch `_story.md`:
     - Add/replace frontmatter fields: `story_id: {new_id}`, `story_name: {story_name}`, `contributes_to: [...]`, `belongs_to: pre-v3` (default — may be changed later).
     - Replace old `status: completed` → `status: ✅ Complete`.
+    - **Remove v2-only frontmatter that has no v3 meaning**: `aliases`, any `tags` starting with `phase/`, `implements/`, `vision/`, `relates-to/` (these v2 Obsidian-style tags are no longer meaningful in v3). Keep `feature/*` tags untouched — they are the audit trail for Step 3's clustering decisions.
     - Prepend origin comment:
       ```
       <!-- v2 origin: _v2-archive/workspace-original/phase/{phase}/goals/{goal}/epics/{epic}/{old_dirname}/ -->

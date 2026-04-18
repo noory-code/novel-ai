@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.4.14] — 2026-04-18
+
+### Fixed
+
+Iteration 29 read an actual v2 Story (`workspace/phase/2026-P1-foundation/goals/G0-infrastructure/epics/02-build-auth/stories/TS-001/_story.md`) and exposed two more Step 4 issues that only surface when the title is non-ASCII:
+
+- **Defect 45 — ID leaks into slug when title starts with ID**. Banas titles are written as `"TS-001: 익명 인증 시스템"` — the ID prefix is included in the title string. The slug-derivation pipeline (whitespace → `-`, strip non-ASCII) would produce `ts-001` from that string, which a naive validity check accepts (valid kebab-case, 3-50 chars) even though it is just the ID repeated and carries zero semantic meaning. Step 4 now (a) strips `^{old_id}[:\s\-]*` from the title before slug derivation and (b) rejects any slug that equals the `{old_id}` lowercased, forcing the Story into the `pending_names` batch prompt.
+- **Defect 46 — v2-only frontmatter fields leak into v3 Story files**. Banas stories carry `aliases: [TS-001, 스토리]` plus v2 Obsidian-style tags (`phase/p1-foundation`, `implements/g1-tech-foundation`, `vision/g1-tech-foundation`, `relates-to/persona-bana`). These have no v3 meaning. Step 4's frontmatter patch now removes them. `feature/*` tags are preserved because they form the audit trail for Step 3's clustering decisions.
+
+---
+
 ## [3.4.13] — 2026-04-18
 
 ### Fixed
