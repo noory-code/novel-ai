@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.4] — 2026-04-18
+
+### Fixed
+
+- **Iteration 9 defect** — `solera-init` Step 6 interrupt-handling rule now covers both user-interrupt and `AskUserQuestion` tool errors: both route to `deferred` with reason `"interrupted during Step 6"` and continue. Prevents an unlikely-but-possible silent skip if the tool layer raises.
+
+---
+
 ## [3.4.3] — 2026-04-18
 
 ### Fixed

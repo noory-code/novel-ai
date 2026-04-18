@@ -276,7 +276,7 @@ For each gate where `condition` is non-empty, ask:
     - `question`: `"Briefly, why {decline|defer}?"`
     - `options`: three common reasons from the catalog entry if provided, plus the inherent `Other` for free text. If the catalog entry lists no stock reasons, rely on `Other`.
   - Record the result in an in-memory `decisions` list before moving to the next candidate.
-  - **If the user interrupts** (no answer received, e.g. `Esc`): record this candidate as `deferred` with reason `"interrupted during Step 6"` and continue to the next candidate. Never silently skip.
+  - **If the user interrupts or the AskUserQuestion call itself errors** (no answer received, e.g. `Esc`; or the tool raises): record this candidate as `deferred` with reason `"interrupted during Step 6"` and continue to the next candidate. Never silently skip; never retry more than once.
 - [ ] **For each `create now` decision** (iterate `decisions` in order):
   1. Load the candidate's catalog entry. If the catalog requires `{test_command}` and it cannot be resolved from evidence, **demote this decision to `declined`** with reason `"test command could not be resolved from evidence"` and continue to the next candidate. (Do **not** halt the whole Step 6.)
   2. Substitute every `{variable}` in the catalog's Frontmatter + System prompt body per the catalog's "Variable substitution rules" table.
