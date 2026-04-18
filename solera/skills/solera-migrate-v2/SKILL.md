@@ -223,7 +223,13 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
 
 ### Step 4 — Story relocation with `contributes_to` inference
 
-- [ ] **Discover Stories** in the archive: every directory under `_v2-archive/workspace-original/phase/*/goals/*/epics/*/stories/` whose directory name matches the regex `^(US|TS)-\d{3}(-.*)?$` (both `TS-003` with no name suffix and `TS-003-partner-role` with a name suffix are valid) AND which contains `_story.md`. Real v2 projects mix both shapes — missing either shape loses Stories silently.
+- [ ] **Discover Stories** in the archive: every directory under `_v2-archive/workspace-original/phase/*/goals/*/epics/*/` (with or without an intermediate `stories/` layer — banas mixes both, e.g. `epics/02-build-auth/stories/TS-001/` AND `epics/01-user-auth/US-001-login-screen/`) whose directory name matches the regex `^([A-Z]{1,4})-\d{3}(-.*)?$` AND which contains `_story.md`. The `[A-Z]{1,4}` deliberately accepts non-standard prefixes (e.g. `DS-` for Design Story, `IS-` for Investigation, etc.) that real v2 projects use — missing these loses Stories and their ACTs silently.
+- [ ] **Unknown prefix handling**: group discovered Stories by prefix. For any prefix not in `{US, TS}` (the v3 canonical set), run a **single BLOCKING prompt** listing the unknown prefixes with Story counts, asking the human:
+  - `(1) Keep the prefix as-is` (allowed in v3 with the caveat that v3 convention is `US`/`TS` only — user accepts the deviation).
+  - `(2) Convert to TS` (Technical Story) — the common choice when the prefix was used for technical work that was not a user-facing User Story.
+  - `(3) Convert to US` — when the prefix labelled user-facing work.
+  - `(4) Provide a per-prefix mapping` (e.g. `DS → TS, IS → TS`).
+  The decision applies to all Stories with that prefix. Record the mapping in MIGRATION-NOTES.md so the rename trail is auditable.
 - [ ] **Propose a global ID strategy**. v2 Story IDs (`US-001`, `TS-001`) are unique only within an Epic, so collisions are expected in v3's flat `stories/`. AI proposes one of:
   - **Renumber**: assign new global IDs (`US-0001`, `US-0002`, …) in discovery order. Loses the original ID — captured in the origin comment.
   - **Prefix by Epic**: `US-{epic_primary_feature}-001` instead of `US-001`, where `{epic_primary_feature}` is the primary feature derived in Step 3 (e.g. Epic directory `02-build-auth` → `auth`, `09-build-design-system` → `design-system`). Preserves original number; keeps IDs short; aligns with the Concept clustering. (Not `02-build-auth` verbatim — the numeric prefix and verb are dropped.)

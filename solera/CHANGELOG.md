@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.4.15] — 2026-04-18
+
+### Fixed
+
+- **Iteration 30 defect 47 — Story discovery missed non-`US`/`TS` prefixes and intermediate-directory variance**. Real banas v2 uses `DS-001-profile-db/` (Design Stories — custom prefix) and mixes two directory shapes: `epics/02-build-auth/stories/TS-001/` (with intermediate `stories/` dir) AND `epics/01-user-auth/US-001-login-screen/` (no intermediate dir). The v3.4.8 regex matched only `US`/`TS` with a required `stories/` wrapper. Banas would have **silently dropped all DS Stories and every Story living directly under an Epic** — losing their ACT files too.
+  - Regex relaxed to `^([A-Z]{1,4})-\d{3}(-.*)?$` (accepts any 1–4 letter prefix).
+  - Discovery path glob handles both shapes (with and without `stories/`).
+  - A **single BLOCKING prompt** per unknown prefix asks the human: keep as-is / convert to TS / convert to US / provide per-prefix mapping. Decision applies to all Stories with that prefix and is recorded in MIGRATION-NOTES.md.
+
+---
+
 ## [3.4.14] — 2026-04-18
 
 ### Fixed
