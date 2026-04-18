@@ -1,5 +1,25 @@
 # Changelog
 
+## [3.5.0] — 2026-04-18
+
+### Added
+
+- **Concept hierarchy** — Concepts can now declare a `parent` (another active Concept they sit inside). Top-level Concepts represent the project's largest regions (products, shared foundations, surfaces); children nest without depth limit, so a product decision like "Community" can later hold "Reactions → Like", "Comments → Threaded", etc. Flat Concepts remain fully valid — the field is optional and backwards-compatible with every existing workspace.
+- **`axes-and-status.md` → Cross-axis Relations** gains a `parent: Concept → Concept` row plus a dedicated subsection that specifies cycle/self-parent/archive rules (cycles rejected, self-parenting rejected, parent must be `active`, children become orphaned when parent archives).
+- **`solera-write-concept` → Create mode** now resolves `parent` after Current Design: AI proposes a candidate from vocabulary overlap / explicit human reference / product-surface signals, human accepts or overrides (including explicit top-level). The Human–AI Protocol codifies: AI may propose `parent`, AI may not write it silently.
+- **`solera-write-concept` → Update mode** adds `Parent` to the edit menu so a Concept can be re-homed (or promoted to top-level) without rewriting Intent. Setting parent to `null` removes the frontmatter line rather than persisting `parent: null`.
+- **`solera-write-concept` → Wrap-up** rebuilds `concepts/_index.md` as an **indented tree** (2 spaces per depth) instead of a flat list, so the hierarchy is visible without opening the viewer. Orphaned children (parent missing / non-active) surface with a `⚠️ orphan` marker.
+- **Concept template** (`concept-template.md`) includes a commented `parent` placeholder so hand-authored Concepts know the field exists.
+- **New error handling** in `solera-write-concept`: unknown parent, inactive parent, self-parent, parent cycle — each halts with a specific message.
+
+### Notes
+
+This is a minor bump because the new field is optional and every existing workspace keeps parsing unchanged. The downstream `solera-map` plugin depends on this field for its Plan canvas tree rendering; prior to this release it was reading a field Solera didn't officially know about.
+
+`solera-write-concept` skill version bumps to `1.1.0`.
+
+---
+
 ## [3.4.20] — 2026-04-18
 
 ### Fixed

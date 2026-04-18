@@ -127,10 +127,27 @@ proposed ──► agreed ──► in-progress ──► released
 
 | Relation | From | To | Cardinality | Required |
 |----------|------|-----|-------------|----------|
+| `parent` | Concept | Concept | Concept → 0 or 1 Concept | no |
 | `contributes_to` | Story | Concept | Story → 1+ Concepts | **yes** |
 | `belongs_to` | Story | Milestone | Story → 0 or 1 Milestone | no |
 | `depends_on` | Action Item | Action Item | ACT → 0+ sibling ACTs | no |
 | `in_scope` | Release | Concept | Release → 1+ Concepts | **yes** |
+
+### `parent` (Concept → Concept)
+
+A Concept may declare one `parent` — another active Concept it sits inside.
+Top-level Concepts (no parent) represent the project's biggest regions
+(products, shared foundations, top-level surfaces). Nesting is unbounded:
+a parent can itself have a parent, all the way up until one without a parent.
+
+- **Cycles are forbidden.** A → B → A must be rejected; skills and viewers
+  walk the chain upward and halt if they revisit an ancestor.
+- **Self-parenting is forbidden.** `parent == self.id` must be rejected.
+- **The parent Concept must be `active`** at the time it is set — archiving
+  a Concept that still has children is surfaced as a warning (children
+  become orphaned / rise to top-level automatically).
+- **Changing `parent`** is a normal Update — not an Intent rewrite. It
+  doesn't trigger archive-and-new.
 
 ## Scope Tag Invariant
 

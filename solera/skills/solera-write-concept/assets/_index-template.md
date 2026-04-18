@@ -5,7 +5,10 @@
 
 ## Active
 
-<!-- Auto-maintained by solera-write-concept at Wrap-up. Every file with `status: active` in its frontmatter appears here. -->
+<!-- Auto-maintained by solera-write-concept at Wrap-up. Every file with `status: active`
+     in its frontmatter appears here, indented by parent chain so the map's hierarchy
+     is visible at a glance. Top-level Concepts (no `parent:`) sit at column 0; children
+     indent two spaces per depth, keeping the file format grep-friendly. -->
 
 (no active Concepts yet)
 

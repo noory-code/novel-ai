@@ -3,6 +3,7 @@ id: {concept_id}
 name: {concept_name}
 status: active
 created: {YYYY-MM-DD}
+# parent: {parent_concept_id}   # optional — omit for top-level Concepts
 ---
 
 # Intent

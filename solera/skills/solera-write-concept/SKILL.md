@@ -3,7 +3,7 @@ name: solera-write-concept
 user-invocable: true
 description: Draw, update, deprecate, or archive a Concept — the living abstract areas that make up the project map.
 metadata:
-  version: "1.0.1"
+  version: "1.1.0"
   category: writing
   type: unit
   style: procedural
@@ -31,6 +31,9 @@ A Concept holds:
 - **Contributions** — append-only log of Stories that advanced this Concept.
 - **Related Artifacts** — published design artifacts and external links.
 
+A Concept may optionally declare a `parent` — another Concept it sits inside.
+See [axes-and-status.md → `parent` (Concept → Concept)](../../docs/reference/axes-and-status.md#parent-concept--concept) for cycle/self-parent/archive rules.
+
 This skill handles four modes:
 
 | Mode | When |
@@ -54,6 +57,7 @@ This skill handles four modes:
 | **mode** | Y | `create` \| `update` \| `deprecate` \| `archive` | create |
 | **concept_id** | Y | Kebab-case ID of the Concept | authentication |
 | **concept_name** | N | Human-readable name (defaults to title-cased id) | Authentication |
+| **parent** | N | Parent Concept id; omit or `null` for a top-level Concept | banas-app |
 
 ## Output
 
@@ -106,8 +110,21 @@ This skill handles four modes:
   - AI may **not** write the Current Design on behalf of the human.
   - AI may offer to reword the human's answer for clarity — **word-smithing only, no new ideas**. Present the reworded version side-by-side with the original and require explicit approval. If the human wants substantive additions, ask targeted questions instead of inserting content.
 
+- [ ] **Resolve `parent`** (AI proposes; human decides):
+  - If the invocation passed a `parent` argument: validate it exists + is `active`. On failure, halt with a clear error.
+  - Otherwise: infer a candidate parent from the new Concept's Intent/Current Design + existing `concepts/_index.md`. Examples of signals:
+    - Vocabulary overlap with an existing Concept's Intent (e.g., new "Profile Edit" ↔ existing `profile`).
+    - Explicit reference by the human in conversation ("this goes under Me tab" → `me`).
+    - Product surface implied by language ("어드민 전용" → `banas-admin` if it exists).
+    Present the candidate as a proposal:
+    > "이 Concept이 `{candidate_id}` 아래에 들어가는 게 자연스러워 보입니다. 맞나요? 아니면 다른 parent, 아니면 top-level로 두시겠어요?"
+  - Human chooses: accept candidate / specify a different parent id / explicit `null` (top-level).
+  - **Reject cycles and self-parenting** per [axes-and-status.md → `parent`](../../docs/reference/axes-and-status.md#parent-concept--concept). Walk the chain from the proposed parent upward; if we revisit `concept_id`, halt.
+  - AI must **never** invent a parent silently. "No parent found" is fine; proposing `null` is fine.
+
 - [ ] Write the Concept file using the template, filling:
   - Frontmatter: `id`, `name`, `status: active`, `created: {today in YYYY-MM-DD}`.
+  - `parent: {parent_id}` — include only if a parent was resolved; **omit the line entirely** for top-level Concepts (don't write `parent: null`).
   - `# Intent` — from the human, word-for-word (or human-approved rewording).
   - `# Current Design` — from the human.
   - `# Current Shape` — initially: `(no Stories have contributed yet)`.
@@ -127,11 +144,20 @@ This skill handles four modes:
   - Horizon
   - Health
   - Related Artifacts
+  - **Parent** (re-home this Concept under a different parent or promote to top-level)
   - Something else (free text)
 - [ ] For each chosen section, show the current content, ask for the new content, and replace after human confirmation.
 - [ ] **Intent is not editable here.** If the human wants to change Intent:
   - Stop and ask: "Intent is meant to be the unchanging north star. Changing it means this is effectively a different Concept. Do you want to (a) archive this one and create a new Concept, or (b) confirm the Intent rewording is a clarification of the same idea?"
   - Proceed only after explicit human answer.
+- [ ] **When `parent` is chosen for editing**:
+  - Show the current parent (or "(top-level)").
+  - Ask for a new parent id or `null` (top-level).
+  - Validate per [axes-and-status.md → `parent`](../../docs/reference/axes-and-status.md#parent-concept--concept):
+    - Target Concept exists and is `active` (reject otherwise).
+    - Target is not `concept_id` itself (self-parent).
+    - Setting target does not create a cycle (walk proposed_parent's ancestor chain; if we hit `concept_id`, reject).
+  - On `null`: **remove** the `parent:` line from frontmatter rather than writing `parent: null`.
 - [ ] Append a `<!-- updated: YYYY-MM-DD --> ` HTML comment at the top of the edited section for auditability.
 - [ ] Proceed to Wrap-up.
 
@@ -152,11 +178,17 @@ This skill handles four modes:
 ### 6. Wrap-up
 
 - [ ] Update `{project_path}/workspace/concepts/_index.md`:
-  - `active` section lists all files with `status: active`, linked.
-  - `deprecated` section lists all files with `status: deprecated`.
+  - `active` section lists all files with `status: active`, linked, **indented by parent chain**:
+    - Top-level Concepts (no `parent:`) at indent 0.
+    - Each child at its parent's indent + 2 spaces.
+    - Render recursively so arbitrary depth stays readable.
+    - Preserve deterministic ordering (alphabetical by id within each sibling group).
+  - `deprecated` section lists all files with `status: deprecated` (flat — hierarchy less meaningful once a Concept is leaving).
   - Archived files are **not** listed in the index (but remain on disk).
+  - If a Concept's `parent:` references an id that no longer exists or is non-`active`, treat it as orphan and render at indent 0 with a trailing `— ⚠️ orphan` marker.
 - [ ] Emit a short summary to the user:
-  - For `create`: "Concept `{id}` drawn. Intent fixed. Current Design captured. Index updated."
+  - For `create`: "Concept `{id}` drawn{parent_note}. Intent fixed. Current Design captured. Index updated."
+    - `{parent_note}` = ` under {parent_id}` if parent set, else ` as a top-level Concept`.
   - For `update`: "Concept `{id}` updated: {list of sections changed}."
   - For `deprecate`/`archive`: "Concept `{id}` now {status}."
 
@@ -169,6 +201,7 @@ This skill is a **Moment 1 skill** (Concept Drawing). The collaboration rule is:
 | Ask clarifying questions | Invent Intent or Current Design |
 | Offer observations from the codebase / artifacts | Merge / split Concepts unilaterally |
 | Rephrase for clarity, with human approval | Mark anything as final without human confirmation |
+| **Propose a `parent` based on observed overlap / context** | **Write `parent` silently without the human confirming** |
 | Update the index and file structure | Decide that a Concept is deprecated or archived without the human asking |
 
 If at any point the human asks the AI to "just write it", the AI should still surface a proposed draft and wait for confirmation before persisting — the file is the human's drawing.
@@ -181,6 +214,10 @@ If at any point the human asks the AI to "just write it", the AI should still su
 | Create conflict | File exists in `create` mode | Offer `update` or archive/create-new | Skill halts until mode resolved |
 | Update target missing | File absent in `update`/`deprecate`/`archive` | Offer `create` mode | Skill halts until mode resolved |
 | Intent rewrite in update | Human wants to edit Intent | Branch decision dialog (archive-and-new vs clarify) | Skill halts until chosen |
+| Unknown parent | `parent` references a non-existent Concept | List available Concepts; halt | Skill halts until fixed |
+| Inactive parent | `parent` exists but is `deprecated`/`archived` | Ask for a different parent (or top-level) | Skill halts until fixed |
+| Self-parent | `parent == concept_id` | Reject | Skill halts until fixed |
+| Parent cycle | Setting parent would loop back through `concept_id` | Show the chain; reject | Skill halts until fixed |
 | Index corruption | `_index.md` malformed | Rebuild from filesystem scan of `concepts/*.md` | Continues |
 
 ## Completion Checklist
