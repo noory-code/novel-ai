@@ -11,7 +11,7 @@ metadata:
   uses: []
 ---
 
-# Meta Command
+# Edit Command
 
 > Creates, reviews, or improves a slash command file in `.claude/commands/`.
 

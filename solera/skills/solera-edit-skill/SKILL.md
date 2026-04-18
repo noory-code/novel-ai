@@ -11,7 +11,7 @@ metadata:
   uses: []
 ---
 
-# Meta Skill
+# Edit Skill
 
 > Creates, reviews, or improves a skill file in `.claude/skills/`.
 > Run this to scaffold a new skill, audit an existing one, or apply improvements.

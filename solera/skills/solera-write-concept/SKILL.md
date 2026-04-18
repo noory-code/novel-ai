@@ -3,7 +3,7 @@ name: solera-write-concept
 user-invocable: true
 description: Draw, update, deprecate, or archive a Concept — the living abstract areas that make up the project map.
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   category: writing
   type: unit
   style: procedural

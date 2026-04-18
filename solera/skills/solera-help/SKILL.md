@@ -54,7 +54,7 @@ Run `/solera-handoff` before ending a session to update `HANDOFF.md`, so the nex
 | `solera-manage-workflow` | "What should I work on", "show current progress" | `progress.md` updates; reads and drives each work item's `## Workflow` |
 | `solera-create-pr` | "Open a PR", "merge the Story" | GitHub PR via `gh pr create`, squash merge, branch deletion |
 | `solera-publish-artifacts` | "Publish Story artifacts" | persona / service-map / journey / use-case / domain-model promoted to `catalog/published/`; Concept Related Artifacts updated |
-| `solera-handoff` | "End session", "save handoff" | `HANDOFF.md` with full session context |
+| `solera-handoff` | "Run handoff", "save handoff" | `HANDOFF.md` with full session context |
 
 ### Migration
 

@@ -3,7 +3,7 @@ name: solera-write-milestone
 user-invocable: true
 description: Reach a human–AI agreement on scope — which Concepts advance to what depth before the next release. The Moment 2 skill.
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   category: writing
   type: unit
   style: procedural

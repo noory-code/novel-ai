@@ -11,7 +11,7 @@ metadata:
   uses: []
 ---
 
-# meta-subagent
+# Edit Agent
 
 ## Agent Definition Fields
 

@@ -3,7 +3,7 @@ name: solera-release
 user-invocable: true
 description: Freeze an achieved Milestone into an immutable release snapshot — the Moment 4 skill that closes 결과 확정.
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   category: writing
   type: unit
   style: procedural
