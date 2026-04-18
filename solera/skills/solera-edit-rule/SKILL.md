@@ -41,6 +41,7 @@ metadata:
 
 **Step 2: Write rule file** — ref: [assets/rule-template.md](assets/rule-template.md)
 
+- [ ] Frontmatter filled (`name`, `description`, `version`, `applies_to`). `description` names 2-3 concrete triggers. `applies_to` is a bounded glob/area, not "everywhere".
 - [ ] Keep under 200 lines
 - [ ] Scope statement present
 - [ ] Checklist included
@@ -48,6 +49,7 @@ metadata:
 
 **Step 3: Validate**
 
+- [ ] Frontmatter present and complete
 - [ ] Scope is explicit (not "when appropriate")
 - [ ] Each checklist item is independently verifiable
 - [ ] Good/Bad examples are concrete, not generic
@@ -58,6 +60,7 @@ metadata:
 
 **Step 4: Analyze existing rule**
 
+- [ ] Frontmatter present with `name`, `description`, `version`, `applies_to`
 - [ ] Line count ≤ 200
 - [ ] Scope statement is clear
 - [ ] Checklist items are verifiable
@@ -85,6 +88,7 @@ metadata:
 ## Completion Checklist
 
 - [ ] `.claude/rules/{rule_name}.md` created
+- [ ] Frontmatter present (`name`, `description`, `version`, `applies_to`)
 - [ ] Line count ≤ 200
 - [ ] Scope statement present
 - [ ] Checklist included
