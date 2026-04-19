@@ -1,19 +1,21 @@
 ---
 name: solera-migrate-v2
 user-invocable: true
-description: Assisted, non-destructive migration from Solera v2 (Phase/Goal/Epic hierarchy) to v3 (three axes). Every step blocks for human approval; reversible via git until committed.
+description: Assisted, non-destructive migration from Solera v2 (Phase/Goal/Epic hierarchy) to v4 (three axes + Living-axis Personas/Journeys/Narratives, hosted in `.solera/`). Every step blocks for human approval; reversible via git until committed.
 metadata:
-  version: "1.3.0"
+  version: "2.0.0"
   category: meta
   type: unit
   style: procedural
-  triggers: [migrate solera, migrate v2 to v3, upgrade solera workspace, v2 to v3]
+  triggers: [migrate solera, migrate v2 to v3, migrate v2 to v4, upgrade solera workspace, v2 to v3, v2 to v4]
   uses: []
 ---
 
-# Migrate Solera v2 → v3 (Assisted)
+# Migrate Solera v2 → v4 (Assisted)
 
-> 1-shot migration tool. Reads a v2 workspace, freezes it to `_v2-archive/`, and proposes a v3 structure that the human reviews at every step. No automatic decisions about Concept taxonomy — AI suggests, human approves.
+> 1-shot migration tool. Reads a v2 workspace at `{project_path}/workspace/`, freezes it to `{project_path}/.solera/_v2-archive/`, and proposes a v4 structure that the human reviews at every step. No automatic decisions about Concept taxonomy — AI suggests, human approves.
+>
+> **v4 difference from earlier v3-targeting versions of this skill**: the destination is now `{project_path}/.solera/` (dotfolder), not `{project_path}/workspace/`. Personas and Journeys are first-class Living-axis entities (`.solera/personas/`, `.solera/journeys/`), no longer catalog artifacts. Narratives (`.solera/narratives/`) are new and not produced by this skill — there is no v2 source for them; humans author them post-migration via `solera-write-narrative`.
 
 ## Philosophy
 
@@ -40,53 +42,70 @@ migrate-v2 is a **one-shot transition skill**, not a work item. It runs once (or
 
 | Parameter | Required | Description | Example |
 |---|---|---|---|
-| **project_path** | Y | Project root containing `workspace/` | `/Users/me/banas` |
-| **workspace_path** | N | v2 workspace location; default `{project_path}/workspace` | `{project_path}/workspace` |
+| **project_path** | Y | Project root containing `workspace/` (v2 source) | `/Users/me/banas` |
+| **v2_source_path** | N | v2 workspace location; default `{project_path}/workspace` | `{project_path}/workspace` |
+| **solera_path** | N | v4 destination root; default `{project_path}/.solera` | `{project_path}/.solera` |
 | **extra_artifact_dirs** | N | Additional artifact roots to fold into the archive/catalog (comma-separated) | `{project_path}/published` |
 | **resume_from** | N | Skip earlier steps; accepts the name of a step (`skeleton`, `concepts`, `stories`, `milestone`, `release`, `cleanup`) | `stories` |
+
+**Path semantics**:
+- `v2_source_path` is the **input** — where v2 data lives today (still at `workspace/` because v2 predates the dotfolder convention).
+- `solera_path` is the **output** — where v4 lives going forward (`.solera/`). The skill creates this directory and the archive (`{solera_path}/_v2-archive/`) inside it.
+- All references below to `{solera_path}` (legacy parameter name from earlier versions of this skill) are interpreted as `{solera_path}` — the v4 destination root.
 
 ## Output
 
 | Step | Output | Path |
 |------|--------|------|
-| 1. Freeze | Archived v2 data | `{workspace_path}/_v2-archive/` |
-| 2. Skeleton | v3 directory structure | `{workspace_path}/concepts/`, `milestones/`, `stories/`, `releases/` + `_index.md` seeds |
-| 3. Concepts | Drafted Concept files (human-approved) | `concepts/{id}.md` |
-| 4. Stories | Relocated Stories with `contributes_to` tags | `stories/{story_id}-{story_name}/` |
-| 5. Milestone (optional) | `pre-v3` milestone summarizing v2 era | `milestones/pre-v3.md` |
-| 6. Release | First immutable snapshot | `releases/v2-final/` |
-| 7. Cleanup | Updated `progress.md` + migration summary | `progress.md`, `MIGRATION-NOTES.md` |
+| 1. Freeze | Archived v2 data | `{solera_path}/_v2-archive/workspace-original/` |
+| 2. Skeleton | v4 directory structure | `{solera_path}/concepts/`, `personas/`, `journeys/`, `narratives/`, `milestones/`, `stories/`, `releases/`, `catalog/published/` + `_index.md` seeds |
+| 3. Concepts | Drafted Concept files (human-approved) | `{solera_path}/concepts/{id}.md` |
+| 4. Stories | Relocated Stories with `contributes_to` tags | `{solera_path}/stories/{story_id}-{story_name}/` |
+| 5. Milestone | `pre-v3` synthetic milestone summarizing v2 era | `{solera_path}/milestones/pre-v3.md` |
+| 6. Release | First immutable snapshot | `{solera_path}/releases/v2-final/` |
+| 7. Cleanup | v4 progress.md + migration summary | `{solera_path}/progress.md`, `{project_path}/MIGRATION-NOTES.md` |
+
+Note: Personas (`personas/`), Journeys (`journeys/`), and Narratives (`narratives/`) directories are created **empty** in Step 2. v2 had no first-class equivalents (the closest were catalog `persona/` and `journey/` artifacts, which Step 2.3 routes to `_unclassified/` for human re-homing via `solera-write-persona` / `solera-write-journey` post-migration). Narratives are entirely new — author them via `solera-write-narrative` after migration.
 
 ## Procedure (7 steps, all BLOCKING on approval)
 
 ### Step 1 — Freeze
 
-**Policy**: move the **entire** current `{workspace_path}/` contents into an archive, then build v3 fresh in Step 2 by copying selectively from that archive. This avoids ambiguous name-based skipping — `workspace/identity/` may already exist in v2 and still contain v2-only content; deciding to keep or archive it by name alone is wrong. The only safe rule is "archive everything, rebuild from archive."
+**Policy**: move the **entire** current `{v2_source_path}/` (i.e. `workspace/`) contents into an archive **inside the new `.solera/` dest**, then build v4 fresh in Step 2 by copying selectively from that archive. This avoids ambiguous name-based skipping — `workspace/identity/` may already exist in v2 and still contain v2-only content; deciding to keep or archive it by name alone is wrong. The only safe rule is "archive everything, rebuild from archive."
 
-- [ ] Run `git status --porcelain`. If any output → halt with: "Working tree must be clean. Commit or stash your changes, then re-run."
+- [ ] Run `git status --porcelain` at `{project_path}`. If any output → halt with: "Working tree must be clean. Commit or stash your changes, then re-run."
+- [ ] Verify `{v2_source_path}/` exists. If absent → halt with: "No `workspace/` to migrate at `{project_path}`. If you mean an already-v3 project, run `solera-migrate-workspace-to-dotsolera` instead."
+- [ ] Verify `{solera_path}/` does **not** exist. If it does and is non-empty → halt with: "`{solera_path}` already exists. A v4 layout may already be partially set up. Inspect it and move it aside before re-running."
 - [ ] Report what will be frozen:
-  - every direct child of `{workspace_path}/` except `_v2-archive/` itself (file or directory, regardless of name) — these all move to `{workspace_path}/_v2-archive/workspace-original/`
-  - every `extra_artifact_dirs` entry moves to `{workspace_path}/_v2-archive/extra/{basename}/`
-- [ ] **BLOCKING**: show the report and ask `"Freeze these paths to _v2-archive/? (yes/no)"`
+  - the **entire** `{v2_source_path}/` directory tree moves to `{solera_path}/_v2-archive/workspace-original/`
+  - every `extra_artifact_dirs` entry moves to `{solera_path}/_v2-archive/extra/{basename}/`
+  - if a top-level `{project_path}/progress.md` exists (v2 convention), it moves to `{solera_path}/_v2-archive/progress-original.md` (v4 will write a fresh `{solera_path}/progress.md` in Step 7)
+  - if a top-level `{project_path}/HANDOFF.md` exists, it moves to `{solera_path}/HANDOFF.md` (v4 convention — kept, not archived)
+- [ ] **BLOCKING**: show the report and ask `"Freeze these paths to {solera_path}/_v2-archive/? (yes/no)"`
 - [ ] On approval:
-  - Create `{workspace_path}/_v2-archive/workspace-original/`
-  - For every direct child of `{workspace_path}/` (except `_v2-archive`): `git mv {workspace_path}/{child} {workspace_path}/_v2-archive/workspace-original/{child}` (preserves git history)
-  - For each `extra_artifact_dirs/{path}`: when `{workspace_path}/_v2-archive/extra/{basename}` parent does not exist, `mkdir -p` it; then `git mv {extra_dir} {workspace_path}/_v2-archive/extra/{basename}`
-- [ ] After this step, `{workspace_path}/` contains exactly one entry: `_v2-archive/`.
+  - Create `{solera_path}/_v2-archive/workspace-original/` parent (`mkdir -p`)
+  - `git mv {v2_source_path} {solera_path}/_v2-archive/workspace-original` (single rename of the whole tree — preserves git history for every file inside)
+  - For each `extra_artifact_dirs/{path}`: when `{solera_path}/_v2-archive/extra/{basename}` parent does not exist, `mkdir -p` it; then `git mv {extra_dir} {solera_path}/_v2-archive/extra/{basename}`
+  - If `{project_path}/progress.md` exists: `git mv {project_path}/progress.md {solera_path}/_v2-archive/progress-original.md`
+  - If `{project_path}/HANDOFF.md` exists: `git mv {project_path}/HANDOFF.md {solera_path}/HANDOFF.md`
+- [ ] After this step, `{solera_path}/` exists with at least `_v2-archive/` inside (and optionally `HANDOFF.md`). `{v2_source_path}/` no longer exists at the project root.
 - [ ] Commit with resume trailer:
   ```
-  chore(solera): freeze v2 workspace before v3 migration
+  chore(solera): freeze v2 workspace before v4 migration
 
   Solera-Migrate-Step: 1-freeze
   ```
-- [ ] Report: `"Frozen. Entire workspace archived to _v2-archive/workspace-original/. Continuing to Step 2 (skeleton)."`
+- [ ] Report: `"Frozen. workspace/ archived to {solera_path}/_v2-archive/workspace-original/. Continuing to Step 2 (skeleton)."`
 
 ### Step 2 — Skeleton
 
-After Step 1, `{workspace_path}/` contains only `_v2-archive/`. Step 2 builds the fresh v3 layout from scratch and copies selected content back from the archive.
+After Step 1, `{solera_path}/` exists with `_v2-archive/` (and optionally `HANDOFF.md`) inside. Step 2 builds the fresh v4 layout under `{solera_path}/` and copies selected content back from the archive.
 
-- [ ] Create v3 directories under `{workspace_path}/`:
+- [ ] Create v4 directories under `{solera_path}/`:
   - `identity/` (contents will be filled by Step 2.1)
+  - `personas/` + `_index.md` (from [../solera-write-persona/assets/_index-template.md](../solera-write-persona/assets/_index-template.md))
+  - `journeys/` + `_index.md` (from [../solera-write-journey/assets/_index-template.md](../solera-write-journey/assets/_index-template.md))
+  - `narratives/` + `_index.md` (from [../solera-write-narrative/assets/_index-template.md](../solera-write-narrative/assets/_index-template.md))
   - `concepts/` + `_index.md` (from [../solera-write-concept/assets/_index-template.md](../solera-write-concept/assets/_index-template.md))
   - `milestones/` + `_index.md` (from [../solera-write-milestone/assets/_index-template.md](../solera-write-milestone/assets/_index-template.md))
   - `stories/`
@@ -94,8 +113,10 @@ After Step 1, `{workspace_path}/` contains only `_v2-archive/`. Step 2 builds th
   - `catalog/published/`
 
 > All source paths below refer to the archive laid out by Step 1:
-> `{workspace_path}/_v2-archive/workspace-original/` for the former workspace contents,
-> `{workspace_path}/_v2-archive/extra/{name}/` for each former `extra_artifact_dirs` entry.
+> `{solera_path}/_v2-archive/workspace-original/` for the former workspace contents,
+> `{solera_path}/_v2-archive/extra/{name}/` for each former `extra_artifact_dirs` entry.
+
+> Note on Persona / Journey / Narrative directories: created **empty** here. v2 catalog entries under `persona/` and `journey/` are routed to `_unclassified/` in Step 2.3 (see below) for human re-homing via `solera-write-persona` / `solera-write-journey` post-migration. Narratives are entirely new in v4 and have no v2 source — author them post-migration via `solera-write-narrative`.
 
 #### 2.1 Identity copy policy
 
@@ -105,16 +126,16 @@ Identity files may live in multiple locations in v2 Obsidian-style vaults (insid
   1. `_v2-archive/workspace-original/identity/*.md` (from the former workspace identity directory)
   2. `_v2-archive/extra/*/identity/*.md` (from each archived extra vault)
 - [ ] For each candidate file, classify:
-  - **v3 standard identity** (`mission.md`, `core-values.md`, `vision_*.md`) → stage to copy into `{workspace_path}/identity/`.
-  - **Journeys subdir** (`.../identity/journeys/*`) → stage to move into `catalog/published/journey/` — these are journey artifacts that happened to live under identity in v2.
+  - **v4 standard identity** (`mission.md`, `core-values.md`, `vision_*.md`) → stage to copy into `{solera_path}/identity/`.
+  - **Journeys subdir** (`.../identity/journeys/*`) → stage to move into `{solera_path}/catalog/published/_unclassified/journeys-from-identity/`. **Note: v4 does not have `catalog/published/journey/` anymore** — Journeys are first-class Living-axis files at `.solera/journeys/`. Routing to `_unclassified/` parks the v2 journey artifacts visibly so the human can re-home them via `solera-write-journey` post-migration.
   - **Non-standard identity files** (`tone-and-manner.md`, `README.md`, and any other `.md` under an identity dir that is not standard): gather into a list for the BLOCKING prompt below.
-- [ ] **BLOCKING** (only if non-standard files found): for each non-standard file, ask `"Found '{filename}' under identity. Choose: (1) keep at workspace/identity/{filename}  (2) move to catalog/published/_unclassified/identity/{filename}  (3) move to a custom target path (e.g. .claude/rules/{filename} when the file is actually a rule, or .claude/skills/{name}/SKILL.md when promoting to a skill — provide the target path, relative to {project_path})  (4) skip (leave only in _v2-archive)"`. When option 3 is chosen, validate the target path ends with `.md`, is inside `{project_path}`, and `mkdir -p` the parent before copying. Record every decision in the step log for MIGRATION-NOTES.md.
-- [ ] Apply all decisions: copy standard files to `workspace/identity/`, move journeys to `catalog/published/journey/`, handle non-standard per human choice. Leave archive copies intact (the archive is the full record). **If a journey filename already exists at `catalog/published/journey/`** (e.g. same journey file appears in both `workspace/identity/journeys/` and `extra/*/identity/journeys/`): run the same filename-collision BLOCKING prompt as Step 2.3 ("Which version wins?") — Step 2.1 must not silently overwrite.
+- [ ] **BLOCKING** (only if non-standard files found): for each non-standard file, ask `"Found '{filename}' under identity. Choose: (1) keep at .solera/identity/{filename}  (2) move to .solera/catalog/published/_unclassified/identity/{filename}  (3) move to a custom target path (e.g. .claude/rules/{filename} when the file is actually a rule, or .claude/skills/{name}/SKILL.md when promoting to a skill — provide the target path, relative to {project_path})  (4) skip (leave only in _v2-archive)"`. When option 3 is chosen, validate the target path ends with `.md`, is inside `{project_path}`, and `mkdir -p` the parent before copying. Record every decision in the step log for MIGRATION-NOTES.md.
+- [ ] Apply all decisions: copy standard files to `{solera_path}/identity/`, move journey artifacts to `{solera_path}/catalog/published/_unclassified/journeys-from-identity/`, handle non-standard per human choice. Leave archive copies intact (the archive is the full record). **If a journey filename collision occurs**: run the same filename-collision BLOCKING prompt as Step 2.3 ("Which version wins?") — Step 2.1 must not silently overwrite.
 - [ ] If **no** standard identity files were found in any source → warn the human: `"No standard identity files found. You may need to run solera-write-identity manually after migration. Continue?"` — require confirmation.
 
 #### 2.2 team-process.md
 
-- [ ] If `_v2-archive/workspace-original/team-process.md` exists → copy to `{workspace_path}/team-process.md` and patch the `workflow_gates` section:
+- [ ] If `_v2-archive/workspace-original/team-process.md` exists → copy to `{solera_path}/team-process.md` and patch the `workflow_gates` section:
   1. **Remove v2-only keys**: `epic.use_case`, `epic.concept`.
   2. **Add v3 keys**: `milestone.agree` (empty `condition`), `concept.align` (with the standard `concept_exists` check that defaults to the calling Story's `contributes_to`).
   3. **Convert v2 text-based `checks` arrays to v3 shape**. v2 projects often have `checks:` as a list of plain strings (human-readable check descriptions, e.g. `- "Domain test 작성되어 있고 통과"`). v3 expects `checks[]` to be a list of `{type, params}` objects. For each v2 gate where `checks` is a list of strings:
@@ -126,28 +147,32 @@ Identity files may live in multiple locations in v2 Obsidian-style vaults (insid
 
 #### 2.3 Catalog merge
 
-Merge archived catalogs from both the original workspace and every extra vault into the fresh `{workspace_path}/catalog/published/`. Handle v2's `concept/` rename, unknown types, and loose files.
+Merge archived catalogs from both the original workspace and every extra vault into the fresh `{solera_path}/catalog/published/`. Handle v2's `concept/` rename, the v4 demotion of `persona/` and `journey/` (no longer catalog types), unknown types, and loose files.
 
-- [ ] **Rename v2 `concept/` → v3 `domain-model/` everywhere it appears**. Any of the following source paths should route to `catalog/published/domain-model/`:
+- [ ] **Rename v2 `concept/` → v4 `domain-model/` everywhere it appears**. Any of the following source paths should route to `{solera_path}/catalog/published/domain-model/`:
   - `_v2-archive/workspace-original/catalog/published/concept/`
   - `_v2-archive/extra/*/concept/`
   - `_v2-archive/extra/*/published/concept/` (nested vault layouts)
-- [ ] Enumerate every `{type}/` subdir from all relevant source locations:
+- [ ] **Demote v3 `persona/` and `journey/` to `_unclassified/`**. v4 makes Personas and Journeys first-class Living-axis files at `.solera/personas/` and `.solera/journeys/`, **not** catalog artifacts. Source paths like:
+  - `_v2-archive/workspace-original/catalog/published/persona/`, `journey/`
+  - `_v2-archive/extra/*/persona/`, `journey/`, `_v2-archive/extra/*/published/persona/`, `journey/`
+  → route to `{solera_path}/catalog/published/_unclassified/persona-from-v3-catalog/` and `_unclassified/journey-from-v3-catalog/` respectively. **Do not auto-create `personas/` or `journeys/` files** — humans re-home them post-migration via `solera-write-persona` / `solera-write-journey` (which require human-approved Identity / Goals / Steps / Outcome). Record this demotion in MIGRATION-NOTES.md so the human knows where to look.
+- [ ] Enumerate every other `{type}/` subdir from all relevant source locations:
   - `_v2-archive/workspace-original/catalog/published/{type}/`
   - `_v2-archive/extra/*/{type}/` (top level of each extra vault)
   - `_v2-archive/extra/*/published/{type}/` (nested `published/` inside extra vaults — common Obsidian layout)
-- [ ] For each `{type}` found, classify using the `solera-publish-artifacts` Move Mapping table:
-  - **Known type** (persona, service-map, journey, use-case, domain-model, erd, dto, api-spec, reference) → destination per that table.
-  - **Unknown type** (e.g., `schema/`, any custom folder): **BLOCKING** one-shot prompt per type: `"Found unknown catalog type '{type}' (from {source}). Choose: (1) move to catalog/published/_unclassified/{type}/  (2) map to an existing v3 type (provide target)  (3) skip (leave only in _v2-archive)"`. Apply the decision.
+- [ ] For each remaining `{type}` found, classify using the `solera-publish-artifacts` Move Mapping table:
+  - **Known v4 catalog type** (service-map, use-case, domain-model, erd, dto, api-spec, reference) → destination `{solera_path}/catalog/published/{type}/`.
+  - **Unknown type** (e.g., `schema/`, any custom folder): **BLOCKING** one-shot prompt per type: `"Found unknown catalog type '{type}' (from {source}). Choose: (1) move to .solera/catalog/published/_unclassified/{type}/  (2) map to an existing v4 type (provide target)  (3) skip (leave only in _v2-archive)"`. Apply the decision.
 - [ ] **Subtree vs flat `{type}/` contents**: a `{type}/` directory may contain either flat `.md` files or nested subdirectories (e.g. `concept/liquor/foo.md`, `schema/liquor/bar.sql`). Move the entire subtree to the destination via `git mv {source}/{type}/ {destination}/` when destination is empty, or — when destination already has content — iterate each entry inside `{type}/` and `git mv` it one by one, running collision detection on the target path. Never flatten nested structure: `concept/liquor/foo.md` becomes `domain-model/liquor/foo.md`, not `domain-model/foo.md`.
 - [ ] **Loose files at vault roots**: scan for `.md` files that sit **directly** at the root of any extra vault (e.g., `_v2-archive/extra/{name}/README.md`, `_v2-archive/extra/{name}/app-structure.md`) rather than inside a `{type}/` subdir. Also scan `_v2-archive/workspace-original/` for loose `.md` files that aren't `team-process.md`.
-  - **BLOCKING** one-shot prompt per loose file: `"Found loose file '{path}'. Choose: (1) copy to catalog/published/_unclassified/misc/{filename}  (2) provide a target path  (3) skip"`. Apply the decision.
+  - **BLOCKING** one-shot prompt per loose file: `"Found loose file '{path}'. Choose: (1) copy to .solera/catalog/published/_unclassified/misc/{filename}  (2) provide a target path  (3) skip"`. Apply the decision.
 - [ ] **Filename collision detection during merge**: if the same filename from different sources targets the same destination:
   - **BLOCKING**: show a short diff summary and ask `"Which version wins? (1) source A  (2) source B  (3) both (rename the later one to {name}__{source_tag}.md)"`.
 
 - [ ] Commit with resume trailer:
   ```
-  chore(solera): scaffold v3 workspace skeleton
+  chore(solera): scaffold v4 workspace skeleton
 
   Solera-Migrate-Step: 2-skeleton
   ```
@@ -291,7 +316,7 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
     ```
     The human pastes the list in one shot. Parse it — one name per Story, in order. Empty lines → use `{old_id}` as-is and record a note in MIGRATION-NOTES.md under "Stories without descriptive names". Lines that do not match `^[a-z][a-z0-9-]{0,48}[a-z0-9]$` → reject the whole batch and re-prompt with the specific lines flagged.
   - **Never relocate a Story to a directory whose name ends with a trailing `-`**.
-  - Target path: `{workspace_path}/stories/{new_id}-{story_name}/` (always `{new_id}-{story_name}`, never `{new_id}-` with empty name).
+  - Target path: `{solera_path}/stories/{new_id}-{story_name}/` (always `{new_id}-{story_name}`, never `{new_id}-` with empty name).
   - `git mv {archive_story_path} {target_path}/` (preserves git history).
   - Patch `_story.md`:
     - **If the file has no YAML frontmatter at all** (some v2 Stories were written without one): **inject** a new frontmatter block at the very top of the file with the required v3 fields (`title`, `story_id`, `story_name`, `contributes_to`, `belongs_to`, `status`, `created`). Derive `title` from the first Markdown heading if present, else `{new_id}: {story_name}`. Derive `created` from the file's earliest git commit date if available, else today's date.
@@ -316,7 +341,7 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
 
 `solera-release` requires a released milestone. Migration always creates one synthetic milestone (`pre-v3`) that captures the v2 era as a single scope-agreed block, so Step 6 can operate.
 
-- [ ] Write `{workspace_path}/milestones/pre-v3.md` directly (not via `solera-write-milestone`, which would trigger an interactive Agreement Cycle — inappropriate for a synthetic historical milestone):
+- [ ] Write `{solera_path}/milestones/pre-v3.md` directly (not via `solera-write-milestone`, which would trigger an interactive Agreement Cycle — inappropriate for a synthetic historical milestone):
   - Frontmatter: `id: pre-v3`, `name: "Pre-v3 era"`, `status: released`, `target_date` omitted, `created: today`, `released_at: today`
   - `# Scope`: one line per migrated Concept with the depth note `"as of v3 migration"`
   - `# AI Analysis`: `"Synthetic milestone. No agreement cycle ran; scope is the full set of migrated Concepts at migration time. Analysis rounds do not apply to retrospective synthesis."`
@@ -356,18 +381,17 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   - ID strategy chosen in Step 4
   - List of excluded v2 Goals/Epics from Step 3 with rationale
   - Known manual tasks ("these Stories still have empty contributes_to")
-- [ ] Rewrite `{project_path}/progress.md` to v3 format. The canonical v3 progress.md template lives inside `solera-init/SKILL.md` **Step 3 "Create workspace structure"** (look for the `progress.md` code block with `## Living Axis` / `## Time-bound Axis` / `## Immutable Axis` sections) — use it as the shape source. Find the **reference source** (v2 content to translate) by trying these locations in order:
-  1. `{workspace_path}/_v2-archive/workspace-original/progress.md` — when the v2 project kept progress.md inside `workspace/` (the stock Solera v2 convention). Archived by Step 1.
-  2. `{project_path}/progress.md` — when the project kept progress.md at the project root instead of inside workspace (real v2 projects like banas). This file was **not** archived by Step 1 because it lived outside `workspace/`. Use its current content as the reference, then overwrite it in place with the v3 rewrite.
-  3. Neither exists → start from scratch using the v3 template (three-axis format).
-
-  The v3 rewrite is always written to `{project_path}/progress.md` (v3 convention). If Step 1 archived a workspace-internal progress.md, do not recreate it inside `workspace/` — v3 keeps progress.md at the project root.
-- [ ] **BLOCKING**: ask `"Delete _v2-archive/? (default: keep. It's safe to keep — git history stores everything.)"`
+- [ ] Write a fresh `{solera_path}/progress.md` in v4 format. The canonical progress.md template lives inside `solera-init/SKILL.md` **Step 3 "Create workspace structure"** (look for the `.solera/progress.md` code block with `## Living Axis` / `## Time-bound Axis` / `## Immutable Axis` sections — note that v4's Living section lists Personas, Journeys, Narratives, and Concepts) — use it as the shape source. Find a **reference source** (optional v2 content to translate) by trying these locations in order:
+  1. `{solera_path}/_v2-archive/workspace-original/progress.md` — when the v2 project kept progress.md inside `workspace/` (stock Solera v2 convention). Archived by Step 1.
+  2. `{solera_path}/_v2-archive/progress-original.md` — when the project kept progress.md at the project root (real v2 projects like banas). Step 1 archived it here as part of the freeze.
+  3. Neither exists → start from scratch using the v4 template.
+  The v4 rewrite is always written to `{solera_path}/progress.md`. **Do not** recreate `progress.md` at the project root — v4 keeps it inside `.solera/`.
+- [ ] **BLOCKING**: ask `"Delete {solera_path}/_v2-archive/? (default: keep. It's safe to keep — git history stores everything.)"`
   - Default: **keep**. The archive is not heavy.
-  - If the human chooses delete: `git rm -r _v2-archive/`.
+  - If the human chooses delete: `git rm -r {solera_path}/_v2-archive/`.
 - [ ] Commit with resume trailer:
   ```
-  chore(solera): complete v2→v3 migration (see MIGRATION-NOTES.md)
+  chore(solera): complete v2→v4 migration (see MIGRATION-NOTES.md)
 
   Solera-Migrate-Step: 7-cleanup
   ```
@@ -375,12 +399,18 @@ This is the most judgment-heavy step. AI scans v2 artifacts and proposes Concept
   ```
   Migration complete.
 
-  Concepts created: {N}  (see concepts/_index.md)
+  Concepts created: {N}  (see {solera_path}/concepts/_index.md)
   Stories migrated: {M}  ({K} need contributes_to review — see MIGRATION-NOTES.md)
+  Personas/Journeys/Narratives: empty (run solera-write-persona / solera-write-journey /
+                                       solera-write-narrative to populate; v3 catalog
+                                       persona/ and journey/ artifacts are parked in
+                                       {solera_path}/catalog/published/_unclassified/
+                                       for human re-homing)
   Release cut:     v2-final
   _v2-archive:     kept | deleted
 
-  Next step: run `solera-write-milestone` to agree on your first post-v3 scope.
+  Next step: run `solera-write-persona` to draw your first Living-axis Persona, then
+             `solera-write-milestone` to agree on your first post-v4 scope.
   ```
 
 ## Resume Semantics
