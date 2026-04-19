@@ -40,10 +40,11 @@ metadata:
 - [ ] Check if `.claude/rules/solera-workflow.md` already exists.
   - If exists: ask user whether to overwrite or skip.
 - [ ] Detect existing Solera state at `{project_path}` in this priority order:
-  - **v4 detection** — `{project_path}/.solera/` exists. → Skip folder creation; continue to rule installation. If `.solera/` is partial (missing some standard subdirs), fill the gaps without overwriting existing files.
-  - **v3 detection** — `{project_path}/workspace/` exists with `concepts/` or `milestones/` (no `_v2-archive/` and no `initiative/`/`phase/`). → Stop and advise `solera-migrate-workspace-to-dotsolera` to relocate `workspace/` → `.solera/` before continuing.
-  - **v2 detection** — `{project_path}/workspace/` exists with any of: `workspace/initiative/`, `workspace/phase/`, a `_goal.md` or `_epic.md` anywhere under `workspace/`. → Stop and advise `solera-migrate-v2`. Do NOT attempt to overlay v4 on top of v2 data. Note: `solera-migrate-v2` produces v4 (`.solera/`) output directly — no need to chain through `solera-migrate-workspace-to-dotsolera` afterward.
-  - **None detected** — proceed with fresh v4 setup in Step 2.
+  - **v5 detection** — `{project_path}/.solera/roles/` exists. → Skip folder creation; continue to rule installation. If `.solera/` is partial (missing some standard subdirs), fill the gaps without overwriting existing files.
+  - **v4 detection** — `{project_path}/.solera/` exists with `personas/` but NO `roles/` directory. → Stop and advise `solera-migrate-v4-to-v5` to promote Personas → Roles and re-stamp Journey/Narrative frontmatter before continuing.
+  - **v3 detection** — `{project_path}/workspace/` exists with `concepts/` or `milestones/` (no `_v2-archive/` and no `initiative/`/`phase/`). → Stop and advise `solera-migrate-workspace-to-dotsolera` to relocate `workspace/` → `.solera/` before continuing (then follow up with `solera-migrate-v4-to-v5`).
+  - **v2 detection** — `{project_path}/workspace/` exists with any of: `workspace/initiative/`, `workspace/phase/`, a `_goal.md` or `_epic.md` anywhere under `workspace/`. → Stop and advise `solera-migrate-v2`. Do NOT attempt to overlay v5 on top of v2 data. Note: `solera-migrate-v2` produces v4 (`.solera/`) output directly — chain through `solera-migrate-v4-to-v5` afterward.
+  - **None detected** — proceed with fresh v5 setup in Step 2.
 
 ### Step 2. Install rules
 
