@@ -1,8 +1,19 @@
 # Solera
 
-**AI-driven project workflow with a three-axis model — Concepts that live, Milestones that resolve, Releases that freeze.**
+**AI-driven project workflow + mindmap canvas.**
+**Three-axis model — Concepts that live, Milestones that resolve, Releases that freeze.**
+**Four canvases — Service / Plan / Build / Live.**
 
 Like the solera aging method, where layers of work blend and deepen over time into something complete.
+
+## Two ways to use
+
+| Surface | Install | What you get |
+|---|---|---|
+| **Claude Code** | `/plugin install solera` | Skills + MCP server + browser canvas via `/map` |
+| **VSCode** | Marketplace → "Solera" (publisher `noory-code`) | In-editor canvas panel + bundled MCP the VSCode AI host (Copilot, Claude extension, Gemini, etc.) can read |
+
+Data format is shared — `.solera/` in your project root. Switching between surfaces requires no migration.
 
 ## Why Solera?
 

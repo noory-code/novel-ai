@@ -125,8 +125,8 @@ A single git commit moving:
   - .gitignore patched to match new paths
 
   BREAKING: Solera v4+ reads from .solera/. Run this skill once per project
-  to migrate. Backward compat in solera-map v0.1.x falls back to workspace/
-  for one minor version; will be removed in v0.2.0.
+  to migrate. Backward compat in Solera v1.x falls back to workspace/
+  for one minor version; will be removed in a future Solera minor.
 
   Solera-Migrate-Step: workspace-to-dotsolera
   ```

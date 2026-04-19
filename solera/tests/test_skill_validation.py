@@ -65,7 +65,9 @@ class SkillValidator:
             if "## Output" in line:
                 in_output_table = True
                 continue
-            if in_output_table and line.startswith("##") or in_output_table and line.startswith(">"):
+            if in_output_table and (
+                line.startswith("##") or line.startswith(">")
+            ):
                 break
             if in_output_table and "|" in line and not line.startswith("|---"):
                 parts = [p.strip() for p in line.split("|")]
@@ -139,8 +141,11 @@ def test_write_story_prerequisites():
     # Must mention Concept-oriented prerequisites
     assert "concepts/_index.md" in joined, \
         "Prerequisites must reference concepts/_index.md"
-    assert "concepts/{id}" in joined or "concepts/{id}.md" in joined or "status: active" in joined, \
-        "Prerequisites must require each contributed Concept to exist/be active"
+    assert (
+        "concepts/{id}" in joined
+        or "concepts/{id}.md" in joined
+        or "status: active" in joined
+    ), "Prerequisites must require each contributed Concept to exist/be active"
 
     # Guard against v2 remnants
     assert "_epic.md" not in joined, "v2 _epic.md prerequisite must not appear in v3"
@@ -222,7 +227,9 @@ def test_execute_action_item_prerequisites():
     joined = "\n".join(prerequisites)
 
     assert "_story.md" in joined, "Must require parent _story.md"
-    assert "Action Items table" in joined, "Must require ACT to appear in Story's Action Items table"
+    assert "Action Items table" in joined, (
+        "Must require ACT to appear in Story's Action Items table"
+    )
     assert "depends_on" in joined, "Must require depends_on ACTs to be complete"
 
 

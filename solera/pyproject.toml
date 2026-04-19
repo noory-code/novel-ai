@@ -1,0 +1,55 @@
+[project]
+name = "solera-mcp"
+version = "1.0.0"
+description = "Solera MCP server + canvas viewer. Reads .solera/ and exposes a typed graph + four canvases (Service / Plan / Build / Live) to Claude Code and VSCode."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11,<3.14"
+keywords = ["claude-code", "mcp", "solera", "mindmap", "canvas"]
+dependencies = [
+    "fastmcp>=2.0",
+    "starlette>=0.37",
+    "uvicorn[standard]>=0.30",
+    "watchdog>=4.0",
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+solera-mcp = "solera_mcp.__main__:main"
+solera-mcp-http = "solera_mcp.__main__:http_only"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["solera_mcp"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "mypy>=1.10",
+    "ruff>=0.8",
+    "types-PyYAML>=6.0",
+    "httpx>=0.28.1",
+]

@@ -1,14 +1,21 @@
 {
   "name": "solera",
-  "version": "4.0.0",
-  "description": "AI-driven project workflow plugin with a three-axis model: Living (Identity, Personas, Journeys, Narratives, Concepts), Time-bound (Milestones, Stories, Action Items), and Immutable (Releases). Humans draw Concepts (and the Personas/Journeys/Narratives upstream of them) and agree on Milestones; AI decomposes Stories into commit-sized Action Items and proposes updates to the Living map at wrap-up. Workspace data lives in `.solera/`. Supports v2→v4 and v3→v4 assisted migration.",
+  "version": "1.0.0",
+  "description": "AI-driven project workflow with a mindmap canvas. Three-axis model: Living (Identity, Personas, Journeys, Narratives, Concepts), Time-bound (Milestones, Stories, Action Items), Immutable (Releases). Humans draw; AI decomposes, proposes, and verifies. Ships with skills, MCP server, and four canvases (Service / Plan / Build / Live) over one `.solera/` dotfolder.",
   "homepage": "https://github.com/noory-code/noory-ai/tree/main/solera",
   "repository": "https://github.com/noory-code/noory-ai",
   "license": "MIT",
-  "keywords": ["workflow", "planning", "writing", "claude-code", "project-management", "team", "concept", "persona", "journey", "narrative", "milestone", "release", "retrospective", "handoff"],
+  "keywords": ["workflow", "planning", "writing", "claude-code", "mcp", "mindmap", "canvas", "project-management", "concept", "persona", "journey", "narrative", "milestone", "release"],
   "author": {
     "name": "noory-code",
     "url": "https://github.com/noory-code"
   },
-  "skills": "./skills/"
+  "skills": "./skills/",
+  "commands": "./commands/",
+  "mcpServers": {
+    "solera": {
+      "command": "uv",
+      "args": ["run", "--directory", "${CLAUDE_PLUGIN_ROOT}", "python", "-m", "solera_mcp"]
+    }
+  }
 }

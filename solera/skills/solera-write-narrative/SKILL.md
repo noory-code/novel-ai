@@ -51,7 +51,7 @@ Folder: `narratives/` (Living) vs `stories/` (Time-bound). Frontmatter: `kind: n
 
 ### "Propose as Concept" interaction
 
-The Service canvas in `solera-map` exposes a "Propose as Concept" action on each Narrative. When a human clicks it, the canvas POSTs to `solera-map`'s `/api/concept/propose-from-narrative` endpoint, which writes a **stub** Concept whose `# Intent` is explicitly flagged "needs human review per solera-write-concept Moment 1 rule" and adds the new concept_id to this Narrative's `proposes:` list. The human then runs `solera-write-concept` in `update` mode to fill the real Intent. **No Concept is finalized without the human writing its Intent.**
+The Service canvas exposes a "Propose as Concept" action on each Narrative. When a human clicks it, the canvas POSTs to the Solera MCP server's `/api/concept/propose-from-narrative` endpoint, which writes a **stub** Concept whose `# Intent` is explicitly flagged "needs human review per solera-write-concept Moment 1 rule" and adds the new concept_id to this Narrative's `proposes:` list. The human then runs `solera-write-concept` in `update` mode to fill the real Intent. **No Concept is finalized without the human writing its Intent.**
 
 ## Prerequisites
 

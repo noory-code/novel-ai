@@ -1,0 +1,81 @@
+{
+  "name": "solera",
+  "displayName": "Solera",
+  "description": "AI-driven project workflow with a mindmap canvas. Four views (Service / Plan / Build / Live) over .solera/ data. Bundles an MCP server so Copilot / Claude / Gemini and any VSCode AI assistant can read the same graph.",
+  "version": "1.0.0",
+  "publisher": "noory-code",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Visualization",
+    "AI",
+    "Other"
+  ],
+  "icon": "icon.png",
+  "keywords": [
+    "solera",
+    "mcp",
+    "mindmap",
+    "canvas",
+    "concept",
+    "persona",
+    "journey",
+    "narrative"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "solera.open",
+        "title": "Solera: Open Canvas",
+        "category": "Solera"
+      }
+    ],
+    "configuration": {
+      "title": "Solera",
+      "properties": {
+        "solera.command": {
+          "type": "string",
+          "default": "uv run python -m solera_mcp",
+          "description": "Shell command that launches the Solera MCP server. Invoked in the workspace folder. Default assumes `uv` is on PATH and the `solera-mcp` Python package is resolvable."
+        },
+        "solera.port": {
+          "type": "number",
+          "default": 5170,
+          "minimum": 1024,
+          "maximum": 65535,
+          "description": "Local HTTP port the spawned server binds to (also used by the webview to talk to it)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "pretest:integration": "npm run compile",
+    "test:integration": "node out/test/runTest.js",
+    "package": "vsce package",
+    "vscode:prepublish": "npm run copy-viewer && npm run compile",
+    "copy-viewer": "node -e \"const fs=require('fs'),path=require('path');const src=path.resolve('../viewer/dist');const dst=path.resolve('media/viewer');fs.rmSync(dst,{recursive:true,force:true});fs.mkdirSync(dst,{recursive:true});function cp(s,d){for(const e of fs.readdirSync(s,{withFileTypes:true})){const sp=path.join(s,e.name),dp=path.join(d,e.name);if(e.isDirectory()){fs.mkdirSync(dp,{recursive:true});cp(sp,dp);}else{fs.copyFileSync(sp,dp);}}}cp(src,dst);console.log('Copied viewer dist to media/viewer/');\""
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.2.1",
+    "glob": "^13.0.6",
+    "mocha": "^11.7.5",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noory-code/noory-ai.git",
+    "directory": "solera/vscode-extension"
+  }
+}

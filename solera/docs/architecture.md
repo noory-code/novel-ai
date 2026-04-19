@@ -243,7 +243,7 @@ The write-* skill expands the block to match actual rows when it creates the doc
 - `.solera/catalog/published/` is the only authoritative location for a promoted design artifact. The same file is never duplicated between `stories/{id}/artifacts/` and `catalog/published/` — `solera-publish-artifacts` moves (not copies).
 - Each Concept owns its own `# Contributions` and `# Related Artifacts` — the single canonical record of "what advanced this Concept."
 - A written Release is immutable. `.solera/releases/{tag}/.released` marks this for other skills and humans.
-- **v3 → v4 migration**: projects with `workspace/` at the project root run `solera-migrate-workspace-to-dotsolera` once to relocate to `.solera/`. Backward compat in solera-map v0.1.x reads both layouts; dropped in v0.2.0.
+- **v3 → v4 migration**: projects with `workspace/` at the project root run `solera-migrate-workspace-to-dotsolera` once to relocate to `.solera/`. Backward compat in Solera v1.x reads both layouts; will be dropped in a future minor.
 
 ---
 

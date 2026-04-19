@@ -33,5 +33,5 @@ semantic:
 
   - {id: C-020, name: "No Workflow section (rationale stated)", type: content_contains, target: SKILL.md, patterns: ["one-shot transition skill", "no template-level Workflow"]}
 
-  - {id: C-021, name: "Backward-compat note for solera-map", type: content_contains, target: SKILL.md, patterns: ["solera-map v0.1.x falls back", "removed in v0.2.0"]}
+  - {id: C-021, name: "Backward-compat note for Solera v1.x", type: content_contains, target: SKILL.md, patterns: ["Solera v1.x falls back", "removed in a future minor"]}
 ```

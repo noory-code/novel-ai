@@ -1,11 +1,79 @@
 # Changelog
 
+## [1.0.0] — 2026-04-19
+
+### Unified product
+
+Solera is now **one thing**, not three. What used to ship as `solera/` (skills), `solera-map/` (MCP + viewer), and `solera-map-vscode/` (VSCode extension) is consolidated under a single `solera/` directory with a single version line.
+
+- Claude Code users: `/plugin install solera` now brings skills **and** the MCP canvas server. No second install step.
+- VSCode users: install **"Solera"** (publisher `noory-code`) from Marketplace — the extension bundles the MCP server, spawns it automatically, and registers it with VSCode's MCP host so Copilot / Claude / Gemini / any AI assistant can read the same graph.
+- Data format `.solera/` is shared between the two surfaces. Switching between Claude Code and VSCode requires no data migration.
+
+### Versioning reset
+
+Previous split versioning (`solera` 3.5.0 + `solera-map` 0.0.1 + `solera-map-vscode` 0.1.0) collapses to a single `1.0.0`. The v0.x prerelease phase of the map/canvas layer is over — it ships as part of Solera v1.0. The `solera` skill-plugin history before 1.0 (3.x and earlier) stays below in this file.
+
+### Breaking vs pre-1.0 projects
+
+- **From solera v3.x (the skill plugin)**: run `solera-migrate-workspace-to-dotsolera` once. Moves `workspace/` → `.solera/` with a single `git mv` commit. Everything else works.
+- **From solera-map v0.0.1 (the MCP plugin)**: uninstall `solera-map` and install the unified `solera` — the MCP server is now inside it. Same `.solera/` data; no data migration.
+- **From solera-map-vscode (if previously sideloaded)**: uninstall the old `noory-code.solera-map` extension, install `noory-code.solera` from Marketplace.
+
+### Naming changes
+
+- VSCode extension: `solera-map` → `solera`. Marketplace ID `noory-code.solera`. Command palette entry: **Solera: Open Canvas**.
+- Python package: `solera-map` → `solera-mcp`. Module: `solera_map` → `solera_mcp`. Scripts: `solera-map` → `solera-mcp`, `solera-map-http` → `solera-mcp-http`.
+- Configuration keys (VSCode): `soleraMap.command` → `solera.command`, `soleraMap.port` → `solera.port`.
+
+### Living-axis expansion (unchanged from v4.0 of the skill plugin)
+
+Personas, Journeys, and Narratives join Identity and Concept on the Living axis:
+
+- **Persona** (`solera-write-persona`) — who the service is for.
+- **Journey** (`solera-write-journey`) — steps a Persona walks. `walks: {persona_id}` required.
+- **Narrative** (`solera-write-narrative`) — "As a / I want / so that" (or JTBD / scenario). May `proposes:` Concepts.
+- Status grammar `active` / `deprecated` / `archived` (same as Concept).
+- New cross-axis relations: `walks`, `about`, `in_journey`, `proposes`.
+- `solera-init` and `solera-migrate-v2` seed the new directories automatically.
+
+### Workspace layout
+
+All project data lives under `.solera/` (dotfolder, hidden from default file-tree views like `.git/` and `.vscode/`). Top-level `progress.md` and `HANDOFF.md` move inside. `solera-migrate-workspace-to-dotsolera` relocates v3.x projects atomically.
+
+### Four canvases (Service / Plan / Build / Live)
+
+- **Service** (new) — Persona swimlanes with Journey lanes and Narrative anchors. Upstream of Plan.
+- **Plan** — Concept mindmap, bilateral layout around Identity.
+- **Build** / **Live** — same Plan canvas with lens-driven styling; dedicated components deferred.
+
+### Preserves Moment 1
+
+The Service canvas's "Propose as Concept" action writes a **stub** Concept whose `# Intent` is explicitly flagged "needs human review per solera-write-concept Moment 1 rule". The human must still run `solera-write-concept` in `update` mode to fill the real Intent. The AI never finalizes Concepts on the human's behalf.
+
+### Tests
+
+158 automated tests ship with v1.0:
+
+- 78 Python (skill validation + graph + server unit + E2E subprocess)
+- 48 viewer (ServiceCanvas layout + SidePanel + api.ts, vitest + jsdom)
+- 32 extension unit (csp + workspaceCheck + ServerProcess, vitest)
+- Integration scaffold for VSCode extension via `@vscode/test-electron` (requires one-time Gatekeeper approval on macOS Sequoia+)
+
+---
+
+## Pre-consolidation history
+
+Below is the history of `solera` (the skill plugin) before the v1.0 consolidation. Full git log preserves the pre-consolidation `solera-map` and `solera-map-vscode` history under their former directories.
+
+---
+
 ## [4.0.0] — 2026-04-19
 
 ### Breaking
 
 - **Workspace layout moved from `workspace/` to `.solera/`**. All Solera-managed data (identity, personas, journeys, narratives, concepts, milestones, stories, releases, catalog, team-process) now lives under a single dotfolder, hidden from default IDE / file-tree views (matching `.git/`, `.vscode/`, `.idea/` conventions). Top-level `progress.md` and `HANDOFF.md` move to `.solera/progress.md` and `.solera/HANDOFF.md`.
-- Existing v3.x projects must run the new **`solera-migrate-workspace-to-dotsolera`** skill to migrate. Idempotent, git-tracked, single commit. The `solera-map` plugin v0.1.x reads both layouts during the transition; v0.2.0 will drop the `workspace/` fallback.
+- Existing v3.x projects must run the new **`solera-migrate-workspace-to-dotsolera`** skill to migrate. Idempotent, git-tracked, single commit. Solera v1.x reads both layouts during the transition.
 - `solera-init` now detects v4 (`.solera/`), v3 (`workspace/` with `concepts/` or `milestones/`), or v2 (`workspace/` with `initiative/` or `phase/`) and routes to the appropriate migration skill.
 - `solera-migrate-v2` now produces v4 (`.solera/`) output directly — no need to chain through `solera-migrate-workspace-to-dotsolera` for v2 projects. Skill version bumps to `2.0.0`.
 - v3 catalog `persona/` and `journey/` types are no longer first-class catalog entries. `solera-migrate-v2` parks any existing v2 catalog persona/journey artifacts under `_unclassified/persona-from-v3-catalog/` and `_unclassified/journey-from-v3-catalog/` for human re-homing via the new write skills.
@@ -33,7 +101,7 @@
 
 This is a major bump because the on-disk layout changed in a breaking way. The Living/Time-bound/Immutable axis model itself is unchanged — Personas, Journeys, and Narratives join Identity and Concepts on the existing Living axis, preserving the MECE-by-time-relationship structure. There is no new axis.
 
-The Workflow-as-SSOT rule continues to apply: each new entity template carries a `## Workflow` section that the supervisor reads. The `solera-map` plugin's "Propose as Concept" canvas action (new in solera-map v0.1.0) creates a stub Concept whose `# Intent` is explicitly flagged "needs human review per solera-write-concept Moment 1 rule" — preserving the Moment 1 collaboration constraint.
+The Workflow-as-SSOT rule continues to apply: each new entity template carries a `## Workflow` section that the supervisor reads. The "Propose as Concept" canvas action  creates a stub Concept whose `# Intent` is explicitly flagged "needs human review per solera-write-concept Moment 1 rule" — preserving the Moment 1 collaboration constraint.
 
 ---
 
