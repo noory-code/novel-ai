@@ -267,6 +267,13 @@ function ParentSelect({
 }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingParent, setPendingParent] = useState<string | null>(null);
+  // Parent id of the last failed attempt — stays disabled until the user
+  // retries or reverts, so accidental rapid-fire of the same broken change is
+  // blocked even though the dropdown itself would otherwise be re-enabled.
+  const [failedAttempt, setFailedAttempt] = useState<{ parent: string | null } | null>(
+    null,
+  );
 
   // Avoid listing descendants to prevent cycles on the client too.
   const descendantIds = collectDescendants(concept.id, graph.concepts);
@@ -274,21 +281,32 @@ function ParentSelect({
     (c) => c.id !== concept.id && !descendantIds.has(c.id),
   );
 
-  const onChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    const nextParent = value === "__none__" ? null : value;
-    if (nextParent === concept.parent) return;
+  const submit = async (nextParent: string | null) => {
     setSaving(true);
     setError(null);
+    setPendingParent(nextParent);
     try {
       await patchConcept(projectPath, concept.id, { parent: nextParent });
+      setFailedAttempt(null);
       onMutated();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+      setFailedAttempt({ parent: nextParent });
     } finally {
       setSaving(false);
+      setPendingParent(null);
     }
   };
+
+  const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    const nextParent = value === "__none__" ? null : value;
+    if (nextParent === concept.parent) return;
+    void submit(nextParent);
+  };
+
+  const locked =
+    saving || (failedAttempt !== null && failedAttempt.parent === (pendingParent ?? null));
 
   return (
     <div className="flex items-start gap-3 text-[12px]">
@@ -299,8 +317,13 @@ function ParentSelect({
         <select
           value={concept.parent ?? "__none__"}
           onChange={onChange}
-          disabled={saving}
-          className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[12px] focus:border-sketch focus:outline-none"
+          disabled={locked}
+          className={`w-full rounded border bg-white px-2 py-1 text-[12px] focus:outline-none ${
+            failedAttempt
+              ? "border-rose-400 focus:border-rose-500"
+              : "border-slate-300 focus:border-sketch"
+          }`}
+          aria-invalid={failedAttempt ? true : undefined}
         >
           <option value="__none__">— (top-level surface)</option>
           {options.map((c) => (
@@ -309,7 +332,33 @@ function ParentSelect({
             </option>
           ))}
         </select>
-        {error && <div className="mt-1 text-[11px] text-rose-500">{error}</div>}
+        {saving && (
+          <div
+            className="mt-1 inline-flex items-center gap-1 text-[11px] text-slate-500"
+            role="status"
+            aria-live="polite"
+          >
+            <span
+              aria-hidden
+              className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600"
+            />
+            <span>saving parent…</span>
+          </div>
+        )}
+        {error && (
+          <div className="mt-1 flex items-center gap-2 text-[11px] text-rose-700">
+            <span>⚠ {error}</span>
+            {failedAttempt && (
+              <button
+                type="button"
+                onClick={() => void submit(failedAttempt.parent)}
+                className="rounded bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700 hover:bg-rose-200"
+              >
+                retry
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -765,14 +814,25 @@ function ProposeAsConceptButton({
         <button
           onClick={submit}
           disabled={submitting || !conceptId.trim() || !conceptName.trim()}
-          className="flex-1 rounded-md bg-emerald-600 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-emerald-700 disabled:bg-slate-300"
+          className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-1.5 text-[12px] font-medium text-white transition disabled:bg-slate-300 ${
+            submitting
+              ? "cursor-wait bg-emerald-800"
+              : "bg-emerald-600 hover:bg-emerald-700"
+          }`}
+          aria-busy={submitting}
         >
-          {submitting ? "creating…" : "Create stub Concept"}
+          {submitting && (
+            <span
+              aria-hidden
+              className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-emerald-200 border-t-white"
+            />
+          )}
+          <span>{submitting ? "Creating stub…" : "Create stub Concept"}</span>
         </button>
         <button
           onClick={reset}
           disabled={submitting}
-          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:bg-slate-50"
+          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-[12px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
         >
           Cancel
         </button>

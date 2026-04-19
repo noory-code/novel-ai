@@ -511,14 +511,22 @@ class BroadcastHub:
                 if watcher is not None:
                     watcher.stop()
 
-    async def notify(self, workspace: Path) -> None:
-        """Broadcast a `graph_changed` event to all subscribers of workspace."""
+    async def notify(self, workspace: Path, kind: str = "graph") -> None:
+        """Broadcast a change event to all subscribers of workspace.
+
+        ``kind`` is ``"graph"`` for content changes (any ``.md`` or
+        ``concept-graph.json``) and ``"layout"`` for pure canvas-position
+        saves (``map-layout.json``). Viewers interpret ``layout_changed`` as a
+        cheap refresh that can skip graph re-fetch, preserving selection and
+        panel state when the user drags a node.
+        """
+        event = "layout_changed" if kind == "layout" else "graph_changed"
         async with self._lock:
             targets = list(self._subs.get(workspace, ()))
         dead: list[WebSocket] = []
         for ws in targets:
             try:
-                await ws.send_json({"event": "graph_changed"})
+                await ws.send_json({"event": event})
             except Exception:
                 dead.append(ws)
         if dead:
@@ -534,8 +542,8 @@ class BroadcastHub:
     def _start_watcher(self, workspace: Path) -> WorkspaceWatcher:
         loop = asyncio.get_running_loop()
 
-        async def on_change() -> None:
-            await self.notify(workspace)
+        async def on_change(kind: str) -> None:
+            await self.notify(workspace, kind=kind)
 
         watcher = WorkspaceWatcher(workspace, on_change=on_change, loop=loop)
         watcher.start()

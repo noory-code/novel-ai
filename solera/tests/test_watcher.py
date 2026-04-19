@@ -77,6 +77,31 @@ async def test_hub_notify_with_no_subscribers_is_noop(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_hub_notify_layout_kind_sends_layout_event(tmp_path: Path) -> None:
+    """Layout-only changes emit `layout_changed` so viewers can skip graph re-fetch."""
+    hub = BroadcastHub(enable_watchers=False)
+    ws = _FakeWebSocket()
+
+    await hub.subscribe(ws, tmp_path)  # type: ignore[arg-type]
+    await hub.notify(tmp_path, kind="layout")
+
+    assert ws.sent == [{"event": "layout_changed"}]
+
+
+@pytest.mark.asyncio
+async def test_hub_notify_unknown_kind_falls_back_to_graph(tmp_path: Path) -> None:
+    """Unknown kind strings are treated as ``graph`` to avoid silently dropping
+    relevant events — better to over-refresh than to miss a change."""
+    hub = BroadcastHub(enable_watchers=False)
+    ws = _FakeWebSocket()
+
+    await hub.subscribe(ws, tmp_path)  # type: ignore[arg-type]
+    await hub.notify(tmp_path, kind="something-else")
+
+    assert ws.sent == [{"event": "graph_changed"}]
+
+
+@pytest.mark.asyncio
 async def test_hub_drops_failing_client_on_broadcast(tmp_path: Path) -> None:
     hub = BroadcastHub(enable_watchers=False)
 

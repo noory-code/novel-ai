@@ -93,31 +93,97 @@ export interface GraphSocket {
   close(): void;
 }
 
+export type SocketStatus = "connecting" | "connected" | "reconnecting" | "disconnected";
+
+export interface GraphSocketHandlers {
+  onEvent: (event: { event: string }) => void;
+  onStatus?: (status: SocketStatus) => void;
+  onError?: (err: string) => void;
+}
+
+/**
+ * Open a resilient graph WebSocket with exponential-backoff reconnection.
+ *
+ * Backoff doubles from 1s up to 30s; each reconnect attempt emits
+ * ``status: "reconnecting"`` and then ``"connected"`` on success. Normal
+ * close codes (1000 ``going away``, 1001 ``endpoint terminating``) don't
+ * trigger retries — those are user-initiated teardowns. Policy violations
+ * (1008) and bad payloads (1003) also stop retrying since the server
+ * explicitly rejected the session.
+ */
 export function openGraphSocket(
   projectPath: string,
-  onEvent: (event: { event: string }) => void,
-  onError: (err: string) => void,
+  handlers: GraphSocketHandlers,
 ): GraphSocket {
   const wsProto = window.location.protocol === "https:" ? "wss" : "ws";
   const host = window.location.host;
   const url = `${wsProto}://${host}/ws?project_path=${encodeURIComponent(projectPath)}`;
-  const ws = new WebSocket(url);
+  const { onEvent, onStatus, onError } = handlers;
 
-  ws.onmessage = (e) => {
-    try {
-      onEvent(JSON.parse(e.data));
-    } catch {
-      onError("malformed message");
-    }
-  };
-  ws.onerror = () => onError("websocket error");
-  ws.onclose = (e) => {
-    if (e.code !== 1000 && e.code !== 1001) {
-      onError(`connection closed (${e.code})`);
-    }
+  let ws: WebSocket | null = null;
+  let disposed = false;
+  let retryMs = 1000;
+  const RETRY_MAX = 30_000;
+  let retryTimer: number | null = null;
+
+  const report = (status: SocketStatus) => onStatus?.(status);
+
+  const scheduleReconnect = () => {
+    if (disposed) return;
+    report("reconnecting");
+    retryTimer = window.setTimeout(() => {
+      retryTimer = null;
+      connect();
+    }, retryMs);
+    retryMs = Math.min(retryMs * 2, RETRY_MAX);
   };
 
-  return { close: () => ws.close() };
+  const connect = () => {
+    if (disposed) return;
+    report(retryMs === 1000 ? "connecting" : "reconnecting");
+    const socket = new WebSocket(url);
+    ws = socket;
+
+    socket.onopen = () => {
+      retryMs = 1000;
+      report("connected");
+    };
+    socket.onmessage = (e) => {
+      try {
+        onEvent(JSON.parse(e.data));
+      } catch {
+        onError?.("malformed message");
+      }
+    };
+    socket.onerror = () => {
+      // Deferred to onclose — onerror alone doesn't give a close code and
+      // fires during the same lifecycle event as onclose on socket failures.
+    };
+    socket.onclose = (e) => {
+      ws = null;
+      if (disposed) return;
+      const normal = e.code === 1000 || e.code === 1001;
+      const rejected = e.code === 1003 || e.code === 1008;
+      if (normal || rejected) {
+        report("disconnected");
+        if (rejected) onError?.(`connection rejected (${e.code}) ${e.reason}`.trim());
+        return;
+      }
+      onError?.(`connection lost (${e.code})`);
+      scheduleReconnect();
+    };
+  };
+
+  connect();
+
+  return {
+    close: () => {
+      disposed = true;
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
+      if (ws !== null) ws.close(1000, "client closing");
+      report("disconnected");
+    },
+  };
 }
 
 export function resolveProjectPath(): string {
