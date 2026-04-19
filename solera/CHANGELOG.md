@@ -1,5 +1,105 @@
 # Changelog
 
+## [5.1.0] — 2026-04-19
+
+Minor. The canvas becomes the primary authoring surface: click a field
+on a Role / Persona / Journey / Narrative / Concept to edit it in place,
+"+ add" popovers on Identity and each node spawn new entities without
+leaving the canvas. Skills remain for bulk / scripted operations.
+
+### Added
+
+- **Unified CRUD HTTP surface** for every Living-axis entity:
+  - `POST   /api/role` · `PATCH /api/role/{id}`
+  - `POST   /api/persona` · `PATCH /api/persona/{id}`
+  - `POST   /api/journey` · `PATCH /api/journey/{id}`
+  - `POST   /api/narrative` · `PATCH /api/narrative/{id}`
+  - `POST   /api/concept` · `PATCH /api/concept/{id}` (widened from
+    parent-only)
+  Each endpoint enforces a per-kind allowed-key list, validates
+  cross-references (role exists, walks resolves to a Role,
+  about_roles ≥ 1, parent chain has no cycles, Persona role matches
+  journey.walks when used in walked_by, etc.), and writes via
+  atomic helpers in `solera_mcp/writers.py`. Kebab-case `id` is
+  required on POST; duplicates 409.
+- **EditableText / EditableTextarea primitives** in
+  `viewer/src/edit/`. Tiny `useInlineEdit` hook drives an
+  idle / editing / saving / error state machine with optimistic-like
+  UX: successful saves dismiss to idle, failed saves keep the draft
+  and surface the server error so the human can retry. Enter commits
+  on single-line, Cmd/Ctrl+Enter commits on textarea, Esc cancels,
+  blur commits.
+- **Actors canvas inline edit** (`canvases/ActorsLabels.tsx`):
+  - Role: name + description editable in place; `+ add` popover
+    creates sub-Role / Journey the role walks / Persona archetype /
+    Narrative about this Role.
+  - Persona: name + identity paragraph editable.
+  - Journey: name + trigger + outcome editable; `+ narrative`
+    popover attaches a new Narrative with in_journey set.
+  - Narrative: statement editable.
+  - Identity hub: `+ role` popover creates a top-level Role.
+- **Plan canvas inline edit** (`canvases/PlanLabels.tsx`):
+  - Concept: name + intent + the lens-dependent sub-text
+    (current_design or current_shape depending on the active lens)
+    editable in place.
+  - Identity hub: `+ concept` popover creates top-level Concepts.
+  - "+ concept" on every Concept node creates a child Concept.
+- 10 new typed API client functions in `viewer/src/api.ts` —
+  `patchRole` / `createRole` and siblings for every kind. Each has
+  a TypeScript-typed Patch interface mirroring the server's
+  allowed-key set so mistyped fields fail at compile time.
+
+### Changed
+
+- `patchConcept` now accepts every allowed Concept field
+  (`name`, `status`, `intent`, `current_design`, `current_shape`,
+  `horizon`, `parent`) instead of just `parent`.
+- Dead code removed: `ActorsCanvas.tsx` dropped ~200 LOC of
+  read-only `render{Kind}Label` renderers; `PlanCanvas.tsx`
+  dropped the old `IdentityLabel` / `renderConceptLabel` / unused
+  `truncate` helper.
+- `PlanCanvas` and `ActorsCanvas` now accept `projectPath` +
+  `onMutated` props; `App.tsx` wires `onMutated` to a graph
+  re-fetch so successful inline edits update the view without a
+  WebSocket round-trip.
+
+### Tests
+
+- `tests/test_writers.py` (13 Python cases): round-trip
+  create + patch across every kind; preservation of untouched
+  sections under patch; bullet-list and Steps table rewrites;
+  frontmatter `parent: null` deletion.
+- `tests/test_api_endpoints.py` (16 Python cases): happy paths
+  for every POST + PATCH, cross-ref rejections (unknown role,
+  missing walks, empty about_roles, self-parent), duplicate-id
+  409, invalid-kebab 400, unknown-key 400.
+- `tests/useInlineEdit.test.ts` (7 viewer cases): hook state
+  transitions, custom-equality skip, rejected-save draft
+  retention.
+- `tests/EditableText.test.tsx` (5 viewer cases): click → edit,
+  Enter commits, Esc cancels, error banner on reject, disabled
+  blocks edit.
+
+### Totals
+
+188 tests green — 125 Python (+29) + 63 viewer (+14). mypy + ruff
+clean. `npm run build` clean (bundle +~30kb for the edit
+primitives + popovers).
+
+### Known limitations / out of scope
+
+- **Bullet-list and Steps-table inline editors** — Persona
+  `goals` / `pains` / `triggers` / `quotes`, Narrative
+  `acceptance_cues`, and the Journey Steps markdown table are
+  still edited via skills only. Add/edit/remove UIs for these
+  ship in a later minor.
+- **Drag-and-drop reparent** — side-panel dropdown (ConceptPanel
+  `ParentSelect`) remains the reparent surface. Drag still only
+  moves node positions.
+- **Multi-select / bulk edit** — a future cycle.
+
+---
+
 ## [5.0.0] — 2026-04-19
 
 Major version. Breaking schema change: `Role` is a new Living-axis

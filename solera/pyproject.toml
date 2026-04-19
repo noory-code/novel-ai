@@ -1,6 +1,6 @@
 [project]
 name = "solera-mcp"
-version = "5.0.0"
+version = "5.1.0"
 description = "Solera MCP server + canvas viewer. Reads .solera/ and exposes a typed graph + four canvases (Service / Plan / Build / Live) to Claude Code and VSCode."
 readme = "README.md"
 license = "MIT"
