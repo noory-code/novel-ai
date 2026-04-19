@@ -12,14 +12,8 @@ import ReactFlow, {
   type NodeChange,
   applyNodeChanges,
 } from "reactflow";
-import type {
-  BranchSide,
-  Concept,
-  Graph,
-  Identity,
-  Layout,
-  WorkspaceLens,
-} from "../types";
+import type { BranchSide, Concept, Graph, Layout, WorkspaceLens } from "../types";
+import { ConceptLabel, IdentityConceptHubLabel } from "./PlanLabels";
 
 export const IDENTITY_NODE_ID = "identity";
 
@@ -67,13 +61,8 @@ export function PlanCanvas({
   projectPath,
   onMutated,
 }: PlanCanvasProps) {
-  // v5.1 scope note: `projectPath` / `onMutated` are passed through for
-  // Concept inline-edit wiring in Commit 4; consumed there via a new
-  // PlanLabels module mirroring the ActorsLabels pattern.
-  void projectPath;
-  void onMutated;
   const { nodes, edges } = useMemo(
-    () => buildFlowElements(graph, lens, layout, selection),
+    () => buildFlowElements(graph, lens, layout, selection, projectPath, onMutated),
     [graph, lens, layout, selection],
   );
 
@@ -169,6 +158,8 @@ function buildFlowElements(
   lens: WorkspaceLens,
   layout: Layout,
   selection: SelectedNode | null,
+  projectPath: string,
+  onMutated: () => void,
 ): { nodes: Node[]; edges: Edge[] } {
   const byId = new Map(graph.concepts.map((c) => [c.id, c] as const));
   const childrenByParent = new Map<string | null, Concept[]>();
@@ -218,7 +209,17 @@ function buildFlowElements(
       id: IDENTITY_NODE_ID,
       type: "identity",
       position: positionOf(IDENTITY_NODE_ID, autoPositions.get(IDENTITY_NODE_ID) ?? { x: 0, y: 0 }),
-      data: { children: <IdentityLabel identity={graph.identity} /> },
+      data: {
+        children: (
+          <IdentityConceptHubLabel
+            summary={extractFirstSentence(
+              graph.identity.mission ?? graph.identity.vision ?? "",
+            )}
+            projectPath={projectPath}
+            onMutated={onMutated}
+          />
+        ),
+      },
       style: {
         background: "#0f172a",
         color: "white",
@@ -245,7 +246,17 @@ function buildFlowElements(
     nodes.push({
       id,
       position: positionOf(id, fallback),
-      data: { label: renderConceptLabel(concept, lens, isRoot) },
+      data: {
+        label: (
+          <ConceptLabel
+            concept={concept}
+            lens={lens}
+            isRoot={isRoot}
+            projectPath={projectPath}
+            onMutated={onMutated}
+          />
+        ),
+      },
       sourcePosition: sourcePos,
       targetPosition: targetPos,
       style: {
@@ -354,23 +365,6 @@ function subtreeHeight(
   return kids.reduce((acc, k) => acc + subtreeHeight(k, childrenByParent), 0);
 }
 
-function IdentityLabel({ identity }: { identity: Identity }) {
-  const firstSentence = extractFirstSentence(identity.mission ?? identity.vision ?? "");
-  return (
-    <div className="text-left">
-      <div className="text-[10px] font-semibold uppercase tracking-widest text-amber-300">
-        identity
-      </div>
-      <div className="mt-0.5 text-[14px] font-bold">BANAS</div>
-      {firstSentence && (
-        <div className="mt-1 text-[11px] leading-tight text-slate-300 line-clamp-3">
-          {firstSentence}
-        </div>
-      )}
-    </div>
-  );
-}
-
 function extractFirstSentence(text: string): string {
   for (const raw of text.split("\n")) {
     const trimmed = raw.trim();
@@ -380,27 +374,6 @@ function extractFirstSentence(text: string): string {
     return trimmed.replace(/^>\s*/, "").replace(/\*\*/g, "").replace(/<!--.*?-->/g, "").trim();
   }
   return "";
-}
-
-function renderConceptLabel(c: Concept, lens: WorkspaceLens, isRoot: boolean) {
-  const sub = lens === "live" ? c.current_shape : c.current_design;
-  return (
-    <div className="text-left">
-      <div className={`font-semibold text-ink ${isRoot ? "text-[14px]" : "text-[12px]"}`}>
-        {c.name}
-      </div>
-      {c.intent && (
-        <div className="mt-0.5 text-[11px] italic text-slate-500 line-clamp-2">{c.intent}</div>
-      )}
-      {sub && !sub.includes("no Stories") && (
-        <div className="mt-1 text-[11px] text-slate-700 line-clamp-2">{truncate(sub, 90)}</div>
-      )}
-    </div>
-  );
-}
-
-function truncate(s: string, max: number): string {
-  return s.length <= max ? s : `${s.slice(0, max).trim()}…`;
 }
 
 function conceptBackground(c: Concept, lens: WorkspaceLens): string {
