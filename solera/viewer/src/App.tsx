@@ -8,7 +8,7 @@ import {
   type SocketStatus,
 } from "./api";
 import { PlanCanvas, type SelectedNode } from "./canvases/PlanCanvas";
-import { ServiceCanvas } from "./canvases/ServiceCanvas";
+import { ActorsCanvas } from "./canvases/ActorsCanvas";
 import { SidePanel } from "./SidePanel";
 import type { Graph, Layout, WorkspaceLens } from "./types";
 
@@ -127,8 +127,8 @@ export function App() {
             // 4th canvas added in v0.1.0). `plan`/`build`/`live` still share
             // PlanCanvas with lens-driven styling — promoting them to dedicated
             // components is left to a future PR.
-            lens === "service" ? (
-              <ServiceCanvas
+            lens === "actors" ? (
+              <ActorsCanvas
                 graph={graph}
                 layout={layout}
                 onLayoutChange={persistLayout}
@@ -187,7 +187,7 @@ function Header({
     // active-tab label clears WCAG AA (4.5:1) on the white tab background.
     // The lighter tokens (`sketch`, `paint`, `live`, `rose-500`) remain for
     // decorative surfaces (borders, backgrounds) where contrast isn't gating.
-    { key: "service", label: "Service", accent: "text-rose-700" },
+    { key: "actors", label: "Actors", accent: "text-rose-700" },
     { key: "plan", label: "Plan", accent: "text-indigo-700" },
     { key: "build", label: "Build", accent: "text-amber-700" },
     { key: "live", label: "Live", accent: "text-emerald-700" },

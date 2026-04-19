@@ -2,6 +2,7 @@ import type { Graph } from "../types";
 import {
   BulletSection,
   EmptyState,
+  IntegrityBanner,
   MetaRow,
   Section,
   StatusChip,
@@ -14,6 +15,7 @@ export function PersonaBody({ graph, personaId }: { graph: Graph; personaId: str
 
   // v5.0: Journeys now walk Roles; Persona sees the Journeys that explicitly
   // include it on `walked_by`. Narratives: explicit `about_personas` entry.
+  const role = graph.roles.find((r) => r.id === persona.role);
   const journeys = graph.journeys.filter((j) => j.walked_by.includes(persona.id));
   const narratives = graph.narratives.filter((n) =>
     n.about_personas.includes(persona.id),
@@ -27,8 +29,37 @@ export function PersonaBody({ graph, personaId }: { graph: Graph; personaId: str
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-400">
           <span className="font-mono">{persona.id}</span>
           <StatusChip status={persona.status} />
+          {persona.integrity.length > 0 && (
+            <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700 ring-1 ring-red-300">
+              ⚠ integrity
+            </span>
+          )}
         </div>
       </header>
+      {persona.integrity.includes("missing_role") && (
+        <IntegrityBanner
+          title="This Persona has no Role."
+          detail={
+            <>
+              Every Persona must declare a Role via <code>role:</code> in the
+              frontmatter. Without it the archetype is disconnected on the
+              Actors canvas.
+            </>
+          }
+          repair={`/solera-write-persona mode=update persona_id=${persona.id}`}
+        />
+      )}
+      {persona.integrity.includes("broken_role_ref") && (
+        <IntegrityBanner
+          title={`role "${persona.role}" does not exist.`}
+          detail="Draw the Role first, or update this Persona's role to a known active Role."
+          repair={`/solera-write-role mode=create role_id=${persona.role}`}
+        />
+      )}
+      <MetaRow
+        label="Role"
+        value={role ? role.name : persona.role || "(none)"}
+      />
       {persona.parent && (
         <MetaRow label="Parent" value={resolveName(graph.personas, persona.parent)} />
       )}

@@ -145,9 +145,11 @@ export interface Graph {
   releases: Release[];
 }
 
-// `service` is leftmost — it is upstream of Plan in the user's mental model
-// (humans draw Personas/Journeys/Narratives, then propose Concepts to Plan).
-export type WorkspaceLens = "service" | "plan" | "build" | "live";
+// `actors` is leftmost — it is upstream of Plan in the user's mental model
+// (humans draw Roles / Personas / Journeys / Narratives, then propose Concepts
+// to Plan). In v5.0 the canvas was renamed from `service` to `actors` to
+// match its actual content (structural Roles plus optional archetypes).
+export type WorkspaceLens = "actors" | "plan" | "build" | "live";
 
 export type BranchSide = "left" | "right";
 

@@ -13,9 +13,12 @@ export function JourneyBody({ graph, journeyId }: { graph: Graph; journeyId: str
   const journey = graph.journeys.find((j) => j.id === journeyId);
   if (!journey) return <EmptyState text="Journey not found." />;
 
-  const persona = graph.personas.find((p) => p.id === journey.walks);
+  const role = graph.roles.find((r) => r.id === journey.walks);
+  const walkedByPersonas = graph.personas.filter((p) =>
+    journey.walked_by.includes(p.id),
+  );
   const narratives = graph.narratives.filter((n) => n.in_journey === journey.id);
-  const orphanWalksRef = Boolean(journey.walks) && !persona;
+  const orphanWalksRef = Boolean(journey.walks) && !role;
 
   return (
     <div className="space-y-4">
@@ -33,10 +36,10 @@ export function JourneyBody({ graph, journeyId }: { graph: Graph; journeyId: str
       </header>
       {journey.integrity.includes("missing_walks") && (
         <IntegrityBanner
-          title="This Journey has no Persona."
+          title="This Journey has no Role."
           detail={
             <>
-              A Journey must declare the Persona it is walked by via{" "}
+              A Journey must declare the Role it is walked by via{" "}
               <code>walks:</code> in the frontmatter.
             </>
           }
@@ -45,15 +48,25 @@ export function JourneyBody({ graph, journeyId }: { graph: Graph; journeyId: str
       )}
       {orphanWalksRef && !journey.integrity.includes("missing_walks") && (
         <IntegrityBanner
-          title={`walks Persona "${journey.walks}" is missing or inactive.`}
-          detail="Draw the Persona first, or update this Journey's `walks` to a known active Persona."
-          repair={`/solera-write-persona mode=create persona_id=${journey.walks}`}
+          title={`walks Role "${journey.walks}" is missing or inactive.`}
+          detail="Draw the Role first, or update this Journey's `walks` to a known active Role."
+          repair={`/solera-write-role mode=create role_id=${journey.walks}`}
         />
       )}
       <MetaRow
-        label="Walks"
-        value={persona ? persona.name : journey.walks || "(none — orphan)"}
+        label="Walks (Role)"
+        value={role ? role.name : journey.walks || "(none — orphan)"}
       />
+      {(walkedByPersonas.length > 0 || journey.walked_by.length > 0) && (
+        <MetaRow
+          label="Walked by"
+          value={
+            walkedByPersonas.length > 0
+              ? walkedByPersonas.map((p) => p.name).join(", ")
+              : journey.walked_by.join(", ")
+          }
+        />
+      )}
       {journey.parent && (
         <MetaRow label="Parent" value={resolveName(graph.journeys, journey.parent)} />
       )}

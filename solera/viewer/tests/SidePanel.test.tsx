@@ -10,6 +10,7 @@ import type {
   Layout,
   Narrative,
   Persona,
+  Role,
 } from "../src/types";
 
 // Stub `MarkdownBody` so tests don't need the markdown pipeline (and so we
@@ -41,6 +42,17 @@ const baseGraph = (overrides: Partial<Graph> = {}): Graph => ({
   stories: [],
   action_items: [],
   releases: [],
+  ...overrides,
+});
+
+const mkRole = (id: string, overrides: Partial<Role> = {}): Role => ({
+  id,
+  name: id.replace(/-/g, " "),
+  status: "active",
+  description: `Description of ${id}.`,
+  context: null,
+  parent: null,
+  integrity: [],
   ...overrides,
 });
 
@@ -189,10 +201,10 @@ describe("SidePanel — PersonaBody", () => {
 });
 
 describe("SidePanel — JourneyBody", () => {
-  it("renders trigger, outcome, and walks-Persona name", () => {
+  it("renders trigger, outcome, and the walks-Role name", () => {
     const graph = baseGraph({
-      personas: [mkPersona("alice")],
-      journeys: [mkJourney("first-purchase", "alice")],
+      roles: [mkRole("fan")],
+      journeys: [mkJourney("first-purchase", "fan")],
     });
 
     render(
@@ -205,14 +217,14 @@ describe("SidePanel — JourneyBody", () => {
 
     expect(screen.getByText(/first-purchase trigger sentence/i)).toBeInTheDocument();
     expect(screen.getByText(/first-purchase outcome sentence/i)).toBeInTheDocument();
-    // walks Persona's display name appears in the Walks MetaRow.
-    expect(screen.getByText(/alice/i)).toBeInTheDocument();
+    // walks Role's display name appears in the Walks (Role) MetaRow.
+    expect(screen.getByText(/fan/i)).toBeInTheDocument();
   });
 
-  it("flags an integrity issue when walks Persona doesn't exist", () => {
+  it("flags an integrity issue when walks Role doesn't exist", () => {
     const graph = baseGraph({
-      // No personas; journey walks a ghost.
-      journeys: [mkJourney("ghost-walk", "missing-persona")],
+      // No roles; journey walks a ghost.
+      journeys: [mkJourney("ghost-walk", "missing-role")],
     });
 
     render(
@@ -226,8 +238,8 @@ describe("SidePanel — JourneyBody", () => {
     // Header chip announces the integrity problem at a glance.
     expect(screen.getByText(/integrity/i)).toBeInTheDocument();
     // IntegrityBanner surfaces the concrete repair target — the missing
-    // Persona id — so the human knows exactly what to draw.
-    expect(screen.getAllByText(/missing-persona/).length).toBeGreaterThan(0);
+    // Role id — so the human knows exactly what to draw.
+    expect(screen.getAllByText(/missing-role/).length).toBeGreaterThan(0);
   });
 
   it("surfaces an integrity banner when the walks field is absent", () => {
@@ -245,7 +257,7 @@ describe("SidePanel — JourneyBody", () => {
     );
 
     expect(screen.getByText(/integrity/i)).toBeInTheDocument();
-    expect(screen.getByText(/no Persona/i)).toBeInTheDocument();
+    expect(screen.getByText(/no Role/i)).toBeInTheDocument();
   });
 
   it("renders steps in order with stage / touchpoint / emotion / pain", () => {

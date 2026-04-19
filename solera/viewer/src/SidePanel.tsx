@@ -5,6 +5,7 @@ import { IdentityBody } from "./panels/IdentityPanel";
 import { JourneyBody } from "./panels/JourneyPanel";
 import { NarrativeBody } from "./panels/NarrativePanel";
 import { PersonaBody } from "./panels/PersonaPanel";
+import { RoleBody } from "./panels/RolePanel";
 import type { Graph, Layout } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -46,6 +47,7 @@ export function SidePanel({
   const headerLabel: Record<SelectedNode["kind"], string> = {
     identity: "Identity",
     concept: "Concept",
+    role: "Role",
     persona: "Persona",
     journey: "Journey",
     narrative: "Narrative",
@@ -111,6 +113,8 @@ function renderSelectionBody({
           onLayoutChange={onLayoutChange}
         />
       );
+    case "role":
+      return <RoleBody graph={graph} roleId={selection.id} />;
     case "persona":
       return <PersonaBody graph={graph} personaId={selection.id} />;
     case "journey":
