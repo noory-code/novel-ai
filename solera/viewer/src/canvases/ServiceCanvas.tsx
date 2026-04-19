@@ -4,13 +4,12 @@ import ReactFlow, {
   BackgroundVariant,
   Controls,
   MarkerType,
-  Position,
   type Edge,
   type Node,
   type NodeChange,
   applyNodeChanges,
 } from "reactflow";
-import type { Graph, Layout, Persona, Journey, Narrative } from "../types";
+import type { Graph, Journey, Layout, Narrative, Persona } from "../types";
 import type { SelectedNode } from "./PlanCanvas";
 
 interface ServiceCanvasProps {
@@ -21,27 +20,38 @@ interface ServiceCanvasProps {
   selection: SelectedNode | null;
 }
 
-// Three-column swimlane: Personas on the left, Journeys for each Persona in the
-// middle, Narratives anchored to their Journey/Persona on the right. Loose
-// Narratives (no `in_journey`) cluster in a tray at the bottom.
+// Persona-centric radial mindmap:
+//   - Each Persona is the hub of its own cluster.
+//   - Its Journeys sit on the inner ring (distributed evenly around the
+//     hub, clockwise from 12 o'clock).
+//   - Narratives sit on the outer ring:
+//       - If the Narrative has `in_journey`, it sits at approximately the
+//         same angle as that Journey (slightly fanned out if multiple).
+//       - Loose Narratives (about the Persona but no in_journey) fill the
+//         angular gaps between Journeys. If there are no Journeys, they
+//         spread evenly around the hub.
+//   - Multiple Personas → multiple clusters, arranged on a wide grid
+//     (CLUSTERS_PER_ROW per row). User drag positions are persisted via
+//     `layout.nodes` and override auto-layout on subsequent renders.
+//   - Orphan Journeys (walks unknown) and fully-loose Narratives (no
+//     resolvable `about` Persona) get a horizontal orphan row below the
+//     persona clusters so the integrity banners the SidePanel surfaces are
+//     easy to find.
 //
-// Coordinates use a fixed band per Persona; Journeys stack vertically within
-// the band, and Narratives stack vertically next to their anchor. Persisted
-// positions in `layout.nodes` always override auto-layout.
+// This honours the "UI must be mindmap graph" principle (feedback memory
+// `feedback_topview_purpose.md`) — radial is the shape human cognition uses
+// for "who pressures what".
 
-const COL_PERSONA_X = 0;
-const COL_JOURNEY_X = 360;
-const COL_NARRATIVE_X = 760;
+const CLUSTER_SPACING_X = 900;
+const CLUSTER_SPACING_Y = 900;
+const CLUSTERS_PER_ROW = 3;
 
-const PERSONA_BAND_GAP = 60; // extra space between Persona bands
-const JOURNEY_ROW_GAP = 28;
-const NARRATIVE_ROW_GAP = 24;
+const JOURNEY_RING_RADIUS = 220;
+const NARRATIVE_RING_RADIUS = 400;
+const NARRATIVE_EXTRA_LAYER_STEP = 110; // extra radius per overflow layer
 
-const PERSONA_NODE_HEIGHT = 140;
-const JOURNEY_NODE_HEIGHT = 110;
-const NARRATIVE_NODE_HEIGHT = 110;
-
-const LOOSE_NARRATIVE_BAND_GAP = 80;
+const ORPHAN_ROW_GAP = 260;
+const ORPHAN_STEP_X = 360;
 
 export function ServiceCanvas({
   graph,
@@ -126,91 +136,46 @@ export function buildServiceFlowElements(
   selection: SelectedNode | null,
 ): { nodes: Node[]; edges: Edge[] } {
   const personas = graph.personas;
-  const journeysByPersona = new Map<string, Journey[]>();
-  for (const j of graph.journeys) {
-    const key = j.walks || "__orphan__";
-    if (!journeysByPersona.has(key)) journeysByPersona.set(key, []);
-    journeysByPersona.get(key)!.push(j);
-  }
+  const personaIdSet = new Set(personas.map((p) => p.id));
 
-  const narrativesByJourney = new Map<string, Narrative[]>();
-  const looseNarratives: Narrative[] = [];
-  for (const n of graph.narratives) {
-    if (n.in_journey) {
-      if (!narrativesByJourney.has(n.in_journey)) narrativesByJourney.set(n.in_journey, []);
-      narrativesByJourney.get(n.in_journey)!.push(n);
-    } else {
-      looseNarratives.push(n);
-    }
-  }
-
-  // Auto-layout: walk personas top-to-bottom, allocating each one a band whose
-  // height accommodates its journeys + their attached narratives.
+  // Auto-layout positions keyed by `kind:id`.
   const autoPositions = new Map<string, { x: number; y: number }>();
-  let cursorY = 0;
-  let maxBandBottom = 0;
 
-  const allocatePersonaBand = (persona: Persona) => {
-    const ownJourneys = journeysByPersona.get(persona.id) ?? [];
-    const journeyCount = Math.max(ownJourneys.length, 1);
-    const journeysHeight = journeyCount * (JOURNEY_NODE_HEIGHT + JOURNEY_ROW_GAP) - JOURNEY_ROW_GAP;
-    const narrativesForBand = ownJourneys.flatMap(
-      (j) => narrativesByJourney.get(j.id) ?? [],
+  // Each Persona owns a radial cluster centred on a grid slot.
+  personas.forEach((persona, i) => {
+    const row = Math.floor(i / CLUSTERS_PER_ROW);
+    const col = i % CLUSTERS_PER_ROW;
+    const cx = col * CLUSTER_SPACING_X;
+    const cy = row * CLUSTER_SPACING_Y;
+    const ownJourneys = graph.journeys.filter((j) => j.walks === persona.id);
+    const ownNarratives = graph.narratives.filter((n) =>
+      n.about.some((aboutId) => aboutId === persona.id),
     );
-    const narrativesHeight =
-      Math.max(narrativesForBand.length, 0) * (NARRATIVE_NODE_HEIGHT + NARRATIVE_ROW_GAP) -
-      NARRATIVE_ROW_GAP;
-    const bandHeight = Math.max(PERSONA_NODE_HEIGHT, journeysHeight, narrativesHeight);
+    layoutPersonaCluster(cx, cy, persona, ownJourneys, ownNarratives, autoPositions);
+  });
 
-    autoPositions.set(`persona:${persona.id}`, {
-      x: COL_PERSONA_X,
-      y: cursorY,
-    });
-
-    let journeyY = cursorY;
-    let narrativeCursorY = cursorY;
-    for (const j of ownJourneys) {
-      autoPositions.set(`journey:${j.id}`, { x: COL_JOURNEY_X, y: journeyY });
-      journeyY += JOURNEY_NODE_HEIGHT + JOURNEY_ROW_GAP;
-      for (const n of narrativesByJourney.get(j.id) ?? []) {
-        autoPositions.set(`narrative:${n.id}`, {
-          x: COL_NARRATIVE_X,
-          y: narrativeCursorY,
-        });
-        narrativeCursorY += NARRATIVE_NODE_HEIGHT + NARRATIVE_ROW_GAP;
-      }
-    }
-
-    maxBandBottom = Math.max(maxBandBottom, cursorY + bandHeight);
-    cursorY += bandHeight + PERSONA_BAND_GAP;
-  };
-
-  for (const persona of personas) {
-    allocatePersonaBand(persona);
-  }
-
-  // Orphan Journeys (walks a Persona that doesn't exist) get an "Orphan" band.
-  const orphanJourneys = journeysByPersona.get("__orphan__") ?? [];
-  const journeysWithOrphanWalks = graph.journeys.filter(
-    (j) => j.walks && !personas.some((p) => p.id === j.walks),
+  // Orphans: Journeys pointing at a Persona that doesn't exist (or with empty
+  // `walks`), plus Narratives whose entire `about` list is unresolvable. Put
+  // them on a horizontal row below the Persona clusters so the integrity
+  // banners in the SidePanel are easy to find.
+  const orphanJourneys = graph.journeys.filter(
+    (j) => !j.walks || !personaIdSet.has(j.walks),
   );
-  const allOrphans = [...orphanJourneys, ...journeysWithOrphanWalks];
-  let orphanY = cursorY;
-  for (const j of allOrphans) {
-    autoPositions.set(`journey:${j.id}`, { x: COL_JOURNEY_X, y: orphanY });
-    for (const n of narrativesByJourney.get(j.id) ?? []) {
-      autoPositions.set(`narrative:${n.id}`, { x: COL_NARRATIVE_X, y: orphanY });
-      orphanY += NARRATIVE_NODE_HEIGHT + NARRATIVE_ROW_GAP;
-    }
-    orphanY += JOURNEY_NODE_HEIGHT + JOURNEY_ROW_GAP;
-  }
-  maxBandBottom = Math.max(maxBandBottom, orphanY);
-
-  // Loose Narratives tray below everything.
-  let looseY = maxBandBottom + LOOSE_NARRATIVE_BAND_GAP;
-  for (const n of looseNarratives) {
-    autoPositions.set(`narrative:${n.id}`, { x: COL_NARRATIVE_X, y: looseY });
-    looseY += NARRATIVE_NODE_HEIGHT + NARRATIVE_ROW_GAP;
+  const orphanNarratives = graph.narratives.filter(
+    (n) => n.about.length === 0 || !n.about.some((a) => personaIdSet.has(a)),
+  );
+  if (orphanJourneys.length > 0 || orphanNarratives.length > 0) {
+    const orphanRow = Math.ceil(personas.length / CLUSTERS_PER_ROW);
+    const baseY = orphanRow * CLUSTER_SPACING_Y;
+    orphanJourneys.forEach((j, i) => {
+      autoPositions.set(`journey:${j.id}`, { x: i * ORPHAN_STEP_X, y: baseY });
+    });
+    orphanNarratives.forEach((n, i) => {
+      autoPositions.set(`narrative:${n.id}`, {
+        x: i * ORPHAN_STEP_X,
+        y: baseY + ORPHAN_ROW_GAP,
+      });
+    });
   }
 
   const positionOf = (id: string, fallback: { x: number; y: number }) => {
@@ -228,16 +193,15 @@ export function buildServiceFlowElements(
     const isSelected = selection?.kind === "persona" && selection.id === persona.id;
     nodes.push({
       id,
-      position: positionOf(id, autoPositions.get(id) ?? { x: COL_PERSONA_X, y: 0 }),
+      position: positionOf(id, autoPositions.get(id) ?? { x: 0, y: 0 }),
       data: { label: renderPersonaLabel(persona) },
-      sourcePosition: Position.Right,
       style: {
         background: persona.status === "deprecated" ? "#fef3c7" : "#fdf2f8",
         border: `${isSelected ? 3 : 2}px solid ${isSelected ? "#6366f1" : "#f9a8d4"}`,
         borderRadius: 14,
         padding: "12px 16px",
-        minWidth: 280,
-        maxWidth: 320,
+        minWidth: 260,
+        maxWidth: 300,
         cursor: "pointer",
       },
     });
@@ -251,10 +215,8 @@ export function buildServiceFlowElements(
     const hasIntegrityIssue = journey.integrity.length > 0 || orphan;
     nodes.push({
       id,
-      position: positionOf(id, autoPositions.get(id) ?? { x: COL_JOURNEY_X, y: 0 }),
+      position: positionOf(id, autoPositions.get(id) ?? { x: 0, y: 0 }),
       data: { label: renderJourneyLabel(journey, orphan) },
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left,
       style: {
         background: hasIntegrityIssue
           ? "#fef2f2"
@@ -266,8 +228,8 @@ export function buildServiceFlowElements(
         }`,
         borderRadius: 12,
         padding: "10px 14px",
-        minWidth: 320,
-        maxWidth: 380,
+        minWidth: 280,
+        maxWidth: 320,
         cursor: "pointer",
       },
     });
@@ -280,9 +242,8 @@ export function buildServiceFlowElements(
     const hasIntegrityIssue = narrative.integrity.length > 0;
     nodes.push({
       id,
-      position: positionOf(id, autoPositions.get(id) ?? { x: COL_NARRATIVE_X, y: 0 }),
+      position: positionOf(id, autoPositions.get(id) ?? { x: 0, y: 0 }),
       data: { label: renderNarrativeLabel(narrative) },
-      targetPosition: Position.Left,
       style: {
         background: hasIntegrityIssue
           ? "#fef2f2"
@@ -300,8 +261,8 @@ export function buildServiceFlowElements(
         }`,
         borderRadius: 12,
         padding: "10px 14px",
-        minWidth: 280,
-        maxWidth: 340,
+        minWidth: 240,
+        maxWidth: 300,
         cursor: "pointer",
       },
     });
@@ -356,6 +317,93 @@ export function buildServiceFlowElements(
 }
 
 // ---- Node label renderers ---------------------------------------------------
+
+function layoutPersonaCluster(
+  cx: number,
+  cy: number,
+  persona: Persona,
+  journeys: Journey[],
+  narratives: Narrative[],
+  positions: Map<string, { x: number; y: number }>,
+): void {
+  // Persona is the hub.
+  positions.set(`persona:${persona.id}`, { x: cx, y: cy });
+
+  const nJ = journeys.length;
+  const journeyAngles = new Map<string, number>();
+
+  // Inner ring: distribute journeys starting from 12 o'clock, clockwise.
+  // With only one Journey this still anchors it at the top; with many, each
+  // gets ``2π/N`` of angular space.
+  journeys.forEach((j, i) => {
+    const angle = -Math.PI / 2 + (i / Math.max(nJ, 1)) * 2 * Math.PI;
+    journeyAngles.set(j.id, angle);
+    positions.set(`journey:${j.id}`, {
+      x: cx + JOURNEY_RING_RADIUS * Math.cos(angle),
+      y: cy + JOURNEY_RING_RADIUS * Math.sin(angle),
+    });
+  });
+
+  // Split narratives: anchored to a Journey (in_journey) vs loose (only
+  // `about` this Persona). Anchored narratives ride the outer ring near
+  // their journey's angle; loose ones fill the gaps between journeys.
+  const inJourneyNars = new Map<string, Narrative[]>();
+  const looseNars: Narrative[] = [];
+  for (const n of narratives) {
+    if (n.in_journey && journeyAngles.has(n.in_journey)) {
+      const bucket = inJourneyNars.get(n.in_journey) ?? [];
+      bucket.push(n);
+      inJourneyNars.set(n.in_journey, bucket);
+    } else {
+      looseNars.push(n);
+    }
+  }
+
+  // Anchored narratives: fan them out around their journey's angle. With a
+  // single anchored narrative the fan collapses to zero offset; with many,
+  // cap the spread so neighbouring journeys' narratives don't overlap.
+  for (const [journeyId, nars] of inJourneyNars.entries()) {
+    const baseAngle = journeyAngles.get(journeyId)!;
+    const maxSpread = Math.min(0.35, Math.PI / Math.max(nJ * 2, 2));
+    nars.forEach((n, i) => {
+      const offset =
+        nars.length === 1 ? 0 : -maxSpread + (i / (nars.length - 1)) * (maxSpread * 2);
+      const angle = baseAngle + offset;
+      positions.set(`narrative:${n.id}`, {
+        x: cx + NARRATIVE_RING_RADIUS * Math.cos(angle),
+        y: cy + NARRATIVE_RING_RADIUS * Math.sin(angle),
+      });
+    });
+  }
+
+  // Loose narratives: if no Journeys exist, spread evenly around the hub.
+  // Otherwise place them at the midpoints of the journey arcs, wrapping out
+  // to an additional radial layer once we run out of unique midpoints.
+  if (looseNars.length > 0) {
+    if (nJ === 0) {
+      looseNars.forEach((n, i) => {
+        const angle =
+          -Math.PI / 2 + (i / looseNars.length) * 2 * Math.PI;
+        positions.set(`narrative:${n.id}`, {
+          x: cx + NARRATIVE_RING_RADIUS * Math.cos(angle),
+          y: cy + NARRATIVE_RING_RADIUS * Math.sin(angle),
+        });
+      });
+    } else {
+      looseNars.forEach((n, i) => {
+        const slot = i % nJ;
+        const layer = Math.floor(i / nJ);
+        const midpointAngle =
+          -Math.PI / 2 + ((slot + 0.5) / nJ) * 2 * Math.PI;
+        const radius = NARRATIVE_RING_RADIUS + layer * NARRATIVE_EXTRA_LAYER_STEP;
+        positions.set(`narrative:${n.id}`, {
+          x: cx + radius * Math.cos(midpointAngle),
+          y: cy + radius * Math.sin(midpointAngle),
+        });
+      });
+    }
+  }
+}
 
 function renderPersonaLabel(persona: Persona): React.ReactNode {
   const firstSentence = persona.identity.split(/[.!?]\s/)[0]?.trim() ?? "";
