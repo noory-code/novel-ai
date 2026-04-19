@@ -34,13 +34,23 @@ export async function saveLayout(projectPath: string, layout: Layout): Promise<v
   }
 }
 
-export async function patchConcept(
+// ---------------------------------------------------------------------------
+// CRUD client — v5.1 unified POST/PATCH surface
+// ---------------------------------------------------------------------------
+
+/**
+ * Low-level caller for a PATCH against ``/api/{kind}/{id}``. Unwraps
+ * the server error body and throws on any non-2xx so callers can rely
+ * on ``await patchX(...)`` always succeeding if it returns.
+ */
+async function patchEntity(
   projectPath: string,
-  conceptId: string,
-  patch: { parent?: string | null },
+  kind: string,
+  entityId: string,
+  patch: Record<string, unknown>,
 ): Promise<void> {
-  const url = `${API_BASE}/api/concept/${encodeURIComponent(
-    conceptId,
+  const url = `${API_BASE}/api/${kind}/${encodeURIComponent(
+    entityId,
   )}?project_path=${encodeURIComponent(projectPath)}`;
   const res = await fetch(url, {
     method: "PATCH",
@@ -51,6 +61,180 @@ export async function patchConcept(
     const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
     throw new Error(body?.error ?? `HTTP ${res.status}`);
   }
+}
+
+/** Low-level caller for ``POST /api/{kind}``. Returns the new id on success. */
+async function createEntity(
+  projectPath: string,
+  kind: string,
+  payload: Record<string, unknown>,
+): Promise<{ ok: true; id: string; path: string }> {
+  const url = `${API_BASE}/api/${kind}?project_path=${encodeURIComponent(projectPath)}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    throw new Error(body?.error ?? `HTTP ${res.status}`);
+  }
+  return (await res.json()) as { ok: true; id: string; path: string };
+}
+
+// Concept — extended in v5.1 to accept every allowed field (name, status,
+// intent, current_design, current_shape, horizon, parent). The signature is
+// loose so callers can patch one field at a time.
+export interface ConceptPatch {
+  name?: string;
+  status?: "active" | "deprecated" | "archived";
+  intent?: string;
+  current_design?: string;
+  current_shape?: string;
+  horizon?: string | null;
+  parent?: string | null;
+}
+
+export function patchConcept(
+  projectPath: string,
+  conceptId: string,
+  patch: ConceptPatch,
+): Promise<void> {
+  return patchEntity(projectPath, "concept", conceptId, patch as unknown as Record<string, unknown>);
+}
+
+export interface ConceptCreate {
+  id: string;
+  name?: string;
+  intent?: string;
+  current_design?: string;
+  current_shape?: string;
+  horizon?: string;
+  parent?: string;
+}
+export function createConcept(projectPath: string, payload: ConceptCreate) {
+  return createEntity(projectPath, "concept", payload as unknown as Record<string, unknown>);
+}
+
+// Role
+export interface RolePatch {
+  name?: string;
+  status?: "active" | "deprecated" | "archived";
+  description?: string;
+  context?: string | null;
+  parent?: string | null;
+}
+export function patchRole(projectPath: string, roleId: string, patch: RolePatch) {
+  return patchEntity(projectPath, "role", roleId, patch as unknown as Record<string, unknown>);
+}
+export interface RoleCreate {
+  id: string;
+  name?: string;
+  description?: string;
+  context?: string;
+  parent?: string;
+}
+export function createRole(projectPath: string, payload: RoleCreate) {
+  return createEntity(projectPath, "role", payload as unknown as Record<string, unknown>);
+}
+
+// Persona
+export interface PersonaPatch {
+  name?: string;
+  status?: "active" | "deprecated" | "archived";
+  role?: string;
+  identity?: string;
+  goals?: string[];
+  pains?: string[];
+  triggers?: string[];
+  quotes?: string[];
+  channels?: string | null;
+  parent?: string | null;
+}
+export function patchPersona(projectPath: string, personaId: string, patch: PersonaPatch) {
+  return patchEntity(projectPath, "persona", personaId, patch as unknown as Record<string, unknown>);
+}
+export interface PersonaCreate {
+  id: string;
+  role: string;
+  name?: string;
+  identity?: string;
+  goals?: string[];
+  pains?: string[];
+  triggers?: string[];
+  quotes?: string[];
+  channels?: string;
+  parent?: string;
+}
+export function createPersona(projectPath: string, payload: PersonaCreate) {
+  return createEntity(projectPath, "persona", payload as unknown as Record<string, unknown>);
+}
+
+// Journey
+export interface JourneyStepInput {
+  n: number;
+  stage: string;
+  step: string;
+  touchpoint: string;
+  emotion: string;
+  pain: string;
+}
+export interface JourneyPatch {
+  name?: string;
+  status?: "active" | "deprecated" | "archived";
+  walks?: string;
+  walked_by?: string[];
+  trigger?: string;
+  steps?: JourneyStepInput[];
+  outcome?: string;
+  parent?: string | null;
+}
+export function patchJourney(projectPath: string, journeyId: string, patch: JourneyPatch) {
+  return patchEntity(projectPath, "journey", journeyId, patch as unknown as Record<string, unknown>);
+}
+export interface JourneyCreate {
+  id: string;
+  walks: string;
+  walked_by?: string[];
+  name?: string;
+  trigger?: string;
+  steps?: JourneyStepInput[];
+  outcome?: string;
+  parent?: string;
+}
+export function createJourney(projectPath: string, payload: JourneyCreate) {
+  return createEntity(projectPath, "journey", payload as unknown as Record<string, unknown>);
+}
+
+// Narrative
+export interface NarrativePatch {
+  name?: string;
+  status?: "active" | "deprecated" | "archived";
+  form?: "user_story" | "jtbd" | "scenario";
+  statement?: string;
+  context?: string;
+  acceptance_cues?: string[];
+  about_roles?: string[];
+  about_personas?: string[];
+  in_journey?: string | null;
+  proposes?: string[];
+}
+export function patchNarrative(projectPath: string, narrativeId: string, patch: NarrativePatch) {
+  return patchEntity(projectPath, "narrative", narrativeId, patch as unknown as Record<string, unknown>);
+}
+export interface NarrativeCreate {
+  id: string;
+  about_roles: string[];
+  form?: "user_story" | "jtbd" | "scenario";
+  about_personas?: string[];
+  statement?: string;
+  context?: string;
+  acceptance_cues?: string[];
+  in_journey?: string;
+  proposes?: string[];
+}
+export function createNarrative(projectPath: string, payload: NarrativeCreate) {
+  return createEntity(projectPath, "narrative", payload as unknown as Record<string, unknown>);
 }
 
 export interface ProposeConceptResult {
