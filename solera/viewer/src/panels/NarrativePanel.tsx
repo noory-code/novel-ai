@@ -25,7 +25,10 @@ export function NarrativeBody({
   const narrative = graph.narratives.find((n) => n.id === narrativeId);
   if (!narrative) return <EmptyState text="Narrative not found." />;
 
-  const personas = graph.personas.filter((p) => narrative.about.includes(p.id));
+  const personas = graph.personas.filter((p) =>
+    narrative.about_personas.includes(p.id),
+  );
+  const roles = graph.roles.filter((r) => narrative.about_roles.includes(r.id));
   const journey = narrative.in_journey
     ? graph.journeys.find((j) => j.id === narrative.in_journey)
     : null;
@@ -75,13 +78,23 @@ export function NarrativeBody({
         />
       )}
       <MetaRow
-        label="About"
+        label="About Roles"
         value={
-          personas.length > 0
-            ? personas.map((p) => p.name).join(", ")
-            : narrative.about.join(", ") || "(none)"
+          roles.length > 0
+            ? roles.map((r) => r.name).join(", ")
+            : narrative.about_roles.join(", ") || "(none)"
         }
       />
+      {(narrative.about_personas.length > 0 || personas.length > 0) && (
+        <MetaRow
+          label="About Personas"
+          value={
+            personas.length > 0
+              ? personas.map((p) => p.name).join(", ")
+              : narrative.about_personas.join(", ")
+          }
+        />
+      )}
       {journey && <MetaRow label="In Journey" value={journey.name} />}
       <Section title="Context" body={narrative.context} />
       <BulletSection title="Acceptance Cues" items={narrative.acceptance_cues} />

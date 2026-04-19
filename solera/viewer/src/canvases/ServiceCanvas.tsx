@@ -148,8 +148,12 @@ export function buildServiceFlowElements(
     const cx = col * CLUSTER_SPACING_X;
     const cy = row * CLUSTER_SPACING_Y;
     const ownJourneys = graph.journeys.filter((j) => j.walks === persona.id);
+    // v5.0 transitional: Service canvas (deprecated — will be replaced by
+    // ActorsCanvas in Commit 3). Narratives directly about a Persona now
+    // live on `about_personas`; the old `about` (Role-level) is handled by
+    // the new ActorsCanvas. Keep orphan/label semantics working for now.
     const ownNarratives = graph.narratives.filter((n) =>
-      n.about.some((aboutId) => aboutId === persona.id),
+      n.about_personas.includes(persona.id),
     );
     layoutPersonaCluster(cx, cy, persona, ownJourneys, ownNarratives, autoPositions);
   });
@@ -162,7 +166,9 @@ export function buildServiceFlowElements(
     (j) => !j.walks || !personaIdSet.has(j.walks),
   );
   const orphanNarratives = graph.narratives.filter(
-    (n) => n.about.length === 0 || !n.about.some((a) => personaIdSet.has(a)),
+    (n) =>
+      n.about_personas.length === 0 ||
+      !n.about_personas.some((a) => personaIdSet.has(a)),
   );
   if (orphanJourneys.length > 0 || orphanNarratives.length > 0) {
     const orphanRow = Math.ceil(personas.length / CLUSTERS_PER_ROW);
@@ -301,7 +307,7 @@ export function buildServiceFlowElements(
     } else {
       // No journey anchor — connect to first known Persona via dashed line so
       // the narrative is visually rooted somewhere.
-      const anchor = narrative.about.find((p) => personaIds.has(p));
+      const anchor = narrative.about_personas.find((p) => personaIds.has(p));
       if (anchor) {
         edges.push({
           id: `about-${narrative.id}-${anchor}`,

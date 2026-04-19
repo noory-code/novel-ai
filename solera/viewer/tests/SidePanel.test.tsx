@@ -31,6 +31,7 @@ const emptyIdentity: Identity = {
 
 const baseGraph = (overrides: Partial<Graph> = {}): Graph => ({
   identity: emptyIdentity,
+  roles: [],
   personas: [],
   journeys: [],
   narratives: [],
@@ -47,6 +48,7 @@ const mkPersona = (id: string, overrides: Partial<Persona> = {}): Persona => ({
   id,
   name: id.replace(/-/g, " "),
   status: "active",
+  role: "customer",
   identity: `${id} identity paragraph.`,
   goals: [`${id} goal A`, `${id} goal B`],
   pains: [],
@@ -54,6 +56,7 @@ const mkPersona = (id: string, overrides: Partial<Persona> = {}): Persona => ({
   quotes: [],
   channels: null,
   parent: null,
+  integrity: [],
   ...overrides,
 });
 
@@ -62,6 +65,7 @@ const mkJourney = (id: string, walks: string, overrides: Partial<Journey> = {}):
   name: id.replace(/-/g, " "),
   status: "active",
   walks,
+  walked_by: [],
   trigger: `${id} trigger sentence.`,
   steps: [],
   outcome: `${id} outcome sentence.`,
@@ -77,7 +81,8 @@ const mkNarrative = (id: string, overrides: Partial<Narrative> = {}): Narrative 
   statement: `As a user, I want ${id}.`,
   context: `Context for ${id}.`,
   acceptance_cues: [`cue 1 for ${id}`, `cue 2 for ${id}`],
-  about: ["alice"],
+  about_roles: ["customer"],
+  about_personas: [],
   in_journey: null,
   proposes: [],
   integrity: [],
@@ -161,10 +166,14 @@ describe("SidePanel — PersonaBody", () => {
     expect(screen.getByText("Persona not found.")).toBeInTheDocument();
   });
 
-  it("lists journeys walked by the persona", () => {
+  it("lists journeys that explicitly walk the persona via walked_by", () => {
+    // v5.0: Journey.walks references a Role; Personas only see Journeys
+    // that named them on `walked_by` (concrete archetype cases).
     const graph = baseGraph({
       personas: [mkPersona("alice")],
-      journeys: [mkJourney("first-purchase", "alice")],
+      journeys: [
+        mkJourney("first-purchase", "customer", { walked_by: ["alice"] }),
+      ],
     });
 
     render(
@@ -175,7 +184,6 @@ describe("SidePanel — PersonaBody", () => {
       />,
     );
 
-    // Journey name appears in the Journeys MetaRow (kebab→spaces).
     expect(screen.getByText(/first purchase/)).toBeInTheDocument();
   });
 });

@@ -2,7 +2,7 @@
 
 Every ``read_*`` here is idempotent: it rebuilds from the filesystem on each
 call. Tolerant of malformed files — missing fields surface as empty defaults,
-and integrity-relevant omissions are flagged so the Service canvas can
+and integrity-relevant omissions are flagged so the Actors canvas can
 prompt the human to repair the file.
 """
 
@@ -23,6 +23,7 @@ from solera_mcp.models import (
     NarrativeForm,
     Persona,
     Release,
+    Role,
     Story,
 )
 from solera_mcp.parsing import (
@@ -75,6 +76,39 @@ def read_concepts(workspace: Path) -> list[Concept]:
 
 
 # ---------------------------------------------------------------------------
+# Roles (v5.0+)
+# ---------------------------------------------------------------------------
+
+
+def read_role_file(path: Path) -> Role:
+    text = path.read_text(encoding="utf-8")
+    fm, body = parse_frontmatter(text)
+    sections = parse_sections(body)
+    role_id = fm.get("id") or path.stem
+    parent = fm.get("parent")
+    return Role(
+        id=str(role_id),
+        name=fm.get("name", role_id.replace("-", " ").title()),
+        status=fm.get("status", "active"),
+        description=sections.get("Description", "").strip(),
+        context=sections.get("Context", "").strip() or None,
+        parent=str(parent) if parent else None,
+    )
+
+
+def read_roles(workspace: Path) -> list[Role]:
+    roles_dir = workspace / "roles"
+    if not roles_dir.exists():
+        return []
+    results: list[Role] = []
+    for md in sorted(roles_dir.glob("*.md")):
+        if md.name == "_index.md":
+            continue
+        results.append(read_role_file(md))
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Personas
 # ---------------------------------------------------------------------------
 
@@ -85,10 +119,20 @@ def read_persona_file(path: Path) -> Persona:
     sections = parse_sections(body)
     persona_id = fm.get("id") or path.stem
     parent = fm.get("parent")
+    role = fm.get("role")
+    integrity: list[str] = []
+    if not role:
+        # v5.0 spec: every Persona must declare a Role. Missing `role` is
+        # either a v4 legacy file (awaiting /solera-migrate-v4-to-v5) or a
+        # human drafting mistake — surface as integrity so the canvas can
+        # prompt a repair.
+        _log.warning("Persona %s has no `role`; rendering as orphan.", path)
+        integrity.append("missing_role")
     return Persona(
         id=str(persona_id),
         name=fm.get("name", persona_id.replace("-", " ").title()),
         status=fm.get("status", "active"),
+        role=str(role) if role else "",
         identity=sections.get("Identity", "").strip(),
         goals=parse_bullet_list(sections.get("Goals", "")),
         pains=parse_bullet_list(sections.get("Pains", "")),
@@ -96,6 +140,7 @@ def read_persona_file(path: Path) -> Persona:
         quotes=parse_bullet_list(sections.get("Quotes", "")),
         channels=sections.get("Channels", "").strip() or None,
         parent=str(parent) if parent else None,
+        integrity=integrity,
     )
 
 
@@ -123,10 +168,10 @@ def read_journey_file(path: Path) -> Journey:
     journey_id = fm.get("id") or path.stem
     walks = fm.get("walks")
     if not walks:
-        # Tolerant read: surface the Journey with an empty `walks`. The Service
+        # Tolerant read: surface the Journey with an empty `walks`. The Actors
         # canvas renders it as orphan; the human can fix the file via
         # solera-write-journey update.
-        _log.warning("Journey %s has no `walks` Persona id; rendering as orphan.", path)
+        _log.warning("Journey %s has no `walks` Role id; rendering as orphan.", path)
     parent = fm.get("parent")
     integrity: list[str] = []
     if not walks:
@@ -136,6 +181,7 @@ def read_journey_file(path: Path) -> Journey:
         name=fm.get("name", journey_id.replace("-", " ").title()),
         status=fm.get("status", "active"),
         walks=str(walks) if walks else "",
+        walked_by=coerce_id_list(fm.get("walked_by")),
         trigger=sections.get("Trigger", "").strip(),
         steps=parse_journey_steps_table(sections.get("Steps", "")),
         outcome=sections.get("Outcome", "").strip(),
@@ -170,13 +216,26 @@ def read_narrative_file(path: Path) -> Narrative:
     form: NarrativeForm = (
         raw_form if raw_form in ("user_story", "jtbd", "scenario") else "user_story"
     )
-    about = coerce_id_list(fm.get("about"))
+    about_roles = coerce_id_list(fm.get("about_roles"))
+    about_personas = coerce_id_list(fm.get("about_personas"))
+    # v4 legacy compatibility: if only the old flat `about` key is present,
+    # parse it into `about_roles` so the graph still renders something. The
+    # integrity flag `legacy_about_field` cues the human to run the v4→v5
+    # migration skill. Both keys present together → `about_roles` wins and
+    # the legacy `about` is silently ignored (we assume the migration was
+    # completed but the legacy field was left behind accidentally).
     integrity: list[str] = []
-    if not about:
-        # Spec requires 1+ active Personas on `about`. Surface as orphan so the
-        # human can repair via `solera-write-narrative` update.
-        _log.warning("Narrative %s has empty `about` list; rendering as orphan.", path)
-        integrity.append("missing_about")
+    if not about_roles and not about_personas and fm.get("about") is not None:
+        about_roles = coerce_id_list(fm.get("about"))
+        if about_roles:
+            integrity.append("legacy_about_field")
+    if not about_roles:
+        # Spec requires 1+ active Role on `about_roles`. Surface as orphan so
+        # the human can repair via `solera-write-narrative` update.
+        _log.warning(
+            "Narrative %s has empty `about_roles` list; rendering as orphan.", path
+        )
+        integrity.append("missing_about_roles")
     return Narrative(
         id=str(narrative_id),
         form=form,
@@ -184,7 +243,8 @@ def read_narrative_file(path: Path) -> Narrative:
         statement=sections.get("Statement", "").strip(),
         context=sections.get("Context", "").strip(),
         acceptance_cues=parse_bullet_list(sections.get("Acceptance Cues", "")),
-        about=about,
+        about_roles=about_roles,
+        about_personas=about_personas,
         in_journey=str(fm["in_journey"]) if fm.get("in_journey") else None,
         proposes=coerce_id_list(fm.get("proposes")),
         integrity=integrity,

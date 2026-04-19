@@ -18,10 +18,21 @@ export interface Concept {
 
 // v4 Living-axis additions — upstream of Concept.
 
+export interface Role {
+  id: string;
+  name: string;
+  status: ConceptStatus;
+  description: string;
+  context: string | null;
+  parent: string | null;
+  integrity: string[];
+}
+
 export interface Persona {
   id: string;
   name: string;
   status: ConceptStatus;
+  role: string; // v5.0+ required: Role id this Persona archetypes
   identity: string;
   goals: string[];
   pains: string[];
@@ -29,6 +40,7 @@ export interface Persona {
   quotes: string[];
   channels: string | null;
   parent: string | null;
+  integrity: string[];
 }
 
 export interface JourneyStep {
@@ -44,13 +56,15 @@ export interface Journey {
   id: string;
   name: string;
   status: ConceptStatus;
-  walks: string; // Persona id, "" when orphan (file lacks the field)
+  walks: string; // v5.0+: Role id, "" when orphan
+  walked_by: string[]; // optional Persona ids for concrete cases
   trigger: string;
   steps: JourneyStep[];
   outcome: string;
   parent: string | null;
-  // Data-integrity flags from the MCP parser: e.g. `missing_walks`. Canvas and
-  // SidePanel surface these so the human can repair the underlying file.
+  // Data-integrity flags from the MCP parser: e.g. `missing_walks`,
+  // `broken_walks_ref`. Canvas and SidePanel surface these so the human can
+  // repair the underlying file.
   integrity: string[];
 }
 
@@ -61,11 +75,12 @@ export interface Narrative {
   statement: string;
   context: string;
   acceptance_cues: string[];
-  about: string[];
+  about_roles: string[]; // v5.0+: 1+ required (Role ids)
+  about_personas: string[]; // v5.0+: optional (Persona ids)
   in_journey: string | null;
   proposes: string[];
-  // Data-integrity flags from the MCP parser: e.g. `missing_about`,
-  // `broken_in_journey_ref`. Canvas and SidePanel surface these.
+  // Data-integrity flags from the MCP parser: e.g. `missing_about_roles`,
+  // `broken_about_role_ref`, `legacy_about_field`, `broken_in_journey_ref`.
   integrity: string[];
 }
 
@@ -118,6 +133,7 @@ export interface Release {
 
 export interface Graph {
   identity: Identity | null;
+  roles: Role[];
   personas: Persona[];
   journeys: Journey[];
   narratives: Narrative[];

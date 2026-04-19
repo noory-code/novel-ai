@@ -12,8 +12,12 @@ export function PersonaBody({ graph, personaId }: { graph: Graph; personaId: str
   const persona = graph.personas.find((p) => p.id === personaId);
   if (!persona) return <EmptyState text="Persona not found." />;
 
-  const journeys = graph.journeys.filter((j) => j.walks === persona.id);
-  const narratives = graph.narratives.filter((n) => n.about.includes(persona.id));
+  // v5.0: Journeys now walk Roles; Persona sees the Journeys that explicitly
+  // include it on `walked_by`. Narratives: explicit `about_personas` entry.
+  const journeys = graph.journeys.filter((j) => j.walked_by.includes(persona.id));
+  const narratives = graph.narratives.filter((n) =>
+    n.about_personas.includes(persona.id),
+  );
   const children = graph.personas.filter((p) => p.parent === persona.id);
 
   return (

@@ -13,6 +13,7 @@ const mkPersona = (id: string, overrides: Partial<Persona> = {}): Persona => ({
   id,
   name: id.replace(/-/g, " "),
   status: "active",
+  role: "customer",
   identity: `Identity for ${id}.`,
   goals: [],
   pains: [],
@@ -20,6 +21,7 @@ const mkPersona = (id: string, overrides: Partial<Persona> = {}): Persona => ({
   quotes: [],
   channels: null,
   parent: null,
+  integrity: [],
   ...overrides,
 });
 
@@ -28,6 +30,7 @@ const mkJourney = (id: string, walks: string, overrides: Partial<Journey> = {}):
   name: id.replace(/-/g, " "),
   status: "active",
   walks,
+  walked_by: [],
   trigger: `Trigger for ${id}.`,
   steps: [],
   outcome: `Outcome for ${id}.`,
@@ -43,7 +46,8 @@ const mkNarrative = (id: string, overrides: Partial<Narrative> = {}): Narrative 
   statement: `As a user, I want ${id}.`,
   context: `Context for ${id}.`,
   acceptance_cues: [],
-  about: ["alice"],
+  about_roles: ["customer"],
+  about_personas: [],
   in_journey: null,
   proposes: [],
   integrity: [],
@@ -61,6 +65,7 @@ const emptyIdentity: Identity = {
 
 const baseGraph = (overrides: Partial<Graph> = {}): Graph => ({
   identity: emptyIdentity,
+  roles: [],
   personas: [],
   journeys: [],
   narratives: [],
@@ -127,10 +132,10 @@ describe("buildServiceFlowElements — happy paths", () => {
     expect(inJourneyEdge?.style?.strokeDasharray).toBeDefined();
   });
 
-  it("falls back to about[0] anchor when a Narrative has no in_journey", () => {
+  it("falls back to about_personas[0] anchor when a Narrative has no in_journey", () => {
     const graph = baseGraph({
       personas: [mkPersona("alice")],
-      narratives: [mkNarrative("loose", { about: ["alice"] })],
+      narratives: [mkNarrative("loose", { about_personas: ["alice"] })],
     });
 
     const { edges } = buildServiceFlowElements(graph, emptyLayout, null);
@@ -171,7 +176,7 @@ describe("buildServiceFlowElements — orphan handling", () => {
   it("does NOT emit any anchor edge for a Narrative with no journey AND no known persona", () => {
     const graph = baseGraph({
       // Persona "alice" missing entirely; narrative is fully orphaned.
-      narratives: [mkNarrative("homeless", { about: ["alice"] })],
+      narratives: [mkNarrative("homeless", { about_personas: ["alice"] })],
     });
 
     const { edges } = buildServiceFlowElements(graph, emptyLayout, null);
@@ -255,7 +260,7 @@ describe("buildServiceFlowElements — multiple personas / journeys", () => {
       // Narrative "about: bob" but anchored to alice's journey — perfectly
       // valid (a narrative may concern a Persona who doesn't walk that
       // particular Journey, even if it's an unusual data shape).
-      narratives: [mkNarrative("crossover", { about: ["bob"], in_journey: "alice-1" })],
+      narratives: [mkNarrative("crossover", { about_personas: ["bob"], in_journey: "alice-1" })],
     });
 
     const { edges } = buildServiceFlowElements(graph, emptyLayout, null);

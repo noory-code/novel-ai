@@ -99,6 +99,7 @@ def _seed_solera_workspace(base: Path) -> None:
     """Write a minimal but realistic .solera/ layout the server can parse."""
     root = base / ".solera"
     (root / "concepts").mkdir(parents=True, exist_ok=True)
+    (root / "roles").mkdir(parents=True, exist_ok=True)
     (root / "personas").mkdir(parents=True, exist_ok=True)
     (root / "journeys").mkdir(parents=True, exist_ok=True)
     (root / "narratives").mkdir(parents=True, exist_ok=True)
@@ -110,9 +111,15 @@ def _seed_solera_workspace(base: Path) -> None:
         "# Current Shape\n(no Stories)\n",
         encoding="utf-8",
     )
+    (root / "roles" / "cafe-owner.md").write_text(
+        "---\nid: cafe-owner\nkind: role\nname: Cafe Owner\nstatus: active\n"
+        "created: 2026-04-19\n---\n\n"
+        "# Description\nA small independent cafe owner.\n",
+        encoding="utf-8",
+    )
     (root / "personas" / "alice.md").write_text(
         "---\nid: alice\nkind: persona\nname: Alice\nstatus: active\n"
-        "created: 2026-04-19\n---\n\n"
+        "role: cafe-owner\ncreated: 2026-04-19\n---\n\n"
         "# Identity\nAlice runs a small cafe.\n\n"
         "# Goals\n- Sell more coffee\n",
         encoding="utf-8",
@@ -120,7 +127,8 @@ def _seed_solera_workspace(base: Path) -> None:
     (root / "narratives" / "rush-orders.md").write_text(
         "---\nid: rush-orders\nkind: narrative\nform: user_story\n"
         "status: active\ncreated: 2026-04-19\n"
-        'about: ["alice"]\n---\n\n'
+        'about_roles: ["cafe-owner"]\n'
+        'about_personas: ["alice"]\n---\n\n'
         "# Statement\nAs a cafe owner, I want rush orders tracked.\n\n"
         "# Context\nMornings are chaotic.\n\n"
         "# Acceptance Cues\n- Orders arrive within 1s.\n",
@@ -219,9 +227,11 @@ def test_graph_endpoint_returns_seeded_entities_over_real_tcp(
     )
     assert status == 200
     assert [c["id"] for c in body["concepts"]] == ["auth"]
+    assert [r["id"] for r in body["roles"]] == ["cafe-owner"]
     assert [p["id"] for p in body["personas"]] == ["alice"]
     assert [n["id"] for n in body["narratives"]] == ["rush-orders"]
-    assert body["narratives"][0]["about"] == ["alice"]
+    assert body["narratives"][0]["about_roles"] == ["cafe-owner"]
+    assert body["narratives"][0]["about_personas"] == ["alice"]
 
 
 # ---------------------------------------------------------------------------

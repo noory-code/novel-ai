@@ -326,7 +326,37 @@ def test_build_graph_end_to_end(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _write_persona(workspace: Path, persona_id: str, *, parent: str | None = None) -> None:
+def _write_role(
+    workspace: Path,
+    role_id: str,
+    *,
+    parent: str | None = None,
+) -> None:
+    """v5.0+ Role fixture helper."""
+    d = workspace / "roles"
+    d.mkdir(parents=True, exist_ok=True)
+    parent_line = f"parent: {parent}\n" if parent else ""
+    (d / f"{role_id}.md").write_text(
+        f"---\n"
+        f"id: {role_id}\n"
+        f"kind: role\n"
+        f"name: {role_id.replace('-', ' ').title()}\n"
+        f"status: active\n"
+        f"created: 2026-04-01\n"
+        f"{parent_line}"
+        f"---\n\n"
+        f"# Description\nThe {role_id} Role used in tests.\n",
+        encoding="utf-8",
+    )
+
+
+def _write_persona(
+    workspace: Path,
+    persona_id: str,
+    *,
+    role: str = "customer",
+    parent: str | None = None,
+) -> None:
     d = workspace / "personas"
     d.mkdir(parents=True, exist_ok=True)
     parent_line = f"parent: {parent}\n" if parent else ""
@@ -337,6 +367,7 @@ def _write_persona(workspace: Path, persona_id: str, *, parent: str | None = Non
         f"name: {persona_id.replace('-', ' ').title()}\n"
         f"status: active\n"
         f"created: 2026-04-01\n"
+        f"role: {role}\n"
         f"{parent_line}"
         f"---\n\n"
         f"# Identity\nA shopkeeper running a small independent cafe in a dense urban area.\n\n"
@@ -484,13 +515,19 @@ def _write_narrative(
     narrative_id: str,
     *,
     form: str = "user_story",
-    about: list[str] | None = None,
+    about_roles: list[str] | None = None,
+    about_personas: list[str] | None = None,
     in_journey: str | None = None,
     proposes: list[str] | None = None,
 ) -> None:
     d = workspace / "narratives"
     d.mkdir(parents=True, exist_ok=True)
-    about = about if about is not None else ["small-cafe-owner"]
+    about_roles = about_roles if about_roles is not None else ["customer"]
+    about_personas_line = (
+        f"about_personas: {json.dumps(about_personas)}\n"
+        if about_personas is not None
+        else ""
+    )
     in_journey_line = f"in_journey: {in_journey}\n" if in_journey else ""
     proposes_line = (
         f"proposes: {json.dumps(proposes)}\n"
@@ -504,7 +541,8 @@ def _write_narrative(
         f"form: {form}\n"
         f"status: active\n"
         f"created: 2026-04-01\n"
-        f"about: {json.dumps(about)}\n"
+        f"about_roles: {json.dumps(about_roles)}\n"
+        f"{about_personas_line}"
         f"{in_journey_line}"
         f"{proposes_line}"
         f"---\n\n"
@@ -531,7 +569,8 @@ def test_read_narratives_parses_user_story(tmp_path: Path) -> None:
     assert "small cafe owner" in n.statement
     assert "morning rush" in n.context
     assert len(n.acceptance_cues) == 2
-    assert n.about == ["small-cafe-owner"]
+    assert n.about_roles == ["customer"]
+    assert n.about_personas == []
     assert n.in_journey is None
     assert n.proposes == []
 
@@ -557,7 +596,7 @@ def test_read_narratives_form_fallback_to_user_story(tmp_path: Path) -> None:
     (d / "weird.md").write_text(
         "---\n"
         "id: weird\nkind: narrative\nform: poem\nstatus: active\ncreated: 2026-04-01\n"
-        'about: ["buyer"]\n---\n\n'
+        'about_roles: ["buyer"]\n---\n\n'
         "# Statement\nA verse.\n\n# Context\nCtx.\n\n# Acceptance Cues\n- one\n",
         encoding="utf-8",
     )
@@ -572,24 +611,31 @@ def test_read_narratives_missing_dir_returns_empty(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# build_graph end-to-end with v4 entities
+# build_graph end-to-end with v5 Living-axis entities
 # ---------------------------------------------------------------------------
 
 
-def test_build_graph_includes_v4_living_axis(tmp_path: Path) -> None:
+def test_build_graph_includes_v5_living_axis(tmp_path: Path) -> None:
+    _write_role(tmp_path, "customer")
     _write_concept(tmp_path, "order-tracking")
-    _write_persona(tmp_path, "small-cafe-owner")
-    _write_journey(tmp_path, "first-time-checkout", walks="small-cafe-owner")
+    _write_persona(tmp_path, "small-cafe-owner", role="customer")
+    _write_journey(tmp_path, "first-time-checkout", walks="customer")
     _write_narrative(
         tmp_path,
         "rush-orders-not-lost",
+        about_roles=["customer"],
         in_journey="first-time-checkout",
         proposes=["order-tracking"],
     )
 
     graph = build_graph(tmp_path)
 
+    assert {r.id for r in graph.roles} == {"customer"}
     assert {p.id for p in graph.personas} == {"small-cafe-owner"}
     assert {j.id for j in graph.journeys} == {"first-time-checkout"}
     assert {n.id for n in graph.narratives} == {"rush-orders-not-lost"}
     assert graph.narratives[0].proposes == ["order-tracking"]
+    # All cross-refs resolve — no integrity flags.
+    assert graph.personas[0].integrity == []
+    assert graph.journeys[0].integrity == []
+    assert graph.narratives[0].integrity == []
