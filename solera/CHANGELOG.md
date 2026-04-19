@@ -1,5 +1,92 @@
 # Changelog
 
+## [4.1.0] — 2026-04-19
+
+### Added
+
+- **Data-integrity flags on Living-axis entities.** `Journey.integrity` and
+  `Narrative.integrity` are surfaced by the MCP graph parser whenever the
+  underlying file is malformed: `missing_walks` (Journey without a `walks:`
+  Persona id), `missing_about` (Narrative with an empty or absent `about:`
+  list), and `broken_in_journey_ref` (Narrative pointing at a Journey that
+  does not exist). Invalid references are preserved — not coerced to null —
+  so the canvas can show the human what they typed.
+- **Repair banners in the side panel.** Journey and Narrative views now show
+  a red banner when any integrity flag is set, each with a copyable repair
+  command (e.g. `/solera-write-journey mode=update journey_id=foo`) so the
+  human can jump straight back to the correct skill.
+- **Stronger orphan / integrity visuals on the Service canvas.** Nodes with
+  integrity issues get a thick red border, rose background, and a header
+  pill naming the concrete cause (`no walks`, `no about`, `unknown journey`)
+  with a hover tooltip. Replaces the near-invisible small orange tag.
+- **Next-step hints at skill completion.** `solera-write-persona`,
+  `solera-write-journey`, and `solera-write-narrative` now print a concrete
+  "Next:" line on `create`, pointing the human at the next skill in the
+  Living-axis flow (or the Service canvas's "Propose as Concept" action for
+  Narratives).
+- **Plan-canvas empty state.** When `.solera/concepts/` is empty, the Plan
+  canvas now shows an explicit prompt directing users to
+  `solera-write-concept` or the Service canvas's Propose action — matching
+  the Service canvas's existing empty state pattern.
+- **Canvas loading / save / connection feedback.** A spinner + "Loading
+  graph…" replaces the silent grey "loading…" text; the header now shows a
+  pulsing socket-status dot (`connecting…` / `live` / `reconnecting…` /
+  `offline`) and a transient save indicator (`saving…` → `saved` flash →
+  idle).
+- **WebSocket reconnection with exponential backoff.** `openGraphSocket`
+  retries 1s → 2s → 4s → … up to 30s on abnormal disconnects and emits
+  per-attempt status callbacks. Normal close codes (1000 / 1001) and
+  explicit rejections (1003 / 1008) stop retrying.
+
+### Changed
+
+- **Separate `layout_changed` broadcast.** The MCP file watcher now
+  classifies changes as `graph` (any `.md` or `concept-graph.json`) or
+  `layout` (pure `map-layout.json` saves). The broadcast hub emits
+  `{"event": "graph_changed"}` or `{"event": "layout_changed"}` accordingly;
+  viewers only run a full graph re-fetch on the former, keeping canvas
+  selection and side-panel state alive when the user drags a node.
+- **Side-panel mutation feedback.** `ParentSelect` now shows an inline
+  spinner while saving, retains the failed choice in a disabled state with a
+  retry button on error, and marks the select with `aria-invalid` on
+  failure. The "Propose as Concept" submit button gains a visible loading
+  state (spinner + darker background + `aria-busy`).
+- **WCAG AA contrast on tab labels and section titles.** Active-tab accents
+  and `SectionTitle` tone classes moved from 500-shades (2.1:1–4.2:1 on
+  white) to 700-shades (5.3:1–7.6:1). Inactive-tab text moved from
+  `slate-500` (4.55:1) to `slate-700` (9.59:1). Markdown link color moved to
+  `indigo-700`.
+- **`solera-help`** (`3.1.0`): Living-axis table lists `solera-write-persona`
+  / `-journey` / `-narrative`; Quick Start now walks users through drawing a
+  Persona → Journey → Narrative before Concepts; all residual "v3" language
+  removed.
+- **`solera-init`**: description and title drop the "v3" marker; completion
+  checklist points at the v4 gate keys explicitly.
+- **`solera-write-persona`**: description no longer uses the unexplained
+  phrase "service composer".
+
+### Fixed
+
+- Malformed Living-axis files no longer become silent orphans — they render
+  prominently and point the human at the exact skill + flag to repair.
+
+### Tests
+
+166 tests green — 85 Python (added 5 integrity + 2 layout-event broadcast
+tests), 49 viewer (added integrity-banner coverage), 32 extension unchanged.
+
+### Known limitations (carried over from 4.0)
+
+- VSCode AI-host MCP registration is still not wired up — deferred per the
+  current roadmap.
+- Service canvas is still a three-column swimlane, not a mindmap.
+- `solera_mcp/graph.py`, `solera_mcp/server.py`, and `viewer/src/SidePanel.tsx`
+  still exceed the project's 500-LOC SoC warning. Split planned for a later
+  minor — the integrity and feedback work in this release intentionally
+  kept surgical rather than restructuring.
+
+---
+
 ## [4.0.0] — 2026-04-19
 
 ### Unified distribution (product consolidation)
