@@ -248,8 +248,7 @@ def test_propose_from_narrative_writes_stub_concept_to_disk(
     port = live_server["port"]
     project_path: Path = live_server["project_path"]
     status, body = _http_post(
-        f"http://127.0.0.1:{port}/api/concept/propose-from-narrative"
-        f"?project_path={project_path}",
+        f"http://127.0.0.1:{port}/api/concept/propose-from-narrative?project_path={project_path}",
         {
             "narrative_id": "rush-orders",
             "concept_id": "order-tracking",
@@ -269,9 +268,9 @@ def test_propose_from_narrative_writes_stub_concept_to_disk(
     assert "name: Order Tracking" in content
 
     # Narrative's frontmatter gained the new concept_id.
-    narrative_content = (
-        project_path / ".solera" / "narratives" / "rush-orders.md"
-    ).read_text(encoding="utf-8")
+    narrative_content = (project_path / ".solera" / "narratives" / "rush-orders.md").read_text(
+        encoding="utf-8"
+    )
     assert "order-tracking" in narrative_content
 
     # Subsequent GET /api/graph returns the new Concept.
@@ -290,8 +289,7 @@ def test_propose_from_narrative_409s_on_duplicate_over_real_tcp(
 
     # First attempt writes the stub.
     status, _ = _http_post(
-        f"http://127.0.0.1:{port}/api/concept/propose-from-narrative"
-        f"?project_path={project_path}",
+        f"http://127.0.0.1:{port}/api/concept/propose-from-narrative?project_path={project_path}",
         {
             "narrative_id": "rush-orders",
             "concept_id": "auth",  # already exists in the seed

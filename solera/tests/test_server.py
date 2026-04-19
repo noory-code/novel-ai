@@ -116,9 +116,7 @@ def test_graph_endpoint_returns_graph(client: TestClient, tmp_path: Path) -> Non
     assert body["stories"] == []
 
 
-def test_graph_endpoint_missing_workspace_returns_404(
-    client: TestClient, tmp_path: Path
-) -> None:
+def test_graph_endpoint_missing_workspace_returns_404(client: TestClient, tmp_path: Path) -> None:
     r = client.get("/api/graph", params={"project_path": str(tmp_path)})
     assert r.status_code == 404
     assert "workspace" in r.json()["error"].lower()
@@ -218,9 +216,7 @@ def test_concept_patch_clears_parent(client: TestClient, tmp_path: Path) -> None
     assert profile["parent"] is None
 
 
-def test_concept_patch_rejects_unknown_parent(
-    client: TestClient, tmp_path: Path
-) -> None:
+def test_concept_patch_rejects_unknown_parent(client: TestClient, tmp_path: Path) -> None:
     _write_concept(tmp_path / ".solera", "profile")
     r = client.patch(
         "/api/concept/profile",
@@ -254,21 +250,20 @@ def test_concept_patch_rejects_cycle(client: TestClient, tmp_path: Path) -> None
     assert r.status_code == 400
 
 
-def test_concept_patch_rejects_disallowed_fields(
-    client: TestClient, tmp_path: Path
-) -> None:
+def test_concept_patch_rejects_disallowed_fields(client: TestClient, tmp_path: Path) -> None:
+    """v5.1: the Concept PATCH surface accepts name / status / intent / etc.
+    but still rejects arbitrary unknown keys."""
     _write_concept(tmp_path / ".solera", "profile")
     r = client.patch(
         "/api/concept/profile",
         params={"project_path": str(tmp_path)},
-        json={"name": "hacked"},
+        json={"totally-made-up-key": "x"},
     )
     assert r.status_code == 400
+    assert "totally-made-up-key" in r.json()["error"]
 
 
-def test_concept_patch_returns_404_for_missing_concept(
-    client: TestClient, tmp_path: Path
-) -> None:
+def test_concept_patch_returns_404_for_missing_concept(client: TestClient, tmp_path: Path) -> None:
     (tmp_path / ".solera" / "concepts").mkdir(parents=True)
     r = client.patch(
         "/api/concept/missing",
@@ -308,9 +303,7 @@ def _write_narrative_for_propose(workspace: Path, narrative_id: str) -> None:
     )
 
 
-def test_propose_from_narrative_creates_stub_concept(
-    client: TestClient, tmp_path: Path
-) -> None:
+def test_propose_from_narrative_creates_stub_concept(client: TestClient, tmp_path: Path) -> None:
     _seed_workspace(tmp_path / ".solera")  # an existing Concept dir + auth concept
     _write_narrative_for_propose(tmp_path / ".solera", "rush-orders-not-lost")
 
@@ -359,9 +352,9 @@ def test_propose_from_narrative_appends_to_narrative_proposes(
     )
     assert r.status_code == 200
 
-    narrative_text = (
-        tmp_path / ".solera" / "narratives" / "rush-orders-not-lost.md"
-    ).read_text(encoding="utf-8")
+    narrative_text = (tmp_path / ".solera" / "narratives" / "rush-orders-not-lost.md").read_text(
+        encoding="utf-8"
+    )
     assert "proposes:" in narrative_text
     assert "order-tracking" in narrative_text
 
@@ -422,9 +415,7 @@ def test_propose_from_narrative_rejects_invalid_concept_id(
     assert "kebab-case" in r.json()["error"]
 
 
-def test_propose_from_narrative_requires_all_fields(
-    client: TestClient, tmp_path: Path
-) -> None:
+def test_propose_from_narrative_requires_all_fields(client: TestClient, tmp_path: Path) -> None:
     _seed_workspace(tmp_path / ".solera")
     _write_narrative_for_propose(tmp_path / ".solera", "n1")
 

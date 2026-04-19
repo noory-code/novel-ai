@@ -65,19 +65,19 @@ class SkillValidator:
             if "## Output" in line:
                 in_output_table = True
                 continue
-            if in_output_table and (
-                line.startswith("##") or line.startswith(">")
-            ):
+            if in_output_table and (line.startswith("##") or line.startswith(">")):
                 break
             if in_output_table and "|" in line and not line.startswith("|---"):
                 parts = [p.strip() for p in line.split("|")]
                 if len(parts) >= 4 and parts[1] != "Step":
-                    outputs.append({
-                        "step": parts[1],
-                        "output": parts[2],
-                        "path": parts[3] if len(parts) > 3 else "",
-                        "nature": parts[4] if len(parts) > 4 else "",
-                    })
+                    outputs.append(
+                        {
+                            "step": parts[1],
+                            "output": parts[2],
+                            "path": parts[3] if len(parts) > 3 else "",
+                            "nature": parts[4] if len(parts) > 4 else "",
+                        }
+                    )
 
         return outputs
 
@@ -85,6 +85,7 @@ class SkillValidator:
 # ---------------------------------------------------------------------------
 # solera-write-story (v3: Story → Concepts, no phase/goal/epic)
 # ---------------------------------------------------------------------------
+
 
 def test_write_story_required_parameters():
     """write-story: required parameters match v3 three-axis model"""
@@ -99,14 +100,14 @@ def test_write_story_required_parameters():
     expected_params = {"project_path", "story_id", "story_name", "contributes_to"}
     found_params = set(required_params)
 
-    assert expected_params.issubset(found_params), \
+    assert expected_params.issubset(found_params), (
         f"Missing required parameters: {expected_params - found_params}"
+    )
 
     # Guard against regression to v2 schema
     forbidden_params = {"phase_id", "goal_id", "epic_name", "epic_branches"}
     leaked = forbidden_params & found_params
-    assert not leaked, \
-        f"v2 parameters leaked back into write-story: {leaked}"
+    assert not leaked, f"v2 parameters leaked back into write-story: {leaked}"
 
 
 def test_write_story_parameter_formats():
@@ -114,12 +115,12 @@ def test_write_story_parameter_formats():
     # story_id format: US-NNN or TS-NNN
     story_id_pattern = r"^(US|TS)-\d{3}$"
     for valid in ("US-001", "TS-014"):
-        assert re.match(story_id_pattern, valid), \
-            f"Valid story_id failed format check: {valid}"
+        assert re.match(story_id_pattern, valid), f"Valid story_id failed format check: {valid}"
 
     for invalid in ("US-1", "STORY-001", "us-001"):
-        assert not re.match(story_id_pattern, invalid), \
+        assert not re.match(story_id_pattern, invalid), (
             f"Invalid story_id passed format check: {invalid}"
+        )
 
     # story_name: kebab-case
     story_name_pattern = r"^[a-z][a-z0-9-]*[a-z0-9]$"
@@ -139,18 +140,16 @@ def test_write_story_prerequisites():
     joined = "\n".join(prerequisites)
 
     # Must mention Concept-oriented prerequisites
-    assert "concepts/_index.md" in joined, \
-        "Prerequisites must reference concepts/_index.md"
+    assert "concepts/_index.md" in joined, "Prerequisites must reference concepts/_index.md"
     assert (
-        "concepts/{id}" in joined
-        or "concepts/{id}.md" in joined
-        or "status: active" in joined
+        "concepts/{id}" in joined or "concepts/{id}.md" in joined or "status: active" in joined
     ), "Prerequisites must require each contributed Concept to exist/be active"
 
     # Guard against v2 remnants
     assert "_epic.md" not in joined, "v2 _epic.md prerequisite must not appear in v3"
-    assert "phase" not in joined.lower() or "contributes_to" in joined.lower(), \
+    assert "phase" not in joined.lower() or "contributes_to" in joined.lower(), (
         "v2 phase/goal language must not reappear"
+    )
 
 
 def test_write_story_expected_outputs():
@@ -171,13 +170,15 @@ def test_write_story_expected_outputs():
     assert "RETROSPECTIVE.md" in joined, "RETROSPECTIVE.md output must be declared"
 
     # v3-specific: Concept Current Shape updates
-    assert "Current Shape" in joined or "concepts/" in joined, \
+    assert "Current Shape" in joined or "concepts/" in joined, (
         "write-story Wrap-up must declare Concept updates as output"
+    )
 
 
 # ---------------------------------------------------------------------------
 # solera-execute-action-item (v3: no epic_name, ACT is a commit)
 # ---------------------------------------------------------------------------
+
 
 def test_execute_action_item_required_parameters():
     """execute-action-item: required parameters match v3 (no epic_name)"""
@@ -189,17 +190,22 @@ def test_execute_action_item_required_parameters():
     assert len(required_params) > 0, "No required parameters defined"
 
     expected_params = {
-        "project_path", "story_id", "story_name",
-        "action_item_id", "action_item_name",
+        "project_path",
+        "story_id",
+        "story_name",
+        "action_item_id",
+        "action_item_name",
     }
     found_params = set(required_params)
 
-    assert expected_params.issubset(found_params), \
+    assert expected_params.issubset(found_params), (
         f"Missing required parameters: {expected_params - found_params}"
+    )
 
     # Guard against v2 regression
-    assert "epic_name" not in found_params, \
+    assert "epic_name" not in found_params, (
         "v2 epic_name parameter must not reappear in execute-action-item"
+    )
 
 
 def test_execute_action_item_parameter_formats():
@@ -248,13 +254,15 @@ def test_execute_action_item_expected_outputs():
     assert any("Execute" in s for s in found_steps), "Execute step must declare outputs"
     assert any("Wrap-up" in s for s in found_steps), "Wrap-up step must declare outputs"
     assert "commit" in joined_outputs.lower(), "Wrap-up must declare a git commit as output"
-    assert "Output Artifacts" in joined_outputs, \
+    assert "Output Artifacts" in joined_outputs, (
         "Wrap-up must append Output Artifacts to parent Story (v3 invariant)"
+    )
 
 
 # ---------------------------------------------------------------------------
 # Commit message format (v3: [primary_concept][story_id][ACT-NNN])
 # ---------------------------------------------------------------------------
+
 
 def test_commit_message_format_validation():
     """Commit message follows v3 three-axis scope tag: [concept_id][story_id][ACT-NNN]"""
@@ -268,19 +276,19 @@ def test_commit_message_format_validation():
     ]
 
     for msg in valid_messages:
-        assert re.match(valid_format, msg), \
-            f"Valid commit message failed format validation: {msg}"
+        assert re.match(valid_format, msg), f"Valid commit message failed format validation: {msg}"
 
     invalid_messages = [
-        "[authentication][US-001] message",      # ACT-NNN missing
-        "[US-001][ACT-001] message",             # concept tag missing
+        "[authentication][US-001] message",  # ACT-NNN missing
+        "[US-001][ACT-001] message",  # concept tag missing
         "[authentication][US-001][ACT-1] message",  # ACT format error
         "authentication][US-001][ACT-001] message",  # malformed brackets
     ]
 
     for msg in invalid_messages:
-        assert not re.match(valid_format, msg), \
+        assert not re.match(valid_format, msg), (
             f"Invalid commit message passed format validation: {msg}"
+        )
 
 
 if __name__ == "__main__":

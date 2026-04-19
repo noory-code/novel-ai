@@ -106,9 +106,7 @@ def append_to_narrative_proposes(narrative_path: Path, concept_id: str) -> None:
 async def concept_propose_from_narrative_endpoint(request: Request) -> JSONResponse:
     project_path = request.query_params.get("project_path")
     if not project_path:
-        return JSONResponse(
-            {"error": "project_path query param is required"}, status_code=400
-        )
+        return JSONResponse({"error": "project_path query param is required"}, status_code=400)
     try:
         workspace = resolve_solera_root(project_path)
     except FileNotFoundError as exc:
@@ -153,9 +151,7 @@ async def concept_propose_from_narrative_endpoint(request: Request) -> JSONRespo
 
     narrative_path = workspace / "narratives" / f"{narrative_id}.md"
     if not narrative_path.exists():
-        return JSONResponse(
-            {"error": f"Narrative '{narrative_id}' not found"}, status_code=404
-        )
+        return JSONResponse({"error": f"Narrative '{narrative_id}' not found"}, status_code=404)
 
     concept_path = workspace / "concepts" / f"{concept_id}.md"
     if concept_path.exists():
@@ -173,16 +169,9 @@ async def concept_propose_from_narrative_endpoint(request: Request) -> JSONRespo
 
     concept_path.parent.mkdir(parents=True, exist_ok=True)
     frontmatter = (
-        f"---\n"
-        f"id: {concept_id}\n"
-        f"name: {concept_name}\n"
-        f"status: active\n"
-        f"created: {today}\n"
-        f"---\n\n"
+        f"---\nid: {concept_id}\nname: {concept_name}\nstatus: active\ncreated: {today}\n---\n\n"
     )
-    concept_path.write_text(
-        frontmatter + stub_concept_body(narrative_id, today), encoding="utf-8"
-    )
+    concept_path.write_text(frontmatter + stub_concept_body(narrative_id, today), encoding="utf-8")
 
     append_to_narrative_proposes(narrative_path, concept_id)
 

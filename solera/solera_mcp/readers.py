@@ -232,9 +232,7 @@ def read_narrative_file(path: Path) -> Narrative:
     if not about_roles:
         # Spec requires 1+ active Role on `about_roles`. Surface as orphan so
         # the human can repair via `solera-write-narrative` update.
-        _log.warning(
-            "Narrative %s has empty `about_roles` list; rendering as orphan.", path
-        )
+        _log.warning("Narrative %s has empty `about_roles` list; rendering as orphan.", path)
         integrity.append("missing_about_roles")
     return Narrative(
         id=str(narrative_id),

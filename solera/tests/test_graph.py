@@ -524,16 +524,10 @@ def _write_narrative(
     d.mkdir(parents=True, exist_ok=True)
     about_roles = about_roles if about_roles is not None else ["customer"]
     about_personas_line = (
-        f"about_personas: {json.dumps(about_personas)}\n"
-        if about_personas is not None
-        else ""
+        f"about_personas: {json.dumps(about_personas)}\n" if about_personas is not None else ""
     )
     in_journey_line = f"in_journey: {in_journey}\n" if in_journey else ""
-    proposes_line = (
-        f"proposes: {json.dumps(proposes)}\n"
-        if proposes is not None
-        else ""
-    )
+    proposes_line = f"proposes: {json.dumps(proposes)}\n" if proposes is not None else ""
     (d / f"{narrative_id}.md").write_text(
         f"---\n"
         f"id: {narrative_id}\n"

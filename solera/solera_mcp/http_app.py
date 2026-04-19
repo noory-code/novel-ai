@@ -11,10 +11,19 @@ from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from solera_mcp.api_endpoints import (
     concept_patch_endpoint,
+    concept_post_endpoint,
     graph_endpoint,
     health_endpoint,
+    journey_patch_endpoint,
+    journey_post_endpoint,
     layout_get_endpoint,
     layout_put_endpoint,
+    narrative_patch_endpoint,
+    narrative_post_endpoint,
+    persona_patch_endpoint,
+    persona_post_endpoint,
+    role_patch_endpoint,
+    role_post_endpoint,
 )
 from solera_mcp.broadcast import BroadcastHub
 from solera_mcp.concept_propose import concept_propose_from_narrative_endpoint
@@ -56,11 +65,28 @@ def create_http_app(hub: BroadcastHub | None = None) -> Starlette:
         Route("/api/graph", graph_endpoint),
         Route("/api/layout", layout_get_endpoint, methods=["GET"]),
         Route("/api/layout", layout_put_endpoint, methods=["PUT"]),
+        # Keep the specialised propose-from-narrative route BEFORE the
+        # generic `/api/concept` POST so Starlette's pattern matcher
+        # doesn't route `propose-from-narrative` through concept_post.
         Route(
             "/api/concept/propose-from-narrative",
             concept_propose_from_narrative_endpoint,
             methods=["POST"],
         ),
+        # v5.1: unified POST/PATCH surface for every Living-axis entity.
+        Route("/api/role", role_post_endpoint, methods=["POST"]),
+        Route("/api/role/{role_id}", role_patch_endpoint, methods=["PATCH"]),
+        Route("/api/persona", persona_post_endpoint, methods=["POST"]),
+        Route("/api/persona/{persona_id}", persona_patch_endpoint, methods=["PATCH"]),
+        Route("/api/journey", journey_post_endpoint, methods=["POST"]),
+        Route("/api/journey/{journey_id}", journey_patch_endpoint, methods=["PATCH"]),
+        Route("/api/narrative", narrative_post_endpoint, methods=["POST"]),
+        Route(
+            "/api/narrative/{narrative_id}",
+            narrative_patch_endpoint,
+            methods=["PATCH"],
+        ),
+        Route("/api/concept", concept_post_endpoint, methods=["POST"]),
         Route(
             "/api/concept/{concept_id}",
             concept_patch_endpoint,
