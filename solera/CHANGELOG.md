@@ -1,5 +1,54 @@
 # Changelog
 
+## [4.1.1] — 2026-04-19
+
+### Refactored
+
+Three source files exceeded the project's 500-LOC SoC warning. They have
+now been decomposed by responsibility with the public surface preserved
+via facade re-exports — no caller needs to change its imports.
+
+- **`viewer/src/SidePanel.tsx`** (736 → 128 LOC): split into
+  `panels/IdentityPanel`, `panels/ConceptPanel`, `panels/PersonaPanel`,
+  `panels/JourneyPanel`, `panels/NarrativePanel`, and `panels/helpers`
+  (shared Section / StatusChip / MetaRow / IntegrityBanner atoms).
+  Largest remaining panel is `ConceptPanel.tsx` at 244 LOC (bundles
+  `ParentSelect` / `SideToggle` with the Concept body because they only
+  apply to Concepts).
+- **`solera_mcp/graph.py`** (748 → 141 LOC): split into `models.py`
+  (Pydantic + status literals), `parsing.py` (markdown/frontmatter/table
+  helpers), `readers.py` (per-entity `read_*` functions, 420 LOC — the
+  largest remaining file), `writers.py` (`update_concept_frontmatter`,
+  `read_layout`, `write_layout`), and `integrity.py`
+  (`annotate_cross_ref_integrity`). `graph.py` now owns only
+  `build_graph` plus re-exports.
+- **`solera_mcp/server.py`** (728 → 150 LOC): split into `workspace.py`
+  (path / port helpers), `broadcast.py` (`BroadcastHub`),
+  `api_endpoints.py` (basic HTTP handlers), `concept_propose.py` (the
+  `POST /api/concept/propose-from-narrative` endpoint with its
+  Moment-1 guardrails), `http_app.py` (Starlette composition), and
+  `mcp_tools.py` (FastMCP + `get_map` + `open_map`). `server.py` keeps
+  the uvicorn/asyncio entry points and re-exports the old names.
+
+Some leading-underscore helpers were promoted to public names where
+they're now imported across files (e.g. `_status_from_icon_or_text` →
+`status_from_icon_or_text`, `_graph_for` → `graph_for`,
+`_stub_concept_body` → `stub_concept_body`). No functional change.
+
+### Tests
+
+166 green, unchanged from v4.1.0 (85 Python + 49 viewer + 32 extension).
+mypy + ruff clean. Viewer build clean.
+
+### Known limitations (carried over)
+
+- VSCode AI-host MCP registration is still not wired up — deferred.
+- Service canvas is still a three-column swimlane, not a mindmap.
+- The 500-LOC SoC warning is now resolved across all Python and viewer
+  source files; the largest file is `solera_mcp/readers.py` at 420 LOC.
+
+---
+
 ## [4.1.0] — 2026-04-19
 
 ### Added
