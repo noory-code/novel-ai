@@ -16,6 +16,9 @@ Humans own the Living axis (the drawing of the project map). AI executes the Tim
 flowchart TD
     subgraph Living["Living Axis — never ends"]
         ID[Identity<br/>Mission / Values / Vision]
+        PE[Personas<br/>who the service is for]
+        JO[Journeys<br/>steps a Persona walks]
+        NA[Narratives<br/>As a / I want / so that]
         CO[Concepts<br/>Intent / Current Design / Current Shape]
     end
 
@@ -30,6 +33,10 @@ flowchart TD
     end
 
     ID -.-> CO
+    JO -->|walks| PE
+    NA -->|about| PE
+    NA -.->|in_journey| JO
+    NA -.->|proposes| CO
     ST -->|contributes_to| CO
     ST -.->|belongs_to| MS
     AI --> ST
@@ -38,10 +45,14 @@ flowchart TD
     classDef living fill:#fff9e6,stroke:#d4a300
     classDef timebound fill:#e6f4ff,stroke:#2196F3
     classDef immutable fill:#f0f0f0,stroke:#666
-    class ID,CO living
+    class ID,PE,JO,NA,CO living
     class MS,ST,AI timebound
     class RE immutable
 ```
+
+**The Living axis splits into two clusters:**
+- **User-side** (Personas, Journeys, Narratives) — who the service is for, how they live with it. **Upstream of Concepts.**
+- **Product-side** (Identity, Concepts) — what we're building. Concepts grow out of Narratives or are drawn directly by humans.
 
 ## Items by Axis
 
@@ -52,9 +63,14 @@ Status values, transitions, and ownership tables live in [reference/axes-and-sta
 | Item | Cadence | Skill |
 |------|---------|-------|
 | **Identity** | Once | `solera-write-identity` |
+| **Persona** | Drawn upfront, evolves as understanding deepens | `solera-write-persona` |
+| **Journey** | Drawn alongside Personas, evolves with each redesign | `solera-write-journey` |
+| **Narrative** | Written ad-hoc, may propose Concepts | `solera-write-narrative` |
 | **Concept** | Always active, evolves per Story Wrap-up | `solera-write-concept` |
 
-A Concept never enters a "Complete" state. When it is no longer pursued, it is **deprecated** (kept visible for history) or **archived** (hidden from the active index, file preserved). The only path to "change the Intent" is archive-and-new.
+A Concept never enters a "Complete" state. When it is no longer pursued, it is **deprecated** (kept visible for history) or **archived** (hidden from the active index, file preserved). The only path to "change the Intent" is archive-and-new. **Personas, Journeys, and Narratives follow the same lifecycle** — they never "complete," they evolve or get deprecated/archived.
+
+Narratives `propose:` Concepts: a human writes "As a [Persona] I want [goal] so that [benefit]" and surfaces a candidate Concept from it. The Service canvas's "Propose as Concept" action creates a stub Concept whose `# Intent` is explicitly flagged "needs human review" — preserving the Moment 1 rule that AI may not invent Intent.
 
 ### Time-bound Axis
 
@@ -122,37 +138,46 @@ flowchart LR
 
 ```
 {project}/
-├── progress.md                       # current state on all three axes
-├── HANDOFF.md                        # transient session state
-└── workspace/
-    ├── identity/                     # Mission / Values / Vision
-    ├── concepts/                     # Living Axis — one file per Concept
+└── .solera/
+    ├── progress.md                       # current state on all three axes
+    ├── HANDOFF.md                        # transient session state
+    ├── identity/                         # Mission / Values / Vision
+    ├── personas/                         # Living — who the service is for
+    │   ├── _index.md
+    │   └── {persona_id}.md
+    ├── journeys/                         # Living — how a Persona moves
+    │   ├── _index.md
+    │   └── {journey_id}.md
+    ├── narratives/                       # Living — As a / I want / so that
+    │   ├── _index.md
+    │   └── {narrative_id}.md
+    ├── concepts/                         # Living — one file per Concept
     │   ├── _index.md
     │   └── {concept_id}.md
-    ├── milestones/                   # Time-bound — agreements
+    ├── milestones/                       # Time-bound — agreements
     │   ├── _index.md
     │   └── {milestone_id}.md
-    ├── stories/                      # Time-bound — flattened
+    ├── stories/                          # Time-bound — flattened
     │   └── {story_id}-{story_name}/
     │       ├── _story.md
     │       ├── ACT-NNN-{name}.md
     │       ├── RETROSPECTIVE.md
-    │       └── artifacts/            # staging for Story-produced design artifacts
-    ├── releases/                     # Immutable snapshots
+    │       └── artifacts/                # staging for Story-produced design artifacts
+    ├── releases/                         # Immutable snapshots
     │   ├── _index.md
     │   └── {release_tag}/
     │       ├── .released
     │       ├── README.md
     │       ├── concepts-snapshot/
     │       └── stories-manifest.md
-    ├── team-process.md               # gates, layers, architecture rules
+    ├── team-process.md                   # gates, layers, architecture rules
     └── catalog/
-        └── published/                # promoted design artifacts (SSOT)
-            ├── persona/
+        └── published/                    # promoted design artifacts (SSOT)
             ├── service-map/
-            ├── journey/
             ├── use-case/
             └── domain-model/
+
+**Note:** `catalog/published/persona/` and `catalog/published/journey/` from v3.x are removed in v4. Personas and Journeys are now first-class Living-axis files at `personas/` and `journeys/`, not catalog artifacts. Existing v3.x projects migrate via `solera-migrate-workspace-to-dotsolera` (which also relocates the workspace into `.solera/`).
 ```
 
 **No `phase/`, no `initiative/`, no `goals/`, no `epics/`** — those v2 layers are removed. A v2 project migrates via `solera-migrate-v2`, which freezes the old data to `_v2-archive/` and proposes Concepts from the existing Goals/Epics.

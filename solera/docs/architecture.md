@@ -19,6 +19,9 @@ flowchart TD
     WM[solera-manage-workflow<br/>supervisor]
 
     WI[solera-write-identity]
+    WPE[solera-write-persona]
+    WJO[solera-write-journey]
+    WNA[solera-write-narrative]
     WC[solera-write-concept]
     WMS[solera-write-milestone]
     WS[solera-write-story]
@@ -29,8 +32,12 @@ flowchart TD
     PR[solera-create-pr]
     HO[solera-handoff]
     MIG[solera-migrate-v2]
+    MIGW[solera-migrate-workspace-to-dotsolera]
 
     WM --> WI
+    WM --> WPE
+    WM --> WJO
+    WM --> WNA
     WM --> WC
     WM --> WMS
     WM --> WS
@@ -40,6 +47,11 @@ flowchart TD
 
     WS --> WAI
     WS --> PA
+
+    WJO -.->|walks| WPE
+    WNA -.->|about| WPE
+    WNA -.->|in_journey| WJO
+    WNA -.->|proposes| WC
 
     WMS -.->|consumes| WC
     WR -.->|consumes| WMS
@@ -61,10 +73,10 @@ flowchart TD
     classDef utility fill:#f0f8e8,stroke:#4CAF50
 
     class WM supervisor
-    class WI,WC living
+    class WI,WPE,WJO,WNA,WC living
     class WMS,WS,WAI timebound
     class WR immutable
-    class PA,PR,HO,MIG utility
+    class PA,PR,HO,MIG,MIGW utility
 ```
 
 **Solid arrows** = direct skill invocation.
@@ -78,6 +90,9 @@ flowchart TD
 flowchart LR
     subgraph Living["Living Axis"]
         ID[identity/<br/>mission, values, vision]
+        PE[personas/<br/>Identity, Goals, Pains,<br/>Triggers, Quotes]
+        JO[journeys/<br/>Trigger, Steps table,<br/>Outcome — walks one Persona]
+        NA[narratives/<br/>Statement, Context,<br/>Acceptance Cues — proposes Concepts]
         CO[concepts/<br/>Intent, Current Design,<br/>Current Shape, Contributions]
     end
 
@@ -91,9 +106,13 @@ flowchart LR
         RE[releases/{tag}/<br/>concepts-snapshot/,<br/>stories-manifest.md]
     end
 
-    CAT[catalog/published/<br/>persona, service-map, journey,<br/>use-case, domain-model]
+    CAT[catalog/published/<br/>service-map, use-case,<br/>domain-model]
 
     ID --> CO
+    JO -->|walks| PE
+    NA -->|about| PE
+    NA -.->|in_journey| JO
+    NA -.->|proposes| CO
     CO -->|referenced by| MS
     CO -->|referenced by| ST
     MS -->|frames scope for| ST
@@ -107,8 +126,9 @@ flowchart LR
 ```
 
 Key flows:
+- **Narrative → Concept (Propose):** human writes a Narrative, then either manually authors a Concept inspired by it OR uses the Service canvas's "Propose as Concept" action (creates a stub Concept whose `# Intent` is flagged "needs human review" — the Moment 1 collaboration rule still applies).
 - **Story → Concept (Wrap-up):** AI proposes updates to each contributed Concept's `# Current Shape`; human approves.
-- **Story artifacts → catalog → Concept (Story Wrap-up hook):** `solera-publish-artifacts` moves design artifacts from `stories/{id}/artifacts/` to `catalog/published/{type}/`, then registers wikilinks on each contributed Concept's `# Related Artifacts`.
+- **Story artifacts → catalog → Concept (Story Wrap-up hook):** `solera-publish-artifacts` moves design artifacts from `stories/{id}/artifacts/` to `catalog/published/{type}/`, then registers wikilinks on each contributed Concept's `# Related Artifacts`. Note: `catalog/published/persona/` and `catalog/published/journey/` from v3.x are **deprecated** — Personas and Journeys are now first-class Living-axis files in `personas/` and `journeys/`, not catalog artifacts.
 - **Milestone Exit Criteria met → Release:** `solera-release` reads the milestone's scope, snapshots each in-scope Concept, lists contributing Stories, freezes the result.
 
 ---
@@ -177,45 +197,53 @@ The write-* skill expands the block to match actual rows when it creates the doc
 
 ```
 [project]/
-├── progress.md                         # current pointers on all three axes
-├── HANDOFF.md                          # transient per-session state
-└── workspace/
-    ├── identity/                       # Living — one-time
-    ├── concepts/                       # Living — evolves
+└── .solera/
+    ├── progress.md                         # current pointers on all three axes
+    ├── HANDOFF.md                          # transient per-session state
+    ├── identity/                           # Living — one-time
+    ├── personas/                           # Living — who the service is for
+    │   ├── _index.md
+    │   └── {persona_id}.md
+    ├── journeys/                           # Living — steps a Persona walks
+    │   ├── _index.md
+    │   └── {journey_id}.md
+    ├── narratives/                         # Living — As a / I want / so that
+    │   ├── _index.md
+    │   └── {narrative_id}.md
+    ├── concepts/                           # Living — evolves
     │   ├── _index.md
     │   └── {concept_id}.md
-    ├── milestones/                     # Time-bound — agreement
+    ├── milestones/                         # Time-bound — agreement
     │   ├── _index.md
     │   └── {milestone_id}.md
-    ├── stories/                        # Time-bound — execution
+    ├── stories/                            # Time-bound — execution
     │   └── {story_id}-{story_name}/
     │       ├── _story.md
     │       ├── ACT-NNN-{name}.md
     │       ├── RETROSPECTIVE.md
-    │       └── artifacts/              # staging before publish
-    ├── releases/                       # Immutable
+    │       └── artifacts/                  # staging before publish
+    ├── releases/                           # Immutable
     │   ├── _index.md
     │   └── {release_tag}/
     │       ├── .released
     │       ├── README.md
     │       ├── concepts-snapshot/
     │       └── stories-manifest.md
-    ├── team-process.md                 # gates, layers, arch rules
+    ├── team-process.md                     # gates, layers, arch rules
     └── catalog/
-        └── published/                  # SSOT for promoted artifacts
-            ├── persona/
+        └── published/                      # SSOT for promoted artifacts
             ├── service-map/
-            ├── journey/
             ├── use-case/
             └── domain-model/
 ```
 
 **SSOT invariants:**
 
-- `progress.md` is the single source for "where this project is right now" — which Concepts are active, which Milestone is in flight, which Story and Action Item are current.
-- `catalog/published/` is the only authoritative location for a promoted design artifact. The same file is never duplicated between `stories/{id}/artifacts/` and `catalog/published/` — `solera-publish-artifacts` moves (not copies).
+- `.solera/progress.md` is the single source for "where this project is right now" — which Concepts are active, which Milestone is in flight, which Story and Action Item are current.
+- `.solera/catalog/published/` is the only authoritative location for a promoted design artifact. The same file is never duplicated between `stories/{id}/artifacts/` and `catalog/published/` — `solera-publish-artifacts` moves (not copies).
 - Each Concept owns its own `# Contributions` and `# Related Artifacts` — the single canonical record of "what advanced this Concept."
-- A written Release is immutable. `releases/{tag}/.released` marks this for other skills and humans.
+- A written Release is immutable. `.solera/releases/{tag}/.released` marks this for other skills and humans.
+- **v3 → v4 migration**: projects with `workspace/` at the project root run `solera-migrate-workspace-to-dotsolera` once to relocate to `.solera/`. Backward compat in solera-map v0.1.x reads both layouts; dropped in v0.2.0.
 
 ---
 
