@@ -2,7 +2,7 @@
   "name": "solera",
   "displayName": "Solera",
   "description": "AI-driven project workflow with a mindmap canvas. Four views (Service / Plan / Build / Live) over .solera/ data. Bundles an MCP server so Copilot / Claude / Gemini and any VSCode AI assistant can read the same graph.",
-  "version": "4.2.0",
+  "version": "5.0.0",
   "publisher": "noory-code",
   "license": "MIT",
   "engines": {

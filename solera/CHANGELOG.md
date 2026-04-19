@@ -1,5 +1,109 @@
 # Changelog
 
+## [5.0.0] — 2026-04-19
+
+Major version. Breaking schema change: `Role` is a new Living-axis
+entity, `Persona` becomes its optional archetype, the Service canvas is
+renamed to **Actors** and reshaped around an Identity-centric Role
+tree. v4.x workspaces need the one-shot
+`solera-migrate-v4-to-v5` skill to upgrade.
+
+### Why
+
+banas and similar projects kept using "Persona" for both *structural
+user classes* (admin / fan / hero / 3rd-party) and *individual
+archetypes* ("30대 성덕 Alice"). Those are two different levels of
+description, and conflating them made the Service canvas semantics
+ambiguous — there was no way to draw the structural shape of an
+audience first and deepen individual verticals later. v5 gives each
+its own entity.
+
+### Added
+
+- **`Role` entity** (Living axis). Fields: `id`, `name`, `status`,
+  `description`, optional `context`, optional `parent` (sub-role
+  chain), `integrity[]`. Full status grammar (active / deprecated /
+  archived) identical to Concept. Stored under `.solera/roles/*.md`.
+- **`solera-write-role` skill** (1.0.0) with four modes
+  (create / update / deprecate / archive), parent cycle / self /
+  archive validation, Moment 1 collaboration rule.
+- **`solera-migrate-v4-to-v5` skill** (1.0.0) — BLOCKING, idempotent,
+  per-Persona AskUserQuestion workflow that promotes Personas to
+  Roles, splits `about:` into `about_roles` + `about_personas`,
+  re-stamps `walks:` semantics, and writes
+  `.solera/MIGRATION-v4-to-v5.md` with every decision.
+- **`RolePanel`** in the viewer showing description / context / parent
+  / sub-roles / personas / journeys / narratives + integrity banners
+  for broken_parent_ref and inactive_parent_ref.
+- **Integrity flags**: `missing_role`, `broken_role_ref`,
+  `inactive_role_ref` (Persona); `broken_walks_ref`,
+  `inactive_walks_ref` (Journey now resolves against Roles);
+  `missing_about_roles`, `broken_about_role_ref`,
+  `broken_about_persona_ref`, `legacy_about_field` (Narrative);
+  `broken_parent_ref`, `inactive_parent_ref` (Role).
+
+### Changed (BREAKING)
+
+- **`Persona.role`** is now a required field. Every Persona must
+  declare its parent Role. Missing `role:` surfaces as
+  `missing_role` integrity flag; running
+  `solera-migrate-v4-to-v5` is the supported path to populate it.
+- **`Journey.walks`** semantically references a Role id (was
+  Persona id in v4). A new `Journey.walked_by: list[str]` captures
+  optional Persona archetypes for concrete cases.
+- **`Narrative.about`** split into `Narrative.about_roles: list[str]`
+  (1+ required) and `Narrative.about_personas: list[str]`
+  (optional). Readers tolerate the legacy `about:` key by coercing
+  it to `about_roles` and raising `legacy_about_field` — the
+  migration skill clears this.
+- **Service canvas → Actors canvas.** `ServiceCanvas.tsx` renamed to
+  `ActorsCanvas.tsx`. `WorkspaceLens`: `"service"` →
+  `"actors"`. Tab label reads **Actors**. Layout is Identity-
+  centric: Roles form the first ring, sub-roles nest outward,
+  Journeys sit one radius further, Narratives one radius beyond
+  their Journey (or in their Role's wedge), Personas are small
+  satellites next to their Role.
+- **`solera-write-persona`** (2.0.0): `role:` parameter required in
+  create; prerequisite flips from "≥1 Persona" to "≥1 Role".
+- **`solera-write-journey`** (2.0.0): `walks` resolves against
+  Roles; `walked_by` parameter added.
+- **`solera-write-narrative`** (2.0.0): `about` split into
+  `about_roles` / `about_personas`.
+- **`solera-init`** (4.0.0): seeds `.solera/roles/` +
+  `roles/_index.md`; v5 vs v4 vs v3 vs v2 detection with routing to
+  the correct migration skill. Fresh-setup wording updated.
+- **`solera-help`** (4.0.0): Living-axis table exposes
+  `solera-write-role`; Quick Start walks through Role → Persona
+  (optional) → Journey → Narrative → Concept.
+- **`axes-and-status.md`**: Role added to the three-axis table,
+  mermaid diagram updated with the new cross-axis relations
+  (persona.role, journey.walks→Role, journey.walked_by,
+  narrative.about_roles, narrative.about_personas), Role status
+  grammar row, ownership column header renamed Actor to avoid the
+  Role-entity collision.
+
+### Migration
+
+Run `/solera-migrate-v4-to-v5` inside any v4 workspace. The skill
+makes a single atomic commit once the human approves the per-file
+decisions. Existing `_v2-archive/` workspaces go v2 → v4 → v5 by
+chaining `solera-migrate-v2` then `solera-migrate-v4-to-v5`.
+
+### Tests
+
+Total up to ~147: 96 Python (85 pre-Role + 11 new Role/integrity)
+and 51 viewer (49 pre-Role + 2 new ActorsCanvas tests) green; mypy
+and ruff clean; vite build clean.
+
+### Known limitations (carried over)
+
+- **VSCode AI-host MCP registration** still not wired up — deferred.
+- **v5.1 editable canvas** (in-browser CRUD for Role / Persona /
+  Journey / Narrative) is explicitly out of scope for v5.0 and ships
+  next.
+
+---
+
 ## [4.2.0] — 2026-04-19
 
 ### Changed (canvas redesign — resolves founding-principle violation)
