@@ -248,6 +248,7 @@ export function buildServiceFlowElements(
     const isSelected = selection?.kind === "journey" && selection.id === journey.id;
     const orphan =
       !journey.walks || !personas.some((p) => p.id === journey.walks);
+    const hasIntegrityIssue = journey.integrity.length > 0 || orphan;
     nodes.push({
       id,
       position: positionOf(id, autoPositions.get(id) ?? { x: COL_JOURNEY_X, y: 0 }),
@@ -255,9 +256,13 @@ export function buildServiceFlowElements(
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
       style: {
-        background: journey.status === "deprecated" ? "#fef3c7" : "#eff6ff",
-        border: `${isSelected ? 3 : 2}px solid ${
-          isSelected ? "#6366f1" : orphan ? "#fb923c" : "#93c5fd"
+        background: hasIntegrityIssue
+          ? "#fef2f2"
+          : journey.status === "deprecated"
+            ? "#fef3c7"
+            : "#eff6ff",
+        border: `${isSelected || hasIntegrityIssue ? 3 : 2}px solid ${
+          isSelected ? "#6366f1" : hasIntegrityIssue ? "#ef4444" : "#93c5fd"
         }`,
         borderRadius: 12,
         padding: "10px 14px",
@@ -272,19 +277,26 @@ export function buildServiceFlowElements(
     const id = `narrative:${narrative.id}`;
     const isSelected =
       selection?.kind === "narrative" && selection.id === narrative.id;
+    const hasIntegrityIssue = narrative.integrity.length > 0;
     nodes.push({
       id,
       position: positionOf(id, autoPositions.get(id) ?? { x: COL_NARRATIVE_X, y: 0 }),
       data: { label: renderNarrativeLabel(narrative) },
       targetPosition: Position.Left,
       style: {
-        background: narrative.status === "deprecated" ? "#fef3c7" : "#f0fdf4",
-        border: `${isSelected ? 3 : 2}px solid ${
+        background: hasIntegrityIssue
+          ? "#fef2f2"
+          : narrative.status === "deprecated"
+            ? "#fef3c7"
+            : "#f0fdf4",
+        border: `${isSelected || hasIntegrityIssue ? 3 : 2}px solid ${
           isSelected
             ? "#6366f1"
-            : narrative.proposes.length > 0
-              ? "#86efac"
-              : "#bbf7d0"
+            : hasIntegrityIssue
+              ? "#ef4444"
+              : narrative.proposes.length > 0
+                ? "#86efac"
+                : "#bbf7d0"
         }`,
         borderRadius: 12,
         padding: "10px 14px",
@@ -374,13 +386,18 @@ function renderPersonaLabel(persona: Persona): React.ReactNode {
 }
 
 function renderJourneyLabel(journey: Journey, orphan: boolean): React.ReactNode {
+  const hasIntegrityIssue = journey.integrity.length > 0 || orphan;
   return (
     <div className="flex flex-col gap-1 text-left">
       <div className="flex items-center gap-2">
         <span className="text-[10px] uppercase tracking-wide text-blue-500">Journey</span>
-        {orphan && (
-          <span className="text-[10px] uppercase tracking-wide text-orange-600">
-            ⚠ orphan
+        {hasIntegrityIssue && (
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 ring-1 ring-red-300"
+            title={integrityTooltip("journey", journey.integrity, orphan)}
+          >
+            <span aria-hidden>⚠</span>
+            <span>{integrityShortLabel(journey.integrity, orphan)}</span>
           </span>
         )}
         {journey.status !== "active" && (
@@ -413,12 +430,22 @@ function renderNarrativeLabel(narrative: Narrative): React.ReactNode {
       : narrative.form === "scenario"
         ? "text-teal-500"
         : "text-emerald-500";
+  const hasIntegrityIssue = narrative.integrity.length > 0;
   return (
     <div className="flex flex-col gap-1 text-left">
       <div className="flex items-center gap-2">
         <span className={`text-[10px] uppercase tracking-wide ${formColor}`}>
           {narrative.form.replace("_", " ")}
         </span>
+        {hasIntegrityIssue && (
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 ring-1 ring-red-300"
+            title={integrityTooltip("narrative", narrative.integrity, false)}
+          >
+            <span aria-hidden>⚠</span>
+            <span>{integrityShortLabel(narrative.integrity, false)}</span>
+          </span>
+        )}
         {narrative.status !== "active" && (
           <span className="text-[10px] uppercase tracking-wide text-amber-600">
             {narrative.status}
@@ -436,4 +463,36 @@ function renderNarrativeLabel(narrative: Narrative): React.ReactNode {
       )}
     </div>
   );
+}
+
+function integrityShortLabel(flags: string[], orphan: boolean): string {
+  if (flags.includes("missing_walks")) return "no walks";
+  if (flags.includes("missing_about")) return "no about";
+  if (flags.includes("broken_in_journey_ref")) return "unknown journey";
+  if (orphan) return "orphan";
+  return "issue";
+}
+
+function integrityTooltip(
+  kind: "journey" | "narrative",
+  flags: string[],
+  orphan: boolean,
+): string {
+  const messages: string[] = [];
+  if (flags.includes("missing_walks")) {
+    messages.push("`walks` Persona id is missing — required for a Journey.");
+  }
+  if (flags.includes("missing_about")) {
+    messages.push("`about` list is empty — a Narrative requires 1+ Personas.");
+  }
+  if (flags.includes("broken_in_journey_ref")) {
+    messages.push("`in_journey` references a Journey that doesn't exist.");
+  }
+  if (orphan && !flags.includes("missing_walks")) {
+    messages.push("This Journey walks a Persona that doesn't exist or is inactive.");
+  }
+  if (messages.length === 0) {
+    return `${kind} has an integrity issue — open the side panel for details.`;
+  }
+  return messages.join(" ");
 }

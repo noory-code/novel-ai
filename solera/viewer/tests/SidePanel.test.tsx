@@ -66,6 +66,7 @@ const mkJourney = (id: string, walks: string, overrides: Partial<Journey> = {}):
   steps: [],
   outcome: `${id} outcome sentence.`,
   parent: null,
+  integrity: [],
   ...overrides,
 });
 
@@ -79,6 +80,7 @@ const mkNarrative = (id: string, overrides: Partial<Narrative> = {}): Narrative 
   about: ["alice"],
   in_journey: null,
   proposes: [],
+  integrity: [],
   ...overrides,
 });
 
@@ -199,7 +201,7 @@ describe("SidePanel — JourneyBody", () => {
     expect(screen.getByText(/alice/i)).toBeInTheDocument();
   });
 
-  it("flags an orphan when walks Persona doesn't exist", () => {
+  it("flags an integrity issue when walks Persona doesn't exist", () => {
     const graph = baseGraph({
       // No personas; journey walks a ghost.
       journeys: [mkJourney("ghost-walk", "missing-persona")],
@@ -213,10 +215,29 @@ describe("SidePanel — JourneyBody", () => {
       />,
     );
 
-    expect(screen.getByText(/orphan/i)).toBeInTheDocument();
-    // The MetaRow falls back to the raw walks id when the Persona isn't
-    // found — surfaces "missing-persona" so the human knows what's wrong.
-    expect(screen.getByText(/missing-persona/)).toBeInTheDocument();
+    // Header chip announces the integrity problem at a glance.
+    expect(screen.getByText(/integrity/i)).toBeInTheDocument();
+    // IntegrityBanner surfaces the concrete repair target — the missing
+    // Persona id — so the human knows exactly what to draw.
+    expect(screen.getAllByText(/missing-persona/).length).toBeGreaterThan(0);
+  });
+
+  it("surfaces an integrity banner when the walks field is absent", () => {
+    const graph = baseGraph({
+      // `walks` omitted entirely — Python parser flags this as `missing_walks`.
+      journeys: [mkJourney("adrift", "", { walks: "", integrity: ["missing_walks"] })],
+    });
+
+    render(
+      <SidePanel
+        graph={graph}
+        selection={{ kind: "journey", id: "adrift" }}
+        {...baseProps}
+      />,
+    );
+
+    expect(screen.getByText(/integrity/i)).toBeInTheDocument();
+    expect(screen.getByText(/no Persona/i)).toBeInTheDocument();
   });
 
   it("renders steps in order with stage / touchpoint / emotion / pain", () => {

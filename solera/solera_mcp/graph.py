@@ -101,6 +101,12 @@ class Journey(BaseModel):
     steps: list[JourneyStep] = Field(default_factory=list)
     outcome: str
     parent: str | None = None  # Journey ID; None = top-level
+    integrity: list[str] = Field(default_factory=list)
+    """Data-integrity flags surfaced to the canvas so the human can repair the file.
+
+    Canonical values: ``missing_walks`` (no ``walks`` Persona id in frontmatter).
+    Future passes may add ``broken_walks_ref`` / ``inactive_walks_ref``.
+    """
 
 
 class Narrative(BaseModel):
@@ -120,6 +126,13 @@ class Narrative(BaseModel):
     about: list[str] = Field(default_factory=list)  # Persona IDs, 1+
     in_journey: str | None = None  # Journey ID, optional
     proposes: list[str] = Field(default_factory=list)  # Concept IDs, populated by canvas action
+    integrity: list[str] = Field(default_factory=list)
+    """Data-integrity flags surfaced to the canvas so the human can repair the file.
+
+    Canonical values: ``missing_about`` (``about`` list empty — spec requires 1+),
+    ``broken_in_journey_ref`` (``in_journey`` references a Journey not present in
+    the graph). Set during :func:`build_graph`'s integrity pass.
+    """
 
 
 class ConceptEdge(BaseModel):
@@ -420,6 +433,9 @@ def read_journey_file(path: Path) -> Journey:
         # solera-write-journey update.
         _log.warning("Journey %s has no `walks` Persona id; rendering as orphan.", path)
     parent = fm.get("parent")
+    integrity: list[str] = []
+    if not walks:
+        integrity.append("missing_walks")
     return Journey(
         id=str(journey_id),
         name=fm.get("name", journey_id.replace("-", " ").title()),
@@ -429,6 +445,7 @@ def read_journey_file(path: Path) -> Journey:
         steps=_parse_journey_steps_table(sections.get("Steps", "")),
         outcome=sections.get("Outcome", "").strip(),
         parent=str(parent) if parent else None,
+        integrity=integrity,
     )
 
 
@@ -453,6 +470,13 @@ def read_narrative_file(path: Path) -> Narrative:
     form: NarrativeForm = (
         raw_form if raw_form in ("user_story", "jtbd", "scenario") else "user_story"
     )
+    about = _coerce_id_list(fm.get("about"))
+    integrity: list[str] = []
+    if not about:
+        # Spec requires 1+ active Personas on `about`. Surface as orphan so the
+        # human can repair via `solera-write-narrative` update.
+        _log.warning("Narrative %s has empty `about` list; rendering as orphan.", path)
+        integrity.append("missing_about")
     return Narrative(
         id=str(narrative_id),
         form=form,
@@ -460,9 +484,10 @@ def read_narrative_file(path: Path) -> Narrative:
         statement=sections.get("Statement", "").strip(),
         context=sections.get("Context", "").strip(),
         acceptance_cues=_parse_bullet_list(sections.get("Acceptance Cues", "")),
-        about=_coerce_id_list(fm.get("about")),
+        about=about,
         in_journey=str(fm["in_journey"]) if fm.get("in_journey") else None,
         proposes=_coerce_id_list(fm.get("proposes")),
+        integrity=integrity,
     )
 
 
@@ -734,11 +759,14 @@ def build_graph(workspace: Path) -> Graph:
     The parameter name is historical; it points at whichever layout exists.
     """
     stories, action_items = read_stories(workspace)
+    journeys = read_journeys(workspace)
+    narratives = read_narratives(workspace)
+    _annotate_cross_ref_integrity(journeys, narratives)
     return Graph(
         identity=read_identity(workspace),
         personas=read_personas(workspace),
-        journeys=read_journeys(workspace),
-        narratives=read_narratives(workspace),
+        journeys=journeys,
+        narratives=narratives,
         concepts=read_concepts(workspace),
         concept_edges=read_concept_graph(workspace),
         milestones=read_milestones(workspace),
@@ -746,3 +774,20 @@ def build_graph(workspace: Path) -> Graph:
         action_items=action_items,
         releases=read_releases(workspace),
     )
+
+
+def _annotate_cross_ref_integrity(
+    journeys: list[Journey], narratives: list[Narrative]
+) -> None:
+    """Second pass: flag cross-entity reference breaks.
+
+    Per-file :func:`read_*_file` only sees one file at a time, so refs like
+    ``Narrative.in_journey`` can only be validated once every file has been
+    read. This pass appends ``broken_in_journey_ref`` where applicable; other
+    cross-ref flags can be added here without touching the single-file readers.
+    """
+    journey_ids = {j.id for j in journeys}
+    for n in narratives:
+        if n.in_journey and n.in_journey not in journey_ids:
+            if "broken_in_journey_ref" not in n.integrity:
+                n.integrity.append("broken_in_journey_ref")

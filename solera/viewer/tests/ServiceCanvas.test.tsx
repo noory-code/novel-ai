@@ -32,6 +32,7 @@ const mkJourney = (id: string, walks: string, overrides: Partial<Journey> = {}):
   steps: [],
   outcome: `Outcome for ${id}.`,
   parent: null,
+  integrity: [],
   ...overrides,
 });
 
@@ -45,6 +46,7 @@ const mkNarrative = (id: string, overrides: Partial<Narrative> = {}): Narrative 
   about: ["alice"],
   in_journey: null,
   proposes: [],
+  integrity: [],
   ...overrides,
 });
 

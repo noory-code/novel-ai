@@ -49,6 +49,9 @@ export interface Journey {
   steps: JourneyStep[];
   outcome: string;
   parent: string | null;
+  // Data-integrity flags from the MCP parser: e.g. `missing_walks`. Canvas and
+  // SidePanel surface these so the human can repair the underlying file.
+  integrity: string[];
 }
 
 export interface Narrative {
@@ -61,6 +64,9 @@ export interface Narrative {
   about: string[];
   in_journey: string | null;
   proposes: string[];
+  // Data-integrity flags from the MCP parser: e.g. `missing_about`,
+  // `broken_in_journey_ref`. Canvas and SidePanel surface these.
+  integrity: string[];
 }
 
 export interface ConceptEdge {

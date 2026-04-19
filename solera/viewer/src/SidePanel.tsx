@@ -403,6 +403,51 @@ function EmptyState({ text }: { text: string }) {
   return <p className="text-sm italic text-slate-400">{text}</p>;
 }
 
+function IntegrityBanner({
+  title,
+  detail,
+  repair,
+}: {
+  title: string;
+  detail: React.ReactNode;
+  repair: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    void navigator.clipboard.writeText(repair).then(
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      },
+      () => {
+        // Clipboard denied: fall back to selecting — the user can still copy
+        // manually. Swallow the rejection rather than throw.
+      },
+    );
+  };
+  return (
+    <div className="space-y-2 rounded-md border border-red-300 bg-red-50 p-3 text-[12px] text-red-900">
+      <div className="flex items-center gap-2">
+        <span aria-hidden className="text-base">
+          ⚠
+        </span>
+        <strong className="font-semibold">{title}</strong>
+      </div>
+      <p className="text-red-800">{detail}</p>
+      <div className="flex items-center gap-2 rounded border border-red-200 bg-white px-2 py-1 font-mono text-[11px] text-red-800">
+        <span className="flex-1 select-all break-all">{repair}</span>
+        <button
+          onClick={copy}
+          className="rounded bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700 hover:bg-red-200"
+          type="button"
+        >
+          {copied ? "copied" : "copy"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // v4 Living-axis body components (Persona, Journey, Narrative)
 // ---------------------------------------------------------------------------
@@ -458,6 +503,7 @@ function JourneyBody({ graph, journeyId }: { graph: Graph; journeyId: string }) 
 
   const persona = graph.personas.find((p) => p.id === journey.walks);
   const narratives = graph.narratives.filter((n) => n.in_journey === journey.id);
+  const orphanWalksRef = Boolean(journey.walks) && !persona;
 
   return (
     <div className="space-y-4">
@@ -466,13 +512,32 @@ function JourneyBody({ graph, journeyId }: { graph: Graph; journeyId: string }) 
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-400">
           <span className="font-mono">{journey.id}</span>
           <StatusChip status={journey.status} />
-          {!persona && journey.walks && (
-            <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-medium text-orange-700">
-              ⚠ orphan
+          {(journey.integrity.length > 0 || orphanWalksRef) && (
+            <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700 ring-1 ring-red-300">
+              ⚠ integrity
             </span>
           )}
         </div>
       </header>
+      {journey.integrity.includes("missing_walks") && (
+        <IntegrityBanner
+          title="This Journey has no Persona."
+          detail={
+            <>
+              A Journey must declare the Persona it is walked by via{" "}
+              <code>walks:</code> in the frontmatter.
+            </>
+          }
+          repair={`/solera-write-journey mode=update journey_id=${journey.id}`}
+        />
+      )}
+      {orphanWalksRef && !journey.integrity.includes("missing_walks") && (
+        <IntegrityBanner
+          title={`walks Persona "${journey.walks}" is missing or inactive.`}
+          detail="Draw the Persona first, or update this Journey's `walks` to a known active Persona."
+          repair={`/solera-write-persona mode=create persona_id=${journey.walks}`}
+        />
+      )}
       <MetaRow
         label="Walks"
         value={persona ? persona.name : journey.walks || "(none — orphan)"}
@@ -555,8 +620,33 @@ function NarrativeBody({
             {narrative.form.replace("_", " ")}
           </span>
           <StatusChip status={narrative.status} />
+          {narrative.integrity.length > 0 && (
+            <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700 ring-1 ring-red-300">
+              ⚠ integrity
+            </span>
+          )}
         </div>
       </header>
+      {narrative.integrity.includes("missing_about") && (
+        <IntegrityBanner
+          title="This Narrative has no Persona."
+          detail={
+            <>
+              A Narrative must declare at least one active Persona via{" "}
+              <code>about:</code> in the frontmatter. Without it the Narrative
+              is disconnected on the Service canvas.
+            </>
+          }
+          repair={`/solera-write-narrative mode=update narrative_id=${narrative.id}`}
+        />
+      )}
+      {narrative.integrity.includes("broken_in_journey_ref") && (
+        <IntegrityBanner
+          title={`in_journey "${narrative.in_journey}" does not exist.`}
+          detail="The Journey referenced here is missing from the workspace. Either draw the Journey or update this Narrative to detach or point at an existing one."
+          repair={`/solera-write-journey mode=create journey_id=${narrative.in_journey ?? ""}`}
+        />
+      )}
       <MetaRow
         label="About"
         value={
