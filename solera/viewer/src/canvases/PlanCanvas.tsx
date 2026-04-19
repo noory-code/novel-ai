@@ -37,6 +37,10 @@ interface PlanCanvasProps {
   onLayoutChange: (next: Layout) => void;
   onSelect: (selection: SelectedNode | null) => void;
   selection: SelectedNode | null;
+  /** v5.1: workspace path for CRUD. */
+  projectPath: string;
+  /** v5.1: called after a server mutation so the graph can be re-read. */
+  onMutated: () => void;
 }
 
 const LEVEL_STEP_X = 280;
@@ -60,7 +64,14 @@ export function PlanCanvas({
   onLayoutChange,
   onSelect,
   selection,
+  projectPath,
+  onMutated,
 }: PlanCanvasProps) {
+  // v5.1 scope note: `projectPath` / `onMutated` are passed through for
+  // Concept inline-edit wiring in Commit 4; consumed there via a new
+  // PlanLabels module mirroring the ActorsLabels pattern.
+  void projectPath;
+  void onMutated;
   const { nodes, edges } = useMemo(
     () => buildFlowElements(graph, lens, layout, selection),
     [graph, lens, layout, selection],

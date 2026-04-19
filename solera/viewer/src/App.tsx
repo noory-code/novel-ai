@@ -134,6 +134,8 @@ export function App() {
                 onLayoutChange={persistLayout}
                 onSelect={setSelection}
                 selection={selection}
+                projectPath={projectPath}
+                onMutated={() => void reload()}
               />
             ) : (
               <PlanCanvas
@@ -143,6 +145,8 @@ export function App() {
                 onLayoutChange={persistLayout}
                 onSelect={setSelection}
                 selection={selection}
+                projectPath={projectPath}
+                onMutated={() => void reload()}
               />
             )
           ) : (
