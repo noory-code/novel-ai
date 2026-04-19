@@ -1,5 +1,59 @@
 # Changelog
 
+## [4.2.0] — 2026-04-19
+
+### Changed (canvas redesign — resolves founding-principle violation)
+
+- **Service canvas is now a Persona-centric radial mindmap.** The v4.0
+  three-column swimlane (Persona | Journey | Narrative) violated the
+  founding "UI must be mindmap graph" principle and was flagged in the
+  v4.0.0 *Known limitations #2*. The new layout:
+  - Each Persona is the hub of its own radial cluster.
+  - Its Journeys radiate on the inner ring (radius 220) distributed
+    evenly clockwise from 12 o'clock.
+  - Its Narratives sit on the outer ring (radius 400). Anchored
+    Narratives (`in_journey`) fan out around their Journey's angle;
+    loose Narratives fill the angular midpoints between Journeys.
+  - Multiple Personas → multiple clusters on a 3-per-row grid (900px
+    spacing). Orphan Journeys + fully-loose Narratives get a dedicated
+    row below the clusters so the integrity banners stay easy to find.
+  - User drag positions persist via `layout.nodes` — identical contract
+    to PlanCanvas, so the two canvases share one mental model.
+- Service-canvas nodes dropped their hard-coded `sourcePosition` /
+  `targetPosition` hints. React Flow now picks the best edge routing
+  for the current angle, which is the only reasonable behavior when
+  there's no "inbound side" in radial placement.
+- Node widths trimmed 20–40px (Persona 260–300, Journey 280–320,
+  Narrative 240–300) because radial wants slightly more compact cards
+  to read as a ring rather than a list.
+
+### Behavioural breaking (no API break)
+
+- Any `map-layout.json` positions persisted under the old 3-column
+  coordinate system will simply render at those coordinates — the user
+  can drag to reorganize. No migration skill needed. New clusters
+  without stored positions get the new radial layout by default.
+
+### Known limitations (carried over)
+
+- **VSCode AI-host MCP registration** is still not wired up — explicitly
+  deferred. Claude Code plugin users are unaffected.
+- The v4.0.0 *Known limitations #2* (ServiceCanvas swimlane) is now
+  **RESOLVED** by this release.
+
+### Verification
+
+Visual verification via Playwright against a synthetic 3-Persona /
+4-Journey / 5-Narrative workspace:
+- Multi-Journey Persona renders the canonical radial mindmap shape.
+- Single-Journey Personas render with one radial spoke (geometrically a
+  chain — the mindmap shape emerges with density, as expected).
+
+166 tests green (85 Python + 49 viewer + 32 extension). mypy + ruff
+clean. Viewer build clean.
+
+---
+
 ## [4.1.1] — 2026-04-19
 
 ### Refactored
@@ -204,7 +258,7 @@ Two real canvas components, four lenses:
 
 1. **VSCode AI-host MCP registration is NOT wired up yet.** The extension spawns the MCP server and its Webview consumes it over HTTP, but `contributes.mcpServerDefinitionProviders` is not declared — so Copilot / Claude extension / Gemini inside VSCode cannot auto-discover this MCP. To be added in a patch release; earlier drafts of this CHANGELOG overstated the current state.
 
-2. **Service canvas layout is swimlane, not mindmap.** The founding principle "UI must be mindmap graph" (human+AI co-draw for cognition) is honored by the Plan canvas but not the Service canvas (3-column layout: Persona | Journey | Narrative). Under review — may change in a later minor if the swimlane choice is judged to drift from product identity.
+2. **Service canvas layout is swimlane, not mindmap.** The founding principle "UI must be mindmap graph" (human+AI co-draw for cognition) is honored by the Plan canvas but not the Service canvas (3-column layout: Persona | Journey | Narrative). Under review — may change in a later minor if the swimlane choice is judged to drift from product identity. **[Resolved in 4.2.0: Persona-centric radial.]**
 
 3. **3 files exceed the project's 500-LOC SoC warning**: `solera_mcp/graph.py` (748), `solera_mcp/server.py` (720), `viewer/src/SidePanel.tsx` (736). Split planned for v4.1.
 
