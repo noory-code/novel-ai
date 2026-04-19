@@ -1,5 +1,42 @@
 # Changelog
 
+## [4.0.0] — 2026-04-19
+
+### Breaking
+
+- **Workspace layout moved from `workspace/` to `.solera/`**. All Solera-managed data (identity, personas, journeys, narratives, concepts, milestones, stories, releases, catalog, team-process) now lives under a single dotfolder, hidden from default IDE / file-tree views (matching `.git/`, `.vscode/`, `.idea/` conventions). Top-level `progress.md` and `HANDOFF.md` move to `.solera/progress.md` and `.solera/HANDOFF.md`.
+- Existing v3.x projects must run the new **`solera-migrate-workspace-to-dotsolera`** skill to migrate. Idempotent, git-tracked, single commit. The `solera-map` plugin v0.1.x reads both layouts during the transition; v0.2.0 will drop the `workspace/` fallback.
+- `solera-init` now detects v4 (`.solera/`), v3 (`workspace/` with `concepts/` or `milestones/`), or v2 (`workspace/` with `initiative/` or `phase/`) and routes to the appropriate migration skill.
+- `solera-migrate-v2` now produces v4 (`.solera/`) output directly — no need to chain through `solera-migrate-workspace-to-dotsolera` for v2 projects. Skill version bumps to `2.0.0`.
+- v3 catalog `persona/` and `journey/` types are no longer first-class catalog entries. `solera-migrate-v2` parks any existing v2 catalog persona/journey artifacts under `_unclassified/persona-from-v3-catalog/` and `_unclassified/journey-from-v3-catalog/` for human re-homing via the new write skills.
+
+### Added
+
+- **Living-axis expansion** — three new entity types upstream of Concepts:
+  - **Persona** (`solera-write-persona`) — who the service is for. Identity / Goals / Pains / Triggers / Quotes / Channels / Related cross-links. Status grammar `active`/`deprecated`/`archived`, identical to Concept.
+  - **Journey** (`solera-write-journey`) — sequence of steps a Persona walks. Trigger / Steps (markdown table) / Outcome / Related. `walks` is required and points at exactly one active Persona.
+  - **Narrative** (`solera-write-narrative`) — "As a / I want / so that" (or JTBD / scenario). Statement / Context / Acceptance Cues / Related. May `proposes:` Concepts. Distinct from Solera's existing Time-bound `Story` work item — Narratives are upstream of Concepts, not work units.
+- All three follow the same Living-axis status grammar as Concept (`active`/`deprecated`/`archived`); see `axes-and-status.md`.
+- **New cross-axis relations**: `walks` (Journey → Persona, required, exactly one), `about` (Narrative → Persona, 1+, required), `in_journey` (Narrative → Journey, 0..1, optional), `proposes` (Narrative → Concept, 0+, optional).
+- **`solera-init` Step 3** seeds the new entity directories (`personas/`, `journeys/`, `narratives/`) and their `_index.md` files automatically. Six index files exist after `solera-init` (was three).
+- **`solera-init` initial `progress.md`** lists Active Personas / Journeys / Narratives alongside Active Concepts.
+- **New skill `solera-migrate-workspace-to-dotsolera`** — single-commit, idempotent, BLOCKING-confirmation migration for v3 projects to relocate `workspace/` and top-level `progress.md`/`HANDOFF.md` into `.solera/`.
+
+### Changed
+
+- **`solera-publish-artifacts`**: catalog destinations under `.solera/catalog/published/` no longer recognize `persona/` or `journey/` (those are first-class Living-axis files now). Existing v4 projects can still write design artifacts of other types (`service-map/`, `use-case/`, `domain-model/`, etc.) unchanged.
+- **`solera-migrate-v2`**: Workflow rewritten for v4 destination. Adds `v2_source_path` (default `{project_path}/workspace`) and `solera_path` (default `{project_path}/.solera`) parameters; legacy `workspace_path` references in the skill's body are interpreted as `solera_path`. Step 7 final report points users to `solera-write-persona` / `solera-write-journey` / `solera-write-narrative` for re-homing v3 catalog artifacts.
+- **`solera-handoff`** writes to `.solera/HANDOFF.md` instead of project-root `HANDOFF.md`.
+- Plugin description and keywords updated to reference the new entity types.
+
+### Notes
+
+This is a major bump because the on-disk layout changed in a breaking way. The Living/Time-bound/Immutable axis model itself is unchanged — Personas, Journeys, and Narratives join Identity and Concepts on the existing Living axis, preserving the MECE-by-time-relationship structure. There is no new axis.
+
+The Workflow-as-SSOT rule continues to apply: each new entity template carries a `## Workflow` section that the supervisor reads. The `solera-map` plugin's "Propose as Concept" canvas action (new in solera-map v0.1.0) creates a stub Concept whose `# Intent` is explicitly flagged "needs human review per solera-write-concept Moment 1 rule" — preserving the Moment 1 collaboration constraint.
+
+---
+
 ## [3.5.0] — 2026-04-18
 
 ### Added
