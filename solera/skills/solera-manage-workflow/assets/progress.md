@@ -5,7 +5,7 @@ Document for tracking the project's current state on all three axes: Living (Con
 ## Location
 
 ```
-{project_path}/progress.md
+{project_path}/.solera/progress.md
 ```
 
 ## Template
@@ -16,6 +16,18 @@ Document for tracking the project's current state on all three axes: Living (Con
 > Last updated: {YYYY-MM-DD HH:MM}
 
 ## Living Axis
+
+**Active Personas** ({count}):
+<!-- Extracted from personas/_index.md `## Active` section -->
+- (none yet — run `solera-write-persona`)
+
+**Active Journeys** ({count}):
+<!-- Extracted from journeys/_index.md `## Active` section -->
+- (none yet — run `solera-write-journey`)
+
+**Active Narratives** ({count}):
+<!-- Extracted from narratives/_index.md `## Active` section -->
+- (none yet — run `solera-write-narrative`)
 
 **Active Concepts** ({count}):
 <!-- Extracted from concepts/_index.md `## Active` section -->

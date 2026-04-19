@@ -8,34 +8,41 @@ Project-wide rules referenced by all Solera skills. Axis definitions, ownership,
 
 ```
 {project}/
-├── progress.md                       # current state on all three axes
-├── HANDOFF.md                        # transient session state
-└── workspace/
-    ├── identity/                     # mission, values, vision
-    ├── concepts/                     # Living Axis — one file per Concept
+└── .solera/
+    ├── progress.md                       # current state on all three axes
+    ├── HANDOFF.md                        # transient session state
+    ├── identity/                         # mission, values, vision
+    ├── personas/                         # Living — who the service is for
+    │   ├── _index.md
+    │   └── {persona_id}.md
+    ├── journeys/                         # Living — steps a Persona walks
+    │   ├── _index.md
+    │   └── {journey_id}.md
+    ├── narratives/                       # Living — As a / I want / so that
+    │   ├── _index.md
+    │   └── {narrative_id}.md
+    ├── concepts/                         # Living — one file per Concept
     │   ├── _index.md
     │   └── {concept_id}.md
-    ├── milestones/                   # Time-bound — agreements
+    ├── milestones/                       # Time-bound — agreements
     │   ├── _index.md
     │   └── {milestone_id}.md
-    ├── stories/                      # Time-bound — flattened
+    ├── stories/                          # Time-bound — flattened
     │   └── {story_id}-{story_name}/
     │       ├── _story.md
     │       ├── ACT-NNN-{name}.md
     │       └── RETROSPECTIVE.md
-    ├── releases/                     # Immutable snapshots
+    ├── releases/                         # Immutable snapshots
     │   ├── _index.md
     │   └── {release_tag}/
     │       ├── .released
     │       ├── README.md
     │       ├── concepts-snapshot/
     │       └── stories-manifest.md
-    ├── team-process.md               # team conventions (gates, layers, architecture rules)
+    ├── team-process.md                   # team conventions (gates, layers, architecture rules)
     └── catalog/
-        └── published/                # promoted design artifacts
-            ├── persona/
+        └── published/                    # promoted design artifacts
             ├── service-map/
-            ├── journey/
             ├── use-case/
             └── domain-model/
 ```

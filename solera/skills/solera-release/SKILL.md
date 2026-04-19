@@ -37,9 +37,9 @@ Unlike Concept / Milestone / Story files, a Release is **not a work item**. It h
 
 ## Prerequisites
 
-- `{project_path}/workspace/milestones/{milestone_id}.md` exists with `status: released` (set via `solera-write-milestone --mode=mark-released`).
-- `{project_path}/workspace/concepts/` contains every Concept listed in the milestone's `# Scope`.
-- `{project_path}/workspace/releases/` directory (created by `solera-init` or on first invocation).
+- `{project_path}/.solera/milestones/{milestone_id}.md` exists with `status: released` (set via `solera-write-milestone --mode=mark-released`).
+- `{project_path}/.solera/concepts/` contains every Concept listed in the milestone's `# Scope`.
+- `{project_path}/.solera/releases/` directory (created by `solera-init` or on first invocation).
 
 ## Input
 
@@ -54,7 +54,7 @@ Unlike Concept / Milestone / Story files, a Release is **not a work item**. It h
 
 | Step | Output | Path | Nature |
 |------|--------|------|--------|
-| Create | Release directory | `{project_path}/workspace/releases/{release_tag}/` | Final (immutable) |
+| Create | Release directory | `{project_path}/.solera/releases/{release_tag}/` | Final (immutable) |
 | Create | Release README | `releases/{release_tag}/README.md` | Final (immutable) |
 | Create | Concepts snapshot | `releases/{release_tag}/concepts-snapshot/*.md` | Final (immutable) |
 | Create | Stories manifest | `releases/{release_tag}/stories-manifest.md` | Final (immutable) |
@@ -65,7 +65,7 @@ Unlike Concept / Milestone / Story files, a Release is **not a work item**. It h
 
 ### 1. Setup
 
-- [ ] Confirm `{project_path}/workspace/milestones/{milestone_id}.md` exists and has `status: released`.
+- [ ] Confirm `{project_path}/.solera/milestones/{milestone_id}.md` exists and has `status: released`.
   - If status is `agreed` or `in-progress`: stop and advise `solera-write-milestone --mode=mark-released` first.
   - If file is missing: stop.
 - [ ] Read the milestone's `# Scope` section; extract the list of Concept IDs.
@@ -195,7 +195,7 @@ Skill(name="solera-release", args={
 
 After success, tree:
 ```
-banas/workspace/releases/
+banas/.solera/releases/
 ├── _index.md                         # updated
 └── v0.1-mvp/
     ├── .released

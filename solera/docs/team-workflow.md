@@ -233,7 +233,7 @@ Claude reads the Milestone's Exit Criteria, compares each to the current Concept
 
 ## Recommended Team Setup
 
-- [ ] Keep `workspace/identity/`, `workspace/concepts/`, `workspace/milestones/`, `workspace/releases/`, `workspace/team-process.md` in git — these are the shared project truth.
+- [ ] Keep `.solera/identity/`, `.solera/concepts/`, `.solera/milestones/`, `.solera/releases/`, `.solera/team-process.md` in git — these are the shared project truth.
 - [ ] Commit `progress.md` after each significant state change (Story complete, Milestone agreed, Release cut).
 - [ ] Decide on `HANDOFF.md` handling:
   - Add `HANDOFF.md` to `.gitignore` if each contributor's handoff is private (most teams).

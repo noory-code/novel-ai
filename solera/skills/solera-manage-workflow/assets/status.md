@@ -5,7 +5,7 @@ Status document for work awaiting human approval.
 ## Location
 
 ```
-{project_path}/workspace/pending/{task-name}/_status.md
+{project_path}/.solera/pending/{task-name}/_status.md
 ```
 
 > Rarely used. Prefer inline BLOCKING steps inside the relevant skill's Workflow. This template exists for ad-hoc human-approval gates outside the standard skill flow.

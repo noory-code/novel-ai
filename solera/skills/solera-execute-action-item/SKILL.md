@@ -27,7 +27,7 @@ This skill is the bridge between **일** (the commit-sized unit of work) and **�
 
 ## Prerequisites
 
-- `{project_path}/workspace/stories/{story_id}-{story_name}/_story.md` exists with `status: 🔄` or `⏳`.
+- `{project_path}/.solera/stories/{story_id}-{story_name}/_story.md` exists with `status: 🔄` or `⏳`.
 - The ACT must be listed in the `_story.md` Action Items table.
 - All prerequisite ACTs named in `depends_on` must be ✅ complete.
 
@@ -50,7 +50,7 @@ This skill is the bridge between **일** (the commit-sized unit of work) and **�
 | Wrap-up | ACT status ✅ + commit hash | `{story_path}/ACT-NNN-{name}.md` | Final |
 | Wrap-up | Output Artifacts row on Story | `{story_path}/_story.md` — appends to `# Output Artifacts` | Final |
 
-> `{story_path}` = `{project_path}/workspace/stories/{story_id}-{story_name}`
+> `{story_path}` = `{project_path}/.solera/stories/{story_id}-{story_name}`
 
 ## Skill Resolution
 
@@ -90,7 +90,7 @@ This skill is the bridge between **일** (the commit-sized unit of work) and **�
 - [ ] Tests pass (Green).
 - [ ] Confirm all files listed in `output_paths` exist.
 - [ ] **Architecture check** (when `architecture_rules.rules` is non-empty in team-process.md):
-  - Read `architecture_rules.rules` from `{project_path}/workspace/team-process.md`.
+  - Read `architecture_rules.rules` from `{project_path}/.solera/team-process.md`.
   - For each rule:
     - Collect files matching `rule.scope` via Glob.
     - Intersect with this ACT's changed files (`output_paths` + `git diff --name-only`).

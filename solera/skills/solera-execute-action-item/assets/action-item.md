@@ -88,7 +88,7 @@ Defines the decomposition unit of a Story that corresponds to a single commit.
 ## Folder Structure
 
 ```
-{project_path}/workspace/stories/{story_id}-{story_name}/
+{project_path}/.solera/stories/{story_id}-{story_name}/
 ├── _story.md
 ├── ACT-001-{name}.md
 ├── ACT-002-{name}.md

@@ -25,7 +25,7 @@ metadata:
 
 ## Prerequisites
 
-- `{project_path}/progress.md` exists; if not, initialize from [assets/progress.md](assets/progress.md).
+- `{project_path}/.solera/progress.md` exists; if not, initialize from [assets/progress.md](assets/progress.md).
 
 ## Input
 
@@ -38,7 +38,7 @@ metadata:
 
 | Action | Output | Path |
 |--------|--------|------|
-| start / complete | progress.md update | `{project_path}/progress.md` |
+| start / complete | progress.md update | `{project_path}/.solera/progress.md` |
 | complete (Story) | RETROSPECTIVE.md written | `{story_path}/RETROSPECTIVE.md` |
 | next | Next work item decided | — |
 | check | Current state report | — |

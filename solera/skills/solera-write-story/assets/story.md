@@ -154,7 +154,7 @@ created: {YYYY-MM-DD}
 ## Folder Structure
 
 ```
-{project_path}/workspace/stories/{story_id}-{story_name}/
+{project_path}/.solera/stories/{story_id}-{story_name}/
 ├── _story.md
 ├── RETROSPECTIVE.md                  # created at Wrap-up
 ├── ACT-001-{name}.md

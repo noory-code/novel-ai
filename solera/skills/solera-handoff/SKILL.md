@@ -23,7 +23,7 @@ None (auto-detects current session state)
 
 | Step | Output | Path | Nature |
 |------|--------|------|--------|
-| Create/Update | HANDOFF.md | Project root | Transient |
+| Create/Update | HANDOFF.md | `{project_path}/.solera/HANDOFF.md` | Transient |
 
 ## Procedure
 
@@ -40,11 +40,11 @@ Collect the following information to understand the current session's work:
 
 2. **Check Todo list**: Review the current session's todo list state
 
-3. **Read progress.md**: Check the current state on all three axes (active Concepts, active Milestone, current Story, current Action Item, latest Release) via the [solera-manage-workflow](../solera-manage-workflow/SKILL.md) skill
+3. **Read `.solera/progress.md`**: Check the current state on all three axes (active Concepts, active Milestone, current Story, current Action Item, latest Release) via the [solera-manage-workflow](../solera-manage-workflow/SKILL.md) skill
 
 ### Step 2: Read HANDOFF.md
 
-1. Attempt to read `HANDOFF.md`
+1. Attempt to read `.solera/HANDOFF.md`
 2. If the file does not exist, create a new one referencing [assets/handoff-template.md](assets/handoff-template.md)
 
 ### Step 3: Update sections
@@ -69,9 +69,9 @@ Update the following sections based on information collected in Step 1:
 
 | Failure point | Condition | Recovery procedure |
 |---------------|-----------|-------------------|
-| HANDOFF.md read failure | File does not exist | Create a new one at the project root (reference template) |
+| HANDOFF.md read failure | File does not exist | Create a new one at `.solera/HANDOFF.md` (reference template) |
 | Cannot determine current work | git diff/log is empty | Ask the user: "What did you accomplish this session?" |
-| HANDOFF.md write failure | Permission error | Run `chmod 644 HANDOFF.md` and retry |
+| HANDOFF.md write failure | Permission error | Run `chmod 644 .solera/HANDOFF.md` and retry |
 
 ## When to Use
 

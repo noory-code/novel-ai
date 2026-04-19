@@ -10,11 +10,13 @@ Solera does **not** collect, transmit, or store any data on external servers. Al
 
 | File | Purpose | Location |
 |------|---------|----------|
-| `team-process.md` | Team workflow configuration | `{project}/workspace/` |
-| `progress.md` | Current work item position | `{project}/` |
-| `HANDOFF.md` | Session context for continuity | `{project}/` |
-| `_goal.md`, `_epic.md`, `_story.md` | Work item definitions | `{project}/phase/...` |
-| Artifact files | Use cases, personas, journeys, concepts | `{project}/phase/.../artifacts/` |
+| `team-process.md` | Team workflow configuration | `{project}/.solera/` |
+| `progress.md` | Current work item position | `{project}/.solera/` |
+| `HANDOFF.md` | Session context for continuity | `{project}/.solera/` |
+| `identity/`, `personas/`, `journeys/`, `narratives/`, `concepts/` | Living-axis files | `{project}/.solera/` |
+| `_story.md`, `ACT-NNN-*.md`, `RETROSPECTIVE.md` | Time-bound work item definitions | `{project}/.solera/stories/{story_id}-{name}/` |
+| `_index.md` files | Per-axis indices | `{project}/.solera/{axis-folder}/` |
+| Artifact files | Use cases, service maps, domain models, etc. | `{project}/.solera/catalog/published/...` |
 
 ## Third-Party Services
 

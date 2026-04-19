@@ -32,7 +32,7 @@ At Wrap-up the AI proposes updates to each contributed Concept's Current Shape; 
 
 ## Prerequisites
 
-- `{project_path}/workspace/concepts/_index.md` exists with at least one active Concept.
+- `{project_path}/.solera/concepts/_index.md` exists with at least one active Concept.
 - Each Concept in `contributes_to` must exist at `concepts/{id}.md` with `status: active`.
 - If `belongs_to` is provided: the Milestone file exists with `status: agreed` or `in-progress`.
 
@@ -51,13 +51,13 @@ At Wrap-up the AI proposes updates to each contributed Concept's Current Shape; 
 
 | Step | Output | Path | Nature |
 |------|--------|------|--------|
-| Create | `_story.md` | `{project_path}/workspace/stories/{story_id}-{story_name}/_story.md` | Final |
+| Create | `_story.md` | `{project_path}/.solera/stories/{story_id}-{story_name}/_story.md` | Final |
 | Create | `ACT-NNN-{name}.md` (one per Action Item) | `{story_path}/ACT-NNN-{name}.md` | Final |
 | Wrap-up | `RETROSPECTIVE.md` | `{story_path}/RETROSPECTIVE.md` | Final |
 | Wrap-up | Concept Current Shape updates | `concepts/{id}.md` (each contributed) | Final |
 | Wrap-up | Concept Contributions row | `concepts/{id}.md` | Final |
 
-> `{story_path}` = `{project_path}/workspace/stories/{story_id}-{story_name}`
+> `{story_path}` = `{project_path}/.solera/stories/{story_id}-{story_name}`
 
 ## Skills Used
 
@@ -69,13 +69,13 @@ At Wrap-up the AI proposes updates to each contributed Concept's Current Shape; 
 
 ### 1. Setup
 
-- [ ] Confirm `{project_path}/workspace/concepts/_index.md` exists; stop otherwise and advise `solera-write-concept`.
+- [ ] Confirm `{project_path}/.solera/concepts/_index.md` exists; stop otherwise and advise `solera-write-concept`.
 - [ ] **Gate `concept.align` check** (blocking):
   - Built-in validation (always runs): `contributes_to` is present and non-empty; for each `concept_id` in `contributes_to`, Glob `concepts/{concept_id}.md` must exist and have `status: active`. On failure: halt with a clear error listing missing IDs.
   - Additional `checks[]` from team-process.md (if configured): run each entry as described in **Gate check execution** below. Halt on any failure.
 - [ ] If `belongs_to` is provided: read `milestones/{belongs_to}.md`; status must be `agreed` or `in-progress`. Halt otherwise.
 - [ ] Check for previous Story retrospectives: `Glob stories/*/RETROSPECTIVE.md` — if any exist, read the most recent and apply any "AI Improvements" noted there.
-- [ ] Read `{project_path}/workspace/team-process.md` if it exists; extract `workflow_gates` for Steps 4–5 and `execution_order.groups` / `architecture_rules` for Step 3.
+- [ ] Read `{project_path}/.solera/team-process.md` if it exists; extract `workflow_gates` for Steps 4–5 and `execution_order.groups` / `architecture_rules` for Step 3.
 - [ ] Create branch `story/{story_id}-{story_name}` from the current base branch (usually `main` or `dev`).
 - [ ] Create `{story_path}/` folder.
 - [ ] Status → 🔄.

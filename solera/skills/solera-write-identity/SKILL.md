@@ -34,15 +34,15 @@ In v3, the output of this skill is **all on the Living axis** — it never creat
 
 | Step | Output | Path |
 |------|--------|------|
-| Create | Mission | `{project_path}/workspace/identity/mission.md` |
-| Create | Core Values | `{project_path}/workspace/identity/core-values.md` |
-| Create | Vision | `{project_path}/workspace/identity/vision_1.md` |
-| Create (optional) | Rough directions | `{project_path}/workspace/identity/rough-directions.md` |
+| Create | Mission | `{project_path}/.solera/identity/mission.md` |
+| Create | Core Values | `{project_path}/.solera/identity/core-values.md` |
+| Create | Vision | `{project_path}/.solera/identity/vision_1.md` |
+| Create (optional) | Rough directions | `{project_path}/.solera/identity/rough-directions.md` |
 
 ## Procedure
 
 1. **Discovery Interview**
-   - [ ] If `team-process.md` exists at `{project_path}/workspace/team-process.md`, read it and skip questions already answered
+   - [ ] If `team-process.md` exists at `{project_path}/.solera/team-process.md`, read it and skip questions already answered
    - [ ] If `service_name` is not provided, ask: "What is the name of your service?"
    - [ ] If `target_user` is not provided, ask: "Who are the primary users of this service?"
    - [ ] Gather persona details for each user type via the following questions.
@@ -69,28 +69,28 @@ In v3, the output of this skill is **all on the Living axis** — it never creat
    - [ ] Write a one-sentence mission statement: "For [who], through [how], we build [what]."
    - [ ] Define key terms used in the mission
    - [ ] Write the underlying philosophy (beliefs that support the mission)
-   - [ ] Save to `{project_path}/workspace/identity/mission.md`
+   - [ ] Save to `{project_path}/.solera/identity/mission.md`
 
 3. **Define Core Values** — ref: [assets/core-values.md](assets/core-values.md)
    - [ ] Define 3–5 core values
    - [ ] For each value, write a decision-making criterion: "When in doubt, ask: [question]"
-   - [ ] Save to `{project_path}/workspace/identity/core-values.md`
+   - [ ] Save to `{project_path}/.solera/identity/core-values.md`
 
 4. **Define Vision** — ref: [assets/vision.md](assets/vision.md)
    - [ ] Describe a concrete future state the service aims to reach
    - [ ] Write measurable achievement conditions (checklist format)
-   - [ ] Save to `{project_path}/workspace/identity/vision_1.md`
+   - [ ] Save to `{project_path}/.solera/identity/vision_1.md`
 
 5. **Draft rough directions (optional)** — ref: [assets/goals.md](assets/goals.md)
    - [ ] Ask the human: "Would you like to jot down rough directions you want this service to go? These are not commitments — they become candidates for the first Concepts you draw."
    - [ ] If yes: collect a short bulleted list, linked to core values where relevant.
-   - [ ] Save to `{project_path}/workspace/identity/rough-directions.md`.
+   - [ ] Save to `{project_path}/.solera/identity/rough-directions.md`.
    - [ ] If no: skip — directions will emerge as you draw Concepts.
 
 ## Folder Structure
 
 ```
-{project_path}/workspace/
+{project_path}/.solera/
 └── identity/
     ├── mission.md
     ├── core-values.md

@@ -34,7 +34,7 @@ This skill is a **hook**, not a work item. It runs once as part of `solera-write
 ## Prerequisites
 
 - Called by `solera-write-story` during Step 5 (Wrap-up), after all ACTs are ✅ and RETROSPECTIVE.md is written.
-- The Story folder `{project_path}/workspace/stories/{story_id}-{story_name}/` exists.
+- The Story folder `{project_path}/.solera/stories/{story_id}-{story_name}/` exists.
 - The Story's `_story.md` frontmatter has non-empty `contributes_to`.
 
 ## Input
@@ -49,7 +49,7 @@ This skill is a **hook**, not a work item. It runs once as part of `solera-write
 
 | Step | Output | Path | Nature |
 |------|--------|------|--------|
-| Move | Promoted artifact files | `{project_path}/workspace/catalog/published/{type}/` | Final |
+| Move | Promoted artifact files | `{project_path}/.solera/catalog/published/{type}/` | Final |
 | Tag | Version header line | Each promoted file's header | Final |
 | Link | `# Related Artifacts` row | Each contributed `concepts/{id}.md` | Final |
 
@@ -57,7 +57,7 @@ This skill is a **hook**, not a work item. It runs once as part of `solera-write
 
 ### 1. Discover artifacts to publish
 
-- [ ] Read `{project_path}/workspace/stories/{story_id}-{story_name}/_story.md`.
+- [ ] Read `{project_path}/.solera/stories/{story_id}-{story_name}/_story.md`.
 - [ ] Extract `contributes_to` from frontmatter (list of concept IDs; must be non-empty).
 - [ ] Scan the Story's staging directory for design artifacts:
   - Path: `{story_path}/artifacts/{type}/`
@@ -72,7 +72,7 @@ This skill is a **hook**, not a work item. It runs once as part of `solera-write
 
 ### 2. Verify destination
 
-- [ ] Ensure `{project_path}/workspace/catalog/published/` exists; `mkdir -p` if not.
+- [ ] Ensure `{project_path}/.solera/catalog/published/` exists; `mkdir -p` if not.
 - [ ] For each artifact type in the batch: ensure `catalog/published/{type}/` exists; `mkdir -p` if not.
 
 ### 3. Tag + move each artifact
@@ -105,7 +105,7 @@ For each claimed artifact:
 
 For each `concept_id` in `contributes_to`:
 
-- [ ] Read `{project_path}/workspace/concepts/{concept_id}.md`.
+- [ ] Read `{project_path}/.solera/concepts/{concept_id}.md`.
 - [ ] Locate the `# Related Artifacts` section.
 - [ ] For each artifact moved in Step 3, ensure a link line exists under the appropriate category (Personas / Service Map / Journey / Use Cases / Domain Model / External):
   ```
@@ -142,16 +142,16 @@ For each `concept_id` in `contributes_to`:
 
 | Artifact type (source dir) | Destination |
 |---|---|
-| `persona/` | `workspace/catalog/published/persona/` |
-| `service-map/` | `workspace/catalog/published/service-map/` |
-| `journey/` | `workspace/catalog/published/journey/` |
-| `use-case/` | `workspace/catalog/published/use-case/` |
-| `domain-model/` | `workspace/catalog/published/domain-model/` |
-| `erd/` | `workspace/catalog/published/schema/` |
-| `dto/` | `workspace/catalog/published/dto/` |
-| `api-spec/` | `workspace/catalog/published/api/` |
-| `reference/` | `workspace/catalog/published/reference/` |
-| **(unknown type)** | `workspace/catalog/published/_unclassified/{type}/` (requires BLOCKING confirmation at Step 1) |
+| `persona/` | `.solera/catalog/published/persona/` |
+| `service-map/` | `.solera/catalog/published/service-map/` |
+| `journey/` | `.solera/catalog/published/journey/` |
+| `use-case/` | `.solera/catalog/published/use-case/` |
+| `domain-model/` | `.solera/catalog/published/domain-model/` |
+| `erd/` | `.solera/catalog/published/schema/` |
+| `dto/` | `.solera/catalog/published/dto/` |
+| `api-spec/` | `.solera/catalog/published/api/` |
+| `reference/` | `.solera/catalog/published/reference/` |
+| **(unknown type)** | `.solera/catalog/published/_unclassified/{type}/` (requires BLOCKING confirmation at Step 1) |
 
 > Types not on this table go to `_unclassified/` as a fallback so no artifact is silently dropped. If `_unclassified/` fills with a recurring type, extend this mapping (bump the skill version) so future Stories route that type to a proper home.
 

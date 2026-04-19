@@ -45,9 +45,9 @@ This skill handles four modes:
 
 ## Prerequisites
 
-- `{project_path}/workspace/identity/mission.md` should exist (human knows who they are before drawing the map).
+- `{project_path}/.solera/identity/mission.md` should exist (human knows who they are before drawing the map).
   - If not: ask the user to invoke `solera-write-identity` first.
-- `{project_path}/workspace/concepts/` directory (created by `solera-init` or on first `create`).
+- `{project_path}/.solera/concepts/` directory (created by `solera-init` or on first `create`).
 
 ## Input
 
@@ -63,17 +63,17 @@ This skill handles four modes:
 
 | Step | Output | Path | Nature |
 |------|--------|------|--------|
-| Create | Concept file | `{project_path}/workspace/concepts/{concept_id}.md` | Final |
-| Wrap-up | Updated index | `{project_path}/workspace/concepts/_index.md` | Final |
+| Create | Concept file | `{project_path}/.solera/concepts/{concept_id}.md` | Final |
+| Wrap-up | Updated index | `{project_path}/.solera/concepts/_index.md` | Final |
 
 ## Procedure
 
 ### 1. Setup
 
-- [ ] Confirm `{project_path}/workspace/identity/mission.md` exists (Glob). If missing, stop and ask user to run `solera-write-identity`.
-- [ ] Ensure `{project_path}/workspace/concepts/` exists; create if missing.
-- [ ] Ensure `{project_path}/workspace/concepts/_index.md` exists; if missing, scaffold from [assets/_index-template.md](assets/_index-template.md).
-- [ ] Resolve concept file path: `{project_path}/workspace/concepts/{concept_id}.md`.
+- [ ] Confirm `{project_path}/.solera/identity/mission.md` exists (Glob). If missing, stop and ask user to run `solera-write-identity`.
+- [ ] Ensure `{project_path}/.solera/concepts/` exists; create if missing.
+- [ ] Ensure `{project_path}/.solera/concepts/_index.md` exists; if missing, scaffold from [assets/_index-template.md](assets/_index-template.md).
+- [ ] Resolve concept file path: `{project_path}/.solera/concepts/{concept_id}.md`.
 - [ ] Branch by `mode`:
   - `create` — file must **not** exist → proceed to Create.
   - `update` / `deprecate` / `archive` — file **must** exist → proceed to Update.
@@ -177,7 +177,7 @@ This skill handles four modes:
 
 ### 6. Wrap-up
 
-- [ ] Update `{project_path}/workspace/concepts/_index.md`:
+- [ ] Update `{project_path}/.solera/concepts/_index.md`:
   - `active` section lists all files with `status: active`, linked, **indented by parent chain**:
     - Top-level Concepts (no `parent:`) at indent 0.
     - Each child at its parent's indent + 2 spaces.

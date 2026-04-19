@@ -39,10 +39,10 @@ AI must produce at least **one analysis round per iteration** — never silently
 
 ## Prerequisites
 
-- `{project_path}/workspace/concepts/_index.md` exists with at least one active Concept.
+- `{project_path}/.solera/concepts/_index.md` exists with at least one active Concept.
   - If not: stop and ask the user to run `solera-write-concept` first.
-- `{project_path}/workspace/identity/mission.md` exists.
-- `{project_path}/workspace/milestones/` directory (created by `solera-init` or on first invocation).
+- `{project_path}/.solera/identity/mission.md` exists.
+- `{project_path}/.solera/milestones/` directory (created by `solera-init` or on first invocation).
 
 ## Input
 
@@ -58,17 +58,17 @@ AI must produce at least **one analysis round per iteration** — never silently
 
 | Step | Output | Path | Nature |
 |------|--------|------|--------|
-| Create | Milestone file | `{project_path}/workspace/milestones/{milestone_id}.md` | Final |
-| Wrap-up | Updated index | `{project_path}/workspace/milestones/_index.md` | Final |
+| Create | Milestone file | `{project_path}/.solera/milestones/{milestone_id}.md` | Final |
+| Wrap-up | Updated index | `{project_path}/.solera/milestones/_index.md` | Final |
 
 ## Procedure
 
 ### 1. Setup
 
-- [ ] Confirm `{project_path}/workspace/concepts/_index.md` exists and contains ≥1 active Concept. If not, stop and advise `solera-write-concept`.
-- [ ] Ensure `{project_path}/workspace/milestones/` exists; create if missing.
-- [ ] Ensure `{project_path}/workspace/milestones/_index.md` exists; if missing, scaffold from [assets/_index-template.md](assets/_index-template.md).
-- [ ] Read `{project_path}/workspace/team-process.md` if it exists; extract `workflow_gates.milestone.agree` for use at the agreement boundary in Step 2.3.
+- [ ] Confirm `{project_path}/.solera/concepts/_index.md` exists and contains ≥1 active Concept. If not, stop and advise `solera-write-concept`.
+- [ ] Ensure `{project_path}/.solera/milestones/` exists; create if missing.
+- [ ] Ensure `{project_path}/.solera/milestones/_index.md` exists; if missing, scaffold from [assets/_index-template.md](assets/_index-template.md).
+- [ ] Read `{project_path}/.solera/team-process.md` if it exists; extract `workflow_gates.milestone.agree` for use at the agreement boundary in Step 2.3.
 - [ ] Branch by `mode`:
   - `create` — file must **not** exist → proceed to Create.
   - `update` — file must exist with `status ∈ {proposed, agreed, in-progress}` → proceed to Update.

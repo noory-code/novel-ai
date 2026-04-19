@@ -29,9 +29,15 @@ Solera creates:
 
 ```
 task-app/
-├── progress.md                            # v3 three-axis format
-└── workspace/
+└── .solera/                               # v4 dotfolder root
+    ├── progress.md                        # v3 three-axis format
     ├── identity/
+    ├── personas/
+    │   └── _index.md
+    ├── journeys/
+    │   └── _index.md
+    ├── narratives/
+    │   └── _index.md
     ├── concepts/
     │   └── _index.md
     ├── milestones/
@@ -49,12 +55,15 @@ It also installs `.claude/rules/solera-workflow.md` and conducts a short kickoff
 **Verify:**
 
 ```
-task-app/progress.md                     ← exists
-task-app/workspace/concepts/             ← exists
-task-app/workspace/milestones/           ← exists
-task-app/workspace/stories/              ← exists
-task-app/workspace/releases/             ← exists
-task-app/workspace/team-process.md       ← exists
+task-app/.solera/progress.md            ← exists
+task-app/.solera/concepts/              ← exists
+task-app/.solera/personas/              ← exists
+task-app/.solera/journeys/              ← exists
+task-app/.solera/narratives/            ← exists
+task-app/.solera/milestones/            ← exists
+task-app/.solera/stories/               ← exists
+task-app/.solera/releases/              ← exists
+task-app/.solera/team-process.md        ← exists
 ```
 
 ---
@@ -68,7 +77,7 @@ Say to Claude:
 Solera asks about mission, target users, and core values, then writes:
 
 ```
-task-app/workspace/identity/
+task-app/.solera/identity/
 ├── mission.md
 ├── core-values.md
 └── vision_1.md
@@ -363,7 +372,7 @@ Solera runs `solera-release`:
 Result:
 
 ```
-workspace/releases/
+.solera/releases/
 ├── _index.md                             (updated)
 └── v0.1-mvp/
     ├── .released

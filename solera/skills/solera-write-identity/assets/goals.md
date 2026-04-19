@@ -5,7 +5,7 @@ This is a human jotting-pad. In v3 there is no "Goal" work item — Goals became
 ## Location
 
 ```
-{project_path}/workspace/identity/rough-directions.md
+{project_path}/.solera/identity/rough-directions.md
 ```
 
 ## Format

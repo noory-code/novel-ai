@@ -22,16 +22,16 @@ metadata:
 
 | Parameter | Required | Description | Example |
 |-----------|----------|-------------|---------|
-| **project_path** | Y | Project workspace root (where `workspace/` will live) | . |
+| **project_path** | Y | Project root (where `.solera/` will live) | . |
 
 ## Output
 
 | Step | Output | Path |
 |------|--------|------|
 | Rules | Workflow rule | `.claude/rules/solera-workflow.md` |
-| Folders | Workspace skeleton | `{project_path}/workspace/` |
-| State | Progress file | `{project_path}/progress.md` |
-| Interview | Team process definition | `{project_path}/workspace/team-process.md` |
+| Folders | Workspace skeleton | `{project_path}/.solera/` |
+| State | Progress file | `{project_path}/.solera/progress.md` |
+| Interview | Team process definition | `{project_path}/.solera/team-process.md` |
 
 ## Procedure
 
@@ -39,11 +39,11 @@ metadata:
 
 - [ ] Check if `.claude/rules/solera-workflow.md` already exists.
   - If exists: ask user whether to overwrite or skip.
-- [ ] Check if `{project_path}/workspace/` already exists.
-  - If exists: this is either a v2 project needing migration, or a partial v3 setup.
-  - **v2 detection** — any of: `workspace/initiative/`, `workspace/phase/`, a `_goal.md` or `_epic.md` anywhere under `workspace/`.
-  - If v2 detected: stop and advise `solera-migrate-v2`. Do NOT attempt to overlay v3 on top of v2 data.
-  - If v3 partial (has `concepts/` or `milestones/`): skip folder creation, continue to rule installation.
+- [ ] Detect existing Solera state at `{project_path}` in this priority order:
+  - **v4 detection** — `{project_path}/.solera/` exists. → Skip folder creation; continue to rule installation. If `.solera/` is partial (missing some standard subdirs), fill the gaps without overwriting existing files.
+  - **v3 detection** — `{project_path}/workspace/` exists with `concepts/` or `milestones/` (no `_v2-archive/` and no `initiative/`/`phase/`). → Stop and advise `solera-migrate-workspace-to-dotsolera` to relocate `workspace/` → `.solera/` before continuing.
+  - **v2 detection** — `{project_path}/workspace/` exists with any of: `workspace/initiative/`, `workspace/phase/`, a `_goal.md` or `_epic.md` anywhere under `workspace/`. → Stop and advise `solera-migrate-v2`. Do NOT attempt to overlay v4 on top of v2 data. Note: `solera-migrate-v2` produces v4 (`.solera/`) output directly — no need to chain through `solera-migrate-workspace-to-dotsolera` afterward.
+  - **None detected** — proceed with fresh v4 setup in Step 2.
 
 ### Step 2. Install rules
 
@@ -52,12 +52,15 @@ metadata:
 
 ### Step 3. Create workspace structure
 
-- [ ] Create the v3 folder layout:
+- [ ] Create the v4 folder layout:
   ```
   {project_path}/
-  ├── progress.md
-  └── workspace/
+  └── .solera/
+      ├── progress.md
       ├── identity/
+      ├── personas/
+      ├── journeys/
+      ├── narratives/
       ├── concepts/
       ├── milestones/
       ├── stories/
@@ -65,16 +68,22 @@ metadata:
       └── catalog/
           └── published/
   ```
+- [ ] Seed `personas/_index.md` from [../solera-write-persona/assets/_index-template.md](../solera-write-persona/assets/_index-template.md).
+- [ ] Seed `journeys/_index.md` from [../solera-write-journey/assets/_index-template.md](../solera-write-journey/assets/_index-template.md).
+- [ ] Seed `narratives/_index.md` from [../solera-write-narrative/assets/_index-template.md](../solera-write-narrative/assets/_index-template.md).
 - [ ] Seed `concepts/_index.md` from [../solera-write-concept/assets/_index-template.md](../solera-write-concept/assets/_index-template.md).
 - [ ] Seed `milestones/_index.md` from [../solera-write-milestone/assets/_index-template.md](../solera-write-milestone/assets/_index-template.md).
 - [ ] Seed `releases/_index.md` from [../solera-release/assets/_index-template.md](../solera-release/assets/_index-template.md).
-- [ ] Write initial `progress.md`:
+- [ ] Write initial `.solera/progress.md`:
   ```markdown
   # Progress
 
   > Last updated: {today}
 
   ## Living Axis
+  **Active Personas** (0): (none yet — run `solera-write-persona`)
+  **Active Journeys** (0): (none yet — run `solera-write-journey`)
+  **Active Narratives** (0): (none yet — run `solera-write-narrative`)
   **Active Concepts** (0): (none yet — run `solera-write-concept`)
 
   ## Time-bound Axis
@@ -91,16 +100,16 @@ metadata:
 ### Step 4. Verify
 
 - [ ] `.claude/rules/solera-workflow.md` exists and is non-empty.
-- [ ] `{project_path}/workspace/` with all v3 subdirectories exists.
-- [ ] `progress.md` exists.
-- [ ] Three `_index.md` files exist (concepts, milestones, releases).
+- [ ] `{project_path}/.solera/` with all v4 subdirectories exists (`identity/`, `personas/`, `journeys/`, `narratives/`, `concepts/`, `milestones/`, `stories/`, `releases/`, `catalog/published/`).
+- [ ] `.solera/progress.md` exists.
+- [ ] Six `_index.md` files exist (personas, journeys, narratives, concepts, milestones, releases).
 
 ### Step 5. Team Kickoff Interview
 
 Conduct a conversational interview to understand the team's work process.
 **Ask all questions in the user's language.**
 Every question maps to a specific field in `team-process.md`.
-Save results to `{project_path}/workspace/team-process.md`.
+Save results to `{project_path}/.solera/team-process.md`.
 
 If `project.type` is `software`, also merge fields from [assets/team-process-software.md](assets/team-process-software.md) into the output.
 
@@ -408,8 +417,8 @@ tooling:
 ## Completion Checklist
 
 - [ ] Rule file installed at `.claude/rules/solera-workflow.md`
-- [ ] v3 workspace folder structure created (`identity/`, `concepts/`, `milestones/`, `stories/`, `releases/`, `catalog/published/`)
-- [ ] Three `_index.md` seed files present
+- [ ] v4 workspace folder structure created at `.solera/` (`identity/`, `personas/`, `journeys/`, `narratives/`, `concepts/`, `milestones/`, `stories/`, `releases/`, `catalog/published/`)
+- [ ] Six `_index.md` seed files present (personas, journeys, narratives, concepts, milestones, releases)
 - [ ] `progress.md` initialized with v3 three-axis format
 - [ ] Kickoff interview completed (Steps A–G)
 - [ ] `team-process.md` written with v3 gate keys (no `epic.*` gates)
