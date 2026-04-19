@@ -173,6 +173,8 @@ This skill handles four modes:
   - For `create`: "Journey `{id}` drawn (walked by `{walks}`{parent_note}). Index updated."
   - For `update`: "Journey `{id}` updated: {sections changed}."
   - For `deprecate`/`archive`: "Journey `{id}` now {status}."
+- [ ] Append a **next-step hint** on `create` (omit on `update`/`deprecate`/`archive`):
+  > "Next: run `solera-write-narrative` to draw a user story that lives on this Journey (use `in_journey: {journey_id}`), or update the Persona's Related → Journeys list. Open the Service canvas to see the swimlane."
 
 ## Human–AI Protocol
 

@@ -187,6 +187,8 @@ The Service canvas exposes a "Propose as Concept" action on each Narrative. When
   - For `create`: "Narrative `{id}` written ({form}, about: {about}{journey_note}{proposes_note}). Index updated."
   - For `update`: "Narrative `{id}` updated: {sections changed}."
   - For `deprecate`/`archive`: "Narrative `{id}` now {status}."
+- [ ] Append a **next-step hint** on `create` (omit on `update`/`deprecate`/`archive`):
+  > "Next: open the Service canvas and click **Propose as Concept** on this Narrative — it writes a stub Concept flagged 'needs human review', which you then fill via `solera-write-concept` in `update` mode. Or invoke `solera-write-concept` directly if the Concept already exists."
 
 ## Human–AI Protocol
 

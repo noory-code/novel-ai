@@ -87,6 +87,23 @@ export function PlanCanvas({
     onLayoutChange({ ...layout, nodes: nextNodes });
   };
 
+  if (graph.concepts.length === 0) {
+    return (
+      <div className="flex h-full items-center justify-center px-8 text-center text-slate-500">
+        <div className="max-w-md">
+          <h2 className="mb-2 text-xl font-semibold text-slate-700">No Concepts yet</h2>
+          <p className="text-sm">
+            The Plan canvas renders <strong>Concepts</strong> — the living domain map around your
+            project's <strong>Identity</strong>, read from <code>.solera/concepts/</code>. Run{" "}
+            <code>solera-write-concept</code> to draw one directly, or open the{" "}
+            <strong>Service</strong> canvas and click <strong>Propose as Concept</strong> on a
+            Narrative.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full w-full">
       <ReactFlow

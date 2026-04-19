@@ -1,7 +1,7 @@
 ---
 name: solera-write-persona
 user-invocable: true
-description: Draw, update, deprecate, or archive a Persona — a service composer (a kind of user the project is for).
+description: Draw, update, deprecate, or archive a Persona — a kind of user the service is for.
 metadata:
   version: "1.0.0"
   category: writing
@@ -169,6 +169,8 @@ This skill handles four modes:
   - For `create`: "Persona `{id}` drawn{parent_note}. Index updated."
   - For `update`: "Persona `{id}` updated: {sections changed}."
   - For `deprecate`/`archive`: "Persona `{id}` now {status}."
+- [ ] Append a **next-step hint** on `create` (omit on `update`/`deprecate`/`archive`):
+  > "Next: run `solera-write-journey` to draw a Journey this Persona walks, or `solera-write-narrative` for a user story about them. Open the Service canvas to see them appear."
 
 ## Human–AI Protocol
 

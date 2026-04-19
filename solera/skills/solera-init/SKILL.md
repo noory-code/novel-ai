@@ -1,7 +1,7 @@
 ---
 name: solera-init
 user-invocable: true
-description: Set up Solera v3 in a project — install rules, create the three-axis workspace, and run the team kickoff interview.
+description: Set up Solera in a project — install rules, create the three-axis `.solera/` workspace, and run the team kickoff interview.
 metadata:
   version: "3.2.0"
   category: meta
@@ -11,11 +11,11 @@ metadata:
   uses: []
 ---
 
-# Solera Init (v3)
+# Solera Init
 
-> Sets up Solera v3 in the current project:
+> Sets up Solera in the current project:
 > - installs the workflow rule,
-> - creates the three-axis workspace (Living / Time-bound / Immutable),
+> - creates the three-axis `.solera/` workspace (Living / Time-bound / Immutable),
 > - and runs the team kickoff interview to populate `team-process.md`.
 
 ## Input
@@ -419,8 +419,8 @@ tooling:
 - [ ] Rule file installed at `.claude/rules/solera-workflow.md`
 - [ ] v4 workspace folder structure created at `.solera/` (`identity/`, `personas/`, `journeys/`, `narratives/`, `concepts/`, `milestones/`, `stories/`, `releases/`, `catalog/published/`)
 - [ ] Six `_index.md` seed files present (personas, journeys, narratives, concepts, milestones, releases)
-- [ ] `progress.md` initialized with v3 three-axis format
+- [ ] `progress.md` initialized with three-axis format (Living: Personas/Journeys/Narratives/Concepts; Time-bound; Immutable)
 - [ ] Kickoff interview completed (Steps A–G)
-- [ ] `team-process.md` written with v3 gate keys (no `epic.*` gates)
+- [ ] `team-process.md` written with gate keys (`milestone.agree`, `concept.align`, `story.execute`, `story.wrap_up`, `act.start`, `act.done` — no `epic.*` gates)
 - [ ] Step 6 (Project-Tailored Tooling) completed: either skipped with a report, or ran to yield `tooling.created/.declined/.deferred` in `team-process.md`
 - [ ] User informed of next step: "Run `solera-write-identity` to establish project identity, then `solera-write-concept` to draw your first Concept."

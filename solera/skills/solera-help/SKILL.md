@@ -3,7 +3,7 @@ name: solera-help
 user-invocable: true
 description: Explain what Solera is, list all available skills, and guide the first step.
 metadata:
-  version: "3.0.0"
+  version: "3.1.0"
   category: meta
   type: unit
   style: guide
@@ -11,9 +11,9 @@ metadata:
   uses: []
 ---
 
-# Solera Help (v3)
+# Solera Help (v4)
 
-> Three-axis project workflow — **Living** (Identity, Concepts), **Time-bound** (Milestones, Stories, Action Items), **Immutable** (Releases).
+> Three-axis project workflow — **Living** (Identity, Personas, Journeys, Narratives, Concepts), **Time-bound** (Milestones, Stories, Action Items), **Immutable** (Releases).
 
 ## Overview
 
@@ -31,6 +31,9 @@ Run `/solera-handoff` before ending a session to update `HANDOFF.md`, so the nex
 | Skill | Trigger phrase | Produces |
 |-------|----------------|----------|
 | `solera-write-identity` | "Define service identity", "write mission statement" | `identity/mission.md`, `core-values.md`, `vision_1.md` |
+| `solera-write-persona` | "Draw a persona", "add a persona", "update persona" | `personas/{id}.md` (Identity, Goals, Pains, Triggers, Quotes, Channels, Related); `personas/_index.md` |
+| `solera-write-journey` | "Draw a journey", "add a user journey", "update journey" | `journeys/{id}.md` (Trigger, Steps table, Outcome, Related — `walks` one Persona); `journeys/_index.md` |
+| `solera-write-narrative` | "Write a narrative", "write a user story", "JTBD", "propose concept from narrative" | `narratives/{id}.md` (Statement, Context, Acceptance Cues — `about` 1+ Personas, optional `in_journey`, optional `proposes` Concepts); `narratives/_index.md` |
 | `solera-write-concept` | "Draw a concept", "update concept", "deprecate concept" | `concepts/{id}.md` (Intent, Current Design, Current Shape, Health, Contributions); `concepts/_index.md` |
 
 ### Time-bound Axis — human–AI agreement, AI execution
@@ -66,7 +69,7 @@ Run `/solera-handoff` before ending a session to update `HANDOFF.md`, so the nex
 
 | Skill | Trigger phrase | Produces |
 |-------|----------------|----------|
-| `solera-init` | "Set up solera", "initialize solera" | `.claude/rules/solera-workflow.md`, v3 workspace structure, `progress.md` |
+| `solera-init` | "Set up solera", "initialize solera" | `.claude/rules/solera-workflow.md`, `.solera/` workspace structure, `progress.md` |
 | `solera-help` | "Help", "list skills", "what can solera do" | Skill overview and quick-start guidance |
 | `solera-edit-skill` | "Create a skill", "edit a skill" | `.claude/skills/{name}/SKILL.md` |
 | `solera-edit-rule` | "Create a rule", "add a coding rule" | `.claude/rules/{name}.md` |
@@ -79,11 +82,19 @@ Run `/solera-handoff` before ending a session to update `HANDOFF.md`, so the nex
 
 > Initialize Solera for this project.
 
-This installs the workflow rule and creates the v3 workspace structure (concepts/, milestones/, stories/, releases/, catalog/published/).
+This installs the workflow rule and creates the `.solera/` workspace structure (`identity/`, `personas/`, `journeys/`, `narratives/`, `concepts/`, `milestones/`, `stories/`, `releases/`, `catalog/published/`).
 
 **Then establish identity:**
 
 > Write the identity for this project.
+
+**Draw who the service is for (Living Axis — upstream of Concepts):**
+
+> Draw a Persona called `small-cafe-owner`.
+> Draw a Journey `first-time-checkout` walked by `small-cafe-owner`.
+> Write a Narrative about `small-cafe-owner` in journey `first-time-checkout`.
+
+Personas, Journeys, and Narratives pressure Concept design. AI proposes observations but never invents who the user is, what they walk through, or what they want — those are the human's drawings.
 
 **Draw the first Concept:**
 
