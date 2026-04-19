@@ -42,7 +42,7 @@ The webview talks to `http://127.0.0.1:{port}` over an explicit `connect-src` Co
 
 ## Backward compatibility (v3 `workspace/`)
 
-Solera v1.x reads from both `.solera/` (v4) and `workspace/` (v3) for one minor version. If the extension detects only `workspace/`, it shows an info notification suggesting `/solera-migrate-workspace-to-dotsolera` in Claude Code. Solera will drop the v3 fallback in a future minor.
+Solera v4.x reads from both `.solera/` (v4) and `workspace/` (v3) for one minor version. If the extension detects only `workspace/`, it shows an info notification suggesting `/solera-migrate-workspace-to-dotsolera` in Claude Code. Solera will drop the v3 fallback in a future minor.
 
 ## Tests
 
@@ -69,7 +69,7 @@ cd solera/vscode-extension
 npm install
 npm run vscode:prepublish   # copies viewer/dist into media/viewer + tsc
 npx vsce package            # produces solera-{version}.vsix
-code --install-extension solera-1.0.0.vsix --force
+code --install-extension solera-4.0.0.vsix --force
 ```
 
 The `vscode:prepublish` script copies `../viewer/dist/` into `media/viewer/`. Re-run it whenever you rebuild the viewer with `cd ../viewer && npm run build`.
