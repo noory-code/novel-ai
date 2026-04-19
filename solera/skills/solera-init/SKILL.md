@@ -3,7 +3,7 @@ name: solera-init
 user-invocable: true
 description: Set up Solera in a project — install rules, create the three-axis `.solera/` workspace, and run the team kickoff interview.
 metadata:
-  version: "3.2.0"
+  version: "4.0.0"
   category: meta
   type: unit
   style: procedural
@@ -52,12 +52,13 @@ metadata:
 
 ### Step 3. Create workspace structure
 
-- [ ] Create the v4 folder layout:
+- [ ] Create the v5 folder layout:
   ```
   {project_path}/
   └── .solera/
       ├── progress.md
       ├── identity/
+      ├── roles/
       ├── personas/
       ├── journeys/
       ├── narratives/
@@ -68,6 +69,7 @@ metadata:
       └── catalog/
           └── published/
   ```
+- [ ] Seed `roles/_index.md` from [../solera-write-role/assets/_index-template.md](../solera-write-role/assets/_index-template.md).
 - [ ] Seed `personas/_index.md` from [../solera-write-persona/assets/_index-template.md](../solera-write-persona/assets/_index-template.md).
 - [ ] Seed `journeys/_index.md` from [../solera-write-journey/assets/_index-template.md](../solera-write-journey/assets/_index-template.md).
 - [ ] Seed `narratives/_index.md` from [../solera-write-narrative/assets/_index-template.md](../solera-write-narrative/assets/_index-template.md).
@@ -81,7 +83,8 @@ metadata:
   > Last updated: {today}
 
   ## Living Axis
-  **Active Personas** (0): (none yet — run `solera-write-persona`)
+  **Active Roles** (0): (none yet — run `solera-write-role`)
+  **Active Personas** (0): (none yet — run `solera-write-persona` under a Role)
   **Active Journeys** (0): (none yet — run `solera-write-journey`)
   **Active Narratives** (0): (none yet — run `solera-write-narrative`)
   **Active Concepts** (0): (none yet — run `solera-write-concept`)
@@ -100,9 +103,9 @@ metadata:
 ### Step 4. Verify
 
 - [ ] `.claude/rules/solera-workflow.md` exists and is non-empty.
-- [ ] `{project_path}/.solera/` with all v4 subdirectories exists (`identity/`, `personas/`, `journeys/`, `narratives/`, `concepts/`, `milestones/`, `stories/`, `releases/`, `catalog/published/`).
+- [ ] `{project_path}/.solera/` with all v5 subdirectories exists (`identity/`, `roles/`, `personas/`, `journeys/`, `narratives/`, `concepts/`, `milestones/`, `stories/`, `releases/`, `catalog/published/`).
 - [ ] `.solera/progress.md` exists.
-- [ ] Six `_index.md` files exist (personas, journeys, narratives, concepts, milestones, releases).
+- [ ] Seven `_index.md` files exist (roles, personas, journeys, narratives, concepts, milestones, releases).
 
 ### Step 5. Team Kickoff Interview
 
@@ -423,4 +426,4 @@ tooling:
 - [ ] Kickoff interview completed (Steps A–G)
 - [ ] `team-process.md` written with gate keys (`milestone.agree`, `concept.align`, `story.execute`, `story.wrap_up`, `act.start`, `act.done` — no `epic.*` gates)
 - [ ] Step 6 (Project-Tailored Tooling) completed: either skipped with a report, or ran to yield `tooling.created/.declined/.deferred` in `team-process.md`
-- [ ] User informed of next step: "Run `solera-write-identity` to establish project identity, then `solera-write-concept` to draw your first Concept."
+- [ ] User informed of next step: "Run `solera-write-identity` to establish project identity, then `solera-write-role` to draw the structural user classes (admin / general-user / specific audiences). Personas come later as concrete archetypes under a Role if a vertical deepens; Concepts come after Roles give you an audience shape to pressure them against."

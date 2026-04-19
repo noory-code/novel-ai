@@ -4,7 +4,8 @@ kind: persona
 name: {persona_name}
 status: active
 created: {YYYY-MM-DD}
-# parent: {parent_persona_id}   # optional — omit for top-level Personas
+role: {role_id}
+# parent: {parent_persona_id}   # optional — omit for top-level Personas within this Role
 ---
 
 # Identity

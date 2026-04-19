@@ -7,22 +7,23 @@
 
 | Axis | Characteristic | Items |
 |------|----------------|-------|
-| **Living** | Never ends; evolves continuously | Identity, Concepts, Personas, Journeys, Narratives |
+| **Living** | Never ends; evolves continuously | Identity, Roles, Personas, Journeys, Narratives, Concepts |
 | **Time-bound** | Has a start and end | Milestone, Story, Action Item |
 | **Immutable** | Frozen snapshot, write-once | Release |
 
 The axes are orthogonal — every workspace item belongs to exactly one axis. This is what makes the model MECE.
 
-The Living axis splits into two clusters by perspective: **product-side** (Identity, Concepts — what we're building) and **user-side** (Personas, Journeys, Narratives — who it's for and how they live with it). User-side items are upstream of Concepts: humans draw Personas, attach Journeys, write Narratives, and from those propose Concepts.
+The Living axis splits into two clusters by perspective: **product-side** (Identity, Concepts — what we're building) and **user-side** (Roles, Personas, Journeys, Narratives — who it's for and how they live with it). User-side items are upstream of Concepts: humans draw Roles as the structural audience shape, optionally deepen them with individual Persona archetypes, attach Journeys, write Narratives, and from those propose Concepts.
 
 ```mermaid
 flowchart TD
     subgraph Living["Living Axis — never ends"]
         ID[Identity]
-        CO[Concepts]
+        RO[Roles]
         PE[Personas]
         JO[Journeys]
         NA[Narratives]
+        CO[Concepts]
     end
     subgraph TimeBound["Time-bound Axis — ends"]
         MS[Milestone]
@@ -33,8 +34,12 @@ flowchart TD
         RE[Release]
     end
     ID -.-> CO
-    JO -->|walks| PE
-    NA -->|about| PE
+    ID -.-> RO
+    PE -->|role| RO
+    JO -->|walks| RO
+    JO -.->|walked_by| PE
+    NA -->|about_roles| RO
+    NA -.->|about_personas| PE
     NA -.->|in_journey| JO
     NA -.->|proposes| CO
     ST -->|contributes_to| CO
@@ -45,9 +50,9 @@ flowchart TD
 
 ## Ownership
 
-| Role | Owned items | Primary responsibility |
+| Actor | Owned items | Primary responsibility |
 |------|-------------|------------------------|
-| **Human** | Identity, Concepts, Personas, Journeys, Narratives, Milestone agreement, Release approval | Direction, Intent, who-the-user-is, scope agreement, final say |
+| **Human** | Identity, Roles, Personas, Journeys, Narratives, Concepts, Milestone agreement, Release approval | Direction, Intent, who-the-user-is, scope agreement, final say |
 | **AI** | Story, Action Item; drafts for Milestone analysis and Release notes | Decomposition, implementation, proposals |
 
 Both collaborate at **Milestone Agreement** (Moment 2) and **Story Wrap-up** (결과 확정 of Moment 3).
@@ -61,10 +66,11 @@ Every skill must use exactly these values. Adding a new value means editing this
 | Item | Allowed values | Notes |
 |------|----------------|-------|
 | **Identity** | — | No status field. Identity is written once and edited in place. |
+| **Role** | `active` / `deprecated` / `archived` | Structural user class (admin / fan / hero / 3rd-party / etc.). Parent chain for sub-roles. |
+| **Persona** | `active` / `deprecated` / `archived` | Individual archetype of a Role. `role:` frontmatter required. AI may not invent who the user is. |
+| **Journey** | `active` / `deprecated` / `archived` | A Journey is walked by exactly one Role. Optional `walked_by:` names concrete Persona archetypes. |
+| **Narrative** | `active` / `deprecated` / `archived` | `about_roles:` 1+ required; optional `about_personas:` for concrete cases. May propose Concepts. |
 | **Concept** | `active` / `deprecated` / `archived` | Never "complete" — Concepts evolve until retired. |
-| **Persona** | `active` / `deprecated` / `archived` | Same status grammar as Concept. AI may not invent who the user is. |
-| **Journey** | `active` / `deprecated` / `archived` | Same status grammar as Concept. A Journey is walked by exactly one Persona. |
-| **Narrative** | `active` / `deprecated` / `archived` | Same status grammar as Concept. May propose Concepts via the `proposes:` frontmatter field. |
 
 ### Time-bound Axis
 
@@ -94,7 +100,7 @@ Every skill must use exactly these values. Adding a new value means editing this
 
 Skills **must** reject any transition not listed here.
 
-### Concept (and Persona, Journey, Narrative — identical grammar)
+### Concept (and Role, Persona, Journey, Narrative — identical grammar)
 
 ```
 active ──► deprecated ──► archived

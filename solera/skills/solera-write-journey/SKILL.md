@@ -1,9 +1,9 @@
 ---
 name: solera-write-journey
 user-invocable: true
-description: Draw, update, deprecate, or archive a Journey — the sequence of steps a Persona walks through when interacting with the service.
+description: Draw, update, deprecate, or archive a Journey — the sequence of steps a Role walks through when interacting with the service. Optional Persona archetypes via walked_by.
 metadata:
-  version: "1.0.0"
+  version: "2.0.0"
   category: writing
   type: unit
   style: procedural
@@ -15,24 +15,24 @@ metadata:
 
 # Writing Journey
 
-> A Journey is a living sequence of steps a Persona walks.
+> A Journey is a living sequence of steps a Role walks.
 > Humans draw Journeys; AI proposes and questions, never decides alone.
-> Journeys never end — they evolve as the Persona's experience changes.
+> Journeys never end — they evolve as the audience's experience changes.
 
 ## Philosophy
 
-Journeys belong to the **Living Axis** — alongside Identity, Personas, Narratives, and Concepts. They are **upstream of Concepts**: a Journey reveals which steps the service must support, which pressures Concept design.
+Journeys belong to the **Living Axis** — alongside Identity, Roles, Personas, Narratives, and Concepts. They are **upstream of Concepts**: a Journey reveals which steps the service must support, which pressures Concept design.
 
 A Journey holds:
 
-- **Trigger** — what kicks off this journey for the Persona.
+- **Trigger** — what kicks off this journey for the Role.
 - **Steps** — a markdown table: `# | Stage | Step | Touchpoint | Emotion | Pain`.
-- **Outcome** — what success looks like for the Persona at the end.
-- **Related** — back-link to the Persona that walks it; Narratives anchored to it; Concepts touched by its steps.
+- **Outcome** — what success looks like for the Role at the end.
+- **Related** — back-link to the Role that walks it; Narratives anchored to it; Concepts touched by its steps; optional Persona archetypes named on `walked_by` for concrete cases.
 
-Steps stay **inside the table**, not as separate files. A Journey is read-mostly; the Service canvas renders it as a swimlane row.
+Steps stay **inside the table**, not as separate files. A Journey is read-mostly; the Actors canvas renders it as a branch of the Role's subtree.
 
-A Journey is always walked by **exactly one** Persona (`walks: {persona_id}`, required). Multi-persona journeys must be split into one Journey per Persona — this keeps swimlane visualization unambiguous.
+A Journey is always walked by **exactly one** Role (`walks: {role_id}`, required). If multiple Roles share the same flow, each Role needs its own Journey so the Actors canvas stays unambiguous. A Journey **may** additionally name specific Persona archetypes via `walked_by: [persona_id, ...]` — those are concrete cases used for design research, not new top-level Journey rows.
 
 A Journey may optionally declare a `parent` — a variant journey under a base journey (e.g., "first-time onboarding" under "onboarding"). See [axes-and-status.md → `parent`](../../docs/reference/axes-and-status.md#parent-concept--concept-persona--persona-journey--journey) for cycle/self-parent/archive rules.
 
@@ -47,8 +47,8 @@ This skill handles four modes:
 
 ## Prerequisites
 
-- `{project_path}/.solera/personas/_index.md` exists with at least one active Persona (since `walks` is required).
-  - If not: ask the user to invoke `solera-write-persona` first.
+- `{project_path}/.solera/roles/_index.md` exists with at least one active Role (since `walks` references a Role).
+  - If not: ask the user to invoke `solera-write-role` first.
 - `{project_path}/.solera/journeys/` directory (created by `solera-init` or on first `create`).
 
 ## Input
@@ -59,7 +59,8 @@ This skill handles four modes:
 | **mode** | Y | `create` \| `update` \| `deprecate` \| `archive` | create |
 | **journey_id** | Y | Kebab-case ID | first-time-checkout |
 | **journey_name** | N | Human-readable name (defaults to title-cased id) | First-time Checkout |
-| **walks** | Y (in `create`) | Persona id this Journey is walked by — exactly one | small-cafe-owner |
+| **walks** | Y (in `create`) | Role id this Journey is walked by — exactly one | fan |
+| **walked_by** | N | Persona ids that concretise this Journey (optional list) | [alice] |
 | **parent** | N | Parent Journey id; omit or `null` for a top-level Journey | onboarding |
 
 ## Output
@@ -73,7 +74,7 @@ This skill handles four modes:
 
 ### 1. Setup
 
-- [ ] Confirm `{project_path}/.solera/personas/_index.md` exists and contains ≥1 active Persona. If not, stop and advise `solera-write-persona`.
+- [ ] Confirm `{project_path}/.solera/roles/_index.md` exists and contains ≥1 active Role. If not, stop and advise `solera-write-role`.
 - [ ] Ensure `{project_path}/.solera/journeys/` exists; create if missing.
 - [ ] Ensure `{project_path}/.solera/journeys/_index.md` exists; if missing, scaffold from [assets/_index-template.md](assets/_index-template.md).
 - [ ] Resolve journey file path: `{project_path}/.solera/journeys/{journey_id}.md`.
@@ -86,14 +87,20 @@ This skill handles four modes:
 
 - [ ] Read [assets/journey-template.md](assets/journey-template.md).
 
-- [ ] **Resolve `walks`** (required, exactly one Persona):
-  - If `walks` argument provided: validate the named Persona exists + is `active`. On failure, halt with the list of active Personas.
+- [ ] **Resolve `walks`** (required, exactly one Role):
+  - If `walks` argument provided: validate the named Role exists + is `active`. On failure, halt with the list of active Roles.
   - Otherwise: ask the human:
-    > "Which Persona walks this Journey? (exactly one — multi-persona journeys must be split)"
-  - If the human names a Persona that is not yet drawn: stop and advise `solera-write-persona` first.
+    > "Which Role walks this Journey? (exactly one — multi-role journeys must be split)"
+  - If the human names a Role that is not yet drawn: stop and advise `solera-write-role` first.
+
+- [ ] **Resolve `walked_by`** (optional, 0+ Personas):
+  - If `walked_by` argument provided: validate every named Persona exists + is `active` + has `role == walks` (a Persona only concretises a Journey if the Persona is an archetype of the Role that walks it).
+  - Otherwise: ask the human (with explicit skip):
+    > "Any specific Persona archetypes that concretise this Journey? Skip if this is an abstract Role-level Journey."
+  - On Role mismatch: warn and refuse to write the persona id to `walked_by` (or offer to change `walks` to the Persona's Role).
 
 - [ ] **Ask the human for the Trigger** (blocking):
-  > "What kicks off this Journey for `{persona_id}`? One sentence — the moment they start."
+  > "What kicks off this Journey for `{role_id}`? One sentence — the moment they start."
   - Reject empty / placeholder responses.
   - AI **must not** invent the Trigger; only refine wording with approval.
 
@@ -125,7 +132,7 @@ This skill handles four modes:
   - **Reject cycles and self-parenting** per axes-and-status.md.
 
 - [ ] Write the Journey file using the template, filling:
-  - Frontmatter: `id`, `kind: journey`, `name`, `status: active`, `created: {today in YYYY-MM-DD}`, `walks: {persona_id}`.
+  - Frontmatter: `id`, `kind: journey`, `name`, `status: active`, `created: {today in YYYY-MM-DD}`, `walks: {role_id}`, optional `walked_by: [...]`.
   - `parent: {parent_id}` — include only if a parent was resolved; **omit the line entirely** for top-level Journeys.
   - All sections from human input.
   - Keep the `## Workflow` section from the template intact.
@@ -174,7 +181,7 @@ This skill handles four modes:
   - For `update`: "Journey `{id}` updated: {sections changed}."
   - For `deprecate`/`archive`: "Journey `{id}` now {status}."
 - [ ] Append a **next-step hint** on `create` (omit on `update`/`deprecate`/`archive`):
-  > "Next: run `solera-write-narrative` to draw a user story that lives on this Journey (use `in_journey: {journey_id}`), or update the Persona's Related → Journeys list. Open the Service canvas to see the swimlane."
+  > "Next: run `solera-write-narrative` to draw a user story that lives on this Journey (use `in_journey: {journey_id}`), or update the Persona's Related → Journeys list. Open the Actors canvas to see the swimlane."
 
 ## Human–AI Protocol
 
@@ -192,8 +199,9 @@ This skill belongs to the same Moment 1 family as `solera-write-concept` and `so
 
 | Failure point | Condition | Recovery | Exit behavior |
 |---|---|---|---|
-| No active Personas | `personas/_index.md` empty | Advise `solera-write-persona` first | Halt |
-| Unknown `walks` Persona | Named Persona missing or non-`active` | List active Personas; halt | Halt until fixed |
+| No active Roles | `roles/_index.md` empty | Advise `solera-write-role` first | Halt |
+| Unknown `walks` Role | Named Role missing or non-`active` | List active Roles; halt | Halt until fixed |
+| `walked_by` Role mismatch | Persona's `role` differs from this Journey's `walks` | Reject; suggest using that Persona's Role on `walks` (new Journey) or removing from `walked_by` | Halt until fixed |
 | Create conflict | File exists in `create` mode | Offer `update` or archive/create-new | Halt until mode resolved |
 | Update target missing | File absent in `update`/`deprecate`/`archive` | Offer `create` mode | Halt until mode resolved |
 | Unknown parent | `parent` references a non-existent Journey | List available; halt | Halt until fixed |

@@ -3,7 +3,7 @@ name: solera-write-persona
 user-invocable: true
 description: Draw, update, deprecate, or archive a Persona — a kind of user the service is for.
 metadata:
-  version: "1.0.0"
+  version: "2.0.0"
   category: writing
   type: unit
   style: procedural
@@ -21,7 +21,9 @@ metadata:
 
 ## Philosophy
 
-Personas belong to the **Living Axis** — alongside Identity, Concepts, Journeys, and Narratives. They are **upstream of Concepts**: a Persona's needs and pains pressure which Concepts the project draws.
+Personas belong to the **Living Axis** — alongside Identity, Roles, Journeys, Narratives, and Concepts. A Persona is a **concrete archetype under a Role** — "성덕 30대 Alice" as a representative of the `fan` Role, for instance. Roles describe structural audience classes; Personas add the named, textured flavour for the rare cases where that concreteness matters. A Role can exist with zero Personas (most early-stage projects work that way).
+
+Every Persona **must declare its Role** via the required `role` frontmatter field. If you're reaching for Persona before you have any Role defined, start with [`solera-write-role`](../solera-write-role/SKILL.md) first.
 
 A Persona holds:
 
@@ -48,6 +50,8 @@ This skill handles four modes:
 
 - `{project_path}/.solera/identity/mission.md` should exist (project knows what it stands for before defining who it's for).
   - If not: ask the user to invoke `solera-write-identity` first.
+- `{project_path}/.solera/roles/` contains **at least one active Role** (Personas must be archetypes of a Role).
+  - If not: stop and advise `solera-write-role` first.
 - `{project_path}/.solera/personas/` directory (created by `solera-init` or on first `create`).
 
 ## Input
@@ -57,8 +61,9 @@ This skill handles four modes:
 | **project_path** | Y | Project workspace root | banas |
 | **mode** | Y | `create` \| `update` \| `deprecate` \| `archive` | create |
 | **persona_id** | Y | Kebab-case ID | small-cafe-owner |
+| **role** | Y (in `create`) | Role id this Persona is an archetype of — must be an active Role | fan |
 | **persona_name** | N | Human-readable name or archetype (defaults to title-cased id) | Small Cafe Owner |
-| **parent** | N | Parent Persona id; omit or `null` for a top-level Persona | buyer |
+| **parent** | N | Parent Persona id; omit or `null` for a top-level Persona within its Role | buyer |
 
 ## Output
 
@@ -72,6 +77,7 @@ This skill handles four modes:
 ### 1. Setup
 
 - [ ] Confirm `{project_path}/.solera/identity/mission.md` exists. If missing, stop and ask user to run `solera-write-identity`.
+- [ ] Confirm `{project_path}/.solera/roles/_index.md` exists and contains ≥1 active Role. If not, stop and advise `solera-write-role`.
 - [ ] Ensure `{project_path}/.solera/personas/` exists; create if missing.
 - [ ] Ensure `{project_path}/.solera/personas/_index.md` exists; if missing, scaffold from [assets/_index-template.md](assets/_index-template.md).
 - [ ] Resolve persona file path: `{project_path}/.solera/personas/{persona_id}.md`.
@@ -83,6 +89,12 @@ This skill handles four modes:
 ### 2. Create (mode = create)
 
 - [ ] Read [assets/persona-template.md](assets/persona-template.md).
+
+- [ ] **Resolve `role`** (required, exactly one Role):
+  - If `role` argument provided: validate the named Role exists + is `active`. On failure, halt with the list of active Roles.
+  - Otherwise: ask the human:
+    > "Which Role is this Persona an archetype of? (exactly one — Personas must belong to a Role)"
+  - If the human names a Role that is not yet drawn: stop and advise `solera-write-role` first.
 
 - [ ] **Ask the human who this Persona is** (blocking). Prompt in the user's language:
   > "Who is this Persona? One paragraph — their role, situation, and why they care about a service like yours."
@@ -120,7 +132,7 @@ This skill handles four modes:
   - **Reject cycles and self-parenting** per axes-and-status.md.
 
 - [ ] Write the Persona file using the template, filling:
-  - Frontmatter: `id`, `kind: persona`, `name`, `status: active`, `created: {today in YYYY-MM-DD}`.
+  - Frontmatter: `id`, `kind: persona`, `name`, `status: active`, `created: {today in YYYY-MM-DD}`, `role: {role_id}`.
   - `parent: {parent_id}` — include only if a parent was resolved; **omit the line entirely** for top-level Personas (don't write `parent: null`).
   - All sections from human input (or omit empty sections rather than leave dangling placeholders).
   - Keep the `## Workflow` section from the template intact.
@@ -170,7 +182,7 @@ This skill handles four modes:
   - For `update`: "Persona `{id}` updated: {sections changed}."
   - For `deprecate`/`archive`: "Persona `{id}` now {status}."
 - [ ] Append a **next-step hint** on `create` (omit on `update`/`deprecate`/`archive`):
-  > "Next: run `solera-write-journey` to draw a Journey this Persona walks, or `solera-write-narrative` for a user story about them. Open the Service canvas to see them appear."
+  > "Next: `solera-write-narrative` with `about_personas: [{persona_id}]` for a user story that names this specific archetype. For Journeys, remember they `walks` the Role — reference this Persona via `walked_by` when the Journey is a concrete case for `{persona_id}`. Open the Actors canvas to see the placement."
 
 ## Human–AI Protocol
 

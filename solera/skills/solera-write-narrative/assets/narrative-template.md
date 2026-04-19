@@ -1,25 +1,26 @@
 ---
 id: {narrative_id}
 kind: narrative
-form: user_story          # user_story | jtbd | scenario
+form: user_story                    # user_story | jtbd | scenario
 status: active
 created: {YYYY-MM-DD}
-about: [{persona_id}]     # 1+ active Personas this Narrative concerns
-# in_journey: {journey_id}  # optional — anchors to a Journey
-# proposes: [{concept_id}]  # optional — Concepts this Narrative proposed (canvas-fillable)
+about_roles: [{role_id}]            # 1+ active Roles this Narrative concerns (required)
+# about_personas: [{persona_id}]    # optional — concrete Persona archetypes
+# in_journey: {journey_id}          # optional — anchors to a Journey
+# proposes: [{concept_id}]          # optional — Concepts this Narrative proposed (canvas-fillable)
 ---
 
 # Statement
-> As a {persona}, I want {goal} so that {benefit}.
+> As a {role}, I want {goal} so that {benefit}.
 <!--
 Form templates:
-  user_story → "As a {persona}, I want {goal} so that {benefit}."
+  user_story → "As a {role}, I want {goal} so that {benefit}."
   jtbd       → "When {situation}, I want {motivation}, so I can {outcome}."
-  scenario   → 2–3 sentence prose scenario in the Persona's voice.
+  scenario   → 2–3 sentence prose scenario in the Role's (or named Persona's) voice.
 -->
 
 # Context
-{Why this matters. What state is the Persona in. Provided by the human.}
+{Why this matters. What state the Role (or specific Persona) is in. Provided by the human.}
 
 # Acceptance Cues
 - {Observable sign that the system delivered the benefit}
@@ -31,7 +32,8 @@ item) that this Narrative may eventually inspire — written via solera-write-st
 
 # Related
 <!-- Only include lines for relations that exist. Remove the rest. -->
-- Persona(s): [[persona/...]]
+- Role(s): [[role/...]]             <!-- mirrors `about_roles:` -->
+- Persona archetype(s): [[persona/...]]   <!-- mirrors `about_personas:` -->
 - Journey: [[journey/...]]
 - Proposed Concepts: [[concept/...]]
 - External: {Figma URL / interview transcript / Notion link / ...}
@@ -44,18 +46,19 @@ item) that this Narrative may eventually inspire — written via solera-write-st
 
 ### Step 1. Create (mode = create)
 - [ ] Resolve `form` (user_story | jtbd | scenario)
-- [ ] Resolve `about` (≥1 active Persona — required)
+- [ ] Resolve `about_roles` (≥1 active Role — required)
+- [ ] Resolve `about_personas` (optional; each Persona's `role` must be in `about_roles`)
 - [ ] Resolve `in_journey` (optional; validate active if provided)
 - [ ] Human provides **Statement** in the chosen form (blocking — AI must not invent)
 - [ ] Human provides **Context** (blocking)
 - [ ] Human provides **Acceptance Cues** (blocking — ≥1)
 - [ ] AI surfaces **observations** (overlapping Narratives, candidate Concepts) — advisory
-- [ ] Resolve `proposes` (optional; never auto-finalize a new Concept here — direct to Service canvas)
+- [ ] Resolve `proposes` (optional; never auto-finalize a new Concept here — direct to Actors canvas)
 - [ ] Write file from template; set `status: active`, `created: today`
 
 ### Step 2. Update (mode = update)
 - [ ] Human picks which sections to revise (Statement / Context / Acceptance Cues / Related)
-- [ ] Validate any reference changes (`about` / `in_journey` / `proposes`)
+- [ ] Validate any reference changes (`about_roles` / `about_personas` / `in_journey` / `proposes`)
 - [ ] Each chosen section: show current, accept new, replace with `<!-- updated: YYYY-MM-DD -->` marker
 
 ### Step 3. Deprecate (mode = deprecate)

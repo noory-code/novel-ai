@@ -3,7 +3,7 @@ name: solera-write-narrative
 user-invocable: true
 description: Draw, update, deprecate, or archive a Narrative — a "As a / I want / so that" statement (or JTBD / scenario) that proposes Concepts. Distinct from Solera's Time-bound Story (work item).
 metadata:
-  version: "1.0.0"
+  version: "2.0.0"
   category: writing
   type: unit
   style: procedural
@@ -11,28 +11,28 @@ metadata:
   uses: []
 ---
 
-<!-- SSOT: ../../docs/reference/axes-and-status.md — Narrative status values (`active`/`deprecated`/`archived`), the `about` / `in_journey` / `proposes` relations, and transitions live there -->
+<!-- SSOT: ../../docs/reference/axes-and-status.md — Narrative status values (`active`/`deprecated`/`archived`), the `about_roles` / `about_personas` / `in_journey` / `proposes` relations, and transitions live there -->
 
 # Writing Narrative
 
-> A Narrative is a living, "As a {Persona} I want {goal} so that {benefit}" statement (or JTBD / scenario form).
+> A Narrative is a living, "As a {Role} I want {goal} so that {benefit}" statement (or JTBD / scenario form).
 > Humans write Narratives; AI proposes and questions, never decides alone.
-> Narratives are **upstream of Concepts** — they may `proposes:` Concepts, either by human authorship or via the Service canvas's "Propose as Concept" action.
+> Narratives are **upstream of Concepts** — they may `proposes:` Concepts, either by human authorship or via the Actors canvas's "Propose as Concept" action.
 
 ## Philosophy
 
-Narratives belong to the **Living Axis** — alongside Identity, Personas, Journeys, and Concepts. They are the explicit articulation of "what should the service do, from the user's standpoint." The flow is:
+Narratives belong to the **Living Axis** — alongside Identity, Roles, Personas, Journeys, and Concepts. They are the explicit articulation of "what should the service do, from the user's standpoint." The flow is:
 
 ```
-Persona ───► Journey (steps) ───► Narrative ───► Concept (drafted, human-reviewed)
+Role ───► Journey (steps) ───► Narrative ───► Concept (drafted, human-reviewed)
 ```
 
 A Narrative holds:
 
 - **Statement** — the literal sentence in the chosen `form` (`user_story` / `jtbd` / `scenario`).
-- **Context** — why this matters; what state the Persona is in.
+- **Context** — why this matters; what state the Role (or specific Persona) is in.
 - **Acceptance Cues** — observable signs the system delivered the benefit. **Not acceptance criteria** — those belong on the Story (Time-bound work item) that this Narrative may eventually inspire.
-- **Related** — the `about` Personas (1+ required), optional `in_journey` Journey, optional `proposes` Concepts, plus free-form references.
+- **Related** — `about_roles` (1+ required — the structural anchor), optional `about_personas` (concrete Persona archetypes), optional `in_journey` Journey, optional `proposes` Concepts, plus free-form references.
 
 ### Narrative vs Solera's Time-bound Story
 
@@ -51,12 +51,12 @@ Folder: `narratives/` (Living) vs `stories/` (Time-bound). Frontmatter: `kind: n
 
 ### "Propose as Concept" interaction
 
-The Service canvas exposes a "Propose as Concept" action on each Narrative. When a human clicks it, the canvas POSTs to the Solera MCP server's `/api/concept/propose-from-narrative` endpoint, which writes a **stub** Concept whose `# Intent` is explicitly flagged "needs human review per solera-write-concept Moment 1 rule" and adds the new concept_id to this Narrative's `proposes:` list. The human then runs `solera-write-concept` in `update` mode to fill the real Intent. **No Concept is finalized without the human writing its Intent.**
+The Actors canvas exposes a "Propose as Concept" action on each Narrative. When a human clicks it, the canvas POSTs to the Solera MCP server's `/api/concept/propose-from-narrative` endpoint, which writes a **stub** Concept whose `# Intent` is explicitly flagged "needs human review per solera-write-concept Moment 1 rule" and adds the new concept_id to this Narrative's `proposes:` list. The human then runs `solera-write-concept` in `update` mode to fill the real Intent. **No Concept is finalized without the human writing its Intent.**
 
 ## Prerequisites
 
-- `{project_path}/.solera/personas/_index.md` exists with at least one active Persona (since `about` requires 1+ active Personas).
-  - If not: ask the user to invoke `solera-write-persona` first.
+- `{project_path}/.solera/roles/_index.md` exists with at least one active Role (since `about_roles` requires 1+ active Role).
+  - If not: ask the user to invoke `solera-write-role` first.
 - `{project_path}/.solera/narratives/` directory (created by `solera-init` or on first `create`).
 
 ## Input
@@ -67,7 +67,8 @@ The Service canvas exposes a "Propose as Concept" action on each Narrative. When
 | **mode** | Y | `create` \| `update` \| `deprecate` \| `archive` | create |
 | **narrative_id** | Y | Kebab-case ID | buyer-finds-trusted-cafe |
 | **form** | N (default `user_story`) | `user_story` \| `jtbd` \| `scenario` | jtbd |
-| **about** | Y (in `create`) | List of Persona ids this Narrative concerns (1+) | [small-cafe-owner] |
+| **about_roles** | Y (in `create`) | List of Role ids this Narrative concerns (1+ required) | [fan] |
+| **about_personas** | N | Optional list of Persona ids for concrete archetype anchoring | [alice] |
 | **in_journey** | N | Journey id this Narrative anchors to | first-time-checkout |
 
 ## Output
@@ -81,7 +82,7 @@ The Service canvas exposes a "Propose as Concept" action on each Narrative. When
 
 ### 1. Setup
 
-- [ ] Confirm `{project_path}/.solera/personas/_index.md` exists and contains ≥1 active Persona. If not, stop and advise `solera-write-persona`.
+- [ ] Confirm `{project_path}/.solera/roles/_index.md` exists and contains ≥1 active Role. If not, stop and advise `solera-write-role`.
 - [ ] Ensure `{project_path}/.solera/narratives/` exists; create if missing.
 - [ ] Ensure `{project_path}/.solera/narratives/_index.md` exists; if missing, scaffold from [assets/_index-template.md](assets/_index-template.md).
 - [ ] Resolve narrative file path: `{project_path}/.solera/narratives/{narrative_id}.md`.
@@ -101,10 +102,14 @@ The Service canvas exposes a "Propose as Concept" action on each Narrative. When
     - `scenario` → 2–3 sentence prose scenario.
   - Confirm with the human or accept the argument.
 
-- [ ] **Resolve `about`** (required, 1+ Personas):
-  - If `about` argument provided: validate every named Persona exists + is `active`. On any failure, halt with the list of active Personas.
-  - Otherwise ask: "Which Persona(s) is this Narrative about? (list one or more active Personas)"
-  - If the human names a Persona that is not yet drawn: stop and advise `solera-write-persona`.
+- [ ] **Resolve `about_roles`** (required, 1+ Roles):
+  - If `about_roles` argument provided: validate every named Role exists + is `active`. On any failure, halt with the list of active Roles.
+  - Otherwise ask: "Which Role(s) is this Narrative about? (list one or more active Roles — these are the structural audience anchors)"
+  - If the human names a Role that is not yet drawn: stop and advise `solera-write-role`.
+
+- [ ] **Resolve `about_personas`** (optional, 0+ Personas):
+  - If `about_personas` provided: validate every named Persona exists + is `active` + its `role` is contained in `about_roles` (a Persona can only concretise a Narrative about its own Role).
+  - Otherwise ask (with explicit skip): "Any specific Persona archetypes this Narrative is about? Skip if the Role-level audience is enough."
 
 - [ ] **Resolve `in_journey`** (optional):
   - If argument provided: validate exists + is `active`.
@@ -137,11 +142,11 @@ The Service canvas exposes a "Propose as Concept" action on each Narrative. When
 
 - [ ] **Resolve `proposes`** (optional, 0+ Concepts):
   - If the human names existing Concepts: validate each exists + is `active`.
-  - If the human asks to draft new Concepts now: instruct them to use the Service canvas's "Propose as Concept" action OR to invoke `solera-write-concept` directly with `mode: create`.
-  - **Never auto-finalize a new Concept from this skill** — that path goes through the Service canvas with the stub-Intent guard.
+  - If the human asks to draft new Concepts now: instruct them to use the Actors canvas's "Propose as Concept" action OR to invoke `solera-write-concept` directly with `mode: create`.
+  - **Never auto-finalize a new Concept from this skill** — that path goes through the Actors canvas with the stub-Intent guard.
 
 - [ ] Write the Narrative file using the template, filling:
-  - Frontmatter: `id`, `kind: narrative`, `form`, `status: active`, `created: {today in YYYY-MM-DD}`, `about: [...]`, optional `in_journey`, optional `proposes: [...]`.
+  - Frontmatter: `id`, `kind: narrative`, `form`, `status: active`, `created: {today in YYYY-MM-DD}`, `about_roles: [...]`, optional `about_personas: [...]`, optional `in_journey`, optional `proposes: [...]`.
   - All sections from human input.
   - Keep the `## Workflow` section from the template intact.
 
@@ -154,9 +159,10 @@ The Service canvas exposes a "Propose as Concept" action on each Narrative. When
   - Statement (and optionally `form`)
   - Context
   - Acceptance Cues
-  - Related (`about` / `in_journey` / `proposes` / free-form)
+  - Related (`about_roles` / `about_personas` / `in_journey` / `proposes` / free-form)
 - [ ] For each chosen section, show current content, ask for new content, replace after confirmation.
-- [ ] **When `about` is changed**: validate new Personas exist + `active`; reject empty list.
+- [ ] **When `about_roles` is changed**: validate new Roles exist + `active`; reject empty list.
+- [ ] **When `about_personas` is changed**: validate Personas exist + `active` + their `role` is in `about_roles`.
 - [ ] **When `in_journey` is changed**: validate exists + `active`; allow `null` to detach.
 - [ ] **When `proposes` is changed**: validate every Concept exists + `active`; allow `[]` to clear.
 - [ ] Append `<!-- updated: YYYY-MM-DD -->` at the top of each edited section.
@@ -184,11 +190,11 @@ The Service canvas exposes a "Propose as Concept" action on each Narrative. When
   - Archived files are **not** listed (file remains on disk).
   - Orphans (named Persona / Journey deprecated/archived) render with `— ⚠️ orphan` marker.
 - [ ] Emit a short summary to the user:
-  - For `create`: "Narrative `{id}` written ({form}, about: {about}{journey_note}{proposes_note}). Index updated."
+  - For `create`: "Narrative `{id}` written ({form}, about_roles: {about_roles}{about_personas_note}{journey_note}{proposes_note}). Index updated."
   - For `update`: "Narrative `{id}` updated: {sections changed}."
   - For `deprecate`/`archive`: "Narrative `{id}` now {status}."
 - [ ] Append a **next-step hint** on `create` (omit on `update`/`deprecate`/`archive`):
-  > "Next: open the Service canvas and click **Propose as Concept** on this Narrative — it writes a stub Concept flagged 'needs human review', which you then fill via `solera-write-concept` in `update` mode. Or invoke `solera-write-concept` directly if the Concept already exists."
+  > "Next: open the Actors canvas and click **Propose as Concept** on this Narrative — it writes a stub Concept flagged 'needs human review', which you then fill via `solera-write-concept` in `update` mode. Or invoke `solera-write-concept` directly if the Concept already exists."
 
 ## Human–AI Protocol
 
@@ -200,15 +206,16 @@ This skill belongs to the same Moment 1 family as `solera-write-concept`, `soler
 | Offer observations from sibling Narratives / candidate Concepts | Auto-add Concepts to `proposes` |
 | Refine wording with human approval | Mark anything as final without confirmation |
 | Validate `about` / `in_journey` / `proposes` references | Silently drop a reference that has gone stale |
-| Direct the human to the Service canvas for "Propose as Concept" workflow | Finalize a Concept from this skill |
+| Direct the human to the Actors canvas for "Propose as Concept" workflow | Finalize a Concept from this skill |
 
 ## Error Handling
 
 | Failure point | Condition | Recovery | Exit behavior |
 |---|---|---|---|
-| No active Personas | `personas/_index.md` empty | Advise `solera-write-persona` first | Halt |
-| Empty `about` | No Personas named | Reject; require ≥1 active Persona | Halt until fixed |
-| Unknown `about` Persona | Named Persona missing or non-`active` | List active Personas; halt | Halt until fixed |
+| No active Roles | `roles/_index.md` empty | Advise `solera-write-role` first | Halt |
+| Empty `about_roles` | No Roles named | Reject; require ≥1 active Role | Halt until fixed |
+| Unknown `about_roles` Role | Named Role missing or non-`active` | List active Roles; halt | Halt until fixed |
+| `about_personas` Role mismatch | Persona's `role` not in `about_roles` | Reject; suggest adding the Role to `about_roles` or removing the Persona | Halt until fixed |
 | Unknown `in_journey` Journey | Named Journey missing or non-`active` | Offer skip or draw the Journey first | Halt until chosen |
 | Unknown Concept in `proposes` | Named Concept missing or non-`active` | List active Concepts; halt | Halt until fixed |
 | Create conflict | File exists in `create` mode | Offer `update` or archive/create-new | Halt until mode resolved |

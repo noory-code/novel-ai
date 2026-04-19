@@ -3,7 +3,7 @@ name: solera-help
 user-invocable: true
 description: Explain what Solera is, list all available skills, and guide the first step.
 metadata:
-  version: "3.1.0"
+  version: "4.0.0"
   category: meta
   type: unit
   style: guide
@@ -11,9 +11,9 @@ metadata:
   uses: []
 ---
 
-# Solera Help (v4)
+# Solera Help (v5)
 
-> Three-axis project workflow — **Living** (Identity, Personas, Journeys, Narratives, Concepts), **Time-bound** (Milestones, Stories, Action Items), **Immutable** (Releases).
+> Three-axis project workflow — **Living** (Identity, Roles, Personas, Journeys, Narratives, Concepts), **Time-bound** (Milestones, Stories, Action Items), **Immutable** (Releases).
 
 ## Overview
 
@@ -31,9 +31,10 @@ Run `/solera-handoff` before ending a session to update `HANDOFF.md`, so the nex
 | Skill | Trigger phrase | Produces |
 |-------|----------------|----------|
 | `solera-write-identity` | "Define service identity", "write mission statement" | `identity/mission.md`, `core-values.md`, `vision_1.md` |
-| `solera-write-persona` | "Draw a persona", "add a persona", "update persona" | `personas/{id}.md` (Identity, Goals, Pains, Triggers, Quotes, Channels, Related); `personas/_index.md` |
-| `solera-write-journey` | "Draw a journey", "add a user journey", "update journey" | `journeys/{id}.md` (Trigger, Steps table, Outcome, Related — `walks` one Persona); `journeys/_index.md` |
-| `solera-write-narrative` | "Write a narrative", "write a user story", "JTBD", "propose concept from narrative" | `narratives/{id}.md` (Statement, Context, Acceptance Cues — `about` 1+ Personas, optional `in_journey`, optional `proposes` Concepts); `narratives/_index.md` |
+| `solera-write-role` | "Draw a role", "add admin role", "add a user class" | `roles/{id}.md` (Description, Context, Related — parent chain for sub-roles); `roles/_index.md` |
+| `solera-write-persona` | "Draw a persona", "add a persona" (concrete archetype **under a Role**) | `personas/{id}.md` (Role, Identity, Goals, Pains, Triggers, Quotes, Channels, Related); `personas/_index.md` |
+| `solera-write-journey` | "Draw a journey", "add a user journey" | `journeys/{id}.md` (Trigger, Steps table, Outcome, Related — `walks` one Role; optional `walked_by` Personas); `journeys/_index.md` |
+| `solera-write-narrative` | "Write a narrative", "write a user story", "JTBD", "propose concept from narrative" | `narratives/{id}.md` (Statement, Context, Acceptance Cues — `about_roles` 1+, optional `about_personas`, optional `in_journey`, optional `proposes` Concepts); `narratives/_index.md` |
 | `solera-write-concept` | "Draw a concept", "update concept", "deprecate concept" | `concepts/{id}.md` (Intent, Current Design, Current Shape, Health, Contributions); `concepts/_index.md` |
 
 ### Time-bound Axis — human–AI agreement, AI execution
@@ -82,7 +83,7 @@ Run `/solera-handoff` before ending a session to update `HANDOFF.md`, so the nex
 
 > Initialize Solera for this project.
 
-This installs the workflow rule and creates the `.solera/` workspace structure (`identity/`, `personas/`, `journeys/`, `narratives/`, `concepts/`, `milestones/`, `stories/`, `releases/`, `catalog/published/`).
+This installs the workflow rule and creates the `.solera/` workspace structure (`identity/`, `roles/`, `personas/`, `journeys/`, `narratives/`, `concepts/`, `milestones/`, `stories/`, `releases/`, `catalog/published/`).
 
 **Then establish identity:**
 
@@ -90,11 +91,12 @@ This installs the workflow rule and creates the `.solera/` workspace structure (
 
 **Draw who the service is for (Living Axis — upstream of Concepts):**
 
-> Draw a Persona called `small-cafe-owner`.
-> Draw a Journey `first-time-checkout` walked by `small-cafe-owner`.
-> Write a Narrative about `small-cafe-owner` in journey `first-time-checkout`.
+> Draw a Role called `admin`.
+> Draw a Role called `fan` under `general-user`.
+> Draw a Journey `first-time-checkout` walked by `fan`.
+> Write a Narrative about Role `fan` in journey `first-time-checkout`.
 
-Personas, Journeys, and Narratives pressure Concept design. AI proposes observations but never invents who the user is, what they walk through, or what they want — those are the human's drawings.
+Roles are the structural shape of your audience (admin / fan / hero / 3rd-party etc.). Later, if a specific vertical deepens, draw an individual Persona archetype under the Role — e.g. `solera-write-persona role:fan persona_id:power-fan-alice`. Roles, Journeys, and Narratives pressure Concept design. AI proposes observations but never invents who the user is, what they walk through, or what they want — those are the human's drawings.
 
 **Draw the first Concept:**
 
