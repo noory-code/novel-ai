@@ -410,14 +410,17 @@ function SectionTitle({
   title: string;
   tone?: "north-star" | "sketch" | "live";
 }) {
+  // 10px uppercase bold labels need ≥4.5:1 contrast (small text per WCAG AA).
+  // The lighter custom tokens (`sketch`, `live`) and `amber-600` fail on
+  // white, so the tone variants use Tailwind's 700-shades here.
   const toneClass =
     tone === "north-star"
-      ? "text-amber-600"
+      ? "text-amber-700"
       : tone === "sketch"
-        ? "text-sketch"
+        ? "text-indigo-700"
         : tone === "live"
-          ? "text-live"
-          : "text-slate-500";
+          ? "text-emerald-700"
+          : "text-slate-600";
   return (
     <div className={`mb-1 text-[10px] font-semibold uppercase tracking-widest ${toneClass}`}>
       {title}

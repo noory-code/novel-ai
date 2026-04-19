@@ -183,13 +183,14 @@ function Header({
   saveState,
 }: HeaderProps) {
   const tabs: { key: WorkspaceLens; label: string; accent: string }[] = [
-    // `service` is leftmost — humans walk users (Service) before drawing the
-    // product (Plan). Color uses Tailwind's stock rose-500 since the existing
-    // sketch/paint/live palette is tied to PlanCanvas's three lenses.
-    { key: "service", label: "Service", accent: "text-rose-500" },
-    { key: "plan", label: "Plan", accent: "text-sketch" },
-    { key: "build", label: "Build", accent: "text-paint" },
-    { key: "live", label: "Live", accent: "text-live" },
+    // Each lens is rendered in the darker 700-shade of its palette so the
+    // active-tab label clears WCAG AA (4.5:1) on the white tab background.
+    // The lighter tokens (`sketch`, `paint`, `live`, `rose-500`) remain for
+    // decorative surfaces (borders, backgrounds) where contrast isn't gating.
+    { key: "service", label: "Service", accent: "text-rose-700" },
+    { key: "plan", label: "Plan", accent: "text-indigo-700" },
+    { key: "build", label: "Build", accent: "text-amber-700" },
+    { key: "live", label: "Live", accent: "text-emerald-700" },
   ];
   return (
     <header className="flex items-center justify-between border-b border-slate-200 bg-white/80 px-4 py-2 backdrop-blur">

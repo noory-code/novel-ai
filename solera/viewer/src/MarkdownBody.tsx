@@ -66,7 +66,7 @@ export function MarkdownBody({ text }: MarkdownBodyProps) {
           ),
           td: (props) => <td className="border border-slate-200 px-2 py-1 align-top" {...props} />,
           a: (props) => (
-            <a className="text-sketch underline hover:text-indigo-700" {...props} />
+            <a className="text-indigo-700 underline hover:text-indigo-900" {...props} />
           ),
           hr: () => <hr className="my-3 border-slate-200" />,
         }}
