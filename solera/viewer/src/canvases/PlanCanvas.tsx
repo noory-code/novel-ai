@@ -93,7 +93,8 @@ export function PlanCanvas({
           <h2 className="mb-2 text-xl font-semibold text-slate-700">No Concepts yet</h2>
           <p className="text-sm">
             The Plan canvas renders <strong>Concepts</strong> — the living domain map around your
-            project's <strong>Identity</strong>, read from <code>.solera/concepts/</code>. Run{" "}
+            project's <strong>Identity</strong>, read from <code>.noory/solera/concepts/</code>.
+            Run{" "}
             <code>solera-write-concept</code> to draw one directly, or open the{" "}
             <strong>Service</strong> canvas and click <strong>Propose as Concept</strong> on a
             Narrative.

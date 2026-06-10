@@ -1,5 +1,39 @@
 # Changelog
 
+## [5.2.0] — 2026-06-11
+
+Minor. R9 — Solera workspace data lives under `.noory/solera/` instead of
+`.solera/` so every noory plugin (plot / distill / evonest / solera) shares
+ONE `.noory/` dotfolder per project. Plot's canvas data and Solera's
+workspace data can sit side-by-side without colliding. Completes Track 2.3
+of the overhaul.
+
+### Changed
+
+- `solera_mcp.workspace.resolve_solera_root` resolves `.noory/solera/`
+  first. A legacy `.solera/` migrates lazily on first read (one
+  `shutil.move`, same volume). When both layouts exist (half-migrated /
+  user-restored), the new root wins and the legacy dir is preserved for
+  the user to reconcile — never merged blindly.
+- The migration carries the user's `.gitignore` intent: a project that
+  ignored `.solera/` keeps ignoring the data after the move
+  (`# Solera workspace data (R9 location)\n.noory/solera/\n` appended).
+  Projects that tracked their data on purpose get no ignore added (no
+  invented policy). Same pattern as evonest v1.1.1.
+- VSCode extension (`workspaceCheck.ts`) — adds an `r9` finding kind for
+  projects already on `.noory/solera/`; legacy `.solera/` still reports
+  as `v4` and the Python server auto-migrates it on first read.
+- Viewer empty-state copy (`PlanCanvas.tsx`) + module docstrings updated.
+
+### Notes
+
+- v3 `workspace/` fallback unchanged (deprecated; same warning; same drop
+  target).
+- 133 server tests green; mypy + ruff clean; viewer + vscode-extension
+  tsc clean. `tests/test_noory_migration.py` pins the contract
+  (prefer-new, lazy-move, no-clobber, gitignore intent carry, no invented
+  ignore, v3 untouched).
+
 ## [5.1.0] — 2026-04-19
 
 Minor. The canvas becomes the primary authoring surface: click a field

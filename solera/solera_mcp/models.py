@@ -1,6 +1,7 @@
 """Typed models for the Solera workspace graph.
 
-Every field parsed out of `.solera/` markdown files lands in one of the
+Every field parsed out of the Solera workspace markdown files (under
+`.noory/solera/` after R9, or a legacy `.solera/`) lands in one of the
 `Living`, `Time-bound`, or `Immutable` axis models here. The `Graph`
 aggregate is what HTTP endpoints and MCP tools return to clients.
 

@@ -1,8 +1,9 @@
 """Solera-root file watcher that notifies the asyncio event loop of changes.
 
 A `WorkspaceWatcher` wraps a `watchdog.Observer` on the Solera root directory
-(typically `<project>/.solera/` in v4 or `<project>/workspace/` in the
-deprecated v3 fallback) and fires a user-supplied coroutine whenever a tracked
+(typically `<project>/.noory/solera/` under R9, with auto-migration from a
+legacy `<project>/.solera/` or the deprecated v3 `<project>/workspace/`
+fallback) and fires a user-supplied coroutine whenever a tracked
 file mutates. Rapid bursts (e.g., atomic saves from editors that
 write-then-rename) are collapsed via a debounce window.
 

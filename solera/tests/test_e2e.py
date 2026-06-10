@@ -96,8 +96,8 @@ def _wait_for_health(port: int, deadline_sec: float = 10.0) -> bool:
 
 
 def _seed_solera_workspace(base: Path) -> None:
-    """Write a minimal but realistic .solera/ layout the server can parse."""
-    root = base / ".solera"
+    """Write a minimal but realistic `.noory/solera/` layout the server can parse."""
+    root = base / ".noory" / "solera"
     (root / "concepts").mkdir(parents=True, exist_ok=True)
     (root / "roles").mkdir(parents=True, exist_ok=True)
     (root / "personas").mkdir(parents=True, exist_ok=True)
@@ -178,7 +178,7 @@ def _kill_server(proc: subprocess.Popen[bytes]) -> None:
 
 @pytest.fixture
 def live_server(tmp_path: Path) -> Any:
-    """Spawn a real solera_mcp server against a seeded .solera/ workspace."""
+    """Spawn a real solera_mcp server against a seeded `.noory/solera/` workspace."""
     _seed_solera_workspace(tmp_path)
     port = _find_free_port()
     proc = _spawn_server(tmp_path, port, skip_mcp=True)
@@ -260,7 +260,7 @@ def test_propose_from_narrative_writes_stub_concept_to_disk(
     assert body["needs_intent_review"] is True
 
     # Stub Concept exists on disk with the exact Moment 1 guardrail copy.
-    concept_path = project_path / ".solera" / "concepts" / "order-tracking.md"
+    concept_path = project_path / ".noory" / "solera" / "concepts" / "order-tracking.md"
     assert concept_path.exists()
     content = concept_path.read_text(encoding="utf-8")
     assert "needs human review per solera-write-concept Moment 1 rule" in content
@@ -268,9 +268,9 @@ def test_propose_from_narrative_writes_stub_concept_to_disk(
     assert "name: Order Tracking" in content
 
     # Narrative's frontmatter gained the new concept_id.
-    narrative_content = (project_path / ".solera" / "narratives" / "rush-orders.md").read_text(
-        encoding="utf-8"
-    )
+    narrative_content = (
+        project_path / ".noory" / "solera" / "narratives" / "rush-orders.md"
+    ).read_text(encoding="utf-8")
     assert "order-tracking" in narrative_content
 
     # Subsequent GET /api/graph returns the new Concept.

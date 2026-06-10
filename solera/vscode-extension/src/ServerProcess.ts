@@ -4,7 +4,8 @@ import * as vscode from "vscode";
 export interface ServerStartOptions {
   /** Shell command, may include args (e.g. `uv run python -m solera_mcp`). */
   command: string;
-  /** Working directory — the folder hosting `.solera/` (or `workspace/`). */
+  /** Working directory — the project folder hosting `.noory/solera/`
+   *  (preferred), a legacy `.solera/`, or `workspace/` (v3 fallback). */
   cwd: string;
   /** TCP port the server should bind to. Set via `SOLERA_MAP_PORT`. */
   port: number;

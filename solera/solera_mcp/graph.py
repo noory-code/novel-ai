@@ -120,8 +120,9 @@ def build_graph(workspace: Path) -> Graph:
     """Read everything under the Solera root and assemble a :class:`Graph`.
 
     ``workspace`` is the directory returned by ``resolve_solera_root`` —
-    typically ``<project>/.solera/`` (v4+) or ``<project>/workspace/`` (v3
-    fallback). The parameter name is historical; it points at whichever
+    typically ``<project>/.noory/solera/`` (R9), with auto-migration from
+    a legacy ``<project>/.solera/`` or the deprecated ``<project>/workspace/``
+    fallback. The parameter name is historical; it points at whichever
     layout exists.
 
     A second ``integrity`` pass runs after each kind's reader so that

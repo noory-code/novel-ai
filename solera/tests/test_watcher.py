@@ -142,10 +142,10 @@ def test_ws_missing_workspace_closes() -> None:
 
 
 def test_ws_notify_reaches_connected_client(tmp_path: Path) -> None:
-    _seed_workspace(tmp_path / ".solera")
+    _seed_workspace(tmp_path / ".noory" / "solera")
     hub = BroadcastHub(enable_watchers=False)
     app = create_http_app(hub=hub)
-    workspace_resolved = (tmp_path / ".solera").resolve()
+    workspace_resolved = (tmp_path / ".noory" / "solera").resolve()
     client = TestClient(app)
 
     with client.websocket_connect(f"/ws?project_path={tmp_path}") as ws:

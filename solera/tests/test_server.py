@@ -33,10 +33,14 @@ def _seed_workspace(workspace: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_resolve_solera_root_prefers_dotsolera(tmp_path: Path) -> None:
+def test_resolve_solera_root_migrates_legacy_dotsolera_to_noory(tmp_path: Path) -> None:
+    """R9 (D-2026-06-11-B): legacy `.solera/` is migrated to `.noory/solera/`
+    on first resolve. See ``tests/test_noory_migration.py`` for the full
+    contract (no-clobber, gitignore intent carry, etc.)."""
     _seed_workspace(tmp_path / ".solera")
     resolved = resolve_solera_root(str(tmp_path))
-    assert resolved == (tmp_path / ".solera").resolve()
+    assert resolved == (tmp_path / ".noory" / "solera").resolve()
+    assert not (tmp_path / ".solera").exists()
 
 
 def test_resolve_solera_root_accepts_dotsolera_dir_directly(tmp_path: Path) -> None:
@@ -64,12 +68,13 @@ def test_resolve_solera_root_falls_back_to_workspace_with_warning(
     ), f"expected v3 deprecation warning, got: {[r.message for r in caplog.records]}"
 
 
-def test_resolve_solera_root_prefers_dotsolera_over_workspace(tmp_path: Path) -> None:
-    """When both layouts exist (mid-migration), `.solera/` wins."""
+def test_resolve_solera_root_prefers_noory_solera_over_workspace(tmp_path: Path) -> None:
+    """When both new layout and v3 ``workspace/`` exist, R9 root wins (the
+    legacy `.solera/` migration produces the new layout in this case too)."""
     _seed_workspace(tmp_path / ".solera")
     _seed_workspace(tmp_path / "workspace")
     resolved = resolve_solera_root(str(tmp_path))
-    assert resolved == (tmp_path / ".solera").resolve()
+    assert resolved == (tmp_path / ".noory" / "solera").resolve()
 
 
 def test_resolve_solera_root_missing_raises(tmp_path: Path) -> None:
@@ -106,7 +111,7 @@ def test_graph_endpoint_requires_project_path(client: TestClient) -> None:
 
 
 def test_graph_endpoint_returns_graph(client: TestClient, tmp_path: Path) -> None:
-    _seed_workspace(tmp_path / ".solera")
+    _seed_workspace(tmp_path / ".noory" / "solera")
     r = client.get("/api/graph", params={"project_path": str(tmp_path)})
     assert r.status_code == 200
     body = r.json()
@@ -128,14 +133,14 @@ def test_graph_endpoint_missing_workspace_returns_404(client: TestClient, tmp_pa
 
 
 def test_layout_get_defaults_to_empty(client: TestClient, tmp_path: Path) -> None:
-    _seed_workspace(tmp_path / ".solera")
+    _seed_workspace(tmp_path / ".noory" / "solera")
     r = client.get("/api/layout", params={"project_path": str(tmp_path)})
     assert r.status_code == 200
     assert r.json() == {"nodes": {}}
 
 
 def test_layout_put_and_get_roundtrip(client: TestClient, tmp_path: Path) -> None:
-    _seed_workspace(tmp_path / ".solera")
+    _seed_workspace(tmp_path / ".noory" / "solera")
     body = {
         "nodes": {
             "concept:auth": {"x": 120.5, "y": -40},
@@ -156,7 +161,7 @@ def test_layout_put_and_get_roundtrip(client: TestClient, tmp_path: Path) -> Non
 
 
 def test_layout_put_requires_object_body(client: TestClient, tmp_path: Path) -> None:
-    _seed_workspace(tmp_path / ".solera")
+    _seed_workspace(tmp_path / ".noory" / "solera")
     r = client.put(
         "/api/layout",
         params={"project_path": str(tmp_path)},
@@ -183,7 +188,7 @@ def _write_concept(workspace: Path, concept_id: str, parent: str | None = None) 
 
 
 def test_concept_patch_sets_parent(client: TestClient, tmp_path: Path) -> None:
-    ws = tmp_path / ".solera"
+    ws = tmp_path / ".noory" / "solera"
     _write_concept(ws, "app")
     _write_concept(ws, "profile")
 
@@ -200,7 +205,7 @@ def test_concept_patch_sets_parent(client: TestClient, tmp_path: Path) -> None:
 
 
 def test_concept_patch_clears_parent(client: TestClient, tmp_path: Path) -> None:
-    ws = tmp_path / ".solera"
+    ws = tmp_path / ".noory" / "solera"
     _write_concept(ws, "app")
     _write_concept(ws, "profile", parent="app")
 
@@ -217,7 +222,7 @@ def test_concept_patch_clears_parent(client: TestClient, tmp_path: Path) -> None
 
 
 def test_concept_patch_rejects_unknown_parent(client: TestClient, tmp_path: Path) -> None:
-    _write_concept(tmp_path / ".solera", "profile")
+    _write_concept(tmp_path / ".noory" / "solera", "profile")
     r = client.patch(
         "/api/concept/profile",
         params={"project_path": str(tmp_path)},
@@ -227,7 +232,7 @@ def test_concept_patch_rejects_unknown_parent(client: TestClient, tmp_path: Path
 
 
 def test_concept_patch_rejects_self_parent(client: TestClient, tmp_path: Path) -> None:
-    _write_concept(tmp_path / ".solera", "profile")
+    _write_concept(tmp_path / ".noory" / "solera", "profile")
     r = client.patch(
         "/api/concept/profile",
         params={"project_path": str(tmp_path)},
@@ -237,7 +242,7 @@ def test_concept_patch_rejects_self_parent(client: TestClient, tmp_path: Path) -
 
 
 def test_concept_patch_rejects_cycle(client: TestClient, tmp_path: Path) -> None:
-    ws = tmp_path / ".solera"
+    ws = tmp_path / ".noory" / "solera"
     _write_concept(ws, "a")
     _write_concept(ws, "b", parent="a")
     _write_concept(ws, "c", parent="b")
@@ -253,7 +258,7 @@ def test_concept_patch_rejects_cycle(client: TestClient, tmp_path: Path) -> None
 def test_concept_patch_rejects_disallowed_fields(client: TestClient, tmp_path: Path) -> None:
     """v5.1: the Concept PATCH surface accepts name / status / intent / etc.
     but still rejects arbitrary unknown keys."""
-    _write_concept(tmp_path / ".solera", "profile")
+    _write_concept(tmp_path / ".noory" / "solera", "profile")
     r = client.patch(
         "/api/concept/profile",
         params={"project_path": str(tmp_path)},
@@ -264,7 +269,7 @@ def test_concept_patch_rejects_disallowed_fields(client: TestClient, tmp_path: P
 
 
 def test_concept_patch_returns_404_for_missing_concept(client: TestClient, tmp_path: Path) -> None:
-    (tmp_path / ".solera" / "concepts").mkdir(parents=True)
+    (tmp_path / ".noory" / "solera" / "concepts").mkdir(parents=True)
     r = client.patch(
         "/api/concept/missing",
         params={"project_path": str(tmp_path)},
@@ -304,8 +309,8 @@ def _write_narrative_for_propose(workspace: Path, narrative_id: str) -> None:
 
 
 def test_propose_from_narrative_creates_stub_concept(client: TestClient, tmp_path: Path) -> None:
-    _seed_workspace(tmp_path / ".solera")  # an existing Concept dir + auth concept
-    _write_narrative_for_propose(tmp_path / ".solera", "rush-orders-not-lost")
+    _seed_workspace(tmp_path / ".noory" / "solera")  # an existing Concept dir + auth concept
+    _write_narrative_for_propose(tmp_path / ".noory" / "solera", "rush-orders-not-lost")
 
     r = client.post(
         "/api/concept/propose-from-narrative",
@@ -323,7 +328,7 @@ def test_propose_from_narrative_creates_stub_concept(client: TestClient, tmp_pat
     assert body["concept_id"] == "order-tracking"
     assert body["needs_intent_review"] is True
 
-    concept_path = tmp_path / ".solera" / "concepts" / "order-tracking.md"
+    concept_path = tmp_path / ".noory" / "solera" / "concepts" / "order-tracking.md"
     assert concept_path.exists()
     text = concept_path.read_text(encoding="utf-8")
     # The Moment 1 guardrail must be loud and unmistakable.
@@ -338,8 +343,8 @@ def test_propose_from_narrative_creates_stub_concept(client: TestClient, tmp_pat
 def test_propose_from_narrative_appends_to_narrative_proposes(
     client: TestClient, tmp_path: Path
 ) -> None:
-    _seed_workspace(tmp_path / ".solera")
-    _write_narrative_for_propose(tmp_path / ".solera", "rush-orders-not-lost")
+    _seed_workspace(tmp_path / ".noory" / "solera")
+    _write_narrative_for_propose(tmp_path / ".noory" / "solera", "rush-orders-not-lost")
 
     r = client.post(
         "/api/concept/propose-from-narrative",
@@ -352,9 +357,9 @@ def test_propose_from_narrative_appends_to_narrative_proposes(
     )
     assert r.status_code == 200
 
-    narrative_text = (tmp_path / ".solera" / "narratives" / "rush-orders-not-lost.md").read_text(
-        encoding="utf-8"
-    )
+    narrative_text = (
+        tmp_path / ".noory" / "solera" / "narratives" / "rush-orders-not-lost.md"
+    ).read_text(encoding="utf-8")
     assert "proposes:" in narrative_text
     assert "order-tracking" in narrative_text
 
@@ -362,8 +367,8 @@ def test_propose_from_narrative_appends_to_narrative_proposes(
 def test_propose_from_narrative_rejects_existing_concept(
     client: TestClient, tmp_path: Path
 ) -> None:
-    _seed_workspace(tmp_path / ".solera")  # creates concepts/auth.md
-    _write_narrative_for_propose(tmp_path / ".solera", "rush-orders-not-lost")
+    _seed_workspace(tmp_path / ".noory" / "solera")  # creates concepts/auth.md
+    _write_narrative_for_propose(tmp_path / ".noory" / "solera", "rush-orders-not-lost")
 
     r = client.post(
         "/api/concept/propose-from-narrative",
@@ -381,7 +386,7 @@ def test_propose_from_narrative_rejects_existing_concept(
 def test_propose_from_narrative_rejects_missing_narrative(
     client: TestClient, tmp_path: Path
 ) -> None:
-    _seed_workspace(tmp_path / ".solera")
+    _seed_workspace(tmp_path / ".noory" / "solera")
 
     r = client.post(
         "/api/concept/propose-from-narrative",
@@ -399,8 +404,8 @@ def test_propose_from_narrative_rejects_missing_narrative(
 def test_propose_from_narrative_rejects_invalid_concept_id(
     client: TestClient, tmp_path: Path
 ) -> None:
-    _seed_workspace(tmp_path / ".solera")
-    _write_narrative_for_propose(tmp_path / ".solera", "rush-orders-not-lost")
+    _seed_workspace(tmp_path / ".noory" / "solera")
+    _write_narrative_for_propose(tmp_path / ".noory" / "solera", "rush-orders-not-lost")
 
     r = client.post(
         "/api/concept/propose-from-narrative",
@@ -416,8 +421,8 @@ def test_propose_from_narrative_rejects_invalid_concept_id(
 
 
 def test_propose_from_narrative_requires_all_fields(client: TestClient, tmp_path: Path) -> None:
-    _seed_workspace(tmp_path / ".solera")
-    _write_narrative_for_propose(tmp_path / ".solera", "n1")
+    _seed_workspace(tmp_path / ".noory" / "solera")
+    _write_narrative_for_propose(tmp_path / ".noory" / "solera", "n1")
 
     r = client.post(
         "/api/concept/propose-from-narrative",

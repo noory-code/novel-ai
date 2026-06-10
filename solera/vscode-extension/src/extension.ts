@@ -62,7 +62,7 @@ async function openMap(context: vscode.ExtensionContext): Promise<void> {
   if (chosen.kind === "v3") {
     void vscode.window.showInformationMessage(
       "This project still uses the v3 `workspace/` layout. " +
-        "Run `/solera-migrate-workspace-to-dotsolera` in Claude Code to relocate to `.solera/`. " +
+        "Run `/solera-migrate-workspace-to-dotsolera` in Claude Code to relocate to `.noory/solera/`. " +
         "(Solera reads both layouts; the workspace/ fallback will be dropped in a future minor.)",
       "Continue anyway",
     );

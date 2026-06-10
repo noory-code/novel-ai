@@ -23,7 +23,7 @@ def client() -> TestClient:
 
 def _seed(tmp_path: Path) -> None:
     """Create a minimal `.solera/` with one Role so Personas / Journeys can reference it."""
-    solera = tmp_path / ".solera"
+    solera = tmp_path / ".noory" / "solera"
     (solera / "identity").mkdir(parents=True)
     (solera / "identity" / "mission.md").write_text(
         "---\nid: mission\nkind: identity\n---\n\n# Mission\nTest.\n",
@@ -55,7 +55,7 @@ def test_role_post_creates_file(client: TestClient, tmp_path: Path) -> None:
     )
     assert r.status_code == 200, r.text
     assert r.json()["ok"] is True
-    path = tmp_path / ".solera" / "roles" / "admin.md"
+    path = tmp_path / ".noory" / "solera" / "roles" / "admin.md"
     assert path.exists()
     text = path.read_text(encoding="utf-8")
     assert "# Description" in text
@@ -90,7 +90,7 @@ def test_role_patch_updates_description(client: TestClient, tmp_path: Path) -> N
         json={"description": "An updated buyer description."},
     )
     assert r.status_code == 200, r.text
-    text = (tmp_path / ".solera" / "roles" / "customer.md").read_text("utf-8")
+    text = (tmp_path / ".noory" / "solera" / "roles" / "customer.md").read_text("utf-8")
     assert "An updated buyer description." in text
 
 
@@ -147,7 +147,7 @@ def test_persona_post_writes_identity_and_goals(client: TestClient, tmp_path: Pa
         },
     )
     assert r.status_code == 200
-    text = (tmp_path / ".solera" / "personas" / "alice.md").read_text("utf-8")
+    text = (tmp_path / ".noory" / "solera" / "personas" / "alice.md").read_text("utf-8")
     assert "role: customer" in text
     assert "Alice is a buyer." in text
     assert "Buy fast" in text
@@ -155,7 +155,7 @@ def test_persona_post_writes_identity_and_goals(client: TestClient, tmp_path: Pa
 
 def test_persona_patch_can_change_role(client: TestClient, tmp_path: Path) -> None:
     _seed(tmp_path)
-    (tmp_path / ".solera" / "roles" / "admin.md").write_text(
+    (tmp_path / ".noory" / "solera" / "roles" / "admin.md").write_text(
         "---\nid: admin\nkind: role\nname: Admin\nstatus: active\n"
         "created: 2026-04-19\n---\n\n# Description\nOp.\n",
         encoding="utf-8",
@@ -171,7 +171,7 @@ def test_persona_patch_can_change_role(client: TestClient, tmp_path: Path) -> No
         json={"role": "admin"},
     )
     assert r.status_code == 200
-    text = (tmp_path / ".solera" / "personas" / "alice.md").read_text("utf-8")
+    text = (tmp_path / ".noory" / "solera" / "personas" / "alice.md").read_text("utf-8")
     assert "role: admin" in text
 
 
@@ -226,7 +226,7 @@ def test_journey_patch_updates_steps(client: TestClient, tmp_path: Path) -> None
         },
     )
     assert r.status_code == 200, r.text
-    text = (tmp_path / ".solera" / "journeys" / "first-purchase.md").read_text("utf-8")
+    text = (tmp_path / ".noory" / "solera" / "journeys" / "first-purchase.md").read_text("utf-8")
     assert "Open app" in text
 
 
@@ -287,7 +287,7 @@ def test_narrative_patch_updates_context(client: TestClient, tmp_path: Path) -> 
         json={"context": "new context"},
     )
     assert r.status_code == 200
-    text = (tmp_path / ".solera" / "narratives" / "loose-narrative.md").read_text("utf-8")
+    text = (tmp_path / ".noory" / "solera" / "narratives" / "loose-narrative.md").read_text("utf-8")
     assert "new context" in text
     assert "# Statement" in text  # other sections still intact
 
@@ -311,13 +311,13 @@ def test_concept_post_creates_stub_with_intent(client: TestClient, tmp_path: Pat
         },
     )
     assert r.status_code == 200
-    text = (tmp_path / ".solera" / "concepts" / "auth.md").read_text("utf-8")
+    text = (tmp_path / ".noory" / "solera" / "concepts" / "auth.md").read_text("utf-8")
     assert "User proves identity." in text
 
 
 def test_concept_patch_can_update_intent(client: TestClient, tmp_path: Path) -> None:
     _seed(tmp_path)
-    (tmp_path / ".solera" / "concepts" / "auth.md").write_text(
+    (tmp_path / ".noory" / "solera" / "concepts" / "auth.md").write_text(
         "---\nid: auth\nname: Auth\nstatus: active\n---\n\n"
         "# Intent\nOld intent.\n\n# Current Design\nX.\n\n# Current Shape\nY.\n",
         encoding="utf-8",
@@ -328,7 +328,7 @@ def test_concept_patch_can_update_intent(client: TestClient, tmp_path: Path) -> 
         json={"intent": "Updated intent."},
     )
     assert r.status_code == 200
-    text = (tmp_path / ".solera" / "concepts" / "auth.md").read_text("utf-8")
+    text = (tmp_path / ".noory" / "solera" / "concepts" / "auth.md").read_text("utf-8")
     assert "Updated intent." in text
     # Other sections stay.
     assert "# Current Design" in text

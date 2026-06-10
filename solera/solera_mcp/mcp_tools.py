@@ -37,9 +37,10 @@ def get_map(project_path: str) -> dict[str, Any]:
     """Return the Solera workspace graph for ``project_path`` as a JSON-ready dict.
 
     Args:
-        project_path: Project root containing ``.solera/`` (Solera v4) or
-            ``workspace/`` (Solera v3, deprecated fallback). May also be the
-            Solera root directory itself.
+        project_path: Project root containing ``.noory/solera/`` (R9, preferred),
+            a legacy ``.solera/`` (auto-migrated on first access), or
+            ``workspace/`` (v3, deprecated fallback). May also be the Solera
+            root directory itself.
     """
     return graph_for(project_path).model_dump(by_alias=True)
 

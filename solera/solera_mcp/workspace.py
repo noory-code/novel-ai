@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 import socket
 from pathlib import Path
 
@@ -18,23 +19,61 @@ _log = logging.getLogger(__name__)
 
 DEFAULT_HTTP_PORT = 5170
 
+LEGACY_DIRNAME = ".solera"
+NEW_RELATIVE = Path(".noory") / "solera"
+# Ignore ONLY our subtree. ``.noory/`` is SHARED with sibling plugins whose
+# artifacts are source-of-truth data (plot canvases) — a blanket
+# ``.noory/`` ignore would silently untrack them (evonest v1.1.1 incident).
+GITIGNORE_ENTRY = ".noory/solera/"
+
+
+def _carry_gitignore_intent(project: Path) -> None:
+    """A project that ignored ``.solera/`` must keep ignoring the data after
+    the move — otherwise the next blanket ``git add`` silently tracks runtime
+    data. Only appends when the user had the legacy entry; never invents
+    ignore policy for projects that tracked their data on purpose."""
+    gitignore = project / ".gitignore"
+    if not gitignore.is_file():
+        return
+    content = gitignore.read_text(encoding="utf-8")
+    if LEGACY_DIRNAME + "/" in content and GITIGNORE_ENTRY not in content:
+        with open(gitignore, "a", encoding="utf-8") as f:
+            f.write(f"\n# Solera workspace data (R9 location)\n{GITIGNORE_ENTRY}\n")
+
 
 def resolve_solera_root(project_path: str) -> Path:
     """Resolve the Solera workspace root directory under a project path.
 
-    Resolution order (Solera v4):
-      1. ``{project_path}/.solera/`` — v4 location (preferred).
-      2. ``{project_path}/workspace/`` — v3 location, accepted with a
+    Resolution order:
+      1. ``{project_path}/.noory/solera/`` — R9 location (preferred).
+         If a legacy ``.solera/`` exists and the new root does not, the
+         legacy dir is lazily migrated here (one ``shutil.move``, same
+         volume). When BOTH roots exist (half-migrated / user-restored),
+         the new root wins and the legacy dir is preserved for the user to
+         reconcile — never merged blindly.
+      2. ``{project_path}/.solera/`` — pre-R9 location, accepted only if
+         migration above did not happen (won't be reached on the happy path
+         because step 1 moves it). Kept as a defensive fallback.
+      3. ``{project_path}/workspace/`` — v3 location, accepted with a
          DeprecationWarning. To be removed in solera-map v0.2.0.
-      3. ``{project_path}/`` itself — last-ditch fallback for callers that
+      4. ``{project_path}/`` itself — last-ditch fallback for callers that
          already point at the workspace dir (any name).
 
     A directory qualifies as a Solera workspace if it contains either
     ``concepts/`` or ``identity/``. Raises ``FileNotFoundError`` otherwise.
     """
     base = Path(project_path).expanduser().resolve()
+    new_root = base / NEW_RELATIVE
+    legacy = base / LEGACY_DIRNAME
+    if legacy.is_dir() and not new_root.exists():
+        new_root.parent.mkdir(exist_ok=True)
+        shutil.move(str(legacy), str(new_root))
+        _carry_gitignore_intent(base)
+        _log.info("migrated legacy %s -> %s (R9)", legacy, new_root)
+
     candidates: list[tuple[Path, str | None]] = [
-        (base / ".solera", None),
+        (new_root, None),
+        (legacy, None),
         (base / "workspace", "v3"),
         (base, None),
     ]
@@ -43,15 +82,15 @@ def resolve_solera_root(project_path: str) -> Path:
             if deprecation_label == "v3":
                 _log.warning(
                     "Reading from legacy %s layout at %s. Run "
-                    "`solera-migrate-workspace-to-dotsolera` to relocate to .solera/. "
-                    "solera-map v0.2.0 will drop this fallback.",
+                    "`solera-migrate-workspace-to-dotsolera` to relocate to "
+                    ".noory/solera/. solera-map v0.2.0 will drop this fallback.",
                     deprecation_label,
                     candidate,
                 )
-            return candidate
+            return candidate.resolve()
     raise FileNotFoundError(
         f"No Solera workspace found under {project_path!r} "
-        "(looked for `.solera/`, `workspace/`, and bare directory)"
+        "(looked for `.noory/solera/`, `.solera/`, `workspace/`, and bare directory)"
     )
 
 

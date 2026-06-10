@@ -1,7 +1,7 @@
 {
   "name": "solera",
-  "version": "5.1.0",
-  "description": "AI-driven project workflow with a mindmap canvas. Three-axis model: Living (Identity, Personas, Journeys, Narratives, Concepts), Time-bound (Milestones, Stories, Action Items), Immutable (Releases). Humans draw; AI decomposes, proposes, and verifies. Ships with skills, MCP server, and four canvases (Service / Plan / Build / Live) over one `.solera/` dotfolder.",
+  "version": "5.2.0",
+  "description": "AI-driven project workflow with a mindmap canvas. Three-axis model: Living (Identity, Personas, Journeys, Narratives, Concepts), Time-bound (Milestones, Stories, Action Items), Immutable (Releases). Humans draw; AI decomposes, proposes, and verifies. Ships with skills, MCP server, and four canvases (Service / Plan / Build / Live) over one `.noory/solera/` dotfolder (legacy `.solera/` auto-migrates on first read).",
   "homepage": "https://github.com/noory-code/noory-ai/tree/main/solera",
   "repository": "https://github.com/noory-code/noory-ai",
   "license": "MIT",
