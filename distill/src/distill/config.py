@@ -12,6 +12,8 @@ from typing import Any, cast
 
 from pydantic import BaseModel, Field
 
+from distill.store.scope import local_data_root
+
 
 class SourcesConfig(BaseModel):
     """Configuration for knowledge sources."""
@@ -89,11 +91,15 @@ def load_config(
 
     workspace_conf: dict[str, Any] = {}
     if workspace_root:
-        workspace_conf = _load_json_file(Path(workspace_root) / ".distill" / "config.json")
+        workspace_conf = _load_json_file(
+            local_data_root(Path(workspace_root), create=False) / "config.json"
+        )
 
     project_conf: dict[str, Any] = {}
     if project_root:
-        project_conf = _load_json_file(Path(project_root) / ".distill" / "config.json")
+        project_conf = _load_json_file(
+            local_data_root(Path(project_root), create=False) / "config.json"
+        )
 
     merged = {**global_conf, **workspace_conf, **project_conf}
     return DistillConfig(**merged)

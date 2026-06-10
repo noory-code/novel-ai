@@ -4,6 +4,23 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.8.0] - 2026-06-10
+
+### Changed
+
+- **Local tiers move to `.noory/distill/`** (noory-ai overhaul R9): the
+  workspace (`<git-root>/`) and project tiers now store knowledge + config
+  under `.noory/distill/` instead of `.distill/`. A legacy `.distill/` dir is
+  migrated lazily on first access (one move; config.json and knowledge/
+  travel together). If both roots exist, `.noory/distill` wins and the legacy
+  dir is preserved. The GLOBAL tier (`~/.distill/`) does not move.
+- Config loading is now side-effect-free (`local_data_root(..., create=False)`)
+  — loading config from a root with no distill data no longer creates
+  directories and cannot crash on a nonexistent root.
+- Tests: `tests/test_noory_migration.py` (new roots, lazy move, no-clobber,
+  global pinned). Note: `test_concurrent_writes_succeed_with_busy_timeout`
+  is an intermittent pre-existing flake (fails on the unchanged tree too).
+
 ## [1.7.4] — 2026-03-20
 
 ### Fixed

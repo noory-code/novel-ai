@@ -19,7 +19,7 @@ See [ROADMAP.md](ROADMAP.md) for Phase 3+ planning.
 
 ```
 src/distill/
-├── config.py              ← Config loader (.distill/config.json, SourcesConfig, OutputsConfig)
+├── config.py              ← Config loader (.noory/distill/config.json, SourcesConfig, OutputsConfig)
 ├── server.py              ← FastMCP server + 9 tool registrations
 ├── store/                 ← SQLite metadata + FTS5 + sqlite-vec (fastembed embeddings)
 │   ├── metadata.py        ← SQLite CRUD + FTS5 full-text search
@@ -83,7 +83,7 @@ Hook runs `claude -p` subprocess → Claude reads transcript + calls `mcp__disti
 
 ## Configuration
 
-Config file: `.distill/config.json` (project) or `~/.distill/config.json` (global).
+Config file: `.noory/distill/config.json` (project/workspace) or `~/.distill/config.json` (global).
 Config priority: project > workspace > global > defaults. All fields optional (zero-config).
 
 ```json
@@ -112,8 +112,8 @@ Config priority: project > workspace > global > defaults. All fields optional (z
 | Scope | Path |
 |-------|------|
 | global | `~/.distill/knowledge/` |
-| workspace | `<git-root>/.distill/knowledge/` |
-| project | `.distill/knowledge/` |
+| workspace | `<git-root>/.noory/distill/knowledge/` |
+| project | `.noory/distill/knowledge/` |
 
 ## Docs
 

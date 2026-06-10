@@ -6,7 +6,7 @@ from pathlib import Path
 
 from distill.config import DistillConfig, load_config
 from distill.scanner.scanner import scan_environment
-from distill.store.scope import detect_project_root, detect_workspace_root
+from distill.store.scope import detect_project_root, detect_workspace_root, local_data_root
 from distill.store.types import KnowledgeScope
 
 
@@ -19,9 +19,9 @@ def _ensure_config(
     if scope == "global":
         config_path = Path.home() / ".distill" / "config.json"
     elif scope == "workspace" and workspace_root:
-        config_path = Path(workspace_root) / ".distill" / "config.json"
+        config_path = local_data_root(Path(workspace_root)) / "config.json"
     else:
-        config_path = Path(project_root) / ".distill" / "config.json"
+        config_path = local_data_root(Path(project_root)) / "config.json"
 
     if config_path.exists():
         return False, config_path

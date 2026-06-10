@@ -28,8 +28,8 @@ class TestEnsureConfig:
         assert "outputs" in data
 
     def test_does_not_overwrite_existing_config(self, tmp_path: Path):
-        config_dir = tmp_path / ".distill"
-        config_dir.mkdir()
+        config_dir = tmp_path / ".noory" / "distill"
+        config_dir.mkdir(parents=True)
         config_path = config_dir / "config.json"
         config_path.write_text('{"extraction_model": "custom-model"}')
 
@@ -85,13 +85,13 @@ class TestInitTool:
         result = await init(scope="project", _project_root=str(tmp_path))
 
         assert "Config created" in result
-        config_path = tmp_path / ".distill" / "config.json"
+        config_path = tmp_path / ".noory" / "distill" / "config.json"
         assert config_path.exists()
 
     @pytest.mark.asyncio
     async def test_reports_existing_config(self, tmp_path: Path):
-        config_dir = tmp_path / ".distill"
-        config_dir.mkdir()
+        config_dir = tmp_path / ".noory" / "distill"
+        config_dir.mkdir(parents=True)
         (config_dir / "config.json").write_text('{"extraction_model": "haiku"}')
 
         result = await init(scope="project", _project_root=str(tmp_path))
@@ -121,7 +121,7 @@ class TestInitTool:
         docs_dir = tmp_path / "docs"
         docs_dir.mkdir()
 
-        config_path = tmp_path / ".distill" / "config.json"
+        config_path = tmp_path / ".noory" / "distill" / "config.json"
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text(json.dumps({
             "sources": {"dirs": [str(docs_dir)]},
@@ -144,7 +144,7 @@ class TestInitTool:
         docs_dir = tmp_path / "docs"
         docs_dir.mkdir()
 
-        config_path = tmp_path / ".distill" / "config.json"
+        config_path = tmp_path / ".noory" / "distill" / "config.json"
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text(json.dumps({
             "sources": {"dirs": [str(docs_dir)]},
@@ -169,8 +169,8 @@ class TestMonorepoScopeSelection:
         result = await init(_project_root=str(project))
 
         # config should be created in workspace
-        assert (workspace / ".distill" / "config.json").exists()
-        assert not (project / ".distill" / "config.json").exists()
+        assert (workspace / ".noory" / "distill" / "config.json").exists()
+        assert not (project / ".noory" / "distill" / "config.json").exists()
 
     @pytest.mark.asyncio
     async def test_standalone_project_uses_project_scope(self, tmp_path, monkeypatch):
@@ -180,7 +180,7 @@ class TestMonorepoScopeSelection:
 
         result = await init(_project_root=str(tmp_path))
 
-        assert (tmp_path / ".distill" / "config.json").exists()
+        assert (tmp_path / ".noory" / "distill" / "config.json").exists()
 
     @pytest.mark.asyncio
     async def test_scope_override_respected_in_monorepo(self, tmp_path, monkeypatch):
@@ -195,6 +195,6 @@ class TestMonorepoScopeSelection:
         # Explicitly request project scope
         result = await init(scope="project", _project_root=str(project))
 
-        assert (project / ".distill" / "config.json").exists()
+        assert (project / ".noory" / "distill" / "config.json").exists()
 
 

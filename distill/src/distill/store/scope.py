@@ -2,12 +2,38 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 from distill.store.types import KnowledgeScope
 
+# The GLOBAL tier stays at ~/.distill — pinned in the noory-ai overhaul (R9):
+# only per-project / per-workspace artifacts consolidate under `.noory/`.
 GLOBAL_DIR = Path.home() / ".distill" / "knowledge"
-PROJECT_SUBDIR = ".distill"
+# R9: local tiers live under `<root>/.noory/distill/` (was `<root>/.distill/`).
+LEGACY_PROJECT_SUBDIR = ".distill"
+PROJECT_SUBDIR = str(Path(".noory") / "distill")
+
+
+def local_data_root(root: Path, *, create: bool = True) -> Path:
+    """Resolve `<root>/.noory/distill/`, lazily migrating a legacy
+    `<root>/.distill/` (one move, same volume — config.json and knowledge/
+    travel together). If BOTH exist, the new root wins and the legacy dir is
+    preserved for the user to reconcile — never merged blindly. The global
+    `~/.distill` tier is NOT handled here (it does not move).
+
+    ``create=False`` is the READ path (config loading): it still migrates a
+    legacy dir when one exists, but never creates directories — loading
+    config from a root that has no distill data must stay side-effect-free
+    (and must not crash on a nonexistent root)."""
+    new_root = root / ".noory" / "distill"
+    legacy = root / LEGACY_PROJECT_SUBDIR
+    if legacy.is_dir() and not new_root.exists():
+        new_root.parent.mkdir(exist_ok=True)
+        shutil.move(str(legacy), str(new_root))
+    if create:
+        new_root.mkdir(parents=True, exist_ok=True)
+    return new_root
 
 # Markers that indicate a package/app root (nearest wins for project scope)
 PROJECT_MARKERS = ["pyproject.toml", "pubspec.yaml", "package.json", "CLAUDE.md"]
@@ -48,7 +74,7 @@ def resolve_store_path(
     if scope == "workspace":
         if not workspace_root:
             raise ValueError("workspace scope requires workspace_root")
-        path = Path(workspace_root) / PROJECT_SUBDIR / "knowledge"
+        path = local_data_root(Path(workspace_root)) / "knowledge"
         path.mkdir(parents=True, exist_ok=True)
         return path
 
@@ -56,7 +82,7 @@ def resolve_store_path(
     if not project_root:
         raise ValueError("project scope requires project_root")
 
-    path = Path(project_root) / PROJECT_SUBDIR / "knowledge"
+    path = local_data_root(Path(project_root)) / "knowledge"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
