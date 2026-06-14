@@ -1,5 +1,19 @@
 # Changelog
 
+## [5.2.1] — 2026-06-15
+
+Patch. R8 independence build guard.
+
+### Added
+
+- **R8 independence build guard** (`tests/test_r8_independence.py`). AST-checks
+  every `solera_mcp/` module for imports of the Plot app (viewer / Tauri shell)
+  or any sibling plugin, and bans `src-tauri` path literals. Mirrors
+  `plot/tests/test_r8_independence.py` — the MIT-plugin / proprietary-app
+  licence boundary is defended by this structural guard, not by file layout
+  (noory-ai overhaul R8 / Track 2.2). Covers the Python MCP package; Solera's
+  own React `viewer/` + `vscode-extension/` are separate build artefacts.
+
 ## [5.2.0] — 2026-06-11
 
 Minor. R9 — Solera workspace data lives under `.noory/solera/` instead of
