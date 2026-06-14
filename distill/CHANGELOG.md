@@ -4,6 +4,17 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.8.1] - 2026-06-15
+
+### Added
+
+- **R8 independence build guard** (`tests/test_r8_independence.py`). AST-checks
+  every `src/distill/` module for imports of the Plot app (viewer / Tauri shell)
+  or any sibling plugin, and bans `src-tauri` path literals. Mirrors
+  `plot/tests/test_r8_independence.py` — the MIT-plugin / proprietary-app
+  licence boundary is defended by this structural guard, not by file layout
+  (noory-ai overhaul R8 / Track 2.2).
+
 ## [1.8.0] - 2026-06-10
 
 ### Changed
