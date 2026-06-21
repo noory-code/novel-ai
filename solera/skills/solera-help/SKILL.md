@@ -8,7 +8,7 @@ metadata:
   type: unit
   style: guide
   triggers: [what is solera, solera help, solera get started, how to use solera]
-  uses: [solera-plan, solera-run, solera-retro, solera-feedback]
+  uses: [solera-plan, solera-run, solera-decide, solera-retro, solera-feedback]
 ---
 
 # Solera

@@ -1,5 +1,36 @@
 # Changelog
 
+## [7.2.0] — 2026-06-21
+
+Minor — hooks (D2-6): the automation layer that keeps the loop from drifting.
+
+### Added
+
+- **SessionStart hook** (`hooks/session_start.py`) — orients a new session in the
+  active workspace: surfaces the in-progress leaf (its goal and gate) and the next
+  command to additionalContext, so a session never starts blind to where the loop
+  left off. No-op outside a Solera workspace.
+- **Stop hook** (`hooks/stop.py`) — if a leaf is left `doing` at session end,
+  prints a reminder to run `solera complete` (or write feedback). Advisory only —
+  it never blocks the stop, so it cannot trap the loop.
+
+Both are pure-stdlib, cross-platform, and read the workspace files directly (no
+import of the solera package, so they run even when nothing is installed).
+
+## [7.1.0] — 2026-06-21
+
+Minor — decision-type leaves (D2-3).
+
+### Added
+
+- **`solera-decide` skill** — how to run a leaf that *decides* rather than
+  *builds* (a tech stack, an architecture, a convention). The agent surfaces
+  options and escalates; the **human** chooses and records the decision in
+  [cairn](https://github.com/noory-code/noory-ai/tree/main/cairn); the leaf gates
+  on `cairn check --about <topic>`. No new Solera code — a decision leaf is a
+  normal WorkItem whose gate is a cairn command, so the two tools stay decoupled
+  (no import; the link is a topic slug by value).
+
 ## [7.0.1] — 2026-06-21
 
 Docs — artifact-home rule corrected. `docs/ARTIFACT_HOMES.md` (and the
