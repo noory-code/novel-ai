@@ -20,20 +20,26 @@ from .gate import DEFAULT_TIMEOUT_SECONDS, GateResult, run_action_gate
 from .workspace import Workspace
 
 
-def find_next_todo(ws: Workspace) -> tuple[str, str] | None:
-    """First ``todo`` Action in workspace order, or ``None`` if all are done.
+def find_next_open(ws: Workspace) -> tuple[str, str] | None:
+    """The next Action to work on, or ``None`` if every Action is done.
 
-    Order is deterministic: stories by sorted id, Actions in the order the Story
-    declares them. Done Stories are skipped entirely.
+    A ``doing`` Action is resumed before any ``todo`` is started: there is one
+    active Action at a time, so a chunk stuck after a failed gate is re-offered
+    rather than skipped. Order is otherwise deterministic — stories by sorted id,
+    Actions as the Story declares them; done Stories are skipped entirely.
     """
+    first_todo: tuple[str, str] | None = None
     for story_id in ws.list_stories():
         story = ws.load_story(story_id)
         if story.status == "done":
             continue
         for action_id in story.actions:
-            if ws.load_action(story_id, action_id).status == "todo":
+            status = ws.load_action(story_id, action_id).status
+            if status == "doing":
                 return (story_id, action_id)
-    return None
+            if status == "todo" and first_todo is None:
+                first_todo = (story_id, action_id)
+    return first_todo
 
 
 def set_action_status(ws: Workspace, story_id: str, action_id: str, status: Status) -> Action:
@@ -56,7 +62,7 @@ def start_next(ws: Workspace) -> tuple[str, str] | None:
     Returns the ``(story_id, action_id)`` now in progress, or ``None`` when
     nothing is open — in which case the pointer is cleared to ``null``.
     """
-    pair = find_next_todo(ws)
+    pair = find_next_open(ws)
     if pair is None:
         ws.write_progress(Progress(story=None, action=None))
         return None

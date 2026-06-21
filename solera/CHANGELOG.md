@@ -1,5 +1,24 @@
 # Changelog
 
+## [6.0.1] — 2026-06-21
+
+Patch — one-active-Action invariant + operational spec.
+
+### Fixed
+
+- **`next` no longer skips a stuck Action.** When a gate fails, the Action holds
+  in `doing`; previously `find_next_todo` looked only for `todo`, so the next
+  `next` would silently start a later Action and abandon the stuck one.
+  `find_next_open` now resumes a `doing` Action before starting any `todo` —
+  one active Action at a time (`solera/supervisor.py`).
+
+### Added
+
+- **`docs/SPEC.md`** — how the slim core works, with mermaid diagrams (loop,
+  Action state machine, file layout) and the invariants.
+- End-to-end coverage of the blocked path (gate fails → feedback note → Action
+  holds → `next` re-offers it) in `tests/test_scenario.py`.
+
 ## [6.0.0] — 2026-06-21
 
 Major — **rebirth**. Solera is rebuilt from scratch as a slim **harness**:

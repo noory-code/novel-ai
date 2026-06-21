@@ -5,4 +5,4 @@ the steps an external AI agent executes. It does not run the agent loop itself a
 it works standalone, with or without Plot.
 """
 
-__version__ = "6.0.0"
+__version__ = "6.0.1"

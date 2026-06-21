@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 from solera.audit import audit_workspace
-from solera.formats import Progress, Retrospective
+from solera.formats import Feedback, Progress, Retrospective
 from solera.planning import add_action, create_story
 from solera.supervisor import complete, start_next
 from solera.workspace import Workspace
@@ -52,4 +52,29 @@ def test_full_standalone_scenario(tmp_path: Path) -> None:
 
     prog = ws.load_progress()
     assert prog.story is None and prog.action is None
+    assert audit_workspace(ws) == []
+
+
+def test_blocked_path_writes_feedback_and_holds(tmp_path: Path) -> None:
+    """When a gate cannot pass, the agent records feedback and the Action holds."""
+    project = tmp_path / "project"
+    project.mkdir()
+    ws = Workspace(project / ".noory" / "solera")
+    ws.write_progress(Progress(story=None, action=None))
+
+    story = create_story(ws, "Do something that gets stuck.")
+    add_action(ws, story.id, "Create blocker.txt", gate=_file_gate("blocker.txt"))
+
+    story_id, action_id = start_next(ws)  # type: ignore[misc]
+    # the agent cannot produce the file; the gate fails
+    assert complete(ws, story_id, action_id, cwd=project).passed is False
+
+    # it writes a neutral feedback note and stops
+    ws.write_feedback(Feedback(id="FB-001", about=[], body="Cannot create blocker.txt: no source."))
+    assert ws.load_feedback("FB-001").body.startswith("Cannot")
+    assert ws.list_feedback() == ["FB-001"]
+
+    # the Action holds in doing; next re-offers it rather than skipping ahead
+    assert ws.load_action(story_id, action_id).status == "doing"
+    assert start_next(ws) == (story_id, action_id)
     assert audit_workspace(ws) == []

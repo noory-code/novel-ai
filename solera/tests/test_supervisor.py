@@ -11,7 +11,7 @@ from pathlib import Path
 
 import yaml
 
-from solera.supervisor import complete, find_next_todo, instruction, start_next
+from solera.supervisor import complete, find_next_open, instruction, start_next
 from solera.workspace import Workspace
 
 
@@ -47,27 +47,36 @@ def _seed_two_actions(tmp_path: Path) -> Workspace:
     return ws
 
 
-# --- 3a find next todo -----------------------------------------------------
+# --- 3a find next open -----------------------------------------------------
 
 
-def test_find_next_todo_returns_first_open_in_order(tmp_path: Path) -> None:
+def test_find_next_open_returns_first_in_order(tmp_path: Path) -> None:
     ws = _seed_two_actions(tmp_path)
-    assert find_next_todo(ws) == ("STORY-001", "ACT-001")
+    assert find_next_open(ws) == ("STORY-001", "ACT-001")
 
 
-def test_find_next_todo_skips_done(tmp_path: Path) -> None:
+def test_find_next_open_skips_done(tmp_path: Path) -> None:
     ws = _seed_two_actions(tmp_path)
     ws.write_action("STORY-001", ws.load_action("STORY-001", "ACT-001").model_copy(
         update={"status": "done"}))
-    assert find_next_todo(ws) == ("STORY-001", "ACT-002")
+    assert find_next_open(ws) == ("STORY-001", "ACT-002")
 
 
-def test_find_next_todo_none_when_all_done(tmp_path: Path) -> None:
+def test_find_next_open_none_when_all_done(tmp_path: Path) -> None:
     ws = _seed_two_actions(tmp_path)
     for a in ("ACT-001", "ACT-002"):
         ws.write_action("STORY-001", ws.load_action("STORY-001", a).model_copy(
             update={"status": "done"}))
-    assert find_next_todo(ws) is None
+    assert find_next_open(ws) is None
+
+
+def test_find_next_open_resumes_doing_before_todo(tmp_path: Path) -> None:
+    """A stuck doing Action is resumed, not skipped — one active Action at a time."""
+    ws = _seed_two_actions(tmp_path)
+    # ACT-001 is doing (e.g. its gate failed); ACT-002 is still todo.
+    ws.write_action("STORY-001", ws.load_action("STORY-001", "ACT-001").model_copy(
+        update={"status": "doing"}))
+    assert find_next_open(ws) == ("STORY-001", "ACT-001")
 
 
 # --- 3b/3e start: todo->doing + pointer ------------------------------------
@@ -116,13 +125,17 @@ def test_complete_pass_marks_done(tmp_path: Path) -> None:
 def test_complete_fail_leaves_doing(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
     ws.story_dir("STORY-001").mkdir(parents=True)
-    ws.story_path("STORY-001").write_text(_story(["ACT-001"]))
+    ws.story_path("STORY-001").write_text(_story(["ACT-001", "ACT-002"]))
     ws.action_path("STORY-001", "ACT-001").write_text(_action(_file_gate("missing.txt")))
+    ws.action_path("STORY-001", "ACT-002").write_text(_action(_pass_gate()))
     ws.progress_path.write_text("---\nstory: null\naction: null\n---\n")
     start_next(ws)
     res = complete(ws, "STORY-001", "ACT-001", cwd=tmp_path)
     assert res.passed is False
     assert ws.load_action("STORY-001", "ACT-001").status == "doing"  # stuck for human
+    # next does NOT skip to ACT-002 — it re-offers the stuck ACT-001.
+    assert start_next(ws) == ("STORY-001", "ACT-001")
+    assert ws.load_action("STORY-001", "ACT-002").status == "todo"
 
 
 def test_complete_marks_story_done_when_all_actions_done(tmp_path: Path) -> None:
