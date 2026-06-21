@@ -1,5 +1,46 @@
 # Changelog
 
+## [6.0.0] — 2026-06-21
+
+Major — **rebirth**. Solera is rebuilt from scratch as a slim **harness**:
+it plans work and runs gates, but never builds anything itself. The old mindmap
+canvas, three-axis model, four canvases, MCP server, React viewer, and VSCode
+extension are removed. Breaking: the `.solera/` / canvas data model and the
+`solera_mcp` server no longer exist.
+
+### Added
+
+- **File-convention core** (`solera/formats.py`, `solera/workspace.py`). A
+  `.noory/solera/` workspace of plain Markdown files: Story and Action with YAML
+  frontmatter, identity in the path (Story = directory, Action = file stem),
+  fail-fast parsers (`FormatError`) with strict pydantic models.
+- **Deterministic gate-runner** (`solera/gate.py`). One command, tokenised and
+  run with `shell=False`; exit 0 passes, anything else fails, with stdout/stderr
+  captured. Timeout / binary-not-found reported as `passed=False`, never raised.
+- **Supervisor** (`solera/supervisor.py`). Finds the next open Action, hands the
+  agent an instruction, runs the gate, advances on pass or stops (Action stuck in
+  `doing`) for a human on fail. The `progress.md` pointer tracks the active Action.
+- **Planning helpers** (`solera/planning.py`). Deterministic id allocation and
+  Story/Action creation, so generated files always satisfy the format.
+- **Retrospective + feedback notes** (`solera/formats.py`). Neutral ID-tagged
+  notes; the `about` tag is optional so standalone Solera (no published spec)
+  still produces valid notes.
+- **Artifact homes** (`solera/artifacts.py`, `docs/ARTIFACT_HOMES.md`). One home
+  per output; process artifacts stage under a Story tagged (about / from), not
+  versioned; a light misplacement guard.
+- **Workspace audit** (`solera/audit.py`). Cross-file referential-integrity guard.
+- **CLI** (`solera/cli.py`) + **skills** (`solera-help`, `solera-plan`,
+  `solera-run`, `solera-retro`, `solera-feedback`). The agent-facing surface:
+  `python -m solera <command>`.
+- **R8 independence guard** (`tests/test_independence.py`). No source file imports
+  a Plot module or path-references the plot tree — the connection is by value only.
+
+### Removed
+
+- `solera_mcp/`, `viewer/`, `vscode-extension/`, the old `skills/`, `commands/`,
+  `docs/`, and `tests/`. The MCP server is now a later Plot-integration concern,
+  not part of the standalone core.
+
 ## [5.2.1] — 2026-06-15
 
 Patch. R8 independence build guard.

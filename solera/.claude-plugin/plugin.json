@@ -1,21 +1,14 @@
 {
   "name": "solera",
-  "version": "5.2.1",
-  "description": "AI-driven project workflow with a mindmap canvas. Three-axis model: Living (Identity, Personas, Journeys, Narratives, Concepts), Time-bound (Milestones, Stories, Action Items), Immutable (Releases). Humans draw; AI decomposes, proposes, and verifies. Ships with skills, MCP server, and four canvases (Service / Plan / Build / Live) over one `.noory/solera/` dotfolder (legacy `.solera/` auto-migrates on first read).",
+  "version": "6.0.0",
+  "description": "Solera — a slim harness that plans work into Stories and Actions, runs deterministic gates, and orders the steps an external AI agent executes. It supervises rather than builds, and works standalone over a plain-file .noory/solera/ workspace, with or without Plot. Ships skills (plan / run / retro / feedback) over a `solera` CLI.",
   "homepage": "https://github.com/noory-code/noory-ai/tree/main/solera",
   "repository": "https://github.com/noory-code/noory-ai",
   "license": "MIT",
-  "keywords": ["workflow", "planning", "writing", "claude-code", "mcp", "mindmap", "canvas", "project-management", "concept", "persona", "journey", "narrative", "milestone", "release"],
+  "keywords": ["harness", "agent", "planning", "gate", "workflow", "claude-code", "supervisor"],
   "author": {
     "name": "noory-code",
     "url": "https://github.com/noory-code"
   },
-  "skills": "./skills/",
-  "commands": "./commands/",
-  "mcpServers": {
-    "solera": {
-      "command": "uv",
-      "args": ["run", "--directory", "${CLAUDE_PLUGIN_ROOT}", "python", "-m", "solera_mcp"]
-    }
-  }
+  "skills": "./skills/"
 }
