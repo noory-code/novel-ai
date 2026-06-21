@@ -57,6 +57,9 @@ class Workspace:
     def retrospective_path(self, story_id: str) -> Path:
         return self.story_dir(story_id) / "RETROSPECTIVE.md"
 
+    def artifacts_dir(self, story_id: str) -> Path:
+        return self.story_dir(story_id) / "artifacts"
+
     @property
     def feedback_dir(self) -> Path:
         return self.root / "feedback"
