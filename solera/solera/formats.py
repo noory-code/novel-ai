@@ -15,7 +15,14 @@ from __future__ import annotations
 from typing import Any, Literal, TypeVar
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 from .errors import FormatError
 
@@ -87,6 +94,43 @@ class Progress(BaseModel):
 
     story: str | None
     action: str | None
+
+
+class WorkItem(BaseModel):
+    """One rung of the altitude ladder — initiative, epic, story, or action.
+
+    ``level`` is a free label (conventionally initiative/epic/story/action). The
+    executable invariant: a **leaf** carries a ``gate`` and no children; a
+    **container** carries children and no gate. An item may have neither yet (a
+    container awaiting decomposition) but never both.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str
+    level: str
+    status: Status
+    gate: str = ""
+    children: list[str] = Field(default_factory=list)
+    goal: str
+
+    _check_goal = field_validator("goal")(_require_goal)
+
+    @model_validator(mode="after")
+    def _not_both_leaf_and_container(self) -> WorkItem:
+        if self.gate and self.children:
+            raise ValueError(
+                "a WorkItem cannot be both a leaf (gate) and a container (children)"
+            )
+        return self
+
+    @property
+    def is_leaf(self) -> bool:
+        return bool(self.gate)
+
+    @property
+    def is_container(self) -> bool:
+        return bool(self.children)
 
 
 class _Note(BaseModel):
@@ -161,6 +205,25 @@ def dump_progress(progress: Progress) -> str:
     """Serialize the pointer back to ``progress.md`` text."""
     fm = _frontmatter({"story": progress.story, "action": progress.action})
     return f"---\n{fm}\n---\n"
+
+
+def parse_workitem(text: str, *, item_id: str) -> WorkItem:
+    """Parse a WorkItem file. ``item_id`` comes from the filename."""
+    data, body = _split_frontmatter(text)
+    return _build(WorkItem, data, id=item_id, goal=body)
+
+
+def dump_workitem(item: WorkItem) -> str:
+    """Serialize a WorkItem back to file text. Inverse of :func:`parse_workitem`."""
+    fm = _frontmatter(
+        {
+            "level": item.level,
+            "status": item.status,
+            "gate": item.gate,
+            "children": list(item.children),
+        }
+    )
+    return f"---\n{fm}\n---\n{item.goal}\n"
 
 
 def parse_retrospective(text: str, *, story_id: str) -> Retrospective:
