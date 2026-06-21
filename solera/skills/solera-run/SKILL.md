@@ -1,7 +1,7 @@
 ---
 name: solera-run
 user-invocable: true
-description: Execute a planned Solera Story one Action at a time, verifying each through its gate.
+description: Execute a planned Solera WorkItem tree one leaf at a time, verifying each through its gate.
 metadata:
   version: "6.0.0"
   category: execution
@@ -13,20 +13,20 @@ metadata:
 
 # solera-run
 
-Execute the plan one Action at a time. You do the building; Solera orders the
+Execute the plan one leaf at a time. You do the building; Solera orders the
 work and runs each gate.
 
 ## Procedure (repeat until nothing is open)
 
-1. Take the next Action:
+1. Take the next leaf:
 
    ```bash
    uv run --directory "${CLAUDE_PLUGIN_ROOT}" solera --root "$PWD" next
    ```
 
-   - Prints `(nothing open)` -> the Story is complete. Stop. Consider
+   - Prints `(nothing open)` -> the tree is complete. Stop. Consider
      **solera-retro**.
-   - Otherwise prints the instruction: the Action id, its goal, and the gate.
+   - Otherwise prints the instruction: the leaf's id, its goal, and the gate.
 
 2. **Build it.** Do the work the goal describes, in the project. Do not run the
    gate yourself — just make it pass.
@@ -37,9 +37,9 @@ work and runs each gate.
    uv run --directory "${CLAUDE_PLUGIN_ROOT}" solera --root "$PWD" complete
    ```
 
-   - `PASS` -> the Action is `done`. Go back to step 1.
-   - `FAIL` -> the Action stays `doing`. Read the printed gate output, fix the
-     work, and re-run `complete`.
+   - `PASS` -> the leaf is `done` and its ancestors roll up. Go back to step 1.
+   - `FAIL` -> the leaf stays `doing`. Read the printed gate output, fix the
+     work, and re-run `complete`. `next` will resume the same leaf, not skip it.
 
 ## When to stop and escalate
 

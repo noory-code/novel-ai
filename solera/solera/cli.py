@@ -16,7 +16,7 @@ from pathlib import Path
 from .audit import audit_workspace
 from .errors import SoleraError
 from .formats import Feedback, Retrospective
-from .planning import add_action, create_story
+from .planning import create_item
 from .supervisor import complete, instruction, start_next
 from .workspace import Workspace
 
@@ -26,36 +26,35 @@ def _ws(root: Path) -> Workspace:
 
 
 def _cmd_plan(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
-    story = create_story(ws, args.goal)
-    print(story.id)
+    print(create_item(ws, args.level, args.goal).id)
     return 0
 
 
 def _cmd_add(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
-    action = add_action(ws, args.story, args.goal, gate=args.gate)
-    print(action.id)
+    item = create_item(ws, args.level, args.goal, gate=args.gate, parent=args.parent)
+    print(item.id)
     return 0
 
 
 def _cmd_next(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
-    pair = start_next(ws)
-    if pair is None:
+    item_id = start_next(ws)
+    if item_id is None:
         print("(nothing open)")
         return 0
-    print(instruction(ws, *pair))
+    print(instruction(ws, item_id))
     return 0
 
 
 def _cmd_complete(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     prog = ws.load_progress()
-    if prog.story is None or prog.action is None:
+    if prog.item is None:
         print("nothing in progress; run 'next' first")
         return 1
-    result = complete(ws, prog.story, prog.action, cwd=root)
+    result = complete(ws, prog.item, cwd=root)
     if result.passed:
-        print(f"PASS {prog.story}/{prog.action}")
+        print(f"PASS {prog.item}")
         return 0
-    print(f"FAIL {prog.story}/{prog.action}")
+    print(f"FAIL {prog.item}")
     if result.stdout.strip():
         print(result.stdout.rstrip())
     if result.stderr.strip():
@@ -65,8 +64,7 @@ def _cmd_complete(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
 
 def _cmd_status(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     if ws.progress_path.exists():
-        prog = ws.load_progress()
-        print(f"pointer: story={prog.story} action={prog.action}")
+        print(f"pointer: item={ws.load_progress().item}")
     else:
         print("pointer: (none)")
     problems = audit_workspace(ws)
@@ -76,7 +74,7 @@ def _cmd_status(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
 
 
 def _cmd_retro(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
-    ws.write_retrospective(Retrospective(id=args.story, about=list(args.about), body=args.body))
+    ws.write_retrospective(Retrospective(id=args.item, about=list(args.about), body=args.body))
     return 0
 
 
@@ -92,27 +90,29 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="project directory")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_plan = sub.add_parser("plan", help="create a Story from a goal")
+    p_plan = sub.add_parser("plan", help="create a root WorkItem from a goal")
     p_plan.add_argument("goal")
+    p_plan.add_argument("--level", default="story", help="initiative/epic/story/action")
     p_plan.set_defaults(func=_cmd_plan)
 
-    p_add = sub.add_parser("add", help="add an Action to a Story")
-    p_add.add_argument("story")
+    p_add = sub.add_parser("add", help="add a child WorkItem under a parent")
+    p_add.add_argument("parent")
     p_add.add_argument("goal")
-    p_add.add_argument("--gate", required=True, help="command that verifies the Action")
+    p_add.add_argument("--level", default="action", help="initiative/epic/story/action")
+    p_add.add_argument("--gate", default="", help="command that verifies a leaf")
     p_add.set_defaults(func=_cmd_add)
 
-    p_next = sub.add_parser("next", help="start the next Action and print its instruction")
+    p_next = sub.add_parser("next", help="start the next leaf and print its instruction")
     p_next.set_defaults(func=_cmd_next)
 
-    p_complete = sub.add_parser("complete", help="run the current Action's gate")
+    p_complete = sub.add_parser("complete", help="run the current leaf's gate")
     p_complete.set_defaults(func=_cmd_complete)
 
     p_status = sub.add_parser("status", help="show the pointer and any audit problems")
     p_status.set_defaults(func=_cmd_status)
 
-    p_retro = sub.add_parser("retro", help="write a Story retrospective")
-    p_retro.add_argument("story")
+    p_retro = sub.add_parser("retro", help="write a retrospective for an item")
+    p_retro.add_argument("item")
     p_retro.add_argument("body")
     p_retro.add_argument("--about", action="append", default=[], help="id tag (repeatable)")
     p_retro.set_defaults(func=_cmd_retro)

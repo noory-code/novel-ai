@@ -1,10 +1,11 @@
-"""Cross-file workspace audit — the capstone guard.
+"""Cross-file workspace audit — the capstone guard for the WorkItem tree.
 
-Per-file parsing fails fast on its own (CORE-1). This audit checks the relations
-*between* files: every referenced Action has a parseable file, no Action file is
-orphaned, and the ``progress.md`` pointer points at things that exist. It
-collects problems and returns them rather than raising, so a caller can report
-every issue at once instead of stopping at the first.
+Per-file parsing fails fast on its own. This audit checks the relations between
+items: every referenced child has a parseable file, no child has two parents,
+there are no cycles, and the ``progress.md`` pointer points at something that
+exists. It collects problems and returns them rather than raising, so a caller
+can report every issue at once. (An unreferenced item is not a problem — it is
+simply a root of the forest.)
 """
 
 from __future__ import annotations
@@ -12,9 +13,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .errors import FormatError
+from .formats import WorkItem
 from .workspace import Workspace
-
-_RESERVED = {"story.md", "RETROSPECTIVE.md"}
 
 
 @dataclass(frozen=True)
@@ -29,68 +29,59 @@ def audit_workspace(ws: Workspace) -> list[Problem]:
     """Return every referential-integrity problem in the workspace (possibly empty)."""
     problems: list[Problem] = []
 
-    for story_id in ws.list_stories():
+    parsed: dict[str, WorkItem] = {}
+    for item_id in ws.list_items():
         try:
-            story = ws.load_story(story_id)
+            parsed[item_id] = ws.load_item(item_id)
         except FormatError as exc:
-            problems.append(
-                Problem("malformed-story", f"{story_id}: cannot parse story.md ({exc})")
-            )
-            continue
+            problems.append(Problem("malformed-item", f"{item_id}: cannot parse ({exc})"))
 
-        referenced = set(story.actions)
-        for action_id in story.actions:
-            if not ws.action_path(story_id, action_id).exists():
+    parent_of: dict[str, str] = {}
+    for item_id, item in parsed.items():
+        for child in item.children:
+            if child not in parsed and not ws.item_path(child).exists():
+                problems.append(
+                    Problem("missing-child", f"{item_id} references {child} which has no file")
+                )
+            if child in parent_of:
                 problems.append(
                     Problem(
-                        "missing-action",
-                        f"{story_id}/{action_id}: referenced action file is missing",
+                        "multi-parent",
+                        f"{child} is a child of both {parent_of[child]} and {item_id}",
                     )
                 )
-                continue
-            try:
-                ws.load_action(story_id, action_id)
-            except FormatError as exc:
-                problems.append(
-                    Problem("malformed-action", f"{story_id}/{action_id}: cannot parse ({exc})")
-                )
+            else:
+                parent_of[child] = item_id
 
-        for path in sorted(ws.story_dir(story_id).glob("*.md")):
-            if path.name not in _RESERVED and path.stem not in referenced:
-                problems.append(
-                    Problem(
-                        "orphan-action",
-                        f"{story_id}/{path.stem}: orphan action file not referenced by its story",
-                    )
-                )
-
-    problems.extend(_audit_pointer(ws))
+    problems.extend(_find_cycles(parsed, parent_of))
+    problems.extend(_audit_pointer(ws, parsed))
     return problems
 
 
-def _audit_pointer(ws: Workspace) -> list[Problem]:
+def _find_cycles(parsed: dict[str, WorkItem], parent_of: dict[str, str]) -> list[Problem]:
+    reported: set[str] = set()
+    out: list[Problem] = []
+    for start in parsed:
+        seen = {start}
+        current = parent_of.get(start)
+        while current is not None:
+            if current in seen:
+                if current not in reported:
+                    reported.add(current)
+                    out.append(Problem("cycle", f"cycle detected through {current}"))
+                break
+            seen.add(current)
+            current = parent_of.get(current)
+    return out
+
+
+def _audit_pointer(ws: Workspace, parsed: dict[str, WorkItem]) -> list[Problem]:
     if not ws.progress_path.exists():
         return []
     try:
         prog = ws.load_progress()
     except FormatError as exc:
         return [Problem("malformed-progress", f"progress.md: cannot parse ({exc})")]
-
-    stories = set(ws.list_stories())
-    if prog.story is not None and prog.story not in stories:
-        return [
-            Problem(
-                "dangling-pointer",
-                f"progress points at story {prog.story} which does not exist",
-            )
-        ]
-    if prog.story is not None and prog.action is not None:
-        story = ws.load_story(prog.story)
-        if prog.action not in story.actions:
-            return [
-                Problem(
-                    "dangling-pointer",
-                    f"progress points at action {prog.action} not in {prog.story}",
-                )
-            ]
+    if prog.item is not None and prog.item not in parsed and not ws.item_path(prog.item).exists():
+        return [Problem("dangling-pointer", f"progress points at {prog.item} which does not exist")]
     return []

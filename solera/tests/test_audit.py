@@ -1,16 +1,10 @@
-"""CORE-8 (capstone) — workspace audit: referential integrity across files.
-
-Per-file parsing already fails fast (CORE-1). The audit is the cross-file guard:
-every referenced Action has a file, no Action file is orphaned, and the pointer
-points at things that exist. It reports problems rather than raising, so a tool
-can show them all at once.
-"""
+"""D2-2 — workspace audit: tree integrity across WorkItem files."""
 
 from pathlib import Path
 
 from solera.audit import audit_workspace
-from solera.formats import Progress
-from solera.planning import add_action, create_story
+from solera.formats import Progress, WorkItem
+from solera.planning import create_item
 from solera.workspace import Workspace
 
 
@@ -18,44 +12,51 @@ def _ws(tmp_path: Path) -> Workspace:
     return Workspace(tmp_path / ".noory" / "solera")
 
 
-def test_clean_workspace_has_no_problems(tmp_path: Path) -> None:
+def test_clean_tree_has_no_problems(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    story = create_story(ws, "goal")
-    add_action(ws, story.id, "step", gate="true")
-    ws.write_progress(Progress(story=None, action=None))
+    story = create_item(ws, "story", "box")
+    create_item(ws, "action", "step", gate="true", parent=story.id)
+    ws.write_progress(Progress(item=None))
     assert audit_workspace(ws) == []
 
 
-def test_flags_referenced_action_with_no_file(tmp_path: Path) -> None:
+def test_flags_referenced_child_with_no_file(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    story = create_story(ws, "goal")
-    add_action(ws, story.id, "step", gate="true")
-    ws.action_path(story.id, "ACT-001").unlink()  # delete the file, keep the reference
+    story = create_item(ws, "story", "box")
+    create_item(ws, "action", "step", gate="true", parent=story.id)
+    ws.item_path("ACT-001").unlink()  # remove file, keep the reference
     problems = audit_workspace(ws)
-    assert any("ACT-001" in p.detail and "missing" in p.detail.lower() for p in problems)
+    assert any("ACT-001" in p.detail and p.kind == "missing-child" for p in problems)
 
 
-def test_flags_orphan_action_file(tmp_path: Path) -> None:
+def test_flags_multi_parent(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    story = create_story(ws, "goal")  # no actions referenced
-    ws.action_path(story.id, "ACT-999").write_text(
-        "---\nstatus: todo\ngate: \"true\"\n---\nOrphan.\n"
-    )
-    problems = audit_workspace(ws)
-    assert any("ACT-999" in p.detail and "orphan" in p.detail.lower() for p in problems)
+    leaf = create_item(ws, "action", "shared", gate="true")  # ACT-001
+    s1 = create_item(ws, "story", "one")  # STORY-001
+    s2 = create_item(ws, "story", "two")  # STORY-002
+    ws.write_item(ws.load_item(s1.id).model_copy(update={"children": [leaf.id]}))
+    ws.write_item(ws.load_item(s2.id).model_copy(update={"children": [leaf.id]}))
+    assert any(p.kind == "multi-parent" for p in audit_workspace(ws))
 
 
-def test_flags_pointer_to_missing_story(tmp_path: Path) -> None:
+def test_flags_cycle(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    create_story(ws, "goal")
-    ws.write_progress(Progress(story="STORY-404", action="ACT-001"))
-    problems = audit_workspace(ws)
-    assert any("STORY-404" in p.detail for p in problems)
+    a = WorkItem(id="A", level="epic", status="todo", children=["B"], goal="a")
+    b = WorkItem(id="B", level="story", status="todo", children=["A"], goal="b")
+    ws.write_item(a)
+    ws.write_item(b)
+    assert any(p.kind == "cycle" for p in audit_workspace(ws))
 
 
-def test_flags_malformed_story(tmp_path: Path) -> None:
+def test_flags_dangling_pointer(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    ws.story_dir("STORY-001").mkdir(parents=True)
-    ws.story_path("STORY-001").write_text("garbage, no frontmatter\n")
-    problems = audit_workspace(ws)
-    assert any("STORY-001" in p.detail for p in problems)
+    create_item(ws, "story", "box")
+    ws.write_progress(Progress(item="ACT-404"))
+    assert any("ACT-404" in p.detail for p in audit_workspace(ws))
+
+
+def test_flags_malformed_item(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    ws.items_dir.mkdir(parents=True)
+    ws.item_path("STORY-001").write_text("garbage, no frontmatter\n")
+    assert any("STORY-001" in p.detail for p in audit_workspace(ws))

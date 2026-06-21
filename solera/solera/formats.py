@@ -1,10 +1,10 @@
 """Parsers and models for the plain-file ``.noory/solera/`` workspace.
 
-Each Story and Action is a Markdown file: a YAML frontmatter block holds the
-machine-readable fields, the body holds the human goal. Identity is **not** in
-the frontmatter — it lives in the path (the Action's filename, the Story's
-directory name) and is handed to the parser explicitly. This keeps a single
-source of truth for ids and avoids drift between a file's name and its contents.
+Every node of work is a :class:`WorkItem` — a Markdown file whose YAML
+frontmatter holds the machine-readable fields and whose body holds the human
+goal. Identity is **not** in the frontmatter — it lives in the path (the file
+name) and is handed to the parser explicitly. This keeps a single source of
+truth for ids and avoids drift between a file's name and its contents.
 
 The parsers fail fast: a malformed file raises :class:`FormatError` rather than
 being silently coerced, so a bad workspace never reaches the supervisor or gate.
@@ -61,41 +61,6 @@ def _require_goal(value: str) -> str:
     return value
 
 
-class Action(BaseModel):
-    """A unit of work an AI agent can finish in one context, with a gate."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    id: str
-    status: Status
-    gate: str
-    goal: str
-
-    _check_goal = field_validator("goal")(_require_goal)
-
-
-class Story(BaseModel):
-    """A goal decomposed into an ordered list of Action ids."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    id: str
-    status: Status
-    actions: list[str]
-    goal: str
-
-    _check_goal = field_validator("goal")(_require_goal)
-
-
-class Progress(BaseModel):
-    """The current pointer into the workspace: which Story / Action is active."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    story: str | None
-    action: str | None
-
-
 class WorkItem(BaseModel):
     """One rung of the altitude ladder — initiative, epic, story, or action.
 
@@ -133,6 +98,14 @@ class WorkItem(BaseModel):
         return bool(self.children)
 
 
+class Progress(BaseModel):
+    """The pointer into the workspace: which leaf WorkItem is currently active."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    item: str | None
+
+
 class _Note(BaseModel):
     """A neutral ID-tagged note: a body of prose plus optional ``about`` tags.
 
@@ -150,7 +123,7 @@ class _Note(BaseModel):
 
 
 class Retrospective(_Note):
-    """Written after a Story finishes: what the design lacked (post-hoc sensor)."""
+    """Written after a WorkItem finishes: what the design lacked (post-hoc sensor)."""
 
 
 class Feedback(_Note):
@@ -164,47 +137,8 @@ def _build(model: type[_M], data: dict[str, Any], **path_fields: Any) -> _M:
         raise FormatError(f"invalid {model.__name__.lower()}: {exc}") from exc
 
 
-def parse_action(text: str, *, action_id: str) -> Action:
-    """Parse an Action file. ``action_id`` comes from the filename."""
-    data, body = _split_frontmatter(text)
-    return _build(Action, data, id=action_id, goal=body)
-
-
-def parse_story(text: str, *, story_id: str) -> Story:
-    """Parse a Story file. ``story_id`` comes from the directory name."""
-    data, body = _split_frontmatter(text)
-    return _build(Story, data, id=story_id, goal=body)
-
-
-def parse_progress(text: str) -> Progress:
-    """Parse ``progress.md`` — the pointer to the active Story / Action."""
-    data, _ = _split_frontmatter(text)
-    return _build(Progress, data)
-
-
 def _frontmatter(fields: dict[str, Any]) -> str:
     return yaml.safe_dump(fields, sort_keys=False, default_flow_style=False).strip()
-
-
-def dump_action(action: Action) -> str:
-    """Serialize an Action back to file text. Inverse of :func:`parse_action`.
-
-    ``id`` is omitted — it lives in the filename, not the frontmatter.
-    """
-    fm = _frontmatter({"status": action.status, "gate": action.gate})
-    return f"---\n{fm}\n---\n{action.goal}\n"
-
-
-def dump_story(story: Story) -> str:
-    """Serialize a Story back to file text. Inverse of :func:`parse_story`."""
-    fm = _frontmatter({"status": story.status, "actions": list(story.actions)})
-    return f"---\n{fm}\n---\n{story.goal}\n"
-
-
-def dump_progress(progress: Progress) -> str:
-    """Serialize the pointer back to ``progress.md`` text."""
-    fm = _frontmatter({"story": progress.story, "action": progress.action})
-    return f"---\n{fm}\n---\n"
 
 
 def parse_workitem(text: str, *, item_id: str) -> WorkItem:
@@ -226,10 +160,21 @@ def dump_workitem(item: WorkItem) -> str:
     return f"---\n{fm}\n---\n{item.goal}\n"
 
 
-def parse_retrospective(text: str, *, story_id: str) -> Retrospective:
-    """Parse a ``RETROSPECTIVE.md``. ``story_id`` comes from the directory."""
+def parse_progress(text: str) -> Progress:
+    """Parse ``progress.md`` — the pointer to the active WorkItem."""
+    data, _ = _split_frontmatter(text)
+    return _build(Progress, data)
+
+
+def dump_progress(progress: Progress) -> str:
+    """Serialize the pointer back to ``progress.md`` text."""
+    return f"---\n{_frontmatter({'item': progress.item})}\n---\n"
+
+
+def parse_retrospective(text: str, *, item_id: str) -> Retrospective:
+    """Parse a ``RETROSPECTIVE.md``. ``item_id`` comes from the filename."""
     data, body = _split_frontmatter(text)
-    return _build(Retrospective, data, id=story_id, body=body)
+    return _build(Retrospective, data, id=item_id, body=body)
 
 
 def parse_feedback(text: str, *, feedback_id: str) -> Feedback:
@@ -240,11 +185,9 @@ def parse_feedback(text: str, *, feedback_id: str) -> Feedback:
 
 def dump_retrospective(retro: Retrospective) -> str:
     """Serialize a Retrospective back to file text."""
-    fm = _frontmatter({"about": list(retro.about)})
-    return f"---\n{fm}\n---\n{retro.body}\n"
+    return f"---\n{_frontmatter({'about': list(retro.about)})}\n---\n{retro.body}\n"
 
 
 def dump_feedback(feedback: Feedback) -> str:
     """Serialize a Feedback note back to file text."""
-    fm = _frontmatter({"about": list(feedback.about)})
-    return f"---\n{fm}\n---\n{feedback.body}\n"
+    return f"---\n{_frontmatter({'about': list(feedback.about)})}\n---\n{feedback.body}\n"

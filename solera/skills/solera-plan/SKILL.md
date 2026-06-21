@@ -1,7 +1,7 @@
 ---
 name: solera-plan
 user-invocable: true
-description: Turn a goal into a Solera Story decomposed into small, individually gated Actions.
+description: Turn a goal into a Solera WorkItem tree decomposed down to small, individually gated leaves.
 metadata:
   version: "6.0.0"
   category: planning
@@ -13,8 +13,9 @@ metadata:
 
 # solera-plan
 
-Turn a goal into a Story and decompose it into Actions. The split is your
-judgement; the files are written by the CLI so they always stay valid.
+Turn a goal into a tree of WorkItems and decompose it down to gated leaves. The
+split is your judgement; the files are written by the CLI so they always stay
+valid.
 
 ## When to use
 
@@ -23,32 +24,39 @@ building starts.
 
 ## Procedure
 
-1. Create the Story:
-
-   ```bash
-   uv run --directory "${CLAUDE_PLUGIN_ROOT}" solera --root "$PWD" plan "<goal>"
-   ```
-
-   It prints the Story id (e.g. `STORY-001`).
-
-2. Decompose into Actions. For each chunk, decide:
-   - **goal** — one chunk you can finish in a single context.
-   - **gate** — a command that exits 0 only when the chunk is genuinely done
-     (a test, a build, a file/So content check). The gate is deterministic and
-     shell-independent; prefer `pytest ...`, `python -c "..."`, a linter, etc.
+1. Create a root. Pick its `--level` by how big the goal is — `initiative` for a
+   large effort, `story` for a single feature (the default):
 
    ```bash
    uv run --directory "${CLAUDE_PLUGIN_ROOT}" solera --root "$PWD" \
-     add STORY-001 "<action goal>" --gate "<verification command>"
+     plan "<goal>" --level initiative
    ```
 
-   Repeat in execution order. Each `add` prints the Action id.
+   It prints the id (e.g. `INIT-001`).
 
-## Rules for good Actions
+2. Decompose downward by adding children under a parent. Containers (no gate)
+   group; leaves (with a gate) are the work:
 
-- One context each. If a chunk needs more, split it further.
-- Every Action has a gate. No gate means it cannot be auto-verified.
-- The gate checks the *outcome*, not the steps (e.g. "tests pass", not "ran
-  pytest"). Anyone re-running the gate later must get the same verdict.
+   ```bash
+   # a grouping container under the root
+   uv run --directory "${CLAUDE_PLUGIN_ROOT}" solera --root "$PWD" \
+     add INIT-001 "<epic goal>" --level epic
+   # a gated leaf under that container
+   uv run --directory "${CLAUDE_PLUGIN_ROOT}" solera --root "$PWD" \
+     add EPIC-001 "<action goal>" --level action --gate "<verification command>"
+   ```
+
+   Add leaves in execution order. Each `add` prints the new id.
+
+## Rules for good items
+
+- **A leaf is one context.** If a chunk needs more than one clean agent context,
+  make it a container and split it into smaller leaves.
+- **Every leaf has a gate; containers never do.** The gate is deterministic and
+  shell-independent — prefer `pytest …`, `python -c "…"`, a linter, a build.
+- The gate checks the *outcome*, not the steps ("tests pass", not "ran pytest").
+  Anyone re-running it later must get the same verdict.
+- Some leaves are *decisions*, not builds (e.g. "choose the stack"). Their gate
+  is "a decision is recorded"; they escalate to a human via **solera-feedback**.
 
 When the plan is ready, hand off to **solera-run**.

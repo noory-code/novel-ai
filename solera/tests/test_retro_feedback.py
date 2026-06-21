@@ -1,10 +1,8 @@
 """CORE-6 — retrospective (after work) and feedback (while blocked).
 
-Both are neutral ID-tagged notes. The ``about`` tag is optional: standalone
-Solera has no published spec to point at, so a retrospective or feedback note
-works with an empty tag list and still parses. When Plot is connected the tag
-carries ids like ``feature/login@v2`` — but that is an integration concern, not
-a core requirement.
+Both are neutral ID-tagged notes; the ``about`` tag is optional so standalone
+Solera produces valid notes with an empty tag list. A retrospective attaches to
+any WorkItem by its id.
 """
 
 from pathlib import Path
@@ -27,15 +25,15 @@ from solera.workspace import Workspace
 
 def test_parse_retrospective_reads_body_and_tags() -> None:
     text = "---\nabout:\n  - feature/login\n---\nThe design missed the error path.\n"
-    retro = parse_retrospective(text, story_id="STORY-001")
+    retro = parse_retrospective(text, item_id="STORY-001")
     assert isinstance(retro, Retrospective)
     assert retro.id == "STORY-001"
     assert retro.about == ["feature/login"]
     assert retro.body == "The design missed the error path."
 
 
-def test_parse_retrospective_allows_empty_tags_standalone() -> None:
-    retro = parse_retrospective("---\n---\nWhat we learned.\n", story_id="STORY-002")
+def test_parse_retrospective_allows_empty_tags() -> None:
+    retro = parse_retrospective("---\n---\nWhat we learned.\n", item_id="INIT-001")
     assert retro.about == []
 
 
@@ -51,7 +49,7 @@ def test_parse_retrospective_allows_empty_tags_standalone() -> None:
 )
 def test_parse_retrospective_rejects_malformed(text: str) -> None:
     with pytest.raises(FormatError):
-        parse_retrospective(text, story_id="STORY-XXX")
+        parse_retrospective(text, item_id="X")
 
 
 # --- feedback --------------------------------------------------------------
@@ -60,23 +58,21 @@ def test_parse_retrospective_rejects_malformed(text: str) -> None:
 def test_parse_feedback_reads_body_and_tags() -> None:
     text = "---\nabout:\n  - feature/login@v2\n---\nBlocked: spec is ambiguous.\n"
     fb = parse_feedback(text, feedback_id="FB-001")
-    assert isinstance(fb, Feedback)
     assert fb.id == "FB-001"
     assert fb.about == ["feature/login@v2"]
     assert fb.body == "Blocked: spec is ambiguous."
 
 
 def test_parse_feedback_allows_empty_tags() -> None:
-    fb = parse_feedback("---\n---\nStuck on a missing tool.\n", feedback_id="FB-002")
-    assert fb.about == []
+    assert parse_feedback("---\n---\nStuck.\n", feedback_id="FB-002").about == []
 
 
 # --- round-trips + workspace io --------------------------------------------
 
 
 def test_retrospective_round_trips() -> None:
-    retro = parse_retrospective("---\nabout: [a, b]\n---\nLearned.\n", story_id="S1")
-    assert parse_retrospective(dump_retrospective(retro), story_id="S1") == retro
+    retro = parse_retrospective("---\nabout: [a, b]\n---\nLearned.\n", item_id="X")
+    assert parse_retrospective(dump_retrospective(retro), item_id="X") == retro
 
 
 def test_feedback_round_trips() -> None:
@@ -86,11 +82,10 @@ def test_feedback_round_trips() -> None:
 
 def test_workspace_writes_and_loads_retrospective(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
-    ws.story_dir("STORY-001").mkdir(parents=True)
-    retro = Retrospective(id="STORY-001", about=[], body="Done; learned X.")
+    retro = Retrospective(id="INIT-001", about=[], body="Done; learned X.")
     ws.write_retrospective(retro)
-    assert ws.retrospective_path("STORY-001").exists()
-    assert ws.load_retrospective("STORY-001") == retro
+    assert ws.retrospective_path("INIT-001").exists()
+    assert ws.load_retrospective("INIT-001") == retro
 
 
 def test_workspace_writes_and_loads_feedback(tmp_path: Path) -> None:

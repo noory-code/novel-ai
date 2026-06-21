@@ -1,7 +1,7 @@
 ---
 name: solera-retro
 user-invocable: true
-description: After a Solera Story finishes, record what the design lacked so a human can fold it back.
+description: After a Solera WorkItem finishes, record what the design lacked so a human can fold it back.
 metadata:
   version: "6.0.0"
   category: feedback
@@ -13,13 +13,13 @@ metadata:
 
 # solera-retro
 
-Written **after** a Story is done. A retrospective is the post-hoc signal: what
+Written **after** a WorkItem is done. A retrospective is the post-hoc signal: what
 the design or plan lacked, captured while it is fresh, for a human to fold back
 into the design (in Plot, when connected).
 
 ## When to use
 
-Right after `next` reports `(nothing open)` for a Story.
+Right after `next` reports `(nothing open)`, or when a container has rolled up to done.
 
 ## Procedure
 
@@ -35,11 +35,11 @@ connected — omit in standalone):
   ... retro STORY-001 "<text>" --about feature/login --about feature/signup
 ```
 
-This writes `stories/STORY-001/RETROSPECTIVE.md`.
+This writes `retros/STORY-001.md` (it attaches to any item id).
 
 ## What to write
 
-- Where the plan was wrong-sized (Actions too big or too small).
+- Where the plan was wrong-sized (leaves too big or too small).
 - A gap the design did not cover that only surfaced during the work.
 - A gate that passed but should have checked more.
 

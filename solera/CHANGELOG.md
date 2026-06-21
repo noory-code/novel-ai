@@ -1,5 +1,36 @@
 # Changelog
 
+## [7.0.0] — 2026-06-21
+
+Major — **recursive WorkItem tree**. Solera now plans work at any altitude
+(initiative / epic / story / action), not just two levels. This resolves the
+original "work-item size" question: size is an *altitude*; the leaf stays
+one-context + one-gate, everything above is rollup.
+
+Breaking: the `.noory/solera/` model changed. `Story` and `Action` are replaced
+by a single `WorkItem`; storage is a flat `items/{id}.md` set with each item's
+`children` list reconstructing the tree; `progress.md` now holds a single `item`
+pointer; retrospectives live at `retros/{id}.md`; artifacts at `artifacts/{id}/`.
+
+### Added / changed
+
+- **`WorkItem`** — one node type. `level` is a free label so depth and taxonomy
+  are not hard-coded. Invariant: a leaf has a gate and no children; a container
+  has children and no gate; an item may have neither yet, never both.
+- **Supervisor walks the tree** — `find_next_open` dives to the first open leaf
+  (resuming a stuck `doing` leaf before any `todo`); `complete` rolls completion
+  up the ancestors (a container is done when all its children are).
+- **Planning at any level** — `create_item(level, goal, gate=…, parent=…)` with
+  level-prefixed ids (INIT/EPIC/STORY/ACT-NNN).
+- **Audit** checks tree integrity — missing children, multi-parent, cycles,
+  dangling pointer.
+- **CLI** — `plan --level …`, `add <parent> … --level … --gate …`; `complete`
+  and `next` operate on the active leaf.
+
+### Removed
+
+- `Story`, `Action`, and their parsers/paths. `run_action_gate` → `run_item_gate`.
+
 ## [6.0.1] — 2026-06-21
 
 Patch — one-active-Action invariant + operational spec.

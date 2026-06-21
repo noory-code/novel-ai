@@ -1,7 +1,7 @@
 """CORE-7 — artifact homes: staging + about/from tags + a misplacement guard.
 
 Each kind of output has one home (see docs/ARTIFACT_HOMES.md). Process artifacts
-— scratch output produced on the way — stage under stories/{id}/artifacts/ and
+— scratch output produced on the way — stage under a WorkItem's artifacts/ and
 carry tags (about / from), not versions. The guard is light: it warns when
 something landed in the wrong home, e.g. source code staged in artifacts (code
 belongs in the repo).
@@ -18,12 +18,13 @@ from solera.artifacts import (
     parse_manifest,
 )
 from solera.errors import FormatError
+from solera.planning import create_item
 from solera.workspace import Workspace
 
 
 def _ws(tmp_path: Path) -> Workspace:
     ws = Workspace(tmp_path / ".noory" / "solera")
-    ws.story_dir("STORY-001").mkdir(parents=True)
+    create_item(ws, "story", "the box")  # STORY-001
     return ws
 
 

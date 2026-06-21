@@ -8,7 +8,7 @@ Each kind of output has exactly one home (see ``docs/ARTIFACT_HOMES.md``):
   when Plot is absent
 - process artifacts (scratch output on the way) -> ``stories/{id}/artifacts/``
 
-Process artifacts stage under a Story and carry **tags** — ``about`` (which id)
+Process artifacts stage under a WorkItem and carry **tags** — ``about`` (which id)
 and ``from`` (where they came from) — never version numbers. The misplacement
 guard is light: it flags output that landed in the wrong home, e.g. source code
 staged in artifacts, where it should be committed to the repo instead.
@@ -82,8 +82,8 @@ def find_misplaced_artifacts(ws: Workspace) -> list[Misplacement]:
     not errors — the guard advises; it does not block.
     """
     out: list[Misplacement] = []
-    for story_id in ws.list_stories():
-        adir = ws.artifacts_dir(story_id)
+    for item_id in ws.list_items():
+        adir = ws.artifacts_dir(item_id)
         if not adir.is_dir():
             continue
         for path in sorted(adir.rglob("*")):

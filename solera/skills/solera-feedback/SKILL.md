@@ -1,7 +1,7 @@
 ---
 name: solera-feedback
 user-invocable: true
-description: While blocked on a Solera Action, record a neutral note for a human and stop.
+description: While blocked on a Solera leaf, record a neutral note for a human and stop.
 metadata:
   version: "6.0.0"
   category: feedback
@@ -19,7 +19,7 @@ how you stop correctly instead of forcing a gate.
 
 ## When to use
 
-You are on an Action and cannot make its gate pass for a reason you should not
+You are on a leaf and cannot make its gate pass for a reason you should not
 decide alone: the goal is ambiguous, the design conflicts, a required tool or
 permission is missing.
 

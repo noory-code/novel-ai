@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .errors import GateError
-from .formats import Action
+from .formats import WorkItem
 
 DEFAULT_TIMEOUT_SECONDS = 120.0
 
@@ -100,18 +100,18 @@ def run_gate(
     )
 
 
-def run_action_gate(
-    action: Action,
+def run_item_gate(
+    item: WorkItem,
     *,
     cwd: Path,
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
 ) -> GateResult:
-    """Run the gate declared on ``action``.
+    """Run the gate declared on a leaf ``item``.
 
-    An Action with no gate cannot be auto-verified, so this raises
-    :class:`GateError` rather than passing it silently — the caller must escalate
-    such an Action to a human.
+    Only a leaf carries a gate. An item with no gate cannot be auto-verified, so
+    this raises :class:`GateError` rather than passing it silently — the caller
+    must escalate such an item to a human.
     """
-    if not action.gate.strip():
-        raise GateError(f"action {action.id} has no gate to run")
-    return run_gate(action.gate, cwd=cwd, timeout=timeout)
+    if not item.gate.strip():
+        raise GateError(f"item {item.id} has no gate to run")
+    return run_gate(item.gate, cwd=cwd, timeout=timeout)

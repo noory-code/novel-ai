@@ -1,95 +1,57 @@
-"""CORE-1a/1e — workspace layout + reading files off disk through the guard.
-
-Layout::
-
-    .noory/solera/
-    ├── progress.md
-    └── stories/
-        └── <story-id>/
-            ├── story.md
-            └── <action-id>.md
-"""
+"""Workspace layout + WorkItem io over the flat ``items/`` store."""
 
 from pathlib import Path
 
 import pytest
 
 from solera.errors import FormatError
-from solera.formats import parse_progress, parse_story
+from solera.formats import Progress, WorkItem
 from solera.workspace import Workspace
 
-PROGRESS = "---\nstory: STORY-001\naction: ACT-001\n---\n"
-STORY = "---\nstatus: todo\nactions:\n  - ACT-001\n---\nBuild it.\n"
-ACTION = "---\nstatus: todo\ngate: \"true\"\n---\nDo the thing.\n"
+LEAF = WorkItem(id="ACT-001", level="action", status="todo", gate="true", goal="do step")
+BOX = WorkItem(id="STORY-001", level="story", status="todo", children=["ACT-001"], goal="the box")
 
 
-def _seed(root: Path) -> Workspace:
-    ws = Workspace(root)
-    ws.stories_dir.mkdir(parents=True)
-    ws.progress_path.write_text(PROGRESS)
-    (ws.story_dir("STORY-001")).mkdir()
-    ws.story_path("STORY-001").write_text(STORY)
-    ws.action_path("STORY-001", "ACT-001").write_text(ACTION)
-    return ws
+def _ws(tmp_path: Path) -> Workspace:
+    return Workspace(tmp_path / ".noory" / "solera")
 
 
 def test_paths_compose_from_root(tmp_path: Path) -> None:
-    ws = Workspace(tmp_path / ".noory" / "solera")
+    ws = _ws(tmp_path)
     assert ws.progress_path == ws.root / "progress.md"
-    assert ws.stories_dir == ws.root / "stories"
-    assert ws.story_dir("S1") == ws.root / "stories" / "S1"
-    assert ws.story_path("S1") == ws.root / "stories" / "S1" / "story.md"
-    assert ws.action_path("S1", "ACT-001") == ws.root / "stories" / "S1" / "ACT-001.md"
+    assert ws.items_dir == ws.root / "items"
+    assert ws.item_path("ACT-001") == ws.root / "items" / "ACT-001.md"
+    assert ws.retrospective_path("STORY-001") == ws.root / "retros" / "STORY-001.md"
+    assert ws.artifacts_dir("X") == ws.root / "artifacts" / "X"
 
 
-def test_load_round_trip(tmp_path: Path) -> None:
-    ws = _seed(tmp_path)
-    prog = ws.load_progress()
-    assert prog.story == "STORY-001" and prog.action == "ACT-001"
-    story = ws.load_story("STORY-001")
-    assert story.id == "STORY-001" and story.actions == ["ACT-001"]
-    action = ws.load_action("STORY-001", "ACT-001")
-    assert action.id == "ACT-001" and action.gate == "true"
+def test_write_then_load_items(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    ws.write_item(LEAF)
+    ws.write_item(BOX)
+    assert ws.load_item("ACT-001") == LEAF
+    assert ws.load_item("STORY-001") == BOX
+    assert ws.list_items() == ["ACT-001", "STORY-001"]
 
 
-def test_list_stories_sorted(tmp_path: Path) -> None:
-    ws = _seed(tmp_path)
-    ws.story_dir("STORY-003").mkdir()
-    ws.story_dir("STORY-002").mkdir()
-    assert ws.list_stories() == ["STORY-001", "STORY-002", "STORY-003"]
+def test_progress_round_trip(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    ws.write_progress(Progress(item="ACT-001"))
+    assert ws.load_progress().item == "ACT-001"
 
 
-def test_list_stories_empty_when_no_dir(tmp_path: Path) -> None:
-    ws = Workspace(tmp_path / ".noory" / "solera")
-    assert ws.list_stories() == []
+def test_list_items_empty_when_no_dir(tmp_path: Path) -> None:
+    assert _ws(tmp_path).list_items() == []
 
 
 def test_load_missing_file_raises(tmp_path: Path) -> None:
-    ws = Workspace(tmp_path / ".noory" / "solera")
     with pytest.raises(FileNotFoundError):
-        ws.load_progress()
+        _ws(tmp_path).load_progress()
 
 
-def test_load_malformed_action_raises_format_error(tmp_path: Path) -> None:
-    ws = _seed(tmp_path)
-    ws.action_path("STORY-001", "ACT-001").write_text("garbage, no frontmatter\n")
+def test_load_malformed_item_raises(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    ws.items_dir.mkdir(parents=True)
+    ws.item_path("ACT-001").write_text("garbage, no frontmatter\n")
     with pytest.raises(FormatError):
-        ws.load_action("STORY-001", "ACT-001")
-
-
-# --- writers (CORE-3 status transitions need these) ------------------------
-
-
-def test_write_then_load_action(tmp_path: Path) -> None:
-    ws = _seed(tmp_path)
-    act = ws.load_action("STORY-001", "ACT-001")
-    ws.write_action("STORY-001", act.model_copy(update={"status": "done"}))
-    assert ws.load_action("STORY-001", "ACT-001").status == "done"
-
-
-def test_write_story_and_progress_into_empty_root(tmp_path: Path) -> None:
-    ws = Workspace(tmp_path / ".noory" / "solera")
-    ws.write_story(parse_story(STORY, story_id="STORY-007"))
-    assert ws.load_story("STORY-007").goal == "Build it."
-    ws.write_progress(parse_progress("---\nstory: STORY-007\naction: ACT-001\n---\n"))
-    assert ws.load_progress().story == "STORY-007"
+        ws.load_item("ACT-001")
