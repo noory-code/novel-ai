@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import Any, Literal, TypeVar
 
 import yaml
-from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from .errors import FormatError
 
@@ -89,6 +89,30 @@ class Progress(BaseModel):
     action: str | None
 
 
+class _Note(BaseModel):
+    """A neutral ID-tagged note: a body of prose plus optional ``about`` tags.
+
+    ``about`` is the feedback sensor of the loop — ids the note is about. It is
+    optional so standalone Solera (no published spec) still produces valid notes.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str
+    about: list[str] = Field(default_factory=list)
+    body: str
+
+    _check_body = field_validator("body")(_require_goal)
+
+
+class Retrospective(_Note):
+    """Written after a Story finishes: what the design lacked (post-hoc sensor)."""
+
+
+class Feedback(_Note):
+    """Written while blocked: a neutral note for a human to act on (escalation)."""
+
+
 def _build(model: type[_M], data: dict[str, Any], **path_fields: Any) -> _M:
     try:
         return model.model_validate({**data, **path_fields})
@@ -137,3 +161,27 @@ def dump_progress(progress: Progress) -> str:
     """Serialize the pointer back to ``progress.md`` text."""
     fm = _frontmatter({"story": progress.story, "action": progress.action})
     return f"---\n{fm}\n---\n"
+
+
+def parse_retrospective(text: str, *, story_id: str) -> Retrospective:
+    """Parse a ``RETROSPECTIVE.md``. ``story_id`` comes from the directory."""
+    data, body = _split_frontmatter(text)
+    return _build(Retrospective, data, id=story_id, body=body)
+
+
+def parse_feedback(text: str, *, feedback_id: str) -> Feedback:
+    """Parse a ``feedback/{id}.md``. ``feedback_id`` comes from the filename."""
+    data, body = _split_frontmatter(text)
+    return _build(Feedback, data, id=feedback_id, body=body)
+
+
+def dump_retrospective(retro: Retrospective) -> str:
+    """Serialize a Retrospective back to file text."""
+    fm = _frontmatter({"about": list(retro.about)})
+    return f"---\n{fm}\n---\n{retro.body}\n"
+
+
+def dump_feedback(feedback: Feedback) -> str:
+    """Serialize a Feedback note back to file text."""
+    fm = _frontmatter({"about": list(feedback.about)})
+    return f"---\n{fm}\n---\n{feedback.body}\n"
