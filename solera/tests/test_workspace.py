@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from solera.errors import FormatError
+from solera.formats import parse_progress, parse_story
 from solera.workspace import Workspace
 
 PROGRESS = "---\nstory: STORY-001\naction: ACT-001\n---\n"
@@ -74,3 +75,21 @@ def test_load_malformed_action_raises_format_error(tmp_path: Path) -> None:
     ws.action_path("STORY-001", "ACT-001").write_text("garbage, no frontmatter\n")
     with pytest.raises(FormatError):
         ws.load_action("STORY-001", "ACT-001")
+
+
+# --- writers (CORE-3 status transitions need these) ------------------------
+
+
+def test_write_then_load_action(tmp_path: Path) -> None:
+    ws = _seed(tmp_path)
+    act = ws.load_action("STORY-001", "ACT-001")
+    ws.write_action("STORY-001", act.model_copy(update={"status": "done"}))
+    assert ws.load_action("STORY-001", "ACT-001").status == "done"
+
+
+def test_write_story_and_progress_into_empty_root(tmp_path: Path) -> None:
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    ws.write_story(parse_story(STORY, story_id="STORY-007"))
+    assert ws.load_story("STORY-007").goal == "Build it."
+    ws.write_progress(parse_progress("---\nstory: STORY-007\naction: ACT-001\n---\n"))
+    assert ws.load_progress().story == "STORY-007"

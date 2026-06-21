@@ -6,12 +6,16 @@ parser is handed the id explicitly and parses only status / gate / goal from tex
 """
 
 import pytest
+import yaml
 
 from solera.errors import FormatError
 from solera.formats import (
     Action,
     Progress,
     Story,
+    dump_action,
+    dump_progress,
+    dump_story,
     parse_action,
     parse_progress,
     parse_story,
@@ -137,3 +141,37 @@ def test_parse_progress_allows_null_pointer() -> None:
 def test_parse_progress_rejects_malformed(text: str) -> None:
     with pytest.raises(FormatError):
         parse_progress(text)
+
+
+# --- serialization round-trips (CORE-3 needs writers) ----------------------
+
+
+def test_action_round_trips() -> None:
+    act = parse_action(ACTION_OK, action_id="ACT-001")
+    assert parse_action(dump_action(act), action_id="ACT-001") == act
+
+
+def test_story_round_trips() -> None:
+    story = parse_story(STORY_OK, story_id="STORY-001")
+    assert parse_story(dump_story(story), story_id="STORY-001") == story
+
+
+def test_progress_round_trips() -> None:
+    text = "---\nstory: STORY-001\naction: ACT-001\n---\n"
+    prog = parse_progress(text)
+    assert parse_progress(dump_progress(prog)) == prog
+
+
+def test_progress_null_round_trips() -> None:
+    prog = parse_progress("---\nstory: null\naction: null\n---\n")
+    rt = parse_progress(dump_progress(prog))
+    assert rt.story is None and rt.action is None
+
+
+def test_dump_action_preserves_gate_with_special_chars() -> None:
+    gate = "python -c \"import os; print('hi: there')\""
+    # build via parse from a YAML-safe dump instead of hand-quoting
+    src = "---\n" + yaml.safe_dump({"status": "todo", "gate": gate}).strip() + "\n---\nGoal.\n"
+    act = parse_action(src, action_id="ACT-009")
+    assert act.gate == gate
+    assert parse_action(dump_action(act), action_id="ACT-009").gate == gate

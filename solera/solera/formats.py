@@ -112,3 +112,28 @@ def parse_progress(text: str) -> Progress:
     """Parse ``progress.md`` — the pointer to the active Story / Action."""
     data, _ = _split_frontmatter(text)
     return _build(Progress, data)
+
+
+def _frontmatter(fields: dict[str, Any]) -> str:
+    return yaml.safe_dump(fields, sort_keys=False, default_flow_style=False).strip()
+
+
+def dump_action(action: Action) -> str:
+    """Serialize an Action back to file text. Inverse of :func:`parse_action`.
+
+    ``id`` is omitted — it lives in the filename, not the frontmatter.
+    """
+    fm = _frontmatter({"status": action.status, "gate": action.gate})
+    return f"---\n{fm}\n---\n{action.goal}\n"
+
+
+def dump_story(story: Story) -> str:
+    """Serialize a Story back to file text. Inverse of :func:`parse_story`."""
+    fm = _frontmatter({"status": story.status, "actions": list(story.actions)})
+    return f"---\n{fm}\n---\n{story.goal}\n"
+
+
+def dump_progress(progress: Progress) -> str:
+    """Serialize the pointer back to ``progress.md`` text."""
+    fm = _frontmatter({"story": progress.story, "action": progress.action})
+    return f"---\n{fm}\n---\n"

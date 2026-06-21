@@ -10,7 +10,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .formats import Action, Progress, Story, parse_action, parse_progress, parse_story
+from .formats import (
+    Action,
+    Progress,
+    Story,
+    dump_action,
+    dump_progress,
+    dump_story,
+    parse_action,
+    parse_progress,
+    parse_story,
+)
 
 
 class Workspace:
@@ -54,3 +64,17 @@ class Workspace:
         if not self.stories_dir.is_dir():
             return []
         return sorted(p.name for p in self.stories_dir.iterdir() if p.is_dir())
+
+    # --- writes ------------------------------------------------------------
+
+    def write_progress(self, progress: Progress) -> None:
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.progress_path.write_text(dump_progress(progress))
+
+    def write_story(self, story: Story) -> None:
+        self.story_dir(story.id).mkdir(parents=True, exist_ok=True)
+        self.story_path(story.id).write_text(dump_story(story))
+
+    def write_action(self, story_id: str, action: Action) -> None:
+        self.story_dir(story_id).mkdir(parents=True, exist_ok=True)
+        self.action_path(story_id, action.id).write_text(dump_action(action))
