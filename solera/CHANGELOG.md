@@ -1,5 +1,13 @@
 # Changelog
 
+## [7.0.1] — 2026-06-21
+
+Docs — artifact-home rule corrected. `docs/ARTIFACT_HOMES.md` (and the
+`artifacts.py` docstring) split the old "design → Plot" line into **conceptual
+design → Plot** and **technical design → the repository** (code-near), and add
+**decisions → cairn** (the append-only decision log). Plot defines the *what*,
+not the *how* or the tech stack; those live in the repo and cairn.
+
 ## [7.0.0] — 2026-06-21
 
 Major — **recursive WorkItem tree**. Solera now plans work at any altitude

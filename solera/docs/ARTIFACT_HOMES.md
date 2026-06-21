@@ -1,16 +1,19 @@
 # Artifact homes
 
 Every output Solera's work produces has exactly **one** home (SSOT). Pick the
-home by the *nature* of the output, not by which step created it. Solera does not
-store code or design — it stages process output and points at the rest.
+home by the *nature* of the output, not by which step created it. Solera itself
+stores neither code nor design nor decisions — it stages process output and
+points at the rest by id.
 
-## The four homes
+## The homes
 
 | Output (nature) | Home | Notes |
 |---|---|---|
 | **Code** (source the agent writes) | the **repository** | Never staged in `.noory/solera/`. The misplacement guard warns if code lands in artifacts. |
 | **Code-derived** (generated ERD, API docs — produced *from* code) | the repo's `docs/generated/` | Regenerable from source; lives next to the code it derives from. |
-| **Design intent** (what to build, why) | **Plot** | Folded back via a retrospective or feedback note. When Plot is absent there is no home here — the note still records the intent for a human to place later. |
+| **Conceptual design** (*what* to build and *why*) | **Plot** | Folded back via a retrospective or feedback note. When Plot is absent the note still records the intent for a human to place later. |
+| **Technical design** (*how* it is built — architecture, schema, wiring) | the **repository** (code-near) | Lives next to the code it governs (e.g. `docs/`). Plot does not define the stack; this is not Plot's. |
+| **Decisions** (the *choices* that govern the work — stack, architecture, conventions) | **cairn** | An append-only decision log. Solera/Plot point at decision ids by value; a decision-type leaf records here on acceptance. |
 | **Process artifacts** (scratch output on the way: a draft, a screenshot, a dump) | `artifacts/{id}/` | Staging only. Tagged, not versioned (below). |
 
 ## Staging convention (`artifacts/{id}/`)

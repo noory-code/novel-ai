@@ -4,9 +4,11 @@ Each kind of output has exactly one home (see ``docs/ARTIFACT_HOMES.md``):
 
 - code -> the repository
 - code-derived output (generated ERD, API docs) -> the repo's ``docs/generated``
-- design intent -> Plot (folded back via retrospective / feedback); no home here
-  when Plot is absent
-- process artifacts (scratch output on the way) -> ``stories/{id}/artifacts/``
+- conceptual design (*what* to build, *why*) -> Plot (folded back via
+  retrospective / feedback); no home here when Plot is absent
+- technical design (*how* it is built) -> the repository, code-near
+- decisions (the *choices* that govern the work) -> cairn (the decision log)
+- process artifacts (scratch output on the way) -> ``artifacts/{id}/``
 
 Process artifacts stage under a WorkItem and carry **tags** — ``about`` (which id)
 and ``from`` (where they came from) — never version numbers. The misplacement
