@@ -1,5 +1,22 @@
 # Changelog
 
+## [7.3.0] — 2026-06-22
+
+### Added
+
+- **format F intake — the Solera "read" half of the Plot↔Solera contract**
+  (INT-3). New `solera/intake.py` reads **format F** (a neutral published-bundle
+  format, `repos-plot/docs/specs/format-f.md`) without importing Plot or
+  path-referencing its tree (R8 — `test_independence.py` still green):
+  - `import_release(ws, source_vs_dir, label)` copies a frozen `vS` service
+    bundle + its `based_on` `vP` slice into `specs/{label}/` (immutable →
+    immutable), so a story's `source: specs/{label}` points only inside Solera's
+    own folder — Solera runs with or without Plot.
+  - `diff_releases(old, new)` — the deterministic ID-diff (changed / removed /
+    added) that drives re-pinning on a re-publish. Pure function, never an LLM.
+  - `Workspace.specs_dir` added.
+  Tests synthesize bundles by hand to prove the independence. Suite 100 green.
+
 ## [7.2.0] — 2026-06-21
 
 Minor — hooks (D2-6): the automation layer that keeps the loop from drifting.

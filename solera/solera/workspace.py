@@ -57,6 +57,13 @@ class Workspace:
     def feedback_dir(self) -> Path:
         return self.root / "feedback"
 
+    @property
+    def specs_dir(self) -> Path:
+        """Imported format F bundles (the input spec) — `specs/{label}/`. Each
+        import is a frozen copy, so Solera works against an immutable spec even
+        if the upstream design moves (04-pipeline)."""
+        return self.root / "specs"
+
     def feedback_path(self, feedback_id: str) -> Path:
         return self.feedback_dir / f"{feedback_id}.md"
 
