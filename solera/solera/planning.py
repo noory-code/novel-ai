@@ -45,13 +45,22 @@ def create_item(
     *,
     gate: str = "",
     parent: str | None = None,
+    realizes: list[str] | None = None,
 ) -> WorkItem:
     """Create a WorkItem (optionally a gated leaf, optionally under a parent).
 
     A leaf is created by passing a ``gate``; a container is created without one
-    and grows children as later items are added under it.
+    and grows children as later items are added under it. ``realizes`` links the
+    item to the format F slug(s) it builds (by value — no Plot import).
     """
-    item = WorkItem(id=next_item_id(ws, level), level=level, status="todo", gate=gate, goal=goal)
+    item = WorkItem(
+        id=next_item_id(ws, level),
+        level=level,
+        status="todo",
+        gate=gate,
+        goal=goal,
+        realizes=realizes or [],
+    )
     ws.write_item(item)
     if parent is not None:
         box = ws.load_item(parent)

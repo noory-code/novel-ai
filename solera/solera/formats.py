@@ -77,6 +77,10 @@ class WorkItem(BaseModel):
     status: Status
     gate: str = ""
     children: list[str] = Field(default_factory=list)
+    # Stable format F slug(s) this item realizes (e.g. ``feature/login``). The
+    # connection is by *value* (no import) — the ID-diff on re-publish reopens
+    # the items whose realizes-slug changed. Absent in older files → [].
+    realizes: list[str] = Field(default_factory=list)
     goal: str
 
     _check_goal = field_validator("goal")(_require_goal)
@@ -155,6 +159,7 @@ def dump_workitem(item: WorkItem) -> str:
             "status": item.status,
             "gate": item.gate,
             "children": list(item.children),
+            "realizes": list(item.realizes),
         }
     )
     return f"---\n{fm}\n---\n{item.goal}\n"

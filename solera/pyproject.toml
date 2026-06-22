@@ -1,6 +1,6 @@
 [project]
 name = "solera"
-version = "7.3.1"
+version = "7.4.0"
 description = "Solera — a slim harness that plans work, runs deterministic gates, and orders the steps an external AI agent executes. Reads and writes a plain-file .noory/solera/ workspace. Works standalone, with or without Plot."
 readme = "README.md"
 license = "MIT"

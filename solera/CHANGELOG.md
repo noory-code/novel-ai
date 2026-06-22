@@ -1,5 +1,22 @@
 # Changelog
 
+## [7.4.0] — 2026-06-22
+
+### Added
+
+- **`realizes` link + re-pin flow** (INT-f) — completes the Plot↔Solera loop on
+  the Solera side:
+  - `WorkItem.realizes: list[str]` — the format F slug(s) an item builds (e.g.
+    `feature/login`), connected *by value* (no Plot import). Back-compatible:
+    older item files without it parse as `[]`. CLI: `add --realizes <slug>`
+    (repeatable).
+  - `repin.propose_repin(ws, old, new)` — read-only: maps an ID-diff onto the
+    work items that realize the changed (→ stale) / removed (→ escalate) slugs;
+    unchanged slugs' work is left alone (progress preserved).
+  - `repin.reopen_items(ws, ids)` — the status mutation, applied only after a
+    human approves the proposal (human-in-the-loop gate, 04-pipeline).
+  Suite 105 green, mypy + ruff clean.
+
 ## [7.3.1] — 2026-06-22
 
 ### Added

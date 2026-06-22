@@ -31,7 +31,9 @@ def _cmd_plan(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
 
 
 def _cmd_add(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
-    item = create_item(ws, args.level, args.goal, gate=args.gate, parent=args.parent)
+    item = create_item(
+        ws, args.level, args.goal, gate=args.gate, parent=args.parent, realizes=args.realizes
+    )
     print(item.id)
     return 0
 
@@ -100,6 +102,12 @@ def _build_parser() -> argparse.ArgumentParser:
     p_add.add_argument("goal")
     p_add.add_argument("--level", default="action", help="initiative/epic/story/action")
     p_add.add_argument("--gate", default="", help="command that verifies a leaf")
+    p_add.add_argument(
+        "--realizes",
+        action="append",
+        default=[],
+        help="format F slug this item realizes (repeatable, e.g. feature/login)",
+    )
     p_add.set_defaults(func=_cmd_add)
 
     p_next = sub.add_parser("next", help="start the next leaf and print its instruction")
