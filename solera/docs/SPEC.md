@@ -111,7 +111,16 @@ solera --root <project> plan "goal" [--level story]            -> STORY-001  (a 
                         status      # pointer + tree-integrity audit
                         retro <item> "what was learned"
                         feedback <id> "blocker"
+                        repin <old> <new> [--apply]   # diff two imported releases;
+                                          #   reopen stale work only with --apply
 ```
+
+`repin` reads two imported releases (`specs/{label}/service/manifest.json`),
+runs the ID-diff, and surfaces which work items go **stale** (a `changed` slug
+they realize → reopen candidate) or **escalate** (a `removed` slug → orphaned,
+a human decides). Without `--apply` it only proposes; `--apply` reopens the
+stale set (`status → todo`). `removed`/escalated items are never auto-reopened —
+the human-in-the-loop gate (04-pipeline).
 
 `--root` is the project directory; gates run there.
 

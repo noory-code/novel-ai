@@ -16,7 +16,9 @@ from pathlib import Path
 from .audit import audit_workspace
 from .errors import SoleraError
 from .formats import Feedback, Retrospective
+from .intake import load_imported_elements
 from .planning import create_item
+from .repin import propose_repin, reopen_items
 from .supervisor import complete, instruction, start_next
 from .workspace import Workspace
 
@@ -75,6 +77,32 @@ def _cmd_status(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     return 1 if problems else 0
 
 
+def _cmd_repin(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
+    """Re-pin against a re-published release: diff two imported labels, surface
+    which work items go stale / orphan, and (only with ``--apply``) reopen the
+    stale ones. ``removed`` slugs escalate to a human and are never auto-reopened
+    — the human-in-the-loop gate (04-pipeline)."""
+    try:
+        old_elements = load_imported_elements(ws, args.old)
+        new_elements = load_imported_elements(ws, args.new)
+    except FileNotFoundError as exc:
+        raise SoleraError(str(exc)) from exc
+
+    prop = propose_repin(ws, old_elements, new_elements)
+    diff = prop["diff"]
+    print(f"changed: {diff['changed']}")
+    print(f"removed: {diff['removed']}")
+    print(f"added:   {diff['added']}")
+    print(f"stale (reopen candidates): {prop['stale']}")
+    print(f"escalate (orphaned, removed slug — a human decides): {prop['escalate']}")
+    if args.apply:
+        reopen_items(ws, prop["stale"])
+        print(f"reopened: {prop['stale']}")
+    else:
+        print("(proposal only — pass --apply to reopen the stale items)")
+    return 0
+
+
 def _cmd_retro(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     ws.write_retrospective(Retrospective(id=args.item, about=list(args.about), body=args.body))
     return 0
@@ -118,6 +146,18 @@ def _build_parser() -> argparse.ArgumentParser:
 
     p_status = sub.add_parser("status", help="show the pointer and any audit problems")
     p_status.set_defaults(func=_cmd_status)
+
+    p_repin = sub.add_parser(
+        "repin", help="diff two imported releases and reopen stale work (with --apply)"
+    )
+    p_repin.add_argument("old", help="imported release label to diff from (specs/{label})")
+    p_repin.add_argument("new", help="imported release label to diff to")
+    p_repin.add_argument(
+        "--apply",
+        action="store_true",
+        help="reopen the stale items (human approval); without it, propose only",
+    )
+    p_repin.set_defaults(func=_cmd_repin)
 
     p_retro = sub.add_parser("retro", help="write a retrospective for an item")
     p_retro.add_argument("item")

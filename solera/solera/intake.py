@@ -49,6 +49,21 @@ def diff_releases(
     }
 
 
+def load_imported_elements(ws: Workspace, label: str) -> list[dict[str, Any]]:
+    """Read the ``elements`` of an already-imported service release
+    (``specs/{label}/service/manifest.json``) — the input to a re-pin ID-diff.
+
+    Stays inside Solera's own tree (the imported copy), never reaching back into
+    Plot (R8). Raises :class:`FileNotFoundError` if the label was not imported.
+    """
+    manifest_path = ws.specs_dir / label / "service" / "manifest.json"
+    if not manifest_path.is_file():
+        raise FileNotFoundError(f"no imported release {label!r} at {manifest_path}")
+    manifest: dict[str, Any] = json.loads(manifest_path.read_text(encoding="utf-8"))
+    elements: list[dict[str, Any]] = manifest.get("elements", [])
+    return elements
+
+
 def import_release(ws: Workspace, source_vs_dir: Path, *, label: str) -> dict[str, Any]:
     """Copy a frozen service release ``vS`` (and the ``vP`` slice it is based on)
     into ``specs/{label}/`` and return the ``vS`` manifest.

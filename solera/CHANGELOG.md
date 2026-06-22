@@ -1,5 +1,19 @@
 # Changelog
 
+## [7.5.0] — 2026-06-22
+
+### Added
+
+- **`solera repin <old> <new>` CLI** (INT-f) — the re-pin flow is now driven from
+  the command line, not just library functions. It loads two imported releases'
+  `elements` (`specs/{label}/service/manifest.json`), runs the ID-diff, and
+  prints which work items go **stale** (realize a `changed` slug → reopen
+  candidate) vs **escalate** (realize a `removed` slug → orphaned, a human
+  decides). Read-only by default; `--apply` reopens the stale set
+  (`status → todo`). Escalated items are never auto-reopened — the
+  human-in-the-loop gate (04-pipeline). New: `intake.load_imported_elements`.
+  Suite 109 green, mypy + ruff clean.
+
 ## [7.4.0] — 2026-06-22
 
 ### Added

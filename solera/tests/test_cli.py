@@ -4,6 +4,7 @@ Skills tell the agent to run ``python -m solera <command>``. ``--root`` points a
 the project directory; gates run there and ``.noory/solera/`` lives under it.
 """
 
+import json
 import shlex
 import sys
 from pathlib import Path
@@ -65,6 +66,74 @@ def test_status_reports_audit_problems(tmp_path: Path, capsys) -> None:  # type:
     capsys.readouterr()
     assert _run(tmp_path, "status") != 0
     assert "ACT-001" in capsys.readouterr().out
+
+
+def _write_imported_release(root: Path, label: str, elements: list[dict[str, str]]) -> None:
+    """Stand in for an `import_release` — drop a `vS` manifest where the repin
+    CLI reads it (`specs/{label}/service/manifest.json`)."""
+    manifest_dir = root / ".noory" / "solera" / "specs" / label / "service"
+    manifest_dir.mkdir(parents=True, exist_ok=True)
+    (manifest_dir / "manifest.json").write_text(
+        json.dumps({"format_f_version": 1, "scope": "service", "elements": elements})
+    )
+
+
+def test_repin_proposes_without_mutating_by_default(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _run(tmp_path, "plan", "Goal.")
+    _run(
+        tmp_path, "add", "STORY-001", "Build login", "--gate", "true", "--realizes", "feature/login"
+    )
+    # mark it done so a reopen would be observable
+    item_path = tmp_path / ".noory" / "solera" / "items" / "ACT-001.md"
+    item_path.write_text(item_path.read_text().replace("status: todo", "status: done"))
+    _write_imported_release(tmp_path, "v1", [{"id": "feature/login", "hash": "a"}])
+    _write_imported_release(tmp_path, "v2", [{"id": "feature/login", "hash": "B"}])  # changed
+    capsys.readouterr()
+
+    assert _run(tmp_path, "repin", "v1", "v2") == 0
+    out = capsys.readouterr().out
+    assert "ACT-001" in out  # surfaced as a stale candidate
+    assert "feature/login" in out  # the changed slug
+    # read-only: the item is still done (no --apply)
+    assert "status: done" in item_path.read_text()
+
+
+def test_repin_apply_reopens_stale_items(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _run(tmp_path, "plan", "Goal.")
+    _run(
+        tmp_path, "add", "STORY-001", "Build login", "--gate", "true", "--realizes", "feature/login"
+    )
+    item_path = tmp_path / ".noory" / "solera" / "items" / "ACT-001.md"
+    item_path.write_text(item_path.read_text().replace("status: todo", "status: done"))
+    _write_imported_release(tmp_path, "v1", [{"id": "feature/login", "hash": "a"}])
+    _write_imported_release(tmp_path, "v2", [{"id": "feature/login", "hash": "B"}])
+    capsys.readouterr()
+
+    assert _run(tmp_path, "repin", "v1", "v2", "--apply") == 0
+    assert "status: todo" in item_path.read_text()  # reopened
+
+
+def test_repin_escalates_removed_but_never_reopens_it(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _run(tmp_path, "plan", "Goal.")
+    _run(tmp_path, "add", "STORY-001", "Build old", "--gate", "true", "--realizes", "entity/old")
+    item_path = tmp_path / ".noory" / "solera" / "items" / "ACT-001.md"
+    item_path.write_text(item_path.read_text().replace("status: todo", "status: done"))
+    _write_imported_release(tmp_path, "v1", [{"id": "entity/old", "hash": "a"}])
+    _write_imported_release(tmp_path, "v2", [])  # removed
+    capsys.readouterr()
+
+    assert _run(tmp_path, "repin", "v1", "v2", "--apply") == 0
+    out = capsys.readouterr().out
+    assert "escalate" in out.lower() and "ACT-001" in out
+    # removed → orphaned → a human decides; --apply must NOT reopen it
+    assert "status: done" in item_path.read_text()
+
+
+def test_repin_unknown_label_errors_cleanly(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _run(tmp_path, "plan", "Goal.")
+    capsys.readouterr()
+    assert _run(tmp_path, "repin", "missing", "alsomissing") == 1
+    assert "error:" in capsys.readouterr().out.lower()
 
 
 def test_retro_and_feedback_write_notes(tmp_path: Path) -> None:
