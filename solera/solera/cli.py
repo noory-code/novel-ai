@@ -16,7 +16,7 @@ from pathlib import Path
 from .audit import audit_workspace
 from .errors import SoleraError
 from .formats import Feedback, Retrospective
-from .intake import load_imported_elements
+from .intake import import_release, load_imported_elements
 from .planning import create_item
 from .repin import propose_repin, reopen_items
 from .supervisor import complete, instruction, start_next
@@ -75,6 +75,19 @@ def _cmd_status(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     for problem in problems:
         print(f"problem[{problem.kind}]: {problem.detail}")
     return 1 if problems else 0
+
+
+def _cmd_import(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
+    """Import a published Plot release (format F) — the pipeline's entry step.
+    Copy the ``vS`` service bundle and the ``vP`` snapshot it is ``based_on``
+    into ``specs/{label}/``. The user wires in the path Plot published; Solera
+    never reaches into Plot (format-f.md §6 / 04-pipeline)."""
+    try:
+        manifest = import_release(ws, Path(args.source), label=args.label)
+    except (FileNotFoundError, FileExistsError, ValueError) as exc:
+        raise SoleraError(str(exc)) from exc
+    print(f"imported {manifest['service']} {manifest['release']} as specs/{args.label}")
+    return 0
 
 
 def _cmd_repin(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
@@ -146,6 +159,17 @@ def _build_parser() -> argparse.ArgumentParser:
 
     p_status = sub.add_parser("status", help="show the pointer and any audit problems")
     p_status.set_defaults(func=_cmd_status)
+
+    p_import = sub.add_parser(
+        "import", help="import a published Plot release (format F vS + its vP) into specs/{label}"
+    )
+    p_import.add_argument(
+        "source", help="path to the published vS bundle dir (…/published/{slug}/vS{N})"
+    )
+    p_import.add_argument(
+        "--label", required=True, help="local spec label to import under (specs/{label})"
+    )
+    p_import.set_defaults(func=_cmd_import)
 
     p_repin = sub.add_parser(
         "repin", help="diff two imported releases and reopen stale work (with --apply)"

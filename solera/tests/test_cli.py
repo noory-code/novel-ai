@@ -136,6 +136,50 @@ def test_repin_unknown_label_errors_cleanly(tmp_path: Path, capsys) -> None:  # 
     assert "error:" in capsys.readouterr().out.lower()
 
 
+def _write_published_bundle(pub: Path) -> Path:
+    """Write a minimal format-F published bundle (a `vS` service release + the
+    `vP` snapshot it is based on) and return the `vS` dir — the shape Plot's
+    publish leaves on disk under `published/`."""
+    vp = pub / "_project" / "vP1"
+    (vp / "design").mkdir(parents=True)
+    (vp / "manifest.json").write_text(
+        json.dumps({"format_f_version": 1, "scope": "project", "release": "vP1", "elements": []})
+    )
+    vs = pub / "service" / "vS1"
+    (vs / "design").mkdir(parents=True)
+    (vs / "manifest.json").write_text(
+        json.dumps(
+            {
+                "format_f_version": 1,
+                "scope": "service",
+                "service": "service/auth",
+                "release": "vS1",
+                "based_on": "vP1",
+                "elements": [],
+            }
+        )
+    )
+    return vs
+
+
+def test_import_copies_release_into_specs(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    vs = _write_published_bundle(tmp_path / "pub")
+    capsys.readouterr()
+    assert _run(tmp_path, "import", str(vs), "--label", "auth") == 0
+    assert "auth" in capsys.readouterr().out
+    specs = tmp_path / ".noory" / "solera" / "specs" / "auth"
+    assert (specs / "service" / "manifest.json").exists()  # vS copied
+    assert (specs / "project" / "manifest.json").exists()  # based_on vP copied
+
+
+def test_import_duplicate_label_errors_cleanly(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    vs = _write_published_bundle(tmp_path / "pub")
+    assert _run(tmp_path, "import", str(vs), "--label", "auth") == 0
+    capsys.readouterr()
+    assert _run(tmp_path, "import", str(vs), "--label", "auth") == 1  # re-import refused
+    assert "error:" in capsys.readouterr().out.lower()
+
+
 def test_retro_and_feedback_write_notes(tmp_path: Path) -> None:
     _run(tmp_path, "plan", "Goal.")
     assert _run(tmp_path, "retro", "STORY-001", "Learned a lot.") == 0

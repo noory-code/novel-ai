@@ -1,5 +1,20 @@
 # Changelog
 
+## [7.6.0] — 2026-06-23
+
+### Added
+
+- **`solera import <vs_dir> --label <label>` CLI** — the pipeline's entry step is
+  now driven from the command line. It copies a published Plot release (a
+  format-F `vS` service bundle plus the `vP` snapshot it is `based_on`) into
+  `specs/{label}/`, the same `import_release` the library already exposed.
+  Surfaced by a Plot↔Solera dogfood: every other stage (`plan` / `add` /
+  `next` / `complete` / `repin`) had a CLI, but importing a release was
+  library-only — the `repin` tests even stubbed it on disk. The user wires in
+  the path Plot published; Solera never reaches into Plot (format-f.md §6 /
+  04-pipeline). Bad path / unsupported `format_f_version` / duplicate label
+  fail cleanly (`error:`, exit 1). Suite 111 green, mypy + ruff clean.
+
 ## [7.5.0] — 2026-06-22
 
 ### Added
