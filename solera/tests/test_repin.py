@@ -45,3 +45,23 @@ def test_reopen_items_sets_done_back_to_todo(tmp_path: Path) -> None:
     ws.write_item(ws.load_item(leaf.id).model_copy(update={"status": "done"}))
     reopen_items(ws, [leaf.id])
     assert ws.load_item(leaf.id).status == "todo"
+
+
+def test_reopen_invalidates_done_ancestors(tmp_path: Path) -> None:
+    """Reopening a leaf must break its ancestors' `done` rollup — a container is
+    `done` only when all its children are done (the rollup invariant). Else a
+    parent reads `done` with reopened work under it (pipeline-dogfood finding)."""
+    from solera.supervisor import complete, start_next
+
+    ws = _ws(tmp_path)
+    story = create_item(ws, "story", "S")
+    leaf = create_item(
+        ws, "action", "A", gate="true", realizes=["feature/login"], parent=story.id
+    )
+    start_next(ws)
+    assert complete(ws, leaf.id, cwd=tmp_path).passed is True
+    assert ws.load_item(story.id).status == "done"  # rollup marked the parent done
+
+    reopen_items(ws, [leaf.id])
+    assert ws.load_item(leaf.id).status == "todo"
+    assert ws.load_item(story.id).status != "done"  # ancestor invalidated

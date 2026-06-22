@@ -1,5 +1,19 @@
 # Changelog
 
+## [7.6.1] — 2026-06-23
+
+### Fixed
+
+- **`reopen_items` now invalidates `done` ancestors** (rollup-invariant repair).
+  Reopening a leaf flipped it to `todo` but left its ancestor containers `done`,
+  so a story could read `done` with reopened work under it — breaking the
+  invariant that a container is `done` only when all its children are. New
+  `supervisor.invalidate_done_ancestors` walks up and resets any ancestor whose
+  rollup the reopen broke; `reopen_items` calls it. Leaf-based scheduling already
+  picked the reopened work up, so this is a state-consistency fix, not a
+  scheduling one. Surfaced by the Plot↔Solera pipeline dogfood. Suite 112 green,
+  mypy + ruff clean.
+
 ## [7.6.0] — 2026-06-23
 
 ### Added

@@ -120,6 +120,24 @@ def _rollup(ws: Workspace, leaf_id: str) -> None:
             break
 
 
+def invalidate_done_ancestors(ws: Workspace, item_id: str) -> None:
+    """The inverse of :func:`_rollup`. Reopening a descendant breaks the rollup
+    invariant (a container is ``done`` only when all its children are done), so
+    walk up and reset any ancestor that is ``done`` but now has a non-done child.
+    Idempotent; stops at the first ancestor still legitimately done."""
+    parents = parent_map(ws)
+    current = parents.get(item_id)
+    while current is not None:
+        item = ws.load_item(current)
+        if item.status == "done" and not all(
+            ws.load_item(child).status == "done" for child in item.children
+        ):
+            set_item_status(ws, current, "todo")
+            current = parents.get(current)
+        else:
+            break
+
+
 def complete(
     ws: Workspace,
     item_id: str,

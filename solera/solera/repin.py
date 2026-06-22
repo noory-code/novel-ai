@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import Any
 
 from solera.intake import diff_releases
+from solera.supervisor import invalidate_done_ancestors
 from solera.workspace import Workspace
 
 
@@ -49,8 +50,10 @@ def propose_repin(
 
 def reopen_items(ws: Workspace, item_ids: list[str]) -> None:
     """Reopen the given items (status → ``todo``) after a human approves a
-    proposal. Idempotent; only touches the listed items."""
+    proposal, then invalidate any ancestor whose ``done`` rollup the reopen
+    broke (a container is ``done`` only when all children are done). Idempotent."""
     for item_id in item_ids:
         item = ws.load_item(item_id)
         if item.status != "todo":
             ws.write_item(item.model_copy(update={"status": "todo"}))
+        invalidate_done_ancestors(ws, item_id)

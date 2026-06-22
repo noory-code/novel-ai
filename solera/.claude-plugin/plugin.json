@@ -1,6 +1,6 @@
 {
   "name": "solera",
-  "version": "7.6.0",
+  "version": "7.6.1",
   "description": "Solera — a slim harness that plans work into a tree of WorkItems (initiative / epic / story / action), runs deterministic gates on the leaves, and orders the steps an external AI agent executes. It supervises rather than builds, and works standalone over a plain-file .noory/solera/ workspace, with or without Plot. Ships skills (plan / run / decide / retro / feedback) and SessionStart/Stop hooks over a `solera` CLI.",
   "homepage": "https://github.com/noory-code/noory-ai/tree/main/solera",
   "repository": "https://github.com/noory-code/noory-ai",
