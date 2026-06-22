@@ -6,4 +6,4 @@ executes. It does not run the agent loop itself and it works standalone, with or
 without Plot.
 """
 
-__version__ = "7.3.0"
+__version__ = "7.3.1"

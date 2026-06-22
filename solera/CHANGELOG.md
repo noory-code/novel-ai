@@ -1,5 +1,15 @@
 # Changelog
 
+## [7.3.1] — 2026-06-22
+
+### Added
+
+- **format F version guard** (INT-1c) — `intake.import_release` now rejects a
+  bundle whose `format_f_version` is not `SUPPORTED_FORMAT_F_VERSION`, so a Plot
+  that bumps the format without Solera following fails loudly instead of
+  mis-reading the contract. Pinned in lock-step with Plot's
+  `format_f.FORMAT_F_VERSION` (cross-repo contract guard, both sides tested).
+
 ## [7.3.0] — 2026-06-22
 
 ### Added

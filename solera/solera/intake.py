@@ -22,6 +22,11 @@ from typing import Any
 
 from solera.workspace import Workspace
 
+# Cross-repo contract guard (format-f.md §7): the format F version this reader
+# understands. Must move in lock-step with Plot's ``format_f.FORMAT_F_VERSION``.
+# A bundle stamped with any other version is refused rather than mis-read.
+SUPPORTED_FORMAT_F_VERSION = 1
+
 
 def diff_releases(
     old_elements: list[dict[str, Any]], new_elements: list[dict[str, Any]]
@@ -56,6 +61,13 @@ def import_release(ws: Workspace, source_vs_dir: Path, *, label: str) -> dict[st
     manifest: dict[str, Any] = json.loads(
         (source_vs_dir / "manifest.json").read_text(encoding="utf-8")
     )
+    version = manifest.get("format_f_version")
+    if version != SUPPORTED_FORMAT_F_VERSION:
+        raise ValueError(
+            f"unsupported format_f_version {version!r} "
+            f"(this Solera reads {SUPPORTED_FORMAT_F_VERSION}): {source_vs_dir}"
+        )
+
     based_on = manifest.get("based_on")
     if not based_on:
         raise ValueError(f"service release {source_vs_dir} has no based_on vP")
