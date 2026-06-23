@@ -1,5 +1,16 @@
 # Changelog
 
+## [7.6.2] — 2026-06-24
+
+### Fixed
+
+- **Manifest no longer double-declares the hooks file.** `plugin.json` listed
+  `"hooks": "./hooks/hooks.json"`, but Claude Code already auto-loads that
+  standard path, so the hooks file loaded twice and the second load failed with
+  a "Duplicate hooks file detected" error in `/doctor`. Dropped the redundant
+  `hooks` field — the SessionStart/Stop hooks still load once via the standard
+  path. Mirrors the same fix already applied to metang.
+
 ## [7.6.1] — 2026-06-23
 
 ### Fixed
