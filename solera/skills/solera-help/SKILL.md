@@ -1,14 +1,14 @@
 ---
 name: solera-help
 user-invocable: true
-description: Explain what Solera is and how its plan / run / retro / feedback skills fit together.
+description: Explain what Solera is and how its plan / run / retro / feedback / import / repin skills fit together.
 metadata:
-  version: "6.0.0"
+  version: "7.7.0"
   category: meta
   type: unit
   style: guide
   triggers: [what is solera, solera help, solera get started, how to use solera]
-  uses: [solera-plan, solera-run, solera-decide, solera-retro, solera-feedback]
+  uses: [solera-plan, solera-run, solera-decide, solera-retro, solera-feedback, solera-import, solera-repin]
 ---
 
 # Solera
@@ -50,10 +50,12 @@ uv run --directory "${CLAUDE_PLUGIN_ROOT}" solera --root "$PWD" <command>
 | Command | What it does |
 |---|---|
 | `plan "<goal>" [--level L]` | Create a root WorkItem; prints its id. See **solera-plan**. |
-| `add <parent> "<goal>" [--level L] [--gate "<cmd>"]` | Add a child under a parent (a leaf if you pass `--gate`). |
+| `add <parent> "<goal>" [--level L] [--gate "<cmd>"] [--realizes <slug>]` | Add a child under a parent. `--realizes` pins it to a format F element. |
 | `next` | Mark the next open leaf `doing` and print its instruction. See **solera-run**. |
 | `complete` | Run the active leaf's gate; pass -> `done` + rollup, fail -> stop. |
 | `status` | Show the pointer and any tree-integrity problems. |
+| `import <vs-path> --label <label>` | Import a Plot service release (format F `vS`) into `specs/<label>/`. See **solera-import**. |
+| `repin [--apply] <old> <new>` | Diff two imports; surface stale items when Plot republishes. See **solera-repin**. |
 | `retro <item> "<text>"` | Record what the design lacked. See **solera-retro**. |
 | `feedback <id> "<text>"` | Record a blocker for a human. See **solera-feedback**. |
 

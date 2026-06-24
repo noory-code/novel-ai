@@ -1,5 +1,22 @@
 # Changelog
 
+## [7.7.0] — 2026-06-24
+
+### Added
+
+- **`solera-import` skill** — guides an agent through importing a published Plot
+  service release (format F `vS`) and planning work items with `--realizes` links
+  back to format F feature/entity slugs. Covers finding the path, running
+  `solera import`, reading the imported features, and handing off to `solera-run`.
+- **`solera-repin` skill** — guides an agent through surfacing stale work after
+  Plot republishes. Covers importing the new release, proposing the diff
+  (`repin`), reviewing with the human, and applying (`repin --apply`).
+- **`solera-help` updated** — added `import` and `repin` to the commands table;
+  added `solera-import` and `solera-repin` to the `uses` list; bumped metadata
+  version.
+
+**112 tests passing**
+
 ## [7.6.2] — 2026-06-24
 
 ### Fixed
