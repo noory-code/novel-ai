@@ -141,9 +141,9 @@ Minor — decision-type leaves (D2-3).
 - **`solera-decide` skill** — how to run a leaf that *decides* rather than
   *builds* (a tech stack, an architecture, a convention). The agent surfaces
   options and escalates; the **human** chooses and records the decision in
-  [cairn](https://github.com/noory-code/noory-ai/tree/main/cairn); the leaf gates
-  on `cairn check --about <topic>`. No new Solera code — a decision leaf is a
-  normal WorkItem whose gate is a cairn command, so the two tools stay decoupled
+  [proof](https://github.com/noory-code/noory-ai/tree/main/proof); the leaf gates
+  on `proof check --about <topic>`. No new Solera code — a decision leaf is a
+  normal WorkItem whose gate is a proof command, so the two tools stay decoupled
   (no import; the link is a topic slug by value).
 
 ## [7.0.1] — 2026-06-21
@@ -151,8 +151,8 @@ Minor — decision-type leaves (D2-3).
 Docs — artifact-home rule corrected. `docs/ARTIFACT_HOMES.md` (and the
 `artifacts.py` docstring) split the old "design → Plot" line into **conceptual
 design → Plot** and **technical design → the repository** (code-near), and add
-**decisions → cairn** (the append-only decision log). Plot defines the *what*,
-not the *how* or the tech stack; those live in the repo and cairn.
+**decisions → proof** (the append-only decision log). Plot defines the *what*,
+not the *how* or the tech stack; those live in the repo and proof.
 
 ## [7.0.0] — 2026-06-21
 

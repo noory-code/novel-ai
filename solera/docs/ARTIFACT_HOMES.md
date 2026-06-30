@@ -13,7 +13,7 @@ points at the rest by id.
 | **Code-derived** (generated ERD, API docs — produced *from* code) | the repo's `docs/generated/` | Regenerable from source; lives next to the code it derives from. |
 | **Conceptual design** (*what* to build and *why*) | **Plot** | Folded back via a retrospective or feedback note. When Plot is absent the note still records the intent for a human to place later. |
 | **Technical design** (*how* it is built — architecture, schema, wiring) | the **repository** (code-near) | Lives next to the code it governs (e.g. `docs/`). Plot does not define the stack; this is not Plot's. |
-| **Decisions** (the *choices* that govern the work — stack, architecture, conventions) | **cairn** | An append-only decision log. Solera/Plot point at decision ids by value; a decision-type leaf records here on acceptance. |
+| **Decisions** (the *choices* that govern the work — stack, architecture, conventions) | **proof** | An append-only decision log. Solera/Plot point at decision ids by value; a decision-type leaf records here on acceptance. |
 | **Process artifacts** (scratch output on the way: a draft, a screenshot, a dump) | `artifacts/{id}/` | Staging only. Tagged, not versioned (below). |
 
 ## Staging convention (`artifacts/{id}/`)

@@ -7,7 +7,7 @@ Each kind of output has exactly one home (see ``docs/ARTIFACT_HOMES.md``):
 - conceptual design (*what* to build, *why*) -> Plot (folded back via
   retrospective / feedback); no home here when Plot is absent
 - technical design (*how* it is built) -> the repository, code-near
-- decisions (the *choices* that govern the work) -> cairn (the decision log)
+- decisions (the *choices* that govern the work) -> proof (the decision log)
 - process artifacts (scratch output on the way) -> ``artifacts/{id}/``
 
 Process artifacts stage under a WorkItem and carry **tags** — ``about`` (which id)

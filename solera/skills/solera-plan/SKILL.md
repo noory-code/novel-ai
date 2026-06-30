@@ -57,7 +57,7 @@ building starts.
 - The gate checks the *outcome*, not the steps ("tests pass", not "ran pytest").
   Anyone re-running it later must get the same verdict.
 - Some leaves are *decisions*, not builds (e.g. "choose the stack"). Their gate
-  is "a decision is recorded in cairn"; the human makes the call. See
+  is "a decision is recorded in proof"; the human makes the call. See
   **solera-decide**.
 
 When the plan is ready, hand off to **solera-run**.
