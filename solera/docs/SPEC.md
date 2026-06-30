@@ -2,7 +2,7 @@
 
 The operational spec of the slim core. SSOT for *behaviour* is the code under
 `solera/`; this document is the map. Concept/design rationale lives in the
-harness notes (`repos-plot/docs/idea/harness/`, esp. `06-boundaries-and-altitudes`).
+harness notes (`noory-workspace/docs/idea/harness/`, esp. `06-boundaries-and-altitudes`).
 
 ## Essence
 

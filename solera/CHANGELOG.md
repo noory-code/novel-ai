@@ -104,7 +104,7 @@
 
 - **format F intake — the Solera "read" half of the mashbill↔Solera contract**
   (INT-3). New `solera/intake.py` reads **format F** (a neutral published-bundle
-  format, `repos-plot/docs/specs/format-f.md`) without importing Novel or
+  format, `noory-workspace/docs/specs/format-f.md`) without importing Novel or
   path-referencing its tree (R8 — `test_independence.py` still green):
   - `import_release(ws, source_vs_dir, label)` copies a frozen `vS` service
     bundle + its `based_on` `vP` slice into `specs/{label}/` (immutable →
