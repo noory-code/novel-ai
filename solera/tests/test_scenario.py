@@ -1,6 +1,6 @@
 """D2-2 — one full standalone scenario over the tree: plan -> run -> gate -> retro.
 
-The whole slim core in one pass, with no Plot. The test plays the external
+The whole slim core in one pass, with no Novel. The test plays the external
 agent; everything else is Solera's own helpers.
 """
 

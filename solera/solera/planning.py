@@ -51,7 +51,7 @@ def create_item(
 
     A leaf is created by passing a ``gate``; a container is created without one
     and grows children as later items are added under it. ``realizes`` links the
-    item to the format F slug(s) it builds (by value — no Plot import).
+    item to the format F slug(s) it builds (by value — no Novel import).
     """
     item = WorkItem(
         id=next_item_id(ws, level),

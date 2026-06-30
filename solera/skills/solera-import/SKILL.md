@@ -1,7 +1,7 @@
 ---
 name: solera-import
 user-invocable: true
-description: Import a published Plot service release (format F) into Solera and plan work items that realize its features.
+description: Import a published mashbill service release (format F) into Solera and plan work items that realize its features.
 metadata:
   version: "7.7.0"
   category: planning
@@ -13,21 +13,21 @@ metadata:
 
 # solera-import
 
-Start a Solera engagement from a published Plot service release. Plot freezes
+Start a Solera engagement from a published mashbill service release. mashbill freezes
 a service (its 5-column definition + every feature's UX flow) into a
 **format F** bundle on disk. Solera imports that bundle and you plan work items
 that *realize* each feature — tying implementation directly to the design.
 
 ## When to use
 
-After Plot has published a service release (`vS`) and you want to plan the
+After Novel has published a service release (`vS`) and you want to plan the
 implementation work in Solera with explicit links back to the design.
 
 ## Procedure
 
 ### 1. Find the published release path
 
-After Plot publishes, the release lands at:
+After Novel publishes, the release lands at:
 
 ```
 <project-root>/.noory/plot/published/<service-slug>/vS<N>/
@@ -93,5 +93,5 @@ The leaf's `realizes` links trace back to the design in `specs/<label>/`.
   the published spec.
 - One label per release. If you import the same service twice (e.g. a patch),
   use a new label so both versions stay in `specs/`.
-- When Plot publishes an updated vS, use **solera-repin** to surface which items
+- When Novel publishes an updated vS, use **solera-repin** to surface which items
   have gone stale.

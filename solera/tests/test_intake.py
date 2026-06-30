@@ -1,7 +1,7 @@
-"""format F intake (INT-3) — the Solera "read" half of the Plot↔Solera contract.
+"""format F intake (INT-3) — the Solera "read" half of the mashbill↔Solera contract.
 
 Solera reads format F as a **neutral format** (docs/specs/format-f.md): it does
-not import Plot or know the bundle came from Plot. These tests build synthetic
+not import Novel or know the bundle came from Novel. These tests build synthetic
 bundles by hand to prove exactly that independence — no plot_mcp anywhere.
 """
 
@@ -46,7 +46,7 @@ def _write_bundle(root: Path, rel: str, manifest: dict) -> Path:
 
 def test_import_rejects_unsupported_format_f_version(tmp_path: Path) -> None:
     """Cross-repo contract guard (INT-1c): the reader pins the format version it
-    understands, so a Plot that bumps format_f_version without Solera following
+    understands, so a mashbill that bumps format_f_version without Solera following
     fails loudly here instead of silently mis-reading the contract."""
     from solera.intake import SUPPORTED_FORMAT_F_VERSION
 
@@ -70,7 +70,7 @@ def test_import_rejects_unsupported_format_f_version(tmp_path: Path) -> None:
 
 
 def test_import_release_copies_service_and_its_project_slice(tmp_path: Path) -> None:
-    # Synthetic published tree (as Plot would write it) — NO plot import.
+    # Synthetic published tree (as Novel would write it) — NO plot import.
     published = tmp_path / "published"
     _write_bundle(
         published,

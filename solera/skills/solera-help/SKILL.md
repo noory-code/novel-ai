@@ -17,7 +17,7 @@ Solera is a slim **harness**. It does not build anything itself — you (the age
 do the building. Solera plans the work into a tree, hands you one leaf at a time,
 and runs a deterministic **gate** to verify each leaf before moving on.
 
-It works standalone, with or without Plot, over plain files under
+It works standalone, with or without Novel, over plain files under
 `.noory/solera/` in the project directory.
 
 ## The tree
@@ -54,8 +54,8 @@ uv run --directory "${CLAUDE_PLUGIN_ROOT}" solera --root "$PWD" <command>
 | `next` | Mark the next open leaf `doing` and print its instruction. See **solera-run**. |
 | `complete` | Run the active leaf's gate; pass -> `done` + rollup, fail -> stop. |
 | `status` | Show the pointer and any tree-integrity problems. |
-| `import <vs-path> --label <label>` | Import a Plot service release (format F `vS`) into `specs/<label>/`. See **solera-import**. |
-| `repin [--apply] <old> <new>` | Diff two imports; surface stale items when Plot republishes. See **solera-repin**. |
+| `import <vs-path> --label <label>` | Import a Novel service release (format F `vS`) into `specs/<label>/`. See **solera-import**. |
+| `repin [--apply] <old> <new>` | Diff two imports; surface stale items when Novel republishes. See **solera-repin**. |
 | `retro <item> "<text>"` | Record what the design lacked. See **solera-retro**. |
 | `feedback <id> "<text>"` | Record a blocker for a human. See **solera-feedback**. |
 

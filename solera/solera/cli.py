@@ -78,10 +78,10 @@ def _cmd_status(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
 
 
 def _cmd_import(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
-    """Import a published Plot release (format F) — the pipeline's entry step.
+    """Import a published Novel release (format F) — the pipeline's entry step.
     Copy the ``vS`` service bundle and the ``vP`` snapshot it is ``based_on``
-    into ``specs/{label}/``. The user wires in the path Plot published; Solera
-    never reaches into Plot (format-f.md §6 / 04-pipeline)."""
+    into ``specs/{label}/``. The user wires in the path mashbill published; Solera
+    never reaches into Novel (format-f.md §6 / 04-pipeline)."""
     try:
         manifest = import_release(ws, Path(args.source), label=args.label)
     except (FileNotFoundError, FileExistsError, ValueError) as exc:
@@ -161,7 +161,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_status.set_defaults(func=_cmd_status)
 
     p_import = sub.add_parser(
-        "import", help="import a published Plot release (format F vS + its vP) into specs/{label}"
+        "import", help="import a published Novel release (format F vS + its vP) into specs/{label}"
     )
     p_import.add_argument(
         "source", help="path to the published vS bundle dir (…/published/{slug}/vS{N})"

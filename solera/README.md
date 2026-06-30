@@ -8,7 +8,7 @@ rather than builds**: the agent (Claude Code, Codex) does the work; Solera plans
 it, hands it over one leaf at a time, and verifies each before moving on.
 
 It works **standalone** over a plain-file `.noory/solera/` workspace, with or
-without [Plot](https://github.com/noory-code/noory-ai/tree/main/plot).
+without [Novel](https://github.com/noory-code/noory-ai/tree/main/plot).
 
 ## The loop
 
@@ -58,7 +58,7 @@ solera --root "$PWD" feedback FB-001 "Blocked: the spec is ambiguous about auth.
 
 ## Design
 
-- **Standalone first.** Solera never imports Plot and never path-references it.
+- **Standalone first.** Solera never imports mashbill and never path-references it.
   When the two connect, they share a neutral format and stable ids *by value*,
   never a code dependency (guarded by `tests/test_independence.py`).
 - **Files are the state.** WorkItems, the progress pointer, and notes are

@@ -1,7 +1,7 @@
 {
   "name": "proof",
   "version": "0.4.0",
-  "description": "Proof — an append-only decision log. The shared substrate where a project's significant choices (tech stack, architecture, conventions) are recorded once and never edited; to change one you record a decision that supersedes it. Plot and Solera point at decisions by id (by value), never importing it. Ships skills over a `proof` CLI; standalone over plain files under .noory/proof/.",
+  "description": "Proof — an append-only decision log. The shared substrate where a project's significant choices (tech stack, architecture, conventions) are recorded once and never edited; to change one you record a decision that supersedes it. mashbill and Solera point at decisions by id (by value), never importing it. Ships skills over a `proof` CLI; standalone over plain files under .noory/proof/.",
   "homepage": "https://github.com/noory-code/noory-ai/tree/main/proof",
   "repository": "https://github.com/noory-code/noory-ai",
   "license": "MIT",

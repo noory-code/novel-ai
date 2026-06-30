@@ -18,7 +18,7 @@ architecture, a convention — are recorded once and **never edited**. To change
 decision you record a new one that **supersedes** it, so the history (what was
 decided, why, and what it replaced) is preserved.
 
-Proof is a **shared substrate**: other tools (Plot, Solera) point at decisions by
+Proof is a **shared substrate**: other tools (mashbill, Solera) point at decisions by
 **id, by value** — they never import it. It runs standalone over plain files under
 `.noory/proof/` in the project directory.
 

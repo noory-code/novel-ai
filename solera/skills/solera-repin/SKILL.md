@@ -1,7 +1,7 @@
 ---
 name: solera-repin
 user-invocable: true
-description: Diff two imported Plot releases and reopen work items whose realized features have changed.
+description: Diff two imported Novel releases and reopen work items whose realized features have changed.
 metadata:
   version: "7.7.0"
   category: execution
@@ -13,14 +13,14 @@ metadata:
 
 # solera-repin
 
-When Plot republishes a service (`vS+1`), some features may have changed or been
+When Novel republishes a service (`vS+1`), some features may have changed or been
 removed. `repin` diffs the old and new imported releases and surfaces which
 Solera work items have gone stale — items whose `realizes` target has changed or
 disappeared.
 
 ## When to use
 
-Plot has published a new version of a service and you want to find which already-
+Novel has published a new version of a service and you want to find which already-
 planned (or already-done) items no longer match the current design.
 
 ## Procedure
@@ -67,7 +67,7 @@ design.
 - Always propose before applying. Show the stale list to the human — they decide
   whether the change is significant enough to reopen work.
 - The diff compares element hashes from `specs/{label}/manifest.json`. A hash
-  change means the feature's UX flow or definition changed in Plot; a missing id
+  change means the feature's UX flow or definition changed in Novel; a missing id
   means the feature was removed.
 - `added` elements (features in the new release with no matching item) are
   flagged but not created — plan new items with `solera add --realizes <slug>`

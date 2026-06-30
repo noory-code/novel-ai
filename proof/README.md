@@ -10,7 +10,7 @@ anyone (or any agent) arriving later can see not just *what* was decided but
 *why*, and what it replaced.
 
 Proof is a **shared substrate**. It is the home for the decisions that govern a
-project's work. Tools like [Plot](https://github.com/noory-code/noory-ai/tree/main/plot)
+project's work. Tools like [Novel](https://github.com/noory-code/noory-ai/tree/main/plot)
 and [Solera](https://github.com/noory-code/noory-ai/tree/main/solera) do not own
 it and do not import it — they point at decisions by stable **id, by value**.
 Proof runs **standalone** over plain files under `.noory/proof/`.

@@ -1,6 +1,6 @@
-"""Proof is a lower-layer substrate: it imports neither Plot nor Solera.
+"""Proof is a lower-layer substrate: it imports neither mashbill nor Solera.
 
-Plot and Solera point at decisions by id (by value); the dependency runs one way
+mashbill and Solera point at decisions by id (by value); the dependency runs one way
 (they depend on proof, proof depends on neither). This guard fails if any source
 file imports a plot or solera module.
 """

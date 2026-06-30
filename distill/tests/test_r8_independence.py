@@ -1,7 +1,7 @@
 """R8 build guard — this plugin never imports the app or sibling plugins.
 
 OVERHAUL R8 (see `repos-plot/plot/docs/OVERHAUL.md`) pins the ONE forbidden
-dependency direction: a plugin must stay independent of the commercial Plot
+dependency direction: a plugin must stay independent of the commercial Novel
 app — no imports of the viewer, the Tauri shell, or the app repo — and, per
 R2, independent of every sibling plugin. The MIT-plugin / proprietary-app
 licence boundary is defended by THIS build guard, not by file layout.
@@ -18,7 +18,7 @@ from pathlib import Path
 
 PKG = Path(__file__).resolve().parent.parent / "src" / "distill"
 
-# Code roots this plugin may NEVER import: the Plot viewer / app / shell, and
+# Code roots this plugin may NEVER import: the Novel viewer / app / shell, and
 # every sibling plugin (each is independent — R2/R8).
 BANNED_ROOTS = {
     "viewer",

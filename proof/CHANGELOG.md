@@ -42,7 +42,7 @@ Adds the link a decision-type work-item's gate needs.
 
 ## [0.1.0] — 2026-06-21
 
-Initial release — an append-only decision log (v1: the log itself; Plot/Solera
+Initial release — an append-only decision log (v1: the log itself; mashbill/Solera
 integration comes later).
 
 ### Added
@@ -55,5 +55,5 @@ integration comes later).
   decision that no accepted decision supersedes. Supersession is a relation, not
   an edit, so history is preserved.
 - **CLI** — `proof record / list / in-force / show`. Body via `--body` or stdin.
-- **Independence guard** — proof imports neither Plot nor Solera; they point at
+- **Independence guard** — proof imports neither mashbill nor Solera; they point at
   decisions by id (by value), one-way dependency.

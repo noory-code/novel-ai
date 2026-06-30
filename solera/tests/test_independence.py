@@ -1,6 +1,6 @@
-"""CORE-8b — standalone invariant: Solera never reaches into Plot.
+"""CORE-8b — standalone invariant: Solera never reaches into mashbill.
 
-The hard requirement (R8 spirit): Solera and Plot do not import or path-reference
+The hard requirement (R8 spirit): Solera and mashbill do not import or path-reference
 each other. The connection, when it exists, is a neutral format and stable ids
 shared *by value*, never a code dependency. This guard fails if any source file
 imports a plot module or hard-codes a path into the plot tree.

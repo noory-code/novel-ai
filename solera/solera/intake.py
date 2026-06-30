@@ -1,14 +1,14 @@
-"""format F intake — the Solera "read" half of the Plot↔Solera contract (INT-3).
+"""format F intake — the Solera "read" half of the mashbill↔Solera contract (INT-3).
 
 Solera reads **format F** (docs/specs/format-f.md) as a *neutral* format: it
-never imports Plot and never path-references the Plot tree (R8 — guarded by
+never imports Novel and never path-references the Novel tree (R8 — guarded by
 ``tests/test_independence.py``). The only thing it knows is the format's own
 directory convention (a service bundle ``vS`` sits next to ``_project/{vP}``).
 
 Two pieces:
 - :func:`import_release` — copy a frozen ``vS`` bundle + its ``based_on`` ``vP``
   slice into ``specs/{label}/`` (immutable → immutable). Story files then point
-  at ``specs/{label}`` (their own folder), so Solera runs with or without Plot.
+  at ``specs/{label}`` (their own folder), so Solera runs with or without mashbill.
 - :func:`diff_releases` — the deterministic ID-diff (changed / removed / added)
   that drives re-pinning on a re-publish. A pure function over two manifests.
 """
@@ -23,7 +23,7 @@ from typing import Any
 from solera.workspace import Workspace
 
 # Cross-repo contract guard (format-f.md §7): the format F version this reader
-# understands. Must move in lock-step with Plot's ``format_f.FORMAT_F_VERSION``.
+# understands. Must move in lock-step with Novel's ``format_f.FORMAT_F_VERSION``.
 # A bundle stamped with any other version is refused rather than mis-read.
 SUPPORTED_FORMAT_F_VERSION = 1
 
@@ -54,7 +54,7 @@ def load_imported_elements(ws: Workspace, label: str) -> list[dict[str, Any]]:
     (``specs/{label}/service/manifest.json``) — the input to a re-pin ID-diff.
 
     Stays inside Solera's own tree (the imported copy), never reaching back into
-    Plot (R8). Raises :class:`FileNotFoundError` if the label was not imported.
+    Novel (R8). Raises :class:`FileNotFoundError` if the label was not imported.
     """
     manifest_path = ws.specs_dir / label / "service" / "manifest.json"
     if not manifest_path.is_file():
@@ -69,8 +69,8 @@ def import_release(ws: Workspace, source_vs_dir: Path, *, label: str) -> dict[st
     into ``specs/{label}/`` and return the ``vS`` manifest.
 
     ``source_vs_dir`` is a published service bundle directory (e.g. the
-    ``published/{slug}/vS{N}/`` Plot wrote). The user wires that path in; Solera
-    does not reach into Plot. The ``based_on`` ``vP`` lives at
+    ``published/{slug}/vS{N}/`` mashbill wrote). The user wires that path in; Solera
+    does not reach into Novel. The ``based_on`` ``vP`` lives at
     ``<published>/_project/{based_on}`` per the format's convention.
     """
     manifest: dict[str, Any] = json.loads(

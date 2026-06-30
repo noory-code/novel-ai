@@ -9,7 +9,7 @@ harness notes (`repos-plot/docs/idea/harness/`, esp. `06-boundaries-and-altitude
 Solera does not build anything. It **plans** work into a tree, **hands** the
 agent one leaf at a time, and **verifies** each leaf with a deterministic gate.
 The building is done by an external agent (Claude Code / Codex). Solera is the
-harness around it and runs standalone, with or without Plot.
+harness around it and runs standalone, with or without Novel.
 
 ## The WorkItem tree
 
@@ -126,7 +126,7 @@ the human-in-the-loop gate (04-pipeline).
 
 ## Invariants
 
-1. **Standalone.** No Plot import or path reference (`tests/test_independence.py`).
+1. **Standalone.** No Novel import or path reference (`tests/test_independence.py`).
 2. **The gate is not an LLM step.** A deterministic subprocess; the verdict is trustworthy.
 3. **State is the files.** Solera holds none of its own.
 4. **One active leaf.** A gate failure leaves the leaf `doing`; `next` resumes it.

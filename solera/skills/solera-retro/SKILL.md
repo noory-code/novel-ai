@@ -15,7 +15,7 @@ metadata:
 
 Written **after** a WorkItem is done. A retrospective is the post-hoc signal: what
 the design or plan lacked, captured while it is fresh, for a human to fold back
-into the design (in Plot, when connected).
+into the design (in Novel, when connected).
 
 ## When to use
 
@@ -28,7 +28,7 @@ uv run --directory "${CLAUDE_PLUGIN_ROOT}" solera --root "$PWD" \
   retro STORY-001 "<what the design or plan lacked, and what to change>"
 ```
 
-Optionally tag the ids it is about (repeatable; only meaningful when Plot is
+Optionally tag the ids it is about (repeatable; only meaningful when Novel is
 connected — omit in standalone):
 
 ```bash

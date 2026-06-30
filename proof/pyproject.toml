@@ -1,7 +1,7 @@
 [project]
 name = "proof"
 version = "0.4.0"
-description = "Proof — an append-only decision log. A shared substrate both Plot and Solera point at by id: each decision records its context, choice, alternatives, and consequences, and supersession is a relation between entries, never an edit. Standalone, plain files under .noory/proof/."
+description = "Proof — an append-only decision log. A shared substrate both mashbill and Solera point at by id: each decision records its context, choice, alternatives, and consequences, and supersession is a relation between entries, never an edit. Standalone, plain files under .noory/proof/."
 readme = "README.md"
 license = "MIT"
 keywords = ["decision-log", "adr", "claude-code", "harness", "proof"]

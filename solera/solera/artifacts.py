@@ -4,8 +4,8 @@ Each kind of output has exactly one home (see ``docs/ARTIFACT_HOMES.md``):
 
 - code -> the repository
 - code-derived output (generated ERD, API docs) -> the repo's ``docs/generated``
-- conceptual design (*what* to build, *why*) -> Plot (folded back via
-  retrospective / feedback); no home here when Plot is absent
+- conceptual design (*what* to build, *why*) -> Novel (folded back via
+  retrospective / feedback); no home here when Novel is absent
 - technical design (*how* it is built) -> the repository, code-near
 - decisions (the *choices* that govern the work) -> proof (the decision log)
 - process artifacts (scratch output on the way) -> ``artifacts/{id}/``

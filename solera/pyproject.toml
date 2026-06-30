@@ -1,7 +1,7 @@
 [project]
 name = "solera"
 version = "7.7.0"
-description = "Solera — a slim harness that plans work, runs deterministic gates, and orders the steps an external AI agent executes. Reads and writes a plain-file .noory/solera/ workspace. Works standalone, with or without Plot."
+description = "Solera — a slim harness that plans work, runs deterministic gates, and orders the steps an external AI agent executes. Reads and writes a plain-file .noory/solera/ workspace. Works standalone, with or without mashbill."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11,<3.14"

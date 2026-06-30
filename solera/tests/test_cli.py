@@ -138,7 +138,7 @@ def test_repin_unknown_label_errors_cleanly(tmp_path: Path, capsys) -> None:  # 
 
 def _write_published_bundle(pub: Path) -> Path:
     """Write a minimal format-F published bundle (a `vS` service release + the
-    `vP` snapshot it is based on) and return the `vS` dir — the shape Plot's
+    `vP` snapshot it is based on) and return the `vS` dir — the shape Novel's
     publish leaves on disk under `published/`."""
     vp = pub / "_project" / "vP1"
     (vp / "design").mkdir(parents=True)

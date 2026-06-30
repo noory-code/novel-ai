@@ -4,12 +4,12 @@
 
 ### Added
 
-- **`solera-import` skill** — guides an agent through importing a published Plot
+- **`solera-import` skill** — guides an agent through importing a published Novel
   service release (format F `vS`) and planning work items with `--realizes` links
   back to format F feature/entity slugs. Covers finding the path, running
   `solera import`, reading the imported features, and handing off to `solera-run`.
 - **`solera-repin` skill** — guides an agent through surfacing stale work after
-  Plot republishes. Covers importing the new release, proposing the diff
+  Novel republishes. Covers importing the new release, proposing the diff
   (`repin`), reviewing with the human, and applying (`repin --apply`).
 - **`solera-help` updated** — added `import` and `repin` to the commands table;
   added `solera-import` and `solera-repin` to the `uses` list; bumped metadata
@@ -39,7 +39,7 @@
   `supervisor.invalidate_done_ancestors` walks up and resets any ancestor whose
   rollup the reopen broke; `reopen_items` calls it. Leaf-based scheduling already
   picked the reopened work up, so this is a state-consistency fix, not a
-  scheduling one. Surfaced by the Plot↔Solera pipeline dogfood. Suite 112 green,
+  scheduling one. Surfaced by the mashbill↔Solera pipeline dogfood. Suite 112 green,
   mypy + ruff clean.
 
 ## [7.6.0] — 2026-06-23
@@ -47,13 +47,13 @@
 ### Added
 
 - **`solera import <vs_dir> --label <label>` CLI** — the pipeline's entry step is
-  now driven from the command line. It copies a published Plot release (a
+  now driven from the command line. It copies a published Novel release (a
   format-F `vS` service bundle plus the `vP` snapshot it is `based_on`) into
   `specs/{label}/`, the same `import_release` the library already exposed.
-  Surfaced by a Plot↔Solera dogfood: every other stage (`plan` / `add` /
+  Surfaced by a mashbill↔Solera dogfood: every other stage (`plan` / `add` /
   `next` / `complete` / `repin`) had a CLI, but importing a release was
   library-only — the `repin` tests even stubbed it on disk. The user wires in
-  the path Plot published; Solera never reaches into Plot (format-f.md §6 /
+  the path mashbill published; Solera never reaches into mashbill (format-f.md §6 /
   04-pipeline). Bad path / unsupported `format_f_version` / duplicate label
   fail cleanly (`error:`, exit 1). Suite 111 green, mypy + ruff clean.
 
@@ -75,10 +75,10 @@
 
 ### Added
 
-- **`realizes` link + re-pin flow** (INT-f) — completes the Plot↔Solera loop on
+- **`realizes` link + re-pin flow** (INT-f) — completes the mashbill↔Solera loop on
   the Solera side:
   - `WorkItem.realizes: list[str]` — the format F slug(s) an item builds (e.g.
-    `feature/login`), connected *by value* (no Plot import). Back-compatible:
+    `feature/login`), connected *by value* (no Novel import). Back-compatible:
     older item files without it parse as `[]`. CLI: `add --realizes <slug>`
     (repeatable).
   - `repin.propose_repin(ws, old, new)` — read-only: maps an ID-diff onto the
@@ -93,23 +93,23 @@
 ### Added
 
 - **format F version guard** (INT-1c) — `intake.import_release` now rejects a
-  bundle whose `format_f_version` is not `SUPPORTED_FORMAT_F_VERSION`, so a Plot
+  bundle whose `format_f_version` is not `SUPPORTED_FORMAT_F_VERSION`, so a Novel
   that bumps the format without Solera following fails loudly instead of
-  mis-reading the contract. Pinned in lock-step with Plot's
+  mis-reading the contract. Pinned in lock-step with Novel's
   `format_f.FORMAT_F_VERSION` (cross-repo contract guard, both sides tested).
 
 ## [7.3.0] — 2026-06-22
 
 ### Added
 
-- **format F intake — the Solera "read" half of the Plot↔Solera contract**
+- **format F intake — the Solera "read" half of the mashbill↔Solera contract**
   (INT-3). New `solera/intake.py` reads **format F** (a neutral published-bundle
-  format, `repos-plot/docs/specs/format-f.md`) without importing Plot or
+  format, `repos-plot/docs/specs/format-f.md`) without importing Novel or
   path-referencing its tree (R8 — `test_independence.py` still green):
   - `import_release(ws, source_vs_dir, label)` copies a frozen `vS` service
     bundle + its `based_on` `vP` slice into `specs/{label}/` (immutable →
     immutable), so a story's `source: specs/{label}` points only inside Solera's
-    own folder — Solera runs with or without Plot.
+    own folder — Solera runs with or without mashbill.
   - `diff_releases(old, new)` — the deterministic ID-diff (changed / removed /
     added) that drives re-pinning on a re-publish. Pure function, never an LLM.
   - `Workspace.specs_dir` added.
@@ -149,9 +149,9 @@ Minor — decision-type leaves (D2-3).
 ## [7.0.1] — 2026-06-21
 
 Docs — artifact-home rule corrected. `docs/ARTIFACT_HOMES.md` (and the
-`artifacts.py` docstring) split the old "design → Plot" line into **conceptual
-design → Plot** and **technical design → the repository** (code-near), and add
-**decisions → proof** (the append-only decision log). Plot defines the *what*,
+`artifacts.py` docstring) split the old "design → Novel" line into **conceptual
+design → Novel** and **technical design → the repository** (code-near), and add
+**decisions → proof** (the append-only decision log). Novel defines the *what*,
 not the *how* or the tech stack; those live in the repo and proof.
 
 ## [7.0.0] — 2026-06-21
@@ -237,12 +237,12 @@ extension are removed. Breaking: the `.solera/` / canvas data model and the
   `solera-run`, `solera-retro`, `solera-feedback`). The agent-facing surface:
   `python -m solera <command>`.
 - **R8 independence guard** (`tests/test_independence.py`). No source file imports
-  a Plot module or path-references the plot tree — the connection is by value only.
+  a Novel module or path-references the plot tree — the connection is by value only.
 
 ### Removed
 
 - `solera_mcp/`, `viewer/`, `vscode-extension/`, the old `skills/`, `commands/`,
-  `docs/`, and `tests/`. The MCP server is now a later Plot-integration concern,
+  `docs/`, and `tests/`. The MCP server is now a later Novel-integration concern,
   not part of the standalone core.
 
 ## [5.2.1] — 2026-06-15
@@ -252,7 +252,7 @@ Patch. R8 independence build guard.
 ### Added
 
 - **R8 independence build guard** (`tests/test_r8_independence.py`). AST-checks
-  every `solera_mcp/` module for imports of the Plot app (viewer / Tauri shell)
+  every `solera_mcp/` module for imports of the Novel app (viewer / Tauri shell)
   or any sibling plugin, and bans `src-tauri` path literals. Mirrors
   `plot/tests/test_r8_independence.py` — the MIT-plugin / proprietary-app
   licence boundary is defended by this structural guard, not by file layout
@@ -263,7 +263,7 @@ Patch. R8 independence build guard.
 
 Minor. R9 — Solera workspace data lives under `.noory/solera/` instead of
 `.solera/` so every noory plugin (plot / distill / evonest / solera) shares
-ONE `.noory/` dotfolder per project. Plot's canvas data and Solera's
+ONE `.noory/` dotfolder per project. mashbill's canvas data and Solera's
 workspace data can sit side-by-side without colliding. Completes Track 2.3
 of the overhaul.
 
