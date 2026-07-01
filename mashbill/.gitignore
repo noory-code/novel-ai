@@ -1,0 +1,23 @@
+# Novel runtime data (not tracked)
+.plot/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+dist/
+build/
+
+# Node
+node_modules/
+viewer/dist/
+viewer/dist-debug/
+
+# Editor
+.DS_Store
+.idea/
+.vscode/

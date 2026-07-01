@@ -29,7 +29,7 @@ planned (or already-done) items no longer match the current design.
 
 ```bash
 uv run --directory "${CLAUDE_PLUGIN_ROOT}" solera --root "$PWD" \
-  import .noory/plot/published/<service-slug>/vS<N+1>/ --label <new-label>
+  import .noory/novel/published/<service-slug>/vS<N+1>/ --label <new-label>
 ```
 
 Use a distinct label from the previous import (e.g. `auth-v2`).

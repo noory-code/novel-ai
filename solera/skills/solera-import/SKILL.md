@@ -30,16 +30,16 @@ implementation work in Solera with explicit links back to the design.
 After Novel publishes, the release lands at:
 
 ```
-<project-root>/.noory/plot/published/<service-slug>/vS<N>/
+<project-root>/.noory/novel/published/<service-slug>/vS<N>/
 ```
 
-For example: `.noory/plot/published/auth/vS1/`.
+For example: `.noory/novel/published/auth/vS1/`.
 
 ### 2. Import the release
 
 ```bash
 uv run --directory "${CLAUDE_PLUGIN_ROOT}" solera --root "$PWD" \
-  import .noory/plot/published/<service-slug>/vS<N>/ --label <label>
+  import .noory/novel/published/<service-slug>/vS<N>/ --label <label>
 ```
 
 `--label` is a short local name for this import (e.g. `auth-v1`). It controls
