@@ -266,3 +266,14 @@ def test_services_framing_registers_entities_with_each_feature_batch() -> None:
     f = build_framing_preamble("services").lower()
     assert "same breath" in f
     assert "zero entities is unfinished" in f
+
+
+def test_foundation_framing_lands_identity_mid_phase() -> None:
+    """Round-3 regression (2026-07-03): identity 0/12 — iteration ⑨'s
+    hunt-values-until-dry ate the foundation budget and identity never came
+    (round 2 was 7/8). Depth must not displace completeness: identity lands
+    MID-phase (after 2-3 values stand, draft → quick confirm → back to value
+    hunting); a session ending with identity empty is a failed session."""
+    f = build_framing_preamble("foundation").lower()
+    assert "identity lands mid-phase" in f
+    assert "failed session" in f
