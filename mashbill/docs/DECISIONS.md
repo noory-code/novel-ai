@@ -39,6 +39,31 @@
 
 ## Log
 
+### D-2026-07-02-G — opening an existing subdir project always resolves its real dir (no bare-root guess; create self-heals into the existing project)
+
+- **What:** Two viewer fixes in the project-open path. (1) The active project's
+  effective ``project_path`` now derives from the discovery *state* and resolves to
+  ``null`` (I/O holds) while the active id is not yet in the dir map — before, a
+  URL-restored open raced discovery, guessed the bare workspace root ("." fallback),
+  and the memo never recomputed once discovery landed (it read only a ref), so a
+  subdir project 404'd forever. (2) ``create(targetDir)`` hitting the engine's
+  one-project-per-dir guard (409, D-2026-06-21-AA) now re-discovers and OPENS the
+  project actually in that dir instead of surfacing a raw error.
+- **Why:** Dogfood report B-4 (2026-07-02): "기존거 열면 못여는데" — opening the
+  workspace showed the existing project unreachable (404 at the bare root), and
+  retrying through the folder picker produced a 409 error toast. Root cause was
+  entirely viewer-side path resolution; the engine read the project fine.
+- **Alternatives:** keep the "." fallback but force a refetch when discovery lands —
+  rejected: still fires one guaranteed-wrong request per open (404 + error flash).
+  Engine-side: relax the 409 into open-on-create — rejected: creation staying strict
+  is correct (D-2026-06-21-AA); the *viewer* owns open-vs-create intent.
+- **Approval:** Accepted by user (report 2026-07-02; fix under the standing
+  record-and-regression-test directive).
+- **Spec impact:** Behaviour fix, no rule change. Pinned by viewer
+  ``tests/effective-project-path.test.tsx`` (URL-restored subdir project never fetched
+  at the bare root) + ``tests/project-create-name.test.tsx`` (create self-heals into
+  the existing project).
+
 ### D-2026-07-02-F — identity inspector hides the inert status / provenance inputs (code catches up to D-2026-06-16-O)
 
 - **What:** Removed the ``status`` (select) and ``provenance`` (id-chip) editors from the
