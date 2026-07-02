@@ -39,6 +39,23 @@
 
 ## Log
 
+### D-2026-07-02-F — identity inspector hides the inert status / provenance inputs (code catches up to D-2026-06-16-O)
+
+- **What:** Removed the ``status`` (select) and ``provenance`` (id-chip) editors from the
+  identity per-kind inspector (viewer). The fields stay on the model / wire (unchanged);
+  only their inspector inputs are gone. The inspector now shows description + body only.
+- **Why:** Dogfood report (2026-07-02): the identity inspector surfaced status + 도출출처
+  (provenance), which SPEC.md "Foundation typed-text storage" already declares **inert /
+  deferred (D-2026-06-16-O)** — "the inspector shows no status / provenance inputs for now;
+  they return with the AI-derive flow." Same code-vs-spec drift shape as core_value's
+  ``definition``. This is the code catching up to the pinned spec, not a new decision.
+- **Alternatives:** also fold ``description`` into the body rule-list (full D-2026-06-16-N
+  compliance) — **deferred / flagged, not done**: that is a cross-repo schema change (like
+  core_value) the user did not explicitly request; raised separately rather than bundled.
+- **Approval:** Accepted by user (report + direction 2026-07-02).
+- **Spec impact:** Implements D-2026-06-16-O; no SPEC.md change (already correct). Pinned by
+  viewer ``tests/inspectors/inspectors.smoke.test.tsx`` (identity hides status/provenance).
+
 ### D-2026-07-02-E — coach leads and fills a concept's full set through conversation (no premature "done", no handing the wheel back)
 
 - **What:** Added to `PROPOSE_PLAYBOOK`: the coach keeps leading — it must not hand the
