@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.135.0] — 2026-07-02
+
+### Changed
+
+- **The service landscape spans value exchanges, not internal layers.**
+  Benchmark round 2 (Uber run): asked for the landscape, the coach mapped
+  four internal layers of one marketplace (matching, safety, settlement) and
+  surfaced a single value exchange. The services framing now pins what a
+  service IS (one value-exchange surface — a distinct pair of sides trading
+  value), states that layers of one exchange are not services, and has the
+  coach ask what other exchanges the vision touches before drilling in.
+  (D-2026-07-02-R, tenth sim iteration)
+
 ## [0.134.0] — 2026-07-02
 
 ### Changed

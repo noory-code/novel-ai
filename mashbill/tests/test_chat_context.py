@@ -191,3 +191,16 @@ def test_foundation_framing_draws_values_out_until_dry() -> None:
     assert "next fork" in f
     assert "runs dry" in f
     assert "first two or three" in f
+
+
+def test_services_framing_landscape_spans_exchanges_not_layers() -> None:
+    """Benchmark round 2 (2026-07-02, Uber run): asked for the landscape, the
+    coach mapped four internal layers of ONE marketplace (matching, safety,
+    settlement) and called it the map — surfacing a single value exchange.
+    A service is a value-exchange surface; the landscape spans the DIFFERENT
+    exchanges the mission reaches, and layers of one exchange are not
+    services (tenth sim iteration)."""
+    f = build_framing_preamble("services").lower()
+    assert "value-exchange surface" in f
+    assert "internal layers" in f
+    assert "other exchanges" in f

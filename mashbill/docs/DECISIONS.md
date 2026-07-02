@@ -39,6 +39,24 @@
 
 ## Log
 
+### D-2026-07-02-R — the service landscape spans value exchanges, not internal layers (tenth sim iteration)
+
+- **What:** The services framing now defines a service as one value-exchange surface
+  (a distinct pair of sides trading value), states the landscape SPANS the different
+  exchanges the mission reaches rather than slicing one exchange into internal
+  layers, and — when the map covers only one exchange — has the coach ask what
+  other exchanges the vision touches before drilling in.
+- **Why:** Benchmark round 2 (2026-07-02, Uber): the landscape-first rule
+  (D-2026-07-02-K era) fired, but the "map" it drew was four horizontal layers of
+  ONE marketplace (matching·safety·settlement) — semantically a single exchange.
+  The rule said "map first" without pinning what counts as a member of the map.
+  This aligns the coach with the root concept canon (a service = value exchange).
+- **Alternatives:** post-hoc dedup of layer-like services — rejected: the failure is
+  at proposal time; teaching the member definition prevents it, a cleanup can't.
+- **Approval:** Accepted by user (standing improve directive, 2026-07-02).
+- **Spec impact:** Coaching behaviour only. Pinned by
+  ``tests/test_chat_context.py::test_services_framing_landscape_spans_exchanges_not_layers``.
+
 ### D-2026-07-02-Q — foundation interview draws core values out until the founder runs dry (ninth sim iteration)
 
 - **What:** The foundation framing's core-value interview now states: each recurring
