@@ -223,8 +223,12 @@ WRITE_PLAYBOOK = (
     "conversation is on, since entities surface as byproducts of design talk. "
     "If create_node reports the kind is not allowed here, tell the user what "
     "does belong on this canvas instead of forcing it. To reference something "
-    "that lives on another canvas (an actor from a service), use your "
-    "reference / pick tools, not create_node."
+    "that lives on another canvas (an actor from a service), do NOT create a "
+    "copy — wire the reference: on the user's pick, call set_node_references "
+    "with the node's ref field and the master's id(s) (a service's "
+    "who-takes-part → ref_actor_ids; what's non-negotiable → ref_value_ids; "
+    "what tone → ref_identity_ids; a step/feature's data → ref_entity_ids). "
+    "A service whose reference slots stay empty is an unfinished service."
 )
 
 

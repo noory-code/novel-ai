@@ -39,6 +39,27 @@
 
 ## Log
 
+### D-2026-07-02-N — ``set_node_references``: the coach wires reference slots (seventh sim-benchmark iteration)
+
+- **What:** New ``references`` module + MCP tool ``set_node_references(project_path,
+  project_id, canvas_kind, node_id, refs, service_id?)`` — assigns a node's ``ref_*``
+  fields from an allow-list per kind (service → ref_actor_ids / ref_value_ids /
+  ref_identity_ids; step/feature → ref_entity_ids), validating every referenced id
+  against its home canvas (actors / foundation / entities). Same read → merge →
+  re-validate-whole-doc → atomic-write shape as ``update_node``. Playbook: wire the
+  reference on the user's pick; empty slots = an unfinished service.
+- **Why:** Benchmark (2026-07-02): reference slots 0/N in EVERY run. They are rightly
+  protected from ``update_node`` free-text (D-2026-06-26-D red-team), but no tool
+  could set them at all — the playbook demanded what the tool surface made impossible.
+  Same defect family as ``create_edge`` (D-2026-07-02-J): the coach lacked hands, not
+  instructions.
+- **Alternatives:** loosening ``update_node``'s allow-list — rejected: free-text
+  repointing is the exact risk the protection exists for; an explicit tool keeps
+  id validation and intent.
+- **Approval:** Accepted by user (standing improve directive, 2026-07-02).
+- **Spec impact:** MCP surface + coaching behaviour. Pinned by
+  ``tests/test_update_node.py`` (fill / unknown-master / non-ref-field / playbook).
+
 ### D-2026-07-02-M — coach derives the entity map unprompted; coach-registered features seed their detail canvas
 
 - **What:** (1) Services framing: before leaving the canvas the coach DERIVES the

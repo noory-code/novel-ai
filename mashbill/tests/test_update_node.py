@@ -364,3 +364,64 @@ def test_update_node_is_a_registered_mcp_tool() -> None:
         "node_id",
         "fields",
     }
+
+
+# --- set_node_references (D-2026-07-02-N) ------------------------------------
+
+
+def _ref_fixture(tmp_path: Path) -> Path:
+    from mashbill.models import ActorNode, ServiceNode
+
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(
+        plot_root, "alpha",
+        CanvasDoc(canvas_id="actors", canvas_kind="actors",
+                  nodes=[ActorNode(id="a1", label="사장님"), ActorNode(id="a2", label="손님")]),
+    )
+    write_canvas(
+        plot_root, "alpha",
+        CanvasDoc(canvas_id="services", canvas_kind="services",
+                  nodes=[ServiceNode(id="s1", label="주문")]),
+    )
+    return plot_root
+
+
+def test_set_node_references_fills_service_actor_refs(tmp_path: Path) -> None:
+    """Benchmark finding (2026-07-02): service reference slots stayed 0/N in
+    every run — the playbook told the coach to fill them but ref_* fields are
+    (rightly) protected from free-text update_node and NO tool could set them.
+    ``set_node_references`` assigns them explicitly: allow-listed ref fields
+    per kind, every referenced id validated on its home canvas."""
+    from mashbill.references import set_node_references
+
+    plot_root = _ref_fixture(tmp_path)
+    out = set_node_references(
+        plot_root, "alpha", "services", "s1", {"ref_actor_ids": ["a1", "a2"]}
+    )
+    assert out["node"]["ref_actor_ids"] == ["a1", "a2"]
+    canvas = read_canvas(plot_root, "alpha", "services")
+    svc = next(n for n in canvas.nodes if n.id == "s1")
+    assert svc.ref_actor_ids == ["a1", "a2"]  # type: ignore[attr-defined]
+
+
+def test_set_node_references_rejects_unknown_master(tmp_path: Path) -> None:
+    from mashbill.references import set_node_references
+
+    plot_root = _ref_fixture(tmp_path)
+    with pytest.raises(ValueError, match="ghost"):
+        set_node_references(plot_root, "alpha", "services", "s1", {"ref_actor_ids": ["ghost"]})
+
+
+def test_set_node_references_rejects_non_ref_field(tmp_path: Path) -> None:
+    from mashbill.references import set_node_references
+
+    plot_root = _ref_fixture(tmp_path)
+    with pytest.raises(ValueError, match="not a reference field"):
+        set_node_references(plot_root, "alpha", "services", "s1", {"problem": "hijack"})
+
+
+def test_write_playbook_mentions_set_node_references() -> None:
+    from mashbill.chat_context import WRITE_PLAYBOOK
+
+    assert "set_node_references" in WRITE_PLAYBOOK

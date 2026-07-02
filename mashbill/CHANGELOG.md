@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.132.0] — 2026-07-02
+
+### Added
+
+- **`set_node_references` MCP tool — the coach can wire reference slots.**
+  Benchmark finding: every service's who-takes-part / what-values / what-tone
+  slots stayed empty in every run. Ref fields are rightly protected from
+  free-text writes, but NO tool could set them at all. The new tool assigns
+  allow-listed ref fields per kind (service→actors/values/identities,
+  step/feature→entities), validating every id on its home canvas; the write
+  playbook now treats empty reference slots as an unfinished service.
+  (D-2026-07-02-N)
+
 ## [0.131.0] — 2026-07-02
 
 ### Changed

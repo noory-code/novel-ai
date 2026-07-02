@@ -47,6 +47,9 @@ from mashbill.git_store import (
 from mashbill.migrate import migrate_v01_to_v02
 from mashbill.models import CanvasDoc, CanvasKind
 from mashbill.node_search import search_nodes
+from mashbill.references import (
+    set_node_references as _set_node_references,
+)
 from mashbill.viewer_context import read_viewer_context
 from mashbill.workspace import (
     discover_projects,
@@ -287,6 +290,36 @@ def create_edge(
     plot_root = resolve_plot_root(project_path)
     return _create_edge(
         plot_root, project_id, canvas_kind, source_id, target_id, service_id, label
+    )
+
+
+@mcp.tool()
+def set_node_references(
+    project_path: str,
+    project_id: str,
+    canvas_kind: CanvasKind,
+    node_id: str,
+    refs: dict[str, list[str]],
+    service_id: str | None = None,
+) -> dict[str, Any]:
+    """Wire a node's REFERENCE slots to masters on other canvases
+    (D-2026-07-02-N) — the only way to fill them (they are protected from
+    free-text writes).
+
+    ``refs`` maps a ref field to master ids, e.g. ``{"ref_actor_ids":
+    ["actor_ab12"], "ref_value_ids": ["core_value_cd34"]}``. Allowed per kind:
+    a ``service``'s ``ref_actor_ids`` (who takes part → actors canvas) /
+    ``ref_value_ids`` (what's non-negotiable → core values) /
+    ``ref_identity_ids`` (what tone → identities); a ``step``/``feature``'s
+    ``ref_entity_ids`` (the data it touches → entities canvas). Every id must
+    already exist on its home canvas — find them with get_canvas /
+    search_project_nodes, or create the master first (create_master /
+    create_node on its home canvas). Call this on the user's pick, same
+    confirmation gate as every write.
+    """
+    plot_root = resolve_plot_root(project_path)
+    return _set_node_references(
+        plot_root, project_id, canvas_kind, node_id, refs, service_id
     )
 
 
