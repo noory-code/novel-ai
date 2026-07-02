@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.136.0] — 2026-07-02
+
+### Changed
+
+- **Thin replies flip the coach into draft-first mode.** Persona round
+  (Discord × terse founder): with a short-answer user the coach kept widening
+  with open questions and landed one core value (J 1/7), an unfinished
+  identity, and half-empty reference slots — the worst elicitation of any
+  run. The propose playbook now reads the user's reply weight: thin replies
+  (a word, a fragment, a bare yes) mean narrow, not widen — one concrete
+  candidate at a time, answerable in a word, landing items at that yes/no
+  rhythm. (D-2026-07-02-S, eleventh sim iteration)
+
 ## [0.135.0] — 2026-07-02
 
 ### Changed

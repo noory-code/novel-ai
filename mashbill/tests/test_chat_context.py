@@ -204,3 +204,17 @@ def test_services_framing_landscape_spans_exchanges_not_layers() -> None:
     assert "value-exchange surface" in f
     assert "internal layers" in f
     assert "other exchanges" in f
+
+
+def test_propose_playbook_switches_to_drafts_on_thin_replies() -> None:
+    """Persona round (2026-07-02, Discord × terse founder): with a
+    short-answer user the coach kept widening with open questions and landed
+    ONE core value (J 1/7), an unfinished identity, and half-empty reference
+    slots — the worst elicitation of any run. Thin replies mean the user
+    can't or won't elaborate: the coach must narrow to draft-first mode —
+    one concrete candidate at a time, answerable in a word (eleventh sim
+    iteration)."""
+    p = build_system_prompt("foundation").lower()
+    assert "thin" in p
+    assert "draft-first" in p
+    assert "in a word" in p

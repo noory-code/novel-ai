@@ -39,6 +39,25 @@
 
 ## Log
 
+### D-2026-07-02-S — thin replies flip the coach into draft-first mode (eleventh sim iteration)
+
+- **What:** The propose playbook now reads reply weight: when the user's replies
+  come back thin (a word, a fragment, a bare yes), the coach stops widening with
+  open questions and narrows to draft-first mode — ONE concrete candidate at a
+  time, answerable in a word, landing items at that yes/no rhythm.
+- **Why:** Persona round (2026-07-02, Discord × terse): a terse founder answers a
+  broad question with less, not more. The coach kept asking open questions and
+  produced the worst elicitation of any run — one core value (J 1/7), unfinished
+  identity, reference slots half-empty. The existing "when the user is vague or
+  stuck, lead with your proposal" line did not fire because terse answers are
+  neither vague nor stuck — they are short but definite.
+- **Alternatives:** a persona classifier / mode switch in the engine — rejected:
+  reply weight is visible in the conversation itself; a prompt rule suffices and
+  degrades gracefully when the user opens up.
+- **Approval:** Accepted by user (standing improve directive, 2026-07-02).
+- **Spec impact:** Coaching behaviour only. Pinned by
+  ``tests/test_chat_context.py::test_propose_playbook_switches_to_drafts_on_thin_replies``.
+
 ### D-2026-07-02-R — the service landscape spans value exchanges, not internal layers (tenth sim iteration)
 
 - **What:** The services framing now defines a service as one value-exchange surface
