@@ -90,6 +90,9 @@ from mashbill.detail_sync import (
 from mashbill.detail_sync import (
     sync_details_with_overview as sync_details_with_overview,
 )
+from mashbill.edge_io import (
+    create_edge as create_edge,
+)
 from mashbill.project_io import (
     _seed_actors_canvas as _seed_actors_canvas,
 )

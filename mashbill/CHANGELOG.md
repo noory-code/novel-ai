@@ -4,6 +4,20 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.128.0] — 2026-07-02
+
+### Added
+
+- **`create_edge` MCP tool — the coach can finally draw the line.** Third
+  sim-benchmark iteration: 40/40 coach-registered features floated unconnected
+  (0 service→feature edges across the batch) because the coach had a clobber-safe
+  node append but only the whole-doc `update_canvas` for edges. `create_edge`
+  mirrors `create_node`: endpoint validation, server-minted id + relation,
+  single-edge append, whole-doc re-validation, atomic write, idempotent on
+  retries. The write playbook now has the coach connect a registered node to its
+  parent in the same confirmed action — one yes covers the node and its line.
+  (D-2026-07-02-J)
+
 ## [0.127.0] — 2026-07-02
 
 ### Changed

@@ -39,6 +39,39 @@
 
 ## Log
 
+### D-2026-07-02-J — `create_edge`: the coach connects what it registers (clobber-safe single-edge append)
+
+- **What:** New engine primitive + MCP tool ``create_edge(project_path, project_id,
+  canvas_kind, source_id, target_id, service_id?, label?)`` — the edge mirror of
+  ``create_node``: validate both endpoints exist (Fail Fast), mint the id
+  server-side, classify ``relation`` from canvas + source kind (the same SSOT the
+  viewer uses), append the ONE edge, re-validate the whole doc, write atomically.
+  **Idempotent** (an existing directed source→target line is returned, never
+  duplicated). Lives in its own ``edge_io`` module (500-line rule). The write
+  playbook now instructs the coach: when a registered node belongs to another (a
+  feature under its service, a step after a step), connect it in the SAME confirmed
+  action — one yes covers the node and its line; a registered node must never float
+  unconnected.
+- **Why:** Benchmark batch (2026-07-02): 40/40 coach-registered features floated
+  unconnected — 0 service→feature edges across all runs — because the only edge
+  write was the clobber-unsafe whole-doc ``update_canvas``. A scatter of unlinked
+  nodes defeats thinking-through-sight (VISION). Edges are governed by their
+  definition, not authorship (D-2026-06-17-J), and the containment line of a
+  confirmation-gated create is part of that confirmed change (D-2026-06-16-P's
+  build-through-discussion, same shape as D-2026-06-26-D's write-after-yes) — the
+  services canvas's user-draw-only note in SPEC §Edges is amended accordingly for
+  coach-registered containment edges.
+- **Alternatives:** (a) auto-edge inside ``create_node`` via a parent param —
+  rejected: hides the line inside a node write and revives the v0.13.2 silent
+  auto-edge shape; an explicit tool keeps each artifact reviewable. (b) prompt-only
+  fix telling the coach to use ``update_canvas`` — rejected: clobber-unsafe on a
+  canvas another writer may touch.
+- **Approval:** Accepted by user (standing directives 2026-07-02: 캔버스가 대화로
+  자연스럽게 완성 + 문제있는 거 개선).
+- **Spec impact:** SPEC §Edges services-canvas user-draw-only note amended (coach
+  containment edges allowed on confirmed creates). Pinned by
+  ``tests/test_create_edge.py`` (5 tests incl. the playbook guard).
+
 ### D-2026-07-02-I — coach surfaces entities from design talk; wraps up empty required items (second sim-benchmark iteration)
 
 - **What:** (1) The services framing now surfaces entities as byproducts: when a

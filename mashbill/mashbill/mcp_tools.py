@@ -17,6 +17,9 @@ from typing import Any
 from fastmcp import FastMCP
 
 from mashbill.folder_io import (
+    create_edge as _create_edge,
+)
+from mashbill.folder_io import (
     create_node as _create_node,
 )
 from mashbill.folder_io import (
@@ -245,6 +248,34 @@ def create_node(
     """
     plot_root = resolve_plot_root(project_path)
     return _create_node(plot_root, project_id, canvas_kind, kind, fields, service_id)
+
+
+@mcp.tool()
+def create_edge(
+    project_path: str,
+    project_id: str,
+    canvas_kind: CanvasKind,
+    source_id: str,
+    target_id: str,
+    service_id: str | None = None,
+    label: str = "",
+) -> dict[str, Any]:
+    """Draw ONE directed line between two nodes — the clobber-safe way to
+    connect what you just registered (D-2026-07-02-J).
+
+    Call this in the SAME confirmed action as the ``create_node`` it belongs
+    to: a feature under its service (source = the service, target = the
+    feature), a step after another step. The user's one yes covers the node
+    AND its line — a registered node must never float unconnected. Both
+    endpoints must already exist on the canvas; the id and the edge's
+    ``relation`` are minted server-side. Idempotent — an existing directed
+    source→target line is returned, never duplicated. Every other node and
+    edge is left untouched. Do NOT use ``update_canvas`` just to add a line.
+    """
+    plot_root = resolve_plot_root(project_path)
+    return _create_edge(
+        plot_root, project_id, canvas_kind, source_id, target_id, service_id, label
+    )
 
 
 @mcp.tool()
