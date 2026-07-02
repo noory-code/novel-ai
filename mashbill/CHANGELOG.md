@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.129.0] — 2026-07-02
+
+### Changed
+
+- **Services coaching maps the landscape first.** Fourth sim-benchmark
+  iteration: real products run on 5-6 value-exchange surfaces but the coach
+  landed 2-3, sinking into the first service named. The framing now opens with
+  a canvas-level map — candidate services derived from the mission and actors,
+  confirmed, registered — then details each one. (D-2026-07-02-K)
+
 ## [0.128.0] — 2026-07-02
 
 ### Added

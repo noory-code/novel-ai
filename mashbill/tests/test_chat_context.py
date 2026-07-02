@@ -155,3 +155,14 @@ def test_pace_playbook_wraps_up_missing_items() -> None:
 
     p = PACE_PLAYBOOK.lower()
     assert "draft it now" in p
+
+
+def test_services_framing_maps_the_landscape_first() -> None:
+    """Benchmark finding (2026-07-02): real products run on 5-6 value-exchange
+    surfaces but the coach lands 2-3 — it dives deep into the first service
+    named instead of sweeping the landscape. The framing must open with a
+    canvas-level map: propose the full set of candidate services (derived from
+    the mission and actors), confirm the map, THEN detail each one."""
+    f = build_framing_preamble("services").lower()
+    assert "map the service landscape first" in f
+    assert "then detail" in f

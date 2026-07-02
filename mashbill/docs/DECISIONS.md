@@ -39,6 +39,25 @@
 
 ## Log
 
+### D-2026-07-02-K — services coaching maps the landscape first (fourth sim-benchmark iteration)
+
+- **What:** The services framing now opens at canvas altitude: derive 3–6 candidate
+  value-exchange services from the mission and actors, confirm the map with the
+  user, register the confirmed ones — THEN detail each service one by one (slots,
+  features). Explicit guard: never let the whole session sink into the first
+  service named.
+- **Why:** Benchmark (2026-07-02): real products run on 5–6 surfaces (Airbnb:
+  Stays/Experiences/Hosting/Trust…; Netflix: streaming/games/live/ads/partnership)
+  but the coach landed 2–3 and the semantic judge scored services worst (0–2/5) —
+  it dove deep into the first service mentioned with no sweep of the landscape.
+  Same thinking-through-sight logic as the canvas itself: the big picture first,
+  then depth. User pressed the gap directly ("서비스는???").
+- **Alternatives:** raising the services-phase turn budget — rejected: more turns
+  spent the same depth-first way still misses the map; the order is the defect.
+- **Approval:** Accepted by user (2026-07-02).
+- **Spec impact:** Coaching behaviour (system prompt). Pinned by
+  `tests/test_chat_context.py::test_services_framing_maps_the_landscape_first`.
+
 ### D-2026-07-02-J — `create_edge`: the coach connects what it registers (clobber-safe single-edge append)
 
 - **What:** New engine primitive + MCP tool ``create_edge(project_path, project_id,
