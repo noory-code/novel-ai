@@ -2,7 +2,7 @@
 kind: core_value
 canvas: foundation
 field_count_before: 4   # definition, do, dont, body
-field_count_after: 2    # definition + body (do, dont cut)
+field_count_after: 2    # label (name) + body — definition folded (D-2026-06-16-M)
 status: done   # draft → reviewing → done
 decided: 2026-06-04
 ---
@@ -12,6 +12,12 @@ decided: 2026-06-04
 > **개념(정본): [`concepts/kinds.md`](../../../../../docs/concepts/kinds.md).** (옛 FOUNDATION_CONCEPT 흡수.)
 > 코어밸류 = **현재의 노력. 지금 어떻게 결정하는가** (현재/노력). 사용자에게
 > **인터뷰로 받는 입력**. 필드 정본: `viewer/src/domain/CoreValue.ts`.
+
+> **⚠ 현재 필드 (D-2026-06-16-M, 코드 반영 D-2026-07-02-A):** `label`(가치 이름) +
+> `body`(의미 + 트레이드오프) **두 칸.** `definition` 은 제거됨 — 이름과 definition 이
+> 같은 원칙을 두 번 말하던 중복이라 접었고, definition 은 읽을 때 `body` 선두 문단으로
+> 흡수된다(무손실). 아래 2026-06-04~06 본문은 `definition + body` 로 정한 **당시 기록**
+> (definition 컷 이전) — 역사로 보존. 최신 결론은 이 배너 + root `concepts/kinds.md`.
 
 ## 개념 (2026-06-05 프레임) — 결론 확인
 

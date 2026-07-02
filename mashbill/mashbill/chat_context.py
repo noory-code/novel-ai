@@ -194,23 +194,56 @@ WRITE_PLAYBOOK = (
 )
 
 
+# Layer 3 (CHAT_ARCH.md) — the propose playbook (D-2026-07-02-B). Closes the
+# gap the user reported (2026-07-02): the coach stayed passive — it interviewed
+# and waited, but rarely took a position and PROPOSED. The intended behaviour is
+# already pinned as the "적극 토론 코치" (actively-proposing coach) in
+# ai-collaboration.md §0.1 (D-2026-06-16-H): not weak topic guidance but a
+# partner who clarifies concepts/relationships and offers higher-level ideas the
+# person hadn't reached. COACH_TONE (warmth, one-question) governs HOW to ask;
+# this governs WHEN to stop asking and start proposing. It changes nothing about
+# the write gate — proposing is talk; WRITE_PLAYBOOK still requires an explicit
+# yes before any create/update lands. Canvas scopes only (like COACH_TONE /
+# WRITE_PLAYBOOK); the cross-canvas ``project`` scope has no canvas to propose on.
+PROPOSE_PLAYBOOK = (
+    "Be an actively-proposing coach, not a passive interviewer. Once you have "
+    "enough to take a position — even a rough one — stop asking and PROPOSE: "
+    "draft a concrete candidate and put it on the table (a mission phrasing, two "
+    "or three core values, the features a service makes possible, an entity you "
+    "noticed, a next step). Offer the higher-level concept or angle the user "
+    "hasn't reached yet — that leap is the value you add over a blank form. Keep "
+    "it few and concrete: one or two options at a time, each specific enough to "
+    "react to, always framed as a draft to sharpen or reject — never as settled "
+    "fact, never a wall of choices. When the user is vague or stuck, lead WITH "
+    "your proposal ('here's a first cut — does this fit, or is it off?') instead "
+    "of pushing the blank back to them. This does not loosen the save gate: a "
+    "proposal is a suggestion to react to, so keep talking it through and only "
+    "write it to the canvas after the user's explicit yes (see the save rules) — "
+    "propose freely, save only on confirmation."
+)
+
+
 def build_system_prompt(scope: str) -> str:
     """Return the Layer-3 system prompt for ``scope`` (Lever 2 + Phase 3).
 
     Composes the universal :data:`HALLUCINATION_GUARD` with the shared
-    :data:`COACH_TONE`, the :data:`WRITE_PLAYBOOK` (save a confirmed value into
-    the selected node), and the per-canvas framing (the canvas's coaching
-    interview) when the scope has one. Delivered to the CLI as an authoritative
-    system prompt — claude via ``--append-system-prompt``, codex by prepending
-    to the message — rather than glued into the user message where the model
-    treats it as mere conversation. The cross-canvas ``project`` scope (and any
-    unknown base) has no canvas coaching, so it gets the guard alone (no tone, no
-    write playbook, no framing).
+    :data:`COACH_TONE`, the :data:`PROPOSE_PLAYBOOK` (take a position and propose,
+    don't only ask), the :data:`WRITE_PLAYBOOK` (save a confirmed value into the
+    selected node), and the per-canvas framing (the canvas's coaching interview)
+    when the scope has one. Delivered to the CLI as an authoritative system
+    prompt — claude via ``--append-system-prompt``, codex by prepending to the
+    message — rather than glued into the user message where the model treats it
+    as mere conversation. The cross-canvas ``project`` scope (and any unknown
+    base) has no canvas coaching, so it gets the guard alone (no tone, no propose
+    playbook, no write playbook, no framing).
     """
     framing = build_framing_preamble(scope)
     if not framing:
         return HALLUCINATION_GUARD
-    return f"{HALLUCINATION_GUARD}\n\n{COACH_TONE}\n\n{WRITE_PLAYBOOK}\n\n{framing}"
+    return (
+        f"{HALLUCINATION_GUARD}\n\n{COACH_TONE}\n\n{PROPOSE_PLAYBOOK}\n\n"
+        f"{WRITE_PLAYBOOK}\n\n{framing}"
+    )
 
 
 def build_framing_preamble(scope: str) -> str:

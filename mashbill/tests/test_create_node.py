@@ -25,6 +25,7 @@ from mashbill.models import (
     ActorNode,
     ActorRefNode,
     CanvasDoc,
+    CoreValueNode,
     FeatureNode,
     IdentityNode,
     MissionNode,
@@ -63,13 +64,14 @@ def test_create_node_appends_a_core_value(tmp_path: Path) -> None:
     _foundation(plot_root)
     out = create_node(
         plot_root, "alpha", "foundation", "core_value",
-        {"label": "정직 (Honesty)", "definition": "tell the truth"},
+        {"label": "정직 (Honesty)", "body": "tell the truth"},
     )
     node = out["node"]
     assert node["kind"] == "core_value"
     assert node["id"].startswith("core_value")
     assert node["label"] == "정직 (Honesty)"
-    assert node["definition"] == "tell the truth"
+    assert node["body"] == "tell the truth"
+    assert "definition" not in node  # v0.45 (D-2026-07-02-A): name + body only
     assert out["rejected_fields"] == []
     canvas = read_canvas(plot_root, "alpha", "foundation")
     kinds = sorted(n.kind for n in canvas.nodes)
@@ -169,6 +171,36 @@ def test_create_node_staggers_successive_positions(tmp_path: Path) -> None:
     b = create_node(plot_root, "alpha", "foundation", "core_value", {"label": "B"})
     # two creates of the same kind must not stack at the identical spot
     assert (a["node"]["x"], a["node"]["y"]) != (b["node"]["x"], b["node"]["y"])
+
+
+def test_create_node_clusters_with_same_kind_siblings(tmp_path: Path) -> None:
+    """B-3 (regression, user report 2026-07-02): a new node must join the visual
+    cluster of its OWN kind — not drop at a fixed generic spot ignoring where the
+    siblings actually are. Novel's essence is thinking-through-sight, so scattering
+    same-kind nodes breaks the tool's whole point. Here an existing core_value
+    cluster sits far left; the new core_value must land WITH it, not at the drop lane."""
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="foundation",
+            canvas_kind="foundation",
+            nodes=[
+                MissionNode(id="m1", label="Mission", statement="s"),
+                IdentityNode(id="i1", label="Identity"),
+                CoreValueNode(id="cv1", label="장인정신", x=-500.0, y=100.0),
+                CoreValueNode(id="cv2", label="명료함", x=-500.0, y=200.0),
+            ],
+        ),
+    )
+    out = create_node(plot_root, "alpha", "foundation", "core_value", {"label": "흐름"})
+    nx, ny = out["node"]["x"], out["node"]["y"]
+    assert nx == -500.0  # aligned to the sibling cluster's x, not the generic drop lane
+    assert ny > 200.0  # dropped just below the lowest existing sibling
+    # a different kind with no siblings still uses the generic lane (unclustered ok)
+    ident = create_node(plot_root, "alpha", "foundation", "identity", {"label": "Voice"})
+    assert ident["node"]["x"] != -500.0
 
 
 # --- other canvases ---------------------------------------------------------

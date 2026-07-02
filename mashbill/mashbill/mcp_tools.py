@@ -225,8 +225,8 @@ def create_node(
     JSON round-trip. The id and position are minted **server-side** — do NOT pass
     them. ``kind`` is the new node's kind; ``fields`` is ``{<field>: <value>}``
     using the kind's writable field names (``label`` plus its typed text, e.g. a
-    ``core_value``'s ``definition`` / ``body``) — structural / visual fields are
-    rejected and returned under ``rejected_fields``.
+    ``core_value``'s ``body`` — its name is ``label``) — structural / visual
+    fields are rejected and returned under ``rejected_fields``.
 
     Creatable kinds per canvas: foundation → ``mission`` / ``core_value`` /
     ``identity``; actors → ``actor``; services → ``category`` / ``service`` /

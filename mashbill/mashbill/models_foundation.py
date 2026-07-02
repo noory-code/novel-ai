@@ -67,33 +67,36 @@ class MissionNode(BaseNodeFields):
 
 
 class CoreValueNode(BaseNodeFields):
-    """v0.43.1 (D-2026-06-06-B): core_value = ``definition`` (the value as a
-    decision-priority principle) + ``body``. The ``do`` / ``dont`` fields
-    were removed — ``do`` was a restatement of ``definition`` and ``dont``
-    went unused. Legacy values fold into ``body`` on read (data-loss guard)."""
+    """v0.45 (D-2026-07-02-A): core_value = ``label`` (the value's name) +
+    ``body`` (its meaning + tradeoff). The former typed ``definition`` field
+    is removed — it *was* the value's meaning, which now leads ``body`` — and
+    the earlier ``do`` / ``dont`` fields stay removed. Legacy values fold into
+    ``body`` on read (data-loss guard): ``definition`` leads, then the prior
+    body, then do/dont as ``## Do`` / ``## Don't`` sections. Root canon:
+    docs/concepts/kinds.md (name + body)."""
 
     kind: Literal["core_value"] = "core_value"
-    definition: str = ""
     body: str = ""
 
     @model_validator(mode="before")
     @classmethod
-    def _fold_legacy_do_dont(cls, data: object) -> object:
-        legacy = {"do": "Do", "dont": "Don't"}
-        if not isinstance(data, dict) or not any(k in data for k in legacy):
+    def _fold_legacy_fields(cls, data: object) -> object:
+        legacy_keys = ("definition", "do", "dont")
+        if not isinstance(data, dict) or not any(k in data for k in legacy_keys):
             return data
         out = dict(data)
+        definition = str(out.pop("definition", "") or "").strip()
+        body = str(out.get("body") or "").strip()
+        sections = {"do": "Do", "dont": "Don't"}
         blocks = [
             f"## {label}\n{str(out[key]).strip()}"
-            for key, label in legacy.items()
+            for key, label in sections.items()
             if isinstance(out.get(key), str) and str(out[key]).strip()
         ]
-        for key in legacy:
+        for key in sections:
             out.pop(key, None)
-        if blocks:
-            body = str(out.get("body") or "").rstrip()
-            folded = "\n\n".join(blocks)
-            out["body"] = f"{body}\n\n{folded}" if body else folded
+        parts = [p for p in (definition, body, *blocks) if p]
+        out["body"] = "\n\n".join(parts)
         return out
 
 
@@ -159,7 +162,7 @@ FoundationNode = Annotated[
 FOUNDATION_TYPED_TEXT_FIELDS: dict[str, list[str]] = {
     "project": [],
     "mission": ["statement"],  # v0.43.0 (D-2026-06-06-C): 3 fields → statement
-    "core_value": ["definition"],  # v0.43.1 (D-2026-06-06-B): do/dont removed
+    "core_value": [],  # v0.45 (D-2026-07-02-A): definition removed → name (label) + body
     "identity": ["description"],  # v0.43.2 (D-2026-06-06-B): do/dont removed
 }
 
@@ -171,7 +174,7 @@ FOUNDATION_TYPED_TEXT_FIELDS: dict[str, list[str]] = {
 FOUNDATION_MD_FIELDS: dict[str, list[str]] = {
     "project": [],
     "mission": ["statement", "body"],  # v0.43.0 (D-2026-06-06-C)
-    "core_value": ["definition", "body"],  # v0.43.1 (D-2026-06-06-B)
+    "core_value": ["body"],  # v0.45 (D-2026-07-02-A): definition removed
     "identity": ["description", "body"],  # v0.43.2 (D-2026-06-06-B)
 }
 

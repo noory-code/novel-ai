@@ -260,7 +260,7 @@ def write_canvas(plot_root: Path, project_id: str, canvas: CanvasDoc) -> None:
 _WRITABLE_CONTENT_FIELDS: dict[str, tuple[str, ...]] = {
     "project": (),
     "mission": ("statement", "body"),
-    "core_value": ("definition", "body"),
+    "core_value": ("body",),  # v0.45 (D-2026-07-02-A): definition removed → name + body
     "identity": ("description", "body"),
     "actor": ("body",),
     "actor_ref": (),
@@ -365,11 +365,22 @@ _FRESH_DY = 80.0
 
 def _compute_fresh_position(existing: list[SketchNode], kind: str) -> tuple[float, float]:
     """Where a new ``kind`` node is dropped on a canvas that already holds
-    ``existing`` nodes. Staggered by the count of its own kind so two creates
-    don't land on top of each other (best-effort — last-write-wins means two
-    *concurrent* creates can still collide; named limit, D-2026-06-27-B)."""
-    rank = sum(1 for n in existing if n.kind == kind)
-    return _FRESH_X, _FRESH_Y0 + _FRESH_DY * rank
+    ``existing`` nodes.
+
+    **Cluster with its own kind (D-2026-07-02-C).** Novel's essence is
+    thinking-through-sight, so a new node must JOIN the visual group of its kind,
+    not land at a fixed generic spot ignoring where the siblings actually sit.
+    When same-kind nodes exist, left-align to that cluster and drop just below its
+    lowest member (stacking the group downward). Only the first node of a kind
+    (no siblings yet) uses the generic drop lane, staggered by total node count so
+    distinct first-of-kind creates don't overlap. Best-effort — last-write-wins
+    means two *concurrent* creates can still collide (named limit, D-2026-06-27-B)."""
+    same_kind = [n for n in existing if n.kind == kind]
+    if same_kind:
+        x = min(n.x for n in same_kind)
+        y = max(n.y for n in same_kind) + _FRESH_DY
+        return x, y
+    return _FRESH_X, _FRESH_Y0 + _FRESH_DY * len(existing)
 
 
 def creatable_kinds(canvas_kind: str) -> set[str]:

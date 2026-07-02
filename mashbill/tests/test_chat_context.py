@@ -10,10 +10,12 @@ re-export.
 from __future__ import annotations
 
 from mashbill.chat_context import (
+    PROPOSE_PLAYBOOK,
     SCOPE_FRAMING,
     SELECTION_DETAIL_CAP,
     build_context_preamble,
     build_framing_preamble,
+    build_system_prompt,
 )
 
 
@@ -59,3 +61,20 @@ def test_context_preamble_caps_detailed_nodes() -> None:
     p = build_context_preamble("services", sel)
     assert str(SELECTION_DETAIL_CAP + 5) in p  # total count surfaced
     assert f"n{SELECTION_DETAIL_CAP + 4}" in p  # overflow ids still listed
+
+
+def test_canvas_system_prompt_instructs_proactive_proposing() -> None:
+    """A canvas coach must PROPOSE, not only ask (ai-collaboration.md §적극 토론
+    코치, D-2026-06-16-H; user report 2026-07-02). Every canvas scope carries the
+    propose playbook so the agent drafts concrete candidates unprompted rather
+    than passively interrogating."""
+    for scope in ("foundation", "actors", "services", "feature:svc_1", "service:svc_1"):
+        prompt = build_system_prompt(scope)
+        assert PROPOSE_PLAYBOOK in prompt, scope
+        assert "propose" in prompt.lower(), scope
+
+
+def test_project_scope_has_no_propose_playbook() -> None:
+    """The cross-canvas project scope gets the anti-hallucination guard alone —
+    no tone, no write/propose playbook, no framing (parity with COACH_TONE)."""
+    assert PROPOSE_PLAYBOOK not in build_system_prompt("project")

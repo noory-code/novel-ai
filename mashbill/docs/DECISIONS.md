@@ -39,6 +39,86 @@
 
 ## Log
 
+### D-2026-07-02-C — a newly created node clusters with its own kind (visual grouping, not a fixed drop spot)
+
+- **What:** `_compute_fresh_position` (the server-side auto-position for `create_node`)
+  now places a new node **with the existing cluster of its own kind**: left-align to
+  the same-kind nodes and drop just below their lowest member. Only the first node of
+  a kind (no siblings yet) uses the generic drop lane, staggered by total node count.
+  Before, every create landed at a fixed spot (`_FRESH_X`, staggered only by same-kind
+  count) regardless of where the siblings actually sat — so a new core value never
+  joined the existing core-value cluster and appeared scattered.
+- **Why:** User report (2026-07-02): the coach attached a new core value to the anchor
+  "아무 곳에나" instead of grouping it with the existing core value ("장인정신") on the
+  left. Placing same-kind nodes apart breaks Novel's essence — *thinking-through-sight*
+  (VISION): the canvas must stay visually coherent for the structure to accelerate the
+  user's thinking. This is a placement heuristic, not auto-layout (foundation auto-layout
+  stays a manual button, D-2026-05-13-L) — it only sets a sensible *initial* position.
+- **Alternatives:** (a) auto-run radial layout on every create so grouping is enforced
+  globally — rejected: foundation auto-layout is deliberately opt-in (D-2026-05-13-L), and
+  silently relayouting the user's canvas on each coach create is the kind of unrequested
+  motion the layout sagas warned against. (b) centroid-based placement — rejected as
+  overkill; stacking below the cluster is predictable and undo-friendly.
+- **Approval:** Accepted by user (report + direction), 2026-07-02.
+- **Spec impact:** Refines the `create_node` placement noted at SPEC.md "Coach ADDS a new
+  node". Pinned by `tests/test_create_node.py::test_create_node_clusters_with_same_kind_siblings`.
+
+### D-2026-07-02-B — in-app coach PROPOSES proactively (system-prompt playbook realises the active-coach spec)
+
+- **What:** Added a `PROPOSE_PLAYBOOK` to the canvas system prompt (`chat_context.py`,
+  composed by `build_system_prompt` between `COACH_TONE` and `WRITE_PLAYBOOK`). It
+  instructs the coach to **take a position and propose** once it has enough — draft
+  a concrete candidate (a mission phrasing, 2–3 core values, features a service
+  enables, an entity it noticed, a next step) and offer the higher-level angle the
+  user hasn't reached — rather than only interviewing and waiting. Kept few + concrete
+  (1–2 options, framed as a draft to sharpen or reject) and does **not** touch the
+  save gate: proposing is talk; `WRITE_PLAYBOOK` still requires an explicit yes before
+  any `create_node` / `update_node`.
+- **Why:** User report (2026-07-02): the chat should actively suggest but stays
+  passive. The intended behaviour was **already pinned** as the "적극 토론 코치"
+  (active discussion coach) in `D-2026-06-16-H` + root `concepts/ai-collaboration.md`
+  §0.1 — "사람이 못 떠올린 고차원 개념·방법을 먼저 제안하는 상대." The prompt carried
+  the *intent* scattered in `SCOPE_FRAMING` ("propose features", "draft identity") but
+  the dominant tone/write constants pushed toward question-asking; no constant told the
+  coach *when to stop asking and start proposing*. This closes that gap — the code
+  catches up to the spec.
+- **Alternatives:** (a) UI proposal cards with Accept/Reject buttons — deferred (YAGNI;
+  start with prompt behaviour, add affordance only if dogfood shows proposals get
+  missed in plain text). (b) a separate `propose_node` MCP tool — rejected: proposing
+  is conversation, not a write; `create_node` / `update_node` on confirmation already
+  cover the write.
+- **Approval:** Accepted by user (report + direction), 2026-07-02.
+- **Spec impact:** Realises `D-2026-06-16-H`. Pinned by `tests/test_chat_context.py`
+  (`test_canvas_system_prompt_instructs_proactive_proposing`,
+  `test_project_scope_has_no_propose_playbook`).
+
+### D-2026-07-02-A — core_value definition-removal lands in code + viewer (implements the pending D-2026-06-16-M)
+
+- **What:** Implemented `D-2026-06-16-M` (core_value = name (`label`) + `body`, no
+  separate `definition`) in the **engine model + viewer domain/inspector**, which had
+  drifted from the spec for two weeks. Removed the `definition` field from
+  `CoreValueNode` (Pydantic) and `CoreValue` (viewer domain class); regenerated the
+  wire contract + `wire.gen.ts`; dropped `definition` from the writable-field allow-list
+  and the typed-field maps. Legacy `definition` folds into `body` on read as the **lead
+  paragraph** (it *is* the value's meaning), then the prior body, then any do/dont as
+  `## Do` / `## Don't` sections. The inspector now shows a one-line guide (name vs
+  meaning) + a body labelled "meaning & tradeoff" with a worked placeholder — directly
+  addressing the developer report that the label/definition/body roles were unclear.
+- **Why:** A developer reported (2026-07-02) that the three slots' roles weren't
+  intuitive. Root cause: the spec (`D-2026-06-16-M`, SPEC.md "Foundation typed-text
+  storage", root `concepts/kinds.md`) had already collapsed the kind to name + body,
+  but the code still exposed three fields — so the confusion was structural, not a
+  wording problem. Fixing it = making code match the pinned model.
+- **Alternatives:** (a) keep three fields, clarify with help text — rejected by user:
+  contradicts the pinned two-field model and leaves the redundancy. (b) fold
+  `definition` after the body — rejected: it is the value's core meaning, so it leads.
+- **Approval:** Accepted by user (direction 2026-07-02: "두 칸으로 정리, 정본 따름").
+- **Spec impact:** Implements `D-2026-06-16-M`; no SPEC.md change (already correct).
+  Pinned by `tests/test_core_value_format_migration.py`, `tests/test_canvas_doc.py`,
+  `tests/test_create_node.py`, `tests/test_format_f.py`, and viewer
+  `tests/domain/round-trip.test.ts`, `tests/inspectors/inspectors.smoke.test.tsx`,
+  `tests/inspectors-per-kind.test.tsx`.
+
 ### D-2026-06-28-B — doc homes: shared conceptual model → root single canon; engine docs keep code-near + point to root
 
 - **What:** Resolve the standing root↔noory canon-*direction* conflict. The conceptual model — canvas behaviour / kind meaning / bounded contexts — lived in BOTH `noory-workspace/docs/{concepts,specs}` and `noory-ai/mashbill/docs/{SPEC,CONCEPTS,DOMAIN}` with contradictory "who is canon" headers. Reframed by the user around the **two products** built in this workspace: the open MIT engine (`noory-ai/` plugins) and the commercial app (`plot/`). The shared *conceptual model* both products build on becomes **root `docs/` single canon**; the engine docs keep only **code-near implementation detail** (code homes, wire-field schema, code-to-domain gap lists) and point to root for the model; the commercial-app docs reference root. `index.md` routes it: **concept = root · implementation = noory · business = plot**.

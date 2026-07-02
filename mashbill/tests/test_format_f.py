@@ -45,8 +45,8 @@ def test_publish_project_snapshot_writes_vp1(plot_root: Path) -> None:
 
 def test_foundation_design_renders_primary_statements(plot_root: Path) -> None:
     """The vP foundation rendering must carry each node's *primary* typed field
-    (mission.statement / core_value.definition / identity.description), not only
-    ``body`` — that field is the actual essence the external agent reads."""
+    (mission.statement / core_value.body / identity.description), not only an
+    empty slot — that field is the actual essence the external agent reads."""
     from mashbill.folder_io import write_canvas
     from mashbill.format_f import publish_project_snapshot
 
@@ -57,7 +57,7 @@ def test_foundation_design_renders_primary_statements(plot_root: Path) -> None:
         if n.kind == "mission":
             enriched.append(n.model_copy(update={"statement": "make writing effortless"}))
         elif n.kind == "core_value":
-            enriched.append(n.model_copy(update={"definition": "trust over growth"}))
+            enriched.append(n.model_copy(update={"body": "trust over growth"}))
         elif n.kind == "identity":
             enriched.append(n.model_copy(update={"description": "calm and clear"}))
         else:

@@ -203,18 +203,19 @@ def test_actor_does_not_carry_foreign_typed_fields() -> None:
         )
 
 
-def test_core_value_carries_definition_and_body() -> None:
-    """v0.43.1 (D-2026-06-06-B): core_value = ``definition`` (the value as a
-    decision-priority principle) + ``body``. do/dont were removed."""
+def test_core_value_carries_name_and_body() -> None:
+    """v0.45 (D-2026-07-02-A): core_value = ``label`` (the value's name) +
+    ``body`` (its meaning + tradeoff). definition/do/dont were removed."""
     n = CoreValueNode(
         id="cv-tolerance",
         label="관용",
-        definition="다름을 인정하고 있는 그대로 받아들임",
-        body="판단 기준: 상대를 이해하려 했는가?",
+        body="다름을 인정하고 있는 그대로 받아들임. 판단 기준: 상대를 이해하려 했는가?",
     )
-    assert n.definition.startswith("다름을 인정")
-    assert "판단 기준" in n.body
-    assert "do" not in n.model_dump() and "dont" not in n.model_dump()
+    assert n.label == "관용"
+    assert "다름을 인정" in n.body
+    dumped = n.model_dump()
+    assert "definition" not in dumped
+    assert "do" not in dumped and "dont" not in dumped
 
 
 def test_identity_carries_description_and_body() -> None:
@@ -241,8 +242,7 @@ def test_value_and_identity_typed_fields_round_trip_in_canvas() -> None:
             CoreValueNode(
                 id="cv1",
                 label="Trust",
-                definition="우리는 서로의 의도를 의심하지 않는다",
-                body="동기를 먼저 묻는다",
+                body="우리는 서로의 의도를 의심하지 않는다. 동기를 먼저 묻는다",
             ),
             IdentityNode(
                 id="id1",
@@ -255,8 +255,7 @@ def test_value_and_identity_typed_fields_round_trip_in_canvas() -> None:
     parsed = CanvasDoc.model_validate(doc.model_dump())
     cv = next(n for n in parsed.nodes if n.id == "cv1")
     ident = next(n for n in parsed.nodes if n.id == "id1")
-    assert cv.definition.startswith("우리는 서로")
-    assert cv.body == "동기를 먼저 묻는다"
+    assert cv.body.startswith("우리는 서로")
     assert ident.description == "조용하고 또렷하다"
     assert ident.body == "짧고 단단하게 말한다"
 

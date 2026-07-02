@@ -4,6 +4,38 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.124.0] — 2026-07-02
+
+### Changed
+
+- **A newly created node now clusters with its own kind.** The coach's `create_node`
+  auto-position places a new node with the existing same-kind cluster (left-aligned,
+  just below the lowest sibling) instead of a fixed generic drop spot — so a new core
+  value joins the others rather than scattering. Foundation auto-layout stays a manual
+  button, unchanged. Fixes a dogfood report that new core values attached to the anchor
+  "anywhere". (D-2026-07-02-C)
+
+- **core_value node collapses to name (`label`) + `body`** — the separate
+  `definition` field is removed across the engine model, viewer domain class, and
+  inspector, finally implementing the long-pinned **D-2026-06-16-M** (the spec had
+  said "name + body" for two weeks while the code still exposed three slots). The
+  inspector now spells the two roles out: a one-line guide (name above, meaning
+  below) + a body field labelled "meaning & tradeoff" with a worked placeholder —
+  fixing the developer report that label / definition / body roles were unclear.
+  Legacy `definition` folds into `body` on read as the lead paragraph (data-loss
+  guard), so old projects lose nothing. Wire contract + `wire.gen.ts` regenerated.
+  (D-2026-07-02-A)
+- **In-app coach now proposes proactively.** Added a propose-playbook to the canvas
+  system prompt: once it has enough, the coach drafts a concrete candidate and offers
+  the higher-level angle the user hasn't reached, instead of only interviewing and
+  waiting. Realises the "적극 토론 코치" spec (**D-2026-06-16-H**) that the prompt
+  wasn't enforcing. The save gate is unchanged — proposing is talk; a write still
+  needs an explicit yes. (D-2026-07-02-B)
+
+### Removed
+
+- `core_value.definition` field (engine + viewer + wire), folded into `body` on read.
+
 ## [0.123.0] — 2026-07-01
 
 ### Changed
