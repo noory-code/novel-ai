@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.125.1] — 2026-07-02
+
+### Fixed
+
+- A chat turn sent without a `selection` key (any API caller that isn't the
+  viewer — found by the coach-sim harness) crashed the turn with a 500 in the
+  context preamble. The preamble entry point now normalizes a missing/non-list
+  selection to "nothing selected". Pinned by
+  `test_turn_preamble_tolerates_missing_selection`.
+
 ## [0.125.0] — 2026-07-02
 
 ### Changed

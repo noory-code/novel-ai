@@ -391,3 +391,14 @@ def test_turn_preamble_write_target_feature_scope_has_service_id(tmp_path: Path)
     assert "[Write target]" in out
     assert "feature" in out
     assert "svc1" in out  # service_id
+
+
+def test_turn_preamble_tolerates_missing_selection(tmp_path: Path) -> None:
+    """A chat/send body without a ``selection`` key reaches the preamble as
+    ``None`` — it must degrade to "nothing selected", not crash the turn with a
+    500 (found by the coach-sim harness 2026-07-02, which posts no selection;
+    the viewer always sends one, so this API-boundary hole never surfaced)."""
+    plot_root = _setup(tmp_path)
+    out = build_turn_preamble(plot_root, "foundation", None)
+    assert "[Canvas: foundation]" in out  # canvas map still renders
+    assert "[selected]" not in out

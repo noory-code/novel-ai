@@ -97,7 +97,14 @@ def build_turn_preamble(
     this one function for large projects — callers (the in-app endpoint) don't
     change. The canvas map falls back to the cheap wire-label header when the
     canvas can't be read engine-side.
+
+    ``selection`` arrives verbatim from the request body — a caller that omits
+    the key hands us ``None``. Normalize to "nothing selected" here (the one
+    entry point both delivery layers share) so an API caller without a viewer
+    can't 500 the turn (sim harness, 2026-07-02).
     """
+    if not isinstance(selection, list):
+        selection = []
     canvas_map = render_canvas_map(plot_root, scope, selection)
     context = canvas_map or build_context_preamble(scope, selection)
     registry = render_cross_canvas_registry(plot_root, scope)
