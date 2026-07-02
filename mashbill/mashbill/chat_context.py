@@ -90,7 +90,11 @@ SCOPE_FRAMING: dict[str, str] = {
         "wait for every slot; fill the reference slots (1, 4, 5) by proposing "
         "matches from the existing canvases as you go. Promotion test: if a "
         "proposed feature is really several parties exchanging value, ask "
-        "whether it should stand on its own as a service."
+        "whether it should stand on its own as a service. SURFACE ENTITIES as "
+        "you go: when a feature handles some data 'thing' (a post, a payment, "
+        "an account, a message), point it out ('이건 \"게시글\" 데이터네요 — "
+        "등록해둘까요?') and on yes register it as an entity on the entities "
+        "canvas; strong dedup by identity, never silently."
     ),
     "entities": (
         "You are the AI maintainer of Novel's Entities canvas — the conceptual map "
@@ -197,10 +201,14 @@ WRITE_PLAYBOOK = (
     "for you, so never pass them. Do NOT announce that you added it — it appears "
     "on the canvas on its own; keep the conversation moving. "
     "Adding follows the SAME gate as filling — never create before the yes. "
-    "create_node adds one bare node to the current canvas; if it reports the kind "
-    "is not allowed here, tell the user what does belong on this canvas instead of "
-    "forcing it. To reference something that lives on another canvas (an actor from "
-    "a service), use your reference / pick tools, not create_node."
+    "create_node adds one bare node to the current canvas — with ONE exception: "
+    "a confirmed data entity is always registered on the entities canvas "
+    "(create_node with canvas kind 'entities'), whichever canvas the "
+    "conversation is on, since entities surface as byproducts of design talk. "
+    "If create_node reports the kind is not allowed here, tell the user what "
+    "does belong on this canvas instead of forcing it. To reference something "
+    "that lives on another canvas (an actor from a service), use your "
+    "reference / pick tools, not create_node."
 )
 
 
@@ -255,7 +263,10 @@ PACE_PLAYBOOK = (
     "stands to go faster: draft the later items yourself from the earlier ones "
     "(derive the identity from the mission and values; seed a service's slots "
     "from the foundation and actors) and offer the draft for a quick yes, "
-    "instead of interviewing every item from a blank page."
+    "instead of interviewing every item from a blank page. Wrap up: when the "
+    "conversation is winding down and a required item is still empty, don't "
+    "leave it hanging — draft it NOW from everything that stands and ask for "
+    "one quick confirm."
 )
 
 

@@ -122,3 +122,36 @@ def test_services_framing_pulls_features_forward() -> None:
     f = build_framing_preamble("services").lower()
     assert "as soon as" in f
     assert "don't wait for every slot" in f or "do not wait for every slot" in f
+
+
+def test_services_framing_surfaces_entities_as_byproduct() -> None:
+    """Benchmark finding (2026-07-02, 8-service batch): entities were 0/8 — the
+    surface-the-entity instruction lived only in the entities-scope framing,
+    which no design conversation ever runs under. The services framing (where
+    features are born) must tell the coach to spot the data 'things' features
+    handle and register confirmed ones on the entities canvas."""
+    f = build_framing_preamble("services").lower()
+    assert "entity" in f
+    assert "entities canvas" in f
+
+
+def test_write_playbook_allows_entity_registration_cross_canvas() -> None:
+    """Same finding: the write playbook's 'adds one bare node to the current
+    canvas' line blocked the entity byproduct. Registering a confirmed entity
+    on the entities canvas from a design conversation must be explicitly
+    allowed (still confirmation-gated)."""
+    from mashbill.chat_context import WRITE_PLAYBOOK
+
+    p = WRITE_PLAYBOOK.lower()
+    assert "entities canvas" in p
+
+
+def test_pace_playbook_wraps_up_missing_items() -> None:
+    """Identity landed in only 3/8 batch runs — sessions end with required
+    items empty. The pace playbook must carry a wrap-up rule: when the
+    conversation nears its end and a required item is still empty, draft it
+    NOW and ask for one quick confirm."""
+    from mashbill.chat_context import PACE_PLAYBOOK
+
+    p = PACE_PLAYBOOK.lower()
+    assert "draft it now" in p

@@ -4,6 +4,22 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.127.0] — 2026-07-02
+
+### Changed
+
+- **The coach surfaces entities during design talk.** Second sim-benchmark
+  iteration: entities were 0/8 across the batch — the surface-the-entity
+  instruction lived only in the entities-scope framing that no design
+  conversation runs under. The services framing now spots the data 'things'
+  features handle and registers confirmed ones on the entities canvas (the
+  write playbook explicitly allows that one cross-canvas create; still
+  confirmation-gated). (D-2026-07-02-I)
+- **The coach wraps up instead of leaving required items empty** — identity
+  landed in only 3/8 runs; the pace playbook now has it draft a still-empty
+  required item from everything that stands and ask for one quick confirm as
+  the session winds down. (same decision)
+
 ## [0.126.0] — 2026-07-02
 
 ### Changed

@@ -39,6 +39,30 @@
 
 ## Log
 
+### D-2026-07-02-I — coach surfaces entities from design talk; wraps up empty required items (second sim-benchmark iteration)
+
+- **What:** (1) The services framing now surfaces entities as byproducts: when a
+  feature handles a data 'thing' (a post, a payment, an account), the coach points
+  it out and, on yes, registers it on the entities canvas — with the write playbook
+  explicitly allowing that ONE cross-canvas create (still confirmation-gated,
+  strong-dedup). (2) The pace playbook gains a wrap-up rule: when the conversation
+  winds down with a required item still empty, draft it NOW from what stands and ask
+  one quick confirm.
+- **Why:** 8-service benchmark batch (2026-07-02): entities 0/8 — the
+  surface-the-entity instruction lived only in the entities-scope framing, which no
+  design conversation ever runs under, and the write playbook's "current canvas
+  only" line blocked the byproduct registration. Identity filled only 3/8 —
+  sessions ended with required items empty despite the derive instruction.
+- **Alternatives:** running a separate entities-scope chat phase in the sim —
+  rejected: the spec (entities canvas = AI-maintained byproduct, D-2026-06-17-I)
+  says entities surface DURING feature/service design, not in their own interview.
+- **Approval:** Accepted by user (direction 2026-07-02: "기능은?? 서비스는?? 엔티티는??"
+  + standing improve-what's-broken directive).
+- **Spec impact:** Coaching behaviour (system prompt). Pinned by
+  `tests/test_chat_context.py::test_services_framing_surfaces_entities_as_byproduct`,
+  `::test_write_playbook_allows_entity_registration_cross_canvas`,
+  `::test_pace_playbook_wraps_up_missing_items`.
+
 ### D-2026-07-02-H — coach paces the whole canvas; services coaching proposes features early (first sim-benchmark iteration)
 
 - **What:** Added a `PACE_PLAYBOOK` to the canvas system prompt (between
