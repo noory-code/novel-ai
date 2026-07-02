@@ -218,6 +218,7 @@ def create_node(
     kind: str,
     fields: dict[str, Any] | None = None,
     service_id: str | None = None,
+    near: str | None = None,
 ) -> dict[str, Any]:
     """Add ONE new node to a canvas — the clobber-safe way to create a node.
 
@@ -244,10 +245,15 @@ def create_node(
     ``canvas_kind == "feature"``. Only call this after the user confirms the new
     node — never to add something they haven't agreed to.
 
+    ``near`` places the new node beside an existing node (its parent's column)
+    instead of the generic kind pile — pass the parent's id when registering a
+    child (a feature near its service, a step near the previous step), so the
+    canvas stays visually grouped (D-2026-07-02-L).
+
     Returns ``{"node": <new node dict>, "rejected_fields": [...]}``.
     """
     plot_root = resolve_plot_root(project_path)
-    return _create_node(plot_root, project_id, canvas_kind, kind, fields, service_id)
+    return _create_node(plot_root, project_id, canvas_kind, kind, fields, service_id, near)
 
 
 @mcp.tool()

@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.130.0] — 2026-07-02
+
+### Added
+
+- **`near` placement on `create_node` — children land beside their parent.**
+  Fifth sim-benchmark iteration (user: "캔버스는 잘 못그리네"): kind-clustering
+  piled every feature of every service into one global column. `near=<parent id>`
+  places the new node right of that anchor, stacking below earlier siblings
+  (one column per anchor) and overriding the kind pile; the write playbook has
+  the coach pass the parent when registering a child, in the same confirmed
+  action as the connecting edge. Placement policy split to its own module.
+  (D-2026-07-02-L)
+
 ## [0.129.0] — 2026-07-02
 
 ### Changed

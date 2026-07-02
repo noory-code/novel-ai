@@ -33,6 +33,7 @@ from mashbill.models import (
 )
 from mashbill.models_foundation import PROJECT_ANCHOR_ID
 from mashbill.models_union import SketchNode, SketchNodeAdapter
+from mashbill.placement import _compute_fresh_position, _compute_near_position
 from mashbill.storage import (  # noqa: F401
     _canvas_file,
     _ensure_project,
@@ -358,31 +359,6 @@ def update_node(
 # Server-side placement for a freshly created node — a column staggered down by
 # how many of its kind already exist, so successive creates don't stack on the
 # anchor (generalised from the old masters.py drop zone). The user drags it after.
-_FRESH_X = 160.0
-_FRESH_Y0 = 120.0
-_FRESH_DY = 80.0
-
-
-def _compute_fresh_position(existing: list[SketchNode], kind: str) -> tuple[float, float]:
-    """Where a new ``kind`` node is dropped on a canvas that already holds
-    ``existing`` nodes.
-
-    **Cluster with its own kind (D-2026-07-02-C).** Novel's essence is
-    thinking-through-sight, so a new node must JOIN the visual group of its kind,
-    not land at a fixed generic spot ignoring where the siblings actually sit.
-    When same-kind nodes exist, left-align to that cluster and drop just below its
-    lowest member (stacking the group downward). Only the first node of a kind
-    (no siblings yet) uses the generic drop lane, staggered by total node count so
-    distinct first-of-kind creates don't overlap. Best-effort — last-write-wins
-    means two *concurrent* creates can still collide (named limit, D-2026-06-27-B)."""
-    same_kind = [n for n in existing if n.kind == kind]
-    if same_kind:
-        x = min(n.x for n in same_kind)
-        y = max(n.y for n in same_kind) + _FRESH_DY
-        return x, y
-    return _FRESH_X, _FRESH_Y0 + _FRESH_DY * len(existing)
-
-
 def creatable_kinds(canvas_kind: str) -> set[str]:
     """The kinds :func:`create_node` may append to ``canvas_kind``.
 
@@ -406,6 +382,7 @@ def create_node(
     kind: str,
     fields: dict[str, Any] | None = None,
     service_id: str | None = None,
+    near: str | None = None,
 ) -> dict[str, Any]:
     """Append ONE new node — the clobber-safe way to add a node, and the single
     SSOT for node creation (D-2026-06-27-B).
@@ -447,7 +424,15 @@ def create_node(
         )
     canvas = read_canvas(plot_root, project_id, canvas_kind, service_id)
     node_id = f"{kind}_{uuid4().hex[:8]}"
-    x, y = _compute_fresh_position(canvas.nodes, kind)
+    if near is not None:
+        # D-2026-07-02-L — a child node sits beside ITS parent (one column per
+        # anchor), not in the global kind pile. ``near`` overrides kind-cluster.
+        anchor = next((n for n in canvas.nodes if n.id == near), None)
+        if anchor is None:
+            raise ValueError(f"near anchor not on the {canvas_kind!r} canvas: {near!r}")
+        x, y = _compute_near_position(canvas.nodes, anchor)
+    else:
+        x, y = _compute_fresh_position(canvas.nodes, kind)
     base = SketchNodeAdapter.validate_python({"id": node_id, "kind": kind, "x": x, "y": y})
     allowed_fields = set(writable_node_fields(base))
     incoming = fields or {}

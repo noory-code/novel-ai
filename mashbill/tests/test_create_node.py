@@ -29,6 +29,7 @@ from mashbill.models import (
     FeatureNode,
     IdentityNode,
     MissionNode,
+    ServiceNode,
     SketchEdge,
     StepNode,
 )
@@ -271,10 +272,56 @@ def test_create_node_is_a_registered_mcp_tool() -> None:
     assert tool is not None
     assert tool.name == "create_node"
     props = set(tool.parameters["properties"])
-    assert props == {"project_path", "project_id", "canvas_kind", "kind", "fields", "service_id"}
+    assert props == {
+        "project_path", "project_id", "canvas_kind", "kind", "fields", "service_id", "near",
+    }
     assert set(tool.parameters["required"]) == {
         "project_path",
         "project_id",
         "canvas_kind",
         "kind",
     }
+
+
+def test_create_node_near_places_beside_the_parent(tmp_path: Path) -> None:
+    """Canvas-drawing defect (user report 2026-07-02, "캔버스는 잘 못그리네"):
+    kind-clustering piled every feature of EVERY service into one global
+    feature column. A child node must sit beside ITS parent — ``near`` places
+    the new node right of the anchor node, stacking below earlier siblings
+    placed near the same anchor, and overrides the kind-cluster heuristic."""
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root, "alpha",
+        CanvasDoc(
+            canvas_id="services", canvas_kind="services",
+            nodes=[
+                ServiceNode(id="s1", label="송금", x=0.0, y=0.0),
+                ServiceNode(id="s2", label="자산", x=0.0, y=600.0),
+            ],
+        ),
+    )
+    f1 = create_node(plot_root, "alpha", "services", "feature",
+                     {"label": "연락처 송금"}, near="s1")
+    f2 = create_node(plot_root, "alpha", "services", "feature",
+                     {"label": "링크 송금"}, near="s1")
+    g1 = create_node(plot_root, "alpha", "services", "feature",
+                     {"label": "대시보드"}, near="s2")
+    # children sit right of their own parent, not in a global feature pile
+    assert f1["node"]["x"] > 0.0 and abs(f1["node"]["y"] - 0.0) < 200.0
+    assert g1["node"]["x"] > 0.0 and abs(g1["node"]["y"] - 600.0) < 200.0
+    # siblings near the same parent stack, not overlap
+    assert (f1["node"]["x"], f1["node"]["y"]) != (f2["node"]["x"], f2["node"]["y"])
+
+
+def test_create_node_near_unknown_anchor_raises(tmp_path: Path) -> None:
+    plot_root = _setup(tmp_path)
+    _foundation(plot_root)
+    with pytest.raises(ValueError, match="ghost"):
+        create_node(plot_root, "alpha", "foundation", "core_value",
+                    {"label": "X"}, near="ghost")
+
+
+def test_write_playbook_places_children_near_their_parent() -> None:
+    from mashbill.chat_context import WRITE_PLAYBOOK
+
+    assert "near" in WRITE_PLAYBOOK.lower()

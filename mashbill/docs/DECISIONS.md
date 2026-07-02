@@ -39,6 +39,29 @@
 
 ## Log
 
+### D-2026-07-02-L — ``near`` placement: a coach-registered child lands beside its parent (fifth sim-benchmark iteration)
+
+- **What:** ``create_node`` gains an optional ``near=<node id>``: the new node is
+  placed right of that anchor (one child column per anchor), stacking below earlier
+  siblings within the anchor's band — overriding the kind-cluster heuristic
+  (D-2026-07-02-C). Unknown anchor → ValueError (Fail Fast). The write playbook now
+  has the coach pass the parent's id when registering a child (a feature near its
+  service) in the same confirmed action as the connecting ``create_edge``. Placement
+  policy split into its own ``placement`` module (500-line rule).
+- **Why:** User, looking at a sim canvas (2026-07-02): "캔버스는 잘 못그리네..결함을
+  고쳐야죠." Kind-clustering — right for peers like core values — piled every feature
+  of EVERY service into one global column, so the drawing carried no structure even
+  once edges existed. A child belongs beside ITS parent; the drawing must read as a
+  hierarchy at a glance (thinking-through-sight).
+- **Alternatives:** running auto-layout after coach writes — rejected: silent
+  whole-canvas motion (Rule 7 / layout-saga lesson); initial placement should be
+  right instead. Storing containment as ``parent_id`` — rejected: retired model
+  (v0.26 directed edges are the SSOT).
+- **Approval:** Accepted by user (2026-07-02 report + standing improve directive).
+- **Spec impact:** Placement behaviour of coach creates. Pinned by
+  ``tests/test_create_node.py`` (near-parent placement, unknown anchor, playbook
+  guard + MCP schema pin).
+
 ### D-2026-07-02-K — services coaching maps the landscape first (fourth sim-benchmark iteration)
 
 - **What:** The services framing now opens at canvas altitude: derive 3–6 candidate
