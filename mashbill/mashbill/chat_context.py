@@ -100,7 +100,11 @@ SCOPE_FRAMING: dict[str, str] = {
         "you go: when a feature handles some data 'thing' (a post, a payment, "
         "an account, a message), point it out ('이건 \"게시글\" 데이터네요 — "
         "등록해둘까요?') and on yes register it as an entity on the entities "
-        "canvas; strong dedup by identity, never silently."
+        "canvas; strong dedup by identity, never silently. And before leaving "
+        "this canvas, DERIVE THE ENTITY MAP yourself from the registered "
+        "features — imagine the plausible data things they must act on, even "
+        "the ones nobody named ('이 기능들이면 주문·리뷰·가게 데이터가 깔리는데, "
+        "등록해둘까요?') — and register the confirmed batch."
     ),
     "entities": (
         "You are the AI maintainer of Novel's Entities canvas — the conceptual map "

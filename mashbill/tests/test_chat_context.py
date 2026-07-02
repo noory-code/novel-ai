@@ -166,3 +166,13 @@ def test_services_framing_maps_the_landscape_first() -> None:
     f = build_framing_preamble("services").lower()
     assert "map the service landscape first" in f
     assert "then detail" in f
+
+
+def test_services_framing_derives_the_entity_map_unprompted() -> None:
+    """User directive (2026-07-02): "엔티티는 상상해서라도 만들어보세요" — don't
+    wait for a feature to mention a data thing; before leaving the services
+    canvas the coach DERIVES the entity map itself from the registered
+    features (imagining plausible ones) and proposes it as a batch."""
+    f = build_framing_preamble("services").lower()
+    assert "derive the entity map" in f
+    assert "before leaving" in f

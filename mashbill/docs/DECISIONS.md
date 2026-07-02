@@ -39,6 +39,30 @@
 
 ## Log
 
+### D-2026-07-02-M — coach derives the entity map unprompted; coach-registered features seed their detail canvas
+
+- **What:** (1) Services framing: before leaving the canvas the coach DERIVES the
+  entity map itself from the registered features — imagining the plausible data
+  things they must act on, even ones nobody named — and proposes the batch for
+  confirmation (still gated, strong-dedup). (2) The MCP ``create_node`` path now
+  seeds a feature's detail canvas via the same sync the app's endpoint flow uses,
+  so a coach-registered feature is drillable (기능 캔버스 exists).
+- **Why:** User directives (2026-07-02): "엔티티는 상상해서라도 만들어보세요" — the
+  reactive spot-a-thing instruction (D-2026-07-02-I) still produced 0 entities in
+  runs where the founder never volunteered a data noun; derivation is the coach's
+  leap, exactly the imagination the user wants. And "기능 캔버스 뜨지 않네?" — detail
+  canvases seeded only through the app endpoint flow, so every sim/coach-registered
+  feature had no drill-in canvas at all.
+- **Alternatives:** running a separate entities-scope interview — rejected before
+  (D-2026-07-02-I): entities are byproducts of design talk, not their own interview.
+  Seeding detail canvases inside ``canvas_io.create_node`` — rejected: circular
+  import (detail_sync imports canvas_io); the MCP wrapper mirrors the endpoint
+  layer, where the app already does it.
+- **Approval:** Accepted by user (explicit directives 2026-07-02).
+- **Spec impact:** Coaching behaviour + MCP create side-effect. Pinned by
+  ``tests/test_chat_context.py::test_services_framing_derives_the_entity_map_unprompted``
+  + ``tests/test_create_node.py::test_feature_created_via_mcp_seeds_its_detail_canvas``.
+
 ### D-2026-07-02-L — ``near`` placement: a coach-registered child lands beside its parent (fifth sim-benchmark iteration)
 
 - **What:** ``create_node`` gains an optional ``near=<node id>``: the new node is

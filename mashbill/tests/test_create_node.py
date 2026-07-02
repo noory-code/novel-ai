@@ -325,3 +325,27 @@ def test_write_playbook_places_children_near_their_parent() -> None:
     from mashbill.chat_context import WRITE_PLAYBOOK
 
     assert "near" in WRITE_PLAYBOOK.lower()
+
+
+def test_feature_created_via_mcp_seeds_its_detail_canvas(tmp_path: Path) -> None:
+    """User report (2026-07-02): "기능 캔버스 뜨지 않네?" — detail canvases only
+    seeded through the app's endpoint flow, so features registered by the coach
+    (MCP path) had no drill-in canvas at all. Creating a feature on the services
+    canvas via the MCP tool must seed its detail canvas like the app path does."""
+    from mashbill import mcp_tools
+
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root, "alpha",
+        CanvasDoc(
+            canvas_id="services", canvas_kind="services",
+            nodes=[ServiceNode(id="s1", label="송금", x=0.0, y=0.0)],
+        ),
+    )
+    out = mcp_tools.create_node(
+        str(tmp_path), "alpha", "services", "feature", {"label": "연락처 송금"}, near="s1"
+    )
+    fid = out["node"]["id"]
+    from mashbill.folder_io import list_feature_details
+
+    assert fid in list_feature_details(plot_root, "alpha")

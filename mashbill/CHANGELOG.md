@@ -4,6 +4,22 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.131.0] — 2026-07-02
+
+### Changed
+
+- **The coach derives the entity map itself** — before leaving the services
+  canvas it imagines the plausible data things the registered features must act
+  on, even ones nobody named, and proposes the batch for confirmation
+  ("엔티티는 상상해서라도 만들어보세요"). (D-2026-07-02-M)
+
+### Fixed
+
+- **Coach-registered features are now drillable.** Detail canvases only seeded
+  through the app's endpoint flow, so features created by the coach had no
+  기능 canvas at all ("기능 캔버스 뜨지 않네"). The MCP create path now seeds the
+  feature's detail canvas exactly like the app path. (same decision)
+
 ## [0.130.0] — 2026-07-02
 
 ### Added

@@ -253,7 +253,13 @@ def create_node(
     Returns ``{"node": <new node dict>, "rejected_fields": [...]}``.
     """
     plot_root = resolve_plot_root(project_path)
-    return _create_node(plot_root, project_id, canvas_kind, kind, fields, service_id, near)
+    out = _create_node(plot_root, project_id, canvas_kind, kind, fields, service_id, near)
+    if canvas_kind == "services" and kind == "feature":
+        # D-2026-07-02-M — a feature is the drill target (D-2026-06-17-D): seed
+        # its detail canvas exactly like the app's endpoint flow does, so a
+        # coach-registered feature is drillable too ("기능 캔버스 뜨지 않네" fix).
+        sync_details_with_overview(plot_root, project_id)
+    return out
 
 
 @mcp.tool()
