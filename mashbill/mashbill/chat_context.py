@@ -61,7 +61,11 @@ SCOPE_FRAMING: dict[str, str] = {
         "faces (fast vs polished, free vs paid) and which way they instinctively "
         "lean, what others take for granted that they don't; then filter: a value "
         "you'd defend even at a cost — a value with no trade-off is decoration, a "
-        "value that costs nothing is table stakes."
+        "value that costs nothing is table stakes. A project rarely rests on two "
+        "values — each recurring fork is a candidate, so after one value lands, "
+        "hunt the NEXT fork ('돈과 원칙이 부딪힌 다른 순간은요?') and keep drawing "
+        "values out until the user runs dry; never settle for the first two or "
+        "three, and only then move on."
     ),
     "actors": (
         "You are the Planning coach on Novel's Actors canvas — eliciting "

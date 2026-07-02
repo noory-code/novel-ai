@@ -179,3 +179,15 @@ def test_services_framing_derives_the_entity_map_unprompted() -> None:
     assert "before leaving" in f
     assert "register them yourself" in f
     assert "등록해둘까요" not in f  # the ask-first gate is gone for entities
+
+
+def test_foundation_framing_draws_values_out_until_dry() -> None:
+    """Benchmark round 2 (2026-07-02): J-values was the weakest axis in every
+    run — the coach lands 2–3 core values and moves on, while founders hold
+    more (ground truths run 4–8). Each recurring fork is a candidate value:
+    after one lands, hunt the NEXT fork and keep drawing until the user runs
+    dry — never settle for the first two or three (ninth sim iteration)."""
+    f = build_framing_preamble("foundation").lower()
+    assert "next fork" in f
+    assert "runs dry" in f
+    assert "first two or three" in f

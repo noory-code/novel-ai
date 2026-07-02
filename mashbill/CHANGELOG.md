@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.134.0] — 2026-07-02
+
+### Changed
+
+- **The coach draws core values out until the founder runs dry.** Benchmark
+  round 2: J-values was the weakest axis in every run — the coach landed 2–3
+  values and moved on while ground truths run 4–8. The foundation interview
+  now treats every recurring fork as a candidate value and hunts the next
+  fork after each one lands, never settling for the first two or three.
+  (D-2026-07-02-Q, ninth sim iteration)
+
 ## [0.133.1] — 2026-07-02
 
 ### Fixed

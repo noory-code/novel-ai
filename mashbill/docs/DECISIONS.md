@@ -39,6 +39,21 @@
 
 ## Log
 
+### D-2026-07-02-Q — foundation interview draws core values out until the founder runs dry (ninth sim iteration)
+
+- **What:** The foundation framing's core-value interview now states: each recurring
+  fork is a candidate value; after one value lands, hunt the NEXT fork and keep
+  drawing until the user runs dry — never settle for the first two or three.
+- **Why:** Benchmark round 2 (2026-07-02): J-values (semantic coverage vs published
+  values) was the weakest axis in EVERY run — canvases held 2–3 values against
+  ground truths of 4–8. The founder-sim knows more values and reveals them when
+  probed; the coach simply stopped asking.
+- **Alternatives:** a numeric quota ("collect at least 4") — rejected: a project may
+  genuinely hold 3; the stop condition is the founder running dry, not a count.
+- **Approval:** Accepted by user (standing improve directive, 2026-07-02).
+- **Spec impact:** Coaching behaviour only. Pinned by
+  ``tests/test_chat_context.py::test_foundation_framing_draws_values_out_until_dry``.
+
 ### D-2026-07-02-P — a tool call resets the coach's turn text (pre-tool planning monologue is not reply)
 
 - **What:** In the claude-code stream parser, a ``tool_use`` ``content_block_start``
