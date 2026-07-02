@@ -39,6 +39,25 @@
 
 ## Log
 
+### D-2026-07-02-O — entity registration is autonomous coach judgment (visible surfacing, no per-entity ask)
+
+- **What:** The services framing now has the coach derive the entity map from the
+  registered features and register the entities itself — no per-entity "등록해둘까요?"
+  gate — mentioning it in one light conversational line. The user reviews / edits /
+  deletes on the canvas (live-updating = visible, not silent). The confirm-first
+  write gate is unchanged for foundation / services content.
+- **Why:** User (2026-07-02): "엔티티는 찾을 수 없으니 자율적 판단이 필요" — a founder
+  cannot name their data model, so asking them to approve each entity is theater.
+  This is exactly the pinned model: the entities canvas is AI-MAINTAINED
+  (D-2026-06-17-I), and Rule 7 / D-2026-06-16-P bans *silent finalization*, not
+  autonomous surfacing — an entity appearing on a live canvas the user can edit or
+  delete IS the review surface.
+- **Alternatives:** batch-confirm before leaving the canvas (previous iteration,
+  D-2026-07-02-M) — retired: still asks the user to adjudicate what they can't know.
+- **Approval:** Accepted by user (explicit direction 2026-07-02).
+- **Spec impact:** Refines the entity-surfacing line of D-2026-07-02-I/M. Pinned by
+  ``tests/test_chat_context.py::test_services_framing_derives_the_entity_map_unprompted``.
+
 ### D-2026-07-02-N — ``set_node_references``: the coach wires reference slots (seventh sim-benchmark iteration)
 
 - **What:** New ``references`` module + MCP tool ``set_node_references(project_path,

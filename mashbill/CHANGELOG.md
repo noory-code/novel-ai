@@ -4,6 +4,18 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.133.0] — 2026-07-02
+
+### Changed
+
+- **Entity registration is the coach's own judgment.** Users can't name their
+  data model ("찾을 수 없으니 자율적 판단이 필요"), and the entities canvas is
+  the AI-maintained canvas by spec (D-2026-06-17-I) — so the coach now derives
+  the entity map from the features and registers it autonomously, mentioning it
+  in one light line instead of asking per-entity permission. Visible on the
+  canvas for review/edit/delete = not silent; the confirm-first gate stays for
+  foundation/services content. (D-2026-07-02-O)
+
 ## [0.132.0] — 2026-07-02
 
 ### Added

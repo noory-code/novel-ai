@@ -169,10 +169,13 @@ def test_services_framing_maps_the_landscape_first() -> None:
 
 
 def test_services_framing_derives_the_entity_map_unprompted() -> None:
-    """User directive (2026-07-02): "엔티티는 상상해서라도 만들어보세요" — don't
-    wait for a feature to mention a data thing; before leaving the services
-    canvas the coach DERIVES the entity map itself from the registered
-    features (imagining plausible ones) and proposes it as a batch."""
+    """User directives (2026-07-02): "엔티티는 상상해서라도 만들어보세요" +
+    "찾을 수 없으니 자율적 판단이 필요" — entities are the AI-maintained canvas
+    (D-2026-06-17-I): the coach derives the map from the features and registers
+    it AUTONOMOUSLY (no per-entity confirmation question), mentioning it in one
+    light line; the user reviews/edits/deletes on the canvas."""
     f = build_framing_preamble("services").lower()
     assert "derive the entity map" in f
     assert "before leaving" in f
+    assert "register them yourself" in f
+    assert "등록해둘까요" not in f  # the ask-first gate is gone for entities
