@@ -123,3 +123,28 @@ def test_chat_provider_is_workspace_scoped(
     assert client.get(
         "/api/chat/provider", params={"project_path": str(ws_a)}
     ).json() == {"provider": "claude-code", "model": None}
+
+
+def test_spawn_env_strips_engine_runtime_toggles(monkeypatch) -> None:
+    """The CLI subprocess env must NOT inherit the engine's own runtime toggles
+    (found by the coach-sim harness 2026-07-02): an engine started with
+    ``MASHBILL_NO_MCP=1`` (the documented HTTP-only dev loop) leaked that var to
+    the spawned ``claude`` CLI, whose mashbill MCP stdio server inherited it and
+    exited with "no transports" — the coach silently lost every canvas tool and
+    could only talk. Same for ``MASHBILL_PORT`` (a busy sim port). Both providers
+    go through the same sanitized base env."""
+    from mashbill.chat_providers.base import _SubprocessChatProvider
+    from mashbill.chat_providers.claude_code import ClaudeCodeProvider
+    from mashbill.chat_providers.codex import CodexProvider
+
+    monkeypatch.setenv("MASHBILL_NO_MCP", "1")
+    monkeypatch.setenv("MASHBILL_PORT", "5195")
+    for cls in (ClaudeCodeProvider, CodexProvider):
+        provider = cls.__new__(cls)  # env logic must not depend on ctor state
+        env = _SubprocessChatProvider._spawn_env(provider) or {}
+        assert "MASHBILL_NO_MCP" not in env, cls.__name__
+        assert "MASHBILL_PORT" not in env, cls.__name__
+    claude = ClaudeCodeProvider.__new__(ClaudeCodeProvider)
+    env = claude._spawn_env() or {}
+    assert "MASHBILL_NO_MCP" not in env
+    assert env.get("CLAUDE_CODE_DISABLE_AUTO_MEMORY") == "1"

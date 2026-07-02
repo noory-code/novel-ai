@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Awaitable
 from pathlib import Path
@@ -245,12 +246,26 @@ class _SubprocessChatProvider(ChatProvider):
     ) -> ChatStreamEvent | None: ...
 
     def _spawn_env(self) -> dict[str, str] | None:
-        """Environment for the CLI subprocess. ``None`` inherits the parent
-        env (the default for every provider). A provider may override to add
-        vars (e.g. claude-code's memory-disable, D-2026-06-21-I) — it must
-        return the FULL env (``{**os.environ, ...}``), since a dict replaces it.
+        """Environment for the CLI subprocess: the engine's env MINUS its own
+        runtime toggles. A provider may override to add vars (e.g. claude-code's
+        memory-disable, D-2026-06-21-I) — it must merge over this base
+        (``{**super()._spawn_env(), ...}``), since a dict replaces the env.
+
+        The strip matters (found by the coach-sim harness, 2026-07-02): the CLI
+        spawns the engine's own mashbill MCP stdio server as a child, which
+        inherits this env transitively. An engine started HTTP-only
+        (``MASHBILL_NO_MCP=1`` — the documented dev loop) leaked that toggle
+        down, so the coach's tool server booted with "no transports to start"
+        and exited — the coach silently lost every canvas tool and could only
+        talk. ``MASHBILL_PORT`` is stripped for the same reason (the child
+        would collide with the engine's own busy port instead of using its
+        default).
         """
-        return None
+        return {
+            k: v
+            for k, v in os.environ.items()
+            if k not in ("MASHBILL_NO_MCP", "MASHBILL_PORT")
+        }
 
     async def stream_turn(self, user_message: str) -> AsyncIterator[ChatStreamEvent]:
         turn_id = str(uuid4())

@@ -4,6 +4,20 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.125.2] — 2026-07-02
+
+### Fixed
+
+- **HTTP-only dev engines silently stripped the in-app coach of every canvas
+  tool.** The chat CLI subprocess inherited the engine's own runtime toggles;
+  the coach's mashbill MCP stdio server (spawned by the CLI) then saw
+  `MASHBILL_NO_MCP=1` + the engine's busy `MASHBILL_PORT`, booted with "no
+  transports to start", and exited — the coach could only talk, never write.
+  Found by the coach-sim harness (a 6-turn run confirmed a mission and the
+  canvas stayed empty; the session log showed the coach hunting for its tools
+  six times). Both providers now spawn the CLI with those toggles stripped.
+  Pinned by `test_spawn_env_strips_engine_runtime_toggles`.
+
 ## [0.125.1] — 2026-07-02
 
 ### Fixed

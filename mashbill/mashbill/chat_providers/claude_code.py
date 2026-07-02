@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -126,8 +125,10 @@ class ClaudeCodeProvider(_SubprocessChatProvider):
     def _spawn_env(self) -> dict[str, str] | None:
         # D-2026-06-21-I — disable Claude Code auto-memory for the in-app agent
         # so it can't pull in the user's saved memories from outside the
-        # workspace. Merge over the inherited env (None would REPLACE it).
-        return {**os.environ, "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}
+        # workspace. Merge over the sanitized base env (strips the engine's own
+        # runtime toggles — see the base docstring; a plain dict would REPLACE
+        # the env, so the full merge matters).
+        return {**(super()._spawn_env() or {}), "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}
 
     def _parse_line(
         self, turn_id: str, line: bytes, accumulator: list[str]
