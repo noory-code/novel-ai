@@ -39,6 +39,23 @@
 
 ## Log
 
+### D-2026-07-02-T — flooding replies get distilled and landed, not chased (twelfth sim iteration)
+
+- **What:** The propose playbook's reply-weight rule gains its second pole: when
+  replies flood (long tangents, several ideas at once), the coach acknowledges in a
+  line, distills the usable pieces (a value, an actor, a feature, a body line),
+  lands each into its node while fresh — proposing the distilled text for a quick
+  yes — then steers back to the thread.
+- **Why:** Persona round (2026-07-02, YouTube × rambler): 6 actors registered,
+  ZERO with body text; the content was all said but never anchored. The pace
+  playbook says land items, but nothing told the coach what to do when the user's
+  torrent keeps moving the conversation before anything lands.
+- **Alternatives:** summarising at canvas end — rejected: by then the tangent's
+  content is stale and the founder's words are gone; capture must be in-flow.
+- **Approval:** Accepted by user (standing improve directive, 2026-07-02).
+- **Spec impact:** Coaching behaviour only. Pinned by
+  ``tests/test_chat_context.py::test_propose_playbook_distills_flooding_replies``.
+
 ### D-2026-07-02-S — thin replies flip the coach into draft-first mode (eleventh sim iteration)
 
 - **What:** The propose playbook now reads reply weight: when the user's replies

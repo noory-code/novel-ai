@@ -4,6 +4,18 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.137.0] — 2026-07-02
+
+### Changed
+
+- **Flooding replies get distilled and landed, not chased.** Persona round
+  (YouTube × rambler founder): six actors registered, zero with body text —
+  the coach followed the tangents and never anchored the content. Reply
+  weight now has both poles in the propose playbook: thin → narrow to
+  drafts (v0.136.0); flooding → acknowledge in a line, distill the usable
+  pieces, land each into its node while fresh, then steer back to the
+  thread. (D-2026-07-02-T, twelfth sim iteration)
+
 ## [0.136.0] — 2026-07-02
 
 ### Changed

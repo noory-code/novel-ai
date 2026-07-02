@@ -218,3 +218,16 @@ def test_propose_playbook_switches_to_drafts_on_thin_replies() -> None:
     assert "thin" in p
     assert "draft-first" in p
     assert "in a word" in p
+
+
+def test_propose_playbook_distills_flooding_replies() -> None:
+    """Persona round (2026-07-02, YouTube × rambler founder): six actors
+    registered, ZERO with body text — the coach chased the tangents and never
+    landed the content. Reply weight has two poles: thin means narrow to
+    drafts; FLOODING means distill — extract the usable pieces, land each in
+    its node while fresh, then steer back to the thread (twelfth sim
+    iteration)."""
+    p = build_system_prompt("actors").lower()
+    assert "flood" in p
+    assert "distill" in p
+    assert "back to the thread" in p
