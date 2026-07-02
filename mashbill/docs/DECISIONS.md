@@ -39,6 +39,28 @@
 
 ## Log
 
+### D-2026-07-03-D — the coach prompt compresses under a word budget (sixteenth sim iteration)
+
+- **What:** The composed canvas system prompt is rewritten for density — zero
+  rule loss, all cross-block duplicates collapsed to one home (upstream-reference
+  matching: COACH_TONE → WRITE_PLAYBOOK; pace playbook's per-canvas enumerations →
+  the framings that already carry them; save-gate restatements → one line each).
+  Foundation 1,828 → 1,219 words, services 1,954 → 1,296. A saturation guard
+  (``test_system_prompt_stays_under_saturation_budget``) pins every composed
+  canvas prompt at ≤ 1,300 words: future rotations must compress before adding.
+- **Why:** Fifteen add-only rotations saturated the prompt; the v0.138 sample
+  showed instruction *slips* (a feature batch with no connecting edges — first
+  since v0.128; one "저장했어요" announcement) rather than missing rules. When
+  every rule is present but some stop firing, the lever is size, not content.
+- **Alternatives:** keep adding sharper rules — rejected: that is the mechanism
+  that produced the saturation; the ~25 phrase guards already pin the content,
+  so compression is safe and additive rules are not.
+- **Approval:** Accepted by user (standing improve directive, 2026-07-02 밤;
+  compression queued as rotation 16 in todo/active.md).
+- **Spec impact:** Coaching behaviour only — no rule added or removed. Content
+  pinned by the existing phrase guards in ``tests/test_chat_context.py`` +
+  ``tests/test_chat_system_prompt.py``; size pinned by the new budget guard.
+
 ### D-2026-07-03-A — identity lands mid-phase, after 2-3 values stand (thirteenth sim iteration)
 
 - **What:** Foundation framing: once two or three values stand, draft the identity

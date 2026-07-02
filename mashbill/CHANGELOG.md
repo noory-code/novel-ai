@@ -4,6 +4,33 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.139.0] — 2026-07-03
+
+### Changed
+
+- **The coach prompt is compressed under a word budget** (sixteenth sim
+  iteration — the first that removes instead of adds). Fifteen rotations
+  grew the composed canvas system prompt to ~1,800–2,000 words, and the
+  v0.138 sample showed saturation-style slips (a feature registered with no
+  connecting edge, one "저장했어요" announcement) rather than missing rules.
+  Every block was rewritten for density with zero rule loss: cross-block
+  duplicates collapsed to one home (the upstream-reference matching rule
+  moved from COACH_TONE into WRITE_PLAYBOOK beside set_node_references; the
+  pace playbook's per-canvas enumerations dropped in favour of the framings
+  that already carry them; the save-gate restatements reduced to one line
+  each). Foundation 1,828 → 1,219 words (−33%), services 1,954 → 1,296
+  (−34%). A new saturation guard pins every composed canvas prompt at
+  ≤ 1,300 words, so any future rotation must compress before it adds —
+  the phrase guards keep pinning the content itself. (D-2026-07-03-D)
+
+### Fixed
+
+- **A shadowed prompt guard test runs again.** ``test_chat_context.py``
+  carried two same-named ``test_foundation_framing_lands_identity_mid_phase``
+  definitions; Python keeps only the second, so the first body (pinning
+  "once two or three values stand" / "then return") never executed. Merged
+  into one test carrying all five assertions.
+
 ## [0.138.0] — 2026-07-03
 
 ### Changed

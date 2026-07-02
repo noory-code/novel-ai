@@ -233,19 +233,6 @@ def test_propose_playbook_distills_flooding_replies() -> None:
     assert "back to the thread" in p
 
 
-def test_foundation_framing_lands_identity_mid_phase() -> None:
-    """Round 3 (2026-07-03): identity unfinished in 12/12 runs (round 2: 0) —
-    values-until-dry (D-2026-07-02-Q) crowded identity out and the wrap-up
-    rule never fired (the coach can't see the session ending). Identity now
-    lands MID-phase: once two or three values stand, draft it from the
-    mission and values for a quick confirm, then return to hunting values
-    (thirteenth sim iteration)."""
-    f = build_framing_preamble("foundation").lower()
-    assert "once two or three values stand" in f
-    assert "then return" in f
-    assert "identity still empty is a failed" in f
-
-
 def test_foundation_framing_proposes_candidate_values_from_the_talk() -> None:
     """Round 3: values depth is founder-dependent — guarded founders volunteer
     nothing and probing stalls at 1-3 values, while the terse run proved
@@ -273,7 +260,27 @@ def test_foundation_framing_lands_identity_mid_phase() -> None:
     hunt-values-until-dry ate the foundation budget and identity never came
     (round 2 was 7/8). Depth must not displace completeness: identity lands
     MID-phase (after 2-3 values stand, draft → quick confirm → back to value
-    hunting); a session ending with identity empty is a failed session."""
+    hunting); a session ending with identity empty is a failed session.
+
+    (Merged from a same-named twin that shadowed this one — sixteenth sim
+    iteration housekeeping: a duplicate ``def`` means the first body never
+    runs, so its assertions live here now.)"""
     f = build_framing_preamble("foundation").lower()
     assert "identity lands mid-phase" in f
     assert "failed session" in f
+    assert "once two or three values stand" in f
+    assert "then return" in f
+    assert "identity still empty is a failed" in f
+
+
+def test_system_prompt_stays_under_saturation_budget() -> None:
+    """Sixteenth sim iteration (2026-07-03): the coach prompt grew with every
+    rotation — the composed canvas prompt hit ~1,800–2,000 words and the
+    v0.138 sample showed instruction slips (a connect habit missed, a
+    'saved' announcement) that read as prompt saturation, not missing rules.
+    This budget forces every future rotation to compress before it adds:
+    content is pinned by the phrase guards in this file and
+    ``test_chat_system_prompt.py``; this test pins the SIZE."""
+    for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
+        words = len(build_system_prompt(scope).split())
+        assert words <= 1300, f"{scope}: {words} words > 1300 budget"
