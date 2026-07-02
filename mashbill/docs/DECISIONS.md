@@ -39,6 +39,29 @@
 
 ## Log
 
+### D-2026-07-02-P — a tool call resets the coach's turn text (pre-tool planning monologue is not reply)
+
+- **What:** In the claude-code stream parser, a ``tool_use`` ``content_block_start``
+  frame clears the accumulated turn text. Only text produced after the LAST tool
+  call becomes the persisted assistant message / ``turn_complete`` text (the viewer
+  already reconciles its streamed text against ``turn_complete``). Turns without
+  tool calls are unchanged; text/thinking block starts do not reset.
+- **Why:** Benchmark (B-9, 2026-07-02): 19 coach messages across every sim run
+  opened with an English planning monologue glued to the Korean reply — "The user
+  confirmed. Let me add it.네, 올라갔어요…". The model plans in text before
+  calling tools; the pipeline concatenated every text block of the turn. This is
+  the same internals-exposure D-2026-07-02-D banned, through a channel a system
+  prompt cannot reach — a pipeline rule, not a prompt rule.
+- **Alternatives:** (a) prompt-only ("never write text before tool calls") —
+  rejected: unenforceable, D-2026-07-02-D already tried the prompt lever for this
+  family; (b) buffering all text until turn end to filter — rejected: kills
+  streaming; (c) regex-stripping English prefixes — rejected: heuristic, breaks
+  legitimate English replies.
+- **Approval:** Accepted by user (standing improve directive, 2026-07-02); sim-found B-9.
+- **Spec impact:** Chat pipeline behaviour (CHAT_ARCH territory, no canvas-rule change).
+  Pinned by ``tests/test_claude_stream_parse.py`` (pre-tool drop / between-tools drop /
+  no-tool keep / text-block-start no-reset).
+
 ### D-2026-07-02-O — entity registration is autonomous coach judgment (visible surfacing, no per-entity ask)
 
 - **What:** The services framing now has the coach derive the entity map from the

@@ -158,6 +158,15 @@ def _parse_claude_line(turn_id: str, line: bytes, accumulator: list[str]) -> Cha
     model = _extract_anthropic_model(obj)
     if model:
         return ChatStreamEvent(type="meta", turn_id=turn_id, model=model)
+    # A tool call resets the turn text (B-9, D-2026-07-02-P): text produced
+    # BEFORE a tool_use block is the model planning its canvas work ("The user
+    # confirmed. Let me add it."), not the coach's reply — concatenated, it
+    # leaked internals through a channel the D-2026-07-02-D prompt rule can't
+    # reach. Only text after the LAST tool call survives into the persisted
+    # message; the viewer reconciles its streamed text on ``turn_complete``.
+    if _is_tool_use_start(obj):
+        accumulator.clear()
+        return None
     text = _extract_anthropic_text(obj)
     if not text:
         return None
@@ -176,6 +185,21 @@ def _extract_anthropic_model(obj: dict[str, Any]) -> str | None:
         if isinstance(model, str) and model:
             return model
     return None
+
+
+def _is_tool_use_start(obj: dict[str, Any]) -> bool:
+    """True for a ``content_block_start`` frame opening a ``tool_use`` block.
+
+    Frame shape (verified against the live CLI, B-9):
+    ``{"type":"stream_event","event":{"type":"content_block_start",
+       "content_block":{"type":"tool_use","name":"mcp__mashbill__...",...}}}``.
+    Text / thinking block starts must NOT match — they precede every block.
+    """
+    event = obj.get("event")
+    if isinstance(event, dict) and event.get("type") == "content_block_start":
+        block = event.get("content_block")
+        return isinstance(block, dict) and block.get("type") == "tool_use"
+    return False
 
 
 def _extract_anthropic_text(obj: dict[str, Any]) -> str:

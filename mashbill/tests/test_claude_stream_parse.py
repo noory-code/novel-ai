@@ -51,6 +51,67 @@ def test_full_assistant_message_alone_yields_no_text_event() -> None:
     assert acc == []
 
 
+# --- pre-tool planning monologue is not reply text (B-9) --------------------
+# Before calling canvas tools the model often emits a short English planning
+# block ("The user confirmed. Let me add it.") and the pipeline used to
+# concatenate it with the post-tool reply — internals leaking into the chat
+# through a channel the D-2026-07-02-D prompt rule can't reach. A ``tool_use``
+# ``content_block_start`` resets the accumulated turn text: only text produced
+# after the LAST tool call is the coach's reply. Frame shape verified against
+# the live CLI (stream_event → content_block_start → content_block.type).
+
+
+def _tool_use_start(name: str = "mcp__mashbill__update_node") -> bytes:
+    return json.dumps(
+        {"type": "stream_event", "event": {"type": "content_block_start",
+         "content_block": {"type": "tool_use", "id": "toolu_1", "name": name,
+                           "input": {}}}}
+    ).encode()
+
+
+def test_pre_tool_planning_text_is_dropped_from_the_reply() -> None:
+    acc: list[str] = []
+    _parse_claude_line("t1", _partial("The user confirmed. Let me add it."), acc)
+    _parse_claude_line("t1", _tool_use_start(), acc)
+    _parse_claude_line("t1", _partial("네, 올라갔어요."), acc)
+    assert "".join(acc) == "네, 올라갔어요."
+
+
+def test_text_between_tool_calls_is_dropped_too() -> None:
+    acc: list[str] = []
+    _parse_claude_line("t1", _partial("First I'll read the canvas."), acc)
+    _parse_claude_line("t1", _tool_use_start("mcp__mashbill__get_canvas"), acc)
+    _parse_claude_line("t1", _partial("Now the edges."), acc)
+    _parse_claude_line("t1", _tool_use_start("mcp__mashbill__create_edge"), acc)
+    _parse_claude_line("t1", _partial("연결까지 끝났어요."), acc)
+    assert "".join(acc) == "연결까지 끝났어요."
+
+
+def test_turn_without_tool_calls_keeps_all_text() -> None:
+    acc: list[str] = []
+    _parse_claude_line("t1", _partial("좋아요, "), acc)
+    _parse_claude_line("t1", _partial("이어가죠."), acc)
+    assert "".join(acc) == "좋아요, 이어가죠."
+
+
+def test_text_block_start_does_not_reset_the_accumulator() -> None:
+    """Only tool_use blocks mark planning text; text/thinking block starts
+    arrive before every block and must not wipe legitimate reply text."""
+    acc: list[str] = []
+    _parse_claude_line("t1", _partial("이어서 "), acc)
+    for block in ({"type": "text", "text": ""},
+                  {"type": "thinking", "thinking": "", "signature": ""}):
+        _parse_claude_line(
+            "t1",
+            json.dumps({"type": "stream_event",
+                        "event": {"type": "content_block_start",
+                                  "content_block": block}}).encode(),
+            acc,
+        )
+    _parse_claude_line("t1", _partial("말씀드릴게요."), acc)
+    assert "".join(acc) == "이어서 말씀드릴게요."
+
+
 # --- init `model` reporting (D-2026-06-21-Z) -------------------------------
 # Claude Code's first stream-json line is a ``system`` / ``init`` frame that
 # names the model the CLI actually loaded. Novel surfaces it so the viewer can

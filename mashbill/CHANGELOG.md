@@ -4,6 +4,20 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.133.1] — 2026-07-02
+
+### Fixed
+
+- **Coach's pre-tool planning monologue no longer leaks into the chat.**
+  Benchmark finding (B-9, 19 hits across every run): before calling canvas
+  tools the model emits a short English planning block ("The user confirmed.
+  Let me add it.") and the stream pipeline concatenated it with the post-tool
+  reply — internals leaking through a channel the D-2026-07-02-D prompt rule
+  can't reach. A ``tool_use`` block start now resets the accumulated turn
+  text, so only text after the last tool call is the persisted reply (the
+  viewer already reconciles its streamed text on ``turn_complete``).
+  (D-2026-07-02-P)
+
 ## [0.133.0] — 2026-07-02
 
 ### Changed
