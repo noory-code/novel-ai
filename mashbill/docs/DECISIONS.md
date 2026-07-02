@@ -53,7 +53,7 @@
   since v0.128; one "저장했어요" announcement) rather than missing rules. When
   every rule is present but some stop firing, the lever is size, not content.
 - **Alternatives:** keep adding sharper rules — rejected: that is the mechanism
-  that produced the saturation; the ~25 phrase guards already pin the content,
+  that produced the saturation; the ~30 phrase guards already pin the content,
   so compression is safe and additive rules are not.
 - **Approval:** Accepted by user (standing improve directive, 2026-07-02 밤;
   compression queued as rotation 16 in todo/active.md).
