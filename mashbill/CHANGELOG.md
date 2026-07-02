@@ -4,6 +4,29 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.138.0] — 2026-07-03
+
+### Changed
+
+Round-3 regression fixes (12-run overnight benchmark, engine v0.137):
+
+- **Identity lands mid-phase.** Identity came out unfinished in 12/12 runs
+  (round 2: none) — values-until-dry crowded it out and the wrap-up rule
+  never fired. Once two or three values stand, the coach drafts the identity
+  from the mission and values for a quick confirm, then returns to values;
+  ending foundation with an empty identity is a failed session.
+  (D-2026-07-03-A, thirteenth sim iteration)
+- **The coach proposes candidate values it hears.** Values depth was
+  founder-dependent (guarded founders volunteer nothing; probing stalled at
+  1–3 values while the terse run's draft-first mode landed 5). Proposing now
+  alternates with probing in the core-value interview.
+  (D-2026-07-03-B, fourteenth sim iteration)
+- **Entities land with each feature batch.** Entity registration was
+  all-or-nothing (0 in 9 of 12 runs vs 9/9/23) — the "before leaving the
+  canvas" checkpoint fired too late or never. Entities now register in the
+  same breath as each service's features; features with zero entities mean
+  the service is unfinished. (D-2026-07-03-C, fifteenth sim iteration)
+
 ## [0.137.0] — 2026-07-02
 
 ### Changed

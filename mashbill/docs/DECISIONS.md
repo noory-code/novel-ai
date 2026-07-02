@@ -39,6 +39,50 @@
 
 ## Log
 
+### D-2026-07-03-A — identity lands mid-phase, after 2-3 values stand (thirteenth sim iteration)
+
+- **What:** Foundation framing: once two or three values stand, draft the identity
+  from the mission and values for a quick confirm, then return to hunting values.
+  A foundation session ending with an empty identity is named a failed session.
+- **Why:** Round 3: identity unfinished in 12/12 runs (round 2: all complete).
+  Values-until-dry (D-2026-07-02-Q) consumed the phase and the pace playbook's
+  wrap-up never fired — the coach cannot see the session ending, so the landing
+  point must be positional (mid-phase), not temporal (wind-down).
+- **Alternatives:** longer foundation turn budget — rejected: harness knob, not a
+  coach skill; real sessions are budget-bound too.
+- **Approval:** Accepted by user (standing improve directive, 2026-07-02 밤 "밤새 돕시다").
+- **Spec impact:** Coaching behaviour only. Pinned by
+  ``tests/test_chat_context.py::test_foundation_framing_lands_identity_mid_phase``.
+
+### D-2026-07-03-B — the coach proposes candidate values it hears (fourteenth sim iteration)
+
+- **What:** The core-value interview alternates probing with PROPOSING — the coach
+  names the candidate values it hears in the mission talk, one or two at a time.
+- **Why:** Round 3: values depth collapsed with the recalibrated (guarded) founder
+  personas — probing alone stalled at 1–3 values, while the terse run proved
+  reaction-to-draft elicitation works (1→5 registered). A guarded founder reveals
+  through reactions what they never volunteer.
+- **Alternatives:** probe-only with more turns — rejected: budget-bound and
+  persona-dependent.
+- **Approval:** Accepted by user (standing improve directive).
+- **Spec impact:** Coaching behaviour only. Pinned by
+  ``tests/test_chat_context.py::test_foundation_framing_proposes_candidate_values_from_the_talk``.
+
+### D-2026-07-03-C — entities register in the same breath as each feature batch (fifteenth sim iteration)
+
+- **What:** Services framing: the entity map lands with EACH service's feature
+  batch (2–5 per service is normal), never as a deferred pass; features standing
+  with zero entities mean the service is unfinished — checked before moving on.
+- **Why:** Round 3: all-or-nothing entity behaviour (0 in 9 of 12 runs vs 9/9/23) —
+  the single "before leaving the canvas" checkpoint fired too late or never.
+  Attaching the habit to a per-service event makes it fire N times, not once.
+- **Alternatives:** engine-side auto-derivation without the coach — rejected: the
+  entities canvas is AI-maintained but content must come from the design talk
+  (D-2026-06-17-I), not a silent batch job.
+- **Approval:** Accepted by user (standing improve directive).
+- **Spec impact:** Coaching behaviour only. Pinned by
+  ``tests/test_chat_context.py::test_services_framing_registers_entities_with_each_feature_batch``.
+
 ### D-2026-07-02-T — flooding replies get distilled and landed, not chased (twelfth sim iteration)
 
 - **What:** The propose playbook's reply-weight rule gains its second pole: when

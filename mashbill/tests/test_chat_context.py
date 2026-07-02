@@ -231,3 +231,38 @@ def test_propose_playbook_distills_flooding_replies() -> None:
     assert "flood" in p
     assert "distill" in p
     assert "back to the thread" in p
+
+
+def test_foundation_framing_lands_identity_mid_phase() -> None:
+    """Round 3 (2026-07-03): identity unfinished in 12/12 runs (round 2: 0) —
+    values-until-dry (D-2026-07-02-Q) crowded identity out and the wrap-up
+    rule never fired (the coach can't see the session ending). Identity now
+    lands MID-phase: once two or three values stand, draft it from the
+    mission and values for a quick confirm, then return to hunting values
+    (thirteenth sim iteration)."""
+    f = build_framing_preamble("foundation").lower()
+    assert "once two or three values stand" in f
+    assert "then return" in f
+    assert "identity still empty is a failed" in f
+
+
+def test_foundation_framing_proposes_candidate_values_from_the_talk() -> None:
+    """Round 3: values depth is founder-dependent — guarded founders volunteer
+    nothing and probing stalls at 1-3 values, while the terse run proved
+    drafts work (1→5 registered). The coach now also PROPOSES candidate
+    values it hears in the mission talk, alternating with probing
+    (fourteenth sim iteration)."""
+    f = build_framing_preamble("foundation").lower()
+    assert "candidate values you hear" in f
+    assert "alternate" in f
+
+
+def test_services_framing_registers_entities_with_each_feature_batch() -> None:
+    """Round 3: entity registration was all-or-nothing (0 in 9 of 12 runs vs
+    9/9/23) — the 'before leaving the canvas' checkpoint fires too late or
+    never. Entities now land in the same breath as each service's feature
+    batch; a service with features but zero entities is unfinished
+    (fifteenth sim iteration)."""
+    f = build_framing_preamble("services").lower()
+    assert "same breath" in f
+    assert "zero entities is unfinished" in f
