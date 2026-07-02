@@ -39,6 +39,43 @@
 
 ## Log
 
+### D-2026-07-02-E — coach leads and fills a concept's full set through conversation (no premature "done", no handing the wheel back)
+
+- **What:** Added to `PROPOSE_PLAYBOOK`: the coach keeps leading — it must not hand the
+  wheel back with a bare "what next?" nor declare a canvas done the moment one item
+  exists. A concept usually has several facets (a project holds several core values; an
+  identity has more than one voice), so the coach draws the full set out through
+  conversation before moving on, so the user never has to point out what is missing.
+- **Why:** Dogfood transcript (2026-07-02): the coach declared "Foundation 완성됐네요"
+  with only one identity facet, and the user had to ask "voice만 있고 다른 아이덴티티는?".
+  The chat wasn't smoothly completing the canvas — the user had to drive. This makes the
+  coach cover the concept and lead, matching "대화하다 보면 캔버스가 자연스럽게 완성".
+- **Alternatives:** enforce completeness in code (validator requiring N facets) — rejected:
+  facet count isn't fixed and code-forcing fights build-through-discussion; the coach
+  should draw it out, not a hard gate.
+- **Approval:** Accepted by user (report + direction 2026-07-02).
+- **Spec impact:** Coaching behaviour (system prompt). Pinned by
+  `tests/test_chat_context.py::test_coach_leads_and_covers_full_concept`.
+
+### D-2026-07-02-D — coach keeps its internal operations out of sight (no "saved", no internal field names)
+
+- **What:** The coach must not verbalise its internal operations. Edited `WRITE_PLAYBOOK`
+  (removed the "confirm in one short line what you saved" instruction; replaced with "do
+  NOT announce the save, name the field, or say 'saved'/'done' — the canvas reflects it on
+  its own") and `HALLUCINATION_GUARD` (added: speak in the user's own words — never expose
+  Novel's internal field names like statement / body / definition / provenance / status).
+- **Why:** Dogfood transcript (2026-07-02): the coach said "저장됐어요" and exposed internal
+  field names ("미션 statement는… body는 비어 있어요") to the user. User directive: "코치는
+  노블이 어떻게 돌아가는지 사용자에게 알려주면 안 된다." The canvas updating live IS the
+  feedback (Clear-Feedback ux), so the mechanics stay invisible. Resolves the tension where
+  the old `WRITE_PLAYBOOK` explicitly told the coach to confirm the save out loud.
+- **Alternatives:** keep a soft "saved ✓" confirmation — rejected by user: any internal-op
+  narration is banned; the live canvas is the confirmation.
+- **Approval:** Accepted by user (report + direction 2026-07-02).
+- **Spec impact:** Coaching behaviour (system prompt); supersedes the confirm-the-save line
+  of `D-2026-06-26-D`. Pinned by
+  `tests/test_chat_context.py::test_coach_keeps_mechanics_and_field_names_out_of_sight`.
+
 ### D-2026-07-02-C — a newly created node clusters with its own kind (visual grouping, not a fixed drop spot)
 
 - **What:** `_compute_fresh_position` (the server-side auto-position for `create_node`)

@@ -78,3 +78,25 @@ def test_project_scope_has_no_propose_playbook() -> None:
     """The cross-canvas project scope gets the anti-hallucination guard alone —
     no tone, no write/propose playbook, no framing (parity with COACH_TONE)."""
     assert PROPOSE_PLAYBOOK not in build_system_prompt("project")
+
+
+def test_coach_keeps_mechanics_and_field_names_out_of_sight() -> None:
+    """B-6 (regression, user report + transcript 2026-07-02): the coach must not
+    verbalise its internal operations — it said '저장됐어요' and exposed internal
+    field names ('statement' / 'body') to the user. The system prompt must instruct
+    it to never announce the save and to speak in the user's own words, not Novel's
+    storage-field names."""
+    p = build_system_prompt("foundation").lower()
+    assert "internal field names" in p
+    assert "do not announce" in p
+
+
+def test_coach_leads_and_covers_full_concept() -> None:
+    """B-7 (regression, user report + transcript 2026-07-02): the coach declared a
+    canvas 'done' with only one identity facet and handed the wheel back ('what
+    next?'), forcing the user to point out what was missing. The prompt must
+    instruct it to keep leading and draw out a concept's full set of facets before
+    moving on."""
+    p = build_system_prompt("foundation").lower()
+    assert "several facets" in p
+    assert "before moving on" in p

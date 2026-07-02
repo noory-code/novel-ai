@@ -4,6 +4,21 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.125.0] — 2026-07-02
+
+### Changed
+
+- **The in-app coach no longer narrates its internal operations.** It stops saying
+  "저장됐어요" and stops exposing internal field names (statement / body / …) to the
+  user — the live canvas is the feedback, so the mechanics stay invisible and the coach
+  speaks in the user's own words. Supersedes the "confirm the save out loud" line of the
+  earlier write playbook. (D-2026-07-02-D)
+- **The coach leads and fills a concept's full set through conversation.** It no longer
+  declares a canvas "done" the moment one item exists or hands the wheel back with a bare
+  "what next?" — it draws out a concept's several facets (a project's several core values,
+  an identity's multiple voices) before moving on, so the user isn't forced to point out
+  what's missing. Grounded in a dogfood transcript. (D-2026-07-02-E)
+
 ## [0.124.0] — 2026-07-02
 
 ### Changed
