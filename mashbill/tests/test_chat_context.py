@@ -100,3 +100,25 @@ def test_coach_leads_and_covers_full_concept() -> None:
     p = build_system_prompt("foundation").lower()
     assert "several facets" in p
     assert "before moving on" in p
+
+
+def test_canvas_system_prompt_paces_the_whole_canvas() -> None:
+    """Sim finding (2026-07-02, Airbnb full-flow baseline): the coach is thorough
+    but slow — 8 foundation turns never reached identity, 8 services turns never
+    reached features. The prompt must carry a pacing rule: keep the WHOLE canvas
+    in view, land an item once it's good enough and move on, and draft the
+    later items (identity) yourself from what already stands."""
+    for scope in ("foundation", "services", "actors"):
+        p = build_system_prompt(scope).lower()
+        assert "whole canvas" in p, scope
+        assert "good enough" in p, scope
+
+
+def test_services_framing_pulls_features_forward() -> None:
+    """Same sim finding: the services interview (five slots, then features) is so
+    heavy that features never arrive. The framing must pull feature proposals
+    forward — as soon as the service's problem/value stand, not after all five
+    slots are filled."""
+    f = build_framing_preamble("services").lower()
+    assert "as soon as" in f
+    assert "don't wait for every slot" in f or "do not wait for every slot" in f

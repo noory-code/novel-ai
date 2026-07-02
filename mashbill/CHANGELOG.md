@@ -4,6 +4,21 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.126.0] — 2026-07-02
+
+### Changed
+
+- **The coach paces the whole canvas.** First finding of the coach-sim benchmark
+  (Airbnb full-flow baseline): the coach was thorough but slow — 8 foundation
+  turns never reached identity, 8 services turns never produced a feature. A new
+  pace playbook in the canvas system prompt has it land an item once it's good
+  enough and move on, derive later items from what already stands (identity from
+  mission+values; service slots from foundation/actors), and budget the session
+  across every concept the canvas needs. (D-2026-07-02-H)
+- **Services coaching proposes features early** — 3–5 concrete features as soon
+  as a service's problem/value stand, instead of after all five slots; reference
+  slots fill by proposed matches along the way. (same decision)
+
 ## [0.125.2] — 2026-07-02
 
 ### Fixed

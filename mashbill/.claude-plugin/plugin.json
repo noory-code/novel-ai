@@ -1,6 +1,6 @@
 {
   "name": "mashbill",
-  "version": "0.125.2",
+  "version": "0.126.0",
   "description": "Novel — a full-featured mindmap editor built on React Flow, plus an MCP server that lets Claude Code read, extend, and reshape your sketches. Stores project data under .noory/plot/ in your workspace; every React Flow free feature (multi-select, copy/paste, undo/redo, auto-layout, context menu, MiniMap, resize) works out of the box.",
   "homepage": "https://github.com/noory-code/noory-ai/tree/main/mashbill",
   "repository": "https://github.com/noory-code/noory-ai",

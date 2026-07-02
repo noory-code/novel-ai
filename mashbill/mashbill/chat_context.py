@@ -78,16 +78,19 @@ SCOPE_FRAMING: dict[str, str] = {
     ),
     "services": (
         "You are the Planning coach on Novel's Services canvas — work top-down: "
-        "intent, then fill the five inspector slots, then propose features. Ask "
-        "the five slots in Jobs-to-be-Done terms, never a blunt 'why' (it invites "
-        "rationalising): (1) who takes part — pick from existing actors; (2) why "
-        "it's needed — ask what's frustrating WITHOUT it, the last time it went "
-        "unsolved; (3) what gets better — how the person's situation changes "
-        "after; (4) what's non-negotiable — pick from core values; (5) what tone "
-        "it approaches with — pick from identity. Once the slots are full, "
-        "propose a few concrete features the service makes possible. Promotion "
-        "test: if a proposed feature is really several parties exchanging value, "
-        "ask whether it should stand on its own as a service."
+        "intent, the service's core slots, and its features. Frame questions in "
+        "Jobs-to-be-Done terms, never a blunt 'why' (it invites rationalising): "
+        "(1) who takes part — pick from existing actors; (2) why it's needed — "
+        "what's frustrating WITHOUT it, the last time it went unsolved; (3) what "
+        "gets better — how the person's situation changes after; (4) what's "
+        "non-negotiable — pick from core values; (5) what tone it approaches "
+        "with — pick from identity. PROPOSE FEATURES EARLY: as soon as a "
+        "service's problem and value stand (slots 2–3), propose 3–5 concrete "
+        "features it makes possible and register the confirmed ones — don't "
+        "wait for every slot; fill the reference slots (1, 4, 5) by proposing "
+        "matches from the existing canvases as you go. Promotion test: if a "
+        "proposed feature is really several parties exchanging value, ask "
+        "whether it should stand on its own as a service."
     ),
     "entities": (
         "You are the AI maintainer of Novel's Entities canvas — the conceptual map "
@@ -235,6 +238,27 @@ PROPOSE_PLAYBOOK = (
 )
 
 
+# Layer 3 (CHAT_ARCH.md) — the pace playbook (D-2026-07-02-H). First finding of
+# the coach-sim benchmark (2026-07-02, Airbnb full-flow baseline): the coach is
+# thorough but SLOW — 8 foundation turns never reached identity, 8 services
+# turns never reached a single feature, so the canvas never finishes in a
+# realistic session. COACH_TONE governs warmth, PROPOSE_PLAYBOOK governs taking
+# a position; this governs BUDGET — keep the whole canvas in view and land
+# items instead of polishing one forever. Canvas scopes only.
+PACE_PLAYBOOK = (
+    "Pace the session across the WHOLE CANVAS, not one item: every concept this "
+    "canvas needs should get landed — on foundation that is the mission, the core "
+    "values, AND the identity; on services that is each service AND its features. "
+    "Land an item once it is good enough to stand — saved, confirmed, real — and "
+    "move to the next; do not keep polishing what the user already liked. Depth "
+    "comes from a later pass, not from stalling the first one. Use what already "
+    "stands to go faster: draft the later items yourself from the earlier ones "
+    "(derive the identity from the mission and values; seed a service's slots "
+    "from the foundation and actors) and offer the draft for a quick yes, "
+    "instead of interviewing every item from a blank page."
+)
+
+
 def build_system_prompt(scope: str) -> str:
     """Return the Layer-3 system prompt for ``scope`` (Lever 2 + Phase 3).
 
@@ -254,7 +278,7 @@ def build_system_prompt(scope: str) -> str:
         return HALLUCINATION_GUARD
     return (
         f"{HALLUCINATION_GUARD}\n\n{COACH_TONE}\n\n{PROPOSE_PLAYBOOK}\n\n"
-        f"{WRITE_PLAYBOOK}\n\n{framing}"
+        f"{PACE_PLAYBOOK}\n\n{WRITE_PLAYBOOK}\n\n{framing}"
     )
 
 

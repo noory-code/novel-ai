@@ -39,6 +39,33 @@
 
 ## Log
 
+### D-2026-07-02-H — coach paces the whole canvas; services coaching proposes features early (first sim-benchmark iteration)
+
+- **What:** Added a `PACE_PLAYBOOK` to the canvas system prompt (between
+  `PROPOSE_PLAYBOOK` and `WRITE_PLAYBOOK`): budget the session across every concept
+  the canvas needs; land an item once it is good enough (saved, confirmed) and move
+  on instead of polishing; derive later items from what already stands (identity
+  from mission+values, service slots seeded from foundation/actors) and offer the
+  draft for a quick yes. Reworked the services framing: propose 3–5 concrete
+  features as soon as the service's problem/value stand (slots 2–3), not after all
+  five slots; reference slots fill via proposed matches along the way.
+- **Why:** First finding of the coach-sim benchmark (2026-07-02, Airbnb full-flow
+  baseline, 21 turns): quality per item was good (mission ≈ the real service's own
+  mission; values carried tradeoffs) but the coach never FINISHED — identity empty
+  after 8 foundation turns, zero features after 8 services turns, zero entities.
+  Depth crowded out coverage; user direction: "헤드리스에서 완벽하게 돌아야" — the
+  canvas must complete within a realistic session.
+- **Alternatives:** raise sim turn budgets — rejected: real users won't give 20+
+  turns per canvas; the coach's pacing is the defect, not the session length.
+  Hard-coding a per-item turn cap in code — rejected: conversational judgment
+  belongs in the prompt, not a mechanical cutoff.
+- **Approval:** Accepted by user (direction 2026-07-02: "일단 문제있는거 개선하고" /
+  "헤드리스에서 완벽하게").
+- **Spec impact:** Coaching behaviour (system prompt). Pinned by
+  `tests/test_chat_context.py::test_canvas_system_prompt_paces_the_whole_canvas` +
+  `::test_services_framing_pulls_features_forward`. Baseline vs post-change
+  comparison = sim reports before/after this version (0.125.x vs 0.126.0).
+
 ### D-2026-07-02-G — opening an existing subdir project always resolves its real dir (no bare-root guess; create self-heals into the existing project)
 
 - **What:** Two viewer fixes in the project-open path. (1) The active project's
