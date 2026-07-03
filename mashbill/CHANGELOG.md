@@ -4,6 +4,18 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.141.0] — 2026-07-03
+
+### Changed
+
+- **Values land as a batch, not a drip** (eighteenth sim iteration). The
+  pit-stop rule (v0.140) fixed identity completeness and challenge but did
+  NOT unlock the values stall — registration stayed at 2–3 per run, because
+  the coach lands one value per turn and the 8-turn foundation budget caps
+  that cadence at 2–3. The foundation framing now says: once the talk holds
+  two or three candidates, put them on the table together and register
+  every confirmed one in the same turn. (D-2026-07-03-G)
+
 ## [0.140.0] — 2026-07-03
 
 ### Changed

@@ -297,6 +297,18 @@ def test_write_playbook_demands_natural_korean() -> None:
     assert "reread" in p
 
 
+def test_foundation_framing_lands_values_in_batches() -> None:
+    """Iteration 18 (2026-07-03): the pit-stop rule (iteration 17) did not
+    unlock the values stall — registration stayed at 2-3 per run because the
+    coach lands values ONE per turn and the 8-turn foundation budget caps
+    that at 2-3. The framing must tell the coach to land the values the talk
+    has already surfaced as a BATCH: several candidates on the table in one
+    turn, one yes registers every confirmed one — no one-per-turn drip."""
+    f = build_framing_preamble("foundation").lower()
+    assert "batch" in f
+    assert "drip" in f
+
+
 def test_system_prompt_stays_under_saturation_budget() -> None:
     """Sixteenth sim iteration (2026-07-03): the coach prompt grew with every
     rotation — the composed canvas prompt hit ~1,800–2,000 words and the

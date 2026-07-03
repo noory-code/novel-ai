@@ -39,6 +39,23 @@
 
 ## Log
 
+### D-2026-07-03-G — values land as a batch, not a drip (eighteenth sim iteration)
+
+- **What:** Foundation framing: once the mission talk holds two or three
+  candidate values, the coach puts them on the table together and registers
+  every confirmed one in the same turn — no one-value-per-turn drip.
+- **Why:** v0.140 sample: the pit-stop rule fixed identity (3/3) and challenge
+  (all present) but values registration stayed at 2–3 — the ceiling is
+  structural: one-per-turn landing × 8-turn budget caps at 2–3, whatever the
+  prompt says about returning to the hunt. Batch landing changes the cadence,
+  not the budget.
+- **Alternatives:** raise the foundation turn budget — rejected twice already
+  (harness knob); registering unconfirmed values — violates the write gate.
+- **Approval:** Accepted by user (standing improve directive; 자율 실행 승인
+  2026-07-03).
+- **Spec impact:** Coaching behaviour only. Pinned by
+  ``tests/test_chat_context.py::test_foundation_framing_lands_values_in_batches``.
+
 ### D-2026-07-03-F — canvas text must be natural, correctly-spelled Korean (B-10)
 
 - **What:** The write playbook demands that everything written onto a canvas be
