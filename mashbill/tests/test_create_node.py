@@ -349,3 +349,18 @@ def test_feature_created_via_mcp_seeds_its_detail_canvas(tmp_path: Path) -> None
     from mashbill.folder_io import list_feature_details
 
     assert fid in list_feature_details(plot_root, "alpha")
+
+
+def test_create_node_near_synthetic_anchor_uses_kind_cluster(tmp_path: Path) -> None:
+    """B-14 (D-2026-07-03-T): with the anchor now the named foundation parent,
+    the coach passes near=__project_anchor__ — a viewer-synthetic id with no
+    node/position. That must NOT error and must NOT chain rightward: fall back
+    to same-kind clustering so pillars stack with their siblings."""
+    plot_root = _setup(tmp_path)
+    first = create_node(plot_root, "alpha", "foundation", "core_value",
+                        {"label": "신뢰"}, near="__project_anchor__")
+    second = create_node(plot_root, "alpha", "foundation", "core_value",
+                         {"label": "속도"}, near="__project_anchor__")
+    f, s = first["node"], second["node"]
+    assert s["x"] == f["x"]          # left-aligned to the kind cluster
+    assert s["y"] > f["y"]           # stacked below, not marching right

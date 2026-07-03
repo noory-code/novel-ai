@@ -4,6 +4,20 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.146.1] — 2026-07-03
+
+### Fixed
+
+- **Foundation pillars can finally be connected — and stop marching right**
+  (B-14 root causes, D-2026-07-03-T). The project anchor is viewer-synthetic,
+  so (1) create_edge's endpoints-exist check rejected every anchor spoke —
+  coach-registered values floated forever; (2) with no nameable parent the
+  coach chained near=<previous sibling>, marching pillars rightward through
+  the identity node. Now: the anchor id is a valid edge endpoint (spokes
+  mirror the seeds, relation flow); near=anchor falls back to same-kind
+  clustering (stack below siblings); and the write playbook names
+  __project_anchor__ as the foundation parent.
+
 ## [0.146.0] — 2026-07-03
 
 ### Changed

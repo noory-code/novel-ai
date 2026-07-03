@@ -350,6 +350,16 @@ def test_coach_consults_design_principles_when_judging() -> None:
     assert "get_design_principles" in p
 
 
+def test_write_playbook_names_the_anchor_as_foundation_parent() -> None:
+    """B-14 (D-2026-07-03-T): coach-registered foundation pillars floated —
+    partly the tool bug (create_edge rejected the synthetic anchor), partly
+    the prompt never saying WHO a pillar's parent is. The playbook must name
+    __project_anchor__ as the foundation parent so the one-yes covers the
+    spoke too."""
+    p = build_system_prompt("foundation")
+    assert "__project_anchor__" in p
+
+
 def test_system_prompt_stays_under_saturation_budget() -> None:
     """Sixteenth sim iteration (2026-07-03): the coach prompt grew with every
     rotation — the composed canvas prompt hit ~1,800–2,000 words and the

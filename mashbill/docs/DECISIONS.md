@@ -39,6 +39,23 @@
 
 ## Log
 
+### D-2026-07-03-T — the synthetic anchor is a first-class edge/near endpoint (B-14)
+
+- **What:** create_edge accepts ``__project_anchor__`` as an endpoint (spokes
+  mirror seed edges, relation ``flow``); create_node's ``near=anchor`` falls
+  back to kind-clustering; the write playbook names the anchor as the
+  foundation parent.
+- **Why:** Live-watch B-14 + canvas forensics: every coach-registered value
+  floated (edge tool rejected the anchor — it is viewer-synthetic, not in
+  ``nodes``) and pillars marched rightward (coach chained near=<previous
+  sibling> for lack of a nameable parent), overlapping identity.
+- **Approval:** User bug report ("여전히 연결선을 못 만드는데?"), 2026-07-03 밤.
+- **Spec impact:** Foundation pillars are now AI-connectable to the anchor —
+  edges governed by definition, not authorship (D-2026-06-17-J). Pinned by
+  ``test_create_edge.py::test_create_edge_accepts_the_synthetic_anchor`` +
+  ``test_create_node.py::test_create_node_near_synthetic_anchor_uses_kind_cluster`` +
+  ``test_chat_context.py::test_write_playbook_names_the_anchor_as_foundation_parent``.
+
 ### D-2026-07-03-S — identity keeps one prose field: description (B-15)
 
 - **What:** Identity's 설명(description) is the single prose field; the

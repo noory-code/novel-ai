@@ -79,3 +79,22 @@ def test_write_playbook_connects_registered_features() -> None:
     p = WRITE_PLAYBOOK.lower()
     assert "create_edge" in p
     assert "connect" in p
+
+
+def test_create_edge_accepts_the_synthetic_anchor(tmp_path: Path) -> None:
+    """B-14 root cause (user live-watch 2026-07-03, D-2026-07-03-T): the
+    project anchor is viewer-synthetic — not a node in the doc — so
+    create_edge's both-endpoints-exist check rejected every anchor spoke and
+    coach-registered foundation pillars floated forever. The anchor id is a
+    valid endpoint (canvas_io doc validation already says so); relation
+    mirrors the seed spokes (flow)."""
+    plot_root = _setup(tmp_path)
+    cv = create_node(plot_root, "alpha", "foundation", "core_value", {"label": "신뢰"})
+    cvid = cv["node"]["id"]
+    out = create_edge(plot_root, "alpha", "foundation", "__project_anchor__", cvid)
+    assert out["existing"] is False
+    assert out["edge"]["source"] == "__project_anchor__"
+    assert out["edge"]["relation"] == "flow"
+    # idempotent like any other edge
+    again = create_edge(plot_root, "alpha", "foundation", "__project_anchor__", cvid)
+    assert again["existing"] is True

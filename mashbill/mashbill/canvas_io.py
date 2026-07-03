@@ -424,6 +424,11 @@ def create_node(
         )
     canvas = read_canvas(plot_root, project_id, canvas_kind, service_id)
     node_id = f"{kind}_{uuid4().hex[:8]}"
+    if near == PROJECT_ANCHOR_ID:
+        # B-14 (D-2026-07-03-T): the project anchor is viewer-synthetic (no
+        # node, no position) — near=anchor means "a pillar of this canvas",
+        # which is exactly what kind-clustering does. Fall through.
+        near = None
     if near is not None:
         # D-2026-07-02-L — a child node sits beside ITS parent (one column per
         # anchor), not in the global kind pile. ``near`` overrides kind-cluster.

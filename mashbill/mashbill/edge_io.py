@@ -41,16 +41,27 @@ def create_edge(
     a retried confirmation can't stripe the canvas with parallel lines.
     """
     from mashbill.edge_semantics import classify_edge
+    from mashbill.models_foundation import PROJECT_ANCHOR_ID
 
     canvas = read_canvas(plot_root, project_id, canvas_kind, service_id)
     nodes_by_id = {n.id: n for n in canvas.nodes}
     for endpoint in (source_id, target_id):
+        # The project anchor is viewer-synthetic — a valid endpoint that never
+        # appears in ``nodes`` (B-14 root cause: this check rejected every
+        # anchor spoke, so coach-registered pillars floated; D-2026-07-03-T).
+        if endpoint == PROJECT_ANCHOR_ID:
+            continue
         if endpoint not in nodes_by_id:
             raise ValueError(f"edge endpoint not on the {canvas_kind!r} canvas: {endpoint!r}")
     for existing in canvas.edges:
         if existing.source == source_id and existing.target == target_id and existing.directed:
             return {"edge": existing.model_dump(by_alias=True), "existing": True}
-    relation = classify_edge(canvas_kind, nodes_by_id[source_id].kind)
+    # Anchor spokes mirror the seed edges (relation "flow"); other sources
+    # classify from their node kind as before.
+    if source_id == PROJECT_ANCHOR_ID:
+        relation = "flow"
+    else:
+        relation = classify_edge(canvas_kind, nodes_by_id[source_id].kind)
     edge = SketchEdge.model_validate(
         {
             "id": f"edge_{uuid4().hex[:8]}",
