@@ -360,14 +360,36 @@ def test_write_playbook_names_the_anchor_as_foundation_parent() -> None:
     assert "__project_anchor__" in p
 
 
+def test_services_framing_discriminates_feature_from_service() -> None:
+    """B-17 (user live-watch): the coach blurred service-level and
+    feature-level items. The framing must carry the discriminator both ways:
+    a feature is what ONE person does inside a service; a thing naming an
+    audience/market/revenue line is a service candidate, not a feature."""
+    f = build_framing_preamble("services").lower()
+    assert "one person does" in f
+
+
+def test_services_framing_draws_entity_relationships() -> None:
+    """B-18 (user live-watch): entities landed as disconnected islands — the
+    user expected an ERD-like map. D-2026-06-17-I already allows AI-drawn
+    relationship edges on the entities canvas; the framing must instruct the
+    coach to connect related entities as it registers them."""
+    f = build_framing_preamble("services").lower()
+    assert "relationship edges" in f
+    assert "create_edge" in f
+
+
 def test_system_prompt_stays_under_saturation_budget() -> None:
     """Sixteenth sim iteration (2026-07-03): the coach prompt grew with every
     rotation — the composed canvas prompt hit ~1,800–2,000 words and the
     v0.138 sample showed instruction slips (a connect habit missed, a
     'saved' announcement) that read as prompt saturation, not missing rules.
-    This budget forces every future rotation to compress before it adds:
+    Raised 1300 -> 1350 (D-2026-07-03-U): the evaluation principles moved
+    OUT to the get_design_principles tool, and the user-directed mechanics
+    (anchor parent, label rules, entity edges) needed the headroom.
+    The budget still forces compress-before-add:
     content is pinned by the phrase guards in this file and
     ``test_chat_system_prompt.py``; this test pins the SIZE."""
     for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
         words = len(build_system_prompt(scope).split())
-        assert words <= 1300, f"{scope}: {words} words > 1300 budget"
+        assert words <= 1350, f"{scope}: {words} words > 1350 budget"

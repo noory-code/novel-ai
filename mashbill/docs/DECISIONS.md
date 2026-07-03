@@ -39,6 +39,18 @@
 
 ## Log
 
+### D-2026-07-03-U — B-17/B-18 rules land; prompt budget 1,300 → 1,350
+
+- **What:** Services framing gains the two-way feature/service discriminator
+  (B-17) and ERD-style entity relationship edges via create_edge (B-18); the
+  saturation budget rises to 1,350 words.
+- **Why:** Live-watch reports. The raise: evaluation principles moved OUT to
+  the get_design_principles tool (D-2026-07-03-P), and successive user-directed
+  mechanics (anchor parent, label rules, entity edges) exhausted the 1,300
+  headroom — further micro-trims had started cutting elicitation wording.
+- **Approval:** User bug reports + 자율실행, 2026-07-03 밤.
+- **Spec impact:** Pinned by the two new framing tests + the budget guard.
+
 ### D-2026-07-03-T — the synthetic anchor is a first-class edge/near endpoint (B-14)
 
 - **What:** create_edge accepts ``__project_anchor__`` as an endpoint (spokes

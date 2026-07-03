@@ -4,6 +4,22 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.147.0] — 2026-07-03
+
+### Changed
+
+- **Feature-vs-service discrimination sharpened both ways** (B-17, user
+  live-watch): a feature is what ONE person does inside a service; anything
+  naming an audience, market, or revenue line is a service candidate.
+- **Entities connect like an ERD** (B-18, user live-watch): as the coach
+  registers each service's entity batch it now draws rough relationship
+  edges between related entities (D-2026-06-17-I already allowed AI-drawn
+  relationships; the instruction was missing).
+- **Prompt budget raised 1,300 → 1,350** (D-2026-07-03-U): the evaluation
+  principles moved out to the get_design_principles tool, and the
+  user-directed mechanics above needed the headroom. Compress-before-add
+  still enforced by the guard.
+
 ## [0.146.1] — 2026-07-03
 
 ### Fixed
