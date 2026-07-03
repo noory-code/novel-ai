@@ -39,6 +39,22 @@
 
 ## Log
 
+### D-2026-07-03-O — coach design knowledge = distilled principles, not RAG
+
+- **What:** The coach's design knowledge (what makes a good mission / value /
+  feature design — the source of "propose the higher-level concept the user
+  hasn't reached") will be curated principles distilled into coach
+  instructions/skills, NOT a vector-RAG corpus.
+- **Why:** The 20-iteration benchmark loop proved the distill-and-pin pipeline
+  works (phrase guards + budget + measurable axes); RAG adds infrastructure,
+  latency, and quality variance for breadth the coach doesn't yet need.
+- **Alternatives:** vector RAG over design books — rejected for now; hybrid
+  (principles in prompt + deep material as MCP resources) remains the natural
+  extension path if breadth is needed later.
+- **Approval:** User selection (AskUserQuestion, 2026-07-03 밤).
+- **Spec impact:** none yet — implementation design queued (todo/active.md);
+  prompt budget requires the principles to live outside the per-turn prompt.
+
 ### D-2026-07-03-L — the coach fills placeholder labels in the same write
 
 - **What:** WRITE_PLAYBOOK: when filling a node whose label is still a
