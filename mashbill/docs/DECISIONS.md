@@ -39,6 +39,24 @@
 
 ## Log
 
+### D-2026-07-03-I — the batch-landing rule is removed as a dead letter (twentieth sim iteration)
+
+- **What:** The foundation framing's batch-landing sentence (values put on the
+  table together, multi-registered per turn — D-2026-07-03-G) is removed; a
+  guard now pins its absence.
+- **Why:** Agent transcript audit of three v0.142 runs: the rule never fired —
+  strict one-value-per-turn everywhere; it structurally loses to the
+  one-question-at-a-time tone rule. The values goal was reached by the domain
+  sweep (D-2026-07-03-H) × the 12-turn session budget instead (dual-arm
+  experiment: coverage ~2/7 → 4/5–6/7). A dead instruction costs prompt budget
+  and keeps a live conflict between blocks.
+- **Alternatives:** rewriting the tone rule to allow multi-item turns —
+  rejected: one-at-a-time warmth is a pinned coaching principle
+  (D-2026-06-24-J) and the goal is already met without batching.
+- **Approval:** Accepted by user (수렴 후속 자율실행 승인, 2026-07-03).
+- **Spec impact:** Supersedes D-2026-07-03-G. Pinned by
+  ``tests/test_chat_context.py::test_foundation_framing_has_no_batch_rule_residue``.
+
 ### D-2026-07-03-H — the value hunt sweeps domains, numeric anchors removed (nineteenth sim iteration)
 
 - **What:** Foundation framing sweeps the value TERRAIN — distinct domains

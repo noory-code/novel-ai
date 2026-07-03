@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.143.0] — 2026-07-03
+
+### Removed
+
+- **The batch-landing rule (v0.141) — a dead letter.** Transcript audit of
+  three v0.142 runs showed strict one-value-per-turn in every one: the rule
+  structurally loses to the one-question-at-a-time coaching tone. The values
+  goal was reached by a different route — the domain sweep (v0.142) supplies
+  candidates and the 12-turn session budget supplies time; the dual-arm
+  experiment lifted values coverage from ~2/7 to 4/5–6/7. Removing the dead
+  rule frees prompt budget and ends the instruction conflict.
+  (D-2026-07-03-I supersedes D-2026-07-03-G; twentieth sim iteration)
+
 ## [0.142.0] — 2026-07-03
 
 ### Changed

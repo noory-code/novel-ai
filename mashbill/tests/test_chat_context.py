@@ -299,16 +299,16 @@ def test_write_playbook_demands_natural_korean() -> None:
     assert "reread" in p
 
 
-def test_foundation_framing_lands_values_in_batches() -> None:
-    """Iteration 18 (2026-07-03): the pit-stop rule (iteration 17) did not
-    unlock the values stall — registration stayed at 2-3 per run because the
-    coach lands values ONE per turn and the 8-turn foundation budget caps
-    that at 2-3. The framing must tell the coach to land the values the talk
-    has already surfaced as a BATCH: several candidates on the table in one
-    turn, one yes registers every confirmed one — no one-per-turn drip."""
+def test_foundation_framing_has_no_batch_rule_residue() -> None:
+    """Twentieth iteration (2026-07-03): the batch-landing rule (iteration 18,
+    D-2026-07-03-G) was a DEAD LETTER — transcript audit of three v0.142 runs
+    showed strict one-value-per-turn in every one; it structurally loses to
+    the one-question-at-a-time tone rule. The values goal was reached by the
+    domain sweep × 12-turn budget instead, so the dead rule is removed
+    (D-2026-07-03-I supersedes D-2026-07-03-G) — this pin keeps it out."""
     f = build_framing_preamble("foundation").lower()
-    assert "batch" in f
-    assert "drip" in f
+    assert "batch" not in f
+    assert "drip" not in f
 
 
 def test_foundation_framing_sweeps_value_domains_without_numeric_anchor() -> None:
