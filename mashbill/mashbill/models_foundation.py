@@ -125,6 +125,23 @@ class IdentityNode(BaseNodeFields):
 
     @model_validator(mode="before")
     @classmethod
+    def _fold_body_into_description(cls, data: object) -> object:
+        # B-15 (D-2026-07-03-S): description is the single prose field —
+        # the inspector no longer shows body, so a non-empty body folds into
+        # description on read (data-loss guard, like core_value's definition).
+        if not isinstance(data, dict):
+            return data
+        body = str(data.get("body") or "").strip()
+        if not body:
+            return data
+        out = dict(data)
+        desc = str(out.get("description") or "").strip()
+        out["description"] = f"{desc}\n\n{body}" if desc else body
+        out["body"] = ""
+        return out
+
+    @model_validator(mode="before")
+    @classmethod
     def _fold_legacy_do_dont(cls, data: object) -> object:
         legacy = {"do": "Do", "dont": "Don't"}
         if not isinstance(data, dict) or not any(k in data for k in legacy):

@@ -219,8 +219,8 @@ def test_core_value_carries_name_and_body() -> None:
 
 
 def test_identity_carries_description_and_body() -> None:
-    """v0.43.2 (D-2026-06-06-B): identity = ``description`` + ``body``;
-    do/dont removed."""
+    """B-15 (D-2026-07-03-S supersedes D-2026-06-06-B's split): description is
+    identity's single prose field — a provided body folds into it on read."""
     n = IdentityNode(
         id="id-voice",
         label="Voice",
@@ -228,7 +228,8 @@ def test_identity_carries_description_and_body() -> None:
         body="이름을 부른다",
     )
     assert "따뜻하고" in n.description
-    assert "이름을 부른다" in n.body
+    assert "이름을 부른다" in n.description
+    assert n.body == ""
     assert "do" not in n.model_dump() and "dont" not in n.model_dump()
 
 
@@ -256,8 +257,10 @@ def test_value_and_identity_typed_fields_round_trip_in_canvas() -> None:
     cv = next(n for n in parsed.nodes if n.id == "cv1")
     ident = next(n for n in parsed.nodes if n.id == "id1")
     assert cv.body.startswith("우리는 서로")
-    assert ident.description == "조용하고 또렷하다"
-    assert ident.body == "짧고 단단하게 말한다"
+    # B-15: identity body folds into description on read
+    assert "조용하고 또렷하다" in ident.description
+    assert "짧고 단단하게 말한다" in ident.description
+    assert ident.body == ""
 
 
 def test_node_details_path_absolute_rejected() -> None:

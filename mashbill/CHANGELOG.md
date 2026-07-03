@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.146.0] — 2026-07-03
+
+### Changed
+
+- **Identity keeps one prose field** (B-15, user live-watch; D-2026-07-03-S
+  supersedes D-2026-06-06-B's description+body split). The inspector showed
+  설명 and 노트 side by side — duplicative. Description survives; a non-empty
+  body folds into it on read (data-loss guard, the established fold pattern).
+  Viewer half (note field removed from the identity inspector) lands in the
+  novel repo.
+
 ## [0.145.1] — 2026-07-03
 
 ### Fixed

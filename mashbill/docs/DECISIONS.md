@@ -39,6 +39,17 @@
 
 ## Log
 
+### D-2026-07-03-S — identity keeps one prose field: description (B-15)
+
+- **What:** Identity's 설명(description) is the single prose field; the
+  inspector's 노트(body) field is removed and a non-empty body folds into
+  description on read. Supersedes the D-2026-06-06-B split.
+- **Why:** User live-watch (B-15): the two fields duplicate each other for a
+  kind whose content is one voice/tone description.
+- **Approval:** User bug report + field choice ("설명이다"), 2026-07-03 밤.
+- **Spec impact:** Pinned by ``tests/test_identity_format_migration.py`` fold
+  tests + novel ``inspectors-per-kind`` / ``inspectors.smoke`` pins.
+
 ### D-2026-07-03-R — unique-kind labels stay the kind name (B-12, refines L)
 
 - **What:** Mission/identity labels = kind name in the user's language; content
