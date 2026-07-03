@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.145.1] — 2026-07-03
+
+### Fixed
+
+- **Unique kinds keep their kind name as the label** (B-12, user live-watch;
+  refines D-2026-07-03-L as D-2026-07-03-R). The coach put the mission's
+  content sentence into the label; now mission/identity labels stay the kind
+  name (in the user's language) and content goes in the fields — only
+  multi-instance kinds (core values) get meaningful labels so siblings are
+  tellable apart.
+
 ## [0.145.0] — 2026-07-03
 
 ### Added

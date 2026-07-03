@@ -39,6 +39,17 @@
 
 ## Log
 
+### D-2026-07-03-R — unique-kind labels stay the kind name (B-12, refines L)
+
+- **What:** Mission/identity labels = kind name in the user's language; content
+  never goes in the label. Multi-instance kinds keep the meaningful-label rule.
+- **Why:** User live-watch (B-12): the coach renamed the mission node to its
+  content sentence. Q (viewer, novel repo) reverses the face excerpt the same
+  session (B-13) — labels + save pulse are the canvas feedback.
+- **Approval:** User bug report, 2026-07-03 밤 (live watch).
+- **Spec impact:** Pinned by
+  ``tests/test_chat_context.py::test_write_playbook_fills_placeholder_labels_too``.
+
 ### D-2026-07-03-P — the principles ride as an MCP tool, consulted before challenging
 
 - **What:** ``get_design_principles(area)`` (MCP tool) serves the distilled

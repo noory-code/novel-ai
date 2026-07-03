@@ -329,14 +329,16 @@ def test_foundation_framing_sweeps_value_domains_without_numeric_anchor() -> Non
 
 
 def test_write_playbook_fills_placeholder_labels_too() -> None:
-    """UI-mode finding + user decision (2026-07-03, D-2026-07-03-L): the coach
-    filled the mission's statement but left the default label ("Mission"), so
-    the canvas face showed NO visible change after the write. When filling a
-    node whose label is still a placeholder, the same write must also set a
-    short meaningful label."""
+    """D-2026-07-03-L + B-12 refinement (user live-watch, 2026-07-03): unique
+    kinds (mission, identity) KEEP the kind name as the label — the coach must
+    never put the content sentence in the label; content goes in the fields.
+    Multi-instance kinds (core values) still get a short meaningful label in
+    the same write so siblings are tellable apart."""
     p = build_system_prompt("foundation").lower()
     assert "placeholder" in p
     assert "same update_node call" in p or "same write" in p
+    assert "never the label" in p
+    assert "keep the kind name" in p
 
 
 def test_coach_consults_design_principles_when_judging() -> None:
