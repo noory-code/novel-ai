@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.148.1] — 2026-07-03
+
+### Fixed
+
+- **The anchor-spoke rule is an explicit sentence** (B-14 follow-through:
+  the toss verification round showed labels and layout landing but still
+  zero new spokes — the rule was a parenthetical aside inside the
+  feature-under-service example). Now: on foundation, EVERY new pillar gets
+  its anchor spoke in the same confirmed action.
+
 ## [0.148.0] — 2026-07-03
 
 ### Changed
