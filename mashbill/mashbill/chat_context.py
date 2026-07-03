@@ -94,7 +94,10 @@ SCOPE_FRAMING: dict[str, str] = {
         "roles (owner, supplier, regulator, settlement). Distinguish a "
         "classification hierarchy from a value relationship — a relationship "
         "is a directed line carrying what value flows which way (trust and "
-        "attention count as value)."
+        "attention count as value). DRAW the lines as actors land: for each "
+        "exchange the talk surfaces, create_edge from giver to receiver with "
+        "label = what flows (돈, 신뢰, 콘텐츠); an actor with "
+        "no lines is unfinished — check before closing the canvas."
     ),
     "services": (
         "You are the Planning coach on Novel's Services canvas. MAP THE "

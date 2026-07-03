@@ -379,6 +379,17 @@ def test_services_framing_draws_entity_relationships() -> None:
     assert "create_edge" in f
 
 
+def test_actors_framing_draws_value_flow_edges() -> None:
+    """B-21 (user live-watch round, 2026-07-04): 7 actors registered, 2
+    relationship edges — the interview elicits who-gives-what-to-whom but the
+    coach never drew it. The actors framing must land the value-flow lines
+    (create_edge, label = what flows) as actors register; an actor with no
+    lines is unfinished."""
+    f = build_framing_preamble("actors").lower()
+    assert "create_edge" in f
+    assert "no lines is unfinished" in f
+
+
 def test_system_prompt_stays_under_saturation_budget() -> None:
     """Sixteenth sim iteration (2026-07-03): the coach prompt grew with every
     rotation — the composed canvas prompt hit ~1,800–2,000 words and the

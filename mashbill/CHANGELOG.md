@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.149.0] — 2026-07-04
+
+### Changed
+
+- **Actors get their value-flow lines drawn** (B-21, live canvas-by-canvas
+  round: 7 actors registered, 2 relationship edges). As actors land, the
+  coach draws each surfaced exchange (create_edge giver → receiver, label =
+  what flows); an actor with no lines is unfinished — checked before
+  closing the canvas.
+
 ## [0.148.1] — 2026-07-03
 
 ### Fixed
