@@ -39,6 +39,37 @@
 
 ## Log
 
+### D-2026-07-03-L — the coach fills placeholder labels in the same write
+
+- **What:** WRITE_PLAYBOOK: when filling a node whose label is still a
+  placeholder (Mission, Core value, Voice), the same update_node call also
+  sets a short meaningful label.
+- **Why:** Chrome-UI smoke: the coach saved a mission statement but the canvas
+  face showed only the default label — no visible change. User picked all
+  three feedback mechanisms (label fill + face excerpt + save flash).
+- **Approval:** User selection, 2026-07-03 (AskUserQuestion, all three).
+- **Spec impact:** Coaching behaviour. Pinned by
+  ``tests/test_chat_context.py::test_write_playbook_fills_placeholder_labels_too``.
+
+### D-2026-07-03-M — the node face previews its content (viewer, novel repo)
+
+- **What:** useNodesMemo maps an excerpt of the node's primary text
+  (mission statement / prose body, 120 chars) into the face body preview —
+  it was hardcoded to "" so no node ever showed content.
+- **Why / Approval:** same finding and user selection as D-2026-07-03-L.
+- **Spec impact:** Viewer display. Pinned by novel
+  ``viewer/tests/node-face-content.test.ts``. Verified live in the browser.
+
+### D-2026-07-03-N — the canvas pulses when content lands (viewer, novel repo)
+
+- **What:** ``useContentFlash`` (new hook) flips a highlight class on a node
+  for ~1.5s whenever its label/body signature changes after mount; BaseNode
+  wires it; keyframes in styles.css. Local edits flash too (accepted).
+- **Why / Approval:** same finding and user selection as D-2026-07-03-L.
+- **Spec impact:** Viewer display. Pinned by novel
+  ``viewer/tests/node-save-flash.test.tsx``. Verified live (MutationObserver
+  caught the pulse on a WS-driven write).
+
 ### D-2026-07-03-K — the batch-landing rule is restored (same-day revert of D-2026-07-03-I)
 
 - **What:** The foundation framing's batch-landing sentence returns; the

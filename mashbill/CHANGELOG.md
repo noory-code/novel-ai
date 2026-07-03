@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.144.0] — 2026-07-03
+
+### Changed
+
+- **A filled node must not look untouched** (Chrome-UI-mode finding + user
+  decision, D-2026-07-03-L/M/N). Engine side: when the coach fills a node
+  whose label is still a placeholder (Mission, Core value, Voice), the same
+  write also sets a short meaningful label. Viewer side (novel repo, same
+  decision set): the node face previews the content (mission statement /
+  prose body, truncated) and pulses once when content lands. All three
+  verified live in the browser: WS-driven label update, face excerpt, and
+  flash observed via a planted MutationObserver.
+
 ## [0.143.2] — 2026-07-03
 
 ### Changed

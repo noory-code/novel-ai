@@ -328,6 +328,17 @@ def test_foundation_framing_sweeps_value_domains_without_numeric_anchor() -> Non
     assert f.count("two or three") == 1  # only the anti-anchor survives
 
 
+def test_write_playbook_fills_placeholder_labels_too() -> None:
+    """UI-mode finding + user decision (2026-07-03, D-2026-07-03-L): the coach
+    filled the mission's statement but left the default label ("Mission"), so
+    the canvas face showed NO visible change after the write. When filling a
+    node whose label is still a placeholder, the same write must also set a
+    short meaningful label."""
+    p = build_system_prompt("foundation").lower()
+    assert "placeholder" in p
+    assert "same update_node call" in p or "same write" in p
+
+
 def test_system_prompt_stays_under_saturation_budget() -> None:
     """Sixteenth sim iteration (2026-07-03): the coach prompt grew with every
     rotation — the composed canvas prompt hit ~1,800–2,000 words and the
