@@ -264,11 +264,13 @@ def test_foundation_framing_lands_identity_mid_phase() -> None:
 
     (Merged from a same-named twin that shadowed this one — sixteenth sim
     iteration housekeeping: a duplicate ``def`` means the first body never
-    runs, so its assertions live here now.)"""
+    runs, so its assertions live here now. Nineteenth iteration: the trigger
+    lost its number — "two or three" anchored the coach to stop at 2-3, so
+    the checkpoint is now "once the first values stand".)"""
     f = build_framing_preamble("foundation").lower()
     assert "identity lands mid-phase" in f
     assert "failed session" in f
-    assert "once two or three values stand" in f
+    assert "once the first values stand" in f
     assert "then return" in f
     assert "identity still empty is a failed" in f
 
@@ -307,6 +309,22 @@ def test_foundation_framing_lands_values_in_batches() -> None:
     f = build_framing_preamble("foundation").lower()
     assert "batch" in f
     assert "drip" in f
+
+
+def test_foundation_framing_sweeps_value_domains_without_numeric_anchor() -> None:
+    """Nineteenth iteration (2026-07-03, user: 셋 다): values coverage sat
+    flat at ~2/7 across five measurements while registration hit the "two or
+    three" numbers the prompt itself names — the anchors became quotas, and
+    the registered values all orbit the mission (customer/quality kin) while
+    corpus values span operating principles the coach never fishes for. The
+    framing must sweep the value TERRAIN (distinct domains, probing one the
+    talk hasn't touched) and must not anchor the count: no "two or three"
+    except the anti-anchor warning ("never settle for the first two or
+    three")."""
+    f = build_framing_preamble("foundation").lower()
+    assert "sweep the value terrain" in f
+    assert "hasn't touched" in f
+    assert f.count("two or three") == 1  # only the anti-anchor survives
 
 
 def test_system_prompt_stays_under_saturation_budget() -> None:

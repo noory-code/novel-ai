@@ -4,6 +4,22 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.142.0] — 2026-07-03
+
+### Changed
+
+- **The value hunt sweeps domains and loses its numeric anchors**
+  (nineteenth sim iteration, user directive "셋 다"). Values coverage sat
+  flat at ~2/7 across five measurements while registration snapped to the
+  "two or three" the prompt itself named — the anchors became quotas, and
+  registered values all orbited the mission (customer/quality kin) while
+  corpus values span operating principles the coach never fished for. The
+  foundation framing now sweeps the value terrain (customers, quality,
+  speed vs polish, money vs principle, how people work — probe a domain
+  the talk hasn't touched before closing) and keeps only the anti-anchor
+  ("never settle for the first two or three"); the identity checkpoint
+  triggers on "the first values", not a count. (D-2026-07-03-H)
+
 ## [0.141.0] — 2026-07-03
 
 ### Changed

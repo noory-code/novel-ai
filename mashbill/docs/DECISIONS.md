@@ -39,6 +39,26 @@
 
 ## Log
 
+### D-2026-07-03-H — the value hunt sweeps domains, numeric anchors removed (nineteenth sim iteration)
+
+- **What:** Foundation framing sweeps the value TERRAIN — distinct domains
+  (customers, quality, speed vs polish, money vs principle, how people work),
+  probing one the talk hasn't touched before closing — and drops its numeric
+  anchors: the identity checkpoint triggers on "once the first values stand",
+  the batch rule on "as the talk surfaces candidates"; only the anti-anchor
+  ("never settle for the first two or three") still names a number.
+- **Why:** Five consecutive measurements (v0.137–141) held values coverage at
+  ~2/7 while registration snapped to exactly the numbers the prompt named —
+  anchors read as quotas. Registered values cluster mission-adjacent; corpus
+  values span operating principles nobody fished for. Domain sweep changes
+  what gets fished; anchor removal stops the early close.
+- **Alternatives:** more turns — being measured separately as a harness arm
+  (12-turn sample), per the same user directive; a fixed value-count target —
+  rejected: it recreates the anchor problem.
+- **Approval:** Accepted by user ("셋다해요", 2026-07-03 — card ① of three).
+- **Spec impact:** Coaching behaviour only. Pinned by
+  ``tests/test_chat_context.py::test_foundation_framing_sweeps_value_domains_without_numeric_anchor``.
+
 ### D-2026-07-03-G — values land as a batch, not a drip (eighteenth sim iteration)
 
 - **What:** Foundation framing: once the mission talk holds two or three
