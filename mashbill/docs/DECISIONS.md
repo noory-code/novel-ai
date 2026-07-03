@@ -39,6 +39,19 @@
 
 ## Log
 
+### D-2026-07-03-W — the synthetic anchor is visible in agent canvas reads
+
+- **What:** The agent-facing canvas read injects the project anchor (kind
+  ``project``, a labelled hub entry) on foundation/actors/services — mirroring
+  what the viewer renders. Storage unchanged (anchor stays synthetic).
+- **Why:** User proposal during the live loop: edge fixes (D-T) made the anchor
+  a legal endpoint, but the coach still could not SEE the hub in get_canvas —
+  anchor knowledge lived only in prompt special-cases.
+- **Approval:** User ("헤드리스라도 넣어주면 좋지 않을까요? 앵커 개념을?"),
+  2026-07-03 밤.
+- **Spec impact:** Pinned by
+  ``tests/test_mcp_tools.py::test_get_canvas_surfaces_the_synthetic_anchor``.
+
 ### D-2026-07-03-U — B-17/B-18 rules land; prompt budget 1,300 → 1,350
 
 - **What:** Services framing gains the two-way feature/service discriminator

@@ -214,3 +214,21 @@ def test_design_principles_serve_discriminators_per_area() -> None:
 
     with pytest.raises(ValueError):
         get_principles("nope")
+
+
+def test_get_canvas_surfaces_the_synthetic_anchor(tmp_path: Path) -> None:
+    """D-2026-07-03-W (user proposal: "헤드리스라도 앵커 개념을 넣어주면"):
+    anchored canvases read by the AGENT include the project anchor as a
+    node-like entry — before this, the coach could not see the hub every
+    pillar should connect to (B-14's deeper root), and anchor knowledge
+    lived only in prompt special-cases. Feature/entities canvases have no
+    anchor and stay untouched."""
+    ws = str(tmp_path)
+    mcp_tools.create_project_tool(ws, "alpha", "Alpha")
+    for kind in ("foundation", "actors", "services"):
+        doc = mcp_tools.get_canvas(ws, "alpha", kind)
+        anchors = [n for n in doc["nodes"] if n["id"] == "__project_anchor__"]
+        assert len(anchors) == 1, kind
+        assert anchors[0]["kind"] == "project"
+    ents = mcp_tools.get_canvas(ws, "alpha", "entities")
+    assert all(n["id"] != "__project_anchor__" for n in ents["nodes"])

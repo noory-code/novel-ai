@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.148.0] — 2026-07-03
+
+### Changed
+
+- **The project anchor is visible to the agent** (user proposal
+  "헤드리스라도 앵커 개념을 넣어주면", D-2026-07-03-W). Anchored canvases
+  (foundation / actors / services) read through the agent tool now include
+  the synthetic anchor as a node-like hub entry — connecting a pillar to
+  the hub becomes a visible fact instead of special-case prompt knowledge
+  (the deeper root of B-14).
+
 ## [0.147.0] — 2026-07-03
 
 ### Changed

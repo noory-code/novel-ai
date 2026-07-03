@@ -47,6 +47,7 @@ from mashbill.git_store import (
 )
 from mashbill.migrate import migrate_v01_to_v02
 from mashbill.models import CanvasDoc, CanvasKind
+from mashbill.models_foundation import PROJECT_ANCHOR_ID
 from mashbill.node_search import search_nodes
 from mashbill.references import (
     set_node_references as _set_node_references,
@@ -178,7 +179,20 @@ def get_canvas(
     required when ``canvas_kind == "feature"``."""
     plot_root = resolve_plot_root(project_path)
     canvas = read_canvas(plot_root, project_id, canvas_kind, service_id)
-    return canvas.model_dump(by_alias=True)
+    doc = canvas.model_dump(by_alias=True)
+    # D-2026-07-03-W — surface the viewer-synthetic project anchor to the
+    # agent on anchored canvases, so "connect the pillar to the hub" is a
+    # visible fact, not special-case prompt knowledge (B-14's deeper root).
+    if canvas_kind in ("foundation", "actors", "services"):
+        doc["nodes"] = [
+            {
+                "id": PROJECT_ANCHOR_ID,
+                "kind": "project",
+                "label": "(project anchor — the canvas hub; a valid edge endpoint)",
+            },
+            *doc["nodes"],
+        ]
+    return doc
 
 
 @mcp.tool()
