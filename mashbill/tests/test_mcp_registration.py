@@ -259,6 +259,19 @@ def test_plot_entry_uses_uv_when_not_frozen(plugin_root: Path) -> None:
     assert str(plugin_root) in entry["args"]
 
 
+def test_plot_entry_dev_command_is_stdio_only_too(plugin_root: Path) -> None:
+    """B-11 (2026-07-03, found by the Chrome-UI smoke): the dev-checkout MCP
+    entry ran the FULL engine (``python -m mashbill`` → ``run()``), which also
+    binds the default HTTP port whenever it is free — so every in-app coach
+    turn could capture :5190 and block a real engine from starting. The frozen
+    entry already passes ``--mcp-stdio`` for exactly this collision reason
+    (D-2026-06-14-A); the dev entry must be symmetric."""
+    from mashbill.mcp_registration import _plot_entry, _spec_for
+
+    entry = _plot_entry(plugin_root, _spec_for("claude-code"))
+    assert entry["args"][-1] == "--mcp-stdio"
+
+
 def test_plot_entry_uses_bundled_binary_when_frozen(
     plugin_root: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

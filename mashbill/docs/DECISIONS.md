@@ -39,6 +39,25 @@
 
 ## Log
 
+### D-2026-07-03-J — dev MCP entry is stdio-only, like the frozen one (B-11)
+
+- **What:** The dev-checkout MCP entry (``uv run … python -m mashbill``) gains
+  ``--mcp-stdio``; ``__main__`` dispatches that flag to the stdio-only
+  transport. A registered tool server never starts the HTTP listener.
+- **Why:** B-11 (found by the Chrome-UI smoke, 2026-07-03): the full engine
+  binds the default HTTP port whenever free, so every in-app coach turn's
+  spawned tool server could capture :5190 — blocking a real engine from
+  starting, invisibly in normal use because the user's engine already holds
+  the port. The frozen entry has passed ``--mcp-stdio`` since D-2026-06-14-A
+  for exactly this collision; the dev path was asymmetric.
+- **Alternatives:** an env toggle in the coach's mcp-config only — rejected:
+  external dev-checkout registrations have the same race; the flag fixes all
+  spawn paths symmetrically.
+- **Approval:** Accepted by user (수렴 후속 자율실행 승인, 2026-07-03).
+- **Spec impact:** none user-visible. Pinned by
+  ``tests/test_server.py::test_module_main_dispatches_mcp_stdio_flag`` +
+  ``tests/test_mcp_registration.py::test_plot_entry_dev_command_is_stdio_only_too``.
+
 ### D-2026-07-03-I — the batch-landing rule is removed as a dead letter (twentieth sim iteration)
 
 - **What:** The foundation framing's batch-landing sentence (values put on the

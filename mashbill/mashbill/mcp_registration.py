@@ -129,6 +129,9 @@ def _plot_entry(plugin_root: Path, spec: _ProviderSpec) -> dict[str, Any]:
                 "python",
                 "-m",
                 "mashbill",
+                # stdio-only, like the frozen entry: a registered tool server
+                # must never race the real engine for the HTTP port (B-11).
+                "--mcp-stdio",
             ],
             "env": {},
         }

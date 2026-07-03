@@ -4,6 +4,20 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.143.1] — 2026-07-03
+
+### Fixed
+
+- **A coach turn's tool server no longer races the real engine for :5190**
+  (B-11, found by the Chrome-UI smoke). The dev-checkout MCP entry ran the
+  FULL engine (``python -m mashbill``), which also binds the default HTTP
+  port whenever it is free — so any in-app coach turn could capture :5190
+  and block a real engine from starting (masked normally because the user's
+  engine already holds the port). The frozen .app entry always passed
+  ``--mcp-stdio`` for exactly this collision reason; the dev entry now does
+  too, and ``python -m mashbill --mcp-stdio`` dispatches to the stdio-only
+  transport. (D-2026-07-03-J)
+
 ## [0.143.0] — 2026-07-03
 
 ### Removed

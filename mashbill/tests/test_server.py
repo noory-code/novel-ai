@@ -43,3 +43,22 @@ def test_run_mcp_stdio_drives_only_the_stdio_transport(
     server.run_mcp_stdio()
 
     assert ran["arg"] is made
+
+
+def test_module_main_dispatches_mcp_stdio_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+    """B-11 (found by the Chrome-UI smoke): ``python -m mashbill --mcp-stdio``
+    (the dev-checkout MCP entry) must run the stdio-only transport, never the
+    full engine — the full engine also binds the default HTTP port whenever it
+    is free, so every in-app coach turn could capture :5190."""
+    import sys
+
+    import mashbill.__main__ as entry
+
+    called: dict[str, bool] = {}
+    monkeypatch.setattr(entry, "run_mcp_stdio", lambda: called.setdefault("stdio", True))
+    monkeypatch.setattr(entry, "run", lambda: called.setdefault("full", True))
+    monkeypatch.setattr(sys, "argv", ["mashbill", "--mcp-stdio"])
+
+    entry.main()
+
+    assert called == {"stdio": True}
