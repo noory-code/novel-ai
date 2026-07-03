@@ -39,6 +39,22 @@
 
 ## Log
 
+### D-2026-07-03-P — the principles ride as an MCP tool, consulted before challenging
+
+- **What:** ``get_design_principles(area)`` (MCP tool) serves the distilled
+  discriminators; the propose playbook adds one line: consult it before
+  challenging weak content, challenge as questions. Runtime copy =
+  ``mashbill/coaching_principles.py``; canon = workspace
+  ``docs/concepts/design-principles.md`` (sync canon → engine on change).
+- **Why:** Prompt budget (≤1,300 words) can't hold the principles; the
+  discuss-note verdict (2026-07-02) already picked MCP-carried over installed
+  skills for the in-app coach. Tool-served text loads only when the coach
+  judges — zero cost on ordinary turns.
+- **Approval:** Implements the user's distilled-principles selection
+  (D-2026-07-03-O); wiring within 자율실행 승인.
+- **Spec impact:** Pinned by ``tests/test_mcp_tools.py`` (registry + content)
+  and ``tests/test_chat_context.py::test_coach_consults_design_principles_when_judging``.
+
 ### D-2026-07-03-O — coach design knowledge = distilled principles, not RAG
 
 - **What:** The coach's design knowledge (what makes a good mission / value /

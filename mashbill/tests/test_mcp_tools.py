@@ -35,6 +35,7 @@ _CORE_TOOLS = {
     "list_project_tags",
     "delete_project_tag",
     "get_viewer_context",
+    "get_design_principles",
 }
 
 
@@ -85,9 +86,7 @@ def test_create_node_rejects_structural_fields(tmp_path: Path) -> None:
     ws = str(tmp_path)
     mcp_tools.create_project_tool(ws, "p1", "P1")
     # Position is server-minted, not writable through the content path.
-    out = mcp_tools.create_node(
-        ws, "p1", "foundation", "core_value", {"label": "Trust", "x": 999}
-    )
+    out = mcp_tools.create_node(ws, "p1", "foundation", "core_value", {"label": "Trust", "x": 999})
     assert "x" in out["rejected_fields"]
     assert out["node"]["label"] == "Trust"
 
@@ -196,3 +195,22 @@ def test_tag_project_without_git_raises_actionable_error(tmp_path: Path) -> None
     # No git init → the tool must raise a guiding ValueError, not crash opaquely.
     with pytest.raises(ValueError, match="git not initialized"):
         mcp_tools.tag_project(ws, "p1", "x")
+
+
+def test_design_principles_serve_discriminators_per_area() -> None:
+    """D-2026-07-03-P — the coach's evaluation knowledge (distilled principles,
+    D-2026-07-03-O) rides in the engine as an MCP tool, not the per-turn prompt
+    (budget) and not RAG. Canon = noory-workspace docs/concepts/
+    design-principles.md; this embedded copy must carry the discriminator
+    questions for every area and reject unknown areas."""
+    from mashbill.coaching_principles import get_principles
+
+    for area in ("mission", "values", "services", "features"):
+        text = get_principles(area)
+        assert "판별" in text, area
+    full = get_principles(None)
+    assert "대가" in full and "교환" in full and "체감" in full
+    import pytest
+
+    with pytest.raises(ValueError):
+        get_principles("nope")

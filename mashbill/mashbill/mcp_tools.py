@@ -16,6 +16,7 @@ from typing import Any
 
 from fastmcp import FastMCP
 
+from mashbill.coaching_principles import get_principles
 from mashbill.folder_io import (
     create_edge as _create_edge,
 )
@@ -77,6 +78,14 @@ mcp = FastMCP(
 # ---------------------------------------------------------------------------
 # project CRUD
 # ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def get_design_principles(area: str | None = None) -> str:
+    """Design-quality discriminator questions for judging content strength
+    (D-2026-07-03-O/P). ``area``: mission | values | services | features |
+    omitted for all. Consult before challenging weak content."""
+    return get_principles(area)
 
 
 @mcp.tool()
@@ -288,9 +297,7 @@ def create_edge(
     edge is left untouched. Do NOT use ``update_canvas`` just to add a line.
     """
     plot_root = resolve_plot_root(project_path)
-    return _create_edge(
-        plot_root, project_id, canvas_kind, source_id, target_id, service_id, label
-    )
+    return _create_edge(plot_root, project_id, canvas_kind, source_id, target_id, service_id, label)
 
 
 @mcp.tool()
@@ -318,9 +325,7 @@ def set_node_references(
     confirmation gate as every write.
     """
     plot_root = resolve_plot_root(project_path)
-    return _set_node_references(
-        plot_root, project_id, canvas_kind, node_id, refs, service_id
-    )
+    return _set_node_references(plot_root, project_id, canvas_kind, node_id, refs, service_id)
 
 
 @mcp.tool()

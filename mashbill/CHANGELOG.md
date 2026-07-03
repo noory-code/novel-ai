@@ -4,6 +4,20 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.145.0] — 2026-07-03
+
+### Added
+
+- **The coach's evaluation knowledge ships as a tool** (D-2026-07-03-P,
+  implementing D-2026-07-03-O). ``get_design_principles(area)`` serves
+  distilled design-quality discriminators (mission / values / services /
+  features — trade-off filter, domain spread, opposing-pair tension,
+  felt-state missions, trust-manufacturing surface, exchange-unit maps,
+  strong-vs-weak example pairs, back-extracted from the 16-service ground
+  truths). The propose playbook tells the coach to consult it before
+  challenging weak content — as questions, not verdicts. Canon lives in the
+  workspace docs; the module is the runtime copy.
+
 ## [0.144.0] — 2026-07-03
 
 ### Changed

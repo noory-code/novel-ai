@@ -339,6 +339,15 @@ def test_write_playbook_fills_placeholder_labels_too() -> None:
     assert "same update_node call" in p or "same write" in p
 
 
+def test_coach_consults_design_principles_when_judging() -> None:
+    """D-2026-07-03-P: the propose playbook tells the coach WHERE its
+    evaluation knowledge lives — consult get_design_principles before
+    challenging weak content, so the challenge axis gets teeth without
+    blowing the prompt budget."""
+    p = build_system_prompt("foundation").lower()
+    assert "get_design_principles" in p
+
+
 def test_system_prompt_stays_under_saturation_budget() -> None:
     """Sixteenth sim iteration (2026-07-03): the coach prompt grew with every
     rotation — the composed canvas prompt hit ~1,800–2,000 words and the
