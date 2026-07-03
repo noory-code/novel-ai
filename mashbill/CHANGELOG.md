@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.143.2] — 2026-07-03
+
+### Changed
+
+- **The batch-landing rule is RESTORED — same-day revert of v0.143.0's
+  removal.** Both v0.143 confirmation runs collapsed values registration
+  back to 2–3 (the v0.142 12-turn arm held 5–7) while features/entities
+  ballooned (38 features, 28 entities): the rule was dead by the letter
+  (no run ever multi-registered) but load-bearing in effect — its presence
+  keeps session energy on values. Lesson pinned in the guard: never judge
+  a prompt rule by compliance alone. (D-2026-07-03-K reverts
+  D-2026-07-03-I)
+
 ## [0.143.1] — 2026-07-03
 
 ### Fixed

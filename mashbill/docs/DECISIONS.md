@@ -39,6 +39,24 @@
 
 ## Log
 
+### D-2026-07-03-K — the batch-landing rule is restored (same-day revert of D-2026-07-03-I)
+
+- **What:** The foundation framing's batch-landing sentence returns; the
+  absence-guard flips back to a presence pin.
+- **Why:** Removal regressed values in BOTH v0.143 confirmation runs (12-turn:
+  3 and 2 registered vs the v0.142 arm's 5–7; judged 1/7) while features and
+  entities ballooned (38/28) — the rule never fired as written (no
+  multi-register, transcript-audited) yet its presence held session energy on
+  the value hunt. Dead by the letter, load-bearing in effect.
+- **Alternatives:** rewriting it as an explicit "keep landing values" pressure
+  rule — deferred: restore the proven text first; rewording is a fresh
+  iteration with its own measurement.
+- **Approval:** Accepted by user (자율실행 승인; same-day-rollback honesty per
+  operational rule 3).
+- **Spec impact:** Restores D-2026-07-03-G behaviour. Lesson: never judge a
+  prompt rule by compliance alone — measure removal. Pinned by
+  ``tests/test_chat_context.py::test_foundation_framing_lands_values_in_batches``.
+
 ### D-2026-07-03-J — dev MCP entry is stdio-only, like the frozen one (B-11)
 
 - **What:** The dev-checkout MCP entry (``uv run … python -m mashbill``) gains

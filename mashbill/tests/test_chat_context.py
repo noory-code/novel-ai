@@ -299,16 +299,17 @@ def test_write_playbook_demands_natural_korean() -> None:
     assert "reread" in p
 
 
-def test_foundation_framing_has_no_batch_rule_residue() -> None:
-    """Twentieth iteration (2026-07-03): the batch-landing rule (iteration 18,
-    D-2026-07-03-G) was a DEAD LETTER — transcript audit of three v0.142 runs
-    showed strict one-value-per-turn in every one; it structurally loses to
-    the one-question-at-a-time tone rule. The values goal was reached by the
-    domain sweep × 12-turn budget instead, so the dead rule is removed
-    (D-2026-07-03-I supersedes D-2026-07-03-G) — this pin keeps it out."""
+def test_foundation_framing_lands_values_in_batches() -> None:
+    """RESTORED (D-2026-07-03-K reverts D-2026-07-03-I, same day): the batch
+    rule looked like a dead letter — transcript audits showed strict
+    one-per-turn — but removing it collapsed values registration back to 2-3
+    in BOTH v0.143 confirmation runs (v0.142 12-turn arm: 5-7) while features
+    and entities ballooned: dead by the letter, load-bearing in effect (it
+    keeps session energy on values). Keep the rule; never judge a prompt rule
+    by compliance alone."""
     f = build_framing_preamble("foundation").lower()
-    assert "batch" not in f
-    assert "drip" not in f
+    assert "batch" in f
+    assert "drip" in f
 
 
 def test_foundation_framing_sweeps_value_domains_without_numeric_anchor() -> None:
