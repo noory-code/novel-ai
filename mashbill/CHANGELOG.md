@@ -4,6 +4,33 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.140.0] — 2026-07-03
+
+### Changed
+
+- **The identity confirm is a pit stop, not the finish line** (seventeenth
+  sim iteration). Values stalled at 1–3 registered in all 11 runs of the
+  day — across personas AND founder model families (the codex-founder
+  pairwise experiment ruled out same-family rapport as the cause). The
+  mid-phase identity checkpoint ("once two or three values stand") read as
+  a stopping point; the foundation framing now names it: registering the
+  identity does not end the value hunt — go straight back to the next fork
+  until the founder runs dry. (D-2026-07-03-E)
+- **Canvas text must be natural, correctly-spelled Korean** (B-10, user
+  report). The coach registered "자유하되" (a nonexistent conjugation) as a
+  value label and hangul typos (캐페인/리봰/숬폼) as entity labels — in both
+  founder families, so coach-side. The write playbook now demands natural
+  Korean, no translationese, no typos, reread before saving; the sim judge's
+  new language axis measures it. Offset by equal-size trims elsewhere —
+  the composed services prompt sits exactly at the 1,300-word budget.
+  (D-2026-07-03-F)
+
+### Fixed
+
+- **Version parity restored.** v0.139.0 bumped the plugin manifest but not
+  ``mashbill.__version__`` (the SSOT, D-2026-06-20-N) — the parity test was
+  red on main for one commit. Both now read 0.140.0.
+
 ## [0.139.0] — 2026-07-03
 
 ### Changed

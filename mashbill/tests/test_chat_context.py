@@ -273,6 +273,30 @@ def test_foundation_framing_lands_identity_mid_phase() -> None:
     assert "identity still empty is a failed" in f
 
 
+def test_foundation_framing_resumes_value_hunt_after_identity() -> None:
+    """Iteration 17 (2026-07-03): values stalled at 1-3 registered in all 11
+    runs of the day, across personas AND founder model families — the
+    mid-phase identity checkpoint ("once two or three values stand") reads
+    as a stopping point, and the 'then return to hunting' never fires. The
+    framing must name the checkpoint as a pit stop: registering the identity
+    does NOT end the value hunt."""
+    f = build_framing_preamble("foundation").lower()
+    assert "pit stop" in f
+    assert "does not end the value hunt" in f
+
+
+def test_write_playbook_demands_natural_korean() -> None:
+    """B-10 (user report 2026-07-03): the coach registered '자유하되, 방치하지
+    않는다' — a nonexistent conjugation — as a core value label, plus hangul
+    typos (캐페인/리봰/숬폼) on entity labels, in both founder families.
+    Canvas text is user-facing product output: the write playbook must demand
+    natural, correctly-spelled Korean, reread before saving."""
+    p = build_system_prompt("foundation").lower()
+    assert "natural" in p
+    assert "typo" in p
+    assert "reread" in p
+
+
 def test_system_prompt_stays_under_saturation_budget() -> None:
     """Sixteenth sim iteration (2026-07-03): the coach prompt grew with every
     rotation — the composed canvas prompt hit ~1,800–2,000 words and the

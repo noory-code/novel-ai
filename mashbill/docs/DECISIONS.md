@@ -39,6 +39,41 @@
 
 ## Log
 
+### D-2026-07-03-F — canvas text must be natural, correctly-spelled Korean (B-10)
+
+- **What:** The write playbook demands that everything written onto a canvas be
+  natural, correctly-spelled Korean in the user's own words — no translationese,
+  no typos — reread before saving. The sim judge gains a language axis that
+  sweeps canvas labels for violations.
+- **Why:** User report (2026-07-03): the coach registered "자유하되, 방치하지
+  않는다" — "자유하다" is not a Korean verb — compressing the founder's natural
+  phrasing into translationese; the sweep also found hangul typos landed as
+  entity labels (캐페인, 리봰, 숬폼). Both founder families showed it, so it is
+  coach-side. Canvas artifacts are user-facing product output.
+- **Alternatives:** post-hoc lint of canvas files — rejected for now: silent
+  automated rewrites of user-visible state would breach Rule 7; measurement
+  (judge axis) + prompt rule first.
+- **Approval:** Accepted by user (bug report + "계속합시다", 2026-07-03).
+- **Spec impact:** Coaching behaviour only. Pinned by
+  ``tests/test_chat_context.py::test_write_playbook_demands_natural_korean``.
+
+### D-2026-07-03-E — the identity confirm is a pit stop, not the finish line (seventeenth sim iteration)
+
+- **What:** Foundation framing names the mid-phase identity checkpoint as a pit
+  stop: registering the identity does not end the value hunt — the coach goes
+  straight back to the next fork until the founder runs dry.
+- **Why:** Values stalled at 1–3 registered in all 11 runs of 2026-07-03,
+  across personas and founder model families (the codex-founder pairwise
+  experiment excluded same-family rapport as a cause) — the "once two or three
+  values stand" anchor (D-2026-07-03-A) read as a quota and the return clause
+  never fired.
+- **Alternatives:** raise the foundation turn budget — rejected before
+  (D-2026-07-03-A): harness knob, not a coach skill.
+- **Approval:** Accepted by user (standing improve directive; 자율 실행 승인
+  2026-07-03).
+- **Spec impact:** Coaching behaviour only. Pinned by
+  ``tests/test_chat_context.py::test_foundation_framing_resumes_value_hunt_after_identity``.
+
 ### D-2026-07-03-D — the coach prompt compresses under a word budget (sixteenth sim iteration)
 
 - **What:** The composed canvas system prompt is rewritten for density — zero
