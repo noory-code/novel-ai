@@ -4,6 +4,21 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.160.0] — 2026-07-04
+
+### Fixed
+
+- **Auto-created feature detail canvases stop seeding fake English stubs**
+  (D-2026-07-04-M): every feature's inner canvas was born with
+  "→ Operator" / "→ User" — the Operator stub re-committed the category
+  error D-2026-05-28-J retired (the operator side IS the service; the
+  validator minimum has been ≥ 1 since D-2026-05-28-K), and the other
+  ignored the project's real actors. The seed is now the feature node +
+  ONE ref pointing at the first user-side actor under its CURRENT label
+  (e.g. "→ 구매자"); the coach re-picks/adds refs as the flow develops.
+  Found in the coupang feature sweep: 19 of 22 detail canvases were
+  stub-only shells the user read as broken.
+
 ## [0.159.0] — 2026-07-04
 
 ### Changed

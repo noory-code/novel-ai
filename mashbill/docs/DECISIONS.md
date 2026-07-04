@@ -39,6 +39,19 @@
 
 ## Log
 
+### D-2026-07-04-M — feature detail seeds one real subject ref, not English stubs
+
+- **What:** `sync_details_with_overview` seeds a new feature detail canvas
+  with the feature node + ONE actor_ref pointing at the first user-side
+  actor on the actors canvas under its current label — the two hardcoded
+  English stubs ("→ Operator"/"→ User") are gone.
+- **Why:** live coupang review — 19 of 22 detail canvases were stub-only
+  shells ("기능 캔버스 안에 아무것도 없네요"); the Operator stub had been
+  semantically retired since D-2026-05-28-J/K but the seeder still planted
+  it, in English, pointing at possibly-renamed seed actors.
+- **Approval:** Accepted by user (live review, 2026-07-04).
+- **Spec impact:** `test_sync.py::test_sync_seeds_one_real_user_side_ref_not_english_stubs`.
+
 ### D-2026-07-04-L — entity relationship lines carry their verb
 
 - **What:** services + entities framings require a verb label on every

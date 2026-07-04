@@ -61,6 +61,24 @@ def sync_details_with_overview(plot_root: Path, project_id: str) -> dict[str, li
             if child.is_dir() and child.name != "_archive" and (child / "detail.json").is_file():
                 existing_details.add(child.name)
 
+    # D-2026-07-04-M (user live review): the old seed planted TWO English
+    # stubs ("→ Operator" / "→ User"). The Operator stub re-committed the
+    # category error D-2026-05-28-J retired (the operator side IS the
+    # service, validator minimum is ≥ 1 since D-2026-05-28-K), and the
+    # other ignored the project's real actors. Seed ONE ref pointing at
+    # the first user-side actor under its CURRENT label — the coach or
+    # user re-picks/adds as the flow design develops.
+    try:
+        actors_canvas = read_canvas(plot_root, project_id, "actors")
+        subject = next(
+            (n for n in actors_canvas.nodes if getattr(n, "side", None) == "user"),
+            actors_canvas.nodes[0] if actors_canvas.nodes else None,
+        )
+    except FileNotFoundError:
+        subject = None
+    subject_id = subject.id if subject else "user"
+    subject_label = subject.label if subject else "User"
+
     created: list[str] = []
     for feature_id in sorted(overview_feature_ids - existing_details):
         src = next(n for n in overview.nodes if n.id == feature_id)
@@ -68,29 +86,15 @@ def sync_details_with_overview(plot_root: Path, project_id: str) -> dict[str, li
             canvas_id=feature_id,
             canvas_kind="feature",
             feature_ref=feature_id,
-            # v0.11 — every feature needs ≥ 2 actor_refs (operator +
-            # user) per IDENTITY.md. Auto-seed two stub refs that point at
-            # the project's seeded actors. Users can re-pick via the
-            # picker, or add more refs as the design develops.
             nodes=[
                 # v0.26.0 (D-2026-05-25-A) — parent_id field removed;
                 # feature root carries no structural parent
                 # (is_root marks the canvas anchor).
                 src.model_copy(update={"is_root": False}),
                 ActorRefNode(
-                    id=f"{feature_id}-operator-ref",
-                    label="→ Operator",
-                    ref_actor_id="operator",
-                    side="operator",
-                    color="#bae6fd",
-                    shape="rectangle",
-                    width=140,
-                    height=70,
-                ),
-                ActorRefNode(
                     id=f"{feature_id}-user-ref",
-                    label="→ User",
-                    ref_actor_id="user",
+                    label=f"→ {subject_label}",
+                    ref_actor_id=subject_id,
                     side="user",
                     color="#fecaca",
                     shape="rectangle",

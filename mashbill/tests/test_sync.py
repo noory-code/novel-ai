@@ -53,6 +53,35 @@ def test_sync_creates_detail_for_new_feature(plot_root: Path) -> None:
     assert any(n.id == "order" for n in detail.nodes)
 
 
+def test_sync_seeds_one_real_user_side_ref_not_english_stubs(plot_root: Path) -> None:
+    """User live review (2026-07-04, coupang feature sweep): 19 of 22
+    auto-created detail canvases showed two fake English stubs
+    ("→ Operator" / "→ User"). The Operator stub re-commits the category
+    error D-2026-05-28-J retired (the operator side IS the service); the
+    other ignored the project's real actors. Seed = the feature node + ONE
+    ref pointing at the first user-side actor under its CURRENT label."""
+    create_project(plot_root, "alpha", "Alpha", locale="ko")
+    # the founder's actors canvas has evolved: the seed 사용자 got renamed
+    actors = read_canvas(plot_root, "alpha", "actors")
+    renamed = actors.model_copy(
+        update={
+            "nodes": [
+                n.model_copy(update={"label": "구매자"}) if n.id == "user" else n
+                for n in actors.nodes
+            ]
+        }
+    )
+    write_canvas(plot_root, "alpha", renamed)
+    write_canvas(plot_root, "alpha", _overview_with({"order": "주문"}))
+    sync_details_with_overview(plot_root, "alpha")
+    detail = read_canvas(plot_root, "alpha", "feature", service_id="order")
+    refs = [n for n in detail.nodes if n.kind == "actor_ref"]
+    assert len(refs) == 1
+    assert refs[0].label == "→ 구매자"
+    assert refs[0].ref_actor_id == "user"
+    assert refs[0].side == "user"
+
+
 def test_sync_archives_removed_feature(plot_root: Path) -> None:
     create_project(plot_root, "alpha", "Alpha")
     write_canvas(plot_root, "alpha", _overview_with({"order": "주문", "pay": "결제"}))
@@ -137,7 +166,7 @@ def test_sync_skips_archive_when_detail_has_user_authored_edges(
     edge_doc["edges"] = [
         {
             "id": "e1",
-            "source": "order-operator-ref",
+            "source": "order",
             "target": "order-user-ref",
             "sourceHandle": "r",
             "targetHandle": "l",
