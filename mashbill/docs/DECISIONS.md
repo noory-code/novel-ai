@@ -39,6 +39,38 @@
 
 ## Log
 
+### D-2026-07-05-B — overlapping same-pair edges separate into arcs
+
+- **What:** viewer — two or more edges between the same node pair (any mix
+  of relations/directions) render through a new ``pairArc`` edge type with
+  symmetric canonical bulges (±24px), instead of overlapping exactly.
+  ``edgeTransform`` groups rendered edges by unordered endpoint pair;
+  ``PairArcEdge`` flips the canonical offset for edges drawn against the
+  lexicographic order so the arcs bow to opposite absolute sides.
+- **Why:** user report (2026-07-05, actors canvas): "선이 두 개 겹치면
+  점선이 아니라 실선으로 보여요" — opposite-direction value exchanges
+  (고객→사장님 돈 / 사장님→고객 음식) overlapped exactly and the two dash
+  patterns filled each other's gaps.
+- **Approval:** Accepted by user (live report, 2026-07-05).
+- **Spec impact:** viewer ``edge-transform.test.ts`` §pair separation +
+  ``PairArcEdge`` path math export; root `specs/canvas-behavior.md` Actors
+  visual conventions.
+
+### D-2026-07-05-A — value-exchange lines take their own colour
+
+- **What:** viewer — on the actors canvas (the ``dashValueExchange``
+  opt-in), value-exchange edges colour amber-600 (``EXCHANGE_STROKE``,
+  #d97706) with a matching arrowhead, on top of the existing dash.
+  Structure (spokes, taxonomy) keeps the slate default; injection violet
+  and the value-form recolour toggle keep precedence.
+- **Why:** user directive (2026-07-05): "액터 캔버스에 가치 교환 선의
+  색깔을 다르게 하죠" — dash alone reads weakly once a map carries 16+
+  exchange lines (fresh baemin sample).
+- **Approval:** Accepted by user (live directive, 2026-07-05). Hue choice
+  (amber-600) is implementation judgment — swap freely.
+- **Spec impact:** viewer ``edge-transform.test.ts`` §exchange colour;
+  root `specs/canvas-behavior.md` Actors visual conventions.
+
 ### D-2026-07-04-Q — actor is defined by its exchange, never a persona card
 
 - **What:** the actors framing defines an actor as "a ROLE defined by what
