@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.157.0] — 2026-07-04
+
+### Changed
+
+- **Seeded families get anchor spokes too** (D-2026-07-04-I): the actors
+  framing now says "seeded ones included; before closing, EVERY family has
+  its anchor line" — the coupang verification round left the seeded 운영자
+  as the only hub-less family (same lesson as B-32: seeded nodes are
+  first-class, rules must name them).
+
 ## [0.156.0] — 2026-07-04
 
 ### Fixed

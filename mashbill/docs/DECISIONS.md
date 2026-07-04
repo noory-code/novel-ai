@@ -39,6 +39,25 @@
 
 ## Log
 
+### D-2026-07-04-I — value-exchange lines: dashed, layout-weak; seeded families spoke (actors)
+
+- **What:** three user directives from the live coupang review: (1) value-
+  exchange (labeled flow) lines on the actors canvas render DASHED
+  ("가치교환에 대한 거니까" — viewer `dashValueExchange` prop, Actors-only
+  opt-in); (2) auto-layout ranks structure first — hub spokes + inheritance
+  build the spanning tree, flow lines only attach otherwise-unreachable
+  nodes ("가치 교환은 정렬 할 때 우선순위를 낮춥니다", actors-only in
+  effect); (3) the coach wires SEEDED families to the anchor too (운영자
+  floated hub-less in the verification round). SketchCanvas ceiling
+  563 → 567 (plumbing-only prop threading).
+- **Why:** with taxonomy and value flows now coexisting on one canvas
+  (D-2026-07-04-G), the two meanings must read apart at a glance and the
+  skeleton must own the geometry.
+- **Approval:** Accepted by user (live directives, 2026-07-04).
+- **Spec impact:** viewer `edge-transform.test.ts` (dash pins),
+  `mindmapLayout.test.ts` (structure-first spanning tree),
+  `test_chat_context.py` (seeded-family spokes).
+
 ### D-2026-07-04-H — summary becomes writable; seeds mint localized (B-32/B-19)
 
 - **What:** (1) identity's writable-fields allow-list gains ``summary`` and

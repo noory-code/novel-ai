@@ -420,6 +420,16 @@ def test_mission_lands_as_one_line_with_detail_in_the_note() -> None:
     assert "note" in f
 
 
+def test_actors_seeded_families_get_anchor_spokes_too() -> None:
+    """Coupang verification round (2026-07-04): the coach wired every family
+    it created to the anchor but left the SEEDED 운영자 floating — the only
+    hub-less family on the canvas. Same lesson as B-32: seeded nodes are
+    first-class, rules must name them."""
+    p = build_system_prompt("actors")
+    assert "seeded" in p.lower()
+    assert "every family" in p.lower()
+
+
 def test_actors_hierarchy_arrow_points_at_the_family() -> None:
     """B-34 (user live-watch 2026-07-04): fold buttons sat on LEAF actors —
     the coach drew family → actor while the stored fold convention is
