@@ -4,4 +4,4 @@
 # derives this dynamically (hatchling), schema_export re-exports it as
 # MASHBILL_VERSION, and .claude-plugin/plugin.json is pinned equal by
 # tests/test_version_parity.py. Gate 4 bumps THIS line + plugin.json together.
-__version__ = "0.151.0"
+__version__ = "0.152.0"

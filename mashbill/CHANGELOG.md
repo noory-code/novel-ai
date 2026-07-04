@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.152.0] — 2026-07-04
+
+### Changed
+
+- **Actors are a hierarchy, like inheritance in code** (B-27, user directive
+  with a hand-arranged example): top-level role families connect to the
+  project anchor; every concrete actor registers UNDER its family (near= +
+  create_edge family → actor); benefit-seekers split like subclasses
+  (무료/유료); value-flow lines stay between concrete actors.
+
 ## [0.151.0] — 2026-07-04
 
 ### Changed

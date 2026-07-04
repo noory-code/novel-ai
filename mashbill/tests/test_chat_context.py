@@ -400,6 +400,18 @@ def test_foundation_framing_draws_multiple_identity_facets() -> None:
     assert "voice, energy" in f
 
 
+def test_actors_framing_builds_an_inheritance_hierarchy() -> None:
+    """B-27 (user, 2026-07-04, hand-arranged example on the live canvas):
+    actors are a HIERARCHY like code inheritance — top-level role families
+    connect to the anchor; concrete actors register UNDER their family
+    (near= + create_edge family→actor); 무료/유료 split like subclasses.
+    Value flows stay between concrete actors."""
+    f = build_framing_preamble("actors").lower()
+    assert "hierarchy" in f
+    assert "near=<family id>" in f
+    assert "무료/유료" in f
+
+
 def test_system_prompt_stays_under_saturation_budget() -> None:
     """Sixteenth sim iteration (2026-07-03): the coach prompt grew with every
     rotation — the composed canvas prompt hit ~1,800–2,000 words and the
