@@ -74,11 +74,11 @@ def create_edge(
         side = anchor_side_by_kind.get(nodes_by_id[target_id].kind)
         if side:
             source_handle, target_handle = side, opposite[side]
-    elif relation == "inheritance":
-        # The inheritance arrow points child → superclass (fold_endpoints:
-        # target = parent, B-34) — child's top out, family's bottom in, so
-        # the hierarchy still reads top-down.
-        source_handle, target_handle = "t", "b"
+    # B-36 (D-2026-07-04-O, supersedes the inheritance t/b pin of
+    # D-2026-07-04-C): node-to-node lines store NO handles — the viewer
+    # attaches each end to the side facing the other node ("가장 가까운
+    # 두 연결점"), which tracks the layout as families land on any arm.
+    # Only anchor spokes keep kind-side pins (the layout's sector SSOT).
     edge = SketchEdge.model_validate(
         {
             "id": f"edge_{uuid4().hex[:8]}",

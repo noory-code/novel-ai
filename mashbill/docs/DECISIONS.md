@@ -39,6 +39,20 @@
 
 ## Log
 
+### D-2026-07-04-O — peer lines attach at closest facing sides (B-36, supersedes part of C)
+
+- **What:** create_edge stops pinning handles on node-to-node lines
+  (inheritance included); the viewer's facing-side resolver (D-2026-06-01-E)
+  attaches each end to the side facing the other node. Anchor spokes keep
+  kind-side pins — they are the layout's sector SSOT (D-2026-07-04-D).
+- **Why:** user live-watch — "두 노드를 연결할 때는 가장 가까운 두
+  연결점을 이어야하는거 아닙니까?" The C-era t/b pin assumed vertical
+  stacking, but kind-sector layout puts families on any arm, so pinned
+  lines wrapped around node edges.
+- **Approval:** Accepted by user (live directive, 2026-07-04).
+- **Spec impact:** `test_create_edge.py` pin updated (inheritance handles
+  None).
+
 ### D-2026-07-04-N — actors closing sweep; rename examples span domains
 
 - **What:** the actors framing adds a closing recount ("before closing,

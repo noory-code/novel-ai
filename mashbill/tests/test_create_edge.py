@@ -114,11 +114,16 @@ def test_create_edge_pins_handles_for_anchor_spokes_and_hierarchy(tmp_path: Path
     fam = create_node(plot_root, "alpha", "actors", "actor", {"label": "일반 사용자"})
     sub = create_node(plot_root, "alpha", "actors", "actor", {"label": "무료 사용자"})
     # B-34: the inheritance arrow points child → superclass (the engine's own
-    # fold convention, fold_endpoints) — child's top out, family's bottom in.
+    # fold convention, fold_endpoints). B-36 (user live-watch 2026-07-04,
+    # supersedes the t/b pin of D-2026-07-04-C): node-to-node lines carry NO
+    # pinned handles — the viewer attaches each end to the side FACING the
+    # other node ("가장 가까운 두 연결점"), which tracks the layout as
+    # families land on any arm. Anchor spokes keep their kind-side pins
+    # (the layout's sector SSOT).
     h = create_edge(plot_root, "alpha", "actors", sub["node"]["id"], fam["node"]["id"])
     assert h["edge"]["relation"] == "inheritance"
-    assert h["edge"]["sourceHandle"] == "t"
-    assert h["edge"]["targetHandle"] == "b"
+    assert h["edge"]["sourceHandle"] is None
+    assert h["edge"]["targetHandle"] is None
 
 
 def test_create_edge_actors_labeled_edge_is_flow_and_floats(tmp_path: Path) -> None:

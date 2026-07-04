@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.162.0] — 2026-07-04
+
+### Changed
+
+- **Node-to-node lines attach at the closest facing sides** (B-36,
+  D-2026-07-04-O — supersedes the inheritance t/b pin of D-2026-07-04-C):
+  create_edge stores no handles for peer lines; the viewer's facing-side
+  resolver picks the two nearest connection points and tracks the layout
+  as families land on any arm. Anchor spokes keep their kind-side pins
+  (the mindmap layout's sector SSOT).
+
 ## [0.161.0] — 2026-07-04
 
 ### Changed
