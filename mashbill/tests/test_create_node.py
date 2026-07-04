@@ -407,3 +407,16 @@ def test_create_node_applies_the_kind_palette_color(tmp_path: Path) -> None:
     )
     assert "color" in custom["rejected_fields"]
     assert custom["node"]["color"] == "#fde68a"
+
+
+def test_fresh_foundation_pillars_start_on_their_pinned_side(tmp_path: Path) -> None:
+    """D-2026-07-04-D — one side SSOT end to end: the first core value of a
+    canvas starts LEFT (negative x, matching its pinned anchor-left spoke),
+    identity starts RIGHT, so placement, pins, and layout agree instead of
+    fighting ("정렬을 망가뜨렸는데" side-effect report)."""
+    plot_root = _setup(tmp_path)
+    # fresh canvas has seeds; remove reliance on them by checking side signs
+    v = create_node(plot_root, "alpha", "foundation", "core_value", {"label": "1st"})
+    i = create_node(plot_root, "alpha", "foundation", "identity", {"label": "면"})
+    assert v["node"]["x"] < 0
+    assert i["node"]["x"] > 0
