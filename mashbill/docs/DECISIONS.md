@@ -39,6 +39,16 @@
 
 ## Log
 
+### D-2026-07-04-L — entity relationship lines carry their verb
+
+- **What:** services + entities framings require a verb label on every
+  entity relationship line (주문 —담는다→ 상품); unlabeled = unfinished.
+- **Why:** live coupang review — 7 entity lines, zero labels; the picture
+  read as nothing. Rule 5 ("never emit a meaningless line") already banned
+  this in spirit; the framing now says it operationally.
+- **Approval:** Accepted by user (live directive, 2026-07-04).
+- **Spec impact:** `test_chat_context.py::test_entity_relationship_lines_carry_a_verb_label`.
+
 ### D-2026-07-04-J — families take domain words; same-nature families nest (actors)
 
 - **What:** the actors framing tells the coach (1) the seeded 운영자/사용자

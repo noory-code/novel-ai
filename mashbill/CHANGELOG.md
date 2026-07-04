@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.159.0] — 2026-07-04
+
+### Changed
+
+- **Entity relationship lines carry their verb** (D-2026-07-04-L, user:
+  "엔티티는 왜 저렇게 해놨는지 모르겠어요"): the coupang round left 7
+  relationship lines with zero labels — unreadable. Both the services
+  batch rule and the entities-canvas maintainer now demand the verb on
+  every line (주문 —담는다→ 상품); an unlabeled line is unfinished.
+  Services framing compressed to hold the 1,350-word budget.
+
 ## [0.158.2] — 2026-07-04
 
 ### Fixed

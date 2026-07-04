@@ -369,6 +369,17 @@ def test_services_framing_discriminates_feature_from_service() -> None:
     assert "one person does" in f
 
 
+def test_entity_relationship_lines_carry_a_verb_label() -> None:
+    """User live review (2026-07-04, coupang entities): 7 relationship lines,
+    zero labels — "주문→상품" reads as nothing ("엔티티는 왜 저렇게 해놨는지
+    모르겠어요"). A relationship line must carry its verb (담는다/남긴다);
+    an unlabeled entity line is unfinished."""
+    for scope in ("services", "entities"):
+        p = build_system_prompt(scope).lower()
+        assert "verb" in p, scope
+        assert "unlabeled" in p or "label" in p, scope
+
+
 def test_services_framing_draws_entity_relationships() -> None:
     """B-18 (user live-watch): entities landed as disconnected islands — the
     user expected an ERD-like map. D-2026-06-17-I already allows AI-drawn
