@@ -51,6 +51,9 @@
   generic seed taxonomy is not understanding.
 - **Approval:** Accepted by user (live directives, 2026-07-04).
 - **Spec impact:** `test_chat_context.py::test_actors_seed_families_are_renamed_to_domain_words`.
+- **Follow-up (same day):** 운영자 = the INTERNAL-STAFF family ("운영자는
+  내부직원이라는 뜻입니다") — employed operational roles (배송 기사, 물류,
+  CS) nest under it, not beside it. Same test extended (v0.158.1).
 
 ### D-2026-07-04-I — value-exchange lines: dashed, layout-weak; seeded families spoke (actors)
 

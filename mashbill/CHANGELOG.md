@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.158.1] — 2026-07-04
+
+### Fixed
+
+- **운영자 defined as the internal-staff family** (D-2026-07-04-J
+  follow-up, user: "운영자는 내부직원이라는 뜻입니다"): employed
+  operational roles (배송 기사, 물류, CS) nest UNDER 운영자, not beside
+  it — the coupang draft had them as separate top-level families.
+
 ## [0.158.0] — 2026-07-04
 
 ### Changed

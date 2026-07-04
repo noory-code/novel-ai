@@ -433,6 +433,9 @@ def test_actors_seed_families_are_renamed_to_domain_words() -> None:
     assert "rename" in p.lower()
     assert "same-nature" in p.lower()
     assert "handful" in p.lower()
+    # 운영자 = internal staff ("운영자는 내부직원이라는 뜻입니다") — employed
+    # operational roles (배송 기사, 물류) nest under it, not beside it.
+    assert "internal staff" in p.lower()
 
 
 def test_actors_seeded_families_get_anchor_spokes_too() -> None:
