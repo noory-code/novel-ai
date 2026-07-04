@@ -469,6 +469,18 @@ def test_actors_every_family_gets_an_anchor_spoke() -> None:
     assert "anchor line" in p.lower()
 
 
+def test_actor_is_defined_by_exchange_not_persona_card() -> None:
+    """User live app session (2026-07-04): asked for "주요 액터들", the coach
+    answered with persona cards — narrative person-descriptions ("서비스를
+    이야기처럼 써내려가며 큰 그림을 놓치지 않으려는 사람") instead of
+    exchange roles. The rule must go beyond "ask which role when an
+    individual is named": an actor is DEFINED by what it gives and
+    receives, never described as a persona."""
+    p = build_system_prompt("actors").lower()
+    assert "persona" in p
+    assert "gives and receives" in p
+
+
 def test_foundation_and_actors_start_from_an_empty_canvas() -> None:
     """D-2026-07-04-P — no seed nodes anywhere: the coach must know the
     canvas starts empty and that IT creates nodes as content lands

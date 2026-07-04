@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.164.0] — 2026-07-04
+
+### Changed
+
+- **Actor = exchange role, never a persona card** (D-2026-07-04-Q, user
+  live report "액터를 퍼소나로 인식하네요"): the actors coach defines an
+  actor by what it gives and receives — no demographics or personality
+  sketches. The old rule only fired when the user named an individual.
+
 ## [0.163.0] — 2026-07-04
 
 ### Changed

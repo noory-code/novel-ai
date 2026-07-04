@@ -39,6 +39,20 @@
 
 ## Log
 
+### D-2026-07-04-Q — actor is defined by its exchange, never a persona card
+
+- **What:** the actors framing defines an actor as "a ROLE defined by what
+  it gives and receives — not a person, not a persona card (no demographics
+  or personality sketches)". The old rule only covered the narrow case of
+  the user naming an individual.
+- **Why:** user live app session (2026-07-04): asked for "주요 액터들", the
+  coach answered with narrative person-descriptions ("서비스를 이야기처럼
+  써내려가며 큰 그림을 놓치지 않으려는 사람"). User: "액터를 퍼소나로
+  인식하네요… 대화를 해보니 그래요." Matches the corpus distillation
+  ("액터는 인구통계가 아니라 교환 속 역할").
+- **Approval:** Accepted by user (live report, 2026-07-04).
+- **Spec impact:** `test_actor_is_defined_by_exchange_not_persona_card`.
+
 ### D-2026-07-04-P — blank-canvas start: all seeds and content minimums removed
 
 - **What:** `create_project` writes the four primary canvases EMPTY — the
