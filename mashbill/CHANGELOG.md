@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.165.0] — 2026-07-05
+
+### Fixed
+
+- **Foundation: every pillar anchor-connects in the same turn**
+  (D-2026-07-05-C, B-41 — first live blank-canvas foundation run): the
+  coach wired only the first node of each kind to the anchor; later
+  values/identities floated. The framing now binds the anchor line to
+  EVERY registration ("before closing, no pillar floats"), with prompt
+  compression to hold the 1350-word saturation budget.
+
 ## [0.164.0] — 2026-07-04
 
 ### Changed

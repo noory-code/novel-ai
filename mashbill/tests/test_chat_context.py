@@ -469,6 +469,18 @@ def test_actors_every_family_gets_an_anchor_spoke() -> None:
     assert "anchor line" in p.lower()
 
 
+def test_foundation_every_pillar_gets_anchor_line() -> None:
+    """B-41 (foundation live check 2026-07-05 — first blank-canvas run): the
+    coach anchor-connected only the FIRST node of each kind; the 2nd value
+    and 2nd identity floated, and after being corrected its NEXT new value
+    floated again. Same lesson as the actors families: the rule must bind
+    EVERY registration, in the same turn."""
+    f = build_framing_preamble("foundation").lower()
+    assert "anchor line" in f
+    assert "same turn" in f
+    assert "floats" in f
+
+
 def test_actor_is_defined_by_exchange_not_persona_card() -> None:
     """User live app session (2026-07-04): asked for "주요 액터들", the coach
     answered with persona cards — narrative person-descriptions ("서비스를

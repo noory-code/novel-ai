@@ -39,6 +39,23 @@
 
 ## Log
 
+### D-2026-07-05-C — foundation: every pillar gets its anchor line in the same turn
+
+- **What:** the foundation framing binds anchor connection to EVERY node
+  registration ("EVERY node you register gets its anchor line in the same
+  turn: before closing, no pillar floats"), compressed elsewhere to stay
+  under the 1350-word saturation budget.
+- **Why:** B-41 — first live blank-canvas foundation run (2026-07-05,
+  browser lab): the coach anchor-connected only the first node of each
+  kind; the 2nd value and 2nd identity floated, and after being corrected
+  its NEXT new value floated again. Same lesson as the actors families
+  (B-32-era): rules must bind every registration, not the first.
+- **Approval:** Autonomous within the live-verification loop the user
+  directed ("브라우저로 열어서 직접 확인해가면서 테스트하시죠"); the rule
+  restates the user's standing 앵커 연결 requirement (2026-07-03 session,
+  "연결을 안했어요").
+- **Spec impact:** `test_foundation_every_pillar_gets_anchor_line`.
+
 ### D-2026-07-05-B — overlapping same-pair edges separate into arcs
 
 - **What:** viewer — two or more edges between the same node pair (any mix
