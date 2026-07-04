@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.158.2] — 2026-07-04
+
+### Fixed
+
+- **Employment decides 운영자 membership, not the role name** (user:
+  "라이더 같은 경우에는 내부자가 아닐 수도 있겠네요"): a gig rider may be
+  external (파트너) while an employed driver is internal — the coach asks
+  when the relation is ambiguous instead of assuming from the role.
+
 ## [0.158.1] — 2026-07-04
 
 ### Fixed

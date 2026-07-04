@@ -436,6 +436,10 @@ def test_actors_seed_families_are_renamed_to_domain_words() -> None:
     # 운영자 = internal staff ("운영자는 내부직원이라는 뜻입니다") — employed
     # operational roles (배송 기사, 물류) nest under it, not beside it.
     assert "internal staff" in p.lower()
+    # …but employment decides membership, not the role name: gig riders may
+    # be external ("라이더 같은 경우에는 내부자가 아닐 수도") — the coach
+    # asks instead of assuming.
+    assert "employment" in p.lower()
 
 
 def test_actors_seeded_families_get_anchor_spokes_too() -> None:

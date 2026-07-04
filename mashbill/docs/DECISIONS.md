@@ -54,6 +54,9 @@
 - **Follow-up (same day):** 운영자 = the INTERNAL-STAFF family ("운영자는
   내부직원이라는 뜻입니다") — employed operational roles (배송 기사, 물류,
   CS) nest under it, not beside it. Same test extended (v0.158.1).
+- **Follow-up 2 (same day):** membership is decided by the EMPLOYMENT
+  relation, not the role name — a gig rider may be external (파트너); the
+  coach asks when ambiguous (v0.158.2).
 
 ### D-2026-07-04-I — value-exchange lines: dashed, layout-weak; seeded families spoke (actors)
 
