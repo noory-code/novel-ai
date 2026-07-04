@@ -157,3 +157,18 @@ def test_identity_description_alone_is_untouched() -> None:
         }
     )
     assert n.description == "D" and n.body == ""
+
+
+def test_identity_carries_a_summary_field() -> None:
+    """B-24 (user decision, 2026-07-04): identity splits into 요약(summary,
+    short — shown on the node face) + 설명(description, long). Summary is a
+    plain new field; absent stays empty."""
+    from mashbill.models_foundation import IdentityNode
+
+    n = IdentityNode.model_validate({
+        "id": "i1", "label": "Voice", "x": 0, "y": 0,
+        "summary": "밝고 장난기 있는 응원자", "description": "절대 다그치지 않는다",
+    })
+    assert n.summary == "밝고 장난기 있는 응원자"
+    empty = IdentityNode.model_validate({"id": "i2", "label": "E", "x": 0, "y": 0})
+    assert empty.summary == ""

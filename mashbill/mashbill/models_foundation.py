@@ -118,6 +118,9 @@ class IdentityNode(BaseNodeFields):
     docs/node-format/foundation/identity.md."""
 
     kind: Literal["identity"] = "identity"
+    # B-24 (D-2026-07-04-B): 요약 — one line for the node face; description
+    # holds the long prose (설명).
+    summary: str = ""
     description: str = ""
     body: str = ""
     status: Literal["manual", "derived", "confirmed"] = "manual"

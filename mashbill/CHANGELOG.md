@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.151.0] — 2026-07-04
+
+### Changed
+
+- **Identity splits into 요약(summary) + 설명(description)** (B-24 half,
+  D-2026-07-04-B): a new one-line summary field for the node face; the
+  coach fills both per facet. Wire artifacts regenerated lock-step; the
+  viewer face map + inspector land in the novel repo.
+
 ## [0.150.0] — 2026-07-04
 
 ### Changed
