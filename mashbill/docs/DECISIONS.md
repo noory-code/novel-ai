@@ -39,6 +39,19 @@
 
 ## Log
 
+### D-2026-07-04-J — families take domain words; same-nature families nest (actors)
+
+- **What:** the actors framing tells the coach (1) the seeded 운영자/사용자
+  labels are placeholders to RENAME into the service's own words (쿠팡:
+  사용자 → 구매자), and (2) same-nature families nest under one parent
+  (광고주·카드사·은행 → 파트너/3rd party) so the top level stays a handful.
+- **Why:** live coupang review — "너무 운영자와 사용자에 얽매이는 것
+  같은데" + "카드사나 은행 그리고 광고주 도 파트너 혹은 3rd party 라고
+  묶을 수 있죠." The hierarchy is the coach's understanding made visible;
+  generic seed taxonomy is not understanding.
+- **Approval:** Accepted by user (live directives, 2026-07-04).
+- **Spec impact:** `test_chat_context.py::test_actors_seed_families_are_renamed_to_domain_words`.
+
 ### D-2026-07-04-I — value-exchange lines: dashed, layout-weak; seeded families spoke (actors)
 
 - **What:** three user directives from the live coupang review: (1) value-

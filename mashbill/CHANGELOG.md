@@ -4,6 +4,18 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.158.0] — 2026-07-04
+
+### Changed
+
+- **Family names come from the domain, and same-nature families nest**
+  (D-2026-07-04-J): the seeded 운영자/사용자 are placeholders — the coach
+  renames each family to the service's own word the moment it shows
+  (쇼핑몰: 사용자 → 구매자) and groups same-nature families under one
+  parent (광고주·카드사 → 파트너/3rd party), keeping the top level a
+  handful. Live coupang review: buyers hung under a generic 사용자 and six
+  externals sprawled as separate top-level families.
+
 ## [0.157.0] — 2026-07-04
 
 ### Changed

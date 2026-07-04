@@ -420,6 +420,21 @@ def test_mission_lands_as_one_line_with_detail_in_the_note() -> None:
     assert "note" in f
 
 
+def test_actors_seed_families_are_renamed_to_domain_words() -> None:
+    """User live-watch (2026-07-04): the coach stayed wedded to the seeded
+    운영자/사용자 labels — coupang's buyers hung under a generic 사용자
+    family ("일반 구매자와 멤버십회원은 구매자로 묶을 수 있죠"), and six
+    same-nature externals (광고주, 카드사·은행…) sat as separate top-level
+    families instead of one 파트너/3rd party group. Seeds are placeholders;
+    families take the service's own words; same-nature families nest under
+    one parent so the top level stays a handful."""
+    p = build_system_prompt("actors")
+    assert "placeholder" in p.lower()
+    assert "rename" in p.lower()
+    assert "same-nature" in p.lower()
+    assert "handful" in p.lower()
+
+
 def test_actors_seeded_families_get_anchor_spokes_too() -> None:
     """Coupang verification round (2026-07-04): the coach wired every family
     it created to the anchor but left the SEEDED 운영자 floating — the only
