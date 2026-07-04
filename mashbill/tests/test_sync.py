@@ -53,33 +53,18 @@ def test_sync_creates_detail_for_new_feature(plot_root: Path) -> None:
     assert any(n.id == "order" for n in detail.nodes)
 
 
-def test_sync_seeds_one_real_user_side_ref_not_english_stubs(plot_root: Path) -> None:
-    """User live review (2026-07-04, coupang feature sweep): 19 of 22
-    auto-created detail canvases showed two fake English stubs
-    ("→ Operator" / "→ User"). The Operator stub re-commits the category
-    error D-2026-05-28-J retired (the operator side IS the service); the
-    other ignored the project's real actors. Seed = the feature node + ONE
-    ref pointing at the first user-side actor under its CURRENT label."""
+def test_sync_creates_detail_with_only_root_feature(plot_root: Path) -> None:
+    """D-2026-07-04-P — blank-canvas start: an auto-created detail carries
+    ONLY its root feature node. Supersedes D-2026-07-04-M's single user-side
+    chip (which itself replaced the two fake English stubs): with no seed
+    actors there is nothing truthful to point at — the subject chip lands
+    through coaching."""
     create_project(plot_root, "alpha", "Alpha", locale="ko")
-    # the founder's actors canvas has evolved: the seed 사용자 got renamed
-    actors = read_canvas(plot_root, "alpha", "actors")
-    renamed = actors.model_copy(
-        update={
-            "nodes": [
-                n.model_copy(update={"label": "구매자"}) if n.id == "user" else n
-                for n in actors.nodes
-            ]
-        }
-    )
-    write_canvas(plot_root, "alpha", renamed)
     write_canvas(plot_root, "alpha", _overview_with({"order": "주문"}))
     sync_details_with_overview(plot_root, "alpha")
     detail = read_canvas(plot_root, "alpha", "feature", service_id="order")
-    refs = [n for n in detail.nodes if n.kind == "actor_ref"]
-    assert len(refs) == 1
-    assert refs[0].label == "→ 구매자"
-    assert refs[0].ref_actor_id == "user"
-    assert refs[0].side == "user"
+    assert [n.id for n in detail.nodes] == ["order"]
+    assert detail.edges == []
 
 
 def test_sync_archives_removed_feature(plot_root: Path) -> None:
@@ -114,8 +99,9 @@ def test_sync_on_empty_overview_is_noop(plot_root: Path) -> None:
 
 # v0.27.14 (D-2026-05-28-I) — data-loss guard: when a service disappears
 # from the overview but its detail.json carries user-authored content
-# (nodes beyond the default seeded feature_ref + 2 actor_refs, or any
-# edges), the sync MUST NOT archive it silently. The user's 2026-05-27
+# (nodes beyond the auto-created root feature — legacy actor_ref seed ids
+# still count as non-user content — or any edges), the sync MUST NOT
+# archive it silently. The user's 2026-05-27
 # chrome-devtools session lost a root-service node + its detail because
 # the previous sync wiped the folder without checking content; this test
 # pins the protection so the regression can't recur.
@@ -160,7 +146,8 @@ def test_sync_skips_archive_when_detail_has_user_authored_edges(
     create_project(plot_root, "alpha", "Alpha")
     write_canvas(plot_root, "alpha", _overview_with({"order": "주문"}))
     sync_details_with_overview(plot_root, "alpha")
-    # Add a user-drawn edge between the two seeded actor refs.
+    # Add a user-drawn edge (raw write — the stale target id is fine here;
+    # only the presence of an edge matters to the guard).
     detail = read_canvas(plot_root, "alpha", "feature", service_id="order")
     edge_doc = detail.model_dump(by_alias=True)
     edge_doc["edges"] = [

@@ -119,11 +119,16 @@ def test_writable_map_covers_every_union_kind() -> None:
 
 
 def test_update_node_writes_identity_summary(tmp_path: Path) -> None:
-    """B-32 end-to-end: the coach can land the one-line summary the face shows
-    on the seeded identity node (kept — no canvas overwrite)."""
+    """B-32 end-to-end: the coach can land the one-line summary the face
+    shows on an identity node it registered (blank-canvas start — the coach
+    creates the node first, D-2026-07-04-P)."""
+    from mashbill.canvas_io import create_node
+
     plot_root = resolve_plot_root(str(tmp_path))
     create_project(plot_root, "alpha", "Alpha")
-    out = update_node(plot_root, "alpha", "foundation", "identity", {"summary": "밝은 응원자"})
+    created = create_node(plot_root, "alpha", "foundation", "identity", {"label": "보이스"})
+    node_id = created["node"]["id"]
+    out = update_node(plot_root, "alpha", "foundation", node_id, {"summary": "밝은 응원자"})
     assert out["node"]["summary"] == "밝은 응원자"
     assert out["rejected_fields"] == []
 

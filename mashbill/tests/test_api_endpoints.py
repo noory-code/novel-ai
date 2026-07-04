@@ -187,10 +187,11 @@ def test_project_delete(app_client: tuple[TestClient, str]) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_canvas_get_returns_seeded_core(
+def test_canvas_get_returns_blank_foundation(
     app_client: tuple[TestClient, str],
 ) -> None:
-    """v0.13 Phase 0: foundation seeds Mission + Core value + Identity (no project)."""
+    """D-2026-07-04-P — blank-canvas start: a fresh foundation GET returns
+    no nodes at all (the Mission/Core value/Identity seeds are gone)."""
     client, project_path = app_client
     _create(client, project_path, "alpha", "Alpha")
     resp = client.get(
@@ -200,8 +201,7 @@ def test_canvas_get_returns_seeded_core(
     assert resp.status_code == 200
     body = resp.json()
     assert body["canvas_kind"] == "foundation"
-    kinds = sorted({n["kind"] for n in body["nodes"] if n.get("kind")})
-    assert kinds == ["core_value", "identity", "mission"]
+    assert body["nodes"] == []
 
 
 def test_canvas_put_round_trips_actor(
@@ -693,7 +693,20 @@ def test_file_put_does_not_touch_canvas(
         "/api/projects/alpha/canvases/foundation",
         params={"project_path": project_path},
     ).json()
-    mission = next(n for n in core_before["nodes"] if n["kind"] == "mission")
+    # Blank-canvas start (D-2026-07-04-P): plant the mission the old seed
+    # used to provide before exercising the file write.
+    core_before["nodes"] = [
+        {
+            "id": "mission",
+            "kind": "mission",
+            "label": "Mission",
+            "x": 0,
+            "y": 0,
+            "width": 200,
+            "height": 90,
+        }
+    ]
+    mission = core_before["nodes"][0]
     mission["details_path"] = "core/mission-mission/details.md"
     client.put(
         "/api/projects/alpha/canvases/foundation",

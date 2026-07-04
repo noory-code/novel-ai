@@ -431,17 +431,18 @@ def test_mission_lands_as_one_line_with_detail_in_the_note() -> None:
     assert "note" in f
 
 
-def test_actors_seed_families_are_renamed_to_domain_words() -> None:
-    """User live-watch (2026-07-04): the coach stayed wedded to the seeded
+def test_actors_families_take_domain_words_from_the_start() -> None:
+    """User live-watch (2026-07-04): the coach stayed wedded to generic
     운영자/사용자 labels — coupang's buyers hung under a generic 사용자
     family ("일반 구매자와 멤버십회원은 구매자로 묶을 수 있죠"), and six
     same-nature externals (광고주, 카드사·은행…) sat as separate top-level
-    families instead of one 파트너/3rd party group. Seeds are placeholders;
-    families take the service's own words; same-nature families nest under
-    one parent so the top level stays a handful."""
+    families instead of one 파트너/3rd party group. Since D-2026-07-04-P the
+    canvas starts EMPTY: families mint in the service's own words from the
+    first registration; same-nature families nest under one parent so the
+    top level stays a handful."""
     p = build_system_prompt("actors")
-    assert "placeholder" in p.lower()
-    assert "rename" in p.lower()
+    assert "starts empty" in p.lower()
+    assert "own word" in p.lower()
     assert "same-nature" in p.lower()
     assert "handful" in p.lower()
     # 8-service sample (2026-07-04): slack kept the generic 사용자 label and
@@ -458,14 +459,25 @@ def test_actors_seed_families_are_renamed_to_domain_words() -> None:
     assert "employment" in p.lower()
 
 
-def test_actors_seeded_families_get_anchor_spokes_too() -> None:
+def test_actors_every_family_gets_an_anchor_spoke() -> None:
     """Coupang verification round (2026-07-04): the coach wired every family
-    it created to the anchor but left the SEEDED 운영자 floating — the only
-    hub-less family on the canvas. Same lesson as B-32: seeded nodes are
-    first-class, rules must name them."""
+    it created to the anchor but left one family floating — the only
+    hub-less family on the canvas. Rules must bind EVERY family, whoever
+    created it and whenever it landed."""
     p = build_system_prompt("actors")
-    assert "seeded" in p.lower()
     assert "every family" in p.lower()
+    assert "anchor line" in p.lower()
+
+
+def test_foundation_and_actors_start_from_an_empty_canvas() -> None:
+    """D-2026-07-04-P — no seed nodes anywhere: the coach must know the
+    canvas starts empty and that IT creates nodes as content lands
+    (capability lesson of 2026-07-04: a rule without the create step fails
+    silently)."""
+    for scope in ("foundation", "actors"):
+        p = build_system_prompt(scope).lower()
+        assert "starts empty" in p, scope
+        assert "create" in p, scope
 
 
 def test_actors_hierarchy_arrow_points_at_the_family() -> None:

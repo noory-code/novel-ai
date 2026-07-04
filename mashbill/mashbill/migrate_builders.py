@@ -34,9 +34,9 @@ from mashbill.models import (
 def _build_foundation_canvas(core_root: _V01SketchNode | None, project_name: str) -> CanvasDoc:
     """Promote v0.1 root text fields (mission / core_values / identity) into
     v0.5 top-level nodes on the Core canvas, and plant the v0.5 Project
-    anchor in the centre. Empty fields get placeholder nodes so the
-    ``_core_canvas_rules`` validator (≥ 1 mission, ≥ 1 identity, exactly
-    1 project) stays happy.
+    anchor in the centre. Empty fields still get placeholder nodes — the
+    content minimums that once required them are gone (D-2026-07-04-P);
+    kept so migrated v0.1 projects keep their historical shape.
     """
     nodes: list[SketchNode] = [
         ProjectNode(

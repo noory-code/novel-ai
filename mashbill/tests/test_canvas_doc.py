@@ -83,28 +83,27 @@ def test_core_canvas_multiple_identities_ok() -> None:
     )
 
 
-def test_core_canvas_missing_mission_rejected() -> None:
-    with pytest.raises(ValueError, match="mission"):
-        CanvasDoc(
-            canvas_id="foundation",
-            canvas_kind="foundation",
-            nodes=[
-                ProjectNode(id="project", label="Project", shape="circle"),
-                IdentityNode(id="identity", label="I"),
-            ],
-        )
+def test_foundation_canvas_blank_ok() -> None:
+    """D-2026-07-04-P — blank-canvas start: every canvas begins EMPTY, so the
+    old ≥1 mission / ≥1 identity content minimums are gone. They forced seed
+    placeholders at create time and rejected the write when the user deleted
+    the last mission/identity node (the 2026-07-04 in-app deletion error)."""
+    CanvasDoc(canvas_id="foundation", canvas_kind="foundation", nodes=[])
 
 
-def test_core_canvas_missing_identity_rejected() -> None:
-    with pytest.raises(ValueError, match="identity"):
-        CanvasDoc(
-            canvas_id="foundation",
-            canvas_kind="foundation",
-            nodes=[
-                ProjectNode(id="project", label="Project", shape="circle"),
-                MissionNode(id="mission", label="M"),
-            ],
-        )
+def test_foundation_canvas_partial_content_ok() -> None:
+    """D-2026-07-04-P — any subset of foundation content is saveable; the
+    coach drives completeness, the schema doesn't."""
+    CanvasDoc(
+        canvas_id="foundation",
+        canvas_kind="foundation",
+        nodes=[MissionNode(id="mission", label="M")],
+    )
+    CanvasDoc(
+        canvas_id="foundation",
+        canvas_kind="foundation",
+        nodes=[IdentityNode(id="identity", label="I")],
+    )
 
 
 def test_core_canvas_missing_project_accepted() -> None:
@@ -305,7 +304,6 @@ def test_core_canvas_actor_kind_rejected() -> None:
 
 
 def test_actors_canvas_two_actors_ok() -> None:
-    """v0.11 — actors canvas requires ≥ 2 actor classes."""
     CanvasDoc(
         canvas_id="actors",
         canvas_kind="actors",
@@ -316,14 +314,16 @@ def test_actors_canvas_two_actors_ok() -> None:
     )
 
 
-def test_actors_canvas_single_actor_rejected() -> None:
-    """v0.11 — IDENTITY.md baseline: ≥ 2 actor classes required."""
-    with pytest.raises(ValueError, match="2 actor"):
-        CanvasDoc(
-            canvas_id="actors",
-            canvas_kind="actors",
-            nodes=[ActorNode(id="user", label="사용자")],
-        )
+def test_actors_canvas_blank_and_single_actor_ok() -> None:
+    """D-2026-07-04-P — blank-canvas start: the v0.11 "≥ 2 actor classes"
+    minimum is gone. It existed only to justify the operator/user seed
+    placeholders and made deleting a seed actor unsaveable."""
+    CanvasDoc(canvas_id="actors", canvas_kind="actors", nodes=[])
+    CanvasDoc(
+        canvas_id="actors",
+        canvas_kind="actors",
+        nodes=[ActorNode(id="buyer", label="구매자", side="user")],
+    )
 
 
 def test_actors_canvas_sub_actor_via_parent_id_ok() -> None:
@@ -438,9 +438,9 @@ def test_overview_actor_rejected() -> None:
 
 
 def _detail_seed(canvas_id: str = "order") -> list[SketchNode]:
-    """Minimum valid feature content: root feature (the drill
-    target — D-2026-06-17-D) + two actor_refs (operator + user) to
-    satisfy IDENTITY.md baseline."""
+    """Typical feature-canvas fixture: root feature (the drill
+    target — D-2026-06-17-D) + two actor_refs. Since D-2026-07-04-P only
+    the root feature is required; the refs are ordinary content."""
     return [
         FeatureNode(id=canvas_id, label="주문"),
         ActorRefNode(
@@ -467,18 +467,17 @@ def test_detail_canvas_minimum_ok() -> None:
     )
 
 
-def test_detail_canvas_zero_actor_refs_rejected() -> None:
-    """v0.27.16 (D-2026-05-28-K) — feature still requires at least
-    one actor_ref. ``≥ 0`` would let a canvas exist with no subject at
-    all, which contradicts D-2026-05-28-J (every step's subject is an
-    actor)."""
-    with pytest.raises(ValueError, match="actor_ref"):
-        CanvasDoc(
-            canvas_id="order",
-            canvas_kind="feature",
-            feature_ref="order",
-            nodes=[ServiceNode(id="order", label="주문")],
-        )
+def test_detail_canvas_zero_actor_refs_ok() -> None:
+    """D-2026-07-04-P — blank-canvas start supersedes the ≥ 1 actor_ref
+    minimum (D-2026-05-28-K): a fresh detail canvas holds only its root
+    feature; the subject chip lands through coaching (D-2026-05-28-J's
+    "every step needs a subject" is coached, not schema-enforced)."""
+    CanvasDoc(
+        canvas_id="order",
+        canvas_kind="feature",
+        feature_ref="order",
+        nodes=[FeatureNode(id="order", label="주문")],
+    )
 
 
 def test_detail_canvas_one_user_actor_ref_ok() -> None:

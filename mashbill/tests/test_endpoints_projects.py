@@ -14,6 +14,7 @@ resolves ``{project_path}/.noory/plot`` itself.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -69,7 +70,7 @@ def test_projects_list_returns_created_project(client: TestClient, workspace: Pa
 # ---------------------------------------------------------------------------
 
 
-def test_project_post_creates_project_and_seeds_canvases(
+def test_project_post_creates_project_and_blank_canvases(
     client: TestClient, workspace: Path
 ) -> None:
     resp = client.post(
@@ -80,12 +81,17 @@ def test_project_post_creates_project_and_seeds_canvases(
     body = resp.json()
     assert body["id"] == "alpha"
     assert body["name"] == "Alpha"
-    # Side effect: the four seed canvases are on disk. S2 flat layout
-    # (D-2026-06-21-AB) — a lone project's files live directly under plot_root.
+    # Side effect: the four canvases are on disk — and EMPTY (D-2026-07-04-P,
+    # blank-canvas start). S2 flat layout (D-2026-06-21-AB) — a lone project's
+    # files live directly under plot_root.
     plot_root = resolve_plot_root(str(workspace))
     assert (plot_root / "project.json").exists()
     for kind in ("foundation", "actors", "services", "entities"):
-        assert (plot_root / kind / "canvas.json").exists(), kind
+        canvas_file = plot_root / kind / "canvas.json"
+        assert canvas_file.exists(), kind
+        doc = json.loads(canvas_file.read_text(encoding="utf-8"))
+        assert doc["nodes"] == [], kind
+        assert doc["edges"] == [], kind
 
 
 def test_project_post_requires_project_path(client: TestClient) -> None:
@@ -456,24 +462,22 @@ def test_git_init_requires_project_path(client: TestClient) -> None:
     assert resp.status_code == 400
 
 
-def test_create_project_seeds_localized_labels(tmp_path: Path) -> None:
-    """B-19 (user live-watch, twice): a Korean project's seed placeholders hung
-    off the anchor as English "Mission" / "Core value" / "Voice" (+ actors
-    "Operator" / "User"). The viewer knows its locale — it passes it at
-    creation and the seeds mint in that language; default stays English."""
+def test_create_project_starts_blank_regardless_of_locale(tmp_path: Path) -> None:
+    """D-2026-07-04-P (user directive): no seed placeholders at all — every
+    canvas starts EMPTY, whatever the locale. Subsumes B-19 (English seed
+    labels on a Korean project): with no labels minted, none can be wrong.
+    ``locale`` stays on the wire for API compat."""
     from mashbill.canvas_io import read_canvas
     from mashbill.project_io import create_project
 
-    ko_dir = tmp_path / "ko"
-    ko_dir.mkdir()
-    create_project(ko_dir, "ko-proj", "테스트", locale="ko")
-    fnd = {n.id: n.label for n in read_canvas(ko_dir, "ko-proj", "foundation").nodes}
-    assert fnd == {"mission": "미션", "core-value-1": "코어밸류", "identity": "보이스"}
-    act = {n.id: n.label for n in read_canvas(ko_dir, "ko-proj", "actors").nodes}
-    assert set(act.values()) == {"운영자", "사용자"}
-
-    en_dir = tmp_path / "en"
-    en_dir.mkdir()
-    create_project(en_dir, "en-proj", "test")  # no locale → English unchanged
-    fnd_en = {n.label for n in read_canvas(en_dir, "en-proj", "foundation").nodes}
-    assert fnd_en == {"Mission", "Core value", "Voice"}
+    for locale, sub in (("ko", "ko"), (None, "en")):
+        d = tmp_path / sub
+        d.mkdir()
+        if locale is None:
+            create_project(d, f"{sub}-proj", "test")
+        else:
+            create_project(d, f"{sub}-proj", "테스트", locale=locale)
+        for kind in ("foundation", "actors", "services", "entities"):
+            canvas = read_canvas(d, f"{sub}-proj", kind)
+            assert canvas.nodes == [], (sub, kind)
+            assert canvas.edges == [], (sub, kind)

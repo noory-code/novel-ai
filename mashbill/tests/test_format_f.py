@@ -20,10 +20,47 @@ def plot_root(tmp_path: Path) -> Path:
     return resolve_plot_root(str(tmp_path))
 
 
+def _plant_baseline(plot_root: Path, project_id: str = "alpha") -> None:
+    """Blank-canvas start (D-2026-07-04-P): canvases are created EMPTY, so
+    plant the classic content the old seeds used to provide — publish tests
+    need a mission / core value / identity and two actors to render."""
+    from mashbill.folder_io import write_canvas
+    from mashbill.models import ActorNode, CoreValueNode, IdentityNode, MissionNode
+
+    foundation = read_canvas(plot_root, project_id, "foundation")
+    write_canvas(
+        plot_root,
+        project_id,
+        foundation.model_copy(
+            update={
+                "nodes": [
+                    MissionNode(id="mission", label="Mission"),
+                    CoreValueNode(id="core-value-1", label="Core value"),
+                    IdentityNode(id="identity", label="Voice"),
+                ]
+            }
+        ),
+    )
+    actors = read_canvas(plot_root, project_id, "actors")
+    write_canvas(
+        plot_root,
+        project_id,
+        actors.model_copy(
+            update={
+                "nodes": [
+                    ActorNode(id="operator", label="운영자", side="operator"),
+                    ActorNode(id="user", label="사용자", side="user"),
+                ]
+            }
+        ),
+    )
+
+
 def test_publish_project_snapshot_writes_vp1(plot_root: Path) -> None:
     from mashbill.format_f import publish_project_snapshot
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     m = publish_project_snapshot(plot_root, "alpha")
 
     assert m["format_f_version"] == 1
@@ -51,6 +88,7 @@ def test_foundation_design_renders_primary_statements(plot_root: Path) -> None:
     from mashbill.format_f import publish_project_snapshot
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     foundation = read_canvas(plot_root, "alpha", "foundation")
     enriched = []
     for n in foundation.nodes:
@@ -80,6 +118,7 @@ def test_foundation_hash_tracks_primary_statement(plot_root: Path) -> None:
     from mashbill.format_f import publish_project_snapshot
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     m1 = publish_project_snapshot(plot_root, "alpha")
     h1 = next(e["hash"] for e in m1["elements"] if e["id"] == "mission")
 
@@ -102,6 +141,7 @@ def test_entity_design_renders_summary(plot_root: Path) -> None:
     from mashbill.models import EntityNode
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     entities = read_canvas(plot_root, "alpha", "entities")
     write_canvas(
         plot_root,
@@ -137,6 +177,7 @@ def test_actors_design_renders_relationships(plot_root: Path) -> None:
     from mashbill.models import SketchEdge
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     actors = read_canvas(plot_root, "alpha", "actors")
     write_canvas(
         plot_root,
@@ -160,7 +201,7 @@ def test_actors_design_renders_relationships(plot_root: Path) -> None:
     md = (plot_root / "published" / "_project" / "vP1" / "design" / "actors.md").read_text(
         encoding="utf-8"
     )
-    assert "Operator" in md and "User" in md
+    assert "운영자" in md and "사용자" in md
     assert "serves" in md
 
 
@@ -170,6 +211,7 @@ def test_service_design_surfaces_refs(plot_root: Path) -> None:
     from mashbill.format_f import publish_project_snapshot, publish_service
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     _add_service_referencing_seeds(plot_root)
     publish_project_snapshot(plot_root, "alpha")
     m = publish_service(plot_root, "alpha", "svc-auth")
@@ -188,6 +230,7 @@ def test_service_refs_anchor_to_project_mission(plot_root: Path) -> None:
     from mashbill.format_f import publish_project_snapshot, publish_service
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     _add_service_referencing_seeds(plot_root)
     vp = publish_project_snapshot(plot_root, "alpha")
     assert any(e["id"] == "mission" for e in vp["elements"])  # mission lives in vP
@@ -199,6 +242,7 @@ def test_snapshot_release_bumps(plot_root: Path) -> None:
     from mashbill.format_f import publish_project_snapshot
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     assert publish_project_snapshot(plot_root, "alpha")["release"] == "vP1"
     assert publish_project_snapshot(plot_root, "alpha")["release"] == "vP2"
 
@@ -308,6 +352,7 @@ def test_publish_service_includes_feature_elements(plot_root: Path) -> None:
     from mashbill.format_f import publish_project_snapshot, publish_service
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     _add_service_with_features(plot_root)
     publish_project_snapshot(plot_root, "alpha")
     m = publish_service(plot_root, "alpha", "svc-auth")
@@ -327,6 +372,7 @@ def test_feature_design_renders_capability_and_flow(plot_root: Path) -> None:
     from mashbill.format_f import publish_project_snapshot, publish_service
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     _add_service_with_features(plot_root)
     publish_project_snapshot(plot_root, "alpha")
     m = publish_service(plot_root, "alpha", "svc-auth")
@@ -364,6 +410,7 @@ def test_feature_element_hash_tracks_flow_change(plot_root: Path) -> None:
     from mashbill.format_f import publish_project_snapshot, publish_service
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     _add_service_with_features(plot_root)
     publish_project_snapshot(plot_root, "alpha")
     m1 = publish_service(plot_root, "alpha", "svc-auth")
@@ -389,6 +436,7 @@ def test_service_entity_refs_collected_from_steps(plot_root: Path) -> None:
     from mashbill.models import EntityNode
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     entities = read_canvas(plot_root, "alpha", "entities")
     write_canvas(
         plot_root,
@@ -419,6 +467,7 @@ def test_publish_service_with_dangling_entity_ref_is_rejected(plot_root: Path) -
     from mashbill.format_f import publish_project_snapshot, publish_service
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     _add_service_with_features(plot_root)
     detail = read_canvas(plot_root, "alpha", "feature", service_id="feat-login")
     wired = [
@@ -436,6 +485,7 @@ def test_publish_service_release_refs_into_vp(plot_root: Path) -> None:
     from mashbill.format_f import publish_project_snapshot, publish_service
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     _add_service_referencing_seeds(plot_root)
     publish_project_snapshot(plot_root, "alpha")  # vP1 (bootstrap)
     m = publish_service(plot_root, "alpha", "svc-auth")
@@ -460,6 +510,7 @@ def test_publish_service_without_vp_is_rejected(plot_root: Path) -> None:
     from mashbill.format_f import publish_service
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     _add_service_referencing_seeds(plot_root)
     with pytest.raises(ValueError, match="snapshot"):
         publish_service(plot_root, "alpha", "svc-auth")
@@ -473,6 +524,7 @@ def test_publish_service_with_dangling_ref_is_rejected(plot_root: Path) -> None:
     from mashbill.models import ServiceNode
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     publish_project_snapshot(plot_root, "alpha")  # vP1 has the seeded actors only
     svc = ServiceNode(
         id="svc-x",
@@ -501,6 +553,7 @@ def test_manifest_contract_shape_is_pinned(plot_root: Path) -> None:
     assert FORMAT_F_VERSION == 1
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     _add_service_referencing_seeds(plot_root)
     vp = publish_project_snapshot(plot_root, "alpha")
     assert set(vp) >= {"format_f_version", "scope", "release", "git_sha", "elements"}
@@ -543,6 +596,7 @@ def test_minted_slug_is_stable_across_label_change(plot_root: Path) -> None:
     from mashbill.format_f import mint_slug
 
     create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
     foundation = read_canvas(plot_root, "alpha", "foundation")
     cv = next(n for n in foundation.nodes if n.kind == "core_value")
     s1 = mint_slug(plot_root, "alpha", cv)

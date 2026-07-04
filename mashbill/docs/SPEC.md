@@ -37,6 +37,19 @@ The term **"project"** in user-facing strings means "one service in the
 monorepo" — not "the monorepo as a whole". Workspace-level affordances
 ("open another workspace", "the workspace path") refer to the monorepo.
 
+**Blank-canvas start (D-2026-07-04-P).** `create_project` writes the four
+primary canvases (Foundation / Actors / Services / Entities) **empty** —
+no seed nodes, no seed edges; only the synthetic project anchor
+(`ProjectDoc.anchors`) is present. Auto-created feature detail canvases
+carry only their root feature node. The former content minimums
+(foundation ≥ 1 mission / ≥ 1 identity; actors ≥ 2; feature ≥ 1
+actor_ref) are removed with the seeds: any subset of content is saveable —
+deleting the last node of a kind must not reject the write. Completeness
+is the coach's job, not the schema's. First-of-kind foundation pillars
+drop on their pinned side (mission top / core value left / identity
+right — `placement._FIRST_OF_KIND_XY`, one side SSOT with
+`edge_io.anchor_side_by_kind`, D-2026-07-04-D).
+
 - **Effective project path** — per-project server I/O (canvas read/write,
   anchors, tags, publish) addresses `<root>/<project dir>`, not the bare
   root. Switching to a project in a **different directory** reconnects the

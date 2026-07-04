@@ -4,6 +4,30 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.163.0] — 2026-07-04
+
+### Changed
+
+- **Blank-canvas start** (D-2026-07-04-P, user directive "각 캔버스에 초기
+  노드들 … 다 없애버리세요"): `create_project` writes all four primary
+  canvases EMPTY, and auto-created feature details carry only their root
+  feature node (supersedes D-2026-07-04-M's single subject chip). Coach
+  framings state the canvas starts empty and the coach creates nodes as
+  content lands. First-of-kind foundation pillars keep their pinned side
+  (mission top / core value left / identity right) via
+  `placement._FIRST_OF_KIND_XY` — one side SSOT with the anchor spoke pins.
+
+### Removed
+
+- **Seed placeholders** — foundation Mission/Core value/Voice (+ anchor
+  edges, D-2026-06-21-H), actors Operator/User (v0.11), and the B-19
+  locale minting table (nothing left to localize).
+- **Content-minimum validators** — foundation ≥ 1 mission / ≥ 1 identity,
+  actors ≥ 2 actors, feature ≥ 1 actor_ref (D-2026-05-28-K). They forced
+  the seeds and rejected the write when the user deleted the last node of
+  a kind (the 2026-07-04 in-app deletion error). Completeness is coached,
+  not schema-enforced.
+
 ## [0.162.0] — 2026-07-04
 
 ### Changed

@@ -398,7 +398,7 @@ def create_node(
     kind's typed text; structural / visual / reference / server fields are
     rejected and returned under ``rejected_fields``), then ``read_canvas`` →
     append the one node → re-validate the **whole** ``CanvasDoc`` (unique ids,
-    kind allow-list, per-canvas minimums, edge refs) → atomic :func:`write_canvas`.
+    kind allow-list, edge refs) → atomic :func:`write_canvas`.
     Every other node and all edges are written back unchanged (clobber-safe).
 
     The node is **bare**: it carries no edges and no containment — those are

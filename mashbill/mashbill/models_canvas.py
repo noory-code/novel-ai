@@ -171,16 +171,10 @@ class CanvasDoc(BaseModel):
         # v0.26.0 (D-2026-05-25-A) — parent_id checks removed alongside
         # the field. Project-node top-levelness is now implicit (no
         # incoming directed edge); not validated at schema level.
-        missions = [n for n in self.nodes if n.kind == "mission"]
-        identities = [n for n in self.nodes if n.kind == "identity"]
-        if len(missions) < 1:
-            raise ValueError(
-                f"foundation canvas requires at least one mission node; found {len(missions)}"
-            )
-        if len(identities) < 1:
-            raise ValueError(
-                f"foundation canvas requires at least one identity node; found {len(identities)}"
-            )
+        # D-2026-07-04-P — the ≥1 mission / ≥1 identity content minimums are
+        # gone (blank-canvas start): completeness is coached, not
+        # schema-enforced, and the minimums made deleting the last
+        # mission/identity node unsaveable.
         return self
 
     # v0.26.0 (D-2026-05-25-A) — ``_services_canvas_rules`` removed.
@@ -213,43 +207,12 @@ class CanvasDoc(BaseModel):
         # validated at schema level.
         return self
 
-    @model_validator(mode="after")
-    def _actors_canvas_minimum(self) -> CanvasDoc:
-        # v0.11 — IDENTITY.md "Service minimum baseline": every project needs
-        # ≥ 2 actor classes (typically operator + user). Without two sides,
-        # value exchange can't happen.
-        if self.canvas_kind != "actors":
-            return self
-        actors = [n for n in self.nodes if n.kind == "actor"]
-        if len(actors) < 2:
-            raise ValueError(
-                f"actors canvas requires at least 2 actor classes "
-                f"(operator + user), got {len(actors)}. See IDENTITY.md."
-            )
-        return self
-
-    @model_validator(mode="after")
-    def _feature_actor_refs_minimum(self) -> CanvasDoc:
-        # v0.27.16 (D-2026-05-28-K) — loosened from ≥ 2 to ≥ 1.
-        # Per D-2026-05-28-J the operator side of a service is the
-        # *service itself* (not a separate Admin / System actor),
-        # so a single user-side actor_ref is enough. The pre-v0.27.16
-        # rule ("≥ 2: operator + user") forced an Admin placeholder
-        # on canvases that semantically had no second human actor,
-        # which the user flagged as a category error on 2026-05-28.
-        # We keep ≥ 1 because every step needs a subject (D-2026-05-28-J);
-        # zero actor_refs means there's no one doing the steps.
-        if self.canvas_kind != "feature":
-            return self
-        actor_refs = [n for n in self.nodes if n.kind == "actor_ref"]
-        if len(actor_refs) < 1:
-            raise ValueError(
-                f"feature {self.canvas_id!r} requires at least 1 "
-                f"actor_ref node (the subject of the service's steps), "
-                f"got 0. See SPEC.md §Service composition model "
-                f"(D-2026-05-28-J)."
-            )
-        return self
+    # D-2026-07-04-P — ``_actors_canvas_minimum`` (v0.11 "≥ 2 actor classes")
+    # and ``_feature_actor_refs_minimum`` (D-2026-05-28-K "≥ 1 actor_ref")
+    # removed: blank-canvas start. Content minimums forced seed placeholders
+    # at create time and rejected the write when the user deleted the last
+    # actor / subject chip; "every step needs a subject" (D-2026-05-28-J)
+    # is coached, not schema-enforced.
 
 
 class AnchorPlacement(BaseModel):

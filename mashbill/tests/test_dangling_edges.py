@@ -67,11 +67,12 @@ def test_drop_dangling_edges_is_noop_when_clean(plot_root: Path) -> None:
 def test_read_canvas_loads_canvas_with_dangling_edge_on_disk(plot_root: Path) -> None:
     """End-to-end: a canvas.json corrupted with a dangling edge opens (no 400)."""
     create_project(plot_root, "alpha", "Alpha")
-    # Corrupt the seeded (valid) actors canvas with a dangling edge on disk.
+    # Blank-canvas start (D-2026-07-04-P): plant one actor, then corrupt the
+    # canvas with a dangling edge on disk.
     path = _canvas_file(plot_root, "alpha", "actors", None)
     raw = _read_json(path)
-    first_node = raw["nodes"][0]["id"]
-    raw["edges"] = [{"id": "e_bad", "source": first_node, "target": "ghost"}]
+    raw["nodes"] = [{"id": "a1", "kind": "actor", "label": "구매자", "x": 0, "y": 0}]
+    raw["edges"] = [{"id": "e_bad", "source": "a1", "target": "ghost"}]
     _write_json(path, raw)
 
     loaded = read_canvas(plot_root, "alpha", "actors")

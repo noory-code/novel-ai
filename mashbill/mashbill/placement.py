@@ -14,6 +14,20 @@ _FRESH_X = 160.0
 _FRESH_Y0 = 120.0
 _FRESH_DY = 80.0
 
+# D-2026-07-04-D — one side SSOT: the FIRST foundation pillar of a kind starts
+# on the side its anchor spoke pins to (``edge_io.anchor_side_by_kind``:
+# mission top, core_value left, identity right), so placement, pins, and
+# layout agree. The seeds used to anchor these clusters; with blank-canvas
+# start (D-2026-07-04-P) the first-of-kind drop carries the side itself.
+# Coordinates = the retired seeds' spots (the layout SSOT around the 0,0
+# anchor). These kinds exist only on the foundation canvas, so keying on
+# kind alone is safe.
+_FIRST_OF_KIND_XY: dict[str, tuple[float, float]] = {
+    "mission": (-100.0, -220.0),
+    "core_value": (-340.0, -40.0),
+    "identity": (140.0, -45.0),
+}
+
 
 def _compute_fresh_position(existing: list[SketchNode], kind: str) -> tuple[float, float]:
     """Where a new ``kind`` node is dropped on a canvas that already holds
@@ -23,15 +37,20 @@ def _compute_fresh_position(existing: list[SketchNode], kind: str) -> tuple[floa
     thinking-through-sight, so a new node must JOIN the visual group of its kind,
     not land at a fixed generic spot ignoring where the siblings actually sit.
     When same-kind nodes exist, left-align to that cluster and drop just below its
-    lowest member (stacking the group downward). Only the first node of a kind
-    (no siblings yet) uses the generic drop lane, staggered by total node count so
-    distinct first-of-kind creates don't overlap. Best-effort — last-write-wins
-    means two *concurrent* creates can still collide (named limit, D-2026-06-27-B)."""
+    lowest member (stacking the group downward). The first node of a kind
+    (no siblings yet) starts on its pinned side when it has one
+    (``_FIRST_OF_KIND_XY``), else uses the generic drop lane, staggered by total
+    node count so distinct first-of-kind creates don't overlap. Best-effort —
+    last-write-wins means two *concurrent* creates can still collide (named
+    limit, D-2026-06-27-B)."""
     same_kind = [n for n in existing if n.kind == kind]
     if same_kind:
         x = min(n.x for n in same_kind)
         y = max(n.y for n in same_kind) + _FRESH_DY
         return x, y
+    pinned = _FIRST_OF_KIND_XY.get(kind)
+    if pinned is not None:
+        return pinned
     return _FRESH_X, _FRESH_Y0 + _FRESH_DY * len(existing)
 
 

@@ -39,6 +39,40 @@
 
 ## Log
 
+### D-2026-07-04-P — blank-canvas start: all seeds and content minimums removed
+
+- **What:** `create_project` writes the four primary canvases EMPTY — the
+  foundation Mission/Core value/Voice seeds (+ anchor edges,
+  D-2026-06-21-H), the actors Operator/User pair (v0.11), and their locale
+  minting (B-19) are gone; auto-created feature details carry only the root
+  feature node (supersedes D-2026-07-04-M's single subject chip). The
+  content minimums that forced the seeds are removed with them:
+  foundation ≥ 1 mission / ≥ 1 identity, actors ≥ 2 actors
+  (v0.11), feature ≥ 1 actor_ref (D-2026-05-28-K) — any subset of content
+  is saveable; D-2026-05-28-J's "every step needs a subject" is coached,
+  not schema-enforced. First-of-kind foundation pillars keep their pinned
+  side via `placement._FIRST_OF_KIND_XY` (one side SSOT with the anchor
+  spoke pins, D-2026-07-04-D). Coach framings now state the canvas starts
+  empty and that the coach creates nodes as content lands. Existing
+  projects are untouched (no migration — silent node removal would violate
+  the no-silent-change rule); their seeds are now simply deletable.
+- **Why:** user directive (2026-07-04, live app session): "각 캔버스에 초기
+  노드들 들어가는데 그거 다 없애버리세요." The same session surfaced the
+  minimums' failure mode: deleting a node errored ("에러가 나네.. 노드 삭제
+  동작할때") because dropping below a minimum rejected the whole write.
+  Seeds also kept re-committing the placeholder-residue class of defects
+  (B-19 English labels, generic 사용자 families).
+- **Approval:** Accepted by user (live directive, 2026-07-04).
+- **Spec impact:** SPEC §Blank-canvas start; root `specs/canvas-behavior.md`
+  §공통; tests: `test_foundation_canvas_blank_ok`,
+  `test_actors_canvas_blank_and_single_actor_ok`,
+  `test_detail_canvas_zero_actor_refs_ok`,
+  `test_create_project_*_starts_blank`,
+  `test_create_project_starts_blank_regardless_of_locale`,
+  `test_sync_creates_detail_with_only_root_feature`,
+  `test_foundation_and_actors_start_from_an_empty_canvas`,
+  `test_fresh_foundation_pillars_start_on_their_pinned_side` (kept green).
+
 ### D-2026-07-04-O — peer lines attach at closest facing sides (B-36, supersedes part of C)
 
 - **What:** create_edge stops pinning handles on node-to-node lines

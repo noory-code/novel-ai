@@ -11,16 +11,7 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 from mashbill.canvas_io import list_feature_details, read_canvas, write_canvas  # noqa: F401
-from mashbill.models import (
-    ActorNode,
-    CanvasDoc,
-    CoreValueNode,
-    IdentityNode,
-    MissionNode,
-    ProjectDoc,
-    SketchEdge,
-)
-from mashbill.models_foundation import PROJECT_ANCHOR_ID
+from mashbill.models import CanvasDoc, CanvasKind, ProjectDoc
 from mashbill.storage import (  # noqa: F401
     _canvas_file,
     _ensure_project,
@@ -62,158 +53,30 @@ def rename_project(plot_root: Path, project_id: str, new_name: str) -> ProjectDo
 # ---------------------------------------------------------------------------
 
 
-# B-19 (user live-watch, 2026-07-04): seed placeholder labels mint in the
-# viewer's locale — a Korean project must not hang English "Mission" /
-# "Core value" / "Voice" / "Operator" / "User" off the anchor. English is
-# the default (API compat); the viewer passes its i18n locale at creation.
-_SEED_LABELS: dict[str, dict[str, str]] = {
-    "en": {
-        "mission": "Mission",
-        "core_value": "Core value",
-        "identity": "Voice",
-        "operator": "Operator",
-        "user": "User",
-    },
-    "ko": {
-        "mission": "미션",
-        "core_value": "코어밸류",
-        "identity": "보이스",
-        "operator": "운영자",
-        "user": "사용자",
-    },
-}
+_PRIMARY_CANVASES: tuple[CanvasKind, ...] = ("foundation", "actors", "services", "entities")
 
 
-def _seed_labels(locale: str) -> dict[str, str]:
-    return _SEED_LABELS.get(locale, _SEED_LABELS["en"])
+def _blank_canvas(canvas_kind: CanvasKind) -> CanvasDoc:
+    """D-2026-07-04-P — every canvas starts EMPTY (user directive 2026-07-04).
 
-
-def _seed_foundation_canvas(project_name: str, locale: str = "en") -> CanvasDoc:  # noqa: ARG001
-    """Minimum valid Foundation canvas — Mission / Core Value / Identity.
-
-    v0.13 Phase 0: the Project anchor is no longer a node here. It lives in
-    ``ProjectDoc.anchors["foundation"]`` and is rendered by the viewer at
-    display time. ``project_name`` argument retained for signature stability
-    but unused.
+    The former seed placeholders (foundation Mission/Core value/Voice +
+    anchor edges per D-2026-06-21-H; actors Operator/User per v0.11) and
+    their locale minting (B-19) are gone: content lands only through the
+    conversation / the user's hand, and the content-minimum validators that
+    forced the seeds were removed alongside. The project anchor is not a
+    node — it lives in ``ProjectDoc.anchors``, rendered by the viewer.
     """
-    labels = _seed_labels(locale)
-    # D-2026-06-21-H — initial layout around the centre anchor (0,0): Mission on
-    # top, Core Value on the left, Identity on the right, with an edge from the
-    # project anchor out to each. (Revisits the v0.13.2 auto-edge rollback — now
-    # explicitly user-requested, no longer YAGNI.)
-    return CanvasDoc(
-        canvas_id="foundation",
-        canvas_kind="foundation",
-        nodes=[
-            MissionNode(
-                id="mission",
-                label=labels["mission"],
-                x=-100,
-                y=-220,
-                width=200,
-                height=90,
-                color="#fef3c7",
-                shape="rounded",
-            ),
-            CoreValueNode(
-                id="core-value-1",
-                label=labels["core_value"],
-                x=-340,
-                y=-40,
-                width=180,
-                height=80,
-                color="#fde68a",
-                shape="rounded",
-            ),
-            IdentityNode(
-                id="identity",
-                label=labels["identity"],
-                x=140,
-                y=-45,
-                width=200,
-                height=90,
-                color="#fed7aa",
-                shape="rounded",
-            ),
-        ],
-        edges=[
-            SketchEdge(
-                id=f"anchor-{target}",
-                source=PROJECT_ANCHOR_ID,
-                target=target,
-                directed=True,
-                relation="flow",
-            )
-            for target in ("mission", "core-value-1", "identity")
-        ],
-    )
+    return CanvasDoc(canvas_id=canvas_kind, canvas_kind=canvas_kind, nodes=[])
 
 
-def _seed_actors_canvas(project_name: str, locale: str = "en") -> CanvasDoc:  # noqa: ARG001
-    """v0.11 — actors canvas seeds with two placeholder classes ("Operator"
-    and "User") to satisfy the IDENTITY.md "≥ 2 actor classes" minimum.
-
-    v0.13 Phase 0: project anchor moved to ``ProjectDoc.anchors``; not seeded
-    here.
-    """
-    labels = _seed_labels(locale)
-    return CanvasDoc(
-        canvas_id="actors",
-        canvas_kind="actors",
-        nodes=[
-            ActorNode(
-                id="operator",
-                label=labels["operator"],
-                side="operator",
-                x=-260,
-                y=-50,
-                width=140,
-                height=80,
-                color="#bae6fd",
-                shape="rounded",
-            ),
-            ActorNode(
-                id="user",
-                label=labels["user"],
-                side="user",
-                x=140,
-                y=-50,
-                width=140,
-                height=80,
-                color="#fecaca",
-                shape="rounded",
-            ),
-        ],
-    )
-
-
-def _seed_services_canvas(project_name: str) -> CanvasDoc:  # noqa: ARG001
-    """v0.13 Phase 0: services canvas starts empty (project anchor moved to
-    ``ProjectDoc.anchors``). Categories + services are added by the user.
-    """
-    return CanvasDoc(
-        canvas_id="services",
-        canvas_kind="services",
-        nodes=[],
-    )
-
-
-def _seed_entities_canvas(project_name: str) -> CanvasDoc:  # noqa: ARG001
-    """D-2026-06-17-I: entities canvas starts EMPTY (project anchor lives in
-    ``ProjectDoc.anchors``). Entities are populated last — an AI-maintained,
-    derived surface — never hand-authored at create time (settled: symmetric
-    to services seeding).
-    """
-    return CanvasDoc(
-        canvas_id="entities",
-        canvas_kind="entities",
-        nodes=[],
-    )
-
-
-def create_project(plot_root: Path, project_id: str, name: str, locale: str = "en") -> ProjectDoc:
-    """Create a fresh project folder, seeded with Foundation / Actors /
-    Services / Entities.
+def create_project(
+    plot_root: Path,
+    project_id: str,
+    name: str,
+    locale: str = "en",  # noqa: ARG001 — kept on the wire (viewer passes it); no seeds to localize since D-2026-07-04-P
+) -> ProjectDoc:
+    """Create a fresh project folder with the four canvases — all BLANK
+    (Foundation / Actors / Services / Entities, D-2026-07-04-P).
 
     v0.8 layout: one folder per project (``.plot/{project_id}/``) with a
     subfolder per canvas kind. Each canvas folder holds a ``canvas.json``.
@@ -255,22 +118,11 @@ def create_project(plot_root: Path, project_id: str, name: str, locale: str = "e
     )
     _write_json(_project_file(plot_root, project_id), proj.model_dump())
 
-    _write_json(
-        _canvas_file(plot_root, project_id, "foundation"),
-        _seed_foundation_canvas(proj.name, locale).model_dump(by_alias=True),
-    )
-    _write_json(
-        _canvas_file(plot_root, project_id, "actors"),
-        _seed_actors_canvas(proj.name, locale).model_dump(by_alias=True),
-    )
-    _write_json(
-        _canvas_file(plot_root, project_id, "services"),
-        _seed_services_canvas(proj.name).model_dump(by_alias=True),
-    )
-    _write_json(
-        _canvas_file(plot_root, project_id, "entities"),
-        _seed_entities_canvas(proj.name).model_dump(by_alias=True),
-    )
+    for canvas_kind in _PRIMARY_CANVASES:
+        _write_json(
+            _canvas_file(plot_root, project_id, canvas_kind),
+            _blank_canvas(canvas_kind).model_dump(by_alias=True),
+        )
     # v0.13 Phase 2 — write per-kind JSON Schema + MD template files into
     # ``.plot/{proj}/schema/`` so external tools (Obsidian YAML LSP, custom
     # validators) can verify Foundation node files.

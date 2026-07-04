@@ -10,10 +10,7 @@ import json
 from pathlib import Path
 
 from mashbill.canvas_io import list_feature_details, read_canvas, write_canvas  # noqa: F401
-from mashbill.models import (
-    ActorRefNode,
-    CanvasDoc,
-)
+from mashbill.models import CanvasDoc
 from mashbill.storage import (  # noqa: F401
     _canvas_file,
     _ensure_project,
@@ -61,24 +58,11 @@ def sync_details_with_overview(plot_root: Path, project_id: str) -> dict[str, li
             if child.is_dir() and child.name != "_archive" and (child / "detail.json").is_file():
                 existing_details.add(child.name)
 
-    # D-2026-07-04-M (user live review): the old seed planted TWO English
-    # stubs ("→ Operator" / "→ User"). The Operator stub re-committed the
-    # category error D-2026-05-28-J retired (the operator side IS the
-    # service, validator minimum is ≥ 1 since D-2026-05-28-K), and the
-    # other ignored the project's real actors. Seed ONE ref pointing at
-    # the first user-side actor under its CURRENT label — the coach or
-    # user re-picks/adds as the flow design develops.
-    try:
-        actors_canvas = read_canvas(plot_root, project_id, "actors")
-        subject = next(
-            (n for n in actors_canvas.nodes if getattr(n, "side", None) == "user"),
-            actors_canvas.nodes[0] if actors_canvas.nodes else None,
-        )
-    except FileNotFoundError:
-        subject = None
-    subject_id = subject.id if subject else "user"
-    subject_label = subject.label if subject else "User"
-
+    # D-2026-07-04-P — blank-canvas start: a fresh detail carries ONLY its
+    # root feature node. (Supersedes D-2026-07-04-M's single user-side chip,
+    # which itself replaced two fake English stubs: with no seed actors there
+    # is nothing truthful to point at — the subject chip lands through
+    # coaching; D-2026-05-28-J's "every step needs a subject" is coached.)
     created: list[str] = []
     for feature_id in sorted(overview_feature_ids - existing_details):
         src = next(n for n in overview.nodes if n.id == feature_id)
@@ -91,16 +75,6 @@ def sync_details_with_overview(plot_root: Path, project_id: str) -> dict[str, li
                 # feature root carries no structural parent
                 # (is_root marks the canvas anchor).
                 src.model_copy(update={"is_root": False}),
-                ActorRefNode(
-                    id=f"{feature_id}-user-ref",
-                    label=f"→ {subject_label}",
-                    ref_actor_id=subject_id,
-                    side="user",
-                    color="#fecaca",
-                    shape="rectangle",
-                    width=140,
-                    height=70,
-                ),
             ],
         )
         _write_json(
@@ -148,8 +122,9 @@ def sync_details_with_overview(plot_root: Path, project_id: str) -> dict[str, li
 
 def _detail_has_user_authored_content(detail_dir: Path, feature_id: str) -> bool:
     """v0.27.14 (D-2026-05-28-I) — return True iff the feature's
-    ``detail.json`` contains anything beyond the default seeded shape
-    (root feature node + 2 actor_refs, no edges).  Used by
+    ``detail.json`` contains anything beyond the auto-created shape (the
+    root feature node, no edges; legacy actor_ref seed ids from the
+    pre-D-2026-07-04-P shapes still count as non-user content). Used by
     ``sync_details_with_overview`` to refuse to archive details the
     user has invested work in.
     """

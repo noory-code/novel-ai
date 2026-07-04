@@ -77,55 +77,25 @@ def test_read_project_with_wrong_id_raises(plot_root: Path) -> None:
         read_project(plot_root, "bravo")
 
 
-def test_create_project_seeds_foundation_without_project_node(plot_root: Path) -> None:
-    """v0.13 Phase 0: project anchor moved to ProjectDoc.anchors. Foundation
-    canvas seeds Mission + Core value + Identity pillars only — no project node.
-    """
+def test_create_project_foundation_starts_blank(plot_root: Path) -> None:
+    """D-2026-07-04-P — blank-canvas start: no Mission/Core value/Identity
+    seeds and no anchor edges (supersedes the D-2026-06-21-H seed layout).
+    Content lands only through the conversation / the user's hand."""
     create_project(plot_root, "alpha", "Alpha")
     foundation = read_canvas(plot_root, "alpha", "foundation")
-    kinds = sorted({n.kind for n in foundation.nodes if n.kind is not None})
-    assert kinds == ["core_value", "identity", "mission"]
-    # v0.26.0 (D-2026-05-25-A) — parent_id field removed; the prior
-    # "all peers" check is now trivially satisfied by the field's
-    # absence.
-    assert not any(hasattr(n, "parent_id") for n in foundation.nodes)
-    assert all(n.kind != "project" for n in foundation.nodes)
+    assert foundation.canvas_kind == "foundation"
+    assert foundation.nodes == []
+    assert foundation.edges == []
 
 
-def test_create_project_foundation_layout_and_anchor_edges(plot_root: Path) -> None:
-    """D-2026-06-21-H — initial Foundation layout = Mission on top, Core Value
-    on the left, Identity on the right, with an edge from the project anchor to
-    each (around the centre anchor at 0,0)."""
-    from mashbill.models_foundation import PROJECT_ANCHOR_ID
-
-    create_project(plot_root, "alpha", "Alpha")
-    f = read_canvas(plot_root, "alpha", "foundation")
-    by_id = {n.id: n for n in f.nodes}
-    mission, cv, identity = by_id["mission"], by_id["core-value-1"], by_id["identity"]
-
-    def cx(n: object) -> float:
-        return n.x + n.width / 2  # type: ignore[attr-defined]
-
-    def cy(n: object) -> float:
-        return n.y + n.height / 2  # type: ignore[attr-defined]
-
-    # Mission is the topmost (smallest centre-y = highest on screen).
-    assert cy(mission) < cy(cv) and cy(mission) < cy(identity)
-    # Core Value is left of Identity; Mission is centred between them.
-    assert cx(cv) < cx(mission) < cx(identity)
-    # Edges radiate from the project anchor to each foundation node.
-    targets = {e.target for e in f.edges if e.source == PROJECT_ANCHOR_ID}
-    assert targets == {"mission", "core-value-1", "identity"}
-
-
-def test_create_project_seeds_actors_canvas(plot_root: Path) -> None:
-    """v0.13 Phase 0: actors canvas seeds Operator + User only (no project node)."""
+def test_create_project_actors_starts_blank(plot_root: Path) -> None:
+    """D-2026-07-04-P — no Operator/User placeholder actors (supersedes the
+    v0.11 seed pair and its ≥ 2-actor minimum)."""
     create_project(plot_root, "alpha", "Alpha")
     actors = read_canvas(plot_root, "alpha", "actors")
     assert actors.canvas_kind == "actors"
-    kinds = sorted({n.kind for n in actors.nodes if n.kind})
-    assert kinds == ["actor"]
-    assert all(n.kind != "project" for n in actors.nodes)
+    assert actors.nodes == []
+    assert actors.edges == []
 
 
 def test_create_project_seeds_services_canvas(plot_root: Path) -> None:
