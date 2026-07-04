@@ -37,11 +37,16 @@ ESSENCE_SOURCE_KINDS: frozenset[str] = frozenset(
 )
 
 
-def classify_edge(canvas_kind: str, source_kind: str | None) -> str:
-    """Default relation for an edge, from its canvas + source-node kind.
+def classify_edge(canvas_kind: str, source_kind: str | None, label: str | None = None) -> str:
+    """Default relation for an edge, from its canvas + source-node kind
+    (+ creation-time label on the actors canvas).
 
-    Order matters: actors-canvas edges are always inheritance (single
-    edge type), then essence sources are injection, else flow.
+    Order matters: actors-canvas edges are inheritance UNLESS a label
+    arrives at creation — a labeled actors edge is a value flow
+    (giver → receiver, label = what moves: 돈, 신뢰, 콘텐츠 — B-35,
+    user live-watch 2026-07-04; unlabeled user-drawn lines keep the
+    v0.30.0 single-type default). Then essence sources are injection,
+    else flow.
 
     Entity↔entity edges (entities canvas, D-2026-06-20-Q step 7 / D-2026-06-17-J)
     intentionally take the ``flow`` fallthrough: a rough, directed conceptual
@@ -51,19 +56,22 @@ def classify_edge(canvas_kind: str, source_kind: str | None) -> str:
     ``tests/test_edge_semantics.py::test_entity_edges_default_to_flow``.
     """
     if canvas_kind == "actors":
-        return "inheritance"
+        return "flow" if label else "inheritance"
     if source_kind is not None and source_kind in ESSENCE_SOURCE_KINDS:
         return "injection"
     return "flow"
 
 
-def fold_endpoints(edge: SketchEdge) -> tuple[str, str] | None:
+def fold_endpoints(edge: SketchEdge, canvas_kind: str | None = None) -> tuple[str, str] | None:
     """``(parent, child)`` for the fold / publish-propagation hierarchy,
     per the edge's stored ``relation`` — or ``None`` if the edge defines
     no hierarchy. Mirror of
     ``viewer/src/flow/foldHierarchy.ts::foldEndpoints``:
 
-      - flow        → (source, target)            — source is parent.
+      - flow        → (source, target)            — source is parent;
+                      EXCEPT the actors canvas (B-35, 2026-07-04), where
+                      a flow edge is a peer value exchange
+                      (giver → receiver) and never containment.
       - inheritance → (target, source)  INVERTED  — the arrow points
                       child→superclass, so the *target* is the parent.
       - injection   → None                        — an essence overlay
@@ -78,4 +86,6 @@ def fold_endpoints(edge: SketchEdge) -> tuple[str, str] | None:
         return None
     if relation == "inheritance":
         return (edge.target, edge.source)
+    if canvas_kind == "actors":
+        return None
     return (edge.source, edge.target)

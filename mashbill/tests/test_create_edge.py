@@ -108,13 +108,26 @@ def test_create_edge_pins_handles_for_anchor_spokes_and_hierarchy(tmp_path: Path
     child-top. Value flows stay floating."""
     plot_root = _setup(tmp_path)
     cv = create_node(plot_root, "alpha", "foundation", "core_value", {"label": "신뢰"})
-    spoke = create_edge(plot_root, "alpha", "foundation", "__project_anchor__",
-                        cv["node"]["id"])
+    spoke = create_edge(plot_root, "alpha", "foundation", "__project_anchor__", cv["node"]["id"])
     assert spoke["edge"]["sourceHandle"] == "l"
     assert spoke["edge"]["targetHandle"] == "r"
     fam = create_node(plot_root, "alpha", "actors", "actor", {"label": "일반 사용자"})
     sub = create_node(plot_root, "alpha", "actors", "actor", {"label": "무료 사용자"})
-    h = create_edge(plot_root, "alpha", "actors", fam["node"]["id"], sub["node"]["id"])
-    if h["edge"]["relation"] == "inheritance":
-        assert h["edge"]["sourceHandle"] == "b"
-        assert h["edge"]["targetHandle"] == "t"
+    # B-34: the inheritance arrow points child → superclass (the engine's own
+    # fold convention, fold_endpoints) — child's top out, family's bottom in.
+    h = create_edge(plot_root, "alpha", "actors", sub["node"]["id"], fam["node"]["id"])
+    assert h["edge"]["relation"] == "inheritance"
+    assert h["edge"]["sourceHandle"] == "t"
+    assert h["edge"]["targetHandle"] == "b"
+
+
+def test_create_edge_actors_labeled_edge_is_flow_and_floats(tmp_path: Path) -> None:
+    """B-35: a labeled actors edge is a value flow (giver → receiver), not a
+    taxonomy line — it must not enter the fold hierarchy nor pin handles."""
+    plot_root = _setup(tmp_path)
+    a = create_node(plot_root, "alpha", "actors", "actor", {"label": "판매자"})
+    b = create_node(plot_root, "alpha", "actors", "actor", {"label": "구매자"})
+    out = create_edge(plot_root, "alpha", "actors", a["node"]["id"], b["node"]["id"], label="상품")
+    assert out["edge"]["relation"] == "flow"
+    assert out["edge"]["sourceHandle"] is None
+    assert out["edge"]["targetHandle"] is None

@@ -4,6 +4,33 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.155.0] — 2026-07-04
+
+### Changed
+
+- **The actors canvas has two edge meanings again** (B-35, D-2026-07-04-G):
+  a labeled edge at creation is a value flow (giver → receiver, label =
+  what moves — 돈, 신뢰, 콘텐츠); unlabeled edges keep the inheritance
+  default. The v0.30.0 "single edge type" table stamped coach flow lines
+  as inheritance, polluting the fold hierarchy. Truth table mirrored in
+  the viewer (`edgeSemantics.ts`).
+- **The inheritance arrow points child → superclass** (B-34,
+  D-2026-07-04-G): the coach prompt drew family → actor while the stored
+  fold convention (`fold_endpoints`: target = parent) expects the
+  opposite — so fold buttons landed on LEAF actors. The actors framing
+  now directs `create_edge` from the new actor to its family, and the
+  pinned handles swap accordingly (child-top → family-bottom; the
+  hierarchy still reads top-down).
+- **Actors flow edges define no fold hierarchy** (B-35,
+  D-2026-07-04-G): `fold_endpoints` takes the canvas kind — a peer value
+  exchange is never containment (collapsing 판매자 must not hide 구매자).
+  Mirrored in viewer `foldHierarchy.ts`.
+
+### Fixed
+
+- Existing canvases keep their stored edges (fix-forward): rounds started
+  before v0.155.0 still show inverted fold buttons until re-created.
+
 ## [0.154.0] — 2026-07-04
 
 ### Changed

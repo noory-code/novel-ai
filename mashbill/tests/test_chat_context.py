@@ -420,6 +420,15 @@ def test_mission_lands_as_one_line_with_detail_in_the_note() -> None:
     assert "note" in f
 
 
+def test_actors_hierarchy_arrow_points_at_the_family() -> None:
+    """B-34 (user live-watch 2026-07-04): fold buttons sat on LEAF actors —
+    the coach drew family → actor while the stored fold convention is
+    child → superclass (target = parent, fold_endpoints). The framing must
+    direct the arrow AT the family."""
+    p = build_system_prompt("actors")
+    assert "create_edge from the new actor to its family" in p
+
+
 def test_actors_flows_land_with_each_registration() -> None:
     """B-21 follow-up (coupang round: hierarchy 7 lines, flows 0 — taxonomy
     ate the turn budget): each concrete actor's exchanges are drawn in the

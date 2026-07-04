@@ -46,6 +46,19 @@ def test_classify_edge(canvas_kind: str, source_kind: str | None, expected: str)
     assert classify_edge(canvas_kind, source_kind) == expected
 
 
+def test_actors_labeled_edge_is_a_value_flow() -> None:
+    """B-35 (user live-watch 2026-07-04): the actors canvas has TWO edge
+    meanings since the hierarchy rounds — taxonomy lines (family ← concrete,
+    no label) and value-flow lines (giver → receiver, label = what moves:
+    돈, 신뢰, 콘텐츠). The v0.30.0 "single edge type" table stamped BOTH as
+    inheritance, so flow lines polluted the fold hierarchy (fold buttons on
+    leaves, collapsing hid trade partners). A label at creation is the
+    discriminator; unlabeled user-drawn lines keep today's default."""
+    assert classify_edge("actors", "actor", label="돈") == "flow"
+    assert classify_edge("actors", "actor", label=None) == "inheritance"
+    assert classify_edge("actors", "actor", label="") == "inheritance"
+
+
 def test_entity_edges_default_to_flow() -> None:
     """D-2026-06-20-Q step 7 — an entity↔entity edge is a rough, directed
     conceptual link (flow), editable; never a meaningless / FK / cardinality
@@ -95,6 +108,15 @@ def test_fold_inheritance_is_inverted_target_is_parent() -> None:
         "super",
         "child",
     )
+
+
+def test_fold_actors_flow_edge_defines_no_hierarchy() -> None:
+    """B-35 mirror of viewer foldHierarchy: an actors-canvas flow edge is a
+    peer value exchange (giver → receiver), never containment."""
+    e = _edge(source="seller", target="buyer", relation="flow")
+    assert fold_endpoints(e, canvas_kind="actors") is None
+    assert fold_endpoints(e, canvas_kind="services") == ("seller", "buyer")
+    assert fold_endpoints(e) == ("seller", "buyer")
 
 
 def test_fold_injection_defines_no_hierarchy() -> None:

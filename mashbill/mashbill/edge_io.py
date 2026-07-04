@@ -61,7 +61,7 @@ def create_edge(
     if source_id == PROJECT_ANCHOR_ID:
         relation = "flow"
     else:
-        relation = classify_edge(canvas_kind, nodes_by_id[source_id].kind)
+        relation = classify_edge(canvas_kind, nodes_by_id[source_id].kind, label)
     # B-26 (D-2026-07-04-C) — connection points are FIXED at creation so
     # same-kind spokes converge on one hub side and hierarchies read
     # top-down; the viewer honours stored handles (D-2026-06-01-H) and the
@@ -75,7 +75,10 @@ def create_edge(
         if side:
             source_handle, target_handle = side, opposite[side]
     elif relation == "inheritance":
-        source_handle, target_handle = "b", "t"
+        # The inheritance arrow points child → superclass (fold_endpoints:
+        # target = parent, B-34) — child's top out, family's bottom in, so
+        # the hierarchy still reads top-down.
+        source_handle, target_handle = "t", "b"
     edge = SketchEdge.model_validate(
         {
             "id": f"edge_{uuid4().hex[:8]}",

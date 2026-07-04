@@ -39,6 +39,29 @@
 
 ## Log
 
+### D-2026-07-04-G — actors edges: labeled = flow, arrow points at the family (B-34/B-35)
+
+- **What:** (1) `classify_edge`/`classifyEdge` on the actors canvas returns
+  flow when a label arrives at creation, inheritance otherwise; (2) the
+  coach draws inheritance child → family (matching `fold_endpoints`'s
+  target-is-parent convention) with handles child-top → family-bottom;
+  (3) `fold_endpoints`/`foldEndpoints` exclude actors-canvas flow edges
+  from the fold hierarchy (peer exchange ≠ containment).
+- **Why:** user live-watch — fold buttons sat on LEAF actors ("접기 기능이
+  가장 말단에 있는데 이거 잘못된거 아닌가요?") and the actors edges needed
+  auditing ("액터 캔버스 연결선 확인하세요"). Root cause: the v0.152.0
+  hierarchy prompt said family → actor, contradicting the stored fold
+  convention; and the v0.30.0 single-type table stamped value flows as
+  inheritance.
+- **Alternatives:** flipping the viewer fold convention instead — rejected
+  (converge normalization + actorInheritance + user-drawn edges all assume
+  target = parent); a data migration for existing canvases — deferred,
+  fix-forward (live rounds re-create canvases).
+- **Approval:** Accepted by user (live directives, 2026-07-04).
+- **Spec impact:** truth tables mirrored byte-for-byte both sides; pins in
+  `test_edge_semantics.py`, `test_create_edge.py`, `test_chat_context.py`,
+  viewer `edge-semantics.test.ts` / `fold-hierarchy.test.ts`.
+
 ### D-2026-07-04-F — mission one-liner, identity summaries, flow immediacy (B-30/B-32/B-21)
 
 - **What:** three coach-prompt rules from the live canvas-by-canvas rounds:
