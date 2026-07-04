@@ -4,6 +4,23 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.154.0] — 2026-07-04
+
+### Changed
+
+- **The mission statement is one line** (B-30, D-2026-07-04-F): the coach
+  lands the mission as a single line in its statement; the reasoning behind
+  it goes to the note (body), not the face.
+- **Every identity gets a summary** (B-32, D-2026-07-04-F): the seeded
+  identity node included — each filled identity carries a one-line summary
+  plus the fuller description (the face shows the summary since B-24).
+- **Value flows land with each registration** (B-21 follow-up,
+  D-2026-07-04-F): the actors coach draws the giver→receiver line in the
+  same turn an actor registers — never deferred until the taxonomy is done.
+  Live coupang round showed 12 actors, 0 flows under the old wording.
+- Foundation framing compressed to hold the 1,350-word budget
+  (compress-before-add, D-2026-07-03-U).
+
 ## [0.153.0] — 2026-07-04
 
 ### Changed

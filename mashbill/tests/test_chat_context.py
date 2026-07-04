@@ -412,6 +412,22 @@ def test_actors_framing_builds_an_inheritance_hierarchy() -> None:
     assert "무료/유료" in f
 
 
+def test_mission_lands_as_one_line_with_detail_in_the_note() -> None:
+    """B-30 (user, 2026-07-04): the mission reads best as ONE line on the
+    canvas face; the reasoning moves to its note (body)."""
+    f = build_framing_preamble("foundation").lower()
+    assert "one line" in f
+    assert "note" in f
+
+
+def test_actors_flows_land_with_each_registration() -> None:
+    """B-21 follow-up (coupang round: hierarchy 7 lines, flows 0 — taxonomy
+    ate the turn budget): each concrete actor's exchanges are drawn in the
+    SAME turn it registers, never deferred until the taxonomy is done."""
+    f = build_framing_preamble("actors").lower()
+    assert "same turn it registers" in f
+
+
 def test_system_prompt_stays_under_saturation_budget() -> None:
     """Sixteenth sim iteration (2026-07-03): the coach prompt grew with every
     rotation — the composed canvas prompt hit ~1,800–2,000 words and the

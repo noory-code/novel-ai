@@ -39,6 +39,39 @@
 
 ## Log
 
+### D-2026-07-04-F — mission one-liner, identity summaries, flow immediacy (B-30/B-32/B-21)
+
+- **What:** three coach-prompt rules from the live canvas-by-canvas rounds:
+  (1) the mission statement is ONE line, reasoning to the note; (2) EVERY
+  filled identity — seeded included — gets a one-line summary + description;
+  (3) the actors coach draws value-flow lines in the same turn an actor
+  registers, never deferred to the end.
+- **Why:** live watching — mission faces arrived as paragraphs; the seeded
+  Voice had no summary so its face was blank; the coupang round closed with
+  12 actors and 0 flows despite the B-21 rule (deferral loophole).
+- **Alternatives:** raising the word budget again — rejected; trimmed the
+  foundation framing instead (compress-before-add, D-2026-07-03-U).
+- **Approval:** Accepted by user (live directives, 2026-07-04).
+- **Spec impact:** chat prompt only; tests
+  `test_mission_lands_as_one_line_with_detail_in_the_note`,
+  `test_actors_flows_land_with_each_registration`.
+
+### D-2026-07-04-D/E — viewer-side (novel repo) id reservations
+
+- **What:** D = a kind's pinned hub side is the layout SSOT (unpinned seeds
+  join it); E = the visual arrowhead swap carries stored handles (B-28).
+  Logged here to keep the single D-id namespace coherent; full context in
+  novel repo commits 5382340 / 62bffcd.
+- **Approval:** Accepted by user (live rounds, 2026-07-04).
+
+### D-2026-07-04-A/B — viewer-side (novel repo) id reservations
+
+- **What:** A = mindmap layout groups same-kind branches into one hub sector
+  (B-20); B = per-kind node face — mission=statement, value=body,
+  identity=summary — with the identity `summary` field added engine-side in
+  v0.151.0 (B-24). Full context in novel repo commits 6b18606 / e7ebb5e.
+- **Approval:** Accepted by user (live rounds, 2026-07-04).
+
 ### D-2026-07-04-C — edge handles pin at creation; layout follows (B-26)
 
 - **What:** create_edge stores handles — anchor spokes per target kind
