@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.161.0] — 2026-07-04
+
+### Changed
+
+- **Actors closing sweep** (D-2026-07-04-N, 8-service sample findings):
+  before closing the canvas the coach RECOUNTS top families and folds
+  same-nature ones (공급·판매·광고 계열 → 파트너) — baemin closed with six
+  top families. The rename rule gains a second domain example
+  (협업툴: 사용자 → 멤버) — slack kept the generic seed label.
+
 ## [0.160.0] — 2026-07-04
 
 ### Fixed

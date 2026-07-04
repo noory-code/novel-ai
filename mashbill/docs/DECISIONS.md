@@ -39,6 +39,20 @@
 
 ## Log
 
+### D-2026-07-04-N — actors closing sweep; rename examples span domains
+
+- **What:** the actors framing adds a closing recount ("before closing,
+  RECOUNT the top families and fold same-nature ones") and a second rename
+  example (협업툴: 사용자 → 멤버).
+- **Why:** 8-service actors sample (loop per sim/ACTORS_LOOP.md): 6/8 full
+  structural passes; slack kept the generic 사용자 family label, baemin
+  closed with six top families (음식점·셀러·광고주 unfolded). One habit
+  covers both: re-group at close, and rename with domain breadth.
+- **Approval:** Autonomous within the user-pinned actors-focus loop
+  (2026-07-04); criteria are the user's live-taught taxonomy.
+- **Spec impact:** `test_actors_seed_families_are_renamed_to_domain_words`
+  extended.
+
 ### D-2026-07-04-M — feature detail seeds one real subject ref, not English stubs
 
 - **What:** `sync_details_with_overview` seeds a new feature detail canvas

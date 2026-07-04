@@ -444,6 +444,11 @@ def test_actors_seed_families_are_renamed_to_domain_words() -> None:
     assert "rename" in p.lower()
     assert "same-nature" in p.lower()
     assert "handful" in p.lower()
+    # 8-service sample (2026-07-04): slack kept the generic 사용자 label and
+    # baemin closed with SIX top families — the grouping must run as a
+    # CLOSING sweep, and the rename example needs more than one domain.
+    assert "멤버" in p
+    assert "before closing" in p.lower() and "top famil" in p.lower()
     # 운영자 = internal staff ("운영자는 내부직원이라는 뜻입니다") — employed
     # operational roles (배송 기사, 물류) nest under it, not beside it.
     assert "internal staff" in p.lower()
