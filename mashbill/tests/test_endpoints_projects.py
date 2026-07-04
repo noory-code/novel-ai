@@ -454,3 +454,26 @@ def test_git_init_creates_repo_then_is_idempotent(client: TestClient, workspace:
 def test_git_init_requires_project_path(client: TestClient) -> None:
     resp = client.post("/api/workspace/git-init")
     assert resp.status_code == 400
+
+
+def test_create_project_seeds_localized_labels(tmp_path: Path) -> None:
+    """B-19 (user live-watch, twice): a Korean project's seed placeholders hung
+    off the anchor as English "Mission" / "Core value" / "Voice" (+ actors
+    "Operator" / "User"). The viewer knows its locale — it passes it at
+    creation and the seeds mint in that language; default stays English."""
+    from mashbill.canvas_io import read_canvas
+    from mashbill.project_io import create_project
+
+    ko_dir = tmp_path / "ko"
+    ko_dir.mkdir()
+    create_project(ko_dir, "ko-proj", "테스트", locale="ko")
+    fnd = {n.id: n.label for n in read_canvas(ko_dir, "ko-proj", "foundation").nodes}
+    assert fnd == {"mission": "미션", "core-value-1": "코어밸류", "identity": "보이스"}
+    act = {n.id: n.label for n in read_canvas(ko_dir, "ko-proj", "actors").nodes}
+    assert set(act.values()) == {"운영자", "사용자"}
+
+    en_dir = tmp_path / "en"
+    en_dir.mkdir()
+    create_project(en_dir, "en-proj", "test")  # no locale → English unchanged
+    fnd_en = {n.label for n in read_canvas(en_dir, "en-proj", "foundation").nodes}
+    assert fnd_en == {"Mission", "Core value", "Voice"}

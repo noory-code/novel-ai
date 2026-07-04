@@ -39,6 +39,24 @@
 
 ## Log
 
+### D-2026-07-04-H — summary becomes writable; seeds mint localized (B-32/B-19)
+
+- **What:** (1) identity's writable-fields allow-list gains ``summary`` and
+  drops ``body``; (2) ``create_project(locale=...)`` mints seed placeholder
+  labels in the viewer's language (ko: 미션/코어밸류/보이스/운영자/사용자),
+  wired viewer→endpoint→seeder; the sim harness sends ko.
+- **Why:** the coupang verification round showed the v0.154.0 summary rule
+  never landing — the fail-safe allow-list rejected the field the prompt
+  demanded (rule without capability). And the seeded labels stayed English
+  in a Korean project, the second confirmed sighting of B-19.
+- **Alternatives:** coach renames kind-name labels per conversation language
+  — rejected (fixes only coached canvases, costs prompt budget); Korean-only
+  hardcoded seeds — rejected (Novel is a global service, D-2026-05-11-D).
+- **Approval:** Accepted by user (live loop, 2026-07-04).
+- **Spec impact:** pins in ``test_update_node.py`` (allow-list + end-to-end
+  summary write), ``test_endpoints_projects.py`` (localized seeds), viewer
+  ``create-project-locale.test.ts`` (locale sent, normalized).
+
 ### D-2026-07-04-G — actors edges: labeled = flow, arrow points at the family (B-34/B-35)
 
 - **What:** (1) `classify_edge`/`classifyEdge` on the actors canvas returns

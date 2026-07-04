@@ -79,10 +79,16 @@ def test_writable_fields_per_kind_are_prose_only() -> None:
         "value_created",
     }
     assert set(writable_node_fields(StepNode(id="st", label="x"))) == {"label", "outcome", "body"}
-    # identity: prose only — NOT the derive→confirm lifecycle (status / provenance)
+    # identity: prose only — NOT the derive→confirm lifecycle (status / provenance).
+    # B-32 completion (2026-07-04): the prompt demanded a one-line summary but
+    # this allow-list never exposed the field, so every coach summary write was
+    # silently rejected (rule without capability — verified in the coupang
+    # verification round: both identities landed with empty summaries). ``body``
+    # left the list with B-15 (description is THE prose field; old body folds
+    # on read, not via coach writes).
     idf = set(writable_node_fields(IdentityNode(id="i", label="x")))
-    assert idf == {"label", "description", "body"}
-    assert "status" not in idf and "provenance" not in idf
+    assert idf == {"label", "summary", "description"}
+    assert "status" not in idf and "provenance" not in idf and "body" not in idf
     # actor_ref is a read-only anchor — its master pointer + side are NOT writable
     arf = set(writable_node_fields(ActorRefNode(id="ar", label="x", ref_actor_id="a1")))
     assert arf == {"label"}
@@ -110,6 +116,16 @@ def test_writable_map_covers_every_union_kind() -> None:
 
 
 # --- update_node: the happy path -------------------------------------------
+
+
+def test_update_node_writes_identity_summary(tmp_path: Path) -> None:
+    """B-32 end-to-end: the coach can land the one-line summary the face shows
+    on the seeded identity node (kept — no canvas overwrite)."""
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    out = update_node(plot_root, "alpha", "foundation", "identity", {"summary": "밝은 응원자"})
+    assert out["node"]["summary"] == "밝은 응원자"
+    assert out["rejected_fields"] == []
 
 
 def test_update_node_patches_typed_field(tmp_path: Path) -> None:

@@ -62,7 +62,33 @@ def rename_project(plot_root: Path, project_id: str, new_name: str) -> ProjectDo
 # ---------------------------------------------------------------------------
 
 
-def _seed_foundation_canvas(project_name: str) -> CanvasDoc:  # noqa: ARG001
+# B-19 (user live-watch, 2026-07-04): seed placeholder labels mint in the
+# viewer's locale — a Korean project must not hang English "Mission" /
+# "Core value" / "Voice" / "Operator" / "User" off the anchor. English is
+# the default (API compat); the viewer passes its i18n locale at creation.
+_SEED_LABELS: dict[str, dict[str, str]] = {
+    "en": {
+        "mission": "Mission",
+        "core_value": "Core value",
+        "identity": "Voice",
+        "operator": "Operator",
+        "user": "User",
+    },
+    "ko": {
+        "mission": "미션",
+        "core_value": "코어밸류",
+        "identity": "보이스",
+        "operator": "운영자",
+        "user": "사용자",
+    },
+}
+
+
+def _seed_labels(locale: str) -> dict[str, str]:
+    return _SEED_LABELS.get(locale, _SEED_LABELS["en"])
+
+
+def _seed_foundation_canvas(project_name: str, locale: str = "en") -> CanvasDoc:  # noqa: ARG001
     """Minimum valid Foundation canvas — Mission / Core Value / Identity.
 
     v0.13 Phase 0: the Project anchor is no longer a node here. It lives in
@@ -70,6 +96,7 @@ def _seed_foundation_canvas(project_name: str) -> CanvasDoc:  # noqa: ARG001
     display time. ``project_name`` argument retained for signature stability
     but unused.
     """
+    labels = _seed_labels(locale)
     # D-2026-06-21-H — initial layout around the centre anchor (0,0): Mission on
     # top, Core Value on the left, Identity on the right, with an edge from the
     # project anchor out to each. (Revisits the v0.13.2 auto-edge rollback — now
@@ -80,7 +107,7 @@ def _seed_foundation_canvas(project_name: str) -> CanvasDoc:  # noqa: ARG001
         nodes=[
             MissionNode(
                 id="mission",
-                label="Mission",
+                label=labels["mission"],
                 x=-100,
                 y=-220,
                 width=200,
@@ -90,7 +117,7 @@ def _seed_foundation_canvas(project_name: str) -> CanvasDoc:  # noqa: ARG001
             ),
             CoreValueNode(
                 id="core-value-1",
-                label="Core value",
+                label=labels["core_value"],
                 x=-340,
                 y=-40,
                 width=180,
@@ -100,7 +127,7 @@ def _seed_foundation_canvas(project_name: str) -> CanvasDoc:  # noqa: ARG001
             ),
             IdentityNode(
                 id="identity",
-                label="Voice",
+                label=labels["identity"],
                 x=140,
                 y=-45,
                 width=200,
@@ -122,20 +149,21 @@ def _seed_foundation_canvas(project_name: str) -> CanvasDoc:  # noqa: ARG001
     )
 
 
-def _seed_actors_canvas(project_name: str) -> CanvasDoc:  # noqa: ARG001
+def _seed_actors_canvas(project_name: str, locale: str = "en") -> CanvasDoc:  # noqa: ARG001
     """v0.11 — actors canvas seeds with two placeholder classes ("Operator"
     and "User") to satisfy the IDENTITY.md "≥ 2 actor classes" minimum.
 
     v0.13 Phase 0: project anchor moved to ``ProjectDoc.anchors``; not seeded
     here.
     """
+    labels = _seed_labels(locale)
     return CanvasDoc(
         canvas_id="actors",
         canvas_kind="actors",
         nodes=[
             ActorNode(
                 id="operator",
-                label="Operator",
+                label=labels["operator"],
                 side="operator",
                 x=-260,
                 y=-50,
@@ -146,7 +174,7 @@ def _seed_actors_canvas(project_name: str) -> CanvasDoc:  # noqa: ARG001
             ),
             ActorNode(
                 id="user",
-                label="User",
+                label=labels["user"],
                 side="user",
                 x=140,
                 y=-50,
@@ -183,7 +211,7 @@ def _seed_entities_canvas(project_name: str) -> CanvasDoc:  # noqa: ARG001
     )
 
 
-def create_project(plot_root: Path, project_id: str, name: str) -> ProjectDoc:
+def create_project(plot_root: Path, project_id: str, name: str, locale: str = "en") -> ProjectDoc:
     """Create a fresh project folder, seeded with Foundation / Actors /
     Services / Entities.
 
@@ -229,11 +257,11 @@ def create_project(plot_root: Path, project_id: str, name: str) -> ProjectDoc:
 
     _write_json(
         _canvas_file(plot_root, project_id, "foundation"),
-        _seed_foundation_canvas(proj.name).model_dump(by_alias=True),
+        _seed_foundation_canvas(proj.name, locale).model_dump(by_alias=True),
     )
     _write_json(
         _canvas_file(plot_root, project_id, "actors"),
-        _seed_actors_canvas(proj.name).model_dump(by_alias=True),
+        _seed_actors_canvas(proj.name, locale).model_dump(by_alias=True),
     )
     _write_json(
         _canvas_file(plot_root, project_id, "services"),

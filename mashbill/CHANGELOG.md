@@ -4,6 +4,26 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.156.0] — 2026-07-04
+
+### Fixed
+
+- **The coach can actually write the identity summary** (B-32 completion,
+  D-2026-07-04-H): the writable-fields allow-list never exposed
+  ``summary`` on identity, so every summary write the v0.154.0 rule
+  demanded was silently rejected — verified in the coupang verification
+  round (both identities landed with empty summaries). ``summary`` is now
+  writable; ``body`` left the identity list (B-15: description is THE
+  prose field; legacy body folds on read).
+
+### Changed
+
+- **Seed placeholder labels mint in the viewer's locale** (B-19,
+  D-2026-07-04-H): ``create_project`` takes ``locale`` (viewer passes its
+  i18n language; the sim passes ko) — a Korean project seeds 미션 /
+  코어밸류 / 보이스 / 운영자 / 사용자 instead of hanging English
+  placeholders off the anchor. Default stays English (API compat).
+
 ## [0.155.0] — 2026-07-04
 
 ### Changed

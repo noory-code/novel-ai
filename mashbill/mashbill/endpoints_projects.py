@@ -114,10 +114,14 @@ async def project_post_endpoint(request: Request) -> JSONResponse:
         return _error("invalid JSON body")
     project_id = body.get("id")
     name = body.get("name") or ""
+    # B-19: the viewer passes its i18n locale so seed placeholders mint in
+    # the user's language; anything unknown falls back to English.
+    raw_locale = body.get("locale")
+    locale = raw_locale if isinstance(raw_locale, str) else "en"
     if not project_id or not isinstance(project_id, str):
         return _error("'id' is required and must be a string")
     try:
-        proj = create_project(plot_root, project_id, name)
+        proj = create_project(plot_root, project_id, name, locale=locale)
     except FileExistsError as exc:
         return _error(str(exc), status=409)
     except ValidationError as exc:

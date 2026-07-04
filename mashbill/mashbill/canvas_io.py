@@ -262,7 +262,10 @@ _WRITABLE_CONTENT_FIELDS: dict[str, tuple[str, ...]] = {
     "project": (),
     "mission": ("statement", "body"),
     "core_value": ("body",),  # v0.45 (D-2026-07-02-A): definition removed → name + body
-    "identity": ("description", "body"),
+    # B-32 completion (2026-07-04): summary exposed — the prompt demanded it
+    # while this list silently rejected every coach write. body left with
+    # B-15 (description is THE prose field; legacy body folds on read).
+    "identity": ("summary", "description"),
     "actor": ("body",),
     "actor_ref": (),
     "service": ("problem", "value_created"),
