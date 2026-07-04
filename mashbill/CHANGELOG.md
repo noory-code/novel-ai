@@ -4,6 +4,18 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.150.0] — 2026-07-04
+
+### Changed
+
+- **Same kind, same color** (B-23, screenshot-verified: coach-created values
+  were white beside the amber seed). create_node applies the kind palette
+  (mirroring the viewer stencil); color stays structural — the palette is
+  the single authority.
+- **Identity comes out in facets** (B-25, "왜 아이덴티티는 하나뿐이죠?").
+  The foundation framing now drafts several facets — voice, energy, speech
+  style — each registered as its own identity node.
+
 ## [0.149.0] — 2026-07-04
 
 ### Changed

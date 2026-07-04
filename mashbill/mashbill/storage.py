@@ -91,7 +91,6 @@ def _read_json(path: Path) -> dict[str, Any]:
     return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
 
 
-
 def read_project(plot_root: Path, project_id: str) -> ProjectDoc:
     _ensure_project(plot_root, project_id)
     raw = _read_json(_project_file(plot_root, project_id))
@@ -106,4 +105,3 @@ def write_project(plot_root: Path, project: ProjectDoc) -> None:
         _project_file(plot_root, project.id),
         refreshed.model_dump(),
     )
-

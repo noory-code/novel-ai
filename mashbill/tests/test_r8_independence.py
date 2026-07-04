@@ -59,9 +59,7 @@ def test_plugin_never_imports_app_or_sibling_code() -> None:
 
 def test_plugin_never_reaches_into_the_shell_by_path() -> None:
     offenders = [
-        py.name
-        for py in sorted(PKG.glob("*.py"))
-        if "src-tauri" in py.read_text(encoding="utf-8")
+        py.name for py in sorted(PKG.glob("*.py")) if "src-tauri" in py.read_text(encoding="utf-8")
     ]
     assert offenders == [], f"R8 violation — src-tauri path literal in: {offenders}"
 

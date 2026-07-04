@@ -45,9 +45,7 @@ def test_get_chat_provider_returns_null_on_fresh_workspace(
     assert resp.json() == {"provider": None, "model": None}
 
 
-def test_put_chat_provider_persists_and_returns_value(
-    workspace: Path, client: TestClient
-) -> None:
+def test_put_chat_provider_persists_and_returns_value(workspace: Path, client: TestClient) -> None:
     resp = client.put(
         "/api/chat/provider",
         params={"project_path": str(workspace)},
@@ -64,9 +62,7 @@ def test_put_chat_provider_persists_and_returns_value(
     assert again.json() == {"provider": "claude-code", "model": None}
 
 
-def test_put_chat_provider_null_clears_selection(
-    workspace: Path, client: TestClient
-) -> None:
+def test_put_chat_provider_null_clears_selection(workspace: Path, client: TestClient) -> None:
     client.put(
         "/api/chat/provider",
         params={"project_path": str(workspace)},
@@ -83,9 +79,7 @@ def test_put_chat_provider_null_clears_selection(
     assert after.json() == {"provider": None, "model": None}
 
 
-def test_put_chat_provider_unknown_name_is_422(
-    workspace: Path, client: TestClient
-) -> None:
+def test_put_chat_provider_unknown_name_is_422(workspace: Path, client: TestClient) -> None:
     resp = client.put(
         "/api/chat/provider",
         params={"project_path": str(workspace)},
@@ -104,9 +98,7 @@ def test_put_chat_provider_without_project_path_is_400(client: TestClient) -> No
     assert resp.status_code == 400
 
 
-def test_chat_provider_is_workspace_scoped(
-    tmp_path: Path, client: TestClient
-) -> None:
+def test_chat_provider_is_workspace_scoped(tmp_path: Path, client: TestClient) -> None:
     ws_a = tmp_path / "ws_a"
     ws_b = tmp_path / "ws_b"
     ws_a.mkdir()
@@ -117,12 +109,14 @@ def test_chat_provider_is_workspace_scoped(
         json={"provider": "claude-code"},
     )
     # ws_b stays empty.
-    assert client.get(
-        "/api/chat/provider", params={"project_path": str(ws_b)}
-    ).json() == {"provider": None, "model": None}
-    assert client.get(
-        "/api/chat/provider", params={"project_path": str(ws_a)}
-    ).json() == {"provider": "claude-code", "model": None}
+    assert client.get("/api/chat/provider", params={"project_path": str(ws_b)}).json() == {
+        "provider": None,
+        "model": None,
+    }
+    assert client.get("/api/chat/provider", params={"project_path": str(ws_a)}).json() == {
+        "provider": "claude-code",
+        "model": None,
+    }
 
 
 def test_spawn_env_strips_engine_runtime_toggles(monkeypatch) -> None:

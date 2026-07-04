@@ -115,9 +115,7 @@ def test_feature_scope_framing(tmp_path: Path) -> None:
     plot_root.mkdir()
     base = tmp_path / "rt"
     base.mkdir()
-    write_viewer_context(
-        plot_root, scope="feature:svc_1", selection=[], now=1.0, base_dir=base
-    )
+    write_viewer_context(plot_root, scope="feature:svc_1", selection=[], now=1.0, base_dir=base)
     ctx = read_viewer_context(plot_root, now=1.0, base_dir=base)
     assert ctx["active_canvas"] == "feature:svc_1"
     assert "Execution" in ctx["framing"]

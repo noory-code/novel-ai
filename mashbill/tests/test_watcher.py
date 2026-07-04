@@ -140,9 +140,7 @@ async def test_safe_call_swallows_callback_errors() -> None:
     async def boom(_paths: set[Path]) -> None:
         raise RuntimeError("downstream broadcast failed")
 
-    w = WorkspaceWatcher(
-        Path("/ws/.noory/plot"), boom, asyncio.get_running_loop(), debounce_ms=10
-    )
+    w = WorkspaceWatcher(Path("/ws/.noory/plot"), boom, asyncio.get_running_loop(), debounce_ms=10)
     # Must not raise — a failing broadcast can't take the watcher down.
     await w._safe_call({Path("/ws/.noory/plot/foundation/canvas.json")})
 

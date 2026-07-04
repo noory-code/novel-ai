@@ -42,7 +42,5 @@ def entity_usage(plot_root: Path, project_id: str, entity_id: str) -> list[dict[
         feature_label = next(
             (n.label for n in canvas.nodes if n.id == feature_id and n.label), feature_id
         )
-        usages.append(
-            {"feature_id": feature_id, "feature_label": feature_label, "steps": steps}
-        )
+        usages.append({"feature_id": feature_id, "feature_label": feature_label, "steps": steps})
     return usages

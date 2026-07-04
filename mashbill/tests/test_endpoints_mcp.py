@@ -29,9 +29,7 @@ def client() -> TestClient:
     return TestClient(create_http_app(hub=BroadcastHub(enable_watchers=False)))
 
 
-def test_providers_endpoint_lists_all(
-    fake_home: Path, client: TestClient
-) -> None:
+def test_providers_endpoint_lists_all(fake_home: Path, client: TestClient) -> None:
     resp = client.get("/api/mcp/providers")
     assert resp.status_code == 200, resp.text
     body = resp.json()
@@ -47,29 +45,21 @@ def test_providers_endpoint_reports_unregistered_on_fresh_home(
         assert p["registered"] is False
 
 
-def test_register_endpoint_writes_claude_code_config(
-    fake_home: Path, client: TestClient
-) -> None:
+def test_register_endpoint_writes_claude_code_config(fake_home: Path, client: TestClient) -> None:
     resp = client.post("/api/mcp/providers/claude-code/register")
     assert resp.status_code == 201, resp.text
     cfg = json.loads((fake_home / ".claude.json").read_text(encoding="utf-8"))
     assert "mashbill" in cfg["mcpServers"]
 
 
-def test_register_endpoint_writes_codex_config(
-    fake_home: Path, client: TestClient
-) -> None:
+def test_register_endpoint_writes_codex_config(fake_home: Path, client: TestClient) -> None:
     resp = client.post("/api/mcp/providers/codex/register")
     assert resp.status_code == 201, resp.text
-    cfg = tomllib.loads(
-        (fake_home / ".codex" / "config.toml").read_text(encoding="utf-8")
-    )
+    cfg = tomllib.loads((fake_home / ".codex" / "config.toml").read_text(encoding="utf-8"))
     assert "mashbill" in cfg["mcp_servers"]
 
 
-def test_unregister_endpoint_removes_entry(
-    fake_home: Path, client: TestClient
-) -> None:
+def test_unregister_endpoint_removes_entry(fake_home: Path, client: TestClient) -> None:
     client.post("/api/mcp/providers/claude-code/register")
     resp = client.post("/api/mcp/providers/claude-code/unregister")
     assert resp.status_code == 200, resp.text
@@ -77,16 +67,12 @@ def test_unregister_endpoint_removes_entry(
     assert "mashbill" not in cfg["mcpServers"]
 
 
-def test_unknown_provider_returns_404(
-    fake_home: Path, client: TestClient
-) -> None:
+def test_unknown_provider_returns_404(fake_home: Path, client: TestClient) -> None:
     resp = client.post("/api/mcp/providers/notarealcli/register")
     assert resp.status_code == 404
 
 
-def test_register_then_providers_reports_registered(
-    fake_home: Path, client: TestClient
-) -> None:
+def test_register_then_providers_reports_registered(fake_home: Path, client: TestClient) -> None:
     client.post("/api/mcp/providers/codex/register")
     body = client.get("/api/mcp/providers").json()
     codex = next(p for p in body["providers"] if p["name"] == "codex")

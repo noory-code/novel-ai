@@ -55,8 +55,7 @@ def set_node_references(
         for ref_id in ids:
             if ref_id not in valid:
                 raise ValueError(
-                    f"{field}: {ref_id!r} is not a {expected_kind!r} on the "
-                    f"{home_canvas!r} canvas"
+                    f"{field}: {ref_id!r} is not a {expected_kind!r} on the {home_canvas!r} canvas"
                 )
     merged = {**node.model_dump(), **refs}
     new_node = SketchNodeAdapter.validate_python(merged)

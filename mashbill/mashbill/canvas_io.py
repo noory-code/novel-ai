@@ -33,7 +33,7 @@ from mashbill.models import (
 )
 from mashbill.models_foundation import PROJECT_ANCHOR_ID
 from mashbill.models_union import SketchNode, SketchNodeAdapter
-from mashbill.placement import _compute_fresh_position, _compute_near_position
+from mashbill.placement import KIND_COLORS, _compute_fresh_position, _compute_near_position
 from mashbill.storage import (  # noqa: F401
     _canvas_file,
     _ensure_project,
@@ -438,7 +438,12 @@ def create_node(
         x, y = _compute_near_position(canvas.nodes, anchor)
     else:
         x, y = _compute_fresh_position(canvas.nodes, kind)
-    base = SketchNodeAdapter.validate_python({"id": node_id, "kind": kind, "x": x, "y": y})
+    seed: dict[str, object] = {"id": node_id, "kind": kind, "x": x, "y": y}
+    # B-23 — same kind, same color: apply the kind palette unless the caller
+    # passes an explicit color.
+    if KIND_COLORS.get(kind):
+        seed["color"] = KIND_COLORS[kind]
+    base = SketchNodeAdapter.validate_python(seed)
     allowed_fields = set(writable_node_fields(base))
     incoming = fields or {}
     patch = {k: v for k, v in incoming.items() if k in allowed_fields}

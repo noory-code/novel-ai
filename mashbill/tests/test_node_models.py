@@ -144,8 +144,6 @@ def test_category_defaults_match_sketchnode_category_defaults() -> None:
 # ---------------------------------------------------------------------------
 
 
-
-
 def test_step_round_trip_with_order() -> None:
     n = StepNode(id="s1", label="Sign in", order=1, outcome="session token")
     assert StepNode.model_validate(n.model_dump()) == n
@@ -180,8 +178,6 @@ def test_rule_round_trip() -> None:
     assert RuleNode.model_validate(n.model_dump()) == n
 
 
-
-
 # ---------------------------------------------------------------------------
 # v0.14.17 — discriminated-union dispatch via SketchNodeAdapter
 # ---------------------------------------------------------------------------
@@ -192,8 +188,6 @@ def test_adapter_dispatches_actor() -> None:
     parsed = SketchNodeAdapter.validate_python(raw)
     assert isinstance(parsed, ActorNode)
     assert parsed.side == "user"
-
-
 
 
 def test_adapter_dispatches_actor_ref_with_validator() -> None:

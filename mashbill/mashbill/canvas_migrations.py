@@ -479,5 +479,3 @@ def _evict_legacy_project_anchor(
     raw = {**raw, "nodes": kept, "edges": kept_edges}
     _write_json(_canvas_file(plot_root, project_id, canvas_kind), raw)
     return raw
-
-

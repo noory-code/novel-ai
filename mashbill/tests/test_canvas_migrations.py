@@ -293,9 +293,7 @@ def test_parent_id_skips_self_parent_and_existing_edge(plot_root: Path) -> None:
     assert not any(e["id"] == "e_migrated_c" for e in out["edges"]), (
         "existing equivalent edge → no duplicate migrated edge"
     )
-    assert not any(e["id"] == "e_migrated_self" for e in out["edges"]), (
-        "self-parent → no edge"
-    )
+    assert not any(e["id"] == "e_migrated_self" for e in out["edges"]), "self-parent → no edge"
     assert all("parent_id" not in n for n in out["nodes"])
 
 
@@ -461,9 +459,7 @@ def test_absorb_md_happy_path_absorbs_fields_and_quarantines(plot_root: Path) ->
     raw = {
         "canvas_id": "foundation",
         "canvas_kind": "foundation",
-        "nodes": [
-            {"id": "m", "kind": "mission", "label": label, "details_path": "stale.md"}
-        ],
+        "nodes": [{"id": "m", "kind": "mission", "label": label, "details_path": "stale.md"}],
         "edges": [],
     }
     out = _absorb_md_typed_text_into_json(plot_root, "alpha", raw)

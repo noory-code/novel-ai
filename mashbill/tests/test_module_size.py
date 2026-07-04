@@ -35,9 +35,7 @@ GRANDFATHERED: dict[str, int] = {
 
 def test_no_engine_module_exceeds_the_500_line_rule() -> None:
     offenders = {
-        p.name: _loc(p)
-        for p in PKG.glob("*.py")
-        if _loc(p) > GRANDFATHERED.get(p.name, CEILING)
+        p.name: _loc(p) for p in PKG.glob("*.py") if _loc(p) > GRANDFATHERED.get(p.name, CEILING)
     }
     assert offenders == {}, f"modules over their ceiling (500 or ratchet): {offenders}"
 

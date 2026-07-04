@@ -74,9 +74,7 @@ def test_parse_stream_line_extracts_text_from_content_block_delta() -> None:
 
 def test_parse_stream_line_drops_system_init() -> None:
     accumulator: list[str] = []
-    line = json.dumps(
-        {"type": "system", "subtype": "init", "session_id": "abc"}
-    ).encode()
+    line = json.dumps({"type": "system", "subtype": "init", "session_id": "abc"}).encode()
     assert _parse_stream_line("turn-1", line, accumulator) is None
     assert accumulator == []
 
@@ -94,11 +92,7 @@ def test_parse_stream_line_drops_tool_use_message() -> None:
     line = json.dumps(
         {
             "type": "assistant",
-            "message": {
-                "content": [
-                    {"type": "tool_use", "name": "Bash", "input": {"cmd": "ls"}}
-                ]
-            },
+            "message": {"content": [{"type": "tool_use", "name": "Bash", "input": {"cmd": "ls"}}]},
         }
     ).encode()
     # Tool-use frames carry no text → no delta should land. Future work may
@@ -308,9 +302,7 @@ class _FakeStderr:
 class _FakeProcess:
     """Stand-in for ``asyncio.subprocess.Process``."""
 
-    def __init__(
-        self, *, stdout_lines: list[bytes], returncode: int, stderr: bytes = b""
-    ) -> None:
+    def __init__(self, *, stdout_lines: list[bytes], returncode: int, stderr: bytes = b"") -> None:
         self.stdout = _FakeStdout(stdout_lines)
         self.stderr = _FakeStderr(stderr)
         self._returncode = returncode
@@ -353,10 +345,7 @@ async def test_stream_turn_yields_start_delta_complete_on_success(
 ) -> None:
     process = _FakeProcess(
         stdout_lines=[
-            json.dumps(
-                {"type": "system", "subtype": "init", "session_id": "sid"}
-            ).encode()
-            + b"\n",
+            json.dumps({"type": "system", "subtype": "init", "session_id": "sid"}).encode() + b"\n",
             json.dumps(
                 {
                     "type": "stream_event",
@@ -512,15 +501,18 @@ async def test_stream_turn_emits_error_on_non_zero_exit(tmp_path: Path) -> None:
 async def test_stream_turn_kills_process_on_cancel(tmp_path: Path) -> None:
     """If the consumer abandons the iterator mid-stream, the subprocess dies."""
     # Infinite-ish stream of delta lines — we'll cancel after one.
-    payload = json.dumps(
-        {
-            "type": "stream_event",
-            "event": {
-                "type": "content_block_delta",
-                "delta": {"type": "text_delta", "text": "chunk"},
-            },
-        }
-    ).encode() + b"\n"
+    payload = (
+        json.dumps(
+            {
+                "type": "stream_event",
+                "event": {
+                    "type": "content_block_delta",
+                    "delta": {"type": "text_delta", "text": "chunk"},
+                },
+            }
+        ).encode()
+        + b"\n"
+    )
 
     class _HangingStdout:
         def __init__(self) -> None:
@@ -606,8 +598,7 @@ async def test_codex_stream_yields_agent_message_text_and_captures_thread_id(
 ) -> None:
     process = _FakeProcess(
         stdout_lines=[
-            json.dumps({"type": "thread.started", "thread_id": "tid-abc"}).encode()
-            + b"\n",
+            json.dumps({"type": "thread.started", "thread_id": "tid-abc"}).encode() + b"\n",
             json.dumps({"type": "turn.started"}).encode() + b"\n",
             # Tool work — should be dropped, not surfaced as a delta.
             json.dumps(
@@ -633,10 +624,7 @@ async def test_codex_stream_yields_agent_message_text_and_captures_thread_id(
                 }
             ).encode()
             + b"\n",
-            json.dumps(
-                {"type": "turn.completed", "usage": {"input_tokens": 100}}
-            ).encode()
-            + b"\n",
+            json.dumps({"type": "turn.completed", "usage": {"input_tokens": 100}}).encode() + b"\n",
         ],
         returncode=0,
     )
@@ -659,8 +647,7 @@ async def test_codex_second_turn_uses_exec_resume_with_captured_thread_id(
 ) -> None:
     captured_a = _FakeProcess(
         stdout_lines=[
-            json.dumps({"type": "thread.started", "thread_id": "tid-xyz"}).encode()
-            + b"\n",
+            json.dumps({"type": "thread.started", "thread_id": "tid-xyz"}).encode() + b"\n",
         ],
         returncode=0,
     )
@@ -675,9 +662,7 @@ async def test_codex_second_turn_uses_exec_resume_with_captured_thread_id(
 
     ws = tmp_path / "ws"
     ws.mkdir()
-    provider = CodexProvider(
-        workspace_root=ws, cli_path="codex", subprocess_factory=factory
-    )
+    provider = CodexProvider(workspace_root=ws, cli_path="codex", subprocess_factory=factory)
     await _drain(provider, "first")
     await _drain(provider, "second")
 

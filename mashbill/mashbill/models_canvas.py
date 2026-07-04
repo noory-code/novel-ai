@@ -135,12 +135,7 @@ class CanvasDoc(BaseModel):
         if not note_ids:
             return self
         offending = sorted(
-            {
-                ep
-                for e in self.edges
-                for ep in (e.source, e.target)
-                if ep in note_ids
-            }
+            {ep for e in self.edges for ep in (e.source, e.target) if ep in note_ids}
         )
         if offending:
             raise ValueError(f"note nodes must be edgeless; edges touch notes: {offending}")
@@ -203,8 +198,7 @@ class CanvasDoc(BaseModel):
             raise ValueError("feature canvas requires feature_ref")
         if self.feature_ref != self.canvas_id:
             raise ValueError(
-                f"feature feature_ref {self.feature_ref!r} must match "
-                f"canvas_id {self.canvas_id!r}"
+                f"feature feature_ref {self.feature_ref!r} must match canvas_id {self.canvas_id!r}"
             )
         # D-2026-06-17-D — the detail canvas drills into a **feature**, so its
         # root anchor is the feature node (was a ``service`` pre-overhaul).

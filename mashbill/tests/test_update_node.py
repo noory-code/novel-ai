@@ -375,14 +375,20 @@ def _ref_fixture(tmp_path: Path) -> Path:
     plot_root = resolve_plot_root(str(tmp_path))
     create_project(plot_root, "alpha", "Alpha")
     write_canvas(
-        plot_root, "alpha",
-        CanvasDoc(canvas_id="actors", canvas_kind="actors",
-                  nodes=[ActorNode(id="a1", label="사장님"), ActorNode(id="a2", label="손님")]),
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="actors",
+            canvas_kind="actors",
+            nodes=[ActorNode(id="a1", label="사장님"), ActorNode(id="a2", label="손님")],
+        ),
     )
     write_canvas(
-        plot_root, "alpha",
-        CanvasDoc(canvas_id="services", canvas_kind="services",
-                  nodes=[ServiceNode(id="s1", label="주문")]),
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="services", canvas_kind="services", nodes=[ServiceNode(id="s1", label="주문")]
+        ),
     )
     return plot_root
 
@@ -396,9 +402,7 @@ def test_set_node_references_fills_service_actor_refs(tmp_path: Path) -> None:
     from mashbill.references import set_node_references
 
     plot_root = _ref_fixture(tmp_path)
-    out = set_node_references(
-        plot_root, "alpha", "services", "s1", {"ref_actor_ids": ["a1", "a2"]}
-    )
+    out = set_node_references(plot_root, "alpha", "services", "s1", {"ref_actor_ids": ["a1", "a2"]})
     assert out["node"]["ref_actor_ids"] == ["a1", "a2"]
     canvas = read_canvas(plot_root, "alpha", "services")
     svc = next(n for n in canvas.nodes if n.id == "s1")

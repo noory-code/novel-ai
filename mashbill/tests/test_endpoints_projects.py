@@ -148,9 +148,7 @@ def test_project_post_invalid_id_is_422(client: TestClient, workspace: Path) -> 
 # ---------------------------------------------------------------------------
 
 
-def test_project_get_returns_doc_with_details_and_tags(
-    client: TestClient, workspace: Path
-) -> None:
+def test_project_get_returns_doc_with_details_and_tags(client: TestClient, workspace: Path) -> None:
     create_project(resolve_plot_root(str(workspace)), "alpha", "Alpha")
     resp = client.get(f"/api/projects/alpha?project_path={workspace}")
     assert resp.status_code == 200
@@ -230,9 +228,7 @@ def test_project_patch_requires_project_path(client: TestClient) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_anchor_patch_updates_only_supplied_fields(
-    client: TestClient, workspace: Path
-) -> None:
+def test_anchor_patch_updates_only_supplied_fields(client: TestClient, workspace: Path) -> None:
     """The longer 176-199 block: read project, merge only non-None body fields
     onto the existing AnchorPlacement, write back. Defaults stay put."""
     create_project(resolve_plot_root(str(workspace)), "alpha", "Alpha")
@@ -351,9 +347,7 @@ def test_workspace_discover_requires_project_path(client: TestClient) -> None:
     assert resp.status_code == 400
 
 
-def test_workspace_discover_nonexistent_path_is_404(
-    client: TestClient, tmp_path: Path
-) -> None:
+def test_workspace_discover_nonexistent_path_is_404(client: TestClient, tmp_path: Path) -> None:
     resp = client.get(f"/api/workspace/projects?project_path={tmp_path / 'nope'}")
     assert resp.status_code == 404
 

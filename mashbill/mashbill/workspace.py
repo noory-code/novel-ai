@@ -310,8 +310,9 @@ def migrate_legacy_git_to_workspace(workspace_root: Path) -> bool:
         return False
     if new_git.exists():
         _log.warning(
-            "legacy data-dir .git at %s left in place — workspace already "
-            "has %s (user-owned)", legacy_git, new_git,
+            "legacy data-dir .git at %s left in place — workspace already has %s (user-owned)",
+            legacy_git,
+            new_git,
         )
         return False
     shutil.move(str(legacy_git), str(new_git))

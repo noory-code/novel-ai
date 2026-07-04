@@ -16,8 +16,10 @@ from mashbill.chat_providers.claude_code import _parse_claude_line
 
 def _partial(text: str) -> bytes:
     return json.dumps(
-        {"type": "stream_event", "event": {"type": "content_block_delta",
-         "delta": {"type": "text_delta", "text": text}}}
+        {
+            "type": "stream_event",
+            "event": {"type": "content_block_delta", "delta": {"type": "text_delta", "text": text}},
+        }
     ).encode()
 
 
@@ -63,9 +65,13 @@ def test_full_assistant_message_alone_yields_no_text_event() -> None:
 
 def _tool_use_start(name: str = "mcp__mashbill__update_node") -> bytes:
     return json.dumps(
-        {"type": "stream_event", "event": {"type": "content_block_start",
-         "content_block": {"type": "tool_use", "id": "toolu_1", "name": name,
-                           "input": {}}}}
+        {
+            "type": "stream_event",
+            "event": {
+                "type": "content_block_start",
+                "content_block": {"type": "tool_use", "id": "toolu_1", "name": name, "input": {}},
+            },
+        }
     ).encode()
 
 
@@ -99,13 +105,18 @@ def test_text_block_start_does_not_reset_the_accumulator() -> None:
     arrive before every block and must not wipe legitimate reply text."""
     acc: list[str] = []
     _parse_claude_line("t1", _partial("이어서 "), acc)
-    for block in ({"type": "text", "text": ""},
-                  {"type": "thinking", "thinking": "", "signature": ""}):
+    for block in (
+        {"type": "text", "text": ""},
+        {"type": "thinking", "thinking": "", "signature": ""},
+    ):
         _parse_claude_line(
             "t1",
-            json.dumps({"type": "stream_event",
-                        "event": {"type": "content_block_start",
-                                  "content_block": block}}).encode(),
+            json.dumps(
+                {
+                    "type": "stream_event",
+                    "event": {"type": "content_block_start", "content_block": block},
+                }
+            ).encode(),
             acc,
         )
     _parse_claude_line("t1", _partial("말씀드릴게요."), acc)
@@ -136,7 +147,5 @@ def test_init_frame_yields_a_meta_event_with_the_model() -> None:
 
 def test_init_frame_without_model_yields_nothing() -> None:
     acc: list[str] = []
-    ev = _parse_claude_line(
-        "t1", json.dumps({"type": "system", "subtype": "init"}).encode(), acc
-    )
+    ev = _parse_claude_line("t1", json.dumps({"type": "system", "subtype": "init"}).encode(), acc)
     assert ev is None

@@ -76,9 +76,7 @@ def create_http_app(
     """
     target_hub = hub if hub is not None else BroadcastHub()
     target_registry = (
-        chat_registry_instance
-        if chat_registry_instance is not None
-        else chat_registry()
+        chat_registry_instance if chat_registry_instance is not None else chat_registry()
     )
 
     async def ws_endpoint(ws: WebSocket) -> None:

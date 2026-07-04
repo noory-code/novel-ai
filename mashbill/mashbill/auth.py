@@ -118,13 +118,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         presented = extract_bearer(request.headers.get("authorization"))
         if presented is None:
-            return JSONResponse(
-                {"error": "auth token required"}, status_code=401
-            )
+            return JSONResponse({"error": "auth token required"}, status_code=401)
         if not is_authorized(presented, expected):
-            return JSONResponse(
-                {"error": "invalid auth token"}, status_code=401
-            )
+            return JSONResponse({"error": "invalid auth token"}, status_code=401)
         return await call_next(request)
 
 

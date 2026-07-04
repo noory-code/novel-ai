@@ -64,7 +64,10 @@ def test_create_node_appends_a_core_value(tmp_path: Path) -> None:
     plot_root = _setup(tmp_path)
     _foundation(plot_root)
     out = create_node(
-        plot_root, "alpha", "foundation", "core_value",
+        plot_root,
+        "alpha",
+        "foundation",
+        "core_value",
         {"label": "정직 (Honesty)", "body": "tell the truth"},
     )
     node = out["node"]
@@ -85,7 +88,10 @@ def test_create_node_returns_node_and_rejected_fields_shape(tmp_path: Path) -> N
     plot_root = _setup(tmp_path)
     _foundation(plot_root)
     out = create_node(
-        plot_root, "alpha", "foundation", "core_value",
+        plot_root,
+        "alpha",
+        "foundation",
+        "core_value",
         {"label": "관용", "x": 999, "statement": "mission-only field"},
     )
     assert set(out) == {"node", "rejected_fields"}
@@ -103,9 +109,12 @@ def test_create_node_leaves_other_nodes_and_edges_untouched(tmp_path: Path) -> N
     plot_root = resolve_plot_root(str(tmp_path))
     create_project(plot_root, "alpha", "Alpha")
     write_canvas(
-        plot_root, "alpha",
+        plot_root,
+        "alpha",
         CanvasDoc(
-            canvas_id="svc1", canvas_kind="feature", feature_ref="svc1",
+            canvas_id="svc1",
+            canvas_kind="feature",
+            feature_ref="svc1",
             nodes=[
                 FeatureNode(id="svc1", label="Publishing", proposed="p"),
                 ActorRefNode(id="ar1", label="Writer", ref_actor_id="a1"),
@@ -147,9 +156,12 @@ def test_create_node_rejects_feature_on_feature_canvas(tmp_path: Path) -> None:
     plot_root = resolve_plot_root(str(tmp_path))
     create_project(plot_root, "alpha", "Alpha")
     write_canvas(
-        plot_root, "alpha",
+        plot_root,
+        "alpha",
         CanvasDoc(
-            canvas_id="svc1", canvas_kind="feature", feature_ref="svc1",
+            canvas_id="svc1",
+            canvas_kind="feature",
+            feature_ref="svc1",
             nodes=[
                 FeatureNode(id="svc1", label="Publishing", proposed="p"),
                 ActorRefNode(id="ar1", label="Writer", ref_actor_id="a1"),
@@ -211,9 +223,11 @@ def test_create_node_on_actors_canvas(tmp_path: Path) -> None:
     plot_root = resolve_plot_root(str(tmp_path))
     create_project(plot_root, "alpha", "Alpha")
     write_canvas(
-        plot_root, "alpha",
+        plot_root,
+        "alpha",
         CanvasDoc(
-            canvas_id="actors", canvas_kind="actors",
+            canvas_id="actors",
+            canvas_kind="actors",
             nodes=[ActorNode(id="a1", label="Operator"), ActorNode(id="a2", label="User")],
         ),
     )
@@ -227,7 +241,8 @@ def test_create_node_on_entities_canvas(tmp_path: Path) -> None:
     plot_root = resolve_plot_root(str(tmp_path))
     create_project(plot_root, "alpha", "Alpha")
     write_canvas(
-        plot_root, "alpha",
+        plot_root,
+        "alpha",
         CanvasDoc(canvas_id="entities", canvas_kind="entities", nodes=[]),
     )
     out = create_node(
@@ -273,7 +288,13 @@ def test_create_node_is_a_registered_mcp_tool() -> None:
     assert tool.name == "create_node"
     props = set(tool.parameters["properties"])
     assert props == {
-        "project_path", "project_id", "canvas_kind", "kind", "fields", "service_id", "near",
+        "project_path",
+        "project_id",
+        "canvas_kind",
+        "kind",
+        "fields",
+        "service_id",
+        "near",
     }
     assert set(tool.parameters["required"]) == {
         "project_path",
@@ -291,21 +312,20 @@ def test_create_node_near_places_beside_the_parent(tmp_path: Path) -> None:
     placed near the same anchor, and overrides the kind-cluster heuristic."""
     plot_root = _setup(tmp_path)
     write_canvas(
-        plot_root, "alpha",
+        plot_root,
+        "alpha",
         CanvasDoc(
-            canvas_id="services", canvas_kind="services",
+            canvas_id="services",
+            canvas_kind="services",
             nodes=[
                 ServiceNode(id="s1", label="송금", x=0.0, y=0.0),
                 ServiceNode(id="s2", label="자산", x=0.0, y=600.0),
             ],
         ),
     )
-    f1 = create_node(plot_root, "alpha", "services", "feature",
-                     {"label": "연락처 송금"}, near="s1")
-    f2 = create_node(plot_root, "alpha", "services", "feature",
-                     {"label": "링크 송금"}, near="s1")
-    g1 = create_node(plot_root, "alpha", "services", "feature",
-                     {"label": "대시보드"}, near="s2")
+    f1 = create_node(plot_root, "alpha", "services", "feature", {"label": "연락처 송금"}, near="s1")
+    f2 = create_node(plot_root, "alpha", "services", "feature", {"label": "링크 송금"}, near="s1")
+    g1 = create_node(plot_root, "alpha", "services", "feature", {"label": "대시보드"}, near="s2")
     # children sit right of their own parent, not in a global feature pile
     assert f1["node"]["x"] > 0.0 and abs(f1["node"]["y"] - 0.0) < 200.0
     assert g1["node"]["x"] > 0.0 and abs(g1["node"]["y"] - 600.0) < 200.0
@@ -317,8 +337,7 @@ def test_create_node_near_unknown_anchor_raises(tmp_path: Path) -> None:
     plot_root = _setup(tmp_path)
     _foundation(plot_root)
     with pytest.raises(ValueError, match="ghost"):
-        create_node(plot_root, "alpha", "foundation", "core_value",
-                    {"label": "X"}, near="ghost")
+        create_node(plot_root, "alpha", "foundation", "core_value", {"label": "X"}, near="ghost")
 
 
 def test_write_playbook_places_children_near_their_parent() -> None:
@@ -336,9 +355,11 @@ def test_feature_created_via_mcp_seeds_its_detail_canvas(tmp_path: Path) -> None
 
     plot_root = _setup(tmp_path)
     write_canvas(
-        plot_root, "alpha",
+        plot_root,
+        "alpha",
         CanvasDoc(
-            canvas_id="services", canvas_kind="services",
+            canvas_id="services",
+            canvas_kind="services",
             nodes=[ServiceNode(id="s1", label="송금", x=0.0, y=0.0)],
         ),
     )
@@ -357,10 +378,32 @@ def test_create_node_near_synthetic_anchor_uses_kind_cluster(tmp_path: Path) -> 
     node/position. That must NOT error and must NOT chain rightward: fall back
     to same-kind clustering so pillars stack with their siblings."""
     plot_root = _setup(tmp_path)
-    first = create_node(plot_root, "alpha", "foundation", "core_value",
-                        {"label": "신뢰"}, near="__project_anchor__")
-    second = create_node(plot_root, "alpha", "foundation", "core_value",
-                         {"label": "속도"}, near="__project_anchor__")
+    first = create_node(
+        plot_root, "alpha", "foundation", "core_value", {"label": "신뢰"}, near="__project_anchor__"
+    )
+    second = create_node(
+        plot_root, "alpha", "foundation", "core_value", {"label": "속도"}, near="__project_anchor__"
+    )
     f, s = first["node"], second["node"]
-    assert s["x"] == f["x"]          # left-aligned to the kind cluster
-    assert s["y"] > f["y"]           # stacked below, not marching right
+    assert s["x"] == f["x"]  # left-aligned to the kind cluster
+    assert s["y"] > f["y"]  # stacked below, not marching right
+
+
+def test_create_node_applies_the_kind_palette_color(tmp_path: Path) -> None:
+    """B-23 (screenshot-verified, 2026-07-04): coach-created values were white
+    while the seeded value is amber — same kind, different colors. create_node
+    now applies the kind's default palette (mirroring the viewer stencil)
+    when the caller doesn't pass a color; an explicit color still wins."""
+    plot_root = _setup(tmp_path)
+    v = create_node(plot_root, "alpha", "foundation", "core_value", {"label": "신뢰"})
+    assert v["node"]["color"] == "#fde68a"
+    a = create_node(plot_root, "alpha", "actors", "actor", {"label": "고객"})
+    assert a["node"]["color"] == "#fecaca"
+    # color is a STRUCTURAL field — callers can't set it (existing reject
+    # guard); the palette is the single authority, so the attempt lands in
+    # rejected_fields and the kind color still applies.
+    custom = create_node(
+        plot_root, "alpha", "foundation", "core_value", {"label": "속도", "color": "#123456"}
+    )
+    assert "color" in custom["rejected_fields"]
+    assert custom["node"]["color"] == "#fde68a"

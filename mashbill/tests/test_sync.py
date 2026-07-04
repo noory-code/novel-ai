@@ -94,6 +94,7 @@ def test_sync_skips_archive_when_detail_has_user_authored_nodes(
     plot_root: Path,
 ) -> None:
     from mashbill.folder_io import _canvas_file, _write_json
+
     create_project(plot_root, "alpha", "Alpha")
     write_canvas(plot_root, "alpha", _overview_with({"order": "주문"}))
     sync_details_with_overview(plot_root, "alpha")  # seeds order detail
@@ -111,9 +112,7 @@ def test_sync_skips_archive_when_detail_has_user_authored_nodes(
     write_canvas(plot_root, "alpha", _overview_with({}))
     result = sync_details_with_overview(plot_root, "alpha")
     # Detail must NOT have been archived — user content was present.
-    assert (
-        "order" not in result["archived"]
-    ), "sync archived a detail with user-authored content"
+    assert "order" not in result["archived"], "sync archived a detail with user-authored content"
     # The "skipped" key surfaces the protected services to the caller.
     assert result.get("skipped_archive") == ["order"], (
         "sync must report which detail folders were preserved against the "
@@ -128,6 +127,7 @@ def test_sync_skips_archive_when_detail_has_user_authored_edges(
     plot_root: Path,
 ) -> None:
     from mashbill.folder_io import _canvas_file, _write_json
+
     create_project(plot_root, "alpha", "Alpha")
     write_canvas(plot_root, "alpha", _overview_with({"order": "주문"}))
     sync_details_with_overview(plot_root, "alpha")

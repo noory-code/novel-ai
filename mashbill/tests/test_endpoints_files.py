@@ -61,9 +61,7 @@ def test_file_get_missing_project_path_400(client: TestClient) -> None:
 
 def test_file_get_nonexistent_project_path_404(client: TestClient, tmp_path: Path) -> None:
     missing = tmp_path / "does-not-exist"
-    resp = client.get(
-        f"/api/files?project_path={missing}&project_id={PROJECT_ID}&path=details.md"
-    )
+    resp = client.get(f"/api/files?project_path={missing}&project_id={PROJECT_ID}&path=details.md")
     assert resp.status_code == 404
 
 
@@ -99,14 +97,10 @@ def test_file_get_returns_written_content(client: TestClient, workspace: Path) -
     assert resp.json() == {"path": "details.md", "content": "# Hello\nbody"}
 
 
-def test_file_get_missing_file_returns_empty_string(
-    client: TestClient, workspace: Path
-) -> None:
+def test_file_get_missing_file_returns_empty_string(client: TestClient, workspace: Path) -> None:
     # read_text_file returns "" for a not-yet-created file (open-node flow).
     make_project(workspace)
-    resp = client.get(
-        f"/api/files?project_path={workspace}&project_id={PROJECT_ID}&path=notes.md"
-    )
+    resp = client.get(f"/api/files?project_path={workspace}&project_id={PROJECT_ID}&path=notes.md")
     assert resp.status_code == 200
     assert resp.json() == {"path": "notes.md", "content": ""}
 
@@ -122,9 +116,7 @@ def test_file_get_path_traversal_400(client: TestClient, workspace: Path) -> Non
 
 def test_file_get_disallowed_extension_400(client: TestClient, workspace: Path) -> None:
     make_project(workspace)
-    resp = client.get(
-        f"/api/files?project_path={workspace}&project_id={PROJECT_ID}&path=secret.py"
-    )
+    resp = client.get(f"/api/files?project_path={workspace}&project_id={PROJECT_ID}&path=secret.py")
     assert resp.status_code == 400
     assert "not allowed" in resp.json()["error"]
 
@@ -133,9 +125,7 @@ def test_file_get_oversize_413(client: TestClient, workspace: Path) -> None:
     plot_root = make_project(workspace)
     big = plot_root / "big.md"
     big.write_text("x" * (MAX_FILE_BYTES + 1), encoding="utf-8")
-    resp = client.get(
-        f"/api/files?project_path={workspace}&project_id={PROJECT_ID}&path=big.md"
-    )
+    resp = client.get(f"/api/files?project_path={workspace}&project_id={PROJECT_ID}&path=big.md")
     assert resp.status_code == 413
     assert "exceeds" in resp.json()["error"]
 

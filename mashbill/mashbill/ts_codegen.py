@@ -50,6 +50,7 @@ def wire_ts_path() -> Path | None:
         return None
     return Path(root).resolve() / _VIEWER_REL
 
+
 # Base-field names live on ``BaseFieldsJson`` (the interface each ``XxxJson``
 # extends), so they are excluded from the per-kind interface bodies.
 _BASE_FIELD_NAMES = tuple(BaseNodeFields.model_fields.keys())

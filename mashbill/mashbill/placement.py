@@ -43,9 +43,7 @@ _NEAR_DX = 260.0
 _NEAR_BAND = 400.0
 
 
-def _compute_near_position(
-    existing: list[SketchNode], anchor: SketchNode
-) -> tuple[float, float]:
+def _compute_near_position(existing: list[SketchNode], anchor: SketchNode) -> tuple[float, float]:
     """Place a new node beside ``anchor``, stacked below earlier siblings.
 
     Canvas-drawing defect (D-2026-07-02-L, user report "캔버스는 잘 못그리네"):
@@ -54,8 +52,25 @@ def _compute_near_position(
     siblings stacking downward within the anchor's band."""
     child_x = anchor.x + _NEAR_DX
     siblings = [
-        n
-        for n in existing
-        if abs(n.x - child_x) < 1.0 and abs(n.y - anchor.y) < _NEAR_BAND
+        n for n in existing if abs(n.x - child_x) < 1.0 and abs(n.y - anchor.y) < _NEAR_BAND
     ]
     return child_x, anchor.y + _FRESH_DY * len(siblings)
+
+
+# Kind default colors — MIRRORS the viewer stencil palette
+# (novel/viewer/src/canvases/SketchStencil.tsx); B-23: coach-created nodes
+# must look like their stencil siblings. Callers may still override.
+KIND_COLORS: dict[str, str] = {
+    "mission": "#fef3c7",
+    "core_value": "#fde68a",
+    "identity": "#fed7aa",
+    "actor": "#fecaca",
+    "category": "#e2e8f0",
+    "service": "#bae6fd",
+    "note": "#fef9c3",
+    "feature": "#e0f2fe",
+    "entity": "#cffafe",
+    "actor_ref": "#fce7f3",
+    "step": "#e0e7ff",
+    "decision": "#fde68a",
+}

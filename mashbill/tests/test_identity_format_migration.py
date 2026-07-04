@@ -129,10 +129,16 @@ def test_identity_body_folds_into_description_on_read() -> None:
     definition fold) and body empties."""
     from mashbill.models_foundation import IdentityNode
 
-    n = IdentityNode.model_validate({
-        "id": "i1", "label": "Voice", "x": 0, "y": 0,
-        "description": "따뜻하고 단단한 말투", "body": "격식은 낮추고 존중은 유지",
-    })
+    n = IdentityNode.model_validate(
+        {
+            "id": "i1",
+            "label": "Voice",
+            "x": 0,
+            "y": 0,
+            "description": "따뜻하고 단단한 말투",
+            "body": "격식은 낮추고 존중은 유지",
+        }
+    )
     assert "따뜻하고 단단한 말투" in n.description
     assert "격식은 낮추고 존중은 유지" in n.description
     assert n.body == ""
@@ -141,7 +147,13 @@ def test_identity_body_folds_into_description_on_read() -> None:
 def test_identity_description_alone_is_untouched() -> None:
     from mashbill.models_foundation import IdentityNode
 
-    n = IdentityNode.model_validate({
-        "id": "i1", "label": "Voice", "x": 0, "y": 0, "description": "D",
-    })
+    n = IdentityNode.model_validate(
+        {
+            "id": "i1",
+            "label": "Voice",
+            "x": 0,
+            "y": 0,
+            "description": "D",
+        }
+    )
     assert n.description == "D" and n.body == ""

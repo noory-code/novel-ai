@@ -96,9 +96,7 @@ def test_register_claude_code_creates_config_when_missing(
     assert plot.get("type") == "stdio"
 
 
-def test_register_claude_code_preserves_sibling_entries(
-    fake_home: Path, plugin_root: Path
-) -> None:
+def test_register_claude_code_preserves_sibling_entries(fake_home: Path, plugin_root: Path) -> None:
     (fake_home / ".claude.json").write_text(
         json.dumps(
             {
@@ -117,9 +115,7 @@ def test_register_claude_code_preserves_sibling_entries(
     assert cfg["otherTopLevel"] is True
 
 
-def test_register_claude_code_is_idempotent(
-    fake_home: Path, plugin_root: Path
-) -> None:
+def test_register_claude_code_is_idempotent(fake_home: Path, plugin_root: Path) -> None:
     register_plot("claude-code", plugin_root)
     first = json.loads((fake_home / ".claude.json").read_text(encoding="utf-8"))
     register_plot("claude-code", plugin_root)
@@ -127,9 +123,7 @@ def test_register_claude_code_is_idempotent(
     assert first == second
 
 
-def test_unregister_claude_code_removes_plot_only(
-    fake_home: Path, plugin_root: Path
-) -> None:
+def test_unregister_claude_code_removes_plot_only(fake_home: Path, plugin_root: Path) -> None:
     (fake_home / ".claude.json").write_text(
         json.dumps(
             {
@@ -152,9 +146,7 @@ def test_unregister_claude_code_removes_plot_only(
 # ---------------------------------------------------------------------------
 
 
-def test_register_codex_creates_config_when_missing(
-    fake_home: Path, plugin_root: Path
-) -> None:
+def test_register_codex_creates_config_when_missing(fake_home: Path, plugin_root: Path) -> None:
     register_plot("codex", plugin_root)
     cfg_path = fake_home / ".codex" / "config.toml"
     assert cfg_path.is_file()
@@ -188,9 +180,7 @@ def test_register_codex_is_idempotent(fake_home: Path, plugin_root: Path) -> Non
     assert first == second
 
 
-def test_unregister_codex_removes_plot_only(
-    fake_home: Path, plugin_root: Path
-) -> None:
+def test_unregister_codex_removes_plot_only(fake_home: Path, plugin_root: Path) -> None:
     cfg_path = fake_home / ".codex" / "config.toml"
     cfg_path.parent.mkdir(parents=True)
     cfg_path.write_text(
@@ -210,9 +200,7 @@ def test_unregister_codex_removes_plot_only(
 
 
 @pytest.mark.parametrize("provider", ["claude-code", "codex"])
-def test_is_plot_registered_false_when_no_config(
-    fake_home: Path, provider: ProviderName
-) -> None:
+def test_is_plot_registered_false_when_no_config(fake_home: Path, provider: ProviderName) -> None:
     assert is_plot_registered(provider) is False
 
 
@@ -301,9 +289,7 @@ def test_register_codex_when_frozen_writes_stable_command(
     monkeypatch.setattr(sys, "executable", exe, raising=False)
 
     register_plot("codex", plugin_root)
-    cfg = tomllib.loads(
-        (fake_home / ".codex" / "config.toml").read_text(encoding="utf-8")
-    )
+    cfg = tomllib.loads((fake_home / ".codex" / "config.toml").read_text(encoding="utf-8"))
     plot = cfg["mcp_servers"]["mashbill"]
     assert plot["command"] == exe
     assert plot["args"] == ["--mcp-stdio"]

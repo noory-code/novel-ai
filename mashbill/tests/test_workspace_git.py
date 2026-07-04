@@ -121,9 +121,7 @@ def test_tag_after_consent_lands_in_workspace_repo(tmp_path: Path) -> None:
     assert (tmp_path / ".git").is_dir()
     assert not (plot_root / ".git").exists()
 
-    listed = client.get(
-        "/api/projects/proj-a/tags", params={"project_path": str(tmp_path)}
-    )
+    listed = client.get("/api/projects/proj-a/tags", params={"project_path": str(tmp_path)})
     assert "session-1" in [t["name"] for t in listed.json()["tags"]]
 
     # At-tag: file paths inside the repo are prefixed with .noory/novel/{id}/.
@@ -145,9 +143,7 @@ def test_plot_does_not_touch_existing_user_git(tmp_path: Path) -> None:
     from mashbill.http_app import create_http_app
 
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
-    subprocess.run(
-        ["git", "config", "--local", "user.name", "Alice"], cwd=tmp_path, check=True
-    )
+    subprocess.run(["git", "config", "--local", "user.name", "Alice"], cwd=tmp_path, check=True)
     subprocess.run(
         ["git", "config", "--local", "user.email", "alice@example.com"],
         cwd=tmp_path,
@@ -200,9 +196,7 @@ def test_plot_commit_author_is_plot_even_on_users_repo(tmp_path: Path) -> None:
     from mashbill.http_app import create_http_app
 
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
-    subprocess.run(
-        ["git", "config", "--local", "user.name", "Alice"], cwd=tmp_path, check=True
-    )
+    subprocess.run(["git", "config", "--local", "user.name", "Alice"], cwd=tmp_path, check=True)
     subprocess.run(
         ["git", "config", "--local", "user.email", "alice@example.com"],
         cwd=tmp_path,
@@ -274,8 +268,9 @@ def test_legacy_dotnoory_plot_git_migrates_up_to_workspace(tmp_path: Path) -> No
         check=True,
     )
     subprocess.run(
-        ["git", "-c", "user.name=x", "-c", "user.email=x@x",
-         "commit", "-m", "legacy"], cwd=plot_root, check=True,
+        ["git", "-c", "user.name=x", "-c", "user.email=x@x", "commit", "-m", "legacy"],
+        cwd=plot_root,
+        check=True,
     )
 
     # Open the workspace (triggers migration).

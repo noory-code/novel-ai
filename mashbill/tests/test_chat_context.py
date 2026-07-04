@@ -390,6 +390,16 @@ def test_actors_framing_draws_value_flow_edges() -> None:
     assert "no lines is unfinished" in f
 
 
+def test_foundation_framing_draws_multiple_identity_facets() -> None:
+    """B-25 (user, 2026-07-04): "왜 아이덴티티는 하나뿐이죠?" — the concept is
+    flat N peers (one node per facet: voice / energy / speech style) but the
+    coach only ever filled the seeded Voice. The framing must call for
+    several facets, each its own node."""
+    f = build_framing_preamble("foundation").lower()
+    assert "several facets" in f
+    assert "voice, energy" in f
+
+
 def test_system_prompt_stays_under_saturation_budget() -> None:
     """Sixteenth sim iteration (2026-07-03): the coach prompt grew with every
     rotation — the composed canvas prompt hit ~1,800–2,000 words and the

@@ -641,8 +641,6 @@ def test_feature_refs_round_trip_through_canvas() -> None:
 # ---------------------------------------------------------------------------
 
 
-
-
 def test_step_node_carries_typed_fields() -> None:
     n = StepNode(
         id="s-verify",
@@ -676,8 +674,6 @@ def test_feature_accepts_step() -> None:
             ActorRefNode(id="ar-user", label="→ user", ref_actor_id="user", side="user"),
         ],
     )
-
-
 
 
 def test_step_requires_service_parent() -> None:
@@ -727,8 +723,6 @@ def test_rule_typed_fields_round_trip() -> None:
     assert n.policy.startswith("비밀번호 8자")
     assert n.enforcement.startswith("가입 폼")
     assert n.actor_permissions == {"user": "RUD", "admin": "CRUD"}
-
-
 
 
 def test_actor_permissions_default_empty() -> None:

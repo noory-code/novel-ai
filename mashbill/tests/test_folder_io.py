@@ -611,9 +611,7 @@ def test_absorb_md_typed_text_into_json_no_md_file(plot_root: Path) -> None:
 
     create_project(plot_root, "alpha", "Alpha")
     canonical_rel = str(
-        _foundation_md_path(plot_root, "alpha", "mission", "m", "Mission").relative_to(
-            plot_root
-        )
+        _foundation_md_path(plot_root, "alpha", "mission", "m", "Mission").relative_to(plot_root)
     ).replace("\\", "/")
 
     canvas_path = _canvas_file(plot_root, "alpha", "foundation")

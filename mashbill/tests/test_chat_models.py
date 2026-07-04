@@ -81,9 +81,7 @@ def test_parse_codex_models_carries_reasoning_levels_separately() -> None:
         ]
     }
     out = parse_codex_models(cache)
-    assert out == [
-        ModelOption(id="gpt-5.5", label="GPT-5.5", efforts=["low", "high", "xhigh"])
-    ]
+    assert out == [ModelOption(id="gpt-5.5", label="GPT-5.5", efforts=["low", "high", "xhigh"])]
 
 
 def test_claude_models_are_the_documented_aliases() -> None:

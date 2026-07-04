@@ -18,6 +18,7 @@ def plot_root(tmp_path: Path) -> Path:
     # tests that exercise publish/tag need a real repo, so we init here.
     from mashbill.git_store import init_workspace_repo
     from mashbill.workspace import resolve_plot_root
+
     init_workspace_repo(tmp_path)
     return resolve_plot_root(str(tmp_path))
 
@@ -43,9 +44,7 @@ def _seed_image(plot_root: Path, project_id: str, rel_path: str) -> Path:
     return target
 
 
-def test_raw_endpoint_serves_png_bytes(
-    plot_root: Path, client: TestClient
-) -> None:
+def test_raw_endpoint_serves_png_bytes(plot_root: Path, client: TestClient) -> None:
     _seed_image(plot_root, "alpha", "img/test.png")
     resp = client.get(
         "/api/files/raw",
@@ -60,9 +59,7 @@ def test_raw_endpoint_serves_png_bytes(
     assert resp.headers["content-type"].startswith("image/")
 
 
-def test_raw_endpoint_404_for_missing_file(
-    plot_root: Path, client: TestClient
-) -> None:
+def test_raw_endpoint_404_for_missing_file(plot_root: Path, client: TestClient) -> None:
     create_project(plot_root, "alpha", "alpha")
     resp = client.get(
         "/api/files/raw",
@@ -75,9 +72,7 @@ def test_raw_endpoint_404_for_missing_file(
     assert resp.status_code == 404
 
 
-def test_raw_endpoint_400_for_disallowed_extension(
-    plot_root: Path, client: TestClient
-) -> None:
+def test_raw_endpoint_400_for_disallowed_extension(plot_root: Path, client: TestClient) -> None:
     """Only image extensions are served by /api/files/raw."""
     create_project(plot_root, "alpha", "alpha")
     (plot_root / "notes.md").write_text("# md", encoding="utf-8")
@@ -92,9 +87,7 @@ def test_raw_endpoint_400_for_disallowed_extension(
     assert resp.status_code == 400
 
 
-def test_raw_endpoint_400_for_path_traversal(
-    plot_root: Path, client: TestClient
-) -> None:
+def test_raw_endpoint_400_for_path_traversal(plot_root: Path, client: TestClient) -> None:
     create_project(plot_root, "alpha", "alpha")
     resp = client.get(
         "/api/files/raw",

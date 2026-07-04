@@ -86,8 +86,7 @@ def test_mcp_adapter_does_not_import_http_for_viewer_stack() -> None:
     offenders = [
         mod
         for mod in _HTTP_FOR_VIEWER
-        if f"from mashbill.{mod} import" in src
-        or f"import mashbill.{mod}" in src
+        if f"from mashbill.{mod} import" in src or f"import mashbill.{mod}" in src
     ]
     assert not offenders, (
         f"mcp_tools.py imports the HTTP-for-viewer stack {offenders} — "

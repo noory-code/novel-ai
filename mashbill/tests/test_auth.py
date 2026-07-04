@@ -120,9 +120,7 @@ def test_middleware_disabled_when_env_unset_no_token_required(
     assert resp.status_code == 200
     # /api/workspace/projects also reachable without a header — this is the
     # v0.64.x baseline behaviour, preserved when env is unset.
-    resp2 = client.get(
-        "/api/workspace/projects", params={"project_path": str(workspace)}
-    )
+    resp2 = client.get("/api/workspace/projects", params={"project_path": str(workspace)})
     # The endpoint may return 200 or any non-401 code (depends on workspace
     # contents); the point of this assertion is "auth didn't reject it".
     assert resp2.status_code != 401
@@ -133,16 +131,12 @@ def test_middleware_401_on_missing_header_when_env_set(
 ) -> None:
     monkeypatch.setenv(ENV_VAR, "secret-tok")
     client = _client()
-    resp = client.get(
-        "/api/workspace/projects", params={"project_path": str(workspace)}
-    )
+    resp = client.get("/api/workspace/projects", params={"project_path": str(workspace)})
     assert resp.status_code == 401
     assert "required" in resp.json()["error"]
 
 
-def test_middleware_401_on_wrong_token(
-    workspace: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_middleware_401_on_wrong_token(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(ENV_VAR, "secret-tok")
     client = _client()
     resp = client.get(
@@ -169,9 +163,7 @@ def test_middleware_passes_through_with_correct_token(
     assert resp.status_code != 401
 
 
-def test_health_endpoint_is_always_open(
-    workspace: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_health_endpoint_is_always_open(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The Tauri shell probes /api/health before injecting the token; if
     auth blocked /health it could never bootstrap. The open-path list is
     intentionally tiny (only /api/health)."""

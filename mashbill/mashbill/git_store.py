@@ -47,8 +47,10 @@ class GitNotInitializedError(Exception):
 # ``user.name`` / ``user.email`` stay untouched, even on a workspace Novel
 # initialised itself.
 _MASHBILL_IDENTITY = (
-    "-c", "user.name=Novel",
-    "-c", "user.email=plot@noory-ai.local",
+    "-c",
+    "user.name=Novel",
+    "-c",
+    "user.email=plot@noory-ai.local",
 )
 
 # Novel's tag/publish commits stage ONLY the Novel data root. The user's
@@ -100,9 +102,7 @@ def assert_repo_initialized(workspace_root: Path) -> None:
     ``.git/``. Endpoint code calls this before any git op that would
     otherwise fail with an inscrutable subprocess error."""
     if not is_workspace_repo(workspace_root):
-        raise GitNotInitializedError(
-            f"git not initialized at workspace root {workspace_root}"
-        )
+        raise GitNotInitializedError(f"git not initialized at workspace root {workspace_root}")
 
 
 def init_workspace_repo(workspace_root: Path) -> bool:
@@ -213,8 +213,7 @@ def read_file_at_tag(workspace_root: Path, tag: str, relative_path: str) -> byte
     )
     if result.returncode != 0:
         raise FileNotFoundError(
-            f"file not at tag {tag!r}: {relative_path} "
-            f"(git show {spec} exited {result.returncode})"
+            f"file not at tag {tag!r}: {relative_path} (git show {spec} exited {result.returncode})"
         )
     return result.stdout
 
@@ -244,7 +243,12 @@ def list_tags(workspace_root: Path) -> list[dict[str, Any]]:
             continue
         name, _tag_sha, ts, message = parts
         commit_sha = _git(
-            "rev-list", "-n", "1", name, cwd=workspace_root, check=False,
+            "rev-list",
+            "-n",
+            "1",
+            name,
+            cwd=workspace_root,
+            check=False,
         ).stdout.strip()
         tags.append(
             {

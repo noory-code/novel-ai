@@ -37,7 +37,6 @@ from mashbill.storage import (  # noqa: F401
 # ---------------------------------------------------------------------------
 
 
-
 def rename_project(plot_root: Path, project_id: str, new_name: str) -> ProjectDoc:
     """Update ``ProjectDoc.name``. v0.13 Phase 0: there is no per-canvas
     project node any more — label is derived from ProjectDoc.name at render
@@ -266,5 +265,3 @@ def delete_project(plot_root: Path, project_id: str) -> None:
                 child.unlink()
     else:
         shutil.rmtree(folder)
-
-

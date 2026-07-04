@@ -35,6 +35,7 @@ def _git_not_initialized_response(workspace_root: object) -> JSONResponse:
         status_code=409,
     )
 
+
 # ---------------------------------------------------------------------------
 # v0.24.13 (D-2026-05-21-B) — project-level blueprint publish endpoint
 # ---------------------------------------------------------------------------
@@ -91,11 +92,7 @@ async def project_publish_endpoint(request: Request) -> JSONResponse:
     if bump not in ("major", "minor", "patch"):
         return _error("'bump' must be one of major/minor/patch")
     message_input = body.get("message")
-    message = (
-        message_input
-        if isinstance(message_input, str) and message_input.strip()
-        else None
-    )
+    message = message_input if isinstance(message_input, str) and message_input.strip() else None
 
     from mashbill.folder_io import read_project, write_project
 

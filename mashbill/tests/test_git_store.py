@@ -173,9 +173,7 @@ def test_tag_snapshot_only_stages_noory_plot(workspace: Path) -> None:
         capture_output=True,
         text=True,
     ).stdout
-    assert "user_notes.md" in status, (
-        f"expected user_notes.md untracked, got status={status!r}"
-    )
+    assert "user_notes.md" in status, f"expected user_notes.md untracked, got status={status!r}"
 
 
 def test_tag_snapshot_with_no_changes_still_tags(workspace: Path) -> None:

@@ -234,8 +234,7 @@ def wire_contract() -> dict[str, Any]:
         "schema_version": SCHEMA_VERSION,
         "base_fields": sorted(BaseNodeFields.model_fields.keys()),
         "kinds": {
-            kind: sorted(cls.model_fields.keys())
-            for kind, cls in sorted(_ALL_KIND_CLASSES.items())
+            kind: sorted(cls.model_fields.keys()) for kind, cls in sorted(_ALL_KIND_CLASSES.items())
         },
     }
 

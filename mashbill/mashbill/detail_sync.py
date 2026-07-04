@@ -172,5 +172,3 @@ def _detail_has_user_authored_content(detail_dir: Path, feature_id: str) -> bool
         if node.get("id") not in seeded_ids:
             return True
     return False
-
-

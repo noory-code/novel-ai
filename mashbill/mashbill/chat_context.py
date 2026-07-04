@@ -79,7 +79,10 @@ SCOPE_FRAMING: dict[str, str] = {
         "return to the hunt — the identity confirm is a pit stop, not the "
         "finish line: registering it does not end the value hunt, so go "
         "straight back to the next fork and keep going until the user runs "
-        "dry. A foundation session that ends with the "
+        "dry. Identity has SEVERAL facets — voice, energy, "
+        "speech style — each its own node: draft more than one, and register "
+        "each facet as a separate identity node (kind name as label stays; "
+        "the facet goes in the fields). A foundation session that ends with the "
         "identity still empty is a failed session."
     ),
     "actors": (

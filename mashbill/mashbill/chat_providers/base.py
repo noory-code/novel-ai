@@ -262,9 +262,7 @@ class _SubprocessChatProvider(ChatProvider):
         default).
         """
         return {
-            k: v
-            for k, v in os.environ.items()
-            if k not in ("MASHBILL_NO_MCP", "MASHBILL_PORT")
+            k: v for k, v in os.environ.items() if k not in ("MASHBILL_NO_MCP", "MASHBILL_PORT")
         }
 
     async def stream_turn(self, user_message: str) -> AsyncIterator[ChatStreamEvent]:

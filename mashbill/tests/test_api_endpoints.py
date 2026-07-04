@@ -370,6 +370,8 @@ def test_project_publish_invalid_bump_is_400(
         json={"bump": "huge"},
     )
     assert resp.status_code == 400
+
+
 def test_canvas_put_overview_auto_creates_detail(
     app_client: tuple[TestClient, str],
 ) -> None:
@@ -752,9 +754,7 @@ def test_folder_post_creates_unique_path(
     # index.md is seeded inside the created folder (under the project scope).
     # R9 (D-2026-06-10-G): artifacts live under .noory/novel/. S2: flat layout —
     # no {project_id} segment.
-    assert (
-        Path(project_path) / ".noory/novel/core/mission-mission/index.md"
-    ).is_file()
+    assert (Path(project_path) / ".noory/novel/core/mission-mission/index.md").is_file()
 
 
 def test_list_migrates_v01_sketches_silently(
