@@ -62,11 +62,27 @@ def create_edge(
         relation = "flow"
     else:
         relation = classify_edge(canvas_kind, nodes_by_id[source_id].kind)
+    # B-26 (D-2026-07-04-C) — connection points are FIXED at creation so
+    # same-kind spokes converge on one hub side and hierarchies read
+    # top-down; the viewer honours stored handles (D-2026-06-01-H) and the
+    # mindmap layout follows them. Value flows stay floating (cross-cutting).
+    opposite = {"l": "r", "r": "l", "t": "b", "b": "t"}
+    anchor_side_by_kind = {"core_value": "l", "identity": "r", "mission": "t"}
+    source_handle: str | None = None
+    target_handle: str | None = None
+    if source_id == PROJECT_ANCHOR_ID:
+        side = anchor_side_by_kind.get(nodes_by_id[target_id].kind)
+        if side:
+            source_handle, target_handle = side, opposite[side]
+    elif relation == "inheritance":
+        source_handle, target_handle = "b", "t"
     edge = SketchEdge.model_validate(
         {
             "id": f"edge_{uuid4().hex[:8]}",
             "source": source_id,
             "target": target_id,
+            "sourceHandle": source_handle,
+            "targetHandle": target_handle,
             "label": label,
             "directed": True,
             "relation": relation,

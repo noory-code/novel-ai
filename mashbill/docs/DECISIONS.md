@@ -39,6 +39,20 @@
 
 ## Log
 
+### D-2026-07-04-C — edge handles pin at creation; layout follows (B-26)
+
+- **What:** create_edge stores handles — anchor spokes per target kind
+  (core_value l / identity r / mission t, target gets the opposite side);
+  inheritance edges b→t. Flows stay floating.
+- **Why:** User: moving a node moved its connection point; wants fixed points
+  WITH grouping. Stored handles are already the viewer/layout SSOT
+  (D-2026-06-01-H), so pinning at creation makes grouping stable by
+  construction.
+- **Approval:** User directive ("연결점 고정. 그룹화 잘하는 방법을 찾으세요"),
+  2026-07-04.
+- **Spec impact:** Pinned by
+  ``test_create_edge.py::test_create_edge_pins_handles_for_anchor_spokes_and_hierarchy``.
+
 ### D-2026-07-03-W — the synthetic anchor is visible in agent canvas reads
 
 - **What:** The agent-facing canvas read injects the project anchor (kind

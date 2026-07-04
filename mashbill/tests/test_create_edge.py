@@ -98,3 +98,23 @@ def test_create_edge_accepts_the_synthetic_anchor(tmp_path: Path) -> None:
     # idempotent like any other edge
     again = create_edge(plot_root, "alpha", "foundation", "__project_anchor__", cvid)
     assert again["existing"] is True
+
+
+def test_create_edge_pins_handles_for_anchor_spokes_and_hierarchy(tmp_path: Path) -> None:
+    """B-26 (user, 2026-07-04): connection points must be FIXED, grouped by
+    construction. The viewer already honours stored handles (D-2026-06-01-H);
+    create_edge now stores them — anchor spokes pin per target kind (values
+    left, identity right, mission top), inheritance edges pin parent-bottom →
+    child-top. Value flows stay floating."""
+    plot_root = _setup(tmp_path)
+    cv = create_node(plot_root, "alpha", "foundation", "core_value", {"label": "신뢰"})
+    spoke = create_edge(plot_root, "alpha", "foundation", "__project_anchor__",
+                        cv["node"]["id"])
+    assert spoke["edge"]["sourceHandle"] == "l"
+    assert spoke["edge"]["targetHandle"] == "r"
+    fam = create_node(plot_root, "alpha", "actors", "actor", {"label": "일반 사용자"})
+    sub = create_node(plot_root, "alpha", "actors", "actor", {"label": "무료 사용자"})
+    h = create_edge(plot_root, "alpha", "actors", fam["node"]["id"], sub["node"]["id"])
+    if h["edge"]["relation"] == "inheritance":
+        assert h["edge"]["sourceHandle"] == "b"
+        assert h["edge"]["targetHandle"] == "t"

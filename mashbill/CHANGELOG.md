@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.153.0] — 2026-07-04
+
+### Changed
+
+- **Connection points are fixed at creation** (B-26, D-2026-07-04-C).
+  Anchor spokes pin per target kind (values enter the hub's left, identity
+  the right, mission the top) and inheritance edges pin parent-bottom →
+  child-top — the viewer honours stored handles and the layout follows
+  them, so pinning and grouping reinforce each other. Value flows stay
+  floating.
+
 ## [0.152.0] — 2026-07-04
 
 ### Changed
