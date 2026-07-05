@@ -20,14 +20,21 @@ from mashbill.models import CanvasDoc, CanvasKind
 from mashbill.models_union import SketchNodeAdapter
 
 # Which ref fields a kind carries, and each field's (home canvas, expected kind).
+# D-2026-07-05-E — participation chain: category(=touchpoint) and feature carry
+# ref_actor_ids too, so every layer of the services canvas names WHO takes part
+# (narrowing touchpoint ⊇ service ⊇ feature is coached/UI-soft).
 _REF_FIELDS: dict[str, dict[str, tuple[str, str]]] = {
+    "category": {"ref_actor_ids": ("actors", "actor")},
     "service": {
         "ref_actor_ids": ("actors", "actor"),
         "ref_value_ids": ("foundation", "core_value"),
         "ref_identity_ids": ("foundation", "identity"),
     },
     "step": {"ref_entity_ids": ("entities", "entity")},
-    "feature": {"ref_entity_ids": ("entities", "entity")},
+    "feature": {
+        "ref_actor_ids": ("actors", "actor"),
+        "ref_entity_ids": ("entities", "entity"),
+    },
 }
 
 

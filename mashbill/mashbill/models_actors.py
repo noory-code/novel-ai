@@ -89,16 +89,25 @@ class FeatureNode(BaseNodeFields):
 
     kind: Literal["feature"] = "feature"
     proposed: str = ""
+    # D-2026-07-05-E — participation chain: WHO acts in this feature, picked
+    # from (narrowed to, coached/UI-soft) its service's participants.
+    ref_actor_ids: list[str] = Field(default_factory=list)
 
 
 class CategoryNode(BaseNodeFields):
-    """v0.15 Phase 1: ``category`` kind. Thematic grouping of services on
-    the Services canvas; a pure container with no value creation of its
-    own. ``theme`` is the one-line statement of the common thread."""
+    """v0.15 Phase 1: ``category`` kind. D-2026-07-05-E (user-pinned) — the
+    category IS the product's **touchpoint (접점)**: where the product meets
+    its people (고객 앱, 사장님 웹). It groups the services delivered through
+    that surface, and ``ref_actor_ids`` names the actor families who meet the
+    product here — the top of the participation-narrowing chain
+    (touchpoint ⊇ service ⊇ feature, coached/UI-soft, never a validator).
+    The wire kind stays ``category``; display/concept renamed. ``theme`` is
+    the one-line statement of the common thread."""
 
     kind: Literal["category"] = "category"
     theme: str = ""
     body: str = ""
+    ref_actor_ids: list[str] = Field(default_factory=list)
 
 
 # mission_ref / value_ref / identity_ref retired 2026-06-20 (D-2026-06-17-H /

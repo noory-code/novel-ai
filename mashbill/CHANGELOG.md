@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.166.0] — 2026-07-05
+
+### Changed
+
+- **Participation chain + touchpoint redefinition** (D-2026-07-05-E,
+  user-pinned): category = the product's touchpoint (접점 — where the
+  product meets its people); ``ref_actor_ids`` added to category and
+  feature (service already had it), assignable via set_node_references;
+  the services coach derives services from the actors-canvas exchange
+  lines (participants = the lines' ends) and runs a closing touchpoint
+  sweep. Narrowing (touchpoint ⊇ service ⊇ feature) is coached/UI-soft.
+  Wire artifacts regenerated lock-step.
+
 ## [0.165.0] — 2026-07-05
 
 ### Fixed

@@ -39,6 +39,41 @@
 
 ## Log
 
+### D-2026-07-05-E — participation chain: category=touchpoint, per-layer participants, services derive from exchange lines
+
+- **What:** (1) The category kind is REDEFINED as the product's
+  **touchpoint (접점)** — where the product meets its people (고객 앱,
+  사장님 웹); wire kind name stays ``category``, display/concept renamed
+  (viewer kind labels → 접점/Touchpoint). (2) Every services-canvas layer
+  names WHO participates: ``ref_actor_ids`` added to CategoryNode and
+  FeatureNode (ServiceNode already carried it), assignable via
+  ``set_node_references``. (3) Participation NARROWS top-down — a
+  service's picker offers its touchpoint's picks, a feature's its
+  service's — SOFT (empty parent = full roster; never a validator,
+  D-2026-07-04-P lesson). (4) The services coach derives service
+  candidates from the ACTORS-CANVAS EXCHANGE LINES (a service = how an
+  exchange actually happens; participants = the lines' ends) and runs a
+  closing TOUCHPOINT sweep (group services into touchpoints + set their
+  participant families). (5) The actor inspector's 접점(side/Surface)
+  editor is REMOVED — a touchpoint is undefinable before services exist;
+  the wire field lingers until a later schema-removal step (discuss).
+- **Why:** user-driven design discussion 2026-07-05 심야: "서비스가
+  없는데 어떻게 접점을 정의합니까" (side on the actor is a phase-order
+  error, same template-residue class as the seeds) · "카테고리라는 걸 그
+  접점이라고 이름 붙여둔 걸로 사용하면 된다" (upgrade the vague thematic
+  grouping instead of adding a 4th kind) · "참여 매커니즘… 카테고리에도
+  만들고 서비스에도 만들고 기능에도" + "카테고리에 사용자를 넣어두면
+  자연스레 그 아래 서비스는 카테고리의 사용자만" (per-layer participation
+  with top-down narrowing) · "액터 캔버스에 액터간 교환하는 가치를
+  정의하잖아요 → 서비스에서 어떻게 교환하게 하지?를 만들어낼 수 있죠"
+  (services derive from exchange lines).
+- **Approval:** Accepted by user ("네 작업하시죠", 2026-07-05).
+- **Spec impact:** root ``concepts/kinds.md`` §category + ``specs/
+  kinds-fields.md`` + ``specs/canvas-behavior.md`` §Services 참여 사슬;
+  engine ``test_participation_refs.py`` + services-prompt pins; viewer
+  ``participation-chain.test.tsx`` + inherited-surface test rewrite;
+  wire artifacts regenerated lock-step.
+
 ### D-2026-07-05-D — hand connects unify with engine lines + semantic kind picker
 
 - **What:** viewer — (1) hand-drawn edges stop pinning the dragged

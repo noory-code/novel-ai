@@ -469,6 +469,33 @@ def test_actors_every_family_gets_an_anchor_spoke() -> None:
     assert "anchor line" in p.lower()
 
 
+def test_services_derive_from_actor_exchange_lines() -> None:
+    """User-pinned chain (2026-07-05): the actors canvas already says WHAT
+    flows between whom — a service is HOW that exchange happens. The coach
+    derives service candidates from the exchange lines and wires each
+    service's participants from its lines' ends."""
+    f = build_framing_preamble("services").lower()
+    assert "exchange lines" in f
+    assert "ref_actor_ids" in f
+
+
+def test_services_touchpoint_sweep_before_closing() -> None:
+    """User-pinned (2026-07-05): category IS the touchpoint (접점 — where
+    the product meets its people). Before closing, the coach groups
+    services into touchpoints and sets each touchpoint's participants;
+    narrowing keeps a service's participants within its touchpoint's."""
+    f = build_framing_preamble("services")
+    low = f.lower()
+    assert "touchpoint" in low
+    assert "접점" in f
+    assert "stay within" in low
+
+
+def test_feature_subjects_narrow_to_service_participants() -> None:
+    f = build_framing_preamble("services").lower()
+    assert "its service's participants" in f
+
+
 def test_foundation_every_pillar_gets_anchor_line() -> None:
     """B-41 (foundation live check 2026-07-05 — first blank-canvas run): the
     coach anchor-connected only the FIRST node of each kind; the 2nd value
