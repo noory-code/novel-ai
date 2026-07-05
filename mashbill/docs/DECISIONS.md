@@ -39,6 +39,19 @@
 
 ## Log
 
+### D-2026-07-05-H — 접점 renamed 플랫폼 (Platform); service/feature nodes show their kind tag
+
+- **What:** the category kind's display name changes 접점 → 플랫폼
+  (Platform) across viewer labels, inspector copy, palette hints, and
+  the services coach's closing sweep (PLATFORM sweep). Service and
+  feature nodes now render their kind tag on the canvas face like the
+  platform does, so the three services-canvas kinds read apart by tag
+  AND color (D-2026-07-05-G).
+- **Why:** user directives 2026-07-05 심야 ("접점은 플랫폼으로 바꾸고
+  서비스와 기능에 접점처럼 종류 표기되게").
+- **Approval:** Accepted by user (live directive, 2026-07-05).
+
+
 ### D-2026-07-05-G — services-canvas kind colors read apart at a glance
 
 - **What:** touchpoint(category) violet-200 ``#ddd6fe`` · service sky-200

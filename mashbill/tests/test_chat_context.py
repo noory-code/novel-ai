@@ -479,15 +479,16 @@ def test_services_derive_from_actor_exchange_lines() -> None:
     assert "ref_actor_ids" in f
 
 
-def test_services_touchpoint_sweep_before_closing() -> None:
-    """User-pinned (2026-07-05): category IS the touchpoint (접점 — where
-    the product meets its people). Before closing, the coach groups
-    services into touchpoints and sets each touchpoint's participants;
-    narrowing keeps a service's participants within its touchpoint's."""
+def test_services_platform_sweep_before_closing() -> None:
+    """User-pinned (2026-07-05, renamed 접점→플랫폼 same night): category IS
+    the platform (플랫폼 — where the product meets its people). Before
+    closing, the coach groups services into platforms and sets each
+    platform's participants; narrowing keeps a service's participants
+    within its platform's."""
     f = build_framing_preamble("services")
     low = f.lower()
-    assert "touchpoint" in low
-    assert "접점" in f
+    assert "platform" in low
+    assert "플랫폼" in f
     assert "stay within" in low
 
 

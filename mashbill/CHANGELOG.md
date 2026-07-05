@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.166.2] — 2026-07-05
+
+### Changed
+
+- **접점 → 플랫폼 (Platform)** (D-2026-07-05-H, user directive): the
+  category kind's display/concept name is now platform; the services
+  coach's closing sweep says PLATFORM sweep. Wire kind unchanged.
+
 ## [0.166.1] — 2026-07-05
 
 ### Changed
