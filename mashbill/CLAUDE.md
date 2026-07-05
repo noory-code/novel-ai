@@ -269,11 +269,15 @@ For any UI change in `viewer/`, invoke `mashbill-verifier` to navigate
 the browser, screenshot the change, and probe the DOM. Do not claim
 "done" until the verifier returns **MATCHES SPEC**.
 
-For UI bugs specifically, the [`mashbill-frontend-bug-diagnosis`](./skills/mashbill-frontend-bug-diagnosis/SKILL.md)
-skill is the upstream procedure (probe → diagnose → fix → re-probe).
+For UI bugs specifically, the `mashbill-frontend-bug-diagnosis` skill is the
+upstream procedure (probe → diagnose → fix → re-probe).
 
-For features, the [`mashbill-feature-tdd`](./skills/mashbill-feature-tdd/SKILL.md)
-skill is the end-to-end pipeline; Step 8 invokes the verifier.
+For features, the `mashbill-feature-tdd` skill is the end-to-end pipeline;
+Step 8 invokes the verifier.
+
+> Dev-facing skills live in the workspace-root `.claude/skills/` (D-2026-07-05-I,
+> superseding D-2026-05-13-G's monorepo-level home) and are invoked by name via
+> the Skill tool — not by file path from here.
 
 The legacy "manual" path below is kept as a fallback for sessions
 where the Playwright MCP is offline:
@@ -517,7 +521,7 @@ cd mashbill && uv run ruff format mashbill/ tests/
 | **Adding any cursor / handle / pan override on top of RF defaults** | v0.13.3 → v0.13.5 stacked six rounds of cursor / handle interventions; each fix introduced or revealed the next round's bug, ending with a full reset in v0.13.6 (see D-2026-05-10-C) | Default to React Flow vendor CSS (`reactflow/dist/style.css`, `@reactflow/node-resizer/dist/style.css`). To deviate, open a fresh `D-YYYY-MM-DD-X` entry, get user approval, and add the rule to `styles.css` with an `!important` comment naming the decision id. The override stack itself is the regression engine — never grow it without an audit trail. |
 | **Bundling a cross-cutting visual change with a feature change in one commit** | v0.13.10 shipped `styles.css` cursor patch + auto-layout button move together. The visual fix turned out to address a latent RF v11 + Tailwind preflight bug that had existed since v0.13.0; the auto-layout feature commit became the cognitive scapegoat for ~6 cursor rounds (see D-2026-05-11-C). | Pre-commit gate (`pre_commit_gate.py::cross_cutting_bundle_check`) blocks. Split into two atomic commits: visual fix first (own D-id), feature second. The static guard `viewer/tests/styles-cursor-baseline.test.tsx` further locks `styles.css` to zero cursor rules. |
 | **Hardcoding user-facing UI text in a viewer component** | Novel is a global service (user direction 2026-05-10: *"이건 글로벌 서비스가 될거거든요"*). A hardcoded English or Korean string in a `.tsx` file bypasses the i18n resource bundle and creates per-component sprawl that resists later migration. | Route every user-facing string through `useTranslation()` + `t("namespace.key")`, with the value added to BOTH `viewer/src/i18n/locales/en.json` (primary) and `viewer/src/i18n/locales/ko.json` (Korean). The `i18n-keys-parity.test.tsx` static guard fails the build if locales drift. See D-2026-05-11-D. |
-| **Treating raw JSON as a domain entity (no `fromJson` boundary)** | Pre-v0.15 god `SketchNode` interface: UI code read `.what_we_do` directly off the wire shape, no class, no invariant check, no normalisation. The v0.15 reset (D-2026-05-12-B) retired this by introducing per-kind classes in `viewer/src/domain/{Kind}.ts` with `fromJson` / `toJson` / invariant boundaries (15 at the time; the palette is expanding per D-2026-06-17-D/F/I — `feature` / `note` / `entity`). Adding **any new kind** without the class is the new shape of the old mistake. | Every new kind lands as a domain class via [`mashbill-entity-template`](./skills/mashbill-entity-template/SKILL.md) (14-step walk). The `fromJson` method is the **JSON↔domain boundary** — invariants throw `DomainParseError` there, not in UI validation. Three static guards enforce no regression: `no-god-import.test.tsx` (Phase C, types.ts re-export only + per-kind file exists + `{Kind}Json` exported + `registerKindParser` called), `entity-roundtrip.test.tsx` (Phase D, `fromJson` ∘ `toJson` is identity for every kind), and server-side `test_schema_parity.py` (Pydantic ↔ TS interface drift). See D-2026-05-13-D / E. |
+| **Treating raw JSON as a domain entity (no `fromJson` boundary)** | Pre-v0.15 god `SketchNode` interface: UI code read `.what_we_do` directly off the wire shape, no class, no invariant check, no normalisation. The v0.15 reset (D-2026-05-12-B) retired this by introducing per-kind classes in `viewer/src/domain/{Kind}.ts` with `fromJson` / `toJson` / invariant boundaries (15 at the time; the palette is expanding per D-2026-06-17-D/F/I — `feature` / `note` / `entity`). Adding **any new kind** without the class is the new shape of the old mistake. | Every new kind lands as a domain class via the `mashbill-entity-template` skill (14-step walk). The `fromJson` method is the **JSON↔domain boundary** — invariants throw `DomainParseError` there, not in UI validation. Three static guards enforce no regression: `no-god-import.test.tsx` (Phase C, types.ts re-export only + per-kind file exists + `{Kind}Json` exported + `registerKindParser` called), `entity-roundtrip.test.tsx` (Phase D, `fromJson` ∘ `toJson` is identity for every kind), and server-side `test_schema_parity.py` (Pydantic ↔ TS interface drift). See D-2026-05-13-D / E. |
 
 ---
 

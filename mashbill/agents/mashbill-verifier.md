@@ -220,7 +220,7 @@ likely cause from `mashbill-frontend-bug-diagnosis` quick-reference>
 - [`docs/CURSOR.md`](../docs/CURSOR.md) — cursor SSOT.
 - [`docs/VISION.md`](../docs/VISION.md) — essence anchor (verify
   doesn't drift the user from the essence).
-- [`skills/mashbill-frontend-bug-diagnosis/SKILL.md`](../skills/mashbill-frontend-bug-diagnosis/SKILL.md) —
-  companion probe-first diagnosis skill.
-- [`skills/mashbill-feature-tdd/SKILL.md`](../skills/mashbill-feature-tdd/SKILL.md) —
+- `mashbill-frontend-bug-diagnosis` skill —
+  companion probe-first diagnosis skill (workspace-root `.claude/skills/`, name-invoked).
+- `mashbill-feature-tdd` skill —
   the parent assistant's pipeline; you execute Step 8 of it.

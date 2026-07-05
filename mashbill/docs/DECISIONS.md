@@ -6980,6 +6980,11 @@ in the same browser-verification round:
 
 ### D-2026-05-13-G — Skill classification: dev-facing skills move to monorepo-level .claude/skills/
 
+> **Superseded on the location axis by D-2026-07-05-I** — the dev-facing skills
+> moved one level further up, to the **workspace-root** ``.claude/skills/``. The
+> classification (dev-facing → workspace skills dir, not ``plugin/skills/``) still
+> holds; only the home changed.
+
 - **What:** Move 7 dev-facing skills from ``mashbill/skills/`` to
   ``noory-ai/.claude/skills/`` (monorepo-level Claude Code workspace
   skills directory):
@@ -15114,4 +15119,32 @@ but not yet fully eliminated.
   parity-guarded by `tests/test_chat_scope_parity.py`. Decisions:
   scope omitted → `project` (Postel); `project` scope = explicit toggle;
   `Reset` = current scope only.
+
+---
+
+### D-2026-07-05-I — Dev-facing skills home: monorepo-level → workspace-root .claude/skills/
+
+- **What:** Move the 7 dev-facing ``mashbill-*`` skills + ``claude-plugin-ref``
+  from ``noory-ai/.claude/skills/`` up to the **workspace-root**
+  ``.claude/skills/`` (``noory-workspace/.claude/skills/``). Supersedes the
+  *location* half of D-2026-05-13-G; the classification (dev-facing skills belong
+  in a workspace skills dir, never ``plugin/skills/``) is unchanged.
+- **Why:** All development — including plugin work across the monorepo — now
+  happens from the ``noory-workspace`` root (user decision 2026-07-05), and Novel
+  dev spans **two repos** (``noory-ai/mashbill`` engine + ``novel/`` app). A
+  root-level (unscoped) skills home is the only one that loads in **both** repos;
+  keeping them under ``noory-ai/.claude/`` scopes them to ``noory-ai:*`` (fires
+  under ``noory-ai/`` only, misses ``novel/`` viewer work).
+- **Tradeoff (accepted):** a standalone ``noory-ai`` clone (MIT, cloned on its
+  own) no longer ships these dev skills. Accepted because dev is centralised in
+  the workspace; the skills remain recoverable from git history.
+- **Doc sync:** ``mashbill/CLAUDE.md`` (3 broken ``./skills/mashbill-*`` links →
+  name-invoked skill references) + ``agents/mashbill-verifier.md`` (2 links) +
+  this entry + the D-2026-05-13-G superseded pointer. The old links pointed at
+  ``mashbill/skills/`` (plugin-distribution skills), where the dev skills never
+  lived — a pre-existing break fixed here.
+- **Tracking:** workspace ``.gitignore`` un-ignores ``.claude/skills/``
+  (``.claude/*`` + ``!.claude/skills/`` — git can't re-include under a wholly
+  ignored dir); settings/rules stay ignored. Flow work item: initiative
+  ``beta-groundwork`` / epic-1 / US-107.
 
