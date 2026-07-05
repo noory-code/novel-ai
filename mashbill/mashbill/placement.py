@@ -84,10 +84,13 @@ KIND_COLORS: dict[str, str] = {
     "core_value": "#fde68a",
     "identity": "#fed7aa",
     "actor": "#fecaca",
-    "category": "#e2e8f0",
+    # D-2026-07-05-G — the services canvas' three kinds must read apart at a
+    # glance (user: pale slate/sky/sky all blurred together): touchpoint
+    # violet-200, service sky-200, feature green-200.
+    "category": "#ddd6fe",
     "service": "#bae6fd",
     "note": "#fef9c3",
-    "feature": "#e0f2fe",
+    "feature": "#bbf7d0",
     "entity": "#cffafe",
     "actor_ref": "#fce7f3",
     "step": "#e0e7ff",

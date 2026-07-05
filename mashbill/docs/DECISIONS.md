@@ -39,6 +39,17 @@
 
 ## Log
 
+### D-2026-07-05-G — services-canvas kind colors read apart at a glance
+
+- **What:** touchpoint(category) violet-200 ``#ddd6fe`` · service sky-200
+  ``#bae6fd`` · feature green-200 ``#bbf7d0`` — engine ``KIND_COLORS`` and
+  the viewer stencil presets in lock-step (B-23 parity). Existing nodes
+  keep their stored colors (no silent rewrite).
+- **Why:** user directive 2026-07-05 심야 ("서비스 탭에 최상위 서비스 기능
+  색깔 구별이 확실하게") — the old pale slate/sky/sky triple blurred
+  together, especially in dark mode.
+- **Approval:** Accepted by user (live directive, 2026-07-05).
+
 ### D-2026-07-05-E — participation chain: category=touchpoint, per-layer participants, services derive from exchange lines
 
 - **What:** (1) The category kind is REDEFINED as the product's

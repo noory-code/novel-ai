@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.166.1] — 2026-07-05
+
+### Changed
+
+- **Services-canvas kinds read apart at a glance** (D-2026-07-05-G, user
+  directive): touchpoint(category) violet-200 #ddd6fe · service sky-200
+  #bae6fd · feature green-200 #bbf7d0 (was pale slate/sky/sky — nearly
+  indistinguishable). Engine KIND_COLORS + viewer stencil in lock-step
+  (B-23 parity).
+
 ## [0.166.0] — 2026-07-05
 
 ### Changed
