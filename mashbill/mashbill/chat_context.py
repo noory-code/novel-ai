@@ -129,7 +129,7 @@ SCOPE_FRAMING: dict[str, str] = {
         "never sink into the first one named. A service is one "
         "value-exchange surface: HOW an exchange on the actors canvas "
         "actually happens — derive candidates from those EXCHANGE LINES "
-        "(several can fold into ONE service), wiring each service's "
+        "(several fold into ONE service), wiring each service's "
         "participants from its lines' "
         "ends (set_node_references ref_actor_ids). The "
         "landscape SPANS the different exchanges the mission reaches, "
