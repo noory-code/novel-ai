@@ -39,6 +39,29 @@
 
 ## Log
 
+### D-2026-07-05-D — hand connects unify with engine lines + semantic kind picker
+
+- **What:** viewer — (1) hand-drawn edges stop pinning the dragged
+  handles: node-to-node lines store none (render attaches to facing
+  sides, B-36 parity), anchor spokes pin the kind side
+  (``edge_io.anchor_side_by_kind`` mirror), self-loops keep dragged
+  handles (the arc anchors on them); anchor-touching hand lines store
+  relation ``flow`` (engine parity). (2) On the actors canvas a
+  node-to-node hand connect defers into a SEMANTIC kind picker
+  (EdgeKindModal): "이 선은 무엇을 뜻하나요?" — 소속(갈래로 묶기,
+  child→family inheritance in one click) or 가치 교환(누가 주나요 +
+  무엇이 오가나요 → giver→receiver labeled flow). Cancel creates
+  nothing. Single-meaning canvases keep immediate commit.
+- **Why:** user question 2026-07-05 ("직접 연결한 선하고 그냥 연결한
+  선하고 다른 이유는?") exposed the asymmetry — hand lines pinned to
+  the dragged faces wrap around after layout while engine lines track.
+  User decision: "통일해야죠. 사용자가 선을 연결할 때 선의 속성을
+  선택하게 해야겠네요… 시맨틱한 안내를 해야합니다."
+- **Approval:** Accepted by user (live directives, 2026-07-05).
+- **Spec impact:** root `specs/canvas-behavior.md` Actors §손 연결;
+  viewer `use-flow-handlers.test.ts` (+8) + `edge-kind-modal.test.tsx`
+  (+5); SketchCanvas ceiling 567 → 578 (plumbing).
+
 ### D-2026-07-05-C — foundation: every pillar gets its anchor line in the same turn
 
 - **What:** the foundation framing binds anchor connection to EVERY node
