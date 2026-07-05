@@ -497,6 +497,16 @@ def test_feature_subjects_narrow_to_service_participants() -> None:
     assert "its service's participants" in f
 
 
+def test_feature_doers_are_wired_not_just_narrowed() -> None:
+    """Participation-chain live validation (baemin 2026-07-05 새벽): services
+    and platforms got their participants wired, but features landed 0/24 —
+    the framing said subjects NARROW to the service's participants without
+    ever saying to SET them (the B-41 rule-without-action class). The
+    framing must carry the explicit write."""
+    f = build_framing_preamble("services").lower()
+    assert "each feature's doer" in f
+
+
 def test_foundation_every_pillar_gets_anchor_line() -> None:
     """B-41 (foundation live check 2026-07-05 — first blank-canvas run): the
     coach anchor-connected only the FIRST node of each kind; the 2nd value

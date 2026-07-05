@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.166.3] — 2026-07-05
+
+### Fixed
+
+- **Feature doers get WIRED, not just narrowed** (D-2026-07-05-E follow-up,
+  live validation run): the baemin actors+services run wired every service
+  and platform participant but 0/24 features — the framing said feature
+  subjects narrow to the service's participants without saying to SET them
+  (the rule-without-action class, again). The framing now carries the
+  explicit write (set_node_references ref_actor_ids on the feature).
+
 ## [0.166.2] — 2026-07-05
 
 ### Changed
