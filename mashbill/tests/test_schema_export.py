@@ -63,24 +63,24 @@ def test_foundation_json_schema_strips_typed_text_fields(tmp_path: Path) -> None
 
 def test_non_foundation_json_schema_includes_typed_fields(tmp_path: Path) -> None:
     """A non-Foundation kind's typed fields live in JSON, so its schema
-    must expose them (e.g. ActorNode.side, ServiceNode.target_side)."""
+    must expose them (e.g. ActorNode.body). (side removed US-303)"""
     export_all_schemas(tmp_path, "proj-1")
     schema_dir = tmp_path / "schema"
 
-    # D-2026-06-15-J: actor is identity-only (side + body); motivation/pain
-    # moved to actor_ref (per-service stake).
+    # D-2026-06-15-J + US-303: actor is identity-only (body); motivation/pain
+    # moved to actor_ref. side removed.
     actor_schema = json.loads((schema_dir / "actor.json").read_text(encoding="utf-8"))
     actor_props = actor_schema.get("properties", {})
-    for field in ("side", "body"):
+    for field in ("body",):
         assert field in actor_props, f"actor.json must expose {field!r}"
     for field in ("motivation", "pain"):
         assert field not in actor_props, f"actor.json must NOT expose {field!r} (now actor_ref)"
 
-    # D-2026-06-19-I: actor_ref is a read-only anchor — ref_actor_id + side
+    # D-2026-06-19-I: actor_ref is a read-only anchor — ref_actor_id only
     # only; the per-service stake (gives/receives/motivation/pain) is retired.
     actor_ref_schema = json.loads((schema_dir / "actor_ref.json").read_text(encoding="utf-8"))
     actor_ref_props = actor_ref_schema.get("properties", {})
-    for field in ("ref_actor_id", "side"):
+    for field in ("ref_actor_id",):
         assert field in actor_ref_props, f"actor_ref.json must expose {field!r}"
     for gone in ("gives", "receives", "motivation", "pain"):
         assert gone not in actor_ref_props, f"actor_ref.json must NOT expose retired {gone!r}"

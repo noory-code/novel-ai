@@ -48,9 +48,19 @@ _FEATURES = """기능 판별 기준:
 - 행복 경로가 끝까지: 분기·예외 전에 처음-끝이 한 줄로 걸어져야 한다.
 - 승격 신호: 기능 하나가 여러 당사자의 교환을 품기 시작하면 서비스 후보."""
 
+_ACTORS = """액터(교환 당사자) 판별 기준:
+- 돈 내는 고객만이 아니라 교환의 모든 면: 공급자·수혜자·운영·신뢰까지 일급.
+- 각 액터에 '주는 것'과 '받는 것'이 함께 (호혜적 교환).
+- 신뢰·안전·운영 액터를 명시적으로 세움 (마켓플레이스 필수).
+- 액터는 인구통계가 아니라 교환 속 역할 (Host, Rider, Merchant, Moderator).
+- 공급자는 평판·도구·유통도 받음 (Superhost, 매너온도, 아카데미).
+- 같은 사람도 주고받음 다르면 다른 액터 (무료 학습자 vs 구독자).
+틀린 예: 소비자만 모델링, 공급/운영 누락, 받기만 하는 액터."""
+
 _AREAS: dict[str, str] = {
     "mission": _MISSION,
     "values": _VALUES,
+    "actors": _ACTORS,
     "services": _SERVICES,
     "features": _FEATURES,
 }
@@ -59,12 +69,12 @@ _AREAS: dict[str, str] = {
 def get_principles(area: str | None = None) -> str:
     """Return the discriminator principles for ``area``, or all areas joined.
 
-    ``area``: mission | values | services | features | None (= everything).
+    ``area``: mission | values | actors | services | features | None (= everything).
     Raises ``ValueError`` on an unknown area so a typo can't silently return
     nothing.
     """
     if area is None:
-        return "\n\n".join(_AREAS[k] for k in ("mission", "values", "services", "features"))
+        return "\n\n".join(_AREAS[k] for k in ("mission", "values", "actors", "services", "features"))
     if area not in _AREAS:
         raise ValueError(f"unknown area {area!r}; pick one of {sorted(_AREAS)} or omit")
     return _AREAS[area]

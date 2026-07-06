@@ -183,11 +183,11 @@ def publish_project_snapshot(plot_root: Path, project_id: str) -> dict[str, Any]
             continue
         slug = mint_slug(plot_root, project_id, node)
         body = str(getattr(node, "body", "") or "")
-        side = str(getattr(node, "side", "") or "")
+        # side removed (US-303); only body for identity now
         elements.append(
-            {"id": slug, "kind": "actor", "hash": _hash(f"actor|{node.label}|{side}|{body}")}
+            {"id": slug, "kind": "actor", "hash": _hash(f"actor|{node.label}|{body}")}
         )
-        block = f"### {node.label} (`{slug}`)" + (f" — {side}" if side else "") + "\n"
+        block = f"### {node.label} (`{slug}`)\n"
         if body:
             block += f"\n{body}\n"
         a_roles.append(block)

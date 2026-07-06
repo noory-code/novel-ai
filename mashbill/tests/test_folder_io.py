@@ -203,8 +203,8 @@ def test_write_canvas_rejects_wrong_project(plot_root: Path) -> None:
                 canvas_id="actors",
                 canvas_kind="actors",
                 nodes=[
-                    ActorNode(id="op", label="O", side="operator"),
-                    ActorNode(id="user", label="U", side="user"),
+                    ActorNode(id="op", label="O"),
+                    ActorNode(id="user", label="U"),
                 ],
             ),
         )
@@ -246,13 +246,13 @@ def _detail_with_actor_refs(service_id: str = "order") -> CanvasDoc:
                 id=f"{service_id}-op",
                 label="→ op",
                 ref_actor_id="operator",
-                side="operator",
+
             ),
             ActorRefNode(
                 id=f"{service_id}-user",
                 label="→ user",
                 ref_actor_id="user",
-                side="user",
+
             ),
         ],
     )
@@ -338,8 +338,8 @@ def test_write_canvas_does_not_commit(plot_root: Path) -> None:
             canvas_id="actors",
             canvas_kind="actors",
             nodes=[
-                ActorNode(id="op", label="O", side="operator"),
-                ActorNode(id="u", label="U", side="user"),
+                ActorNode(id="op", label="O"),
+                ActorNode(id="u", label="U"),
             ],
         ),
     )

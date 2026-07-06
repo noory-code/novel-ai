@@ -43,7 +43,7 @@ def test_actor_round_trip() -> None:
     n = ActorNode(
         id="actor-1",
         label="Operator",
-        side="operator",
+
         body="운영자 페르소나",
     )
     assert ActorNode.model_validate(n.model_dump()) == n
@@ -110,15 +110,15 @@ def test_actor_ref_with_blank_ref_actor_id_rejected() -> None:
 
 def test_actor_defaults_match_sketchnode_actor_defaults() -> None:
     """An ActorNode with only id+kind set serialises identity-only typed
-    fields (side/body). D-2026-06-15-J: motivation/pain are no longer
-    actor fields — they moved to actor_ref as per-service stake.
+    fields (body). D-2026-06-15-J + US-303: side removed; motivation/pain
+    moved to actor_ref.
     """
     n = ActorNode(id="actor-min", label="Actor")
     dumped = n.model_dump()
-    assert dumped["side"] is None
     assert dumped["body"] == ""
     assert "motivation" not in dumped
     assert "pain" not in dumped
+    assert "side" not in dumped
 
 
 def test_service_defaults_match_sketchnode_service_defaults() -> None:
@@ -184,10 +184,10 @@ def test_rule_round_trip() -> None:
 
 
 def test_adapter_dispatches_actor() -> None:
-    raw = ActorNode(id="a", label="Actor", side="user").model_dump()
+    raw = ActorNode(id="a", label="Actor").model_dump()
     parsed = SketchNodeAdapter.validate_python(raw)
     assert isinstance(parsed, ActorNode)
-    assert parsed.side == "user"
+    assert parsed.body == ""
 
 
 def test_adapter_dispatches_actor_ref_with_validator() -> None:

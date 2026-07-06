@@ -308,8 +308,8 @@ def test_actors_canvas_two_actors_ok() -> None:
         canvas_id="actors",
         canvas_kind="actors",
         nodes=[
-            ActorNode(id="operator", label="운영자", side="operator"),
-            ActorNode(id="user", label="사용자", side="user"),
+            ActorNode(id="operator", label="운영자"),
+            ActorNode(id="user", label="사용자"),
         ],
     )
 
@@ -322,7 +322,7 @@ def test_actors_canvas_blank_and_single_actor_ok() -> None:
     CanvasDoc(
         canvas_id="actors",
         canvas_kind="actors",
-        nodes=[ActorNode(id="buyer", label="구매자", side="user")],
+        nodes=[ActorNode(id="buyer", label="구매자")],
     )
 
 
@@ -331,8 +331,8 @@ def test_actors_canvas_sub_actor_via_parent_id_ok() -> None:
         canvas_id="actors",
         canvas_kind="actors",
         nodes=[
-            ActorNode(id="team", label="Team", side="user"),
-            ActorNode(id="member", label="Member", side="user"),
+            ActorNode(id="team", label="Team"),
+            ActorNode(id="member", label="Member"),
         ],
     )
 
@@ -447,13 +447,13 @@ def _detail_seed(canvas_id: str = "order") -> list[SketchNode]:
             id=f"{canvas_id}-op-ref",
             label="→ operator",
             ref_actor_id="operator",
-            side="operator",
+
         ),
         ActorRefNode(
             id=f"{canvas_id}-user-ref",
             label="→ user",
             ref_actor_id="user",
-            side="user",
+
         ),
     ]
 
@@ -497,16 +497,15 @@ def test_detail_canvas_one_user_actor_ref_ok() -> None:
                 id="login-user",
                 label="→ Bana",
                 ref_actor_id="bana",
-                side="user",
+    
             ),
         ],
     )
 
 
 def test_detail_canvas_operator_side_only_still_ok_for_backwards_compat() -> None:
-    """v0.27.16 — accept ``side="operator"`` actor_ref on its own too;
-    don't silently break legacy docs that have only an operator actor.
-    The minimum is *one* actor_ref of any side."""
+    """v0.27.16 — accept legacy actor_ref with old "side" (via extra=ignore, US-303);
+    don't silently break legacy docs. The minimum is *one* actor_ref."""
     CanvasDoc(
         canvas_id="ops",
         canvas_kind="feature",
@@ -517,7 +516,7 @@ def test_detail_canvas_operator_side_only_still_ok_for_backwards_compat() -> Non
                 id="ops-op",
                 label="→ Admin",
                 ref_actor_id="admin",
-                side="operator",
+    
             ),
         ],
     )
@@ -669,8 +668,8 @@ def test_feature_accepts_step() -> None:
                 label="Verify credentials",
                 order=1,
             ),
-            ActorRefNode(id="ar-op", label="→ op", ref_actor_id="operator", side="operator"),
-            ActorRefNode(id="ar-user", label="→ user", ref_actor_id="user", side="user"),
+            ActorRefNode(id="ar-op", label="→ op", ref_actor_id="operator"),
+            ActorRefNode(id="ar-user", label="→ user", ref_actor_id="user"),
         ],
     )
 
@@ -687,8 +686,8 @@ def test_step_requires_service_parent() -> None:
         nodes=[
             FeatureNode(id="auth", label="Auth"),
             StepNode(id="s1", label="Stray"),
-            ActorRefNode(id="ar-op", label="→ op", ref_actor_id="op", side="operator"),
-            ActorRefNode(id="ar-u", label="→ u", ref_actor_id="u", side="user"),
+            ActorRefNode(id="ar-op", label="→ op", ref_actor_id="op"),
+            ActorRefNode(id="ar-u", label="→ u", ref_actor_id="u"),
         ],
     )
 
@@ -751,8 +750,8 @@ def test_actor_permissions_round_trip_through_canvas() -> None:
                     "admin": "CRUD-all",
                 },
             ),
-            ActorRefNode(id="ar-op", label="→ op", ref_actor_id="operator", side="operator"),
-            ActorRefNode(id="ar-user", label="→ user", ref_actor_id="user", side="user"),
+            ActorRefNode(id="ar-op", label="→ op", ref_actor_id="operator"),
+            ActorRefNode(id="ar-user", label="→ user", ref_actor_id="user"),
         ],
     )
     parsed = CanvasDoc.model_validate(canvas.model_dump())

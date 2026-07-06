@@ -58,6 +58,8 @@ class _V01SketchNode(BaseModel):
     # Forward-compat fields the migration may need to read from later
     # legacy revisions (v0.2 → v0.10) before re-emitting as per-kind
     # classes. Permissive defaults; unknown keys ignored.
+    # side: removed in current model (US-303); kept here only for reading
+    # very old v0.x data during migration.
     side: Literal["operator", "user"] | None = None
     motivation: str = ""
     pain: str = ""

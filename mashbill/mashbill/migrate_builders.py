@@ -147,16 +147,10 @@ def _build_actors_canvas(
                 # are per-service now (actor_ref), so a legacy v0.1 actor's
                 # motivation/pain are not carried onto the v0.2 actor
                 # master (accepted tradeoff; realistic legacy data is empty).
-                side=n.side,
             )
         )
     cleaned_ids = {n.id for n in cleaned}
     scoped_edges = [e for e in edges if e.source in cleaned_ids and e.target in cleaned_ids]
-    # v0.11 — actors canvas requires ≥ 2 actor classes. Pad with placeholders
-    # if a legacy v0.1 sketch had fewer; the user can rename them. Also
-    # backfill ``side`` on legacy actors that have it unset (default = "user"
-    # since the typical legacy pattern was "one user-side actor").
-    cleaned = _backfill_actor_sides(cleaned)
     cleaned = _ensure_minimum_actors(cleaned)
     return CanvasDoc(
         canvas_id="actors",
@@ -166,59 +160,42 @@ def _build_actors_canvas(
     )
 
 
-def _backfill_actor_sides(nodes: list[ActorNode]) -> list[ActorNode]:
-    """v0.11 migration helper: legacy actor nodes have ``side = None``.
-    Default them to ``"user"`` so the model is self-consistent. Users can
-    flip individual actors to ``"operator"`` via the Inspector after open.
-    """
-    out: list[ActorNode] = []
-    for n in nodes:
-        if n.side is None:
-            out.append(n.model_copy(update={"side": "user"}))
-        else:
-            out.append(n)
-    return out
-
-
 def _ensure_minimum_actors(nodes: list[ActorNode]) -> list[ActorNode]:
     """v0.11 migration helper: pad an under-populated actors canvas with
     placeholder classes so the new ≥ 2 validator doesn't reject open.
     Idempotent — adds only what's missing.
     """
-    has_operator = any(n.side == "operator" for n in nodes)
-    has_user = any(n.side == "user" for n in nodes)
+    # side removed US-303; just ensure at least 2 actors
+    actor_nodes = [n for n in nodes if n.kind == "actor"]
     pad: list[ActorNode] = []
     used_ids = {n.id for n in nodes}
-    if not has_operator:
-        oid = "operator" if "operator" not in used_ids else "operator-seed"
-        pad.append(
-            ActorNode(
-                id=oid,
-                label="Operator",
-                side="operator",
-                x=-160,
-                y=-50,
-                width=140,
-                height=80,
-                color="#bae6fd",
-                shape="rounded",
+    if len(actor_nodes) + len(pad) < 2:
+        if "operator" not in used_ids:
+            pad.append(
+                ActorNode(
+                    id="operator",
+                    label="Operator",
+                    x=-160,
+                    y=-50,
+                    width=140,
+                    height=80,
+                    color="#bae6fd",
+                    shape="rounded",
+                )
             )
-        )
-    if not has_user and len(nodes) + len(pad) < 2:
-        uid = "user" if "user" not in used_ids else "user-seed"
-        pad.append(
-            ActorNode(
-                id=uid,
-                label="User",
-                side="user",
-                x=40,
-                y=-50,
-                width=140,
-                height=80,
-                color="#fecaca",
-                shape="rounded",
+        if len(actor_nodes) + len(pad) < 2 and "user" not in used_ids:
+            pad.append(
+                ActorNode(
+                    id="user",
+                    label="User",
+                    x=40,
+                    y=-50,
+                    width=140,
+                    height=80,
+                    color="#fecaca",
+                    shape="rounded",
+                )
             )
-        )
     return nodes + pad
 
 

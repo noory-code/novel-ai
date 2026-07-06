@@ -48,8 +48,8 @@ def _plant_baseline(plot_root: Path, project_id: str = "alpha") -> None:
         actors.model_copy(
             update={
                 "nodes": [
-                    ActorNode(id="operator", label="운영자", side="operator"),
-                    ActorNode(id="user", label="사용자", side="user"),
+                    ActorNode(id="operator", label="운영자"),
+                    ActorNode(id="user", label="사용자"),
                 ]
             }
         ),
@@ -328,7 +328,7 @@ def _add_service_with_features(plot_root: Path) -> str:
         nodes=[
             FeatureNode(id="feat-login", label="Login", proposed="자격으로 세션을 연다"),
             ActorRefNode(
-                id="feat-login-user-ref", label="→ User", ref_actor_id="user", side="user"
+                id="feat-login-user-ref", label="→ User", ref_actor_id="user"
             ),
             StepNode(id="s-input", label="자격 입력", order=1, outcome="자격 제출"),
             DecisionNode(id="d-verify", label="검증 성공?"),

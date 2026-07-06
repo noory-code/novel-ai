@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import ConfigDict, Field, model_validator
 
 from mashbill.models_kinds import BaseNodeFields
 
@@ -20,13 +20,10 @@ class ActorNode(BaseNodeFields):
     """v0.15 Phase 1: ``actor`` kind. A class of people in the value
     economy (PHILOSOPHY P5, IDENTITY.md ``Actor as class``).
 
-    D-2026-06-15-J: the actor entity carries **identity only** — ``side``
-    (Surface) + ``body``. ``motivation`` / ``pain`` are NOT here: per
-    PHILOSOPHY P3 (Participation is Asymmetric) they are defined by the
-    service and now live on ``actor_ref`` (per-service stake)."""
+    (side removed US-303; legacy data ignored)"""
 
+    model_config = ConfigDict(extra="ignore")
     kind: Literal["actor"] = "actor"
-    side: Literal["operator", "user"] | None = None
     body: str = ""
 
 
@@ -37,12 +34,11 @@ class ActorRefNode(BaseNodeFields):
     ``gives`` / ``receives`` / ``motivation`` / ``pain`` — are **retired**
     (supersedes `D-2026-06-15-J`): role-level value lives on the Actors
     relationship edges, aggregate value on the service "뭐가 좋아지나?". Carries
-    only ``ref_actor_id`` (the master it points at) + ``side`` (denormalized
-    from that master for colour-coding without a per-render dereference)."""
+    only ``ref_actor_id`` (the master it points at). (side removed US-303)"""
 
+    model_config = ConfigDict(extra="ignore")
     kind: Literal["actor_ref"] = "actor_ref"
     ref_actor_id: str | None = None
-    side: Literal["operator", "user"] | None = None
 
     @model_validator(mode="after")
     def _ref_actor_id_required(self) -> ActorRefNode:
