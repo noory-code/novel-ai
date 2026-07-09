@@ -480,10 +480,10 @@ def test_detail_canvas_zero_actor_refs_ok() -> None:
     )
 
 
-def test_detail_canvas_one_user_actor_ref_ok() -> None:
-    """v0.27.16 (D-2026-05-28-K) — per D-2026-05-28-J the operator side
-    of a service is the *service itself*; only a user-side actor_ref is
-    required. A single user-side actor_ref must produce a valid
+def test_detail_canvas_one_subject_actor_ref_ok() -> None:
+    """v0.27.16 (D-2026-05-28-K) — per D-2026-05-28-J the provider role
+    of a service is the *service itself*; only a subject actor_ref is
+    required. A single subject actor_ref must produce a valid
     feature (the pre-v0.27.16 ``≥ 2`` rule rejected this and
     forced an Admin placeholder, which the user flagged as a category
     error on 2026-05-28)."""
@@ -497,7 +497,7 @@ def test_detail_canvas_one_user_actor_ref_ok() -> None:
                 id="login-user",
                 label="→ Bana",
                 ref_actor_id="bana",
-    
+
             ),
         ],
     )
@@ -516,7 +516,7 @@ def test_detail_canvas_operator_side_only_still_ok_for_backwards_compat() -> Non
                 id="ops-op",
                 label="→ Admin",
                 ref_actor_id="admin",
-    
+
             ),
         ],
     )

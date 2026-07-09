@@ -39,7 +39,7 @@ from mashbill.models import (
 
 
 def test_actor_round_trip() -> None:
-    # D-2026-06-15-J: actor is identity-only (side + body).
+    # D-2026-06-15-J + US-303: actor is identity-only (body).
     n = ActorNode(
         id="actor-1",
         label="Operator",
@@ -50,16 +50,12 @@ def test_actor_round_trip() -> None:
 
 
 def test_actor_ref_round_trip() -> None:
-    # D-2026-06-15-J: actor_ref carries per-service stake (motivation/pain)
-    # alongside the value flow (gives/receives).
+    # D-2026-06-19-I + US-303: actor_ref is a read-only anchor carrying only
+    # the master actor pointer.
     n = ActorRefNode(
         id="ref-1",
         label="Operator instance",
         ref_actor_id="actor-1",
-        gives="moderation",
-        receives="reputation",
-        motivation="이 서비스를 안전하게 운영",
-        pain="신고가 너무 많다",
     )
     assert ActorRefNode.model_validate(n.model_dump()) == n
 

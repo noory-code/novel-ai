@@ -89,7 +89,8 @@ def test_writable_fields_per_kind_are_prose_only() -> None:
     idf = set(writable_node_fields(IdentityNode(id="i", label="x")))
     assert idf == {"label", "summary", "description"}
     assert "status" not in idf and "provenance" not in idf and "body" not in idf
-    # actor_ref is a read-only anchor — its master pointer + side are NOT writable
+    # actor_ref is a read-only anchor: its master pointer is not writable and
+    # legacy side is ignored rather than reintroduced.
     arf = set(writable_node_fields(ActorRefNode(id="ar", label="x", ref_actor_id="a1")))
     assert arf == {"label"}
     assert "ref_actor_id" not in arf and "side" not in arf
