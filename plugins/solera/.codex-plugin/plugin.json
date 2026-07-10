@@ -1,0 +1,42 @@
+{
+  "name": "solera",
+  "version": "7.8.0",
+  "description": "Deterministic work planning, ordering, gates, and retrospectives for AI-led execution.",
+  "author": {
+    "name": "noory-code",
+    "url": "https://github.com/noory-code"
+  },
+  "homepage": "https://github.com/noory-code/novel-ai/tree/main/plugins/solera",
+  "repository": "https://github.com/noory-code/novel-ai",
+  "license": "MIT",
+  "keywords": ["harness", "planning", "gates", "workflow", "mcp"],
+  "skills": "./skills/",
+  "mcpServers": {
+    "solera": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${PLUGIN_ROOT}",
+        "python",
+        "-m",
+        "solera.mcp_server"
+      ]
+    }
+  },
+  "interface": {
+    "displayName": "Solera",
+    "shortDescription": "Plan work and enforce deterministic gates",
+    "longDescription": "Solera plans work into a tree, offers one executable leaf at a time, runs its deterministic gate, and records retrospectives and feedback under .noory/solera.",
+    "developerName": "noory-code",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Write"],
+    "websiteURL": "https://github.com/noory-code/novel-ai/tree/main/plugins/solera",
+    "defaultPrompt": [
+      "Plan this work with Solera",
+      "Give me the next executable work item",
+      "Run the current work item's gate"
+    ],
+    "brandColor": "#D97706"
+  }
+}

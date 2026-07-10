@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "distill": {
-      "type": "stdio",
-      "command": "uv",
-      "args": ["run", "python", "-m", "distill"]
-    }
-  }
-}

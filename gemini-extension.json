@@ -1,0 +1,58 @@
+{
+  "name": "novel-ai",
+  "version": "0.1.0",
+  "description": "Open local-first design, execution, decision, and knowledge tools for Gemini CLI.",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {
+    "mashbill": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${extensionPath}${/}plugins${/}mashbill",
+        "python",
+        "-m",
+        "mashbill",
+        "--mcp-stdio"
+      ],
+      "cwd": "${extensionPath}"
+    },
+    "solera": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${extensionPath}${/}plugins${/}solera",
+        "python",
+        "-m",
+        "solera.mcp_server"
+      ],
+      "cwd": "${extensionPath}"
+    },
+    "proof": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${extensionPath}${/}plugins${/}proof",
+        "python",
+        "-m",
+        "proof.mcp_server"
+      ],
+      "cwd": "${extensionPath}"
+    },
+    "distill": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${extensionPath}${/}plugins${/}distill",
+        "python",
+        "-m",
+        "distill"
+      ],
+      "cwd": "${extensionPath}",
+      "includeTools": ["recall", "profile", "digest", "manage_entry", "store", "init"]
+    }
+  }
+}

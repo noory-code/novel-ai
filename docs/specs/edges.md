@@ -1,7 +1,7 @@
 # Edge model
 
 > **Canon (shared behaviour RULES, `D-2026-06-28-B`).** Meaning principles = [`../concepts/kinds.md`](../concepts/kinds.md)
-> §edges. **Detailed render·classification implementation** = engine [`SPEC.md`](../../mashbill/docs/SPEC.md)
+> §edges. **Detailed render·classification implementation** = engine [`SPEC.md`](../../plugins/mashbill/docs/SPEC.md)
 > + `ARCHITECTURE`; classification logic code = TS `flow/edgeSemantics.ts` + Python `edge_semantics.py` (mirror).
 
 ## Principle — governed by definition, not authorship

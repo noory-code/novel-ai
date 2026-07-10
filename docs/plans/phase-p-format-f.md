@@ -1,7 +1,7 @@
 # Phase P — foundational design: the two-layer publication = format F (reconciling T5·T6·publish unit)
 
 > Status: **draft (design proposal), v2 — reflects the mashbill-design-red-team adversarial review.** Not pinned (decision authority = the user).
-> Once made canon, it moves into `docs/specs/storage-publish.md` + Mashbill [`DECISIONS.md`](../../mashbill/docs/DECISIONS.md) (D-id).
+> Once made canon, it moves into `docs/specs/storage-publish.md` + Mashbill [`DECISIONS.md`](../../plugins/mashbill/docs/DECISIONS.md) (D-id).
 >
 > Inputs: [`VISION`](../VISION.md) · the archived private pipeline record (historical context only) ·
 > [`specs/storage-publish`](../specs/storage-publish.md) · [`specs/kinds-fields`](../specs/kinds-fields.md).

@@ -2,7 +2,7 @@
 
 > **Canon (shared schema design contract, `D-2026-06-28-B`).** The *code* SSOT = `viewer/src/domain/{Kind}.ts`
 > + `test_schema_parity.py` (on drift the code guard wins). kind *meaning* = [`../concepts/kinds.md`](../concepts/kinds.md),
-> detailed behaviour/field usage = engine [`SPEC.md`](../../mashbill/docs/SPEC.md).
+> detailed behaviour/field usage = engine [`SPEC.md`](../../plugins/mashbill/docs/SPEC.md).
 > (Retired kinds excluded, the actor_ref reform reflected.)
 
 ## BaseFields (common to all kinds, not repeated)

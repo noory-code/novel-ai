@@ -1,0 +1,34 @@
+{
+  "name": "mashbill",
+  "version": "0.167.0",
+  "description": "Headless Novel design engine for structuring a service's essence, actors, services, features, and entities through MCP and plain .noory/novel/ data.",
+  "homepage": "https://github.com/noory-code/novel-ai/tree/main/plugins/mashbill",
+  "repository": "https://github.com/noory-code/novel-ai",
+  "license": "MIT",
+  "keywords": [
+    "service-design",
+    "canvas",
+    "claude-code",
+    "mcp",
+    "structured-design",
+    "planning"
+  ],
+  "author": {
+    "name": "noory-code",
+    "url": "https://github.com/noory-code"
+  },
+  "mcpServers": {
+    "mashbill": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${CLAUDE_PLUGIN_ROOT}",
+        "python",
+        "-m",
+        "mashbill",
+        "--mcp-stdio"
+      ]
+    }
+  }
+}

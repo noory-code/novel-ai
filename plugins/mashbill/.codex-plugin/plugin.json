@@ -1,0 +1,43 @@
+{
+  "name": "mashbill",
+  "version": "0.167.0",
+  "description": "Headless Novel design engine for structured service discovery and planning.",
+  "author": {
+    "name": "noory-code",
+    "url": "https://github.com/noory-code"
+  },
+  "homepage": "https://github.com/noory-code/novel-ai/tree/main/plugins/mashbill",
+  "repository": "https://github.com/noory-code/novel-ai",
+  "license": "MIT",
+  "keywords": ["service-design", "canvas", "mcp", "planning", "local-first"],
+  "skills": "./skills/",
+  "mcpServers": {
+    "mashbill": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${PLUGIN_ROOT}",
+        "python",
+        "-m",
+        "mashbill",
+        "--mcp-stdio"
+      ]
+    }
+  },
+  "interface": {
+    "displayName": "Mashbill",
+    "shortDescription": "Structure a service with Novel canvases",
+    "longDescription": "Mashbill stores open Novel design data under .noory/novel and exposes tools for projects, canvases, nodes, relationships, and publication.",
+    "developerName": "noory-code",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Write"],
+    "websiteURL": "https://github.com/noory-code/novel-ai/tree/main/plugins/mashbill",
+    "defaultPrompt": [
+      "Initialize a Novel design project",
+      "Help me structure this service",
+      "Publish the current service design"
+    ],
+    "brandColor": "#2563EB"
+  }
+}

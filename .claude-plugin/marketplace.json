@@ -7,22 +7,22 @@
   "plugins": [
     {
       "name": "mashbill",
-      "source": "./mashbill",
-      "description": "Novel's visual thinking canvas and MCP server"
+      "source": "./plugins/mashbill",
+      "description": "Novel's structured service-design engine and MCP server"
     },
     {
       "name": "solera",
-      "source": "./solera",
+      "source": "./plugins/solera",
       "description": "Novel's deterministic work-planning and execution harness"
     },
     {
       "name": "proof",
-      "source": "./proof",
+      "source": "./plugins/proof",
       "description": "Novel's append-only decision log"
     },
     {
       "name": "distill",
-      "source": "./distill",
+      "source": "./plugins/distill",
       "description": "Novel's durable knowledge extraction and recall layer"
     }
   ]

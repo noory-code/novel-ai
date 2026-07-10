@@ -7,13 +7,16 @@ packages form one coherent workflow through plain files and stable identifiers.
 
 | Plugin | Responsibility | Project data |
 |---|---|---|
-| [Mashbill](mashbill/) | Visual thinking canvas and Novel artifact publisher | `.noory/novel/` |
-| [Solera](solera/) | Work planning, deterministic gates, and execution order | `.noory/solera/` |
-| [Proof](proof/) | Append-only decisions referenced by stable ID | `.noory/proof/` |
-| [Distill](distill/) | Durable knowledge extraction and recall | `.noory/distill/`, `~/.distill/` |
+| [Mashbill](plugins/mashbill/) | Structured service design and Novel artifact publication | `.noory/novel/` |
+| [Solera](plugins/solera/) | Work planning, deterministic gates, and execution order | `.noory/solera/` |
+| [Proof](plugins/proof/) | Append-only decisions referenced by stable ID | `.noory/proof/` |
+| [Distill](plugins/distill/) | Durable knowledge extraction and recall | `.noory/distill/`, `~/.distill/` |
 
 The packages do not share Python imports. Mashbill publishes artifacts, Solera consumes them by
 value, Proof records decisions by ID, and Distill preserves reusable knowledge across sessions.
+Claude Code and Codex install them as independent plugins; Gemini CLI installs one suite extension
+that starts the same four packages as separate MCP servers. See
+[Host support and distribution](docs/HOST_SUPPORT.md) for the architecture and capability matrix.
 
 ## Install with Claude Code
 
@@ -28,12 +31,31 @@ value, Proof records decisions by ID, and Distill preserves reusable knowledge a
 Install only the plugins needed by a project. Mashbill and Solera work independently; Proof and
 Distill remain useful standalone.
 
+## Install with Codex
+
+```bash
+codex plugin marketplace add noory-code/novel-ai --ref main
+codex plugin add mashbill@novel-ai
+codex plugin add solera@novel-ai
+codex plugin add proof@novel-ai
+codex plugin add distill@novel-ai
+```
+
+## Install with Gemini CLI
+
+```bash
+gemini extensions install https://github.com/noory-code/novel-ai
+```
+
+Gemini installs one extension and registers four isolated stdio MCP servers. The
+separation keeps failures and dependencies local to each domain package.
+
 ## Development
 
 Each package has its own environment and lockfile:
 
 ```bash
-cd mashbill  # or solera, proof, distill
+cd plugins/mashbill  # or plugins/solera, plugins/proof, plugins/distill
 uv sync
 uv run pytest
 ```

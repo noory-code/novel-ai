@@ -3,7 +3,7 @@
 > **Canon (shared concept, `D-2026-06-28-B`).** The single source for the domain model both products — the
 > open MIT engine (`novel-ai/` plugins) and the commercial app — follow. *Where* code lives
 > (per-context code homes · code-to-domain gaps · code-level term mappings) is held by the engine
-> [`mashbill/docs/DOMAIN.md`](../../mashbill/docs/DOMAIN.md). kind/canvas *meaning* =
+> [`mashbill/docs/DOMAIN.md`](../../plugins/mashbill/docs/DOMAIN.md). kind/canvas *meaning* =
 > [`../concepts/`](../concepts/), parent essence = [`../VISION.md`](../VISION.md).
 
 ## Why this file exists
@@ -108,7 +108,7 @@ Execution). This keeps the phase cycle's drill-back semantics correct. AICollabo
 
 When the same word means different things in different places, rename the loser. Deep per-kind meaning =
 [`../concepts/kinds.md`](../concepts/kinds.md); **code-level term distinctions** (`Node` vs `rf-node`, the
-`useNodesMemo` boundary, etc.) are in the engine [`DOMAIN.md`](../../mashbill/docs/DOMAIN.md).
+`useNodesMemo` boundary, etc.) are in the engine [`DOMAIN.md`](../../plugins/mashbill/docs/DOMAIN.md).
 
 | Term | Meaning in Novel | Confusion to avoid |
 |---|---|---|

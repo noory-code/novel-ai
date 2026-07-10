@@ -4,7 +4,7 @@
 > engine·commercial app) use. Parent = [`../VISION.md`](../VISION.md), canvases = [`canvases.md`](./canvases.md).
 > This is what each kind *means*; the **full typed fields·schema** (JSON contract) are the SSOT in
 > [`../specs/`](../specs/), the *behaviour* spec is the engine `SPEC.md` — not duplicated here.
-> (The engine [`mashbill/docs/CONCEPTS.md`](../../mashbill/docs/CONCEPTS.md) points to this file.)
+> (The engine [`mashbill/docs/CONCEPTS.md`](../../plugins/mashbill/docs/CONCEPTS.md) points to this file.)
 
 ## Palette (current)
 

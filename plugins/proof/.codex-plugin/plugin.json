@@ -1,0 +1,42 @@
+{
+  "name": "proof",
+  "version": "0.5.0",
+  "description": "Append-only project decisions with stable identifiers and explicit supersession.",
+  "author": {
+    "name": "noory-code",
+    "url": "https://github.com/noory-code"
+  },
+  "homepage": "https://github.com/noory-code/novel-ai/tree/main/plugins/proof",
+  "repository": "https://github.com/noory-code/novel-ai",
+  "license": "MIT",
+  "keywords": ["decision-log", "adr", "governance", "mcp", "local-first"],
+  "skills": "./skills/",
+  "mcpServers": {
+    "proof": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${PLUGIN_ROOT}",
+        "python",
+        "-m",
+        "proof.mcp_server"
+      ]
+    }
+  },
+  "interface": {
+    "displayName": "Proof",
+    "shortDescription": "Record durable project decisions",
+    "longDescription": "Proof appends immutable project decisions under .noory/proof, derives which decisions remain in force, and represents change through explicit supersession.",
+    "developerName": "noory-code",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Write"],
+    "websiteURL": "https://github.com/noory-code/novel-ai/tree/main/plugins/proof",
+    "defaultPrompt": [
+      "Record this project decision",
+      "Show the decisions currently in force",
+      "Check whether this work item has a decision"
+    ],
+    "brandColor": "#7C3AED"
+  }
+}

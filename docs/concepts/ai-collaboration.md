@@ -2,8 +2,8 @@
 
 > Canonical source. Parent = [`../VISION.md`](../VISION.md) §AI Collaboration. Canvases = [`canvases.md`](./canvases.md).
 > (Absorbs the retired `AI_CHAT_PLAYBOOK.md` and `FOUNDATION_CONCEPT.md` material plus Mashbill
-> [`CHAT_ARCH.md`](../../mashbill/docs/CHAT_ARCH.md) interview questions. Decision originals = Mashbill
-> [`DECISIONS.md`](../../mashbill/docs/DECISIONS.md) D-16-H~D-19-F.)
+> [`CHAT_ARCH.md`](../../plugins/mashbill/docs/CHAT_ARCH.md) interview questions. Decision originals = Mashbill
+> [`DECISIONS.md`](../../plugins/mashbill/docs/DECISIONS.md) D-16-H~D-19-F.)
 > This document is **load-bearing** — because every node in Novel is generated through coach conversation (`D-16-P`).
 
 ---
