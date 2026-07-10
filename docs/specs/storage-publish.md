@@ -66,8 +66,10 @@ The mashbill↔Solera publish contract is a **2-layer frozen bundle ("format F")
 > ⚠ The "## Publish (per-node, explicit)" section above is the **current code (pre-transition)**. format F is the new
 > contract, and the two coexist until per-node is retired.
 
-## Schema parity (cross-repo caution)
+## Schema parity (repository boundary)
 
-- The wire-schema guard = `plot/tests/test_schema_parity.py` (Pydantic ↔ TS `types.ts`).
-- **Works only inside the current monorepo** — before `viewer/` leaves `noory-ai/`, `types.ts` must be
-  switched to a `schema_export.py` generated artifact so the guard doesn't die (a precondition for repo separation).
+- Mashbill's Pydantic models are the engine-side schema source.
+- TypeScript and wire-contract files are generated explicitly and committed in the commercial app repository;
+  the app does not import Mashbill by filesystem path.
+- Mashbill tests pin its generated contract, and app-side tests pin the committed consumer artifact. A schema
+  change updates and verifies both repositories in lock-step.

@@ -84,7 +84,8 @@ canvas tab (`{feature/service name}` label). Not a modal.
   `outcome` subtitle (inline edit) + `polarity` tint (positive=green/negative=red/neutral=user color).
   `decision` = diamond forced (no tag). Shape=meaning (master=rounded rectangle, `*_ref`=circle, decision=◇).
 - **Layout:** actor-anchor layout (when there are subject edges): preserve actor positions → step/decision get dagre
-  rank → direction from the subject edge handles (↔/↕ toggle). Code detail = `noory-ai/.../AUTO_LAYOUT.md`.
+  rank → direction from the subject edge handles (↔/↕ toggle). Code detail = Mashbill
+  [`AUTO_LAYOUT.md`](../../mashbill/docs/AUTO_LAYOUT.md).
 - **Later expansion:** full body re-description (drill·layout), action↔entity reference mechanism.
 
 ## Entities — Planning (derived, AI-maintained)
