@@ -62,6 +62,13 @@ def validate_local_markdown_links() -> None:
             if not path_text:
                 continue
             destination = (document.parent / path_text).resolve()
+            try:
+                destination.relative_to(ROOT.resolve())
+            except ValueError:
+                failures.append(
+                    f"{document.relative_to(ROOT)} -> {raw_target} (outside repository)"
+                )
+                continue
             if not destination.exists():
                 failures.append(
                     f"{document.relative_to(ROOT)} -> {raw_target}"

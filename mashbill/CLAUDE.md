@@ -91,7 +91,7 @@ when this gate is missing.)
    the user's message + the immediately preceding context what,
    precisely, was just approved. Write it as one declarative line —
    the same shape that would go into SPEC.md.
-2. **Locate the behaviour RULE in root [`specs/canvas-behavior.md`](../../docs/specs/canvas-behavior.md)**
+2. **Locate the behaviour RULE in root [`specs/canvas-behavior.md`](../docs/specs/canvas-behavior.md)**
    (the shared-model rule canon since `D-2026-06-28-B`; detailed mechanism /
    edge cases live in engine [`SPEC.md`](./docs/SPEC.md)).
    - YES, it exists there → verify the existing text matches the

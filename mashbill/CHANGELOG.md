@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.166.6] — 2026-07-10
+
+### Fixed
+
+- Corrected the remaining public-canon link in Mashbill's operational guide.
+- Repository documentation validation now rejects links that escape the public repository, even when a
+  coincidentally matching private-workspace path exists beside the checkout.
+
 ## [0.166.5] — 2026-07-10
 
 ### Changed
