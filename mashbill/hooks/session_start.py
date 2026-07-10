@@ -7,8 +7,8 @@ with the user's anchor in the assistant's working set.
 
 Doc homes (2026-06-19 consolidation, D-2026-06-19-J):
   - VISION.md          → the cross-repo root docs/ (noory-workspace/docs/VISION.md)
-  - DECISIONS.md       → the plugin docs/ (noory-ai/mashbill/docs/DECISIONS.md)
-  - NEXT_SESSION.md    → the plugin docs/ (noory-ai/mashbill/docs/NEXT_SESSION.md)
+  - DECISIONS.md       → the installed plugin's docs/ directory
+  - NEXT_SESSION.md    → the installed plugin's docs/ directory
 These two roots differ, so the hook resolves them separately.
 
 Cross-platform (macOS, Linux, Windows) — pure Python stdlib only.
@@ -24,7 +24,7 @@ from pathlib import Path
 
 
 def find_plugin_root() -> Path | None:
-    """Locate the plugin dir (noory-ai/mashbill/) holding docs/DECISIONS.md."""
+    """Locate the Mashbill plugin directory holding docs/DECISIONS.md."""
     plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT")
     if plugin_root:
         candidate = Path(plugin_root)
@@ -113,6 +113,16 @@ def main() -> int:
     essence = read_vision_essence(vision_path)
     recent = read_recent_decisions(plugin_root, n=5)
     queue = read_next_session_queue(plugin_root)
+    decisions_source = (
+        str((plugin_root / "docs" / "DECISIONS.md").resolve())
+        if plugin_root is not None
+        else "mashbill/docs/DECISIONS.md"
+    )
+    next_session_source = (
+        str((plugin_root / "docs" / "NEXT_SESSION.md").resolve())
+        if plugin_root is not None
+        else "mashbill/docs/NEXT_SESSION.md"
+    )
 
     additional_context_lines = [
         "# Novel session anchor",
@@ -134,7 +144,8 @@ def main() -> int:
     additional_context_lines.extend(
         [
             "",
-            "Source: `noory-ai/mashbill/docs/DECISIONS.md`. Always read the full entry before re-proposing related work.",
+            f"Source: `{decisions_source}`. Always read the full entry before "
+            "re-proposing related work.",
         ]
     )
 
@@ -142,7 +153,8 @@ def main() -> int:
         additional_context_lines.extend(
             [
                 "",
-                "**Queued tasks for next session — trigger by user keyword (read `noory-ai/mashbill/docs/NEXT_SESSION.md` for full scope):**",
+                "**Queued tasks for next session — trigger by user keyword "
+                f"(read `{next_session_source}` for full scope):**",
                 "",
             ]
         )
@@ -153,7 +165,7 @@ def main() -> int:
         additional_context_lines.append("")
         additional_context_lines.append(
             "If the user's first message contains one of the trigger keywords above, "
-            "open `noory-ai/mashbill/docs/NEXT_SESSION.md` and execute the matching item before any "
+            f"open `{next_session_source}` and execute the matching item before any "
             "other work."
         )
 

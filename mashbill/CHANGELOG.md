@@ -4,6 +4,20 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.166.4] — 2026-07-10
+
+### Changed
+
+- Moved Mashbill's canonical source and plugin metadata to
+  `github.com/noory-code/novel-ai` while preserving its directory history.
+- SessionStart context now prints the resolved installed-plugin paths for
+  `DECISIONS.md` and `NEXT_SESSION.md` instead of a monorepo-relative path.
+- The sibling-import guard now includes Proof under its current package name.
+- User-facing metadata and the README now name `.noory/novel/` as the canonical
+  data root while retaining the documented legacy migration paths.
+- Removed redundant manifest paths for standard `skills/`, `agents/`, and
+  `hooks/hooks.json` directories; Claude Code discovers them automatically.
+
 ## [0.166.3] — 2026-07-05
 
 ### Fixed

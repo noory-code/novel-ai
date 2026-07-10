@@ -1,15 +1,15 @@
-"""Proof is a lower-layer substrate: it imports neither mashbill nor Solera.
+"""Proof is a lower-layer substrate: it imports no sibling plugin.
 
 mashbill and Solera point at decisions by id (by value); the dependency runs one way
-(they depend on proof, proof depends on neither). This guard fails if any source
-file imports a plot or solera module.
+(they depend on Proof, Proof depends on neither). This guard fails if any source
+file imports a sibling package.
 """
 
 import ast
 from pathlib import Path
 
 PKG = Path(__file__).resolve().parent.parent / "proof"
-FORBIDDEN_TOP_MODULES = {"plot", "plot_mcp", "solera"}
+FORBIDDEN_TOP_MODULES = {"distill", "mashbill", "plot", "plot_mcp", "solera"}
 
 
 def _imported_modules(tree: ast.AST) -> list[str]:
@@ -22,7 +22,7 @@ def _imported_modules(tree: ast.AST) -> list[str]:
     return mods
 
 
-def test_no_plot_or_solera_imports() -> None:
+def test_no_sibling_imports() -> None:
     for py in PKG.rglob("*.py"):
         tree = ast.parse(py.read_text())
         for module in _imported_modules(tree):

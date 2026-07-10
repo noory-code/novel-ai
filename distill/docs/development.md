@@ -8,8 +8,8 @@
 ## Setup
 
 ```bash
-git clone https://github.com/noory-code/noory-ai.git
-cd noory-ai/distill
+git clone https://github.com/noory-code/novel-ai.git
+cd novel-ai/distill
 uv sync
 ```
 

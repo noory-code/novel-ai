@@ -1,5 +1,15 @@
 # Changelog
 
+## [7.7.1] — 2026-07-10
+
+### Changed
+
+- Moved Solera's canonical source and plugin metadata to
+  `github.com/noory-code/novel-ai` while preserving its directory history.
+- Updated the standalone boundary guard to reject current sibling package
+  names and paths, including `mashbill`, `proof`, and `distill`.
+- Removed the redundant standard `skills/` path from the plugin manifest.
+
 ## [7.7.0] — 2026-06-24
 
 ### Added

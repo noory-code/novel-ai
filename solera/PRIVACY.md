@@ -32,7 +32,8 @@ Updates to this privacy policy will be documented in the [CHANGELOG](./CHANGELOG
 
 ## Contact
 
-For questions about this privacy policy, open an issue at [github.com/noory-code/noory-ai](https://github.com/noory-code/noory-ai/issues).
+For questions about this privacy policy, open an issue at
+[github.com/noory-code/novel-ai](https://github.com/noory-code/novel-ai/issues).
 
 ---
 

@@ -1,4 +1,5 @@
 # Novel runtime data (not tracked)
+.noory/
 .plot/
 
 # Python

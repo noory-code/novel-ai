@@ -28,6 +28,8 @@ BANNED_ROOTS = {
     "plot",
     "plot_mcp",
     "evonest",
+    "mashbill",
+    "proof",
     "solera",
     "solera_mcp",
 }
@@ -73,11 +75,13 @@ def test_plugin_never_reaches_into_the_shell_by_path() -> None:
 
 def test_detector_catches_a_synthetic_violation() -> None:
     """Self-check: the AST walk actually flags a banned import."""
-    sample = ast.parse("from viewer.src.api import putCanvas\nimport plot_mcp\n")
+    sample = ast.parse(
+        "from viewer.src.api import putCanvas\nimport plot_mcp\nimport mashbill\nimport proof\n"
+    )
     roots: set[str] = set()
     for node in ast.walk(sample):
         if isinstance(node, ast.Import):
             roots.update(a.name.split(".")[0] for a in node.names)
         elif isinstance(node, ast.ImportFrom) and node.module:
             roots.add(node.module.split(".")[0])
-    assert roots & BANNED_ROOTS == {"viewer", "plot_mcp"}
+    assert roots & BANNED_ROOTS == {"viewer", "plot_mcp", "mashbill", "proof"}

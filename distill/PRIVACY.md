@@ -35,7 +35,8 @@ Updates will be documented in the [CHANGELOG](./CHANGELOG.md) and reflected in t
 
 ## Contact
 
-For questions, open an issue at [github.com/noory-code/noory-ai](https://github.com/noory-code/noory-ai/issues).
+For questions, open an issue at
+[github.com/noory-code/novel-ai](https://github.com/noory-code/novel-ai/issues).
 
 ---
 

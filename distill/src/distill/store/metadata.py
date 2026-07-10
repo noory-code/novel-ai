@@ -8,6 +8,7 @@ import uuid
 from datetime import UTC, datetime
 
 from distill.store.scope import resolve_db_path
+from distill.store.sqlite_utils import connect_wal
 from distill.store.types import (
     ChunkRelation,
     KnowledgeChunk,
@@ -118,15 +119,7 @@ class MetadataStore:
         workspace_root: str | None = None,
     ) -> None:
         db_path = resolve_db_path(scope, project_root, workspace_root)
-        self._conn_impl: sqlite3.Connection | None = sqlite3.connect(str(db_path), check_same_thread=False)
-        self._conn_impl.row_factory = sqlite3.Row
-
-        # Check if WAL mode is already set before enabling it
-        row = self._conn_impl.execute("PRAGMA journal_mode").fetchone()
-        if row and row[0].lower() != "wal":
-            self._conn_impl.execute("PRAGMA journal_mode = WAL")
-
-        self._conn_impl.execute("PRAGMA busy_timeout = 30000")
+        self._conn_impl: sqlite3.Connection | None = connect_wal(db_path)
         self._conn_impl.executescript(SCHEMA)
         self._apply_migrations()
 
@@ -143,8 +136,9 @@ class MetadataStore:
             try:
                 self._conn.execute(sql)
                 self._conn.commit()
-            except sqlite3.OperationalError:
-                pass  # column already exists
+            except sqlite3.OperationalError as exc:
+                if "duplicate column name" not in str(exc).lower():
+                    raise
 
     def insert(self, input: KnowledgeInput) -> KnowledgeChunk:
         """Insert a new knowledge chunk, returns full chunk with generated id/timestamps."""

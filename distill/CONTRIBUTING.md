@@ -66,4 +66,4 @@ See [docs/architecture.md](docs/architecture.md) for the full picture.
 
 ## Reporting Issues
 
-Please open an issue at https://github.com/noory-code/noory-ai/issues
+Please open an issue at https://github.com/noory-code/novel-ai/issues

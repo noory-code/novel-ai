@@ -1,17 +1,34 @@
-"""CORE-8b — standalone invariant: Solera never reaches into mashbill.
+"""CORE-8b — standalone invariant: Solera never reaches into sibling packages.
 
-The hard requirement (R8 spirit): Solera and mashbill do not import or path-reference
-each other. The connection, when it exists, is a neutral format and stable ids
-shared *by value*, never a code dependency. This guard fails if any source file
-imports a plot module or hard-codes a path into the plot tree.
+The hard requirement (R8 spirit): Solera and its siblings do not import or
+path-reference each other. Connections use neutral formats and stable ids shared
+*by value*, never code dependencies.
 """
 
 import ast
 from pathlib import Path
 
 PKG = Path(__file__).resolve().parent.parent / "solera"
-FORBIDDEN_TOP_MODULES = {"plot", "plot_mcp"}
-FORBIDDEN_PATH_NEEDLES = ("noory-ai/plot", "plot_mcp", "../plot", "/plot/")
+FORBIDDEN_TOP_MODULES = {
+    "distill",
+    "mashbill",
+    "plot",
+    "plot_mcp",
+    "proof",
+}
+FORBIDDEN_PATH_NEEDLES = (
+    "../distill",
+    "../mashbill",
+    "../proof",
+    "/distill/",
+    "/mashbill/",
+    "/proof/",
+    "noory-ai/plot",
+    "novel-ai/distill",
+    "novel-ai/mashbill",
+    "novel-ai/proof",
+    "plot_mcp",
+)
 
 
 def _imported_modules(tree: ast.AST) -> list[str]:
@@ -24,7 +41,7 @@ def _imported_modules(tree: ast.AST) -> list[str]:
     return mods
 
 
-def test_no_plot_imports() -> None:
+def test_no_sibling_imports() -> None:
     for py in PKG.rglob("*.py"):
         tree = ast.parse(py.read_text())
         for module in _imported_modules(tree):
@@ -32,7 +49,7 @@ def test_no_plot_imports() -> None:
             assert top not in FORBIDDEN_TOP_MODULES, f"{py.name} imports {module}"
 
 
-def test_no_plot_path_references() -> None:
+def test_no_sibling_path_references() -> None:
     for py in PKG.rglob("*.py"):
         text = py.read_text()
         for needle in FORBIDDEN_PATH_NEEDLES:

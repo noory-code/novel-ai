@@ -14,6 +14,7 @@ import numpy as np
 import sqlite_vec
 
 from distill.store.scope import resolve_db_path
+from distill.store.sqlite_utils import connect_wal
 from distill.store.types import KnowledgeScope
 
 EMBEDDING_DIM = 384
@@ -85,16 +86,7 @@ class VectorStore:
         workspace_root: str | None = None,
     ) -> None:
         db_path = resolve_db_path(scope, project_root, workspace_root)
-        self._conn_impl: sqlite3.Connection | None = sqlite3.connect(str(db_path), check_same_thread=False)
-        self._conn_impl.row_factory = sqlite3.Row
-
-        # Check if WAL mode is already set before enabling it
-        row = self._conn_impl.execute("PRAGMA journal_mode").fetchone()
-        if row and row[0].lower() != "wal":
-            self._conn_impl.execute("PRAGMA journal_mode = WAL")
-
-        self._conn_impl.execute("PRAGMA busy_timeout = 30000")
-
+        self._conn_impl: sqlite3.Connection | None = connect_wal(db_path)
         # Load the sqlite-vec extension
         self._conn_impl.enable_load_extension(True)
         sqlite_vec.load(self._conn_impl)

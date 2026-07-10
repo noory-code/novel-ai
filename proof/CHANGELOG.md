@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.1] — 2026-07-10
+
+### Changed
+
+- Moved Proof's canonical source and plugin metadata to
+  `github.com/noory-code/novel-ai` while preserving its directory history.
+- Updated the lower-layer independence guard to reject all current sibling
+  package names: `mashbill`, `solera`, and `distill`.
+- Removed the redundant standard `skills/` path from the plugin manifest.
+
 ## [0.4.0] — 2026-06-30
 
 ### Changed

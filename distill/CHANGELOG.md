@@ -4,6 +4,24 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.8.2] - 2026-07-10
+
+### Changed
+
+- Moved Distill's canonical source, install instructions, and plugin metadata
+  to `github.com/noory-code/novel-ai` while preserving its directory history.
+- Restored version parity between `pyproject.toml` and the plugin manifest.
+- Updated the sibling-import guard to include Mashbill and Proof under their
+  current package names.
+- Corrected README scope paths to the `.noory/distill/` layout implemented in
+  v1.8.0.
+- SQLite stores now install their 30-second busy handler before WAL setup, so
+  concurrent first-time connections no longer fail during initialization.
+- Metadata migrations re-raise operational errors other than the expected
+  duplicate-column case.
+- Removed redundant manifest paths for standard skills, hooks, and `.mcp.json`;
+  Claude Code discovers each component from its standard location.
+
 ## [1.8.1] - 2026-06-15
 
 ### Added

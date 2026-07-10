@@ -16,7 +16,7 @@ metadata:
 Some leaves are not *build* work but *decide* work — choosing a tech stack, an
 architecture, a convention. The choice is the **human's** to make ("use this!");
 your job is to lay out the options. The decision is recorded in
-[proof](https://github.com/noory-code/noory-ai/tree/main/proof), an append-only
+[proof](https://github.com/noory-code/novel-ai/tree/main/proof), an append-only
 decision log, and the leaf gates on that record existing.
 
 ## When to use

@@ -191,22 +191,11 @@ decision pending."
 **Design red-team verdict: 🟢 READY** — mechanically simple; the
 question is **product**, not technical.
 
-The decision the user owns:
-- **Split (Novel moves to ``github.com/noory-code/plot``):** cleaner
-  contributor surface; Novel has its own issues / PRs / release cadence;
-  easier to license and distribute independently; users install via
-  plugin marketplace with a stable repo URL.
-- **Stay (Novel remains in ``noory-ai`` monorepo):** shared CI infra,
-  shared marketplace listing logic; no migration cost; the other 4
-  plugins benefit from monorepo synergy.
-
-No code-side findings — when the user picks, the split is a one-time
-``git filter-repo`` + readme reshuffle.
-
-**Migration trap (Minor):** existing plugin users have manifests
-pointing at ``noory-ai/mashbill`` — a split breaks their install path
-unless we leave a stub redirect in the monorepo. Pin a
-``noory-ai/mashbill/MOVED.md`` if/when the split happens.
+**Resolved 2026-07-10:** Novel's four open plugins moved to
+``github.com/noory-code/novel-ai`` with their directory history preserved.
+The original ``noory-ai`` repository keeps a ``novel-ai/`` submodule for
+development reference, while plugin installation uses the new repository's
+own marketplace so it does not depend on recursive submodule checkout.
 
 ---
 

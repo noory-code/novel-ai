@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+
+# Test and coverage output
+.coverage
+coverage.xml
+coverage.json
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/
+.obsidian/
+*.swp
+
+# Local settings and secrets
+.claude/settings.local.json
+.env
+.envrc
+*.key
+*.pem
+credentials*
+secrets*
+
+# Runtime data
+.noory/
+.plot/
+.distill/
+.evonest/
+
+# Local handoff files
+HANDOFF.md

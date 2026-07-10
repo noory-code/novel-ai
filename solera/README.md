@@ -8,7 +8,7 @@ rather than builds**: the agent (Claude Code, Codex) does the work; Solera plans
 it, hands it over one leaf at a time, and verifies each before moving on.
 
 It works **standalone** over a plain-file `.noory/solera/` workspace, with or
-without [Novel](https://github.com/noory-code/noory-ai/tree/main/plot).
+without [Novel](https://github.com/noory-code/novel-ai/tree/main/mashbill).
 
 ## The loop
 
@@ -33,8 +33,9 @@ flowchart LR
 
 ## Install (Claude Code)
 
-```
-/plugin install solera
+```text
+/plugin marketplace add noory-code/novel-ai
+/plugin install solera@novel-ai
 ```
 
 Then use the skills: **solera-plan**, **solera-run**, **solera-retro**,

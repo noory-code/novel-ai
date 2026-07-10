@@ -1,7 +1,7 @@
 [project]
 name = "mashbill"
 dynamic = ["version"]  # single source = mashbill/__init__.py::__version__ (D-2026-06-20-N)
-description = "Novel — freeform mindmap canvas + MCP server. AI-assisted visual thinking workspace that stores sketches as JSON under .plot/ and exposes them to Claude Code."
+description = "Novel — freeform mindmap canvas + MCP server. AI-assisted visual thinking workspace that stores sketches under .noory/novel/ and exposes them to Claude Code."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11,<3.14"

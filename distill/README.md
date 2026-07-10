@@ -60,8 +60,8 @@ Evonest evolves Distill's own codebase through the same cycle. Real findings fro
 ### Claude Code Plugin (recommended)
 
 ```
-/plugin marketplace add noory-code/noory-ai
-/plugin install distill
+/plugin marketplace add noory-code/novel-ai
+/plugin install distill@novel-ai
 ```
 
 MCP server, hooks (PreCompact, SessionEnd), and skills are registered automatically.
@@ -69,8 +69,8 @@ MCP server, hooks (PreCompact, SessionEnd), and skills are registered automatica
 ### Manual
 
 ```bash
-git clone https://github.com/noory-code/noory-ai.git
-cd noory-ai/distill && uv sync
+git clone https://github.com/noory-code/novel-ai.git
+cd novel-ai/distill && uv sync
 ```
 
 Add to `.mcp.json`:
@@ -80,7 +80,7 @@ Add to `.mcp.json`:
   "mcpServers": {
     "distill": {
       "command": "uv",
-      "args": ["run", "--directory", "/absolute/path/to/noory-ai/distill", "python", "-m", "distill"]
+      "args": ["run", "--directory", "/absolute/path/to/novel-ai/distill", "python", "-m", "distill"]
     }
   }
 }
@@ -115,8 +115,8 @@ Add to `.mcp.json`:
 Knowledge is stored in three scopes — all searched simultaneously by `recall`:
 
 - **global** (`~/.distill/`) — cross-project patterns, available in every project
-- **workspace** (`<git-root>/.distill/`) — monorepo conventions
-- **project** (`.distill/`) — project-specific decisions
+- **workspace** (`<git-root>/.noory/distill/`) — monorepo conventions
+- **project** (`.noory/distill/`) — project-specific decisions
 
 The global scope is your permanent knowledge base. Patterns from project A are available when you start project B.
 
@@ -147,7 +147,8 @@ Distill detects conflicts during crystallization and surfaces them in the report
 Recall works offline on stored knowledge. New extraction requires Claude connectivity (MCP Sampling).
 
 **Q: Where is my data stored?**
-Locally in `.distill/` directories (project, workspace, and/or global scope). See [Privacy Policy](PRIVACY.md).
+Locally in `.noory/distill/` for project/workspace scopes and `~/.distill/` for
+the global scope. See [Privacy Policy](PRIVACY.md).
 
 ## Contributing
 

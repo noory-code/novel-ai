@@ -1,0 +1,29 @@
+{
+  "name": "novel-ai",
+  "owner": {
+    "name": "noory-code"
+  },
+  "description": "Open plugins for Novel: visual thinking, execution planning, decisions, and durable knowledge.",
+  "plugins": [
+    {
+      "name": "mashbill",
+      "source": "./mashbill",
+      "description": "Novel's visual thinking canvas and MCP server"
+    },
+    {
+      "name": "solera",
+      "source": "./solera",
+      "description": "Novel's deterministic work-planning and execution harness"
+    },
+    {
+      "name": "proof",
+      "source": "./proof",
+      "description": "Novel's append-only decision log"
+    },
+    {
+      "name": "distill",
+      "source": "./distill",
+      "description": "Novel's durable knowledge extraction and recall layer"
+    }
+  ]
+}
