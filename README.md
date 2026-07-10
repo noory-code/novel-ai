@@ -1,6 +1,5 @@
 # novel-ai
 
-[![CI](https://github.com/noory-code/novel-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/noory-code/novel-ai/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 The open plugin stack used by Novel. Each package is independently installable, while the four
