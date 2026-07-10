@@ -3,8 +3,8 @@
 The implementation order for the major release lines. Each step is
 an independent, ship-ready commit (Python green, viewer green, plugin
 patch bumped, pushed). Together they realise the design captured in
-[`VISION.md`](../../../docs/VISION.md), [`PRODUCT_SPEC.md`](../../../plot/docs/PRODUCT_SPEC.md)
-and [`CONCEPTS.md`](CONCEPTS.md) (IDENTITY → VISION에 흡수). The
+[`VISION.md`](../../docs/VISION.md) and [`CONCEPTS.md`](CONCEPTS.md)
+(IDENTITY → VISION에 흡수). Commercial product requirements remain in the private app repository. The
 2026-06-16~17 big-picture marathon — `DECISIONS.md` `D-2026-06-16-H..R` /
 `D-2026-06-17-A..L` (옛 BIG_PICTURE_REVIEW → ROADMAP+DECISIONS에 흡수) — re-defined
 Foundation / Actors / Services / Feature / Entities; the queued tracks
@@ -207,7 +207,7 @@ session (see [D-2026-05-16-D](./DECISIONS.md)). Frames the
 faithfully but misses the surrounding Identity / tone / sibling-
 service coherence that the canvas already captures.
 
-**Why it matters:** Novel's essence ([`VISION.md`](../../../docs/VISION.md))
+**Why it matters:** Novel's essence ([`VISION.md`](../../docs/VISION.md))
 hinges on AI work staying anchored to the discovered essence.
 Without explicit forest-injection mechanics, Retention (Phase 2) and
 Execution (Phase 3) drift apart — the canvas captures intent the
@@ -250,7 +250,7 @@ agent does not actually use.
   **Mission grounding** (the root-of-existence change,
   [D-2026-06-16-K](./DECISIONS.md)) + sibling-service contradictions).
   Sits at the PR-style merge gate
-  ([`PRODUCT_SPEC.md` §11](../../../plot/docs/PRODUCT_SPEC.md)).
+  (The corresponding commercial-app workflow is specified privately.)
 
 **Design red-team verdict:** not yet run. Before Phase 1 starts,
 re-enter plan mode and run ``mashbill-design-red-team`` to surface at

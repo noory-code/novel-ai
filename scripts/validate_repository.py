@@ -6,10 +6,67 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parent.parent
 REPOSITORY_URL = "https://github.com/noory-code/novel-ai"
 PACKAGES = ("mashbill", "solera", "proof", "distill")
+MARKDOWN_LINK_RE = re.compile(r"(?<!!)\[[^\]]*\]\(([^)]+)\)")
+
+
+def public_documents() -> tuple[Path, ...]:
+    """Return current public contracts; historical logs are intentionally excluded."""
+    documents = {
+        ROOT / "README.md",
+        ROOT / "CONTRIBUTING.md",
+        ROOT / "CLAUDE.md",
+    }
+    documents.update((ROOT / "docs").rglob("*.md"))
+    for package in PACKAGES:
+        for name in ("README.md", "CLAUDE.md", "PRIVACY.md"):
+            path = ROOT / package / name
+            if path.exists():
+                documents.add(path)
+    documents.update(
+        {
+            ROOT / "mashbill" / "docs" / name
+            for name in (
+                "CHAT_ARCH.md",
+                "CONCEPTS.md",
+                "DOMAIN.md",
+                "I18N_KO_GLOSSARY.md",
+                "NEXT_SESSION.md",
+                "ROADMAP.md",
+                "SPEC.md",
+                "VISION.md",
+            )
+        }
+    )
+    documents.update((ROOT / "mashbill" / "docs" / "node-format").rglob("*.md"))
+    return tuple(sorted(documents))
+
+
+def validate_local_markdown_links() -> None:
+    failures: list[str] = []
+    for document in public_documents():
+        text = document.read_text(encoding="utf-8")
+        for raw_target in MARKDOWN_LINK_RE.findall(text):
+            target = raw_target.strip()
+            if target.startswith("<") and target.endswith(">"):
+                target = target[1:-1]
+            elif " " in target:
+                target = target.split(" ", maxsplit=1)[0]
+            if target.startswith(("#", "http://", "https://", "mailto:")):
+                continue
+            path_text = unquote(target.split("#", maxsplit=1)[0].split("?", maxsplit=1)[0])
+            if not path_text:
+                continue
+            destination = (document.parent / path_text).resolve()
+            if not destination.exists():
+                failures.append(
+                    f"{document.relative_to(ROOT)} -> {raw_target}"
+                )
+    assert not failures, "broken local Markdown links:\n" + "\n".join(failures)
 
 
 def load_json(path: Path) -> dict[str, object]:
@@ -64,7 +121,13 @@ def main() -> int:
             f"package={package_version}"
         )
 
-    print("novel-ai repository metadata: OK")
+    canonical_vision = (ROOT / "docs" / "VISION.md").read_bytes()
+    packaged_vision = (ROOT / "mashbill" / "docs" / "VISION.md").read_bytes()
+    assert packaged_vision == canonical_vision, "Mashbill's packaged VISION.md mirror drifted"
+
+    validate_local_markdown_links()
+
+    print("novel-ai repository metadata and documentation: OK")
     return 0
 
 

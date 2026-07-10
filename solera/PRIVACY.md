@@ -10,13 +10,13 @@ Solera does **not** collect, transmit, or store any data on external servers. Al
 
 | File | Purpose | Location |
 |------|---------|----------|
-| `team-process.md` | Team workflow configuration | `{project}/.solera/` |
-| `progress.md` | Current work item position | `{project}/.solera/` |
-| `HANDOFF.md` | Session context for continuity | `{project}/.solera/` |
-| `identity/`, `personas/`, `journeys/`, `narratives/`, `concepts/` | Living-axis files | `{project}/.solera/` |
-| `_story.md`, `ACT-NNN-*.md`, `RETROSPECTIVE.md` | Time-bound work item definitions | `{project}/.solera/stories/{story_id}-{name}/` |
-| `_index.md` files | Per-axis indices | `{project}/.solera/{axis-folder}/` |
-| Artifact files | Use cases, service maps, domain models, etc. | `{project}/.solera/catalog/published/...` |
+| `team-process.md` | Team workflow configuration | `{project}/.noory/solera/` |
+| `progress.md` | Current work item position | `{project}/.noory/solera/` |
+| `HANDOFF.md` | Session context for continuity | `{project}/.noory/solera/` |
+| `identity/`, `personas/`, `journeys/`, `narratives/`, `concepts/` | Living-axis files | `{project}/.noory/solera/` |
+| `_story.md`, `ACT-NNN-*.md`, `RETROSPECTIVE.md` | Time-bound work item definitions | `{project}/.noory/solera/stories/{story_id}-{name}/` |
+| `_index.md` files | Per-axis indices | `{project}/.noory/solera/{axis-folder}/` |
+| Artifact files | Use cases, service maps, domain models, etc. | `{project}/.noory/solera/catalog/published/...` |
 
 ## Third-Party Services
 

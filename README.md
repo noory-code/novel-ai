@@ -41,6 +41,9 @@ uv run pytest
 Read [CLAUDE.md](CLAUDE.md) for repository-wide rules and each package's README for its commands and
 runtime contract.
 
+The canonical public design documentation starts at [docs/index.md](docs/index.md). If you used
+these plugins from their former `noory-ai/` paths, see [docs/MIGRATION.md](docs/MIGRATION.md).
+
 External contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md), the
 [Code of Conduct](CODE_OF_CONDUCT.md), and [Security Policy](SECURITY.md).
 

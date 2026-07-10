@@ -1,8 +1,8 @@
 # How Solera works
 
 The operational spec of the slim core. SSOT for *behaviour* is the code under
-`solera/`; this document is the map. Concept/design rationale lives in the
-harness notes (`noory-workspace/docs/idea/harness/`, esp. `06-boundaries-and-altitudes`).
+`solera/`; this document is the public map. The private design notes that preceded
+this specification are historical context, not a runtime or contributor dependency.
 
 ## Essence
 

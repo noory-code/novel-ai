@@ -8,7 +8,7 @@ status: done   # draft → reviewing → done — v0.44.0 (D-2026-06-07-A)
 
 # identity — 아이덴티티
 
-> **개념(정본): [`concepts/kinds.md`](../../../../../docs/concepts/kinds.md).** (옛 FOUNDATION_CONCEPT 흡수.)
+> **개념(정본): [`concepts/kinds.md`](../../../../docs/concepts/kinds.md).** (옛 FOUNDATION_CONCEPT 흡수.)
 > 아이덴티티 = **쌓여가는 지향. 어떤 존재이고 싶은가** (미래/지향).
 > **★ 입력이 아니라 출력** — AI 가 미션+코어밸류(+누적 설계/행동)에서
 > 도출하고 계속 갱신. 필드 정본: `viewer/src/domain/Identity.ts`.

@@ -5,13 +5,13 @@
 
 | 무엇 | 정본 위치 |
 |---|---|
-| kind별 *의미* (service/feature/actor/entity/… + Symbol 패턴 + 설계 원칙) | [`docs/concepts/kinds.md`](../../../docs/concepts/kinds.md) |
-| 캔버스 5종의 *의미* (각자 강제하는 질문) | [`docs/concepts/canvases.md`](../../../docs/concepts/canvases.md) |
-| AI 코치 모델 | [`docs/concepts/ai-collaboration.md`](../../../docs/concepts/ai-collaboration.md) |
+| kind별 *의미* (service/feature/actor/entity/… + Symbol 패턴 + 설계 원칙) | [`docs/concepts/kinds.md`](../../docs/concepts/kinds.md) |
+| 캔버스 5종의 *의미* (각자 강제하는 질문) | [`docs/concepts/canvases.md`](../../docs/concepts/canvases.md) |
+| AI 코치 모델 | [`docs/concepts/ai-collaboration.md`](../../docs/concepts/ai-collaboration.md) |
 
 엔진 코드-near 쪽:
 
-- **kind별 와이어 필드(JSON 스키마)** = root [`docs/specs/kinds-fields.md`](../../../docs/specs/kinds-fields.md)
+- **kind별 와이어 필드(JSON 스키마)** = root [`docs/specs/kinds-fields.md`](../../docs/specs/kinds-fields.md)
   (설계 계약) + 코드 SSOT `viewer/src/domain/{Kind}.ts` + `test_schema_parity.py`(드리프트 가드).
 - **캔버스별 *동작* 스펙**(렌더·드릴·인스펙터·레이아웃) = [`SPEC.md`](./SPEC.md).
 - **바운디드 컨텍스트 / 코드 거처** = [`DOMAIN.md`](./DOMAIN.md).

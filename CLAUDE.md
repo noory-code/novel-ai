@@ -18,6 +18,9 @@ novel-ai/
 Each package owns its `pyproject.toml`, `uv.lock`, tests, manifest, and changelog. There is no root
 Python workspace. Run development commands from the package being changed.
 
+The canonical public design documentation is under `docs/`; begin with `docs/VISION.md`, then use
+`docs/index.md` to route to concepts, specifications, plans, and package-level implementation docs.
+
 ## Commands
 
 ```bash
@@ -102,3 +105,5 @@ accordingly".
 - Proof is a lower-layer substrate and imports no sibling package.
 - Distill remains independent of the Novel application and every sibling plugin.
 - Package-level independence tests are the executable contract; keep them green.
+- The commercial Novel application is maintained separately. Public plugin contracts must not
+  depend on, link to, or require private application source files.

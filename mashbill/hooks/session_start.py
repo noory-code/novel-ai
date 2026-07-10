@@ -5,11 +5,11 @@ Prints the project essence (VISION.md first sentence) and the last 5
 DECISIONS.md entries to additionalContext so every Novel session begins
 with the user's anchor in the assistant's working set.
 
-Doc homes (2026-06-19 consolidation, D-2026-06-19-J):
-  - VISION.md          → the cross-repo root docs/ (noory-workspace/docs/VISION.md)
+Doc homes (2026-07-10 public-repository consolidation):
+  - VISION.md          → the public novel-ai docs/ canon, mirrored into plugin docs/
   - DECISIONS.md       → the installed plugin's docs/ directory
   - NEXT_SESSION.md    → the installed plugin's docs/ directory
-These two roots differ, so the hook resolves them separately.
+The installed plugin mirror keeps SessionStart self-contained outside the source checkout.
 
 Cross-platform (macOS, Linux, Windows) — pure Python stdlib only.
 """
@@ -39,10 +39,7 @@ def find_plugin_root() -> Path | None:
 
 
 def find_vision() -> Path | None:
-    """VISION.md lives in the cross-repo root docs/ (noory-workspace/docs/).
-
-    Walk up from this file until a docs/VISION.md is found.
-    """
+    """Find the nearest docs/VISION.md, including the installed-plugin mirror."""
     here = Path(__file__).resolve()
     for parent in here.parents:
         vision = parent / "docs" / "VISION.md"
@@ -52,12 +49,12 @@ def find_vision() -> Path | None:
 
 
 def read_vision_essence(vision_path: Path | None) -> str:
-    """Extract the bolded one-sentence essence from VISION.md (§본질)."""
+    """Extract the bolded one-sentence essence from Korean or English VISION.md."""
     if vision_path is None or not vision_path.exists():
         return "(VISION.md not found)"
     text = vision_path.read_text(encoding="utf-8")
-    # The essence is the first **bolded** block after the "## 본질" heading.
-    match = re.search(r"##\s*본질.*?\*\*(.*?)\*\*", text, re.DOTALL)
+    # The essence is the first **bolded** block after the essence heading.
+    match = re.search(r"##\s*(?:본질|Essence).*?\*\*(.*?)\*\*", text, re.DOTALL)
     if match:
         return re.sub(r"\s+", " ", match.group(1)).strip()
     return "(essence sentence not found in VISION.md)"
@@ -131,7 +128,7 @@ def main() -> int:
         "",
         f"> {essence}",
         "",
-        "Source of truth: `noory-workspace/docs/` (map: `index.md`; essence: `VISION.md`; "
+        "Source of truth: public `novel-ai/docs/` (map: `index.md`; essence: `VISION.md`; "
         "meaning: `concepts/`; behavior: `specs/`). Three phases: Discovery (Foundation) "
         "→ Retention (anchor) → Execution (Actors / Services / Feature) with "
         "AICollaboration cross-cutting.",
@@ -159,9 +156,7 @@ def main() -> int:
             ]
         )
         for trigger, title in queue:
-            additional_context_lines.append(
-                f"- User says **`{trigger}`** ⇒ execute: {title}"
-            )
+            additional_context_lines.append(f"- User says **`{trigger}`** ⇒ execute: {title}")
         additional_context_lines.append("")
         additional_context_lines.append(
             "If the user's first message contains one of the trigger keywords above, "

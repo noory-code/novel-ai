@@ -1,7 +1,7 @@
 # SPEC — Novel canvases
 
-> **동작 RULE 정본은 root** (`D-2026-06-28-B`) — [`docs/specs/canvas-behavior.md`](../../../docs/specs/canvas-behavior.md)
-> · [`edges.md`](../../../docs/specs/edges.md) · [`kinds-fields.md`](../../../docs/specs/kinds-fields.md).
+> **동작 RULE 정본은 repository root** (`D-2026-06-28-B`) — [`docs/specs/canvas-behavior.md`](../../docs/specs/canvas-behavior.md)
+> · [`edges.md`](../../docs/specs/edges.md) · [`kinds-fields.md`](../../docs/specs/kinds-fields.md).
 > "무엇이 어떻게 작동하나"의 *현행 규칙*은 거기 있다(두 제품이 공유하는 동작 약속). 이 파일은
 > 그 규칙의 **상세 구현·메커니즘·엣지케이스**(렌더 세부, 레이아웃, 인스펙터 상태, 워크스페이스/
 > 프로젝트 구조 등)를 보유한다. **규칙이 충돌하면 root가 우선** — 이 파일엔 마라톤 전 잔재
@@ -255,7 +255,7 @@ The Foundation stencil's three section headers (Mission / Core values /
 Identity) each carry an **always-visible ⓘ icon** next to the title.
 Clicking it opens a small **popover** with that concept's definition, so a
 user who does not yet know what mission / core value / identity mean can
-learn it in place. Concept SSOT = [`concepts/kinds.md`](../../../docs/concepts/kinds.md)
+learn it in place. Concept SSOT = [`concepts/kinds.md`](../../docs/concepts/kinds.md)
 (absorbed the old FOUNDATION_CONCEPT); the popover is a short surface of it.
 
 | Section | Popover text (full text in `stencil.info.*`) |

@@ -4,6 +4,21 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.166.5] — 2026-07-10
+
+### Changed
+
+- Moved the canonical public Novel design documents into `novel-ai/docs/` and repaired Mashbill's
+  code-near pointers to those repository-local paths.
+- Added a packaged `docs/VISION.md` mirror so SessionStart remains self-contained after marketplace
+  installation; repository validation pins the mirror to the public canonical file.
+- Replaced the maintainer-specific next-session queue with an empty, public-safe queue contract.
+
+### Fixed
+
+- SessionStart now extracts the essence from both English `## Essence` and Korean `## 본질` headings.
+- Removed current operational links to private workspace and commercial-app files.
+
 ## [0.166.4] — 2026-07-10
 
 ### Changed

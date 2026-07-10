@@ -9,7 +9,7 @@ decided: 2026-06-04
 
 # core_value — 코어밸류
 
-> **개념(정본): [`concepts/kinds.md`](../../../../../docs/concepts/kinds.md).** (옛 FOUNDATION_CONCEPT 흡수.)
+> **개념(정본): [`concepts/kinds.md`](../../../../docs/concepts/kinds.md).** (옛 FOUNDATION_CONCEPT 흡수.)
 > 코어밸류 = **현재의 노력. 지금 어떻게 결정하는가** (현재/노력). 사용자에게
 > **인터뷰로 받는 입력**. 필드 정본: `viewer/src/domain/CoreValue.ts`.
 

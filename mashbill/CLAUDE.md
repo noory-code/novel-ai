@@ -5,9 +5,9 @@
 > **Relationship to other CLAUDE.md files:**
 > - `~/.claude/CLAUDE.md` — global *principles* (SOLID, Clean
 >   Architecture, "추측 금지", "임시 통과 금지", TDD, …). Theory.
-> - `noory-ai/CLAUDE.md` — monorepo *rules* (500-line split, atomic
+> - [`../CLAUDE.md`](../CLAUDE.md) — repository *rules* (500-line split, atomic
 >   commits, plugin change rule, AI-First Docs banned phrases, …).
->   Theory + monorepo conventions.
+>   Theory + repository conventions.
 > - **This file** — Novel-local *practical triggers, checklists, and
 >   commands*. The other two files tell you *what* to value; this one
 >   tells you *exactly what to do, when*. When this file disagrees with
@@ -16,21 +16,23 @@
 > **Pairs with (read in this order on session start):**
 >
 > ⚠ **정본 거처 (2026-06-28, `D-2026-06-28-B` — `D-19-J` 실현):** 두 제품(오픈 엔진·상용
-> 앱)이 공유하는 Novel 개념·동작 규칙의 단일 출처 = `noory-workspace/docs/`(맵 `index.md` · 의미
+> 앱)이 공유하는 Novel 개념·동작 규칙의 단일 출처 = repository [`docs/`](../docs/)(맵 `index.md` · 의미
 > `concepts/` · 동작 규칙 `specs/`). 아래 3·7 (DOMAIN/CONCEPTS)은 root를 가리키는 **포인터**
 > + 엔진 코드-near(코드 거처·스키마)만 남고, 4 (SPEC)는 **상세 구현·메커니즘**을 보유하되
 > *동작 규칙*은 root `specs/` 가 정본(충돌 시 root 우선).
 >
-> 1. [`docs/VISION.md`](../../docs/VISION.md) — **the essence** + 3-phase cycle. Single source of truth above everything else. Read first, every session.
-> 2. [`docs/PRODUCT_SPEC.md`](../../plot/docs/PRODUCT_SPEC.md) — **product-level decisions** (platforms, business model, MVP scope, symbol system, canvas inventory, future / out-of-scope). Read second; it is the framing every other doc sits inside.
-> 3. [`docs/DOMAIN.md`](./docs/DOMAIN.md) — engine code-to-domain map (per-context code homes). Concept canon = root [`specs/domain.md`](../../docs/specs/domain.md).
-> 4. [`docs/SPEC.md`](./docs/SPEC.md) — detailed behaviour implementation / mechanism / edge cases. The *rules* (what Novel does per canvas) are canon at root [`specs/canvas-behavior.md`](../../docs/specs/canvas-behavior.md) — root wins on conflict.
-> 5. [`docs/DECISIONS.md`](./docs/DECISIONS.md) — *why* it does what it does, and what was tried and rejected (last 5 entries auto-surfaced by the SessionStart hook).
-> 6. [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — what shape the code is in and how to fix it.
-> 7. [`docs/CONCEPTS.md`](./docs/CONCEPTS.md) — pointer to root concepts/. Kind / canvas *meaning* canon = root [`concepts/kinds.md`](../../docs/concepts/kinds.md); wire schema = root [`specs/kinds-fields.md`](../../docs/specs/kinds-fields.md).
-> 8. [`docs/CURSOR.md`](./docs/CURSOR.md) — canvas cursor SSOT.
-> 9. [`docs/PHILOSOPHY.md`](../../docs/PHILOSOPHY.md) — value-flow / 10 principles.
-> 10. [`docs/ROADMAP.md`](./docs/ROADMAP.md) — release order.
+> 1. [`docs/VISION.md`](../docs/VISION.md) — **the essence** + 3-phase cycle. Single source of truth above everything else. Read first, every session.
+> 2. [`docs/DOMAIN.md`](./docs/DOMAIN.md) — engine code-to-domain map (per-context code homes). Concept canon = root [`specs/domain.md`](../docs/specs/domain.md).
+> 3. [`docs/SPEC.md`](./docs/SPEC.md) — detailed behaviour implementation / mechanism / edge cases. The *rules* (what Novel does per canvas) are canon at root [`specs/canvas-behavior.md`](../docs/specs/canvas-behavior.md) — root wins on conflict.
+> 4. [`docs/DECISIONS.md`](./docs/DECISIONS.md) — *why* it does what it does, and what was tried and rejected (last 5 entries auto-surfaced by the SessionStart hook).
+> 5. [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — what shape the code is in and how to fix it.
+> 6. [`docs/CONCEPTS.md`](./docs/CONCEPTS.md) — pointer to root concepts/. Kind / canvas *meaning* canon = root [`concepts/kinds.md`](../docs/concepts/kinds.md); wire schema = root [`specs/kinds-fields.md`](../docs/specs/kinds-fields.md).
+> 7. [`docs/CURSOR.md`](./docs/CURSOR.md) — canvas cursor SSOT.
+> 8. [`docs/PHILOSOPHY.md`](../docs/PHILOSOPHY.md) — value-flow / 10 principles.
+> 9. [`docs/ROADMAP.md`](./docs/ROADMAP.md) — release order.
+>
+> Commercial application product requirements live in its private repository. They are not a dependency of the
+> public plugin contract.
 
 ---
 
@@ -52,7 +54,7 @@ behaviour question from memory or from code comments alone.**
 ### Gate -1 — Re-anchor to the essence (every session, before answering anything)
 
 The single rule that keeps every other rule honest. Novel's essence
-(from [`docs/VISION.md`](../../docs/VISION.md)):
+(from [`docs/VISION.md`](../docs/VISION.md)):
 
 > **Novel 은 본질을 모르는 사람이 본질을 찾고, 그걸 놓치지 않으면서, 그
 > 본질 아래에서 서비스를 쉽게 기획·개발할 수 있게 AI 와 협업하는
@@ -357,7 +359,7 @@ proves nothing about whether your fix works for the user.
 
 ### Gate 4 — Before commit (mashbill plugin change rule)
 
-Per `noory-ai/CLAUDE.md` plugin rule:
+Per repository [`CLAUDE.md`](../CLAUDE.md) plugin rule:
 
 1. Bump `mashbill/.claude-plugin/plugin.json` `version` (patch / minor).
 2. Append a section to `mashbill/CHANGELOG.md`. **Use the
@@ -483,7 +485,7 @@ cd mashbill && uv run ruff format mashbill/ tests/
 
 1. **Match the user's language.** User asks in Korean → answer in
    Korean. Code, comments, commit messages, docs stay English (per
-   noory-ai CLAUDE.md "Language" section).
+   repository CLAUDE.md "Language" section).
 2. **Brief over verbose.** A clear sentence beats a clear paragraph.
    Don't explain three options when one is clearly right; just ask
    which they want.

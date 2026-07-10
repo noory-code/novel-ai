@@ -1,5 +1,13 @@
 # Changelog
 
+## [7.7.2] — 2026-07-10
+
+### Fixed
+
+- Updated the privacy inventory to name `.noory/solera/`, the current project data root, instead of
+  the retired `.solera/` layout.
+- Removed the operational specification's dependency on a private workspace design-note path.
+
 ## [7.7.1] — 2026-07-10
 
 ### Changed

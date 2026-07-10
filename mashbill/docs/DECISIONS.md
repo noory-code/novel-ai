@@ -39,6 +39,18 @@
 
 ## Log
 
+### D-2026-07-10-A — Public documentation is self-contained in novel-ai
+
+- **What:** The public Novel concept/specification canon moves from the private workspace's English mirror to
+  `novel-ai/docs/`. Mashbill's installed package carries a validated `docs/VISION.md` mirror for SessionStart.
+  `NEXT_SESSION.md` no longer publishes private maintainer tasks, machine paths, or private-app links.
+- **Why:** Mashbill, Solera, Proof, and Distill now live in an international public repository. A fresh contributor
+  or marketplace installation must be able to resolve the documented contract without access to the private
+  product workspace.
+- **Approval:** Accepted by user (explicit request to move the plugins, make `novel-ai` public/international, and
+  update all related documentation, 2026-07-10).
+
+
 ### D-2026-07-05-H — 접점 renamed 플랫폼 (Platform); service/feature nodes show their kind tag
 
 - **What:** the category kind's display name changes 접점 → 플랫폼
@@ -15147,4 +15159,3 @@ but not yet fully eliminated.
   (``.claude/*`` + ``!.claude/skills/`` — git can't re-include under a wholly
   ignored dir); settings/rules stay ignored. Flow work item: initiative
   ``beta-groundwork`` / epic-1 / US-107.
-

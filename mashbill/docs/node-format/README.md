@@ -1,6 +1,6 @@
 # node-format/ — 노드 종류(kind)별 데이터 형식 감사
 
-> ⚠ **kind 필드 정본 = [`../../../../docs/specs/kinds-fields.md`](../../../../docs/specs/kinds-fields.md)**
+> ⚠ **kind 필드 정본 = [`../../../docs/specs/kinds-fields.md`](../../../docs/specs/kinds-fields.md)**
 > (root). 이 폴더는 마라톤 전 *감사 기록*(SSOT 아님 — 무엇이 왜 있고 유용한가를 따진 이력).
 
 > **노드 종류 1개 = 문서 1개.** 각 문서는 그 kind가 가진 프로퍼티 +
@@ -11,7 +11,7 @@
 > **목적:** Novel 노드 데이터 모델을 kind 단위로 감사 → 발행/산출물(Q6)을
 > 올리기 전에 형식을 의도적으로 다시 정한다.
 >
-> **개념 정본:** [`../../../../docs/concepts/kinds.md`](../../../../docs/concepts/kinds.md) —
+> **개념 정본:** [`../../../docs/concepts/kinds.md`](../../../docs/concepts/kinds.md) —
 > 미션(뿌리/입력)→코어밸류(현재/입력)→아이덴티티(지향/**출력**). 파운데이션
 > kind 의 *형식*은 이 *개념*에서 따라 나온다. 형식 감사 전에 개념을 본다.
 > (옛 FOUNDATION_CONCEPT → concepts/ai-collaboration·kinds 로 흡수.)

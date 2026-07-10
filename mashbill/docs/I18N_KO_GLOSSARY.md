@@ -11,7 +11,7 @@
 > **Pairs with:**
 > - [`../CLAUDE.md`](../CLAUDE.md) i18n anti-pattern row — the rule "Novel is a
 >   global service, i18n is non-negotiable" (originally a user-direction memory note).
-> - [`PRODUCT_SPEC.md`](../../../plot/docs/PRODUCT_SPEC.md) — the canonical vocabulary
+> - [`../../docs/concepts/kinds.md`](../../docs/concepts/kinds.md) — the canonical public vocabulary
 >   for Novel kinds.
 
 ---

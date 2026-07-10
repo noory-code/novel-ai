@@ -9,7 +9,7 @@ decided: 2026-06-04
 
 # mission — 미션
 
-> **개념(정본): [`concepts/kinds.md`](../../../../../docs/concepts/kinds.md).** (옛 FOUNDATION_CONCEPT 흡수.)
+> **개념(정본): [`concepts/kinds.md`](../../../../docs/concepts/kinds.md).** (옛 FOUNDATION_CONCEPT 흡수.)
 > 미션 = **존재의 뿌리. 탄생의 이유. 왜 존재하는가** (과거/뿌리). 사용자에게
 > **인터뷰로 받는 입력**. 필드 정본: `viewer/src/domain/Mission.ts`.
 > 공통 BaseFields 는 ../README 참조.
