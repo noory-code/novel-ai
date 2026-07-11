@@ -1,6 +1,6 @@
 {
   "name": "distill",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "Durable local knowledge extraction, storage, and recall across AI coding sessions.",
   "author": {
     "name": "noory-code",

@@ -72,8 +72,9 @@ External contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md), the
 ## History
 
 This repository was extracted from [`noory-code/noory-ai`](https://github.com/noory-code/noory-ai)
-with the commit history of all four package directories preserved. The original repository retains
-this project as the `novel-ai/` submodule.
+with the commit history of all four package directories preserved. The original repository no
+longer embeds this project; coordinated workspace checkouts place `noory-ai` and `novel-ai` in
+sibling directories.
 
 ## License
 

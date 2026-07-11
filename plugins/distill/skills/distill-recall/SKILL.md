@@ -3,7 +3,7 @@ name: distill-recall
 user-invocable: true
 description: Search accumulated knowledge by semantic + keyword hybrid search.
 metadata:
-  version: "1.9.0"
+  version: "1.9.1"
   category: search
   type: unit
   style: tool

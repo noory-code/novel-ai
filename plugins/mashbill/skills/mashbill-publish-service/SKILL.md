@@ -3,7 +3,7 @@ name: mashbill-publish-service
 user-invocable: true
 description: Publish a validated Novel project snapshot and service release in immutable format F.
 metadata:
-  version: "0.167.0"
+  version: "0.167.1"
   category: publication
   type: unit
   style: procedure

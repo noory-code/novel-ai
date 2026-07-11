@@ -3,7 +3,7 @@ name: distill-digest
 user-invocable: true
 description: Analyze knowledge for duplicates and stale entries.
 metadata:
-  version: "1.9.0"
+  version: "1.9.1"
   category: maintenance
   type: unit
   style: tool

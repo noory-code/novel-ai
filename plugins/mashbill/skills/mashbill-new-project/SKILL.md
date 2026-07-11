@@ -3,7 +3,7 @@ name: mashbill-new-project
 user-invocable: true
 description: Create a structured Novel design project in a user-selected workspace directory.
 metadata:
-  version: "0.167.0"
+  version: "0.167.1"
   category: action
   type: unit
   style: procedure

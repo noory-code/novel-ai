@@ -3,7 +3,7 @@ name: distill-crystallize
 user-invocable: true
 description: Use Claude MCP Sampling to consolidate stored Distill knowledge into Claude rules and skills.
 metadata:
-  version: "1.9.0"
+  version: "1.9.1"
   category: maintenance
   type: unit
   style: tool

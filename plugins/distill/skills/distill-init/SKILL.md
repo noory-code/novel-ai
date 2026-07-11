@@ -3,7 +3,7 @@ name: distill-init
 user-invocable: true
 description: One-step Distill onboarding for a new project.
 metadata:
-  version: "1.9.0"
+  version: "1.9.1"
   category: setup
   type: unit
   style: tool

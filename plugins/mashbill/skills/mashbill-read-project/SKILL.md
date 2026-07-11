@@ -3,7 +3,7 @@ name: mashbill-read-project
 user-invocable: true
 description: Read a Novel design project and summarize its foundation, actors, services, features, and gaps.
 metadata:
-  version: "0.167.0"
+  version: "0.167.1"
   category: analysis
   type: unit
   style: procedure

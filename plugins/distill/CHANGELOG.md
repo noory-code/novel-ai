@@ -4,6 +4,13 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.9.1] - 2026-07-11
+
+### Fixed
+
+- Corrected the public requirements link after Distill moved to
+  `plugins/distill/` in the shared marketplace layout.
+
 ## [1.9.0] - 2026-07-10
 
 ### Added

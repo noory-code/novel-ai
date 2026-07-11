@@ -3,7 +3,7 @@ name: distill-help
 user-invocable: true
 description: Explain Distill's local knowledge store and the capabilities available on the current host.
 metadata:
-  version: "1.9.0"
+  version: "1.9.1"
   category: meta
   type: unit
   style: guide

@@ -193,9 +193,9 @@ question is **product**, not technical.
 
 **Resolved 2026-07-10:** Novel's four open plugins moved to
 ``github.com/noory-code/novel-ai`` with their directory history preserved.
-The original ``noory-ai`` repository keeps a ``novel-ai/`` submodule for
-development reference, while plugin installation uses the new repository's
-own marketplace so it does not depend on recursive submodule checkout.
+The original ``noory-ai`` repository no longer embeds this project. Coordinated
+workspace checkouts place ``noory-ai/`` and ``novel-ai/`` in sibling directories,
+while plugin installation uses this repository's own marketplace.
 
 ---
 

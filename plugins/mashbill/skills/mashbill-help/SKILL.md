@@ -3,7 +3,7 @@ name: mashbill-help
 user-invocable: true
 description: Explain Mashbill's headless Novel design model, data layout, MCP tools, and workflows.
 metadata:
-  version: "0.167.0"
+  version: "0.167.1"
   category: meta
   type: unit
   style: guide

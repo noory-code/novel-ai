@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.167.1] — 2026-07-11
+
+### Fixed
+
+- Updated repository-layout guidance after Novel AI became a top-level sibling
+  checkout instead of a nested `noory-ai` submodule.
+- Corrected the generated cross-repository command comment to use the
+  `novel-ai/plugins/mashbill/` package path.
+
 ## [0.167.0] — 2026-07-10
 
 ### Added

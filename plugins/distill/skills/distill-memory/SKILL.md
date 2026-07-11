@@ -3,7 +3,7 @@ name: distill-memory
 user-invocable: true
 description: Promote, demote, or delete one Distill knowledge entry without requiring MCP Sampling.
 metadata:
-  version: "1.9.0"
+  version: "1.9.1"
   category: maintenance
   type: unit
   style: tool
