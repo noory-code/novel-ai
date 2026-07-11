@@ -4,6 +4,25 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.168.0] — 2026-07-12
+
+### Added
+
+- `get_canvas_framing(scope)` MCP tool — returns the coach's authoritative
+  system framing for a canvas scope (the same prompt the in-app coach receives
+  via `--append-system-prompt`), so a headless coach running the open engine is
+  first-class. One SSOT: delegates to `chat_context.build_system_prompt`
+  (D-2026-07-12-A).
+- `mashbill-coach` skill — a thin headless design coach that fetches its framing
+  from `get_canvas_framing`, evaluates with `get_design_principles`, and writes
+  only after an explicit confirm (no silent auto-generation).
+
+### Fixed
+
+- `coaching_principles.py` docstring named the private workspace doc as canon;
+  corrected to the public `novel-ai/docs/concepts/design-principles.md` and made
+  the headless-boundary independence explicit.
+
 ## [0.167.1] — 2026-07-11
 
 ### Fixed

@@ -2,10 +2,13 @@
 
 D-2026-07-03-O/P: the coach's evaluation knowledge is DISTILLED PRINCIPLES,
 not RAG — and it rides here as an MCP tool payload, not in the per-turn
-prompt (word budget). CANON lives in the workspace repo
-(``noory-workspace/docs/concepts/design-principles.md``, Korean); this is the
-runtime copy the engine ships — sync canon → here when the canon changes.
-Korean on purpose: the coach quotes these discriminator questions verbatim.
+prompt (word budget). CANON = the public concepts doc
+``novel-ai/docs/concepts/design-principles.md`` (English) — the semantic
+source of truth. These strings are the engine's shipped runtime copy in
+Korean (the coach quotes the discriminator questions verbatim; Novel is a
+Korean-first coach). A Korean reference translation of the canon also lives
+in the private workspace docs, but this public package must NOT depend on it
+(headless boundary). Sync: when the public canon changes, update these strings.
 """
 
 from __future__ import annotations

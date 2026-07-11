@@ -16,6 +16,7 @@ from typing import Any
 
 from fastmcp import FastMCP
 
+from mashbill.chat_context import build_system_prompt
 from mashbill.coaching_principles import get_principles
 from mashbill.folder_io import (
     create_edge as _create_edge,
@@ -87,6 +88,20 @@ def get_design_principles(area: str | None = None) -> str:
     (D-2026-07-03-O/P). ``area``: mission | values | services | features |
     omitted for all. Consult before challenging weak content."""
     return get_principles(area)
+
+
+@mcp.tool()
+def get_canvas_framing(scope: str) -> str:
+    """The coach's authoritative system framing for a canvas ``scope`` — the
+    SAME prompt the in-app coach receives via ``--append-system-prompt``, so a
+    headless coach (Claude Code / IDE, running the open engine for free) is
+    first-class (D-2026-07-12-A). ``scope``: foundation | actors | services |
+    ``service:<id>`` | ``feature:<id>`` | project. Call it for the canvas the
+    user is designing, then follow it — it carries the hallucination guard,
+    the propose/pace playbooks, and the WRITE gate (confirm before writing;
+    never silently auto-generate). One SSOT: delegates to
+    :func:`mashbill.chat_context.build_system_prompt`."""
+    return build_system_prompt(scope)
 
 
 @mcp.tool()

@@ -36,6 +36,7 @@ _CORE_TOOLS = {
     "delete_project_tag",
     "get_viewer_context",
     "get_design_principles",
+    "get_canvas_framing",
 }
 
 
@@ -44,6 +45,25 @@ async def test_registry_exposes_every_core_tool() -> None:
     names = {getattr(t, "name", None) or t["name"] for t in tools}
     missing = _CORE_TOOLS - names
     assert not missing, f"tool contract lost these verbs: {sorted(missing)}"
+
+
+def test_get_canvas_framing_returns_the_scope_system_prompt() -> None:
+    # The headless coach fetches the same authoritative framing the in-app coach
+    # receives via --append-system-prompt, so the free (open-engine) coach is
+    # first-class. One SSOT: the tool must return build_system_prompt(scope).
+    from mashbill.chat_context import build_system_prompt
+
+    for scope in ("foundation", "actors", "services"):
+        assert mcp_tools.get_canvas_framing(scope) == build_system_prompt(scope)
+    # A per-service thread resolves to the services framing (DRY), not empty.
+    assert mcp_tools.get_canvas_framing("service:abc123") == build_system_prompt("service:abc123")
+    # A framed scope is a strict superset of the guard-only cross-canvas
+    # ``project`` scope — proving the composed prompt carries the playbooks
+    # (incl. the WRITE gate: "no silent auto-generation", VISION AICollaboration)
+    # the headless coach needs to be first-class.
+    guard_only = mcp_tools.get_canvas_framing("project")
+    framed = mcp_tools.get_canvas_framing("foundation")
+    assert guard_only in framed and len(framed) > len(guard_only)
 
 
 def test_create_list_get_project_roundtrip(tmp_path: Path) -> None:

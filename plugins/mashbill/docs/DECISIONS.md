@@ -39,6 +39,29 @@
 
 ## Log
 
+### D-2026-07-12-A — Headless coach: framing via a get_canvas_framing MCP tool + a thin coach skill
+
+- **What:** Expose the coach's per-scope system framing
+  (`chat_context.build_system_prompt`) as a `get_canvas_framing(scope)` MCP tool,
+  and ship a thin `mashbill-coach` skill that fetches its framing from that tool,
+  evaluates with `get_design_principles`, and writes only after an explicit
+  confirm. The in-app coach keeps receiving the same framing via
+  `--append-system-prompt` — one SSOT, both surfaces.
+- **Why:** Open-core strategy — the engine (and thus the coach) is open and free;
+  the paid product is the visual app. The coach must be first-class headless
+  (Claude Code / IDE) so the free product is complete. The framing lived only in
+  the app path (engine chat endpoint); headless surfaces had no way to load it.
+- **Alternatives:** (1) Embed the framing text in the SKILL.md — rejected: the
+  framing is per-canvas-scope and turn-dynamic; a static skill can't reproduce
+  it, and a headless session has no canvas-tab signal. (2) Move the framing to
+  external data files the skill reads — rejected: a missed PyInstaller bundle
+  would return empty framing, silently dropping the hallucination + write guards.
+  Keeping it as Python behind an MCP tool avoids both (mirrors the existing
+  `get_design_principles` payload pattern).
+- **Approval:** Accepted — user, 2026-07-12 (design red-teamed, verdict revised to
+  the tool+thin-skill shape).
+- **Spec impact:** None — coach delivery plumbing, not a canvas-behaviour change.
+
 ### D-2026-07-10-B — One public suite, independent host plugins and MCP processes
 
 - **What:** `novel-ai` is one public repository and distribution source. Claude
