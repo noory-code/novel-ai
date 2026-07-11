@@ -27,7 +27,7 @@ written (the old SPEC also stated "Foundation/Actors only full-spec, the rest la
 
 ## Code-near goes in noory-ai (not duplicated here)
 
-Pure code mechanisms are canonical in [`mashbill/docs/`](../../mashbill/docs/) — referenced only here:
+Pure code mechanisms are canonical in [`plugins/mashbill/docs/`](../../plugins/mashbill/docs/) — referenced only here:
 - Auto-layout algorithm details (`AUTO_LAYOUT.md`), cursor SSOT (`CURSOR.md`), publish MD format
   (`PUBLISH.md`), code structure (`ARCHITECTURE.md`), i18n terms (`I18N_KO_GLOSSARY.md`).
 - The *code* SSOT for the wire schema = `viewer/src/domain/{Kind}.ts` + `test_schema_parity.py`.

@@ -1,6 +1,6 @@
 # Storage · versioning · publish
 
-> Canonical (design level). Publish MD format detail = Mashbill [`PUBLISH.md`](../../mashbill/docs/PUBLISH.md).
+> Canonical (design level). Publish MD format detail = Mashbill [`PUBLISH.md`](../../plugins/mashbill/docs/PUBLISH.md).
 > The publish contract for mashbill↔Solera is **format F** — see §format F below (resolves the old T5/T6 versioning question).
 
 ## Storage layout (`.noory/`)

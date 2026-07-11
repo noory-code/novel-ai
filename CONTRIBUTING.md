@@ -24,7 +24,8 @@ uv run ruff check <package-or-src>/ tests/
 ```
 
 Read [CLAUDE.md](CLAUDE.md) and any package-local instructions before editing. Mashbill contributors
-must also read [`mashbill/CLAUDE.md`](mashbill/CLAUDE.md).
+must also read
+[`plugins/mashbill/CONTRIBUTOR_GUIDE.md`](plugins/mashbill/CONTRIBUTOR_GUIDE.md).
 
 ## Pull Requests
 

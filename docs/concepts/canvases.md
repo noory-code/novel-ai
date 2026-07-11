@@ -2,7 +2,7 @@
 
 > **Canon (shared concept, `D-2026-06-28-B`).** Parent = [`../VISION.md`](../VISION.md). Per-kind *meaning* =
 > [`kinds.md`](./kinds.md), canvas *behaviour* spec (render·drill·edge rules etc.) = [`../specs/`](../specs/).
-> (The engine [`mashbill/docs/CONCEPTS.md`](../../mashbill/docs/CONCEPTS.md) points to this file.)
+> (The engine [`mashbill/docs/CONCEPTS.md`](../../plugins/mashbill/docs/CONCEPTS.md) points to this file.)
 
 Each canvas forces **one sharp question**. That question is that canvas's identity.
 

@@ -1,0 +1,56 @@
+{
+  "name": "novel-ai",
+  "interface": {
+    "displayName": "Novel AI"
+  },
+  "plugins": [
+    {
+      "name": "mashbill",
+      "source": {
+        "source": "local",
+        "path": "./plugins/mashbill"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "solera",
+      "source": {
+        "source": "local",
+        "path": "./plugins/solera"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "proof",
+      "source": {
+        "source": "local",
+        "path": "./plugins/proof"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "distill",
+      "source": {
+        "source": "local",
+        "path": "./plugins/distill"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

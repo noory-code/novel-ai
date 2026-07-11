@@ -1,0 +1,43 @@
+{
+  "name": "distill",
+  "version": "1.9.1",
+  "description": "Durable local knowledge extraction, storage, and recall across AI coding sessions.",
+  "author": {
+    "name": "noory-code",
+    "url": "https://github.com/noory-code"
+  },
+  "homepage": "https://github.com/noory-code/novel-ai/tree/main/plugins/distill",
+  "repository": "https://github.com/noory-code/novel-ai",
+  "license": "MIT",
+  "keywords": ["memory", "knowledge-base", "recall", "mcp", "local-first"],
+  "skills": "./skills/",
+  "mcpServers": {
+    "distill": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${PLUGIN_ROOT}",
+        "python",
+        "-m",
+        "distill"
+      ],
+      "enabled_tools": ["recall", "profile", "digest", "manage_entry", "store", "init"]
+    }
+  },
+  "interface": {
+    "displayName": "Distill",
+    "shortDescription": "Recall durable knowledge from past sessions",
+    "longDescription": "Distill extracts reusable patterns, preferences, decisions, and workarounds into local stores and recalls them when relevant without requiring an external API key.",
+    "developerName": "noory-code",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Write"],
+    "websiteURL": "https://github.com/noory-code/novel-ai/tree/main/plugins/distill",
+    "defaultPrompt": [
+      "Initialize Distill for this project",
+      "Recall relevant knowledge for this task",
+      "Show my accumulated knowledge profile"
+    ],
+    "brandColor": "#059669"
+  }
+}

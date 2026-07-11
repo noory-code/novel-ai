@@ -22,14 +22,15 @@ Existing project data does not move. The plugins continue to use their documente
 
 | Former source path | Current source path |
 |---|---|
-| `noory-ai/mashbill/` | `novel-ai/mashbill/` |
-| `noory-ai/solera/` | `novel-ai/solera/` |
-| `noory-ai/proof/` | `novel-ai/proof/` |
-| `noory-ai/distill/` | `novel-ai/distill/` |
+| `noory-ai/mashbill/` | `novel-ai/plugins/mashbill/` |
+| `noory-ai/solera/` | `novel-ai/plugins/solera/` |
+| `noory-ai/proof/` | `novel-ai/plugins/proof/` |
+| `noory-ai/distill/` | `novel-ai/plugins/distill/` |
 | private workspace `docs/en/` mirrors | canonical public `novel-ai/docs/` |
 
-The original `noory-ai` repository references this repository as its `novel-ai/` submodule. Development,
-releases, issues, and pull requests for these four packages now belong here.
+The original `noory-ai` repository no longer embeds this repository. Coordinated workspace
+checkouts place `noory-ai/` and `novel-ai/` in sibling directories. Development, releases,
+issues, and pull requests for these four packages belong here.
 
 ## Repository boundary
 

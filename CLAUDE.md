@@ -9,10 +9,14 @@ and deliberately exchange files and stable identifiers instead of importing one 
 
 ```
 novel-ai/
-├── mashbill/  — Novel canvas, MCP/HTTP server, skills, agents, and hooks
-├── solera/    — deterministic work planning and execution harness
-├── proof/     — append-only decision log
-└── distill/   — durable knowledge extraction and recall
+├── plugins/
+│   ├── mashbill/  — Novel canvas, MCP/HTTP server, skills, agents, and hooks
+│   ├── solera/    — deterministic work planning and execution harness
+│   ├── proof/     — append-only decision log
+│   └── distill/   — durable knowledge extraction and recall
+├── .claude-plugin/             — Claude Code marketplace
+├── .agents/plugins/            — Codex marketplace
+└── gemini-extension.json       — Gemini CLI suite extension
 ```
 
 Each package owns its `pyproject.toml`, `uv.lock`, tests, manifest, and changelog. There is no root
@@ -33,7 +37,7 @@ uv run ruff format <package-or-src>/ tests/
 ```
 
 Mashbill also contains frontend assets and package-specific gates. Read
-`mashbill/CLAUDE.md` in full before changing anything under `mashbill/`.
+`plugins/mashbill/CONTRIBUTOR_GUIDE.md` in full before changing anything under `plugins/mashbill/`.
 
 ## Language
 
@@ -69,10 +73,10 @@ Any modification inside a plugin directory requires all of the following in the 
 
 1. Bump the plugin version: patch for fixes/docs/packaging, minor for features or refactors.
 2. Update the package's version SSOTs together:
-   - Mashbill: `mashbill/mashbill/__init__.py` and `mashbill/.claude-plugin/plugin.json`
-   - Solera: `solera/pyproject.toml` and `solera/.claude-plugin/plugin.json`
-   - Proof: `proof/pyproject.toml` and `proof/.claude-plugin/plugin.json`
-   - Distill: `distill/pyproject.toml` and `distill/.claude-plugin/plugin.json`
+   - Mashbill: `plugins/mashbill/mashbill/__init__.py`, Claude manifest, and Codex manifest
+   - Solera: `plugins/solera/pyproject.toml`, Claude manifest, and Codex manifest
+   - Proof: `plugins/proof/pyproject.toml`, Claude manifest, and Codex manifest
+   - Distill: `plugins/distill/pyproject.toml`, Claude manifest, and Codex manifest
 3. Add a dated entry to that package's `CHANGELOG.md`.
 4. Run the package's tests and static checks before committing.
 

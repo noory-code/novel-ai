@@ -3,7 +3,7 @@
 > Canonical (system level). Parent = [`VISION.md`](./VISION.md) (essence/identity). This document = how Novel is
 > *composed and deployed* — the plugin / app / engine boundaries and their *intent*. Engine-internal bounded
 > contexts = [`specs/domain.md`](./specs/domain.md). Mashbill code shape =
-> [`mashbill/docs/ARCHITECTURE.md`](../mashbill/docs/ARCHITECTURE.md) (different altitude). The commercial
+> [`mashbill/docs/ARCHITECTURE.md`](../plugins/mashbill/docs/ARCHITECTURE.md) (different altitude). The commercial
 > application's product requirements are private and are not part of this public plugin contract.
 
 ## Principle — Open-Core
@@ -85,5 +85,5 @@ The open-core boundary migration is complete:
 - Python↔TypeScript wire parity crosses the repository boundary through committed generated artifacts; neither
   repository imports the other by filesystem path.
 
-Decision source = [`mashbill/docs/DECISIONS.md`](../mashbill/docs/DECISIONS.md) `D-2026-06-20-A`.
+Decision source = [`mashbill/docs/DECISIONS.md`](../plugins/mashbill/docs/DECISIONS.md) `D-2026-06-20-A`.
 Source-repository relocation guidance = [`MIGRATION.md`](./MIGRATION.md).

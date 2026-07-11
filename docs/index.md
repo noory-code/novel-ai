@@ -26,9 +26,10 @@ override the public plugin contracts defined here.
 | Open-core system boundary | [ARCHITECTURE.md](./ARCHITECTURE.md) |
 | Canvas and kind meaning | [concepts/](./concepts/) |
 | Canvas behavior and wire fields | [specs/](./specs/) |
-| Mashbill implementation details | [`mashbill/docs/`](../mashbill/docs/) |
+| Mashbill implementation details | [`plugins/mashbill/docs/`](../plugins/mashbill/docs/) |
 | Publish contract between Mashbill and Solera | [specs/format-f.md](./specs/format-f.md) |
-| Decision history | [`mashbill/docs/DECISIONS.md`](../mashbill/docs/DECISIONS.md) |
+| Decision history | [`plugins/mashbill/docs/DECISIONS.md`](../plugins/mashbill/docs/DECISIONS.md) |
+| Host packaging and capability matrix | [HOST_SUPPORT.md](./HOST_SUPPORT.md) |
 
 ## Repository boundary
 
