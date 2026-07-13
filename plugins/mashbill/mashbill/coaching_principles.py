@@ -51,6 +51,22 @@ _FEATURES = """기능 판별 기준:
 - 행복 경로가 끝까지: 분기·예외 전에 처음-끝이 한 줄로 걸어져야 한다.
 - 승격 신호: 기능 하나가 여러 당사자의 교환을 품기 시작하면 서비스 후보."""
 
+_IDENTITY = """아이덴티티(목소리·태도) 판별 기준:
+- 형용사 더미가 아니라 행동: "이 목소리대로면, 같은 상황에서 경쟁사와 다르게 말하거나
+  행동하는 장면이 하나 그려지나?" (친근한·혁신적인·신뢰가는 = 형용사 나열이지 아이덴티티가
+  아니다)
+- 거절하는 게 있나: "이 아이덴티티가 '우리는 이렇게는 안 한다'며 포기하는 톤·태도가 있나?"
+  (친근함을 택했다면 권위·격식을 얼마간 버린다 — 아무것도 안 버리면 장식)
+- 미션·가치에서 자라났나: "이 목소리를 미션·가치에서 지워도 남나, 아무 서비스에나 붙는
+  스톡 보이스인가?" (브랜드 보이스 템플릿 복붙 = 빌려온 것)
+- 한 사람으로 그려지나: "이걸 한 인물로 그리면 그가 말하는 방식·사용자를 대하는 태도가
+  한 장면에 떠오르나?" (흩어진 UI 형용사는 인물이 아니다)
+강한 예: "금융을 상식처럼 — 전문용어로 겁주지 않고 담백하게"(거절=금융권 권위·격식) ·
+"짓궂지만 끈질긴 코치 — 죄책감을 유머로 찌른다"(거절=정중한 거리두기) · "절제된 확신 —
+설명을 줄이고 보여준다"(거절=스펙 나열).
+약한 예: "친근하고 혁신적이며 신뢰가는"(형용사 더미·거절 없음) · "최고의 사용자 경험을
+전한다"(누구나 걸 수 있는 슬로건) · "전문적이고 세련된 톤"(스톡 보이스)."""
+
 _ACTORS = """액터(교환 당사자) 판별 기준:
 - 돈 내는 고객만이 아니라 교환의 모든 면: 공급자·수혜자·운영·신뢰까지 일급.
 - 각 액터에 '주는 것'과 '받는 것'이 함께 (호혜적 교환).
@@ -63,6 +79,7 @@ _ACTORS = """액터(교환 당사자) 판별 기준:
 _AREAS: dict[str, str] = {
     "mission": _MISSION,
     "values": _VALUES,
+    "identity": _IDENTITY,
     "actors": _ACTORS,
     "services": _SERVICES,
     "features": _FEATURES,
@@ -72,12 +89,12 @@ _AREAS: dict[str, str] = {
 def get_principles(area: str | None = None) -> str:
     """Return the discriminator principles for ``area``, or all areas joined.
 
-    ``area``: mission | values | actors | services | features | None (= everything).
-    Raises ``ValueError`` on an unknown area so a typo can't silently return
-    nothing.
+    ``area``: mission | values | identity | actors | services | features |
+    None (= everything). Raises ``ValueError`` on an unknown area so a typo
+    can't silently return nothing.
     """
     if area is None:
-        areas = ("mission", "values", "actors", "services", "features")
+        areas = ("mission", "values", "identity", "actors", "services", "features")
         return "\n\n".join(_AREAS[key] for key in areas)
     if area not in _AREAS:
         raise ValueError(f"unknown area {area!r}; pick one of {sorted(_AREAS)} or omit")

@@ -4,6 +4,20 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.169.0] — 2026-07-13
+
+### Added
+
+- Identity discrimination criteria for the coach's evaluation knowledge
+  (`get_design_principles("identity")` / `coaching_principles._IDENTITY`) —
+  identity was the one Foundation pillar (mission → core values → identity)
+  without a distilled discriminator set, so the coach could frame the identity
+  interview but not challenge weak identities. Four criteria: behavioral not
+  adjectival, refuses something (pays a price), grown from mission/values not
+  borrowed, a coherent persona. Canon updated in
+  `novel-ai/docs/concepts/design-principles.md` (semantic SSOT), runtime Korean
+  copy synced. Fills W-27.
+
 ## [0.168.0] — 2026-07-12
 
 ### Added

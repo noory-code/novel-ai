@@ -85,8 +85,9 @@ mcp = FastMCP(
 @mcp.tool()
 def get_design_principles(area: str | None = None) -> str:
     """Design-quality discriminator questions for judging content strength
-    (D-2026-07-03-O/P). ``area``: mission | values | services | features |
-    omitted for all. Consult before challenging weak content."""
+    (D-2026-07-03-O/P). ``area``: mission | values | identity | actors |
+    services | features | omitted for all. Consult before challenging weak
+    content."""
     return get_principles(area)
 
 

@@ -53,6 +53,27 @@ feel stupid" (price = ship date), Duolingo "take the long view" (price = immedia
 team" (price = job security). Weak — "Honesty: always be honest" (no price·a noun) · "Innovation: innovate
 ceaselessly" (nothing given up·an unmeasurable decorative word).
 
+## Identity — discrimination criteria
+
+- **Behavioral, not adjectival**: A pile of adjectives ("friendly, innovative, trustworthy") is not an
+  identity — it's a word list. Discriminate: "In the same moment, does one scene come to mind where this
+  voice speaks or acts differently from a competitor?"
+- **Does it refuse something?**: A strong identity rules a tone or behavior out; it pays a price. If it
+  chose warmth, it gave up some authority/formality. Discriminate: "Is there a 'we don't do it this way'
+  the identity refuses? An identity that gives up nothing is decoration."
+- **Grown from mission and values, not borrowed**: A strong identity is the felt surface of the mission +
+  values, not a stock brand-voice template. Discriminate: "Erase the mission and values — does this voice
+  survive, or is it a stock voice you could paste onto any service?"
+- **A coherent persona, not scattered adjectives**: Identity is one character — how it speaks, what it
+  assumes about the user. Discriminate: "Drawn as one person, does a single scene of how they talk and
+  treat the user come into focus?"
+
+**Example pair**: Strong — "Finance as common sense — plain, no jargon to intimidate" (refuses banking's
+authority/formality) · "A mischievous but relentless coach — pokes guilt with humor" (refuses polite
+distance) · "Restrained conviction — show more, explain less" (refuses spec-listing). Weak — "Friendly,
+innovative, and trustworthy" (adjective pile, refuses nothing) · "Delivers the best user experience" (a
+slogan anyone could hang) · "Professional and polished tone" (stock voice).
+
 ## Service map — discrimination criteria
 
 - **Unit of exchange** (validated, turn ⑩): One service = one surface where value is given and received.

@@ -225,11 +225,17 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     questions for every area and reject unknown areas."""
     from mashbill.coaching_principles import get_principles
 
-    for area in ("mission", "values", "services", "features"):
+    for area in ("mission", "values", "actors", "services", "features", "identity"):
         text = get_principles(area)
         assert "판별" in text, area
+    # identity (D-2026-06-16-K listed it as a foundation pillar; W-27 fills the
+    # one discriminator set that was missing) must carry its own criteria, not
+    # just ride the mission/values framing.
+    identity = get_principles("identity")
+    assert "거절" in identity and "형용사" in identity
     full = get_principles(None)
     assert "대가" in full and "교환" in full and "체감" in full
+    assert "형용사" in full  # identity is included in the all-areas join
     import pytest
 
     with pytest.raises(ValueError):
