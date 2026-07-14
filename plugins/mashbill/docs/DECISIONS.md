@@ -39,6 +39,39 @@
 
 ## Log
 
+### D-2026-07-14-A — Coach prompt rebalance: terminology firewall, hierarchy discriminator, evaluation promoted to mainline
+
+- **What:** Three coach-behaviour fixes in the system prompt. (1) The actors
+  framing loses its code metaphor — "as a HIERARCHY, like inheritance in code",
+  "arrow points at the superclass", "무료/유료 like subclasses" become plain
+  role-family / nesting language; the structural directive (families with
+  concrete roles nested under them) stays. (2) `coaching_principles._ACTORS`
+  gains a nesting discriminator ("역할군 아래로 구체 역할이 중첩됐나? 최상위가
+  평평한 나열이면 아직 미성숙"), in the question form the other areas use.
+  (3) Judging a design is promoted from a two-line conditional branch buried in
+  `PROPOSE_PLAYBOOK` to a mainline `EVALUATE_PLAYBOOK` composed into every canvas
+  prompt, naming the coach's three jobs (elicit · evaluate · plan). Public canon
+  `docs/concepts/design-principles.md` gains an Actors section carrying the
+  nesting discriminator (rest of `_ACTORS` queued for canon sync).
+- **Why:** A Codex coach review (2026-07-14) found three defects with one root —
+  the prompt weighted "how to operate the canvas" over "judge whether the design
+  is good" and "speak only in the user's words". (a) The hierarchy discriminator
+  lived only in the manipulation prompt, so canvases came out flat. (b) The
+  "never force jargon" guard and inheritance/subclass examples coexisted, and the
+  coach was observed telling founders their actors form an "inheritance tree".
+  (c) Evaluation was a side-branch while `WRITE_PLAYBOOK` was a large block, so
+  the coach shrank into a scribe. P-00000004 red-team adopted alternative ⓐ
+  (prompt rebalance) before any structural split, as the cheap reversible fix.
+- **Alternatives:** ⓑ physically split coaching from canvas-scribe with a
+  deterministic execution layer — deferred (P-00000004): a hard-to-reverse public
+  architecture change is not justified until ⓐ is re-measured and defects survive.
+- **Approval:** Accepted — user, 2026-07-14 (P-00000004 red-team verdict, ⓐ
+  adopted as W-00000061). Re-measurement via the coach sim is the acceptance
+  evidence and is user-gated (LLM cost).
+- **Spec impact:** None — coach system-prompt wording/composition, not a
+  canvas-behaviour change. Prompt word budget raised 1350 → 1410 for the added
+  mainline playbook (`test_chat_context.py::test_system_prompt_stays_under_saturation_budget`).
+
 ### D-2026-07-12-A — Headless coach: framing via a get_canvas_framing MCP tool + a thin coach skill
 
 - **What:** Expose the coach's per-scope system framing

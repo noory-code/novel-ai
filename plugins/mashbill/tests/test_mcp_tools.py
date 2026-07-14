@@ -233,6 +233,12 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     # just ride the mission/values framing.
     identity = get_principles("identity")
     assert "거절" in identity and "형용사" in identity
+    # W-61 (P-00000004 ⓐ, coach finding 1): the nesting/hierarchy discriminator
+    # lived only in the actors *framing* (manipulation prompt), so it never
+    # reached the coach's evaluation knowledge and canvases came out flat. The
+    # actors quality principles must now carry the nesting discriminator.
+    actors = get_principles("actors")
+    assert "중첩" in actors
     full = get_principles(None)
     assert "대가" in full and "교환" in full and "체감" in full
     assert "형용사" in full  # identity is included in the all-areas join

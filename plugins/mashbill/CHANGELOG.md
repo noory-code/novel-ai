@@ -4,6 +4,31 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.169.1] — 2026-07-14
+
+### Changed
+
+- Coach prompt rebalance (P-00000004 ⓐ, Codex coach review 2026-07-14 findings
+  1·2·4). The Actors framing drops its code metaphor — "like inheritance in
+  code", "superclass", "like subclasses" become plain role-family / nesting
+  language, ending an observed slip where the coach told founders their actors
+  form an "inheritance tree" (collided with the "never force jargon" guard). The
+  structural directive (concrete roles nested under role families) is unchanged.
+- Evaluation is now a mainline coach playbook. Judging a design moved from a
+  two-line conditional branch buried in the propose playbook to a standalone
+  `EVALUATE_PLAYBOOK` composed into every canvas prompt, naming the coach's three
+  jobs (elicit · evaluate · plan) so the coach acts as a design critic, not a
+  canvas scribe. The evaluation knowledge still lives in `get_design_principles`.
+
+### Added
+
+- Nesting discriminator for the actors evaluation knowledge
+  (`get_design_principles("actors")` / `coaching_principles._ACTORS`) — the
+  hierarchy criterion existed only in the manipulation framing, so the coach
+  could arrange actors but not challenge a flat top-level list. Canon
+  `novel-ai/docs/concepts/design-principles.md` gains an Actors section carrying
+  the same discriminator (remaining actor criteria queued for canon sync).
+
 ## [0.169.0] — 2026-07-13
 
 ### Added

@@ -342,12 +342,32 @@ def test_write_playbook_fills_placeholder_labels_too() -> None:
 
 
 def test_coach_consults_design_principles_when_judging() -> None:
-    """D-2026-07-03-P: the propose playbook tells the coach WHERE its
-    evaluation knowledge lives — consult get_design_principles before
-    challenging weak content, so the challenge axis gets teeth without
-    blowing the prompt budget."""
+    """D-2026-07-03-P: the coach must know WHERE its evaluation knowledge lives
+    — consult get_design_principles before challenging weak content, so the
+    challenge axis gets teeth without blowing the prompt budget. Since W-61 this
+    lives in the mainline EVALUATE_PLAYBOOK, not buried in the propose playbook."""
     p = build_system_prompt("foundation").lower()
     assert "get_design_principles" in p
+
+
+def test_evaluate_playbook_promotes_judging_to_mainline() -> None:
+    """W-61 (P-00000004 ⓐ, Codex coach finding 4): evaluating a design was a
+    conditional two-line side-branch inside PROPOSE_PLAYBOOK while WRITE_PLAYBOOK
+    was a large block, so the coach shrank into a canvas scribe rather than a
+    design critic. Evaluation is now its own mainline playbook composed into
+    every canvas prompt, naming the coach's three jobs (elicit · evaluate ·
+    plan) so judging is a first-class duty, not an afterthought."""
+    from mashbill.chat_context import EVALUATE_PLAYBOOK
+
+    for scope in ("foundation", "actors", "services", "feature:x", "service:x"):
+        p = build_system_prompt(scope)
+        assert EVALUATE_PLAYBOOK in p, scope
+    # the three roles are named, evaluation among them
+    low = build_system_prompt("foundation").lower()
+    assert "get_design_principles" in low
+    assert "evaluate" in low or "judge" in low
+    # the cross-canvas project scope gets no coaching playbooks
+    assert EVALUATE_PLAYBOOK not in build_system_prompt("project")
 
 
 def test_write_playbook_names_the_anchor_as_foundation_parent() -> None:
@@ -411,16 +431,28 @@ def test_foundation_framing_draws_multiple_identity_facets() -> None:
     assert "voice, energy" in f
 
 
-def test_actors_framing_builds_an_inheritance_hierarchy() -> None:
+def test_actors_framing_nests_roles_under_families() -> None:
     """B-27 (user, 2026-07-04, hand-arranged example on the live canvas):
-    actors are a HIERARCHY like code inheritance — top-level role families
-    connect to the anchor; concrete actors register UNDER their family
-    (near= + create_edge family→actor); 무료/유료 split like subclasses.
-    Value flows stay between concrete actors."""
+    actors form a HIERARCHY — top-level role families connect to the anchor;
+    concrete actors register UNDER their family (near= + create_edge
+    family→actor); benefit-seekers split (무료/유료) into nested roles.
+    Value flows stay between concrete actors. W-61: the structure stays, the
+    code metaphor (inheritance/subclass) is gone."""
     f = build_framing_preamble("actors").lower()
     assert "hierarchy" in f
     assert "near=<family id>" in f
     assert "무료/유료" in f
+
+
+def test_actors_framing_has_no_code_metaphor() -> None:
+    """W-61 (P-00000004 ⓐ, Codex coach findings 1·2): the actors framing carried
+    a code metaphor (\"like inheritance in code\", \"superclass\", \"like
+    subclasses\") that collided with COACH_TONE's \"never force jargon\" guard —
+    the coach was observed telling founders their actors form an \"inheritance
+    tree\". The structural directive stays; the developer vocabulary is banned."""
+    p = build_system_prompt("actors").lower()
+    for jargon in ("inheritance", "superclass", "subclass"):
+        assert jargon not in p, jargon
 
 
 def test_mission_lands_as_one_line_with_detail_in_the_note() -> None:
@@ -545,7 +577,7 @@ def test_foundation_and_actors_start_from_an_empty_canvas() -> None:
 def test_actors_hierarchy_arrow_points_at_the_family() -> None:
     """B-34 (user live-watch 2026-07-04): fold buttons sat on LEAF actors —
     the coach drew family → actor while the stored fold convention is
-    child → superclass (target = parent, fold_endpoints). The framing must
+    child → family (target = parent, fold_endpoints). The framing must
     direct the arrow AT the family."""
     p = build_system_prompt("actors")
     assert "create_edge from the new actor to its family" in p
@@ -567,9 +599,14 @@ def test_system_prompt_stays_under_saturation_budget() -> None:
     Raised 1300 -> 1350 (D-2026-07-03-U): the evaluation principles moved
     OUT to the get_design_principles tool, and the user-directed mechanics
     (anchor parent, label rules, entity edges) needed the headroom.
+    Raised 1350 -> 1410 (W-61, P-00000004 ⓐ): promoting evaluation from a
+    two-line branch buried in PROPOSE_PLAYBOOK to the mainline EVALUATE_PLAYBOOK
+    (a design critic, not a scribe) inherently adds a titled block. The block is
+    compressed to essentials and the evaluation KNOWLEDGE still stays in the
+    get_design_principles tool, so the raise is minimal.
     The budget still forces compress-before-add:
     content is pinned by the phrase guards in this file and
     ``test_chat_system_prompt.py``; this test pins the SIZE."""
     for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
         words = len(build_system_prompt(scope).split())
-        assert words <= 1350, f"{scope}: {words} words > 1350 budget"
+        assert words <= 1410, f"{scope}: {words} words > 1410 budget"

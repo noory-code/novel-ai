@@ -74,6 +74,17 @@ distance) · "Restrained conviction — show more, explain less" (refuses spec-l
 innovative, and trustworthy" (adjective pile, refuses nothing) · "Delivers the best user experience" (a
 slogan anyone could hang) · "Professional and polished tone" (stock voice).
 
+## Actors — discrimination criteria
+
+> This section currently carries only the nesting discriminator (W-61). The remaining actor criteria
+> (reciprocal give/receive · trust·safety·operations actors · role-not-demographics) still live in the
+> runtime copy `coaching_principles._ACTORS` and are queued for canon sync (follow-up 4).
+
+- **Nested, not a flat list** (2026-07-14): A mature actor map nests concrete roles under broader role
+  families (배달·운영 family → 전속·긱 rider); a flat top level with no nesting is still immature. It is a
+  grouping of exchange roles, not a corporate org chart. Discriminate: "Are concrete roles nested under
+  role families, or is the top level a flat list?"
+
 ## Service map — discrimination criteria
 
 - **Unit of exchange** (validated, turn ⑩): One service = one surface where value is given and received.
@@ -110,3 +121,5 @@ question, not a declaration ("that's weak"). If it doesn't pass, don't rush to r
    missions · opposing-pair tension · trust-manufacturing surface).
 2. Wiring: expose as a coach skill or MCP resource + a one-line usage instruction (offset within budget).
 3. Measure before/after via the benchmark's challenge axis.
+4. Sync the remaining actor criteria (reciprocity · trust·safety·operations actors · role-not-demographics)
+   from `coaching_principles._ACTORS` into the Actors section above.

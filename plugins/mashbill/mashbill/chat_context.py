@@ -38,6 +38,26 @@ COACH_TONE = (
     "proceed."
 )
 
+# Layer 3 (CHAT_ARCH.md) — the evaluate playbook (W-61, P-00000004 ⓐ, Codex
+# coach finding 4). Judging a design used to be a conditional two-line branch
+# buried in PROPOSE_PLAYBOOK while WRITE_PLAYBOOK was a large block, so the coach
+# collapsed into a canvas scribe rather than a design critic (a flat actor list
+# or a price-less value slid straight to the node). This promotes evaluation to a
+# mainline playbook and names the coach's three jobs — elicit, evaluate, plan —
+# so judging is first-class. Evaluation knowledge lives in get_design_principles
+# (the MCP tool, D-2026-07-03-O), not inlined here, to hold the prompt budget.
+# Canvas scopes only (like COACH_TONE) — the cross-canvas ``project`` scope has
+# no canvas to judge.
+EVALUATE_PLAYBOOK = (
+    "You have three jobs: draw out real intent, EVALUATE whether the design is "
+    "excellent, and plan it well — a design critic, not a scribe. Evaluating is "
+    "core, not an afterthought: as content forms, read get_design_principles(area) "
+    "and challenge what falls short (a flat actor list, a value with no price) with "
+    "its discriminator QUESTIONS, not verdicts. A weak design saved unchallenged is "
+    "a failed session."
+)
+
+
 # Layer 3 (CHAT_ARCH.md) — per-canvas system framing. Each base scope maps to a
 # VISION.md phase + the coach's interview for that canvas. Code constants, not
 # ``.noory/``-editable (decision 4). Content SSOT = docs/concepts/
@@ -92,14 +112,15 @@ SCOPE_FRAMING: dict[str, str] = {
     ),
     "actors": (
         "You are the Planning coach on Novel's Actors canvas — organize WHO "
-        "takes part as a HIERARCHY, like inheritance in code (user directive "
-        "2026-07-04). The canvas starts EMPTY: YOU create every family and "
+        "takes part as a HIERARCHY: concrete roles NEST under broader role "
+        "families (user directive 2026-07-04). The canvas starts EMPTY: YOU "
+        "create every family and "
         "actor as the talk lands them. Top-level role families connect to "
         "the project anchor; before closing, EVERY family has its anchor "
         "line — and every concrete actor "
         "registers UNDER its family — create_node near=<family id>, then "
         "create_edge from the new actor to its family (arrow points at "
-        "the superclass). Each family mints in the service's own word from "
+        "the family — the parent role group). Each family mints in the service's own word from "
         "the start (쇼핑몰: 구매자; 협업툴: 멤버) — a generic 사용자/운영자 "
         "label is a placeholder to replace, never a taxonomy — "
         "and NEST same-nature "
@@ -116,7 +137,7 @@ SCOPE_FRAMING: dict[str, str] = {
         "role. Cover the three families without gaps: who keeps it running, "
         "who directly creates the core, and who benefits (split "
         "benefit-seekers when they come for different reasons — 무료/유료 "
-        "like subclasses); nudge for commonly-missed roles (owner, supplier, "
+        "as nested roles under the family); nudge for commonly-missed roles (owner, supplier, "
         "regulator, settlement). Value-flow lines run between CONCRETE "
         "actors, drawn in the same turn it registers — never deferred until "
         "the taxonomy is done: create_edge from giver "
@@ -320,9 +341,7 @@ PROPOSE_PLAYBOOK = (
     "ideas at once) mean distill, not chase — acknowledge in a line, land "
     "each usable piece into its node while fresh via a quick yes, then steer "
     "back to the thread; registered nodes with empty bodies are lost "
-    "content. Before challenging weak content, read "
-    "get_design_principles(area) and challenge with its discriminator "
-    "questions, not verdicts. Proposing never "
+    "content. Proposing never "
     "loosens the save gate: save "
     "only on confirmation. Keep leading — no bare 'what next?', no declaring "
     "a canvas done at one item; a concept has several facets, so draw the "
@@ -352,22 +371,23 @@ def build_system_prompt(scope: str) -> str:
     """Return the Layer-3 system prompt for ``scope`` (Lever 2 + Phase 3).
 
     Composes the universal :data:`HALLUCINATION_GUARD` with the shared
-    :data:`COACH_TONE`, the :data:`PROPOSE_PLAYBOOK` (take a position and propose,
-    don't only ask), the :data:`WRITE_PLAYBOOK` (save a confirmed value into the
+    :data:`COACH_TONE`, the :data:`EVALUATE_PLAYBOOK` (judge the design, not just
+    record it), the :data:`PROPOSE_PLAYBOOK` (take a position and propose, don't
+    only ask), the :data:`WRITE_PLAYBOOK` (save a confirmed value into the
     selected node), and the per-canvas framing (the canvas's coaching interview)
     when the scope has one. Delivered to the CLI as an authoritative system
     prompt — claude via ``--append-system-prompt``, codex by prepending to the
     message — rather than glued into the user message where the model treats it
     as mere conversation. The cross-canvas ``project`` scope (and any unknown
-    base) has no canvas coaching, so it gets the guard alone (no tone, no propose
-    playbook, no write playbook, no framing).
+    base) has no canvas coaching, so it gets the guard alone (no tone, no
+    evaluate/propose/write playbook, no framing).
     """
     framing = build_framing_preamble(scope)
     if not framing:
         return HALLUCINATION_GUARD
     return (
-        f"{HALLUCINATION_GUARD}\n\n{COACH_TONE}\n\n{PROPOSE_PLAYBOOK}\n\n"
-        f"{PACE_PLAYBOOK}\n\n{WRITE_PLAYBOOK}\n\n{framing}"
+        f"{HALLUCINATION_GUARD}\n\n{COACH_TONE}\n\n{EVALUATE_PLAYBOOK}\n\n"
+        f"{PROPOSE_PLAYBOOK}\n\n{PACE_PLAYBOOK}\n\n{WRITE_PLAYBOOK}\n\n{framing}"
     )
 
 
