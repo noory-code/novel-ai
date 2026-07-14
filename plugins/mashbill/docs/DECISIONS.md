@@ -39,6 +39,26 @@
 
 ## Log
 
+### D-2026-07-14-B — Coach save-announcement ban is language-explicit
+
+- **What:** `WRITE_PLAYBOOK`'s no-announce rule dropped its English-only
+  `'saved' / 'done'` examples for a language-explicit ban: "Do not announce the
+  save in ANY language ('저장했어요' too) or the field you wrote — the canvas
+  shows the change; after a write, go straight on."
+- **Why:** B-6 (2026-07-02) already banned announcing the save, but the examples
+  were English so the Korean coach kept saying "구조 저장했어요" / "라이더
+  저장했어요" (observed live 2026-07-14, O-00000003 #2, after the W-61 coach
+  changes). The rule existed; the coach routed around it because the ban read as
+  English-specific. Making it language-explicit and naming the go-straight-on
+  behaviour closes the leak.
+- **Alternatives:** Leave it — rejected: the save-announcement reads as a
+  canvas-scribe tic and recurs; a regression already exists (B-6) so the fix is a
+  one-line sharpening, not new surface.
+- **Approval:** Accepted — follows W-00000062 (O-00000003 #2 follow-up). Behaviour
+  re-check on the dev viewer is user-gated (LLM).
+- **Spec impact:** None — coach system-prompt wording. Prompt budget unchanged
+  (foundation 1409 ≤ 1410).
+
 ### D-2026-07-14-A — Coach prompt rebalance: terminology firewall, hierarchy discriminator, evaluation promoted to mainline
 
 - **What:** Three coach-behaviour fixes in the system prompt. (1) The actors

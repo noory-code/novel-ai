@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.169.2] — 2026-07-14
+
+### Fixed
+
+- Coach save-announcement leak (O-00000003 #2, D-2026-07-14-B). `WRITE_PLAYBOOK`
+  banned announcing the save (B-6, 2026-07-02) but with English-only examples
+  ('saved' / 'done'), so the Korean coach kept saying "구조 저장했어요" / "라이더
+  저장했어요". The ban is now language-explicit ("in ANY language, '저장했어요'
+  too") and names the go-straight-on behaviour after a write. Prompt budget
+  unchanged (foundation 1409 ≤ 1410).
+
 ## [0.169.1] — 2026-07-14
 
 ### Changed

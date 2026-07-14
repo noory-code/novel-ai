@@ -85,10 +85,13 @@ def test_coach_keeps_mechanics_and_field_names_out_of_sight() -> None:
     verbalise its internal operations — it said '저장됐어요' and exposed internal
     field names ('statement' / 'body') to the user. The system prompt must instruct
     it to never announce the save and to speak in the user's own words, not Novel's
-    storage-field names."""
+    storage-field names. W-62 (O-00000003 #2): the English-only 'saved'/'done'
+    examples let '저장했어요' leak back through, so the ban is now language-explicit."""
     p = build_system_prompt("foundation").lower()
     assert "internal field names" in p
     assert "do not announce" in p
+    assert "any language" in p
+    assert "저장했어요" in build_system_prompt("foundation")
 
 
 def test_coach_leads_and_covers_full_concept() -> None:
