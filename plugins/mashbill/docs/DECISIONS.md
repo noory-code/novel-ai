@@ -39,6 +39,28 @@
 
 ## Log
 
+### D-2026-07-15-A — Coach save-announcement ban hoisted for salience
+
+- **What:** `WRITE_PLAYBOOK`'s no-announce rule moves from mid-paragraph (after
+  the label mechanics) to the top of the playbook, right after the write
+  instruction, and names the observed variants
+  ('저장했어요/저장할게요/저장됐어요/기록했어요'); the now-duplicate buried clause
+  is removed (SSOT).
+- **Why:** D-2026-07-14-B made the ban language-explicit, but a reliable
+  4-service round (novel-workspace W-00000067, coach=sonnet, N=3 challenge
+  sampling) still caught the coach opening turns with "저장했어요 / 저장할게요" in
+  3 of 4 runs. The remaining failure was *position*: the rule sat deep in a long
+  run-on block where the model dropped it. Salience is the next lever after
+  wording.
+- **Alternatives:** (a) output post-filter to strip save-announcements — rejected
+  (treats the symptom, risks mangling the coach's natural turn); (b) leave as-is
+  — rejected (two wording passes already failed).
+- **Approval:** Accepted — user (iam@daewook.me), 2026-07-15, after design
+  red-team (🟡→ reconciled with COACH_TONE's answer-acknowledgement so silencing
+  the save does not silence the answer).
+- **Spec impact:** none (coach tone lives in `chat_context.py` / ai-collaboration,
+  not SPEC.md). Content-acknowledgement stays owned by `COACH_TONE`.
+
 ### D-2026-07-14-B — Coach save-announcement ban is language-explicit
 
 - **What:** `WRITE_PLAYBOOK`'s no-announce rule dropped its English-only

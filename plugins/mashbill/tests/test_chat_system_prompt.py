@@ -91,6 +91,22 @@ def test_write_playbook_present_on_canvas_scopes(tmp_path: Path) -> None:
     assert "ask which" in low or "several nodes" in low  # empty/multi-select → ask
 
 
+def test_write_playbook_forbids_announcing_the_save_saliently() -> None:
+    # D-2026-07-15-A: the no-announce rule existed but was buried mid-paragraph,
+    # so the sonnet coach still opened turns with "저장했어요 / 저장할게요" in a
+    # reliable 4-service round (W-67). Pin the rule saliently — the observed
+    # variants are named so the coach cannot slip a synonym past it.
+    wp = WRITE_PLAYBOOK
+    for variant in ("저장했어요", "저장할게요", "저장됐어요", "기록했어요"):
+        assert variant in wp, variant
+    # The prohibition rides at the top of the playbook (right after the write
+    # instruction), not buried after the label rules where it drifted.
+    head = wp[:600]
+    assert "저장했어요" in head, "no-announce rule must be salient (near the top)"
+    # SSOT: the rule states its ONE reason once, not duplicated.
+    assert wp.count("the canvas shows") <= 1
+
+
 def test_write_playbook_has_create_branch(tmp_path: Path) -> None:
     # D-2026-06-27-B: the coach ADDS a genuinely-new node via create_node — gated on
     # the same explicit confirmation as filling (propose first, create on the yes),

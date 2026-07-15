@@ -4,6 +4,22 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.169.3] — 2026-07-15
+
+### Fixed
+
+- Coach save-announcement leak, salience follow-up (D-2026-07-15-A, novel-workspace
+  W-00000067). Making the ban language-explicit (0.169.2) was not enough: in a
+  reliable 4-service round (coach=sonnet, N=3 challenge sampling) the coach still
+  opened turns with "저장했어요 / 저장할게요" in 3 of 4 runs. The rule was buried
+  mid-`WRITE_PLAYBOOK`, after the label mechanics, where the model dropped it.
+  Hoisted the prohibition to the top of the playbook (right after the write
+  instruction) and named the observed variants
+  ('저장했어요/저장할게요/저장됐어요/기록했어요'); removed the now-duplicate buried
+  clause (SSOT). The content-acknowledgement stays owned by `COACH_TONE`
+  ("acknowledge each answer"), so silencing the *save* does not silence the
+  *answer*. Prompt budget respected (foundation 1408 ≤ 1410).
+
 ## [0.169.2] — 2026-07-14
 
 ### Fixed
