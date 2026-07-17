@@ -4,9 +4,20 @@
 """
 
 import pytest
+from pydantic import ValidationError
 
 from solera.errors import FormatError
-from solera.formats import dump_progress, parse_progress
+from solera.formats import WorkItem, dump_progress, parse_progress
+
+
+def test_workitem_rejects_blank_gate_but_accepts_empty_and_real_gates() -> None:
+    fields = {"id": "ACT-001", "level": "action", "status": "todo", "goal": "Do it."}
+
+    with pytest.raises(ValidationError, match="gate must not be blank"):
+        WorkItem(**fields, gate="   ")
+
+    assert WorkItem(**fields, gate="").is_leaf is False
+    assert WorkItem(**fields, gate="pytest -q").is_leaf is True
 
 
 def test_parse_progress_reads_item() -> None:

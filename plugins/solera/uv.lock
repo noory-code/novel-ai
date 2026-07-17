@@ -1288,7 +1288,7 @@ wheels = [
 
 [[package]]
 name = "solera"
-version = "7.8.0"
+version = "7.8.1"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },

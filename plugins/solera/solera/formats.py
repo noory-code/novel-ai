@@ -86,6 +86,12 @@ class WorkItem(BaseModel):
     _check_goal = field_validator("goal")(_require_goal)
 
     @model_validator(mode="after")
+    def _gate_not_blank(self) -> WorkItem:
+        if self.gate and not self.gate.strip():
+            raise ValueError("gate must not be blank: an all-whitespace gate can never run")
+        return self
+
+    @model_validator(mode="after")
     def _not_both_leaf_and_container(self) -> WorkItem:
         if self.gate and self.children:
             raise ValueError(

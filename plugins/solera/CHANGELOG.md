@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.8.1] — 2026-07-17
+
+### Fixed
+
+- Rejected all-whitespace gates when constructing a work item so an unusable leaf fails fast,
+  while preserving an empty gate for containers awaiting decomposition.
+
 ## [7.8.0] — 2026-07-10
 
 ### Added
