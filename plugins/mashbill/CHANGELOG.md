@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.171.2] — 2026-07-18
+
+### Fixed
+
+- `GET /api/chat/conversations/{scope}` now treats corrupt JSON and invalid or
+  old-schema conversation files as absent, returning the same graceful 404 as a
+  missing file instead of an unhandled 500 (W-79, O-1).
+
 ## [0.171.1] — 2026-07-18
 
 ### Fixed

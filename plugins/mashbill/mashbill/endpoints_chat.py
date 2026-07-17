@@ -20,11 +20,13 @@ can exercise it without going through HTTP — POST handlers stay thin.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from pathlib import Path
 from typing import Any, cast
 from uuid import uuid4
 
+from pydantic import ValidationError
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
@@ -323,7 +325,7 @@ async def chat_conversation_get_endpoint(request: Request) -> JSONResponse:
         return JSONResponse({"error": "conversation not found"}, status_code=404)
     try:
         doc = read_conversation(plot_root, project_id, scope)
-    except FileNotFoundError:
+    except (FileNotFoundError, json.JSONDecodeError, ValidationError):
         return JSONResponse({"error": "conversation not found"}, status_code=404)
     return JSONResponse(doc.model_dump())
 
