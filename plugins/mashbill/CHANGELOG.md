@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.171.0] — 2026-07-17
+
+### Added
+
+- Entity nodes now carry an optional validated `proof_id` (`PROOF-NNN`) that
+  round-trips through the generated wire contract and viewer domain layer
+  without widening the shared base-node schema (D-2026-07-17-D).
+- `GET /api/proof/{proof_id}` reads a project-local Proof decision by value from
+  `.noory/proof`, returning its title, status, and Markdown body without
+  importing the Proof package. Invalid ids and malformed YAML frontmatter fail
+  with 422, missing files return 404, and reads never create the Proof directory
+  (D-2026-07-17-D).
+
 ## [0.170.1] — 2026-07-17
 
 ### Fixed

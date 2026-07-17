@@ -16,7 +16,11 @@ from __future__ import annotations
 
 from typing import Literal
 
+from pydantic import Field
+
 from mashbill.models_kinds import BaseNodeFields
+
+PROOF_ID_PATTERN = r"^PROOF-\d+$"
 
 
 class EntityNode(BaseNodeFields):
@@ -28,3 +32,4 @@ class EntityNode(BaseNodeFields):
 
     kind: Literal["entity"] = "entity"
     summary: str = ""
+    proof_id: str | None = Field(default=None, pattern=PROOF_ID_PATTERN)

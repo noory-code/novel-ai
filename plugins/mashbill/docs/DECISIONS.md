@@ -39,6 +39,40 @@
 
 ## Log
 
+### D-2026-07-17-D — Entity node carries a read-only proof link, engine serves proof by value
+
+- **What:** the `entity` node kind gains an optional read-only `proof_id`
+  (`PROOF-NNN`) that renders a clickable "tech: PROOF-NNN" badge on the node.
+  Clicking it opens an in-app read-only reader (a modal) showing that decision's
+  title, status, and body. The viewer gets the decision content from a NEW
+  mashbill endpoint `GET /api/proof/{proof_id}` that reads
+  `{project}/.noory/proof/{proof_id}.md` **by value** — splitting the YAML
+  frontmatter (title/status) from the markdown body — WITHOUT importing the
+  `proof` package (mirrors Solera's `run_proof_gate` plain-file read). Missing
+  file → 404; malformed frontmatter → fails closed (422). The pointer is
+  authored via a single inspector field on the entity; the node never *defines*
+  the tech, it only points.
+- **Why:** a concept (`entity`) node should let the user jump straight to the
+  technology decision that governs it (W-36). "entity" is the concept-map kind
+  (there is no `concept` kind); the label applies to entity only (YAGNI — not
+  all 14 kinds). The viewer talks only to the engine over HTTP (open-core
+  boundary), so an in-app reader requires the engine to serve the content.
+- **Alternatives:** (a) OS-open the raw `PROOF-NNN.md` via Tauri — rejected by
+  the user (wanted the full in-app experience); no engine coupling but opens
+  outside the app. (b) put `proof_id` on `BaseNodeFields` (all kinds) — rejected
+  (YAGNI/AHA, 14-kind blast radius). (c) a full proof-browser screen — deferred
+  (a single-decision modal is the minimum that satisfies "click → read it").
+- **New coupling (recorded deliberately):** this introduces mashbill → proof as
+  a **by-value plain-file read** (no import; the R8 independence guard stays
+  green because nothing imports `proof`). Consistent with the existing
+  Solera→proof by-value pattern. Storing an opaque `PROOF-NNN` string on the
+  wire does not breach package independence.
+- **Approval:** Accepted — user (iam@daewook.me), 2026-07-17 (W-00000036),
+  option B (engine-served in-app reader).
+- **Spec impact:** new `entity.proof_id` wire field (Pydantic SSOT → ts_codegen
+  → viewer `Entity.ts`, lock-step); new `GET /api/proof/{id}` engine endpoint;
+  new viewer reader modal + entity-inspector author field.
+
 ### D-2026-07-17-C — Dangling ref chip shows ⚠ against the full live master set
 
 - **What:** an inspector `RefChips` chip whose picked id is absent from the

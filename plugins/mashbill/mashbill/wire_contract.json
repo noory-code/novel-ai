@@ -125,6 +125,7 @@
       "kind",
       "label",
       "owner",
+      "proof_id",
       "publish_baseline",
       "shape",
       "summary",
