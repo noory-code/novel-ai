@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.171.1] — 2026-07-18
+
+### Fixed
+
+- Cleaned up test-suite type annotations so the canonical `mypy mashbill tests`
+  gate reports no issues. The changes only strengthen test typing and runtime
+  assertions; Mashbill runtime behavior is unchanged (W-74, O-7).
+
 ## [0.171.0] — 2026-07-17
 
 ### Added

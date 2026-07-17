@@ -13,6 +13,8 @@ instead of a hardcoded list (reverses D-2026-06-16-C for codex):
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from mashbill.chat_models import (
     CLAUDE_MODELS,
     ModelOption,
@@ -88,7 +90,7 @@ def test_claude_models_are_the_documented_aliases() -> None:
     assert [m.id for m in CLAUDE_MODELS] == ["fable", "opus", "sonnet"]
 
 
-def test_list_models_codex_reads_cache(tmp_path) -> None:
+def test_list_models_codex_reads_cache(tmp_path: Path) -> None:
     cache_file = tmp_path / "models_cache.json"
     cache_file.write_text(
         '{"models": [{"slug": "gpt-5.5", "display_name": "GPT-5.5",'
@@ -99,7 +101,7 @@ def test_list_models_codex_reads_cache(tmp_path) -> None:
     assert [m.id for m in out] == ["gpt-5.5"]
 
 
-def test_list_models_codex_missing_cache_returns_empty(tmp_path) -> None:
+def test_list_models_codex_missing_cache_returns_empty(tmp_path: Path) -> None:
     out = list_models("codex", codex_cache_path=tmp_path / "nope.json")
     assert out == []
 

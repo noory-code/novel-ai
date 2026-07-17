@@ -27,10 +27,12 @@ def plot_root(tmp_path: Path) -> Path:
 def _overview(feature_labels: dict[str, str]) -> CanvasDoc:
     nodes: list[SketchNode] = [
         CategoryNode(id="default-cat", label="Default"),
-        ServiceNode(id="default-svc", parent_id="default-cat", label="Default service"),
+        ServiceNode.model_validate(
+            {"id": "default-svc", "parent_id": "default-cat", "label": "Default service"}
+        ),
     ]
     nodes.extend(
-        FeatureNode(id=fid, parent_id="default-svc", label=label)
+        FeatureNode.model_validate({"id": fid, "parent_id": "default-svc", "label": label})
         for fid, label in feature_labels.items()
     )
     return CanvasDoc(canvas_id="services", canvas_kind="services", nodes=nodes)

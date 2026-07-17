@@ -12,6 +12,7 @@ left untouched (a concurrent user edit elsewhere is never clobbered).
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -139,7 +140,8 @@ def test_update_node_patches_typed_field(tmp_path: Path) -> None:
     update_node(plot_root, "alpha", "foundation", "m1", {"statement": "new statement"})
     canvas = read_canvas(plot_root, "alpha", "foundation")
     mission = next(n for n in canvas.nodes if n.id == "m1")
-    assert mission.statement == "new statement"  # type: ignore[attr-defined]
+    assert isinstance(mission, MissionNode)
+    assert mission.statement == "new statement"
 
 
 def test_update_node_merges_only_given_fields(tmp_path: Path) -> None:
@@ -148,8 +150,9 @@ def test_update_node_merges_only_given_fields(tmp_path: Path) -> None:
     update_node(plot_root, "alpha", "foundation", "m1", {"statement": "fresh"})
     canvas = read_canvas(plot_root, "alpha", "foundation")
     mission = next(n for n in canvas.nodes if n.id == "m1")
-    assert mission.statement == "fresh"  # type: ignore[attr-defined]
-    assert mission.body == "old body"  # type: ignore[attr-defined]
+    assert isinstance(mission, MissionNode)
+    assert mission.statement == "fresh"
+    assert mission.body == "old body"
     assert mission.label == "Mission"
 
 
@@ -189,7 +192,8 @@ def test_update_node_ignores_structural_fields(tmp_path: Path) -> None:
     )
     canvas = read_canvas(plot_root, "alpha", "foundation")
     mission = next(n for n in canvas.nodes if n.id == "m1")
-    assert mission.statement == "ok"  # type: ignore[attr-defined]
+    assert isinstance(mission, MissionNode)
+    assert mission.statement == "ok"
     assert mission.x == 0.0  # default, unchanged
     assert mission.color == "#ffffff"  # default, unchanged
     assert mission.kind == "mission"  # discriminator unchanged
@@ -239,7 +243,8 @@ def test_update_node_rejects_unknown_field_but_applies_known(tmp_path: Path) -> 
     )
     canvas = read_canvas(plot_root, "alpha", "foundation")
     mission = next(n for n in canvas.nodes if n.id == "m1")
-    assert mission.statement == "ok"  # type: ignore[attr-defined]
+    assert isinstance(mission, MissionNode)
+    assert mission.statement == "ok"
     assert "stetement" in result["rejected_fields"]
 
 
@@ -266,9 +271,10 @@ def test_update_node_rejects_identity_lifecycle_fields(tmp_path: Path) -> None:
     )
     canvas = read_canvas(plot_root, "alpha", "foundation")
     identity = next(n for n in canvas.nodes if n.id == "i1")
-    assert identity.description == "ok"  # type: ignore[attr-defined]
-    assert identity.status == "manual"  # type: ignore[attr-defined]  # unchanged default
-    assert identity.provenance == []  # type: ignore[attr-defined]  # unchanged
+    assert isinstance(identity, IdentityNode)
+    assert identity.description == "ok"
+    assert identity.status == "manual"  # unchanged default
+    assert identity.provenance == []  # unchanged
     assert set(result["rejected_fields"]) == {"status", "provenance"}
 
 
@@ -295,8 +301,9 @@ def test_update_node_rejects_service_reference_arrays(tmp_path: Path) -> None:
     )
     canvas = read_canvas(plot_root, "alpha", "services")
     svc = next(n for n in canvas.nodes if n.id == "svc1")
-    assert svc.problem == "new"  # type: ignore[attr-defined]
-    assert svc.ref_actor_ids == []  # type: ignore[attr-defined]  # not repointed
+    assert isinstance(svc, ServiceNode)
+    assert svc.problem == "new"
+    assert svc.ref_actor_ids == []  # not repointed
     assert set(result["rejected_fields"]) == {"ref_actor_ids", "ref_value_ids"}
 
 
@@ -324,7 +331,8 @@ def test_update_node_on_feature_canvas_threads_service_id(tmp_path: Path) -> Non
     update_node(plot_root, "alpha", "feature", "s1", {"outcome": "new outcome"}, service_id="svc1")
     canvas = read_canvas(plot_root, "alpha", "feature", "svc1")
     step = next(n for n in canvas.nodes if n.id == "s1")
-    assert step.outcome == "new outcome"  # type: ignore[attr-defined]
+    assert isinstance(step, StepNode)
+    assert step.outcome == "new outcome"
     # the edge survives the single-node patch (clobber-safety contract)
     assert [e.id for e in canvas.edges] == ["e1"]
     assert canvas.edges[0].source == "svc1" and canvas.edges[0].target == "s1"
@@ -351,16 +359,18 @@ def test_update_node_preserves_publish_baseline_on_all_nodes(tmp_path: Path) -> 
             canvas_id="foundation",
             canvas_kind="foundation",
             nodes=[
-                MissionNode(id="m1", label="M", statement="s", publish_baseline={"statement": "s"}),
-                IdentityNode(id="i1", label="I", publish_baseline={"description": "d"}),
+                MissionNode(
+                    id="m1", label="M", statement="s", _publish_baseline={"statement": "s"}
+                ),
+                IdentityNode(id="i1", label="I", _publish_baseline={"description": "d"}),
             ],
         ),
     )
     update_node(plot_root, "alpha", "foundation", "m1", {"statement": "s2"})
     canvas = read_canvas(plot_root, "alpha", "foundation")
     by_id = {n.id: n for n in canvas.nodes}
-    assert by_id["m1"].publish_baseline is not None  # type: ignore[attr-defined]
-    assert by_id["i1"].publish_baseline is not None  # type: ignore[attr-defined]
+    assert by_id["m1"].publish_baseline is not None
+    assert by_id["i1"].publish_baseline is not None
 
 
 # --- MCP surface ------------------------------------------------------------
@@ -428,7 +438,8 @@ def test_set_node_references_fills_service_actor_refs(tmp_path: Path) -> None:
     assert out["node"]["ref_actor_ids"] == ["a1", "a2"]
     canvas = read_canvas(plot_root, "alpha", "services")
     svc = next(n for n in canvas.nodes if n.id == "s1")
-    assert svc.ref_actor_ids == ["a1", "a2"]  # type: ignore[attr-defined]
+    assert isinstance(svc, ServiceNode)
+    assert svc.ref_actor_ids == ["a1", "a2"]
 
 
 def test_set_node_references_rejects_unknown_master(tmp_path: Path) -> None:
@@ -444,7 +455,8 @@ def test_set_node_references_rejects_non_ref_field(tmp_path: Path) -> None:
 
     plot_root = _ref_fixture(tmp_path)
     with pytest.raises(ValueError, match="not a reference field"):
-        set_node_references(plot_root, "alpha", "services", "s1", {"problem": "hijack"})
+        invalid_refs = cast(dict[str, list[str]], {"problem": "hijack"})
+        set_node_references(plot_root, "alpha", "services", "s1", invalid_refs)
 
 
 def test_write_playbook_mentions_set_node_references() -> None:

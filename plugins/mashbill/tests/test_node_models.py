@@ -32,6 +32,7 @@ from mashbill.models import (
     SketchNodeAdapter,
     StepNode,
 )
+from mashbill.models_kinds import BaseNodeFields
 
 # ---------------------------------------------------------------------------
 # round-trip — every kind must survive model_dump / model_validate intact
@@ -43,7 +44,6 @@ def test_actor_round_trip() -> None:
     n = ActorNode(
         id="actor-1",
         label="Operator",
-
         body="운영자 페르소나",
     )
     assert ActorNode.model_validate(n.model_dump()) == n
@@ -221,15 +221,15 @@ def test_adapter_rejects_missing_kind() -> None:
 from mashbill.schema_export import _ALL_KIND_CLASSES  # noqa: E402
 
 
-def _make_minimal(kind: str):
+def _make_minimal(kind: str) -> BaseNodeFields:
     """Build the smallest valid instance for a given kind. ``actor_ref`` needs
     a non-empty ``ref_actor_id`` (per its validator); every other kind builds
     from defaults."""
     cls = _ALL_KIND_CLASSES[kind]
-    base = {"id": f"{kind}-1", "label": kind}
+    base: dict[str, object] = {"id": f"{kind}-1", "label": kind}
     if kind == "actor_ref":
-        return cls(**base, ref_actor_id=f"{kind}-master")
-    return cls(**base)
+        base["ref_actor_id"] = f"{kind}-master"
+    return cls.model_validate(base)
 
 
 @pytest.mark.parametrize("kind", sorted(_ALL_KIND_CLASSES.keys()))

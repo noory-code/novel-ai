@@ -90,7 +90,9 @@ def test_foundation_design_renders_primary_statements(plot_root: Path) -> None:
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
     foundation = read_canvas(plot_root, "alpha", "foundation")
-    enriched = []
+    from mashbill.models import SketchNode
+
+    enriched: list[SketchNode] = []
     for n in foundation.nodes:
         if n.kind == "mission":
             enriched.append(n.model_copy(update={"statement": "make writing effortless"}))
@@ -327,9 +329,7 @@ def _add_service_with_features(plot_root: Path) -> str:
         feature_ref="feat-login",
         nodes=[
             FeatureNode(id="feat-login", label="Login", proposed="자격으로 세션을 연다"),
-            ActorRefNode(
-                id="feat-login-user-ref", label="→ User", ref_actor_id="user"
-            ),
+            ActorRefNode(id="feat-login-user-ref", label="→ User", ref_actor_id="user"),
             StepNode(id="s-input", label="자격 입력", order=1, outcome="자격 제출"),
             DecisionNode(id="d-verify", label="검증 성공?"),
             StepNode(id="s-session", label="세션 생성", order=2, outcome="로그인됨"),

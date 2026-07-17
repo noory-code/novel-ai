@@ -12,6 +12,7 @@ merely discusses a save FEATURE.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
 
 from mashbill.chat_output_filter import filter_save_announcements, strip_save_announcement
 from mashbill.chat_providers.base import ChatStreamEvent
@@ -75,9 +76,10 @@ def test_stream_filter_buffers_across_deltas_and_reconciles() -> None:
     ]
 
     async def _run() -> list[ChatStreamEvent]:
-        async def gen():
+        async def gen() -> AsyncIterator[ChatStreamEvent]:
             for e in raw:
                 yield e
+
         return [e async for e in filter_save_announcements(gen())]
 
     out = asyncio.run(_run())

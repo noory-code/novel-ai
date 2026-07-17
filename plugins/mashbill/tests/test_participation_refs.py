@@ -28,7 +28,9 @@ def plot_root(tmp_path: Path) -> Path:
 
 
 def _actor(plot_root: Path, label: str) -> str:
-    return create_node(plot_root, "alpha", "actors", "actor", {"label": label})["node"]["id"]
+    actor_id = create_node(plot_root, "alpha", "actors", "actor", {"label": label})["node"]["id"]
+    assert isinstance(actor_id, str)
+    return actor_id
 
 
 def test_category_takes_actor_participants(plot_root: Path) -> None:
@@ -36,9 +38,7 @@ def test_category_takes_actor_participants(plot_root: Path) -> None:
     cat = create_node(plot_root, "alpha", "services", "category", {"label": "고객 앱"})["node"][
         "id"
     ]
-    out = set_node_references(
-        plot_root, "alpha", "services", cat, {"ref_actor_ids": [actor]}
-    )
+    out = set_node_references(plot_root, "alpha", "services", cat, {"ref_actor_ids": [actor]})
     assert out["node"]["ref_actor_ids"] == [actor]
 
 
@@ -47,9 +47,7 @@ def test_feature_takes_actor_participants(plot_root: Path) -> None:
     feat = create_node(plot_root, "alpha", "services", "feature", {"label": "주문하기"})["node"][
         "id"
     ]
-    out = set_node_references(
-        plot_root, "alpha", "services", feat, {"ref_actor_ids": [actor]}
-    )
+    out = set_node_references(plot_root, "alpha", "services", feat, {"ref_actor_ids": [actor]})
     assert out["node"]["ref_actor_ids"] == [actor]
 
 
@@ -58,9 +56,7 @@ def test_category_participant_must_exist_on_actors_canvas(plot_root: Path) -> No
         "id"
     ]
     with pytest.raises(ValueError, match="ref_actor_ids"):
-        set_node_references(
-            plot_root, "alpha", "services", cat, {"ref_actor_ids": ["ghost"]}
-        )
+        set_node_references(plot_root, "alpha", "services", cat, {"ref_actor_ids": ["ghost"]})
 
 
 def test_partial_participation_is_saveable(plot_root: Path) -> None:
@@ -68,7 +64,5 @@ def test_partial_participation_is_saveable(plot_root: Path) -> None:
     not (yet) — mid-construction states never reject (D-2026-07-04-P)."""
     actor = _actor(plot_root, "라이더")
     feat = create_node(plot_root, "alpha", "services", "feature", {"label": "배차"})["node"]["id"]
-    out = set_node_references(
-        plot_root, "alpha", "services", feat, {"ref_actor_ids": [actor]}
-    )
+    out = set_node_references(plot_root, "alpha", "services", feat, {"ref_actor_ids": [actor]})
     assert out["node"]["ref_actor_ids"] == [actor]

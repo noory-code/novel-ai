@@ -11,7 +11,10 @@ loop, no socket).
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
+import uvicorn
 
 import mashbill.server as server
 
@@ -32,13 +35,13 @@ def test_run_mcp_stdio_drives_only_the_stdio_transport(
         # Close the coroutine so pytest doesn't warn it was never awaited.
         getattr(coro, "close", lambda: None)()
 
-    monkeypatch.setattr(server.asyncio, "run", fake_run)
+    monkeypatch.setattr(asyncio, "run", fake_run)
 
     def boom(*_a: object, **_k: object) -> object:
         raise AssertionError("HTTP server must not start in stdio-only mode")
 
     monkeypatch.setattr(server, "create_http_app", boom)
-    monkeypatch.setattr(server.uvicorn, "run", boom)
+    monkeypatch.setattr(uvicorn, "run", boom)
 
     server.run_mcp_stdio()
 

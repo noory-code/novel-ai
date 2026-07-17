@@ -10,6 +10,7 @@ A registry guard covers (1); end-to-end calls through the real functions cover (
 
 from __future__ import annotations
 
+import webbrowser
 from pathlib import Path
 
 import pytest
@@ -42,7 +43,7 @@ _CORE_TOOLS = {
 
 async def test_registry_exposes_every_core_tool() -> None:
     tools = await mcp_tools.mcp.list_tools()
-    names = {getattr(t, "name", None) or t["name"] for t in tools}
+    names = {t.name for t in tools}
     missing = _CORE_TOOLS - names
     assert not missing, f"tool contract lost these verbs: {sorted(missing)}"
 
@@ -183,11 +184,13 @@ def test_get_viewer_context_reports_no_live_viewer(tmp_path: Path) -> None:
     assert ctx["selection"] == []
 
 
-def test_open_canvas_builds_url_and_opens_browser(tmp_path: Path, monkeypatch) -> None:
+def test_open_canvas_builds_url_and_opens_browser(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     ws = str(tmp_path)
     mcp_tools.create_project_tool(ws, "p1", "P1")
     opened: list[str] = []
-    monkeypatch.setattr(mcp_tools.webbrowser, "open", opened.append)
+    monkeypatch.setattr(webbrowser, "open", opened.append)
     msg = mcp_tools.open_canvas(ws, "p1")
     assert opened and f"project_path={ws}" in opened[0] and "project=p1" in opened[0]
     assert "Opened" in msg

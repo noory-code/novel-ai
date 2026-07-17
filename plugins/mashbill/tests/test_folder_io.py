@@ -246,13 +246,11 @@ def _detail_with_actor_refs(service_id: str = "order") -> CanvasDoc:
                 id=f"{service_id}-op",
                 label="→ op",
                 ref_actor_id="operator",
-
             ),
             ActorRefNode(
                 id=f"{service_id}-user",
                 label="→ user",
                 ref_actor_id="user",
-
             ),
         ],
     )
@@ -442,7 +440,7 @@ def test_orphan_non_anchor_edges_still_stripped(plot_root: Path) -> None:
 
     # Manually write a foundation canvas with an orphan edge bypassing
     # Pydantic validation — simulating a pre-v0.13.0 storage state.
-    raw = {
+    raw: dict[str, object] = {
         "canvas_id": "foundation",
         "canvas_kind": "foundation",
         "feature_ref": None,

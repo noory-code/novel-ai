@@ -7,6 +7,8 @@ engine-side — so they survive a restart and travel with the project.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from mashbill.chat_store import (
@@ -20,13 +22,13 @@ from mashbill.project_io import create_project
 from mashbill.workspace import resolve_plot_root
 
 
-def _project(tmp_path):
+def _project(tmp_path: Path) -> tuple[Path, str]:
     plot_root = resolve_plot_root(str(tmp_path))
     create_project(plot_root, "alpha", "Alpha")
     return plot_root, "alpha"
 
 
-def test_append_user_creates_file_with_title(tmp_path):
+def test_append_user_creates_file_with_title(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     append_user(plot_root, pid, "foundation", "claude-code", "user_1", "Define the mission")
     doc = read_conversation(plot_root, pid, "foundation")
@@ -37,13 +39,13 @@ def test_append_user_creates_file_with_title(tmp_path):
     assert [(m.role, m.text) for m in doc.messages] == [("user", "Define the mission")]
 
 
-def test_recent_transcript_empty_when_no_conversation(tmp_path):
+def test_recent_transcript_empty_when_no_conversation(tmp_path: Path) -> None:
     # A brand-new thread genuinely starts from scratch — no history block.
     plot_root, pid = _project(tmp_path)
     assert read_recent_transcript(plot_root, pid, "foundation") == ""
 
 
-def test_recent_transcript_carries_decided_value_and_roles(tmp_path):
+def test_recent_transcript_carries_decided_value_and_roles(tmp_path: Path) -> None:
     # D-2026-06-26-F: a fresh session must see what was already settled so it
     # doesn't re-ask (the user's repeated "I already wrote it above" complaint).
     plot_root, pid = _project(tmp_path)
@@ -57,7 +59,7 @@ def test_recent_transcript_carries_decided_value_and_roles(tmp_path):
     assert "do not re-ask" in out  # the header instructs continuation
 
 
-def test_recent_transcript_keeps_newest_under_budget(tmp_path):
+def test_recent_transcript_keeps_newest_under_budget(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     for i in range(50):
         append_user(
@@ -69,7 +71,7 @@ def test_recent_transcript_keeps_newest_under_budget(tmp_path):
     assert "message number 0" not in out  # oldest dropped
 
 
-def test_append_assistant_appends_and_bumps_updated(tmp_path):
+def test_append_assistant_appends_and_bumps_updated(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     append_user(plot_root, pid, "foundation", "claude-code", "user_1", "Hi")
     created = read_conversation(plot_root, pid, "foundation").created
@@ -81,7 +83,7 @@ def test_append_assistant_appends_and_bumps_updated(tmp_path):
     assert doc.title == "Hi"  # never overwritten
 
 
-def test_parametric_scope_filename_and_roundtrip(tmp_path):
+def test_parametric_scope_filename_and_roundtrip(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     append_user(plot_root, pid, "service:abc123", "codex", "user_1", "Refund flow")
     # ':' is sanitised to '__' on disk, fs-safe
@@ -92,20 +94,20 @@ def test_parametric_scope_filename_and_roundtrip(tmp_path):
     assert "service:abc123" in scopes
 
 
-def test_traversal_in_scope_id_is_rejected(tmp_path):
+def test_traversal_in_scope_id_is_rejected(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     with pytest.raises(ValueError):
         append_user(plot_root, pid, "service:../../evil", "codex", "user_1", "x")
 
 
-def test_empty_conversation_not_written(tmp_path):
+def test_empty_conversation_not_written(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     # No turn ran — clicking into a scope writes nothing.
     assert list_conversations(plot_root, pid) == []
     assert not (plot_root / "chat").exists()
 
 
-def test_list_sorted_by_updated_desc(tmp_path):
+def test_list_sorted_by_updated_desc(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     append_user(plot_root, pid, "foundation", "claude-code", "user_1", "first")
     append_user(plot_root, pid, "actors", "claude-code", "user_2", "second")
@@ -113,13 +115,13 @@ def test_list_sorted_by_updated_desc(tmp_path):
     assert scopes == ["actors", "foundation"]  # newest-updated first
 
 
-def test_read_missing_conversation_raises(tmp_path):
+def test_read_missing_conversation_raises(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     with pytest.raises(FileNotFoundError):
         read_conversation(plot_root, pid, "entities")
 
 
-def test_survives_simulated_restart(tmp_path):
+def test_survives_simulated_restart(tmp_path: Path) -> None:
     """The regression for the actual bug: write, then read from a fresh root
     handle (process-equivalent) — the transcript is still there."""
     plot_root, pid = _project(tmp_path)

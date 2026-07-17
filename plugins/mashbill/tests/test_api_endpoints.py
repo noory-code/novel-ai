@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 from starlette.testclient import TestClient
@@ -84,14 +85,14 @@ def test_nonexistent_project_path_is_404(app_client: tuple[TestClient, str]) -> 
 # ---------------------------------------------------------------------------
 
 
-def _create(client: TestClient, project_path: str, pid: str, name: str) -> dict:
+def _create(client: TestClient, project_path: str, pid: str, name: str) -> dict[str, Any]:
     resp = client.post(
         "/api/projects",
         params={"project_path": project_path},
         json={"id": pid, "name": name},
     )
     assert resp.status_code == 201, resp.text
-    return resp.json()
+    return cast(dict[str, Any], resp.json())
 
 
 def test_create_then_list(app_client: tuple[TestClient, str]) -> None:

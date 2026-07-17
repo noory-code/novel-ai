@@ -255,6 +255,8 @@ def test_value_and_identity_typed_fields_round_trip_in_canvas() -> None:
     parsed = CanvasDoc.model_validate(doc.model_dump())
     cv = next(n for n in parsed.nodes if n.id == "cv1")
     ident = next(n for n in parsed.nodes if n.id == "id1")
+    assert isinstance(cv, CoreValueNode)
+    assert isinstance(ident, IdentityNode)
     assert cv.body.startswith("우리는 서로")
     # B-15: identity body folds into description on read
     assert "조용하고 또렷하다" in ident.description
@@ -447,13 +449,11 @@ def _detail_seed(canvas_id: str = "order") -> list[SketchNode]:
             id=f"{canvas_id}-op-ref",
             label="→ operator",
             ref_actor_id="operator",
-
         ),
         ActorRefNode(
             id=f"{canvas_id}-user-ref",
             label="→ user",
             ref_actor_id="user",
-
         ),
     ]
 
@@ -497,7 +497,6 @@ def test_detail_canvas_one_subject_actor_ref_ok() -> None:
                 id="login-user",
                 label="→ Bana",
                 ref_actor_id="bana",
-
             ),
         ],
     )
@@ -516,7 +515,6 @@ def test_detail_canvas_operator_side_only_still_ok_for_backwards_compat() -> Non
                 id="ops-op",
                 label="→ Admin",
                 ref_actor_id="admin",
-
             ),
         ],
     )
@@ -630,6 +628,7 @@ def test_feature_refs_round_trip_through_canvas() -> None:
     )
     parsed = CanvasDoc.model_validate(services.model_dump())
     login = next(n for n in parsed.nodes if n.id == "login")
+    assert isinstance(login, ServiceNode)
     assert login.problem.startswith("로그인이")
     assert login.ref_actor_ids == ["user"]
 
@@ -756,6 +755,7 @@ def test_actor_permissions_round_trip_through_canvas() -> None:
     )
     parsed = CanvasDoc.model_validate(canvas.model_dump())
     rule = next(n for n in parsed.nodes if n.id == "r1")
+    assert isinstance(rule, RuleNode)
     assert rule.actor_permissions["user"] == "RUD-self"
     assert rule.actor_permissions["admin"] == "CRUD-all"
 

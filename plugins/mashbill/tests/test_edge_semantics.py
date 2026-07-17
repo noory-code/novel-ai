@@ -93,7 +93,9 @@ def test_relation_value_set_is_the_pinned_three() -> None:
 
 
 def _edge(source: str, target: str, **kw: object) -> SketchEdge:
-    return SketchEdge(id=f"{source}->{target}", source=source, target=target, **kw)
+    return SketchEdge.model_validate(
+        {"id": f"{source}->{target}", "source": source, "target": target, **kw}
+    )
 
 
 def test_fold_flow_source_is_parent() -> None:

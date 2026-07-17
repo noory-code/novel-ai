@@ -13,38 +13,46 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from mashbill import schema_export, ts_codegen
 
 
-def test_wire_ts_target_is_none_when_env_unset(monkeypatch) -> None:
+def test_wire_ts_target_is_none_when_env_unset(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("MASHBILL_VIEWER_ROOT", raising=False)
     assert ts_codegen.wire_ts_path() is None
 
 
-def test_wire_ts_target_resolves_under_env_root(monkeypatch, tmp_path: Path) -> None:
+def test_wire_ts_target_resolves_under_env_root(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     monkeypatch.setenv("MASHBILL_VIEWER_ROOT", str(tmp_path))
     target = ts_codegen.wire_ts_path()
     assert target == tmp_path.resolve() / "src" / "domain" / "wire.gen.ts"
 
 
-def test_viewer_contract_target_is_none_when_env_unset(monkeypatch) -> None:
+def test_viewer_contract_target_is_none_when_env_unset(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("MASHBILL_VIEWER_ROOT", raising=False)
     assert schema_export.viewer_contract_path() is None
 
 
-def test_viewer_contract_target_resolves_under_env_root(monkeypatch, tmp_path: Path) -> None:
+def test_viewer_contract_target_resolves_under_env_root(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     monkeypatch.setenv("MASHBILL_VIEWER_ROOT", str(tmp_path))
     target = schema_export.viewer_contract_path()
     assert target == tmp_path.resolve() / "src" / "schema" / "wire-contract.json"
 
 
-def test_write_wire_ts_skips_without_env(monkeypatch) -> None:
+def test_write_wire_ts_skips_without_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """No env → no write, returns None (engine-alone checkout is a no-op)."""
     monkeypatch.delenv("MASHBILL_VIEWER_ROOT", raising=False)
     assert ts_codegen.write_wire_ts() is None
 
 
-def test_write_wire_ts_writes_under_env_root(monkeypatch, tmp_path: Path) -> None:
+def test_write_wire_ts_writes_under_env_root(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     monkeypatch.setenv("MASHBILL_VIEWER_ROOT", str(tmp_path))
     written = ts_codegen.write_wire_ts()
     assert written == tmp_path.resolve() / "src" / "domain" / "wire.gen.ts"

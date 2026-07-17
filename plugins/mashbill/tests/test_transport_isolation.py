@@ -24,6 +24,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 import mashbill.http_app as http_app_mod
 from mashbill.http_app import create_http_app
 
@@ -94,7 +96,7 @@ def test_mcp_adapter_does_not_import_http_for_viewer_stack() -> None:
     )
 
 
-def test_http_app_builds_without_viewer_dist(monkeypatch) -> None:  # noqa: ANN001
+def test_http_app_builds_without_viewer_dist(monkeypatch: pytest.MonkeyPatch) -> None:
     """The engine builds its HTTP app even when no viewer dist exists, mounting
     only ``/api`` + ``/ws`` (no static ``/`` mount). This is the headless path
     the bundle / post-split engine relies on (Phase C)."""

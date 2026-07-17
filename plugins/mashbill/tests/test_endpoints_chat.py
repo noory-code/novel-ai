@@ -38,7 +38,7 @@ from mashbill.workspace import resolve_plot_root
 # ---------------------------------------------------------------------------
 
 
-class _FakeHub:
+class _FakeHub(BroadcastHub):
     """Captures every ``notify_event`` call so tests can assert event order."""
 
     def __init__(self) -> None:
@@ -97,13 +97,15 @@ async def test_stream_chat_turn_broadcasts_each_event(tmp_path: Path) -> None:
         ]
     )
 
-    await stream_chat_turn(provider, hub, ws, "hello")  # type: ignore[arg-type]
+    await stream_chat_turn(provider, hub, ws, "hello")
 
     assert provider.calls == ["hello"]
     types = [payload["type"] for (_, _, payload) in hub.events]  # type: ignore[index]
     assert types == ["turn_start", "delta", "delta", "turn_complete"]
     deltas = "".join(
-        payload["text"] for (_, _, payload) in hub.events if payload["type"] == "delta"  # type: ignore[index]
+        payload["text"]  # type: ignore[index]
+        for (_, _, payload) in hub.events
+        if payload["type"] == "delta"  # type: ignore[index]
     )
     last_payload = hub.events[-1][2]
     assert last_payload is not None
@@ -128,7 +130,7 @@ async def test_stream_chat_turn_stamps_scope_on_every_event(
         ]
     )
 
-    await stream_chat_turn(provider, hub, ws, "hello", scope="actors")  # type: ignore[arg-type]
+    await stream_chat_turn(provider, hub, ws, "hello", scope="actors")
 
     scopes = [payload["scope"] for (_, _, payload) in hub.events]  # type: ignore[index]
     assert scopes == ["actors", "actors", "actors"]
@@ -139,7 +141,7 @@ async def test_stream_chat_turn_error_carries_scope(tmp_path: Path) -> None:
     ws.mkdir()
     hub = _FakeHub()
 
-    await stream_chat_turn(_ExplodingProvider(), hub, ws, "hi", scope="services")  # type: ignore[arg-type]
+    await stream_chat_turn(_ExplodingProvider(), hub, ws, "hi", scope="services")
 
     payload = hub.events[0][2]
     assert payload is not None
@@ -154,7 +156,7 @@ async def test_stream_chat_turn_broadcasts_error_on_provider_crash(
     hub = _FakeHub()
     provider = _ExplodingProvider()
 
-    await stream_chat_turn(provider, hub, ws, "hi")  # type: ignore[arg-type]
+    await stream_chat_turn(provider, hub, ws, "hi")
 
     assert len(hub.events) == 1
     payload = hub.events[0][2]
@@ -744,7 +746,7 @@ async def test_stream_chat_turn_persists_assistant_on_turn_complete(tmp_path: Pa
         hub,
         plot_root,
         "hello",
-        scope="foundation",  # type: ignore[arg-type]
+        scope="foundation",
         project_id="alpha",
         provider_name="codex",
     )

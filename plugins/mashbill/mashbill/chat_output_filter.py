@@ -78,8 +78,8 @@ async def filter_save_announcements(
     deltas as fallback); the deltas concatenate to exactly that, so a delta-only
     subscriber and a late subscriber reconcile to identical text.
     """
-    buffer = ""   # in-progress (unterminated) sentence, held back
-    raw = ""      # every raw delta char seen, for fallback reconciliation
+    buffer = ""  # in-progress (unterminated) sentence, held back
+    raw = ""  # every raw delta char seen, for fallback reconciliation
     emitted = ""  # cleaned text already sent as deltas
 
     def _delta(piece: str, turn_id: str) -> ChatStreamEvent:
@@ -105,7 +105,7 @@ async def filter_save_announcements(
             # Emit whatever is not yet streamed so a delta-only subscriber lands on
             # the same full text; then reconcile turn_complete.text to it.
             if full_cleaned.startswith(emitted):
-                tail = full_cleaned[len(emitted):]
+                tail = full_cleaned[len(emitted) :]
             else:  # whitespace drift — resend the authoritative text as one delta
                 emitted = ""
                 tail = full_cleaned

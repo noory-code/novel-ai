@@ -119,7 +119,7 @@ def test_chat_provider_is_workspace_scoped(tmp_path: Path, client: TestClient) -
     }
 
 
-def test_spawn_env_strips_engine_runtime_toggles(monkeypatch) -> None:
+def test_spawn_env_strips_engine_runtime_toggles(monkeypatch: pytest.MonkeyPatch) -> None:
     """The CLI subprocess env must NOT inherit the engine's own runtime toggles
     (found by the coach-sim harness 2026-07-02): an engine started with
     ``MASHBILL_NO_MCP=1`` (the documented HTTP-only dev loop) leaked that var to

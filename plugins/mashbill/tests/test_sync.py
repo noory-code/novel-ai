@@ -29,10 +29,12 @@ def _overview_with(feature_labels: dict[str, str]) -> CanvasDoc:
     shows its inspector, clicking a feature drills into its detail."""
     nodes: list[SketchNode] = [
         CategoryNode(id="default-cat", label="Default"),
-        ServiceNode(id="default-svc", parent_id="default-cat", label="Default service"),
+        ServiceNode.model_validate(
+            {"id": "default-svc", "parent_id": "default-cat", "label": "Default service"}
+        ),
     ]
     nodes.extend(
-        FeatureNode(id=fid, parent_id="default-svc", label=label)
+        FeatureNode.model_validate({"id": fid, "parent_id": "default-svc", "label": label})
         for fid, label in feature_labels.items()
     )
     return CanvasDoc(

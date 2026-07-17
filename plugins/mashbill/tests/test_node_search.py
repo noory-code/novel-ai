@@ -47,8 +47,10 @@ def _actors() -> CanvasDoc:
 def _services() -> CanvasDoc:
     nodes: list[SketchNode] = [
         CategoryNode(id="c1", label="Default"),
-        ServiceNode(id="s1", parent_id="c1", label="Commenting"),
-        FeatureNode(id="f_comment", parent_id="s1", label="Post a comment"),
+        ServiceNode.model_validate({"id": "s1", "parent_id": "c1", "label": "Commenting"}),
+        FeatureNode.model_validate(
+            {"id": "f_comment", "parent_id": "s1", "label": "Post a comment"}
+        ),
     ]
     return CanvasDoc(canvas_id="services", canvas_kind="services", nodes=nodes)
 

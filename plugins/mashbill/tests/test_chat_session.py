@@ -19,11 +19,13 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
+from mashbill.chat_providers.base import ChatProvider
 from mashbill.chat_session import (
     ChatSessionRegistry,
     ChatStreamEvent,
@@ -336,7 +338,7 @@ def _build_fake_factory(
     return factory
 
 
-async def _drain(provider: ClaudeCodeProvider, message: str) -> list[ChatStreamEvent]:
+async def _drain(provider: ChatProvider, message: str) -> list[ChatStreamEvent]:
     return [event async for event in provider.stream_turn(message)]
 
 
@@ -549,7 +551,7 @@ async def test_stream_turn_kills_process_on_cancel(tmp_path: Path) -> None:
         subprocess_factory=factory,
     )
 
-    agen = provider.stream_turn("hi").__aiter__()
+    agen = cast(AsyncGenerator[ChatStreamEvent, None], provider.stream_turn("hi").__aiter__())
     # Pull turn_start + the first delta.
     first = await agen.__anext__()
     assert first.type == "turn_start"

@@ -139,8 +139,12 @@ def _two_value_canvas() -> CanvasDoc:
     nodes: list[SketchNode] = [
         MissionNode(id="m1", label="Our mission", statement="Make planning effortless"),
         IdentityNode(id="i1", label="Identity"),
-        CoreValueNode(id="v1", label="Clarity", definition="Always favour the clear path"),
-        CoreValueNode(id="v2", label="Trust", definition="Default to candour"),
+        CoreValueNode.model_validate(
+            {"id": "v1", "label": "Clarity", "definition": "Always favour the clear path"}
+        ),
+        CoreValueNode.model_validate(
+            {"id": "v2", "label": "Trust", "definition": "Default to candour"}
+        ),
     ]
     return CanvasDoc(canvas_id="foundation", canvas_kind="foundation", nodes=nodes)
 

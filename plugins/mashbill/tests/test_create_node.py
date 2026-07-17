@@ -126,7 +126,8 @@ def test_create_node_leaves_other_nodes_and_edges_untouched(tmp_path: Path) -> N
     create_node(plot_root, "alpha", "feature", "step", {"label": "Review"}, service_id="svc1")
     canvas = read_canvas(plot_root, "alpha", "feature", "svc1")
     by_id = {n.id: n for n in canvas.nodes}
-    assert by_id["s1"].outcome == "o"  # type: ignore[attr-defined]
+    assert isinstance(by_id["s1"], StepNode)
+    assert by_id["s1"].outcome == "o"
     assert [e.id for e in canvas.edges] == ["e1"]
     assert sum(1 for n in canvas.nodes if n.kind == "step") == 2
 
