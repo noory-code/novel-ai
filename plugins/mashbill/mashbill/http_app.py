@@ -94,7 +94,7 @@ def create_http_app(
             await ws.close(code=1008, reason="project_path query param required")
             return
         try:
-            plot_root = resolve_plot_root(project_path)
+            plot_root = resolve_plot_root(project_path, create=False)
         except (FileNotFoundError, NotADirectoryError) as exc:
             await ws.close(code=1008, reason=str(exc))
             return

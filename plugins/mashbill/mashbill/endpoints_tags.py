@@ -39,7 +39,7 @@ def _git_not_initialized_response(workspace_root: object) -> JSONResponse:
 
 async def tags_list_endpoint(request: Request) -> JSONResponse:
     try:
-        plot_root = _require_plot_root(request)
+        plot_root = _require_plot_root(request, create=False)
     except _ApiError as exc:
         return exc.response
     project_id = request.path_params["project_id"]
@@ -120,7 +120,7 @@ async def project_at_tag_endpoint(request: Request) -> JSONResponse:
     snapshot cache slot; no PUT path operates on tag-scoped data.
     """
     try:
-        plot_root = _require_plot_root(request)
+        plot_root = _require_plot_root(request, create=False)
     except _ApiError as exc:
         return exc.response
     project_id = request.path_params["project_id"]

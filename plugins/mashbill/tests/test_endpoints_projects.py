@@ -54,6 +54,7 @@ def test_projects_list_empty_workspace(client: TestClient, workspace: Path) -> N
     assert resp.status_code == 200
     body = resp.json()
     assert body == {"projects": [], "migrated": []}
+    assert not (workspace / ".noory").exists()
 
 
 def test_projects_list_returns_created_project(client: TestClient, workspace: Path) -> None:
@@ -356,6 +357,15 @@ def test_workspace_discover_requires_project_path(client: TestClient) -> None:
 def test_workspace_discover_nonexistent_path_is_404(client: TestClient, tmp_path: Path) -> None:
     resp = client.get(f"/api/workspace/projects?project_path={tmp_path / 'nope'}")
     assert resp.status_code == 404
+
+
+def test_workspace_discover_empty_workspace_does_not_create_data_root(
+    client: TestClient, workspace: Path
+) -> None:
+    resp = client.get(f"/api/workspace/projects?project_path={workspace}")
+    assert resp.status_code == 200
+    assert resp.json() == {"projects": [], "migrated": []}
+    assert not (workspace / ".noory" / "novel").exists()
 
 
 def test_workspace_discover_finds_nested_project(client: TestClient, workspace: Path) -> None:

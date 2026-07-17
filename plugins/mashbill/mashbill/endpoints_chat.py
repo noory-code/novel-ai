@@ -297,7 +297,7 @@ async def chat_conversations_list_endpoint(request: Request) -> JSONResponse:
     if not project_path:
         return JSONResponse({"error": "project_path required"}, status_code=400)
     try:
-        plot_root = resolve_plot_root(project_path)
+        plot_root = resolve_plot_root(project_path, create=False)
     except (FileNotFoundError, NotADirectoryError) as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
     project_id = _project_id_for(plot_root)
@@ -315,7 +315,7 @@ async def chat_conversation_get_endpoint(request: Request) -> JSONResponse:
     if not is_valid_scope(scope):
         return JSONResponse({"error": "invalid chat scope"}, status_code=400)
     try:
-        plot_root = resolve_plot_root(project_path)
+        plot_root = resolve_plot_root(project_path, create=False)
     except (FileNotFoundError, NotADirectoryError) as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
     project_id = _project_id_for(plot_root)

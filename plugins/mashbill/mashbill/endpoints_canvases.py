@@ -27,7 +27,7 @@ async def entity_usage_endpoint(request: Request) -> JSONResponse:
     Scans all feature canvases server-side (the viewer can't — it loads
     canvases lazily)."""
     try:
-        plot_root = _require_plot_root(request)
+        plot_root = _require_plot_root(request, create=False)
     except _ApiError as exc:
         return exc.response
     project_id = request.path_params["project_id"]
@@ -70,7 +70,7 @@ async def master_create_endpoint(request: Request) -> JSONResponse:
 
 async def canvas_get_endpoint(request: Request) -> JSONResponse:
     try:
-        plot_root = _require_plot_root(request)
+        plot_root = _require_plot_root(request, create=False)
     except _ApiError as exc:
         return exc.response
     project_id = request.path_params["project_id"]

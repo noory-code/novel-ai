@@ -199,8 +199,12 @@ def create_workspace_dir(workspace_root: Path, rel: str) -> str:
     return target.relative_to(root).as_posix()
 
 
-def resolve_plot_root(project_path: str) -> Path:
-    """Resolve ``{project_path}/.noory/plot/``, creating it on first access.
+def resolve_plot_root(project_path: str, *, create: bool = True) -> Path:
+    """Resolve ``{project_path}/.noory/novel/``.
+
+    When ``create`` is true, create the data root on first access. Read-only
+    callers pass ``create=False`` so resolving an empty workspace has no
+    filesystem side effects.
 
     R9 (D-2026-06-10-G): every plugin's per-project artifacts consolidate
     under ONE ``.noory/`` dotfolder (``.noory/plot/``, ``.noory/distill/``,
@@ -230,7 +234,8 @@ def resolve_plot_root(project_path: str) -> Path:
     # directly instead of appending another ``.noory/plot``. The workspace
     # root is then two levels up.
     if base.name in ("novel", "plot") and base.parent.name == ".noory":
-        base.mkdir(parents=True, exist_ok=True)
+        if create:
+            base.mkdir(parents=True, exist_ok=True)
         flatten_nested_project(base)
         migrate_legacy_git_to_workspace(base.parent.parent)
         return base
@@ -245,8 +250,10 @@ def resolve_plot_root(project_path: str) -> Path:
         root.parent.mkdir(exist_ok=True)
         shutil.move(str(legacy_dotplot), str(root))
         _log.info("migrated legacy %s -> %s (R9)", legacy_dotplot, root)
-    root.mkdir(parents=True, exist_ok=True)
-    flatten_nested_project(root)
+    if create:
+        root.mkdir(parents=True, exist_ok=True)
+    if root.is_dir():
+        flatten_nested_project(root)
     migrate_legacy_git_to_workspace(base)
     return root
 

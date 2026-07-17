@@ -36,13 +36,13 @@ class _ApiError(Exception):
         self.response = response
 
 
-def _require_plot_root(request: Request) -> Path:
+def _require_plot_root(request: Request, *, create: bool = True) -> Path:
     """Return the resolved ``plot_root`` or raise ``_ApiError`` for a 4xx reply."""
     project_path = _project_path(request)
     if not project_path:
         raise _ApiError(_error("project_path query param is required"))
     try:
-        return resolve_plot_root(project_path)
+        return resolve_plot_root(project_path, create=create)
     except (FileNotFoundError, NotADirectoryError) as exc:
         raise _ApiError(_error(str(exc), status=404)) from exc
 

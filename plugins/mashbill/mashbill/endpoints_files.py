@@ -44,7 +44,7 @@ def _project_scoped_root(plot_root: Path, project_id: str) -> Path:
 
 async def file_get_endpoint(request: Request) -> JSONResponse:
     try:
-        plot_root = _require_plot_root(request)
+        plot_root = _require_plot_root(request, create=False)
     except _ApiError as exc:
         return exc.response
     project_id = request.query_params.get("project_id")
@@ -76,7 +76,7 @@ async def file_raw_endpoint(request: Request) -> Response:
     via the existing ``resolve_safe_path``.
     """
     try:
-        plot_root = _require_plot_root(request)
+        plot_root = _require_plot_root(request, create=False)
     except _ApiError as exc:
         return exc.response
     project_id = request.query_params.get("project_id")

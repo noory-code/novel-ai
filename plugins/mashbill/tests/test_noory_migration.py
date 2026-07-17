@@ -20,6 +20,14 @@ def test_plot_root_lives_under_noory(tmp_path: Path) -> None:
     assert root.is_dir()
 
 
+def test_resolve_plot_root_without_create_has_no_side_effect(tmp_path: Path) -> None:
+    root = resolve_plot_root(str(tmp_path), create=False)
+
+    assert root == tmp_path / ".noory" / "novel"
+    assert not root.exists()
+    assert not (tmp_path / ".noory").exists()
+
+
 def test_legacy_dot_plot_migrates_on_first_access(tmp_path: Path) -> None:
     """A pre-R9 workspace (`.plot/proj-x`) is moved wholesale to `.noory/novel`
     the first time the engine touches it, then flattened (S2) since it holds a

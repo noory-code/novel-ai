@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.170.1] — 2026-07-17
+
+### Fixed
+
+- Read and workspace-discovery requests no longer create an empty
+  `.noory/novel/` data root. `resolve_plot_root()` now separates path resolution
+  from creation, while project, canvas, chat, tag, file, and publish write paths
+  retain their existing create-on-write behavior (D-2026-07-17-B).
+
 ## [0.170.0] — 2026-07-17
 
 ### Changed

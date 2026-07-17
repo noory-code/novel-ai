@@ -39,6 +39,51 @@
 
 ## Log
 
+### D-2026-07-17-C — Dangling ref chip shows ⚠ against the full live master set
+
+- **What:** an inspector `RefChips` chip whose picked id is absent from the
+  **full live master set** renders a `⚠` badge + `t("inspector.refChips.dangling")`.
+  RefChips gains a resolvable/live-id input distinct from its existing `available`
+  prop; the 6 call sites (service actors/values/identities, feature actors,
+  step entities, category actors) pass the un-narrowed live set
+  (`availableActors/Values/Identities/Entities`) as the resolvable source.
+  Display-only.
+- **Why:** a feature/service can reference an actor/entity master that was later
+  deleted. The engine already rejects dangling refs at the Solera publish
+  boundary (409), so integrity is safe, but on the live canvas the chip silently
+  showed `(missing)` with no warning. The user should see and fix it
+  (build-through-discussion).
+- **Alternatives:** (a) detect dangling from the existing `available` prop —
+  rejected: for feature/service actors `available` is narrowed by
+  `narrowToParentParticipants`, so an alive-but-non-participant master would
+  false-positive as dangling; detection must run against the full live set.
+  (b) engine auto-cleanup of dangling refs — rejected (Rule 7 violation; the
+  engine must not silently mutate the user's canvas), UI path only.
+- **Approval:** Accepted — user (iam@daewook.me), 2026-07-17 (W-00000021).
+- **Spec impact:** none new — surfaces the existing orphan-warning convention
+  (⚠, cf. `useOrphanActorRefs` / `ActorRefInspector`) on multi-ref chips.
+
+### D-2026-07-17-B — Path resolution splits resolve from create (reads never mkdir)
+
+- **What:** `resolve_plot_root()` gains a keyword `create: bool = True`. With
+  `create=False` it resolves and returns the `.noory/novel` path **without**
+  making any directory (no mkdir of the root, `.noory/`, or the double-nesting
+  guard branch). Read/discovery endpoints (`_require_plot_root` for GET list /
+  get / canvas / chat / tags reads, and `workspace_discover_endpoint`) call it
+  with `create=False`; write endpoints (create project, canvas/chat/tag saves,
+  publish) keep the default `create=True`. Legacy migration still fires only when
+  a real legacy root already exists.
+- **Why:** opening a folder as a workspace, or merely listing projects, resolves
+  the plot root and thereby unconditionally created an empty `.noory/novel/` at
+  that path (`workspace.py:248`). Empty data folders then pollute discovery
+  (B-4 confusion). A pure read must not write.
+- **Alternatives:** (a) patch each read call site to peek-then-skip — rejected
+  (scatters the invariant across call sites, easy to regress); (b) delete the
+  folder after a read — rejected (writes then un-writes; races). The create-intent
+  split keeps the invariant in one function.
+- **Approval:** Accepted — user (iam@daewook.me), 2026-07-17 (W-00000020).
+- **Spec impact:** none — path resolution, not canvas behaviour.
+
 ### D-2026-07-17-A — Coach save-announcement removed by a deterministic stream guard
 
 - **What:** a new `chat_output_filter` sits in the streaming bridge and strips

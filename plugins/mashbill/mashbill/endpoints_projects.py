@@ -44,7 +44,7 @@ from mashbill.workspace import (
 
 async def projects_list_endpoint(request: Request) -> JSONResponse:
     try:
-        plot_root = _require_plot_root(request)
+        plot_root = _require_plot_root(request, create=False)
     except _ApiError as exc:
         return exc.response
     # Silently migrate any leftover v0.1 files in the (now-legacy)
@@ -63,7 +63,7 @@ async def workspace_discover_endpoint(request: Request) -> JSONResponse:
         return exc.response
     # Back-compat: migrate the root-level ``.plot`` only (same as the legacy
     # list endpoint); nested projects are already v0.2+.
-    migrated = migrate_v01_to_v02(resolve_plot_root(str(root)))
+    migrated = migrate_v01_to_v02(resolve_plot_root(str(root), create=False))
     payload = WorkspaceDiscoveryResponse(
         projects=[DiscoveredProject(project=p, dir=d) for p, d in discover_projects(root)],
         migrated=migrated,
@@ -131,7 +131,7 @@ async def project_post_endpoint(request: Request) -> JSONResponse:
 
 async def project_get_endpoint(request: Request) -> JSONResponse:
     try:
-        plot_root = _require_plot_root(request)
+        plot_root = _require_plot_root(request, create=False)
     except _ApiError as exc:
         return exc.response
     project_id = request.path_params["project_id"]

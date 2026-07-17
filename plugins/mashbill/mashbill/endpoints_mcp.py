@@ -101,7 +101,7 @@ async def chat_provider_get_endpoint(request: Request) -> JSONResponse:
     lives at ``<workspace>/.noory/plot/chat-provider``.
     """
     try:
-        plot_root = _require_plot_root(request)
+        plot_root = _require_plot_root(request, create=False)
     except _ApiError as exc:
         return exc.response
     sel = read_selection(plot_root)
