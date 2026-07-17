@@ -35,6 +35,7 @@ from mashbill.chat_context import (
     build_system_prompt,
 )
 from mashbill.chat_models import list_models
+from mashbill.chat_output_filter import filter_save_announcements
 from mashbill.chat_provider import read_selection
 from mashbill.chat_providers.base import DEFAULT_CHAT_SCOPE, is_valid_scope
 from mashbill.chat_selection import build_turn_preamble
@@ -152,7 +153,7 @@ async def stream_chat_turn(
     breaks the live turn.
     """
     try:
-        async for event in provider.stream_turn(user_message):
+        async for event in filter_save_announcements(provider.stream_turn(user_message)):
             payload = event.model_dump()
             payload["scope"] = scope
             await hub.notify_event(plot_root, _CHAT_EVENT, payload)

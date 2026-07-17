@@ -39,6 +39,28 @@
 
 ## Log
 
+### D-2026-07-17-A — Coach save-announcement removed by a deterministic stream guard
+
+- **What:** a new `chat_output_filter` sits in the streaming bridge and strips
+  save-report clauses ("저장했어요/저장할게요/저장됐어요/기록했어요", EN 'saved'/'done')
+  from the coach's reply before broadcast, keeping the content. It buffers deltas to
+  sentence boundaries; complete sentences stream 1:1, an unterminated trailing
+  sentence lands at `turn_complete`, whose text is the authoritative full cleaned reply.
+- **Why:** three prompt passes (B-6, D-2026-07-14-B, D-2026-07-15-A) failed to
+  reliably stop it — a reliable 4-service round (coach=sonnet, N=3 challenge sampling,
+  novel-workspace W-00000067/W-00000070) still caught "미션 좋네요, 저장했어요" in
+  ~3/4 runs, unchanged within variance. A transcript-only strip would let the user
+  still SEE it stream, so the guard runs on the live stream.
+- **Alternatives:** (a) another prompt attempt — rejected (3 failed); (b) strip only
+  the persisted transcript — rejected (games the measurement, user still sees it);
+  (c) leave it — rejected (user chose the real fix). Design red-team flagged the
+  streaming conflict (→ sentence buffering) and the answer-acknowledgement tension
+  (→ COACH_TONE keeps owning content-ack; only the save report is removed).
+- **Approval:** Accepted — user (iam@daewook.me), 2026-07-17.
+- **Spec impact:** none. Streaming granularity for the coach dock becomes
+  sentence-buffered (a deliberate tradeoff for reliable removal); language scope is
+  best-effort KO + EN (global-service caveat).
+
 ### D-2026-07-15-A — Coach save-announcement ban hoisted for salience
 
 - **What:** `WRITE_PLAYBOOK`'s no-announce rule moves from mid-paragraph (after

@@ -4,6 +4,24 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.170.0] — 2026-07-17
+
+### Changed
+
+- Coach save-announcement now removed by a deterministic guard, not just the
+  prompt (D-2026-07-17-A, novel-workspace W-00000071). Three prompt passes (B-6,
+  D-2026-07-14-B, D-2026-07-15-A) could not reliably stop the sonnet coach from
+  reporting the save ("미션 좋네요, 저장했어요") — a reliable 4-service round
+  (coach=sonnet, N=3) still caught it. New `mashbill/chat_output_filter.py`
+  (`strip_save_announcement` + `filter_save_announcements`) sits in the streaming
+  bridge and drops save-report clauses before they broadcast, keeping the coach's
+  actual content (the answer-acknowledgement stays). Because the reply streams
+  token-by-token, the filter buffers to sentence boundaries (a clause split across
+  chunks is judged whole) — so complete sentences still stream 1:1, but an
+  unterminated trailing sentence lands at `turn_complete`. `turn_complete.text` is
+  the authoritative full cleaned reply and the deltas concatenate to it. Scope:
+  best-effort for KO + EN (the coach's validated languages), not every language.
+
 ## [0.169.3] — 2026-07-15
 
 ### Fixed

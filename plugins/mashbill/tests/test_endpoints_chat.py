@@ -85,29 +85,30 @@ async def test_stream_chat_turn_broadcasts_each_event(tmp_path: Path) -> None:
     ws = tmp_path / "ws"
     ws.mkdir()
     hub = _FakeHub()
+    # The save-announcement guard (W-00000071) buffers deltas to sentence
+    # boundaries, so terminated sentences still pass through 1:1 (the common case);
+    # save-free text is unchanged.
     provider = _CannedProvider(
         [
             ChatStreamEvent(type="turn_start", turn_id="t1"),
-            ChatStreamEvent(type="delta", turn_id="t1", text="hi "),
-            ChatStreamEvent(type="delta", turn_id="t1", text="there"),
-            ChatStreamEvent(type="turn_complete", turn_id="t1", text="hi there"),
+            ChatStreamEvent(type="delta", turn_id="t1", text="안녕하세요. "),
+            ChatStreamEvent(type="delta", turn_id="t1", text="반가워요."),
+            ChatStreamEvent(type="turn_complete", turn_id="t1", text="안녕하세요. 반가워요."),
         ]
     )
 
     await stream_chat_turn(provider, hub, ws, "hello")  # type: ignore[arg-type]
 
     assert provider.calls == ["hello"]
-    assert [name for (_, name, _) in hub.events] == [
-        "chat_stream_event",
-        "chat_stream_event",
-        "chat_stream_event",
-        "chat_stream_event",
-    ]
     types = [payload["type"] for (_, _, payload) in hub.events]  # type: ignore[index]
     assert types == ["turn_start", "delta", "delta", "turn_complete"]
+    deltas = "".join(
+        payload["text"] for (_, _, payload) in hub.events if payload["type"] == "delta"  # type: ignore[index]
+    )
     last_payload = hub.events[-1][2]
     assert last_payload is not None
-    assert last_payload["text"] == "hi there"
+    assert last_payload["text"] == "안녕하세요. 반가워요."
+    assert deltas == last_payload["text"]  # stream and reconcile text agree
 
 
 async def test_stream_chat_turn_stamps_scope_on_every_event(
