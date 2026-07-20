@@ -1844,7 +1844,7 @@ ERD / DB-modelling tool — an identity violation).
 | **Back-reference** | **Shown, read-only.** Selecting an entity shows which features / actions reference it (글 → "글쓰기 · 글편집 · 글보기에서 쓰임"). Derived, read-only — core to project-wide management. |
 | **AI-surfacing** | **In-chat proposal, not auto-scan.** During feature-design chat, when an action handles a "thing," the AI proposes the entity ("이건 '글' 엔티티네요 — 등록할까요?") → user confirms → it registers. **No silent background scan.** |
 | **Inspector (when selected)** | **Lean, conceptual:** 이름 + **"무엇을 담나?"** (one line, rough fields 제목·본문·작성자 — no types / FK) + **어디서 쓰이나** (the read-only back-reference) + **거친 관계** (rough relationships to other entities). |
-| **Edges** | Governed by their definition, not authorship (D-2026-06-17-J). The Entities canvas is **AI-maintained**, so the AI may propose / draw the rough entity↔entity relationship edges; the user can edit / delete any of them. |
+| **Edges** | Governed by their definition, not authorship (D-2026-06-17-J). On every confirmed entity registration, `WRITE_PLAYBOOK` calls `create_edge(source=__project_anchor__, target=<new entity>)` in the same action (D-2026-07-21-A), persisting the spoke without changing the bare-node contract of `create_node`. This anchors the concept map visually only; it does not implement the deeper service-target connectedness invariant. The AI may also propose / draw rough entity↔entity relationship edges; those edges remain intact and user-editable / deletable. |
 
 A feature `step` / action gains a **reference relation to an `entity`**
 ("발행 → 글 생성"). The action↔entity reference mechanism is an open

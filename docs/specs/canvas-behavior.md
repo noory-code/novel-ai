@@ -97,4 +97,8 @@ canvas tab (`{feature/service name}` label). Not a modal.
 - **Form:** concept map (name + one-line `"무엇을 담나"` (what does it hold) + rough relationship). Not a physical ERD.
 - **Behavior:** strong dedup (identity matching, ask when ambiguous, quiet merge·no duplicates❌) · back-reference (read-only) ·
   proposed during chat (no auto-scan❌) · lean inspector. Integrity = [`../concepts/ai-collaboration.md`](../concepts/ai-collaboration.md) §3.
-- **Edges:** governed by definition. Being AI-maintained, the AI can propose·draw entity↔entity rough relationship edges; the user can edit·delete.
+- **Edges:** when a confirmed entity is registered, the coach persists a project-anchor→entity spoke in the same
+  action, using the same `create_edge` mechanism as other coach-built canvas structure. This spoke only anchors the
+  concept map visually; it does not implement the deeper service-target connectedness invariant. Being AI-maintained,
+  the AI can also propose·draw entity↔entity rough relationship edges; those relationship edges remain independently
+  editable·deletable.

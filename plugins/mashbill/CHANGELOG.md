@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.172.1] — 2026-07-21
+
+### Fixed
+
+- Newly confirmed entities now receive a persisted project-anchor spoke in the
+  same coach action that registers them, keeping the Entities concept map rooted
+  without changing the entity data format or removing its relationship edges
+  (D-2026-07-21-A, W-87).
+
 ## [0.172.0] — 2026-07-20
 
 ### Added

@@ -100,6 +100,33 @@ def test_create_edge_accepts_the_synthetic_anchor(tmp_path: Path) -> None:
     assert again["existing"] is True
 
 
+def test_entity_anchor_spoke_persists_alongside_relationship_edges(tmp_path: Path) -> None:
+    """W-87: the existing edge primitive roots a newly registered entity
+    without replacing the Entities concept map's relationship edges."""
+    plot_root = _setup(tmp_path)
+    customer = create_node(plot_root, "alpha", "entities", "entity", {"label": "Customer"})["node"]
+    order = create_node(plot_root, "alpha", "entities", "entity", {"label": "Order"})["node"]
+    relationship = create_edge(
+        plot_root,
+        "alpha",
+        "entities",
+        customer["id"],
+        order["id"],
+        label="places",
+    )["edge"]
+
+    spoke = create_edge(plot_root, "alpha", "entities", "__project_anchor__", customer["id"])[
+        "edge"
+    ]
+
+    canvas = read_canvas(plot_root, "alpha", "entities")
+    assert {(edge.source, edge.target) for edge in canvas.edges} == {
+        (relationship["source"], relationship["target"]),
+        (spoke["source"], spoke["target"]),
+    }
+    assert spoke["relation"] == "flow"
+
+
 def test_create_edge_pins_handles_for_anchor_spokes_and_hierarchy(tmp_path: Path) -> None:
     """B-26 (user, 2026-07-04): connection points must be FIXED, grouped by
     construction. The viewer already honours stored handles (D-2026-06-01-H);

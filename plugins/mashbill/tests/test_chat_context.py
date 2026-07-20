@@ -415,6 +415,21 @@ def test_entity_relationship_lines_carry_a_verb_label() -> None:
         assert "unlabeled" in p or "label" in p, scope
 
 
+def test_new_entities_get_a_project_anchor_spoke_in_the_same_action() -> None:
+    """W-87: entity relationship edges alone leave the concept map floating.
+
+    Entity registration can originate from Services, the Entities canvas, or a
+    Feature conversation.  Every such coach must use the existing persisted
+    edge tool in the same confirmed action, without replacing the separate
+    ``create_node`` / ``create_edge`` contract.
+    """
+    expected = "create_edge source __project_anchor__ target <new entity>"
+    for scope in ("services", "entities", "feature:feature_1"):
+        prompt = build_system_prompt(scope)
+        assert "EVERY new entity gets a stored anchor spoke" in prompt, scope
+        assert expected in prompt, scope
+
+
 def test_services_framing_draws_entity_relationships() -> None:
     """B-18 (user live-watch): entities landed as disconnected islands — the
     user expected an ERD-like map. D-2026-06-17-I already allows AI-drawn

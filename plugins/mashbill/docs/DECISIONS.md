@@ -39,6 +39,33 @@
 
 ## Log
 
+### D-2026-07-21-A — Every confirmed entity gets a persisted project-anchor spoke
+
+- **What:** whenever the coach registers a confirmed entity, from any canvas
+  conversation, the same approved action also calls `create_edge` from
+  `__project_anchor__` to the new entity. The spoke is stored in the Entities
+  canvas alongside, and without replacing, its entity-to-entity relationship
+  edges. `create_node` remains a bare-node primitive.
+- **Why:** W-87 / O-9 found that a seven-entity concept map contained eleven
+  relationship edges but zero anchor edges, so the whole graph floated apart
+  from the synthetic project anchor while the other primary canvases were
+  rooted. The shared create-then-`create_edge` playbook is the narrowest
+  consistent mechanism.
+- **Alternatives:** auto-wire inside `create_node` — rejected because it would
+  break the cross-canvas bare-node / separate-edge contract. Viewer load-time
+  repair — rejected because it would fabricate persisted user-visible state on
+  read and would not fix the engine-authored source. Retrofitting existing
+  canvas files — excluded by W-87; the fix applies to newly registered entities.
+- **Principles:** SSOT (one common `WRITE_PLAYBOOK` rule covers Services,
+  Entities, and Feature entry points); Fail Fast (the regression test proves the
+  missing instruction before implementation); AHA (reuse `create_edge`, add no
+  new abstraction); Completion (test, static gates, and retrospective required).
+- **Approval:** Accepted — user, 2026-07-21 (W-00000087), for canvas
+  consistency only; the deeper D-2026-06-20-P connectedness invariant remains
+  out of scope.
+- **Spec impact:** public `docs/specs/canvas-behavior.md` Entities edge rule and
+  package `SPEC.md` Entities edge mechanics.
+
 ### D-2026-07-17-D — Entity node carries a read-only proof link, engine serves proof by value
 
 - **What:** the `entity` node kind gains an optional read-only `proof_id`
