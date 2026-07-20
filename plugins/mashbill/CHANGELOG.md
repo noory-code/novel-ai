@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.172.0] — 2026-07-20
+
+### Added
+
+- The Entities coach now uses read-only reverse references to explain and
+  actively defend the accumulated cross-context intent behind an entity when a
+  user proposes removing, merging, or simplifying it, while leaving the final
+  decision with the user (W-85).
+
 ## [0.171.2] — 2026-07-18
 
 ### Fixed

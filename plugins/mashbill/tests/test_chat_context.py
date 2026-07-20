@@ -138,6 +138,18 @@ def test_services_framing_surfaces_entities_as_byproduct() -> None:
     assert "entities canvas" in f
 
 
+def test_entities_framing_defends_cross_context_intent_without_overruling_user() -> None:
+    """W-85: entity removal must surface accumulated intent without taking
+    the final decision away from the user."""
+    f = build_framing_preamble("entities").lower()
+    assert "removing, merging, or simplifying" in f
+    assert "reverse references" in f
+    assert "cross-context intent" in f
+    assert "steps, services, and features" in f
+    assert "follow their decision" in f
+    assert "never decide for them" in f
+
+
 def test_write_playbook_allows_entity_registration_cross_canvas() -> None:
     """Same finding: the write playbook's 'adds one bare node to the current
     canvas' line blocked the entity byproduct. Registering a confirmed entity
