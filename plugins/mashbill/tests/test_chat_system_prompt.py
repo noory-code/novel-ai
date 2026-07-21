@@ -13,6 +13,7 @@ prepending it to the message.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from mashbill.chat_context import (
@@ -203,6 +204,30 @@ def test_claude_attaches_own_mashbill_strictly(tmp_path: Path) -> None:
 
 
 # --- codex: no system-prompt flag → prepend to the message -----------------
+
+
+def test_codex_attaches_own_mashbill_tools_noninteractively(tmp_path: Path) -> None:
+    # D-2026-07-21-B / W-90: the headless coach must carry THIS build's
+    # Mashbill stdio server without relying on ~/.codex/config.toml, and it
+    # cannot wait for approval because the provider gives it stdin=DEVNULL.
+    p = CodexProvider(workspace_root=tmp_path)
+    cmd = p._build_command("hi")
+
+    exec_index = cmd.index("exec")
+    assert cmd[cmd.index("--ask-for-approval") + 1] == "never"
+    assert cmd.index("--ask-for-approval") < exec_index
+    assert cmd[cmd.index("--sandbox") + 1] == "read-only"
+    assert cmd.index("--sandbox") < exec_index
+    assert "--ignore-user-config" in cmd
+
+    overrides = [cmd[i + 1] for i, arg in enumerate(cmd) if arg == "-c"]
+    command_value = next(v for v in overrides if v.startswith("mcp_servers.mashbill.command="))
+    args_value = next(v for v in overrides if v.startswith("mcp_servers.mashbill.args="))
+    assert json.loads(command_value.split("=", 1)[1]) == "uv"
+    mcp_args = json.loads(args_value.split("=", 1)[1])
+    assert mcp_args[:3] == ["run", "--directory", str(Path(__file__).parents[1])]
+    assert mcp_args[-4:] == ["python", "-m", "mashbill", "--mcp-stdio"]
+    assert cmd[-1] == "hi"
 
 
 def test_codex_prepends_system_prompt_to_message(tmp_path: Path) -> None:

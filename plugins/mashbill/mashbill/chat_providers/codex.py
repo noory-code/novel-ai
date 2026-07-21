@@ -11,6 +11,7 @@ Codex's ``-C`` flag, so every provider shares one root-resolution path.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from mashbill.chat_providers.base import (
@@ -19,6 +20,7 @@ from mashbill.chat_providers.base import (
     _SubprocessChatProvider,
     _SubprocessFactory,
 )
+from mashbill.mcp_registration import codex_mashbill_config
 
 # Reasoning levels codex accepts via `-c model_reasoning_effort=<level>`. The
 # chat model selector encodes the user's pick as "<slug>:<effort>"
@@ -62,23 +64,40 @@ class CodexProvider(_SubprocessChatProvider):
         # positional arg — so the Layer-3 system prompt (Lever 2) rides in front
         # of the user message via the base ``_prepend_system`` fallback.
         message = self._prepend_system(user_message)
-        if self._first_turn or self._session_id is None:
-            return [
-                self._cli_path,
-                "exec",
-                "--json",
-                "--skip-git-repo-check",
-                *self._model_args(),
-                message,
-            ]
-        return [
+        mcp_entry = codex_mashbill_config()["mcp_servers"]["mashbill"]
+        command = [
             self._cli_path,
+            # D-2026-07-21-B — stdin is DEVNULL, so a headless coach cannot
+            # answer an approval prompt. ``never`` is Codex's documented
+            # non-interactive policy; keep its built-in shell read-only while
+            # the injected Mashbill MCP server owns canvas mutations.
+            "--ask-for-approval",
+            "never",
+            "--sandbox",
+            "read-only",
             "exec",
-            "resume",
-            self._session_id,
+        ]
+        turn_args = [
             "--json",
             "--skip-git-repo-check",
+            # Ignore ~/.codex/config.toml for this turn, then inject THIS
+            # engine build's stdio server with Codex's TOML config overrides.
+            # JSON strings/arrays are valid TOML values and safely preserve
+            # spaces in frozen binary paths and plugin-root arguments.
+            "--ignore-user-config",
+            "-c",
+            f"mcp_servers.mashbill.command={json.dumps(mcp_entry['command'])}",
+            "-c",
+            f"mcp_servers.mashbill.args={json.dumps(mcp_entry['args'])}",
             *self._model_args(),
+        ]
+        if self._first_turn or self._session_id is None:
+            return [*command, *turn_args, message]
+        return [
+            *command,
+            "resume",
+            self._session_id,
+            *turn_args,
             message,
         ]
 

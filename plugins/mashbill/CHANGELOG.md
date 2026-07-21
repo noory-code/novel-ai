@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.173.0] — 2026-07-21
+
+### Fixed
+
+- The in-app Codex coach now injects this Mashbill build's stdio MCP server on
+  every turn instead of depending on a global Codex registration, and runs
+  non-interactively with a read-only host sandbox so confirmed `create_node`
+  and `create_edge` calls can complete without granting its built-in shell
+  unrestricted writes (D-2026-07-21-B, W-90).
+
 ## [0.172.1] — 2026-07-21
 
 ### Fixed

@@ -254,6 +254,19 @@ def mashbill_config(plugin_root: Path | None = None) -> dict[str, Any]:
     return {"mcpServers": {_MASHBILL_SERVER_NAME: _plot_entry(root, _spec_for("claude-code"))}}
 
 
+def codex_mashbill_config(plugin_root: Path | None = None) -> dict[str, Any]:
+    """Codex config payload for attaching this build's Mashbill stdio server.
+
+    Codex has no Claude-style ``--mcp-config`` file flag. ``CodexProvider``
+    serializes this payload into per-turn ``-c mcp_servers...`` overrides while
+    ``--ignore-user-config`` excludes the drift-prone global registration.
+    The entry still comes from :func:`_plot_entry`, so dev and frozen builds use
+    the exact same command resolution as persistent MCP registration.
+    """
+    root = plugin_root or plot_plugin_root()
+    return {"mcp_servers": {_MASHBILL_SERVER_NAME: _plot_entry(root, _spec_for("codex"))}}
+
+
 def unregister_plot(provider: ProviderName) -> None:
     """Remove the mashbill MCP server entry from ``provider``'s config.
 

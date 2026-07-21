@@ -39,6 +39,35 @@
 
 ## Log
 
+### D-2026-07-21-B — Codex coach carries this build's Mashbill tools under a read-only host sandbox
+
+- **What:** every in-app `CodexProvider` turn injects this engine build's
+  `mashbill` stdio server through Codex `-c mcp_servers.mashbill.command=...`
+  and `.args=...` overrides, while `--ignore-user-config` prevents dependence
+  on the user's global MCP registration. The non-interactive process runs with
+  `--ask-for-approval never --sandbox read-only`: Mashbill MCP canvas tools can
+  complete without an unavailable stdin approval prompt, while Codex's own
+  shell remains unable to mutate the workspace. The server command and args
+  reuse `mcp_registration`'s existing frozen/dev resolution.
+- **Why:** W-90 confirmed that `CodexProvider` launched bare `codex exec`, so a
+  machine without a global Mashbill registration exposed zero canvas tools and
+  produced zero features and entities. Its `stdin=DEVNULL` subprocess also
+  cannot answer a later approval prompt. Claude already carried the equivalent
+  direct-server and headless-approval protections; Codex did not.
+- **Alternatives:** `--dangerously-bypass-approvals-and-sandbox` was rejected
+  because it would also give Codex's built-in shell unrestricted writes, wider
+  than Claude's Mashbill-only auto-approval. A temporary `CODEX_HOME` config was
+  rejected because per-turn `-c` overrides inject the same server without
+  relocating auth or creating lifecycle-managed config files. Continued global
+  `~/.codex/config.toml` dependence was rejected as stale-build coupling.
+- **Principles:** SSOT (reuse one frozen/dev MCP command builder); Fail Fast
+  (installed CLI help and a live `ListToolsRequest` establish the accepted
+  syntax before implementation); AHA (two config overrides, no new config-file
+  lifecycle); Completion (RED/GREEN command tests, static gates, and
+  retrospective required).
+- **Approval:** Accepted — user, 2026-07-21 (W-00000090).
+- **Spec impact:** package `SPEC.md` R7 chat MCP wiring.
+
 ### D-2026-07-21-A — Every confirmed entity gets a persisted project-anchor spoke
 
 - **What:** whenever the coach registers a confirmed entity, from any canvas
