@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.174.0] — 2026-07-21
+
+### Added
+
+- Canvas writes now attach a canonical project-anchor spoke to pure orphan
+  roots on Foundation, Actors, Services, and Entities while preserving nested
+  nodes, existing anchor edges, the bare `create_node` contract, and the
+  anchorless Feature canvas (D-2026-07-21-C, W-91).
+
 ## [0.173.1] — 2026-07-21
 
 ### Fixed

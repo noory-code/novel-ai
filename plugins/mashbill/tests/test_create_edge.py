@@ -42,7 +42,8 @@ def test_create_edge_connects_service_to_feature(tmp_path: Path) -> None:
     assert edge["directed"] is True
     assert edge["relation"] == "flow"  # services canvas, non-essence source
     canvas = read_canvas(plot_root, "alpha", "services")
-    assert len(canvas.edges) == 1
+    assert sum(e.source == sid and e.target == fid for e in canvas.edges) == 1
+    assert any(e.source == "__project_anchor__" and e.target == sid for e in canvas.edges)
 
 
 def test_create_edge_missing_endpoint_raises(tmp_path: Path) -> None:
@@ -59,7 +60,7 @@ def test_create_edge_is_idempotent(tmp_path: Path) -> None:
     second = create_edge(plot_root, "alpha", "services", sid, fid)
     assert second["edge"]["id"] == first["edge"]["id"]
     canvas = read_canvas(plot_root, "alpha", "services")
-    assert len(canvas.edges) == 1  # no duplicate line
+    assert sum(e.source == sid and e.target == fid for e in canvas.edges) == 1
 
 
 def test_create_edge_actors_canvas_classifies_inheritance(tmp_path: Path) -> None:
@@ -92,7 +93,9 @@ def test_create_edge_accepts_the_synthetic_anchor(tmp_path: Path) -> None:
     cv = create_node(plot_root, "alpha", "foundation", "core_value", {"label": "신뢰"})
     cvid = cv["node"]["id"]
     out = create_edge(plot_root, "alpha", "foundation", "__project_anchor__", cvid)
-    assert out["existing"] is False
+    # W-91 save normalization already created this canonical spoke when the
+    # bare node was persisted; create_edge still accepts and returns it.
+    assert out["existing"] is True
     assert out["edge"]["source"] == "__project_anchor__"
     assert out["edge"]["relation"] == "flow"
     # idempotent like any other edge
@@ -120,9 +123,12 @@ def test_entity_anchor_spoke_persists_alongside_relationship_edges(tmp_path: Pat
     ]
 
     canvas = read_canvas(plot_root, "alpha", "entities")
-    assert {(edge.source, edge.target) for edge in canvas.edges} == {
-        (relationship["source"], relationship["target"]),
-        (spoke["source"], spoke["target"]),
+    assert (relationship["source"], relationship["target"]) in {
+        (edge.source, edge.target) for edge in canvas.edges
+    }
+    assert {edge.target for edge in canvas.edges if edge.source == "__project_anchor__"} == {
+        customer["id"],
+        order["id"],
     }
     assert spoke["relation"] == "flow"
 

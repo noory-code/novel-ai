@@ -16,6 +16,57 @@ from mashbill.models import CanvasDoc, CanvasKind
 from mashbill.models_union import SketchEdge
 
 
+def _build_edge(
+    canvas: CanvasDoc,
+    source_id: str,
+    target_id: str,
+    label: str = "",
+) -> SketchEdge:
+    """Build an edge in the canonical ``create_edge`` wire format.
+
+    Kept separate from persistence so ``write_canvas`` can reuse the exact
+    relation, id, and handle rules for its W-91 anchor-spoke normalization.
+    """
+    from mashbill.edge_semantics import classify_edge
+    from mashbill.models_foundation import PROJECT_ANCHOR_ID
+
+    nodes_by_id = {n.id: n for n in canvas.nodes}
+    for endpoint in (source_id, target_id):
+        if endpoint == PROJECT_ANCHOR_ID:
+            continue
+        if endpoint not in nodes_by_id:
+            raise ValueError(
+                f"edge endpoint not on the {canvas.canvas_kind!r} canvas: {endpoint!r}"
+            )
+    if source_id == PROJECT_ANCHOR_ID:
+        relation = "flow"
+    else:
+        relation = classify_edge(canvas.canvas_kind, nodes_by_id[source_id].kind, label)
+    # B-26 / B-36: only anchor spokes pin handles. Foundation target kinds use
+    # the layout's sector SSOT; node-to-node lines remain floating so the viewer
+    # can attach each end to the side facing its peer.
+    opposite = {"l": "r", "r": "l", "t": "b", "b": "t"}
+    anchor_side_by_kind = {"core_value": "l", "identity": "r", "mission": "t"}
+    source_handle: str | None = None
+    target_handle: str | None = None
+    if source_id == PROJECT_ANCHOR_ID:
+        side = anchor_side_by_kind.get(nodes_by_id[target_id].kind)
+        if side:
+            source_handle, target_handle = side, opposite[side]
+    return SketchEdge.model_validate(
+        {
+            "id": f"edge_{uuid4().hex[:8]}",
+            "source": source_id,
+            "target": target_id,
+            "sourceHandle": source_handle,
+            "targetHandle": target_handle,
+            "label": label,
+            "directed": True,
+            "relation": relation,
+        }
+    )
+
+
 def create_edge(
     plot_root: Path,
     project_id: str,
@@ -40,57 +91,11 @@ def create_edge(
     directed ``source→target`` edge is returned as-is, never duplicated —
     a retried confirmation can't stripe the canvas with parallel lines.
     """
-    from mashbill.edge_semantics import classify_edge
-    from mashbill.models_foundation import PROJECT_ANCHOR_ID
-
     canvas = read_canvas(plot_root, project_id, canvas_kind, service_id)
-    nodes_by_id = {n.id: n for n in canvas.nodes}
-    for endpoint in (source_id, target_id):
-        # The project anchor is viewer-synthetic — a valid endpoint that never
-        # appears in ``nodes`` (B-14 root cause: this check rejected every
-        # anchor spoke, so coach-registered pillars floated; D-2026-07-03-T).
-        if endpoint == PROJECT_ANCHOR_ID:
-            continue
-        if endpoint not in nodes_by_id:
-            raise ValueError(f"edge endpoint not on the {canvas_kind!r} canvas: {endpoint!r}")
     for existing in canvas.edges:
         if existing.source == source_id and existing.target == target_id and existing.directed:
             return {"edge": existing.model_dump(by_alias=True), "existing": True}
-    # Anchor spokes mirror the seed edges (relation "flow"); other sources
-    # classify from their node kind as before.
-    if source_id == PROJECT_ANCHOR_ID:
-        relation = "flow"
-    else:
-        relation = classify_edge(canvas_kind, nodes_by_id[source_id].kind, label)
-    # B-26 (D-2026-07-04-C) — connection points are FIXED at creation so
-    # same-kind spokes converge on one hub side and hierarchies read
-    # top-down; the viewer honours stored handles (D-2026-06-01-H) and the
-    # mindmap layout follows them. Value flows stay floating (cross-cutting).
-    opposite = {"l": "r", "r": "l", "t": "b", "b": "t"}
-    anchor_side_by_kind = {"core_value": "l", "identity": "r", "mission": "t"}
-    source_handle: str | None = None
-    target_handle: str | None = None
-    if source_id == PROJECT_ANCHOR_ID:
-        side = anchor_side_by_kind.get(nodes_by_id[target_id].kind)
-        if side:
-            source_handle, target_handle = side, opposite[side]
-    # B-36 (D-2026-07-04-O, supersedes the inheritance t/b pin of
-    # D-2026-07-04-C): node-to-node lines store NO handles — the viewer
-    # attaches each end to the side facing the other node ("가장 가까운
-    # 두 연결점"), which tracks the layout as families land on any arm.
-    # Only anchor spokes keep kind-side pins (the layout's sector SSOT).
-    edge = SketchEdge.model_validate(
-        {
-            "id": f"edge_{uuid4().hex[:8]}",
-            "source": source_id,
-            "target": target_id,
-            "sourceHandle": source_handle,
-            "targetHandle": target_handle,
-            "label": label,
-            "directed": True,
-            "relation": relation,
-        }
-    )
+    edge = _build_edge(canvas, source_id, target_id, label)
     updated = CanvasDoc.model_validate(
         canvas.model_copy(update={"edges": [*canvas.edges, edge]}).model_dump(by_alias=True)
     )

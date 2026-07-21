@@ -62,6 +62,13 @@ RETIRED_KINDS: frozenset[str] = frozenset(
 )
 
 
+def _attach_orphan_anchor_spokes(canvas: CanvasDoc) -> CanvasDoc:
+    """Run the W-91 write-only normalizer without an import-time I/O cycle."""
+    from mashbill.canvas_normalization import attach_orphan_anchor_spokes
+
+    return attach_orphan_anchor_spokes(canvas)
+
+
 def _drop_retired_kinds(
     plot_root: Path,
     project_id: str,
@@ -221,6 +228,10 @@ def write_canvas(plot_root: Path, project_id: str, canvas: CanvasDoc) -> None:
             for n in canvas.nodes
         ]
         canvas = canvas.model_copy(update={"nodes": preserved})
+    # D-2026-07-21-C / W-91 — save-time normalization only. ``create_node``
+    # remains bare; feature detail remains anchorless; no read path fabricates
+    # user-visible state. Existing anchor or parent edges make this idempotent.
+    canvas = _attach_orphan_anchor_spokes(canvas)
     raw = canvas.model_dump(by_alias=True)
     # v0.17 Phase 1 (D-2026-05-16-A) — JSON is the sole SSOT for
     # Foundation typed-text fields. The v0.13 ``_split_foundation_typed_
@@ -401,8 +412,11 @@ def create_node(
     kind allow-list, edge refs) → atomic :func:`write_canvas`.
     Every other node and all edges are written back unchanged (clobber-safe).
 
-    The node is **bare**: it carries no edges and no containment — those are
-    drawn separately (directed-edge-only since v0.26.0), never auto-wired here.
+    The node is **bare**: this primitive chooses no edges and no containment —
+    those are drawn separately (directed-edge-only since v0.26.0), never
+    auto-wired here. ``write_canvas`` may independently normalize a pure
+    top-level orphan with the project-anchor spoke required by W-91; that
+    save-level invariant does not make ``create_node`` a parent-aware edge API.
     A cross-canvas master (e.g. a new actor referenced from a service) is minted
     via the reference pick-or-create flow (:func:`mashbill.masters.create_master`,
     which now delegates here), not by calling this on the wrong canvas.

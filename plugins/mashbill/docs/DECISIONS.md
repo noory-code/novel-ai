@@ -39,6 +39,37 @@
 
 ## Log
 
+### D-2026-07-21-C — Save-time orphan sweep guarantees primary-canvas anchor spokes
+
+- **What:** `write_canvas` now normalizes every primary canvas before storage:
+  a root-capable node with neither an anchor edge nor a hierarchy parent gets
+  one canonical `__project_anchor__→node` edge in the exact `create_edge`
+  relation/id/handle format. Foundation targets `mission/core_value/identity`,
+  Actors targets `actor`, Services targets `category/service`, and Entities
+  targets `entity`; Feature detail remains excluded. Existing anchor incidence
+  or a canvas-semantic parent makes the sweep a no-op, so it is idempotent and
+  does not re-root nested user state.
+- **Why:** W-91 extended O-9 with Services 0/7 anchored roots and showed that
+  prompt-only spokes vary by conversation scope. This narrowly corrects
+  D-2026-07-02-J and D-2026-07-21-A's no-enforcement choice **for project-anchor
+  connectivity edges only**. `create_node` remains bare, ordinary auto-wire is
+  still forbidden, and no viewer/read-time repair or node-format change is
+  introduced.
+- **Alternatives:** auto-edge inside `create_node` was rejected because it
+  breaks the bare-node/separate-edge contract. Viewer load-time repair was
+  rejected because reads must not fabricate persisted user-visible state.
+  Prompt-only enforcement was rejected because the observed omission is the
+  defect this invariant removes.
+- **Principles:** SSOT (reuse the `create_edge` builder for one edge format);
+  MECE (explicit root-kind table covers four primary canvases and excludes the
+  anchorless Feature canvas); Fail Fast (RED write-path regressions establish
+  the missing invariant); Completion (full pytest, mypy, ruff, docs, version,
+  and retrospective evidence required); Honesty (parented and already-anchored
+  state is preserved instead of silently reinterpreted).
+- **Approval:** Accepted — user, 2026-07-21 (W-00000091).
+- **Spec impact:** public `docs/specs/canvas-behavior.md` common anchor rule and
+  package `SPEC.md` write-time normalization mechanics.
+
 ### D-2026-07-21-B — Codex coach carries this build's Mashbill tools under a read-only host sandbox
 
 - **What:** every in-app `CodexProvider` turn injects this engine build's

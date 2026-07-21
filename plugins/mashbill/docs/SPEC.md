@@ -50,6 +50,20 @@ drop on their pinned side (mission top / core value left / identity
 right — `placement._FIRST_OF_KIND_XY`, one side SSOT with
 `edge_io.anchor_side_by_kind`, D-2026-07-04-D).
 
+**Save-time anchor orphan normalization (D-2026-07-21-C, W-91).** Before
+`canvas_io.write_canvas` serializes a primary canvas, it adds one canonical
+`create_edge`-format `__project_anchor__→node` spoke to each root-capable node
+that has neither an existing anchor edge nor a hierarchy parent. The target
+kinds are Foundation `mission/core_value/identity`, Actors `actor`, Services
+`category/service`, and Entities `entity`; Feature detail is excluded because
+it has no project anchor. Actor `inheritance` child→parent edges and Services
+`flow` parent→child edges identify nested nodes. Foundation and Entities have
+no containment hierarchy, so their essence/concept relationship edges do not
+masquerade as parents. Existing anchor incidence in either stored direction
+suppresses a new spoke. The sweep is idempotent, changes edges only, and runs
+on write only: `create_node` still chooses no edge, and `read_canvas` never
+repairs user-visible state.
+
 - **Effective project path** — per-project server I/O (canvas read/write,
   anchors, tags, publish) addresses `<root>/<project dir>`, not the bare
   root. Switching to a project in a **different directory** reconnects the

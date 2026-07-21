@@ -413,10 +413,13 @@ def test_read_canvas_preserves_anchor_edges_across_repeated_reads(
     # Three idle reads must leave the file untouched.
     for _ in range(3):
         doc = read_canvas(plot_root, "alpha", "foundation")
-        assert len(doc.edges) == 2, "anchor edges must survive read — D-2026-05-13-N regression"
+        # W-91 adds the missing identity spoke on write; all three must remain
+        # stable across reads, including the two caller-authored directions.
+        assert len(doc.edges) == 3, "anchor edges must survive read — D-2026-05-13-N regression"
         edge_endpoints = {(e.source, e.target) for e in doc.edges}
         assert (PROJECT_ANCHOR_ID, "m") in edge_endpoints
         assert ("cv", PROJECT_ANCHOR_ID) in edge_endpoints
+        assert (PROJECT_ANCHOR_ID, "id1") in edge_endpoints
 
     mtime_after = canvas_path.stat().st_mtime
     assert mtime_after == mtime_baseline, (

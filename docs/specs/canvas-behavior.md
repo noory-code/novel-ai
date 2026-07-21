@@ -15,6 +15,11 @@
 - 4-side handles visible, the user can draw edges to the anchor. Holds **the name only** (not a content container).
 - `anchorArrowMode` (arrow direction at render time, the document edge stays the SSOT): Foundation/Actors=`converge`
   (converge toward the anchor), Services=`diverge` (out from the anchor), Feature=`none`.
+- On every engine canvas write, a root-capable node with neither an anchor edge nor a hierarchy parent edge receives
+  one persisted `__project_anchor__→node` spoke. Root-capable kinds are Foundation=`mission/core_value/identity`,
+  Actors=`actor`, Services=`category/service`, and Entities=`entity`; Feature canvases are excluded because they have
+  no project anchor. Existing anchor and parent edges are preserved, so nested nodes are not re-rooted and repeated
+  saves are idempotent. `create_node` remains bare; this is write-time normalization, never read-time repair.
 
 ---
 
@@ -22,8 +27,8 @@
 
 - **Nodes:** `project` (anchor) · `mission` · `core_value` · `identity`. No essence node (emergent).
 - **Drill:** none.
-- **Edges:** **user-draw-only by this canvas's spec** (not a global law — edges are governed by definition,
-  `edges.md`). **No automatic edge emission on node creation.**
+- **Edges:** user-drawn except for the common save-time orphan→anchor normalization above. There is still **no edge
+  emission inside node creation**; the stored spoke is added only when the complete canvas is written.
 - **Inspector:** right `<aside>` (when selected), sections = header (kind·delete·width-toggle·close) → label →
   per-kind typed form. Width toggle 320 ↔ min(720,60vw), localStorage persisted. (Typed-text
   kinds hide the legacy details-MD section.)
@@ -41,6 +46,8 @@
   actor parent and actor children ≥1) shows body only.
 - **2 edge kinds:** hierarchy (inheritance, valueless quiet edge) + relationship (value arrow). The relationship-edge model·render
   is implemented in ROADMAP 5.9 (current code is inheritance-centric). [`../concepts/canvases.md`](../concepts/canvases.md) Actors.
+- **Root safety:** a top-level actor family with no actor parent receives the common save-time anchor spoke; an actor
+  with an `inheritance` parent remains nested and receives no spoke.
 - **Drill:** none.
 - **Inspector (identity-only):** `body`. (US-303: side field/editing/schema removal complete; old motivation/pain removed earlier)
 - **Layout:** `tree` (angle-preserving depth ring). Edges are floating bezier, circle nodes attach to the circumference.
@@ -51,8 +58,9 @@
   Hierarchy category → service → feature. Services are **optional** under a category (not forced).
 - **Drill:** **Selecting a service = 5-field inspector, no drill. Clicking a feature = drill into the Feature canvas**
   (the sole drill target). [The old "single-click on service = drill" is retired.]
-- **Edges:** user-draw-only. **No first-class service↔service edge** (user-journey retired). `anchor→
-  category→service` outward direction (diverge).
+- **Edges:** user-drawn/coach-confirmed hierarchy plus the common save-time orphan normalization. **No first-class
+  service↔service edge** (user-journey retired). `anchor→category→service` outward direction (diverge). A top-level
+  service is valid and receives an anchor spoke; a service already parented by a category does not.
 - **Inspector (service 5 question-style fields):** ① `"누가 참여하나?"` (who participates?) (actor reference chips,
   multiple) ② `"왜 필요한가?"` (why is it needed?) (typed) ③ `"뭐가 좋아지나?"` (what improves?) (typed) ④ `"뭘 양보 못 하나?"`
   (what can't be conceded?) (core_value chips, multiple) ⑤ `"어떤 결로 다가가나?"` (in what manner does it approach?) (identity
@@ -97,8 +105,8 @@ canvas tab (`{feature/service name}` label). Not a modal.
 - **Form:** concept map (name + one-line `"무엇을 담나"` (what does it hold) + rough relationship). Not a physical ERD.
 - **Behavior:** strong dedup (identity matching, ask when ambiguous, quiet merge·no duplicates❌) · back-reference (read-only) ·
   proposed during chat (no auto-scan❌) · lean inspector. Integrity = [`../concepts/ai-collaboration.md`](../concepts/ai-collaboration.md) §3.
-- **Edges:** when a confirmed entity is registered, the coach persists a project-anchor→entity spoke in the same
-  action, using the same `create_edge` mechanism as other coach-built canvas structure. This spoke only anchors the
+- **Edges:** the coach requests a project-anchor→entity spoke in the same confirmed action, and the common save-time
+  normalization guarantees any still-unanchored entity receives that same canonical spoke. This only anchors the
   concept map visually; it does not implement the deeper service-target connectedness invariant. Being AI-maintained,
   the AI can also propose·draw entity↔entity rough relationship edges; those relationship edges remain independently
   editable·deletable.
