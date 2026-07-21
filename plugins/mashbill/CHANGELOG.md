@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.173.1] — 2026-07-21
+
+### Fixed
+
+- Correct the Codex coach's non-interactive flags: `codex exec` has no
+  `--ask-for-approval`/`--sandbox read-only` (that errors "unexpected argument"),
+  so W-90's approval bypass never ran. Use the CLI's documented
+  `--dangerously-bypass-approvals-and-sandbox` placed after the `exec`
+  subcommand — verified against the installed Codex CLI to load the 20 mashbill
+  MCP tools (W-90 follow-up).
+
 ## [0.173.0] — 2026-07-21
 
 ### Fixed

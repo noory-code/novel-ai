@@ -67,19 +67,17 @@ class CodexProvider(_SubprocessChatProvider):
         mcp_entry = codex_mashbill_config()["mcp_servers"]["mashbill"]
         command = [
             self._cli_path,
-            # D-2026-07-21-B — stdin is DEVNULL, so a headless coach cannot
-            # answer an approval prompt. ``never`` is Codex's documented
-            # non-interactive policy; keep its built-in shell read-only while
-            # the injected Mashbill MCP server owns canvas mutations.
-            "--ask-for-approval",
-            "never",
-            "--sandbox",
-            "read-only",
             "exec",
         ]
         turn_args = [
             "--json",
             "--skip-git-repo-check",
+            # D-2026-07-21-B — stdin is DEVNULL, so a headless coach cannot answer
+            # an approval prompt. ``codex exec`` has no ``--ask-for-approval``;
+            # its documented non-interactive escape is this bypass flag (verified
+            # against the installed CLI — the injected Mashbill MCP owns canvas
+            # mutations; Codex's own shell is not what writes the canvas).
+            "--dangerously-bypass-approvals-and-sandbox",
             # Ignore ~/.codex/config.toml for this turn, then inject THIS
             # engine build's stdio server with Codex's TOML config overrides.
             # JSON strings/arrays are valid TOML values and safely preserve

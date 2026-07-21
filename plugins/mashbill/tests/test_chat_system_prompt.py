@@ -214,10 +214,10 @@ def test_codex_attaches_own_mashbill_tools_noninteractively(tmp_path: Path) -> N
     cmd = p._build_command("hi")
 
     exec_index = cmd.index("exec")
-    assert cmd[cmd.index("--ask-for-approval") + 1] == "never"
-    assert cmd.index("--ask-for-approval") < exec_index
-    assert cmd[cmd.index("--sandbox") + 1] == "read-only"
-    assert cmd.index("--sandbox") < exec_index
+    # ``codex exec`` has no --ask-for-approval; the verified non-interactive
+    # escape is the bypass flag, placed AFTER the exec subcommand.
+    assert "--dangerously-bypass-approvals-and-sandbox" in cmd
+    assert cmd.index("--dangerously-bypass-approvals-and-sandbox") > exec_index
     assert "--ignore-user-config" in cmd
 
     overrides = [cmd[i + 1] for i, arg in enumerate(cmd) if arg == "-c"]
