@@ -78,11 +78,26 @@ _ACTORS = """액터(교환 당사자) 판별 기준:
   아래 전속·긱 라이더 — 조직도가 아니라 교환 역할의 묶음).
 틀린 예: 소비자만 모델링, 공급/운영 누락, 받기만 하는 액터, 최상위가 평평한 나열."""
 
+_ENTITIES = """엔티티(데이터 명사) 판별 기준:
+- 모든 사업라인을 덮나: "각 서비스면이 굴리는 핵심 명사가 엔티티에 다 있나?" (주력 교환 루프만
+  세우고 부수 라인 — 쇼핑 상품·구독·광고·혜택 — 의 명사를 빠뜨리면 절반짜리 데이터 지도)
+- 정체성 있는 명사인가: "id로 추적되고 독립적으로 상태가 바뀌나?" (다른 것의 한 필드로 묻히면
+  값이지 엔티티가 아니다 — 배달 주소는 주문의 필드, 쿠폰은 자기 수명·상태를 가진 엔티티)
+- 서비스↔엔티티 짝(누락 신호): "이 서비스면은 있는데 그 면이 굴리는 핵심 명사가 엔티티에 없다 =
+  누락."
+- 역할 명사 아님: 액터(교환 당사자)를 엔티티로 중복 세우지 말 것 — 라이더는 액터, '라이더 보수'는
+  정산 엔티티.
+강한 예: 배달앱에서 주문·가게·메뉴·배달·라이더에 더해 상품(쇼핑 SKU)·쿠폰·혜택·멤버십 구독·광고
+까지 — 각 사업라인이 굴리는 명사가 하나씩.
+약한 예: 주력 배달 루프의 명사(주문·배달·라이더)만 세우고 쇼핑·구독·광고 라인의 명사를 통째 누락 ·
+고객 주소·전화번호처럼 다른 엔티티의 필드를 엔티티로 승격."""
+
 _AREAS: dict[str, str] = {
     "mission": _MISSION,
     "values": _VALUES,
     "identity": _IDENTITY,
     "actors": _ACTORS,
+    "entities": _ENTITIES,
     "services": _SERVICES,
     "features": _FEATURES,
 }
@@ -91,12 +106,20 @@ _AREAS: dict[str, str] = {
 def get_principles(area: str | None = None) -> str:
     """Return the discriminator principles for ``area``, or all areas joined.
 
-    ``area``: mission | values | identity | actors | services | features |
-    None (= everything). Raises ``ValueError`` on an unknown area so a typo
-    can't silently return nothing.
+    ``area``: mission | values | identity | actors | entities | services |
+    features | None (= everything). Raises ``ValueError`` on an unknown area so
+    a typo can't silently return nothing.
     """
     if area is None:
-        areas = ("mission", "values", "identity", "actors", "services", "features")
+        areas = (
+            "mission",
+            "values",
+            "identity",
+            "actors",
+            "entities",
+            "services",
+            "features",
+        )
         return "\n\n".join(_AREAS[key] for key in areas)
     if area not in _AREAS:
         raise ValueError(f"unknown area {area!r}; pick one of {sorted(_AREAS)} or omit")

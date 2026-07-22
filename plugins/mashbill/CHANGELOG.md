@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.175.0] — 2026-07-22
+
+### Added
+
+- Add an Entities discrimination principle covering business-line breadth,
+  identity-bearing nouns, service-to-entity pairing, and the actor/entity
+  boundary (W-97).
+
 ## [0.174.0] — 2026-07-21
 
 ### Added

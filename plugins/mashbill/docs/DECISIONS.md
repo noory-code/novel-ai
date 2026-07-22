@@ -39,6 +39,18 @@
 
 ## Log
 
+### D-2026-07-22-A — Entities gains dedicated discrimination principles
+
+- **What:** add Entities guidance to `get_design_principles`, covering
+  business-line breadth, identity-bearing nouns, service↔entity pairing, and
+  the actor/entity boundary.
+- **Why:** the Entities canvas requested an unsupported area and received no
+  evaluation guidance.
+- **Approval:** Accepted — simulator coach-decision CD-2026-07-22-B and
+  workspace work item W-97.
+- **Spec impact:** canonical `docs/concepts/design-principles.md` gains the
+  Entities discrimination criteria.
+
 ### D-2026-07-21-C — Save-time orphan sweep guarantees primary-canvas anchor spokes
 
 - **What:** `write_canvas` now normalizes every primary canvas before storage:

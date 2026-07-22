@@ -1,4 +1,4 @@
-# Design Discrimination Principles — the coach's evaluation knowledge (v1)
+# Design Discrimination Principles — the coach's evaluation knowledge (v2)
 
 > **What**: A distillation of the criteria that *tell apart* good mission·value·feature design. This is the
 > knowledge source for two of the coach's three roles — "evaluating" (challenging weak content) and
@@ -108,6 +108,22 @@ an org chart, not a map.
 - **Does the happy path run all the way through?**: Before branches·exceptions, start-to-end must be walkable
   in one line.
 - **Promotion signal**: When one feature starts to hold multiple parties' exchange, it's a service candidate.
+
+## Entities — discrimination criteria
+
+- **Cover every business line** (2026-07-22, W-97): The data nouns must span all of the service map's
+  surfaces, not only the primary exchange loop. A delivery app that models 주문·가게·메뉴·배달·라이더 but
+  omits the nouns of its secondary lines (shopping SKU · coupon·benefit · gift card · membership subscription
+  · ad) has a half-drawn data map. Discriminate: "Does every service surface's core noun appear as an entity?"
+- **An identity-bearing noun, not a field** (value-vs-entity): An entity is tracked by id and changes state
+  independently. A noun that lives as one field of another thing is a value, not an entity (a delivery address
+  is a field of 주문; a coupon carries its own lifecycle and state). Discriminate: "Is this tracked by id with
+  its own state, or is it a field of something else?"
+- **Service↔entity pairing (missing-noun signal)**: A service surface with no core noun in the entity set is a
+  gap. Discriminate: "This surface exists — where is the noun it moves?"
+- **Not a role noun**: Do not duplicate an actor (an exchange party) as an entity. 라이더 is an actor; 라이더 보수
+  (rider settlement) is an entity. Discriminate: "Is this an exchange party (actor) or a thing the exchange
+  produces (entity)?"
 
 ## How the coach uses this (wiring instructions)
 

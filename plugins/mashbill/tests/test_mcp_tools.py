@@ -228,7 +228,15 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     questions for every area and reject unknown areas."""
     from mashbill.coaching_principles import get_principles
 
-    for area in ("mission", "values", "actors", "services", "features", "identity"):
+    for area in (
+        "mission",
+        "values",
+        "identity",
+        "actors",
+        "entities",
+        "services",
+        "features",
+    ):
         text = get_principles(area)
         assert "판별" in text, area
     # identity (D-2026-06-16-K listed it as a foundation pillar; W-27 fills the
@@ -242,9 +250,13 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     # actors quality principles must now carry the nesting discriminator.
     actors = get_principles("actors")
     assert "중첩" in actors
+    entities = get_principles("entities")
+    assert entities and "엔티티" in entities
+    assert mcp_tools.get_design_principles(area="entities") == entities
     full = get_principles(None)
     assert "대가" in full and "교환" in full and "체감" in full
     assert "형용사" in full  # identity is included in the all-areas join
+    assert "모든 사업라인을 덮나" in full
     import pytest
 
     with pytest.raises(ValueError):
