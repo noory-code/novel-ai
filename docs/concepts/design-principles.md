@@ -92,6 +92,13 @@ slogan anyone could hang) · "Professional and polished tone" (stock voice).
   Discriminate: "Do different parties stand on the two sides of this surface?"
 - **As wide as the mission's reach**: A real product stands on 3–6 exchange surfaces. If the map is a single
   surface, discriminate: "What exchange the mission reaches is not yet on the map?"
+- **Scan for distinct businesses (brands)** (2026-07-23, W-98): When one company runs several
+  businesses with different party-pairs — food delivery (restaurant↔orderer), streaming
+  (viewer↔content), payments (payer↔merchant) — each is usually its own exchange surface. Do not fold
+  them into facets of the first business. Discriminate: "Of the distinct brands/businesses the founder
+  mentioned, which are not yet on the map as their own surface?" (The same party-pair repeating across
+  surfaces means one business was over-split; a mentioned different party-pair absent from the map means
+  another business was dropped whole.)
 - **A strangers' transaction needs a trust-manufacturing surface** (back-extracted): Products where two
   strangers transact (Airbnb·Karrot·Uber·Baemin·YouTube) without exception stand up a separate exchange
   surface that 'manufactures trust' (verification·guarantee·dispute resolution ↔ reporting·reviews).
@@ -100,6 +107,10 @@ slogan anyone could hang) · "Professional and polished tone" (stock voice).
 **Specimen of a wrong decomposition**: "search→cart→checkout→picking→delivery" as 5 services — all of it is
 the internal process of one exchange surface (shopper↔company). Picking·dispatch have no counterparty: it's
 an org chart, not a map.
+
+**Specimen of a wrong collapse**: Modeling Coupang as only "buy·sell / delivery / seller-growth /
+trust" — Coupang Eats (restaurant↔orderer), Play (viewer↔content), and Pay (payer↔merchant) have
+different party-pairs and are distinct businesses collapsed into one commerce facet.
 
 ## Feature — discrimination criteria
 

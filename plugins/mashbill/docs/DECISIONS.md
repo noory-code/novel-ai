@@ -39,6 +39,17 @@
 
 ## Log
 
+### D-2026-07-23-A — Services scans distinct brand businesses
+
+- **What:** add a distinct-business scan and wrong-collapse specimen to the
+  Services discrimination principles.
+- **Why:** the coach collapsed businesses with different party-pairs into facets
+  of the first business instead of standing each up as its own exchange surface.
+- **Approval:** Accepted — simulator coach-decision CD-2026-07-23-A and workspace
+  work item W-98.
+- **Spec impact:** canonical `docs/concepts/design-principles.md` gains the
+  distinct-business discriminator and wrong-collapse specimen.
+
 ### D-2026-07-22-A — Entities gains dedicated discrimination principles
 
 - **What:** add Entities guidance to `get_design_principles`, covering

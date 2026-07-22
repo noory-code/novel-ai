@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.176.0] — 2026-07-23
+
+### Added
+
+- Add a distinct-business scan and wrong-collapse specimen to the Services
+  discrimination principles so brands with different party-pairs stand as
+  separate exchange surfaces (W-98).
+
 ## [0.175.0] — 2026-07-22
 
 ### Added

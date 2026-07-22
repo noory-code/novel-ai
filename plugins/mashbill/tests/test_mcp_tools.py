@@ -253,10 +253,14 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     entities = get_principles("entities")
     assert entities and "엔티티" in entities
     assert mcp_tools.get_design_principles(area="entities") == entities
+    services = get_principles("services")
+    assert "별개 브랜드 사업 스캔" in services
+    assert "틀린 뭉침의 표본" in services
     full = get_principles(None)
     assert "대가" in full and "교환" in full and "체감" in full
     assert "형용사" in full  # identity is included in the all-areas join
     assert "모든 사업라인을 덮나" in full
+    assert "별개 브랜드 사업 스캔" in full
     import pytest
 
     with pytest.raises(ValueError):
