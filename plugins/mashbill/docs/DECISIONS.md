@@ -39,6 +39,20 @@
 
 ## Log
 
+### D-2026-07-23-B — Values listens beneath explicit labels
+
+- **What:** add a buried-in-telling discriminator to the Values coaching
+  principles.
+- **Why:** the coach captured only explicitly named values and missed candidates
+  implied by founders' decision criteria, communication habits, and limits.
+- **Approval:** Accepted — simulator coach-decision CD-2026-07-23-B and workspace
+  work item W-106.
+- **Spec impact:** canonical `docs/concepts/design-principles.md` gains the
+  buried-in-telling discriminator.
+- **Principles:** SSOT (canon and runtime copy stay synchronized); Completion
+  (focused RED, full gates, release metadata); Honesty (preserve the authorized
+  wording and approval trail).
+
 ### D-2026-07-23-A — Services scans distinct brand businesses
 
 - **What:** add a distinct-business scan and wrong-collapse specimen to the

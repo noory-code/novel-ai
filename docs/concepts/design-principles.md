@@ -47,6 +47,12 @@ done) · "make the world better for everyone" (a slogan anyone could hang, no ch
   pairs that pull against each other — Baemin hangs "be fast" and "good enough is not good enough" as an
   intended tension. Discriminate: "Are there two values that are flatly opposite? If not, you've still only
   seen one face."
+- **Values buried in the telling** (2026-07-23, W-106): A founder needn't label something a "value"
+  for it to be one — decision criteria, communication habits, and what they refuse to tolerate already
+  carry candidate values in the sentences that describe them. Discriminate: "Did the coach catch the
+  value implied by how the founder described a decision or a habit, and reflect it back explicitly —
+  rather than wait for a named 'our value is …'?" (Missing the buried candidates leaves the value map
+  half-drawn.)
 
 **Example pair**: Strong — Coupang "Customer Wow" (price = margin), Shopify "software should never make people
 feel stupid" (price = ship date), Duolingo "take the long view" (price = immediate revenue), Netflix "dream

@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.177.0] — 2026-07-23
+
+### Added
+
+- Add a Values buried-in-telling discriminator so the coach catches candidate
+  values implied by founders' decisions and habits (W-106).
+
 ## [0.176.0] — 2026-07-23
 
 ### Added
