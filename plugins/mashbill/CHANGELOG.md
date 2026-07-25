@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.178.0] — 2026-07-25
+
+### Added
+
+- Add an acknowledged-but-never-recorded discriminator to the Values principles
+  so a value the founder names and the coach agrees with reaches the canvas
+  instead of stopping at the reply (W-117, CD-2026-07-25-A).
+
 ## [0.177.0] — 2026-07-23
 
 ### Added

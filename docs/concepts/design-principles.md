@@ -53,6 +53,11 @@ done) · "make the world better for everyone" (a slogan anyone could hang, no ch
   value implied by how the founder described a decision or a habit, and reflect it back explicitly —
   rather than wait for a named 'our value is …'?" (Missing the buried candidates leaves the value map
   half-drawn.)
+- **Acknowledged but never recorded** (2026-07-25, W-117): the mirror image of the buried value. The
+  founder *does* name it ("we have to choose a clear customer experience"), the coach agrees out loud —
+  and the value still never reaches the map. Acknowledgement is not recording: a value the coach
+  accepted goes onto the canvas before the conversation moves on. Discriminate: "Of the values I just
+  agreed with in this conversation, which one is missing from the map?"
 
 **Example pair**: Strong — Coupang "Customer Wow" (price = margin), Shopify "software should never make people
 feel stupid" (price = ship date), Duolingo "take the long view" (price = immediate revenue), Netflix "dream

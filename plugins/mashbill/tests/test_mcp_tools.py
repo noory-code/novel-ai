@@ -258,6 +258,12 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     assert "틀린 뭉침의 표본" in services
     values = get_principles("values")
     assert "대화 속에 묻힌 가치" in values
+    # CD-2026-07-25-A: the buried-value discriminator covers a value the founder
+    # never NAMED. The opposite failure — the founder names it, the coach agrees
+    # out loud, and it still never reaches the canvas — needs its own criterion,
+    # so the coach cannot treat acknowledgement as recording.
+    assert "말로 받고 안 앉혔나" in values
+    assert "인정은 기록이 아니다" in values
     full = get_principles(None)
     assert "대가" in full and "교환" in full and "체감" in full
     assert "형용사" in full  # identity is included in the all-areas join
