@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.181.0] — 2026-07-25
+
+### Added
+
+- The Foundation framing reads a tradeoff-bearing answer to the identity confirm
+  as a VALUE, not agreement, and registers it in the same turn. Measured at the
+  exact failure moment by next-turn replay over corpus conversations: without
+  the rule the coach registers 7/15, with it 9/9 (W-122, CD-2026-07-25-B).
+  Prompt budget raised 1410 -> 1445 with the rule compressed to 32 words.
+
 ## [0.180.0] — 2026-07-25
 
 ### Removed

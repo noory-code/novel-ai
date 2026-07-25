@@ -26,6 +26,20 @@ def test_framing_maps_each_canvas_to_its_vision_phase() -> None:
     assert "Execution" in build_framing_preamble("feature:svc_1")
 
 
+def test_foundation_framing_reads_a_tradeoff_answer_as_a_value() -> None:
+    """CD-2026-07-25-B (W-122): the identity confirm invites the failure — the
+    founder answers "이 모습이 맞나요?" with a VALUE ("복잡함보다 명확한 고객경험을
+    택해야 해요") and the coach reads it only as agreement to its own proposal, so
+    the value never reaches the map. Measured at the exact moment on corpus
+    conversations (next-turn replay, 3 draws): without the rule the coach
+    registers 7/15; with it 9/9. The framing must carry the rule at the moment it
+    fails — the principles catalog cannot reach it there (0.178-0.180 saga)."""
+    framing = build_framing_preamble("foundation")
+    assert "identity confirmation" in framing
+    assert "not mere agreement" in framing
+    assert "never absorbs a value" in framing
+
+
 def test_framing_empty_for_project_and_unknown_scope() -> None:
     assert build_framing_preamble("project") == ""
     assert build_framing_preamble("nope") == ""
@@ -634,9 +648,15 @@ def test_system_prompt_stays_under_saturation_budget() -> None:
     (a design critic, not a scribe) inherently adds a titled block. The block is
     compressed to essentials and the evaluation KNOWLEDGE still stays in the
     get_design_principles tool, so the raise is minimal.
+    Raised 1410 -> 1445 (CD-2026-07-25-B, W-122): the identity-confirm rule — a
+    tradeoff answer is a value, not agreement — measured 7/15 -> 9/9 at the exact
+    failure moment, and framing is the only surface that reaches it (the
+    principles catalog demonstrably cannot — the 0.178-0.180 saga). The rule is
+    compressed to 32 words; the surrounding phrasings are pinned by earlier
+    measured decisions and stay.
     The budget still forces compress-before-add:
     content is pinned by the phrase guards in this file and
     ``test_chat_system_prompt.py``; this test pins the SIZE."""
     for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
         words = len(build_system_prompt(scope).split())
-        assert words <= 1410, f"{scope}: {words} words > 1410 budget"
+        assert words <= 1445, f"{scope}: {words} words > 1445 budget"
