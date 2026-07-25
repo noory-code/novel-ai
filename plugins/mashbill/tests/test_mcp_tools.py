@@ -258,14 +258,13 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     assert "틀린 뭉침의 표본" in services
     values = get_principles("values")
     assert "대화 속에 묻힌 가치" in values
-    # CD-2026-07-25-A: a founder answering an identity question often answers with
-    # a VALUE ("we have to choose a clear customer experience"). The coach folded
-    # three of Baemin's published service principles into identity traits and left
-    # the value map without them. Identity work must not consume a value.
-    assert "정체성으로 흡수했나" in values
-    assert "가치로도 남긴다" in values
-    identity = get_principles("identity")
-    assert "가치를 삼키지 마라" in identity
+    # CD-2026-07-25-A was REVERTED (W-121). Values really do get filed as identity
+    # lines (novel-workspace O-00000019), but two probe passes over the corpus
+    # showed the coach already spots them under the criteria above — the gap was
+    # never knowledge, so the extra criterion changed no verdict and only spent
+    # prompt budget. Keep it out unless a measurement shows a gain.
+    assert "정체성으로 흡수했나" not in values
+    assert "가치를 삼키지 마라" not in get_principles("identity")
     full = get_principles(None)
     assert "대가" in full and "교환" in full and "체감" in full
     assert "형용사" in full  # identity is included in the all-areas join

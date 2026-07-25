@@ -53,11 +53,6 @@ done) · "make the world better for everyone" (a slogan anyone could hang, no ch
   value implied by how the founder described a decision or a habit, and reflect it back explicitly —
   rather than wait for a named 'our value is …'?" (Missing the buried candidates leaves the value map
   half-drawn.)
-- **Swallowed by identity** (2026-07-25, W-117): founders answer voice-and-tone questions with values
-  ("we have to choose a clear customer experience over complexity"). If the sentence says what it gives
-  up, it is a value — polish it into an identity line and it disappears from the value map. The two are
-  not exclusive: keep it in both. Discriminate: "Among the lines I just wrote as identity, which one
-  carries a price and therefore also belongs in values?"
 
 **Example pair**: Strong — Coupang "Customer Wow" (price = margin), Shopify "software should never make people
 feel stupid" (price = ship date), Duolingo "take the long view" (price = immediate revenue), Netflix "dream

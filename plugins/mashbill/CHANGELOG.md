@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.180.0] — 2026-07-25
+
+### Removed
+
+- Revert the identity-swallows-a-value criteria added in 0.178.0/0.179.0. Values
+  do get filed as identity lines, but two probe passes over the corpus showed the
+  coach already identifies them without the extra criterion — the gap was never
+  knowledge, so it changed no verdict and only spent prompt budget (W-121).
+
 ## [0.179.0] — 2026-07-25
 
 ### Changed
