@@ -258,12 +258,14 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     assert "틀린 뭉침의 표본" in services
     values = get_principles("values")
     assert "대화 속에 묻힌 가치" in values
-    # CD-2026-07-25-A: the buried-value discriminator covers a value the founder
-    # never NAMED. The opposite failure — the founder names it, the coach agrees
-    # out loud, and it still never reaches the canvas — needs its own criterion,
-    # so the coach cannot treat acknowledgement as recording.
-    assert "말로 받고 안 앉혔나" in values
-    assert "인정은 기록이 아니다" in values
+    # CD-2026-07-25-A: a founder answering an identity question often answers with
+    # a VALUE ("we have to choose a clear customer experience"). The coach folded
+    # three of Baemin's published service principles into identity traits and left
+    # the value map without them. Identity work must not consume a value.
+    assert "정체성으로 흡수했나" in values
+    assert "가치로도 남긴다" in values
+    identity = get_principles("identity")
+    assert "가치를 삼키지 마라" in identity
     full = get_principles(None)
     assert "대가" in full and "교환" in full and "체감" in full
     assert "형용사" in full  # identity is included in the all-areas join

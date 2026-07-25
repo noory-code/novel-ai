@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.179.0] — 2026-07-25
+
+### Changed
+
+- Retarget the new Values discriminator at the failure the corpus actually shows:
+  a value answered into an identity question gets polished into an identity line
+  and never reaches the value map. Values and Identity both carry the rule — a
+  sentence that names what it gives up is a value, and identity work must not
+  consume it (W-117, CD-2026-07-25-A).
+
 ## [0.178.0] — 2026-07-25
 
 ### Added
