@@ -273,6 +273,20 @@ def test_foundation_framing_proposes_candidate_values_from_the_talk() -> None:
     assert "alternate" in f
 
 
+def test_foundation_framing_takes_the_counter_stance_once_per_pillar() -> None:
+    """W-133 (DE-00000003): the coach challenged only what it judged weak, so a
+    candidate the founder stated confidently was registered untested. It now
+    steelmans the case AGAINST each mission/value right before confirming and
+    lets the founder defend it. Measured over 14 baseline vs 12 experiment
+    plates: challenge major +2.24 against a plate-to-plate spread of 1.83, with
+    founder turns getting LONGER (no defensive withdrawal). Bounded to ONE per
+    pillar — the gentle-invitation tone (§0.1③) must survive the debate."""
+    f = build_framing_preamble("foundation").lower()
+    assert "counter-stance" in f
+    assert "opposite side once" in f
+    assert "never more" in f
+
+
 def test_services_framing_registers_entities_with_each_feature_batch() -> None:
     """Round 3: entity registration was all-or-nothing (0 in 9 of 12 runs vs
     9/9/23) — the 'before leaving the canvas' checkpoint fires too late or
@@ -654,9 +668,18 @@ def test_system_prompt_stays_under_saturation_budget() -> None:
     principles catalog demonstrably cannot — the 0.178-0.180 saga). The rule is
     compressed to 32 words; the surrounding phrasings are pinned by earlier
     measured decisions and stay.
+    Raised 1445 -> 1500 (DE-00000003, W-133): the counter-stance rule — argue the
+    opposite side once before confirming a pillar — measured challenge major
+    +2.24 against a plate-to-plate spread of 1.83 over 14 baseline vs 12
+    experiment plates, with founder turns getting LONGER (no withdrawal). It is
+    compressed to 42 words and foundation had 2 words of headroom left, so no
+    amount of compressing the new rule could fit it; the surrounding phrasings
+    are each pinned by an earlier measured decision. NOTE: where saturation
+    actually begins has never been measured — the 1,800-2,000 figure above is
+    the only observation, and every raise since has been an inference from it.
     The budget still forces compress-before-add:
     content is pinned by the phrase guards in this file and
     ``test_chat_system_prompt.py``; this test pins the SIZE."""
     for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
         words = len(build_system_prompt(scope).split())
-        assert words <= 1445, f"{scope}: {words} words > 1445 budget"
+        assert words <= 1500, f"{scope}: {words} words > 1500 budget"

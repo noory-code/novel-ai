@@ -4,6 +4,28 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.182.0] — 2026-07-30
+
+### Added
+
+- The Foundation framing argues the opposite side once before a mission or core
+  value is confirmed, then lets the founder defend it: a candidate that survives
+  is registered with that defense in its note, a wobbling one is refined first.
+  Bounded to one counter-stance per pillar so the inviting tone survives the
+  debate. Measured over 14 baseline vs 12 experiment plates (duolingo, slack;
+  blank-slate foundation, 14 turns, codex gpt-5.6-terra): challenge major
+  5.29 -> 7.53 (+2.24) against a plate-to-plate spread of 1.83, and founder
+  turns grew LONGER (89.9 -> 97.5 chars), so the debate does not make founders
+  withdraw. The value axis fell 0.75 -> 0.64, which does NOT clear its own
+  spread (0.11) and stays unproven — watch it in the next measurement.
+
+### Changed
+
+- The system-prompt saturation budget rises 1445 -> 1500 words. Foundation had
+  two words of headroom, so no compression of the new rule could fit it, and
+  every surrounding phrasing is pinned by an earlier measured decision. Where
+  saturation actually begins remains unmeasured.
+
 ## [0.181.0] — 2026-07-25
 
 ### Added

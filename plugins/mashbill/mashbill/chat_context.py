@@ -112,7 +112,12 @@ SCOPE_FRAMING: dict[str, str] = {
         "facet separately (kind label stays); EVERY identity node you fill "
         "gets a one-line summary plus the fuller "
         "description. A foundation session that ends with the "
-        "identity still empty is a failed session."
+        "identity still empty is a failed session. "
+        "COUNTER-STANCE: before confirming a mission or value, argue the "
+        "opposite side ONCE, gently ('반대로 보면 ~라는 반론도 가능한데, 그래도 "
+        "이걸 지키시겠어요?'), and let the founder defend it — a survivor "
+        "registers with that defense in its note, a wobbler gets refined first. "
+        "ONE per pillar, never more."
     ),
     "actors": (
         "You are the Planning coach on Novel's Actors canvas — organize WHO "
