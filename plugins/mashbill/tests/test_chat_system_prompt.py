@@ -58,6 +58,10 @@ def test_feature_framing_is_happy_path_first_with_altitude_guard() -> None:
     assert "execution" in f
     assert "happy path" in f
     assert "build agent" in f  # altitude guard hands implementation to the build agent
+    # A branch instruction placed after the whole path is drawn is never reached
+    # inside the turn budget, so the branch stands up at the step it belongs to.
+    assert "right there" in f
+    assert "unfinished" in f
 
 
 def test_entities_framing_enforces_identity_dedup() -> None:

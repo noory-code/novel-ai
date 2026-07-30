@@ -4,6 +4,25 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.183.0] — 2026-07-30
+
+### Changed
+
+- The Feature framing stands a branch up at the step where the path could go
+  otherwise, instead of drawing the whole happy path first and asking for
+  branches afterwards. Nothing was added to the instruction — the order changed,
+  because a branch instruction placed after the whole path is never reached
+  inside the turn budget: of eight feature talks read, the two that raised a
+  branch both raised it in their last turn, leaving the founder no turn to
+  answer. Measured over 8 baseline vs 12 experiment plates (notion, karrot,
+  airbnb, duolingo, uber, slack; same engine build, same knobs, both arms run in
+  the same batch): flows carrying at least one branch 0.30 -> 0.83 (+0.53
+  against a 0.23 bar), branches per flow 0.32 -> 1.03 (+0.71 against 0.34), and
+  all six companies moved the same way. The side effect this could have caused
+  did not appear — steps per flow 3.24 -> 3.16 and unbroken chains 1.00 -> 0.99,
+  neither separable. Rules per flow rose 0.12 -> 0.25 but does not clear its own
+  bar and stays unproven.
+
 ## [0.182.0] — 2026-07-30
 
 ### Added
