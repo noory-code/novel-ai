@@ -4,6 +4,26 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.183.1] — 2026-08-06
+
+### Fixed
+
+- The codex coach's chat no longer reads as stuttering. Two causes stacked.
+  Codex routinely emits two agent messages in one turn — a short ack before its
+  MCP canvas work, then a restate-and-continue after — and the driver joined
+  them with no separator (every instrumented turn of a 5-turn probe plate had
+  exactly this two-message shape). A paragraph break now rides in the delta
+  stream between agent messages; dropping either message was not an option,
+  because the second does not always restate the first. On top of that, the
+  save-announcement filter's whitespace squash flattened EVERY newline to a
+  space — paragraph breaks and markdown list breaks alike — so the whole turn
+  rendered as one glued line for every provider. Cleaning now normalizes spaces
+  but keeps newlines, including a chunk's trailing newline run, so cleaning the
+  sentence-buffered chunks and cleaning the whole turn agree and the stream
+  filter's resend fallback stays cold. The reconciliation contract is
+  unchanged: the completed turn's text is still exactly the concatenation of
+  the streamed deltas.
+
 ## [0.183.0] — 2026-07-30
 
 ### Changed

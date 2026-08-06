@@ -644,6 +644,67 @@ async def test_codex_stream_yields_agent_message_text_and_captures_thread_id(
     assert provider.session_id == "tid-abc"
 
 
+async def test_codex_two_agent_messages_join_as_paragraphs_not_glued(
+    tmp_path: Path,
+) -> None:
+    # W-150 / workspace O-34: codex routinely emits TWO agent messages in one
+    # turn — a short ack before its MCP canvas work, then a restate-and-continue
+    # after. Joined with "" they read as the coach stuttering ("…— 좋습니다.같은
+    # 최신 디자인을…", every instrumented turn of the 2026-08-06 figma plate).
+    # A paragraph break must ride IN the delta stream itself, so the
+    # turn_complete text stays exactly the concatenation of the deltas
+    # (the reconciliation contract in base.py / chat_output_filter).
+    process = _FakeProcess(
+        stdout_lines=[
+            json.dumps({"type": "thread.started", "thread_id": "tid-2msg"}).encode() + b"\n",
+            json.dumps(
+                {
+                    "type": "item.completed",
+                    "item": {"id": "i1", "type": "agent_message",
+                             "text": "같은 부분을 보고 결정하는 일 — 좋습니다."},
+                }
+            ).encode()
+            + b"\n",
+            # The canvas write between the two messages (dropped, not a delta).
+            json.dumps(
+                {
+                    "type": "item.completed",
+                    "item": {"id": "i2", "type": "command_execution",
+                             "command": "mcp", "status": "completed"},
+                }
+            ).encode()
+            + b"\n",
+            json.dumps(
+                {
+                    "type": "item.completed",
+                    "item": {"id": "i3", "type": "agent_message",
+                             "text": "첫 가치는 이렇게 제안해요."},
+                }
+            ).encode()
+            + b"\n",
+            json.dumps({"type": "turn.completed"}).encode() + b"\n",
+        ],
+        returncode=0,
+    )
+    ws = tmp_path / "ws"
+    ws.mkdir()
+    provider = CodexProvider(
+        workspace_root=ws,
+        cli_path="codex",
+        subprocess_factory=_build_fake_factory(process),
+    )
+    events = await _drain(provider, "다음 가치를 잡자")
+    deltas = [e.text for e in events if e.type == "delta"]
+    complete = next(e for e in events if e.type == "turn_complete")
+    assert deltas == [
+        "같은 부분을 보고 결정하는 일 — 좋습니다.",
+        "\n\n첫 가치는 이렇게 제안해요.",
+    ]
+    assert complete.text == "같은 부분을 보고 결정하는 일 — 좋습니다.\n\n첫 가치는 이렇게 제안해요."
+    # The single-message shape stays untouched — no leading break on the first.
+    assert not (complete.text or "").startswith("\n")
+
+
 async def test_codex_second_turn_uses_exec_resume_with_captured_thread_id(
     tmp_path: Path,
 ) -> None:

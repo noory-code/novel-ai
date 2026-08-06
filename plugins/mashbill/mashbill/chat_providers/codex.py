@@ -116,6 +116,18 @@ class CodexProvider(_SubprocessChatProvider):
             if isinstance(item, dict) and item.get("type") == "agent_message":
                 text = item.get("text")
                 if isinstance(text, str) and text:
+                    # Codex routinely emits TWO agent messages in one turn — a
+                    # short ack before its MCP canvas work, then a
+                    # restate-and-continue after. Joined bare they read as the
+                    # coach stuttering (workspace O-34; every instrumented turn
+                    # of the 2026-08-06 figma plate had exactly this shape).
+                    # Dropping either loses content — the second does not always
+                    # restate the first — so a paragraph break rides IN the
+                    # delta, keeping turn_complete.text exactly the
+                    # concatenation of the deltas (base.py reconciliation
+                    # contract).
+                    if accumulator:
+                        text = "\n\n" + text
                     accumulator.append(text)
                     return ChatStreamEvent(type="delta", turn_id=turn_id, text=text)
         return None

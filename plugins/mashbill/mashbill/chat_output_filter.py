@@ -55,7 +55,16 @@ def _strip_clauses(sentence: str) -> str:
 
 
 def strip_save_announcement(text: str) -> str:
-    """Remove save-report sentences/clauses, preserving the coach's content (pure)."""
+    """Remove save-report sentences/clauses, preserving the coach's content (pure).
+
+    Whitespace is normalized but newlines SURVIVE (W-150, workspace O-34): the
+    codex coach's turn holds two messages joined by a paragraph break, and its
+    prose carries markdown lists — squashing every ``\\n`` to a space rendered
+    the whole turn as one glued line, which is what made the two-message shape
+    read as stuttering. Trailing newlines are kept too, so cleaning a
+    sentence-buffered CHUNK and cleaning the whole turn agree — the stream
+    filter relies on that to avoid its resend fallback.
+    """
     out: list[str] = []
     tokens = _SENT_SPLIT.split(text)
     for i in range(0, len(tokens), 2):
@@ -63,8 +72,15 @@ def strip_save_announcement(text: str) -> str:
         term = tokens[i + 1] if i + 1 < len(tokens) else ""
         cleaned = _strip_clauses(body)
         if cleaned:
-            out.append(cleaned + (term if term.strip() else ""))
-    return re.sub(r"\s+", " ", " ".join(out)).strip()
+            # A pure-newline terminator (a list item or heading line has no
+            # sentence punctuation) still separates lines — dropping it glued
+            # "- 하나\n- 둘" into one line.
+            out.append(cleaned + (term if term.strip() or "\n" in term else ""))
+    joined = " ".join(out)
+    joined = re.sub(r"[ \t]+", " ", joined)
+    joined = re.sub(r" *\n *", "\n", joined)
+    joined = re.sub(r"\n{3,}", "\n\n", joined)
+    return joined.strip(" \t")
 
 
 async def filter_save_announcements(

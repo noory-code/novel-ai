@@ -63,6 +63,55 @@ def test_english_save_report_removed() -> None:
     assert out == "Now let's find the values."
 
 
+def test_paragraph_breaks_survive_cleaning() -> None:
+    # W-150 (workspace O-34): the codex coach's turn holds TWO messages joined
+    # by a paragraph break, and its prose carries markdown lists. The final
+    # whitespace squash flattened every newline to a space, so the whole turn
+    # rendered as one glued line — which is what made the two-message shape
+    # read as stuttering. Cleaning must normalize spaces WITHOUT eating
+    # newlines.
+    two_messages = "같은 부분을 보고 결정하는 일 — 좋습니다.\n\n첫 가치는 이렇게 제안해요."
+    assert strip_save_announcement(two_messages) == two_messages
+
+    listed = "모습은 두 갈래예요.\n- 목소리: 단정하게\n- 에너지: 조용하게"
+    assert strip_save_announcement(listed) == listed
+
+
+def test_save_clause_is_stripped_without_flattening_paragraphs() -> None:
+    src = "미션 좋네요, 저장했어요.\n\n이제 가치를 볼까요?"
+    assert strip_save_announcement(src) == "미션 좋네요.\n\n이제 가치를 볼까요?"
+
+
+def test_stream_chunks_concatenate_to_the_full_cleaned_text_across_paragraphs() -> None:
+    # The live viewer renders deltas as they land and reconciles on
+    # turn_complete. If per-chunk cleaning drops a chunk's trailing paragraph
+    # break, the reconcile path falls back to resending the whole text — a
+    # delta-only subscriber would see the reply twice. So piecewise cleaning
+    # must concatenate to exactly the whole-text cleaning.
+    full = "받아침입니다.\n\n되말하고 이어갑니다. 다음 질문이에요?"
+    raw = [
+        ChatStreamEvent(type="turn_start", turn_id="t2"),
+        # The paragraph break arrives INSIDE the first delta's tail.
+        ChatStreamEvent(type="delta", turn_id="t2", text="받아침입니다.\n\n"),
+        ChatStreamEvent(type="delta", turn_id="t2", text="되말하고 이어갑니다. 다음 질문이에요?"),
+        ChatStreamEvent(type="turn_complete", turn_id="t2", text=full),
+    ]
+
+    async def _run() -> list[ChatStreamEvent]:
+        async def gen() -> AsyncIterator[ChatStreamEvent]:
+            for e in raw:
+                yield e
+
+        return [e async for e in filter_save_announcements(gen())]
+
+    out = asyncio.run(_run())
+    deltas = "".join(e.text for e in out if e.type == "delta")
+    complete = next(e for e in out if e.type == "turn_complete")
+    assert complete.text == full          # nothing to strip → text unchanged
+    assert deltas == complete.text        # piecewise == whole (no resend)
+    assert deltas.count("받아침") == 1      # the resend fallback did not fire
+
+
 def test_stream_filter_buffers_across_deltas_and_reconciles() -> None:
     # The save clause is split across two delta chunks; sentence-buffering must
     # assemble the full sentence before deciding, and turn_complete.text must equal
