@@ -16,7 +16,7 @@ from typing import cast
 
 import pytest
 
-from mashbill.canvas_io import _WRITABLE_CONTENT_FIELDS
+from mashbill.field_policy import _WRITABLE_CONTENT_FIELDS
 from mashbill.folder_io import (
     create_project,
     read_canvas,

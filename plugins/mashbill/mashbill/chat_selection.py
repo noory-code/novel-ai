@@ -21,8 +21,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from mashbill.canvas_io import read_canvas, writable_node_fields
+from mashbill.canvas_io import read_canvas
 from mashbill.chat_context import SELECTION_DETAIL_CAP, build_context_preamble
+from mashbill.field_policy import writable_node_fields
 from mashbill.models_canvas import CanvasDoc, CanvasKind
 from mashbill.workspace import enumerate_projects
 

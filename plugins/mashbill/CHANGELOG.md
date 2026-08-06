@@ -4,6 +4,36 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.184.0] — 2026-08-06
+
+### Fixed
+
+- The Feature coach can place the flow's actor anchor. `create_node` advertised
+  `actor_ref` as creatable on the Feature canvas, but the anchor it cannot exist
+  without — `ref_actor_id` — was held out of every write path, so the seed never
+  validated and each attempt died in a tagged-union dump. The target is now
+  picked while creating the node, and it must name an actor that already exists,
+  so an anchor can neither be born empty nor dangle. Re-pointing stays shut:
+  the field is still absent from the patch allow-list, so `update_node` refuses
+  a later change — moving an anchor means deleting it and picking again. This
+  is why measured flows carried no actor at all: over 100 flow canvases had
+  zero, the only sanctioned path errored out, and the coach's remaining option
+  was the whole-canvas write its own tooling warns against.
+
+### Changed
+
+- The Feature framing tells the coach the anchor is its to place. It called the
+  actor "a read-only reference", which read as "not mine to make" — in a
+  dedicated who-does-what conversation the coach named the actors out loud and
+  still never attempted a write. It now says read-only forbids re-pointing an
+  anchor, not placing one, and ties the moment to the founder settling who acts
+  rather than to drawing the path — both earlier attempts pushed actors into the
+  flow talk itself and shrank the flow (steps 2.81 → 1.50, then 4.15 → 2.91).
+- Write policy — which fields a caller may set, and when — moved out of
+  `canvas_io` into `field_policy`. `canvas_io` sat exactly at the 500-line
+  ceiling, and the two rules (patch allow-list, create-time pick) are the same
+  decision seen from both ends.
+
 ## [0.183.1] — 2026-08-06
 
 ### Fixed

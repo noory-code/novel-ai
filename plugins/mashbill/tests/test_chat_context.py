@@ -262,6 +262,24 @@ def test_propose_playbook_distills_flooding_replies() -> None:
     assert "back to the thread" in p
 
 
+def test_feature_framing_says_the_coach_places_the_actor_anchor_itself() -> None:
+    """Flows carried no actor in 100+ measured canvases (novel-workspace O-25).
+    Two causes stacked: ``create_node`` could not build an ``actor_ref`` at all
+    (fixed — the target is now picked while creating it), and this framing called
+    the actor "a read-only reference", which the coach read as "not mine to
+    make". It never even attempted a write during a dedicated who-does-what
+    segment (W-142). Read-only forbids RE-POINTING an anchor here, not placing
+    one."""
+    p = build_system_prompt("feature:x")
+    assert "actor_ref" in p
+    assert "read-only" in p.lower()
+    # The trigger is the founder settling who acts — NOT a standing task while
+    # the flow is being drawn. Both attempts that pushed actors into the flow
+    # talk itself shrank the flow (steps 2.81->1.50, then 4.15->2.91).
+    lowered = p.lower()
+    assert "when the founder" in lowered or "once the founder" in lowered
+
+
 def test_foundation_framing_proposes_candidate_values_from_the_talk() -> None:
     """Round 3: values depth is founder-dependent — guarded founders volunteer
     nothing and probing stalls at 1-3 values, while the terse run proved

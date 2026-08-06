@@ -175,6 +175,141 @@ def test_create_node_rejects_feature_on_feature_canvas(tmp_path: Path) -> None:
         )
 
 
+# --- actor_ref: the create-time pick ----------------------------------------
+
+
+def _feature_canvas_with_actor(plot_root: Path) -> None:
+    """A feature canvas plus the actor master its anchor can point at."""
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="actors",
+            canvas_kind="actors",
+            nodes=[ActorNode(id="actor_writer", label="Writer")],
+        ),
+    )
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="svc1",
+            canvas_kind="feature",
+            feature_ref="svc1",
+            nodes=[FeatureNode(id="svc1", label="Publishing", proposed="p")],
+        ),
+    )
+
+
+def test_create_node_takes_the_actor_pick_when_creating_an_actor_ref(tmp_path: Path) -> None:
+    # ``actor_ref`` is advertised as creatable on the feature canvas, but the
+    # anchor it needs (``ref_actor_id``) sat behind the writable-content
+    # allow-list, so the seed never validated and EVERY create failed. The
+    # protection exists to stop a coach REPOINTING an anchor after the fact
+    # (D-2026-06-26-D); choosing the target while creating it is the pick that
+    # protection assumed would happen elsewhere. Novel's flows carried no actor
+    # at all because of this (novel-workspace O-25).
+    plot_root = _setup(tmp_path)
+    _feature_canvas_with_actor(plot_root)
+
+    out = create_node(
+        plot_root,
+        "alpha",
+        "feature",
+        "actor_ref",
+        {"label": "Writer", "ref_actor_id": "actor_writer"},
+        service_id="svc1",
+    )
+
+    assert out["node"]["kind"] == "actor_ref"
+    assert out["node"]["ref_actor_id"] == "actor_writer"
+    assert out["rejected_fields"] == []
+    canvas = read_canvas(plot_root, "alpha", "feature", "svc1")
+    anchors = [n for n in canvas.nodes if n.kind == "actor_ref"]
+    assert len(anchors) == 1 and anchors[0].ref_actor_id == "actor_writer"
+
+
+def test_create_node_says_which_pick_is_missing_for_an_actor_ref(tmp_path: Path) -> None:
+    # Without the pick the old code died inside a tagged-union validation dump —
+    # unreadable to the coach, which then stopped trying.
+    plot_root = _setup(tmp_path)
+    _feature_canvas_with_actor(plot_root)
+
+    with pytest.raises(ValueError) as exc:
+        create_node(plot_root, "alpha", "feature", "actor_ref", {"label": "Writer"},
+                    service_id="svc1")
+
+    assert "ref_actor_id" in str(exc.value)
+
+
+def test_create_node_refuses_an_actor_ref_pointing_at_no_actor(tmp_path: Path) -> None:
+    # A pick names a master that exists; free text here would leave a dangling
+    # anchor the viewer cannot resolve.
+    plot_root = _setup(tmp_path)
+    _feature_canvas_with_actor(plot_root)
+
+    with pytest.raises(ValueError) as exc:
+        create_node(
+            plot_root, "alpha", "feature", "actor_ref",
+            {"label": "Ghost", "ref_actor_id": "actor_missing"},
+            service_id="svc1",
+        )
+
+    assert "actor_missing" in str(exc.value)
+    canvas = read_canvas(plot_root, "alpha", "feature", "svc1")
+    assert [n for n in canvas.nodes if n.kind == "actor_ref"] == []
+
+
+def test_a_create_time_pick_does_not_open_repointing(tmp_path: Path) -> None:
+    # The pinned protection is about CHANGING where an anchor points. Creating
+    # one with its target must not reopen that.
+    from mashbill.folder_io import update_node
+
+    plot_root = _setup(tmp_path)
+    _feature_canvas_with_actor(plot_root)
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="actors",
+            canvas_kind="actors",
+            nodes=[ActorNode(id="actor_writer", label="Writer"),
+                   ActorNode(id="actor_editor", label="Editor")],
+        ),
+    )
+    created = create_node(
+        plot_root, "alpha", "feature", "actor_ref",
+        {"label": "Writer", "ref_actor_id": "actor_writer"}, service_id="svc1",
+    )
+
+    # Nothing in the patch is writable, so update_node refuses the whole call.
+    with pytest.raises(ValueError) as exc:
+        update_node(
+            plot_root, "alpha", "feature", created["node"]["id"],
+            {"ref_actor_id": "actor_editor"}, service_id="svc1",
+        )
+
+    assert "ref_actor_id" in str(exc.value)
+    canvas = read_canvas(plot_root, "alpha", "feature", "svc1")
+    anchor = next(n for n in canvas.nodes if n.kind == "actor_ref")
+    assert anchor.ref_actor_id == "actor_writer"
+
+
+def test_other_kinds_still_reject_a_stray_actor_reference(tmp_path: Path) -> None:
+    # The create-time pick is scoped to the anchor kind that needs one; a step
+    # carrying ref_actor_id is still a structural write and stays rejected.
+    plot_root = _setup(tmp_path)
+    _feature_canvas_with_actor(plot_root)
+
+    out = create_node(
+        plot_root, "alpha", "feature", "step",
+        {"label": "Write it", "ref_actor_id": "actor_writer"}, service_id="svc1",
+    )
+
+    assert out["rejected_fields"] == ["ref_actor_id"]
+    assert "ref_actor_id" not in out["node"]
+
+
 # --- position auto-stagger --------------------------------------------------
 
 

@@ -26,13 +26,14 @@ from mashbill.canvas_migrations import (  # noqa: F401
     _migrate_published_slug_to_id,
     collect_foundation_md_warnings,
 )
+from mashbill.field_policy import CREATE_TIME_REFS, validated_pick, writable_node_fields
 from mashbill.models import (
     _ALLOWED_KINDS_BY_CANVAS,
     CanvasDoc,
     CanvasKind,
 )
 from mashbill.models_foundation import PROJECT_ANCHOR_ID
-from mashbill.models_union import SketchNode, SketchNodeAdapter
+from mashbill.models_union import SketchNodeAdapter
 from mashbill.placement import KIND_COLORS, _compute_fresh_position, _compute_near_position
 from mashbill.storage import (  # noqa: F401
     _canvas_file,
@@ -252,63 +253,6 @@ def write_canvas(plot_root: Path, project_id: str, canvas: CanvasDoc) -> None:
 # single-node content patch (D-2026-06-26-D)
 # ---------------------------------------------------------------------------
 
-# Per-kind *content* fields a coach may write via ``update_node`` — the kind's
-# free-text prose only. This is an **allow-list, not a deny-list** (the first cut
-# was `model_fields - base_fields`, which silently let every per-kind
-# structural / reference / lifecycle field through as "writable" — a coach could
-# repoint a service's actor references, lock an identity's derive→confirm
-# lifecycle, or rewrite a rule's permission map; D-2026-06-26-D red-team). An
-# allow-list is **fail-safe**: a field absent here is NOT writable, so a new kind
-# (or a new structural field on an existing kind) defaults to protected until
-# someone classifies it. Deliberately ABSENT and therefore protected: ``ref_*``
-# id arrays + ``actor_ref.ref_actor_id`` (cross-node references — set via the
-# pick-or-create flow, not free text), ``status`` / ``provenance`` (identity
-# derive→confirm lifecycle), ``polarity`` / ``order`` (step structure), ``side``
-# (actor classification), ``actor_permissions`` (rule permission map). ``label``
-# (the node's name) is always writable, added separately. Mirrors the existing
-# per-kind content maps (``FOUNDATION_TYPED_TEXT_FIELDS``). Every union kind must
-# have an entry — pinned by ``tests/test_update_node.py`` so a new kind forces
-# the content-vs-structural decision instead of silently leaking.
-_WRITABLE_CONTENT_FIELDS: dict[str, tuple[str, ...]] = {
-    "project": (),
-    "mission": ("statement", "body"),
-    "core_value": ("body",),  # v0.45 (D-2026-07-02-A): definition removed → name + body
-    # B-32 completion (2026-07-04): summary exposed — the prompt demanded it
-    # while this list silently rejected every coach write. body left with
-    # B-15 (description is THE prose field; legacy body folds on read).
-    "identity": ("summary", "description"),
-    "actor": ("body",),
-    "actor_ref": (),
-    "service": ("problem", "value_created"),
-    "feature": ("proposed",),
-    "category": ("theme", "body"),
-    "step": ("outcome", "body"),
-    "decision": ("body",),
-    "note": ("body",),
-    "rule": ("policy", "enforcement", "body"),
-    "entity": ("summary",),
-}
-
-# Always writable on every kind: the node's name / title.
-_WRITABLE_LABEL = "label"
-
-
-def writable_node_fields(node: SketchNode) -> list[str]:
-    """The content fields a coach may patch on ``node``: ``label`` + the kind's
-    free-text prose (the per-kind allow-list :data:`_WRITABLE_CONTENT_FIELDS`).
-
-    The SSOT for "what is writable" — used both by :func:`update_node` (to filter
-    a patch) and by the chat context builder (to tell the agent which fields an
-    empty selected node accepts, so it can fill a blank node). Structural /
-    reference / lifecycle fields are **not** writable (set through their own
-    flows, never a free-text content patch — Rule 7); the allow-list is fail-safe
-    for future kinds. Deterministic order: ``label`` first, then the kind's
-    content fields that actually exist on the model.
-    """
-    content = _WRITABLE_CONTENT_FIELDS.get(node.kind, ())
-    model_fields = type(node).model_fields
-    return [_WRITABLE_LABEL, *(f for f in content if f in model_fields)]
-
 
 def update_node(
     plot_root: Path,
@@ -460,9 +404,22 @@ def create_node(
     # passes an explicit color.
     if KIND_COLORS.get(kind):
         seed["color"] = KIND_COLORS[kind]
-    base = SketchNodeAdapter.validate_python(seed)
-    allowed_fields = set(writable_node_fields(base))
     incoming = fields or {}
+    create_time_ref = CREATE_TIME_REFS.get(kind)
+    if create_time_ref is not None:
+        # The pick this kind cannot exist without (create_refs). It rides into
+        # the seed BEFORE validation — the model refuses the node without it.
+        ref_field, home_canvas = create_time_ref
+        home = read_canvas(plot_root, project_id, home_canvas)
+        seed[ref_field] = validated_pick(
+            kind, ref_field, home_canvas, incoming.get(ref_field), (n.id for n in home.nodes)
+        )
+    base = SketchNodeAdapter.validate_python(seed)
+    # The create-time pick is already in the seed; keep it out of the
+    # rejected list so the caller is not told its accepted field bounced.
+    allowed_fields = set(writable_node_fields(base))
+    if create_time_ref is not None:
+        allowed_fields.add(create_time_ref[0])
     patch = {k: v for k, v in incoming.items() if k in allowed_fields}
     rejected = sorted(set(incoming) - allowed_fields)
     merged = {**base.model_dump(), **patch}

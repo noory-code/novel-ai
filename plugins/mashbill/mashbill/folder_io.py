@@ -43,9 +43,6 @@ from mashbill.canvas_io import (
     update_node as update_node,
 )
 from mashbill.canvas_io import (
-    writable_node_fields as writable_node_fields,
-)
-from mashbill.canvas_io import (
     write_canvas as write_canvas,
 )
 from mashbill.canvas_migrations import (
@@ -92,6 +89,9 @@ from mashbill.detail_sync import (
 )
 from mashbill.edge_io import (
     create_edge as create_edge,
+)
+from mashbill.field_policy import (
+    writable_node_fields as writable_node_fields,
 )
 from mashbill.project_io import (
     create_project as create_project,
