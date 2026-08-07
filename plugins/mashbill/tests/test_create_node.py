@@ -11,9 +11,12 @@ generalises the former ``create_master`` (now a thin reference-flow wrapper).
 from __future__ import annotations
 
 from pathlib import Path
+from typing import get_args
 
 import pytest
 
+import mashbill.canvas_io as canvas_io
+from mashbill.field_policy import CREATE_TIME_REFS
 from mashbill.folder_io import (
     create_node,
     create_project,
@@ -33,6 +36,7 @@ from mashbill.models import (
     SketchEdge,
     StepNode,
 )
+from mashbill.models_canvas import CanvasKind
 from mashbill.workspace import resolve_plot_root
 
 
@@ -199,6 +203,84 @@ def _feature_canvas_with_actor(plot_root: Path) -> None:
             nodes=[FeatureNode(id="svc1", label="Publishing", proposed="p")],
         ),
     )
+
+
+_CANVAS_KINDS = get_args(CanvasKind)
+
+_CREATABLE_NODE_CASES = [
+    pytest.param(
+        canvas_kind,
+        node_kind,
+        id=f"{canvas_kind}-{node_kind}",
+    )
+    for canvas_kind in _CANVAS_KINDS
+    for node_kind in sorted(canvas_io.creatable_kinds(canvas_kind))
+]
+
+
+@pytest.mark.parametrize("canvas_kind", _CANVAS_KINDS)
+def test_every_canvas_kind_has_a_creatable_node_kind(canvas_kind: CanvasKind) -> None:
+    assert canvas_io.creatable_kinds(canvas_kind), (
+        f"{canvas_kind!r} advertises no creatable node kinds"
+    )
+
+
+@pytest.mark.parametrize(("canvas_kind", "node_kind"), _CREATABLE_NODE_CASES)
+def test_every_advertised_creatable_node_can_be_created(
+    tmp_path: Path, canvas_kind: CanvasKind, node_kind: str
+) -> None:
+    # Sweep the advertised contract so another actor_ref-style create failure
+    # cannot stay hidden while simulations keep selecting the broken kind.
+    plot_root = _setup(tmp_path)
+    create_time_ref = CREATE_TIME_REFS.get(node_kind)
+    needs_feature_canvas = canvas_kind == "feature" or (
+        create_time_ref is not None and create_time_ref[1] == "feature"
+    )
+    if needs_feature_canvas:
+        _feature_canvas_with_actor(plot_root)
+    service_id = "svc1" if canvas_kind == "feature" else None
+
+    fields = {"label": f"Created {node_kind}"}
+    if create_time_ref is not None:
+        ref_field, home_canvas = create_time_ref
+        ref_kind = ref_field.removeprefix("ref_").removesuffix("_id")
+        home_service_id = service_id if home_canvas == "feature" else None
+        home = read_canvas(plot_root, "alpha", home_canvas, home_service_id)
+        target = next((node for node in home.nodes if node.kind == ref_kind), None)
+        if target is None:
+            target_out = create_node(
+                plot_root,
+                "alpha",
+                home_canvas,
+                ref_kind,
+                {"label": f"Referenced {ref_kind}"},
+                service_id=home_service_id,
+            )
+            target_id = target_out["node"]["id"]
+        else:
+            target_id = target.id
+        fields[ref_field] = target_id
+
+    out = create_node(
+        plot_root,
+        "alpha",
+        canvas_kind,
+        node_kind,
+        fields,
+        service_id=service_id,
+    )
+
+    assert out["node"]["kind"] == node_kind
+    assert out["rejected_fields"] == []
+    persisted = read_canvas(plot_root, "alpha", canvas_kind, service_id)
+    match = next(
+        (node for node in persisted.nodes if node.id == out["node"]["id"]),
+        None,
+    )
+    assert match is not None, (
+        f"created {canvas_kind}/{node_kind} node {out['node']['id']!r} was not persisted"
+    )
+    assert match.kind == node_kind
 
 
 def test_create_node_takes_the_actor_pick_when_creating_an_actor_ref(tmp_path: Path) -> None:
@@ -438,6 +520,44 @@ def test_create_node_is_a_registered_mcp_tool() -> None:
         "canvas_kind",
         "kind",
     }
+
+
+def test_create_node_docstring_creatable_kinds_match_runtime_contract() -> None:
+    # The coach never calls ``creatable_kinds`` — it reads this docstring, so the
+    # prose IS the contract it acts on. O-25 was in part prose drift: the actor
+    # anchor was described as "read-only", which the coach read as "not mine to
+    # make", and Novel's flows carried no actor for 100+ runs. The sweep above
+    # only proves the code agrees with itself; this proves the sentence the coach
+    # reads agrees with the code.
+    from mashbill import mcp_tools
+
+    docstring = mcp_tools.create_node.__doc__
+    assert docstring is not None
+    flattened = " ".join(docstring.split())
+    start = "Creatable kinds per canvas: "
+    end = ". The synthetic project anchor"
+    assert start in flattened, f"create_node docstring is missing {start!r}"
+    _, separator, remainder = flattened.partition(start)
+    assert separator
+    advertised_text, separator, _ = remainder.partition(end)
+    assert separator, f"create_node docstring creatable list is missing terminator {end!r}"
+
+    advertised: dict[str, set[str]] = {}
+    for entry in advertised_text.split("; "):
+        canvas_kind, separator, kinds_text = entry.partition(" → ")
+        assert separator, f"cannot parse creatable canvas entry: {entry!r}"
+        assert canvas_kind not in advertised, f"duplicate creatable canvas entry: {canvas_kind!r}"
+        kind_tokens = kinds_text.split(" / ")
+        assert all(token.startswith("``") and token.endswith("``") for token in kind_tokens), (
+            f"cannot parse creatable kinds for {canvas_kind!r}: {kinds_text!r}"
+        )
+        advertised[canvas_kind] = {token[2:-2] for token in kind_tokens}
+
+    assert set(advertised) == set(_CANVAS_KINDS)
+    expected = {
+        canvas_kind: canvas_io.creatable_kinds(canvas_kind) for canvas_kind in _CANVAS_KINDS
+    }
+    assert advertised == expected
 
 
 def test_create_node_near_places_beside_the_parent(tmp_path: Path) -> None:
