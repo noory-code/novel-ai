@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.184.1] — 2026-08-07
+
+### Changed
+
+- The write-time anchor sweep now has a test for the Entities canvas. Entities
+  are the one canvas whose edges are all relationships and never containment,
+  so a coach that draws only those relationships leaves the cluster with no tie
+  to the project — it floats beside the anchor while every other canvas roots
+  into it. The sweep already covered this; only `service` was pinned, so
+  dropping `entity` from the sweep's root kinds broke nothing in the suite. The
+  test now fails if that happens, and asserts the entity relationships survive
+  the sweep untouched.
+
 ## [0.184.0] — 2026-08-06
 
 ### Fixed

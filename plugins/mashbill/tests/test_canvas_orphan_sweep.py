@@ -5,7 +5,14 @@ from __future__ import annotations
 from pathlib import Path
 
 from mashbill.folder_io import create_edge, create_node, create_project, read_canvas, write_canvas
-from mashbill.models import CanvasDoc, CanvasKind, CategoryNode, ServiceNode, SketchEdge
+from mashbill.models import (
+    CanvasDoc,
+    CanvasKind,
+    CategoryNode,
+    EntityNode,
+    ServiceNode,
+    SketchEdge,
+)
 from mashbill.models_foundation import PROJECT_ANCHOR_ID
 from mashbill.workspace import resolve_plot_root
 
@@ -32,6 +39,36 @@ def test_write_canvas_adds_anchor_spoke_to_orphan_service(tmp_path: Path) -> Non
     assert [(edge.source, edge.target, edge.relation) for edge in saved.edges] == [
         (PROJECT_ANCHOR_ID, "svc", "flow")
     ]
+
+
+def test_entities_wired_only_to_each_other_still_reach_the_anchor(tmp_path: Path) -> None:
+    # The Entities canvas is a flat concept map: its edges are relationships
+    # between entities, never containment. Left alone, a coach that draws only
+    # those relationships produces a cluster with no tie to the project — it
+    # floats beside the anchor while every other canvas roots into it, and the
+    # reader cannot see which design the entities serve (novel-workspace O-9).
+    # The sweep must reach entities, and it must not disturb the relationships.
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="entities",
+            canvas_kind="entities",
+            nodes=[EntityNode(id="order", label="Order"),
+                   EntityNode(id="store", label="Store")],
+            edges=[SketchEdge(id="rel", source="order", target="store", directed=True)],
+        ),
+    )
+
+    saved = read_canvas(plot_root, "alpha", "entities")
+    spokes = {edge.target for edge in saved.edges if edge.source == PROJECT_ANCHOR_ID}
+    assert spokes == {"order", "store"}
+    relationships = [
+        (edge.source, edge.target) for edge in saved.edges
+        if PROJECT_ANCHOR_ID not in (edge.source, edge.target)
+    ]
+    assert relationships == [("order", "store")]
 
 
 def test_write_canvas_skips_nested_service_with_parent_edge(tmp_path: Path) -> None:
