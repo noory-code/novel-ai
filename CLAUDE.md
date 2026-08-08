@@ -10,7 +10,7 @@ and deliberately exchange files and stable identifiers instead of importing one 
 ```
 novel-ai/
 ├── plugins/
-│   ├── mashbill/  — Novel canvas, MCP/HTTP server, skills, agents, and hooks
+│   ├── mashbill/  — Novel canvas, MCP/HTTP server, skills, and hooks
 │   ├── solera/    — deterministic work planning and execution harness
 │   ├── proof/     — append-only decision log
 │   └── distill/   — durable knowledge extraction and recall
