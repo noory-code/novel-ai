@@ -10,9 +10,10 @@ Novel's data has two surfaces per node:
    typed text out of JSON into MD; the other 11 kinds keep their typed
    fields in the canvas.json entry, so they get only the JSON schema.
 
-Files land in ``{project_root}/.plot/{project_id}/schema/``:
+Files land in the project's Novel data root, under ``schema/`` — today
+``{project_root}/.noory/novel/schema/`` (see ``_schema_dir``):
 
-  _meta.json                — schema_version, plot_version, kinds
+  _meta.json                — schema_version, engine_version, kinds
   {kind}.json               — JSON Schema for the canvas.json entry
                               of this kind (15 files, one per kind)
   mission.md.template       — heading template for the mission kind
@@ -176,7 +177,11 @@ def export_all_schemas(project_root: Path, project_id: str) -> None:
     # _meta.json
     meta = {
         "schema_version": SCHEMA_VERSION,
-        "plot_version": MASHBILL_VERSION,
+        # ``engine_version``: the same name ``/api/health`` has always used
+        # (``endpoints_common``). Until 0.184.2 this key read ``plot_version``,
+        # a pre-rename leftover — one engine reporting one number under two
+        # names. Informational, no reader, so it is renamed rather than aliased.
+        "engine_version": MASHBILL_VERSION,
         "generated_at": datetime.now(UTC).isoformat(),
         "kinds": list(_ALL_KIND_CLASSES.keys()),
     }

@@ -109,8 +109,11 @@ def test_meta_json_lists_every_kind(tmp_path: Path) -> None:
     export_all_schemas(tmp_path, "proj-1")
     meta = json.loads((tmp_path / "schema" / "_meta.json").read_text(encoding="utf-8"))
     assert meta["schema_version"] == SCHEMA_VERSION
-    assert meta["plot_version"] == MASHBILL_VERSION
+    assert meta["engine_version"] == MASHBILL_VERSION
     assert sorted(meta["kinds"]) == sorted(_ALL_KIND_CLASSES.keys())
+    # The pre-rename key is gone, not aliased: `_meta.json` is informational
+    # and has no reader, and `/api/health` has always said `engine_version`.
+    assert "plot_version" not in meta
 
 
 def test_export_is_idempotent_no_byte_rewrite(tmp_path: Path) -> None:

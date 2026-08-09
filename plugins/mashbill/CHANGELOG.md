@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.184.2] — 2026-08-09
+
+### Changed
+
+- `_meta.json` reports the engine version under `engine_version`. It used to
+  say `plot_version`, a name left over from before the rename, so one engine
+  reported one number under two names — `/api/health` has always said
+  `engine_version`. The key is renamed rather than aliased: `_meta.json` is
+  informational and nothing reads it (D-2026-06-20-N). A test now pins both the
+  new name and the absence of the old one.
+
 ## [0.184.1] — 2026-08-07
 
 ### Changed

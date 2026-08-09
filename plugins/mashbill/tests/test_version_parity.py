@@ -27,7 +27,7 @@ from mashbill.schema_export import MASHBILL_VERSION, SCHEMA_VERSION
 _MASHBILL_ROOT = Path(__file__).resolve().parent.parent
 
 
-def test_plot_version_re_exports_package_version() -> None:
+def test_engine_version_re_exports_package_version() -> None:
     assert MASHBILL_VERSION == __version__
 
 
