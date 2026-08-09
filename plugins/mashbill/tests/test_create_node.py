@@ -318,8 +318,9 @@ def test_create_node_says_which_pick_is_missing_for_an_actor_ref(tmp_path: Path)
     _feature_canvas_with_actor(plot_root)
 
     with pytest.raises(ValueError) as exc:
-        create_node(plot_root, "alpha", "feature", "actor_ref", {"label": "Writer"},
-                    service_id="svc1")
+        create_node(
+            plot_root, "alpha", "feature", "actor_ref", {"label": "Writer"}, service_id="svc1"
+        )
 
     assert "ref_actor_id" in str(exc.value)
 
@@ -332,7 +333,10 @@ def test_create_node_refuses_an_actor_ref_pointing_at_no_actor(tmp_path: Path) -
 
     with pytest.raises(ValueError) as exc:
         create_node(
-            plot_root, "alpha", "feature", "actor_ref",
+            plot_root,
+            "alpha",
+            "feature",
+            "actor_ref",
             {"label": "Ghost", "ref_actor_id": "actor_missing"},
             service_id="svc1",
         )
@@ -355,20 +359,30 @@ def test_a_create_time_pick_does_not_open_repointing(tmp_path: Path) -> None:
         CanvasDoc(
             canvas_id="actors",
             canvas_kind="actors",
-            nodes=[ActorNode(id="actor_writer", label="Writer"),
-                   ActorNode(id="actor_editor", label="Editor")],
+            nodes=[
+                ActorNode(id="actor_writer", label="Writer"),
+                ActorNode(id="actor_editor", label="Editor"),
+            ],
         ),
     )
     created = create_node(
-        plot_root, "alpha", "feature", "actor_ref",
-        {"label": "Writer", "ref_actor_id": "actor_writer"}, service_id="svc1",
+        plot_root,
+        "alpha",
+        "feature",
+        "actor_ref",
+        {"label": "Writer", "ref_actor_id": "actor_writer"},
+        service_id="svc1",
     )
 
     # Nothing in the patch is writable, so update_node refuses the whole call.
     with pytest.raises(ValueError) as exc:
         update_node(
-            plot_root, "alpha", "feature", created["node"]["id"],
-            {"ref_actor_id": "actor_editor"}, service_id="svc1",
+            plot_root,
+            "alpha",
+            "feature",
+            created["node"]["id"],
+            {"ref_actor_id": "actor_editor"},
+            service_id="svc1",
         )
 
     assert "ref_actor_id" in str(exc.value)
@@ -384,8 +398,12 @@ def test_other_kinds_still_reject_a_stray_actor_reference(tmp_path: Path) -> Non
     _feature_canvas_with_actor(plot_root)
 
     out = create_node(
-        plot_root, "alpha", "feature", "step",
-        {"label": "Write it", "ref_actor_id": "actor_writer"}, service_id="svc1",
+        plot_root,
+        "alpha",
+        "feature",
+        "step",
+        {"label": "Write it", "ref_actor_id": "actor_writer"},
+        service_id="svc1",
     )
 
     assert out["rejected_fields"] == ["ref_actor_id"]

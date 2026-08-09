@@ -805,9 +805,7 @@ def test_conversation_get_valid_saved_conversation_200(
     assert resp.json() == read_conversation(plot_root, "alpha", "foundation").model_dump()
 
 
-def test_conversation_get_corrupt_json_404(
-    app_client: TestClient, workspace: Path
-) -> None:
+def test_conversation_get_corrupt_json_404(app_client: TestClient, workspace: Path) -> None:
     plot_root = resolve_plot_root(str(workspace))
     create_project(plot_root, "alpha", "Alpha")
     chat_dir = plot_root / "chat"
@@ -815,29 +813,21 @@ def test_conversation_get_corrupt_json_404(
     (chat_dir / "foundation.json").write_bytes(b"{not valid JSON")
 
     with TestClient(app_client.app, raise_server_exceptions=False) as client:
-        resp = client.get(
-            f"/api/chat/conversations/foundation?project_path={workspace}"
-        )
+        resp = client.get(f"/api/chat/conversations/foundation?project_path={workspace}")
 
     assert resp.status_code == 404
     assert resp.json() == {"error": "conversation not found"}
 
 
-def test_conversation_get_invalid_schema_404(
-    app_client: TestClient, workspace: Path
-) -> None:
+def test_conversation_get_invalid_schema_404(app_client: TestClient, workspace: Path) -> None:
     plot_root = resolve_plot_root(str(workspace))
     create_project(plot_root, "alpha", "Alpha")
     chat_dir = plot_root / "chat"
     chat_dir.mkdir()
-    (chat_dir / "foundation.json").write_text(
-        '{"scope": "foundation"}', encoding="utf-8"
-    )
+    (chat_dir / "foundation.json").write_text('{"scope": "foundation"}', encoding="utf-8")
 
     with TestClient(app_client.app, raise_server_exceptions=False) as client:
-        resp = client.get(
-            f"/api/chat/conversations/foundation?project_path={workspace}"
-        )
+        resp = client.get(f"/api/chat/conversations/foundation?project_path={workspace}")
 
     assert resp.status_code == 404
     assert resp.json() == {"error": "conversation not found"}
@@ -848,9 +838,7 @@ def test_conversation_get_invalid_scope_400(app_client: TestClient, workspace: P
     assert resp.status_code == 400
 
 
-def test_conversation_get_absent_file_404(
-    app_client: TestClient, workspace: Path
-) -> None:
+def test_conversation_get_absent_file_404(app_client: TestClient, workspace: Path) -> None:
     plot_root = resolve_plot_root(str(workspace))
     create_project(plot_root, "alpha", "Alpha")
     resp = app_client.get(f"/api/chat/conversations/entities?project_path={workspace}")

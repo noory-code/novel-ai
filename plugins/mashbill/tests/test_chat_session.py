@@ -660,8 +660,11 @@ async def test_codex_two_agent_messages_join_as_paragraphs_not_glued(
             json.dumps(
                 {
                     "type": "item.completed",
-                    "item": {"id": "i1", "type": "agent_message",
-                             "text": "같은 부분을 보고 결정하는 일 — 좋습니다."},
+                    "item": {
+                        "id": "i1",
+                        "type": "agent_message",
+                        "text": "같은 부분을 보고 결정하는 일 — 좋습니다.",
+                    },
                 }
             ).encode()
             + b"\n",
@@ -669,16 +672,23 @@ async def test_codex_two_agent_messages_join_as_paragraphs_not_glued(
             json.dumps(
                 {
                     "type": "item.completed",
-                    "item": {"id": "i2", "type": "command_execution",
-                             "command": "mcp", "status": "completed"},
+                    "item": {
+                        "id": "i2",
+                        "type": "command_execution",
+                        "command": "mcp",
+                        "status": "completed",
+                    },
                 }
             ).encode()
             + b"\n",
             json.dumps(
                 {
                     "type": "item.completed",
-                    "item": {"id": "i3", "type": "agent_message",
-                             "text": "첫 가치는 이렇게 제안해요."},
+                    "item": {
+                        "id": "i3",
+                        "type": "agent_message",
+                        "text": "첫 가치는 이렇게 제안해요.",
+                    },
                 }
             ).encode()
             + b"\n",

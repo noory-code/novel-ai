@@ -322,6 +322,5 @@ def test_novel_commit_identity_carries_no_pre_rename_name() -> None:
     assert "user.email=novel@novel-ai.local" in identity
     for retired in ("plot", "noory-ai"):
         assert retired not in identity, (
-            f"the commit identity still says {retired!r} — it goes into every "
-            "user's git history"
+            f"the commit identity still says {retired!r} — it goes into every user's git history"
         )

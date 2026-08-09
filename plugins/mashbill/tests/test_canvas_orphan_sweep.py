@@ -55,8 +55,7 @@ def test_entities_wired_only_to_each_other_still_reach_the_anchor(tmp_path: Path
         CanvasDoc(
             canvas_id="entities",
             canvas_kind="entities",
-            nodes=[EntityNode(id="order", label="Order"),
-                   EntityNode(id="store", label="Store")],
+            nodes=[EntityNode(id="order", label="Order"), EntityNode(id="store", label="Store")],
             edges=[SketchEdge(id="rel", source="order", target="store", directed=True)],
         ),
     )
@@ -65,7 +64,8 @@ def test_entities_wired_only_to_each_other_still_reach_the_anchor(tmp_path: Path
     spokes = {edge.target for edge in saved.edges if edge.source == PROJECT_ANCHOR_ID}
     assert spokes == {"order", "store"}
     relationships = [
-        (edge.source, edge.target) for edge in saved.edges
+        (edge.source, edge.target)
+        for edge in saved.edges
         if PROJECT_ANCHOR_ID not in (edge.source, edge.target)
     ]
     assert relationships == [("order", "store")]

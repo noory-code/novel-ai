@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.184.4] — 2026-08-09
+
+### Changed
+
+- `ruff format` applied to six test files. `ruff format --check` — one of the
+  commands CONTRIBUTOR_GUIDE.md tells you to run before committing — had been
+  failing on five of them, which hides any new formatting drift behind a red
+  that everyone learns to ignore. Formatting only; no code changed.
+
 ## [0.184.3] — 2026-08-09
 
 ### Changed

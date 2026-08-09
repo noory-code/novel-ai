@@ -107,9 +107,9 @@ def test_stream_chunks_concatenate_to_the_full_cleaned_text_across_paragraphs() 
     out = asyncio.run(_run())
     deltas = "".join(e.text for e in out if e.type == "delta")
     complete = next(e for e in out if e.type == "turn_complete")
-    assert complete.text == full          # nothing to strip → text unchanged
-    assert deltas == complete.text        # piecewise == whole (no resend)
-    assert deltas.count("받아침") == 1      # the resend fallback did not fire
+    assert complete.text == full  # nothing to strip → text unchanged
+    assert deltas == complete.text  # piecewise == whole (no resend)
+    assert deltas.count("받아침") == 1  # the resend fallback did not fire
 
 
 def test_stream_filter_buffers_across_deltas_and_reconciles() -> None:
