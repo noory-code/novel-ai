@@ -218,7 +218,7 @@ def test_plot_commit_author_is_plot_even_on_users_repo(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
     ).stdout.strip()
-    assert log == "Novel plot@noory-ai.local"
+    assert log == "Novel novel@novel-ai.local"
 
 
 def test_tag_only_stages_plot_data_paths(tmp_path: Path) -> None:
@@ -306,3 +306,22 @@ def test_legacy_migration_skipped_when_workspace_already_has_git(tmp_path: Path)
     # Both repos still present, untouched.
     assert (tmp_path / ".git").is_dir()
     assert (plot_root / ".git").is_dir()
+
+
+def test_novel_commit_identity_carries_no_pre_rename_name() -> None:
+    """The inline identity lands in every user's git log, forever.
+
+    Nothing pinned it, so it kept `plot@noory-ai.local` for months after the
+    rename. Commits already written cannot be changed; this stops new ones
+    from carrying a name the project no longer uses.
+    """
+    from mashbill.git_store import _MASHBILL_IDENTITY
+
+    identity = " ".join(_MASHBILL_IDENTITY)
+    assert "user.name=Novel" in identity
+    assert "user.email=novel@novel-ai.local" in identity
+    for retired in ("plot", "noory-ai"):
+        assert retired not in identity, (
+            f"the commit identity still says {retired!r} — it goes into every "
+            "user's git history"
+        )

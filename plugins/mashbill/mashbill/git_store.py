@@ -8,9 +8,9 @@ explicit ``init_workspace_repo`` call (driven by the user's Yes) actually
 creates the repo.
 
 Identity for Novel-authored commits is passed **inline** (``git -c
-user.name=Novel -c user.email=plot@noory-ai.local …``) so the user's
+user.name=Novel -c user.email=novel@novel-ai.local …``) so the user's
 repo-level config stays untouched even when Novel initialised the repo
-itself. Staging is **path-scoped to** ``.noory/plot/`` so the user's
+itself. Staging is **path-scoped to** ``.noory/novel`` so the user's
 working-tree edits outside Novel's data root are never folded into a
 Novel commit.
 
@@ -50,7 +50,10 @@ _MASHBILL_IDENTITY = (
     "-c",
     "user.name=Novel",
     "-c",
-    "user.email=plot@noory-ai.local",
+    # ``.local`` is deliberately unroutable — this address must never reach an
+    # inbox. Until 0.184.3 it read ``plot@noory-ai.local``, a pre-rename name
+    # that nothing pinned, so it kept landing in users' git history.
+    "user.email=novel@novel-ai.local",
 )
 
 # Novel's tag/publish commits stage ONLY the Novel data root. The user's

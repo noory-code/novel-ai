@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.184.3] — 2026-08-09
+
+### Changed
+
+- Novel-authored commits are signed `Novel <novel@novel-ai.local>`. The address
+  read `plot@noory-ai.local` — a name the project stopped using at the
+  2026-06-30 rename — and nothing pinned it, so it kept landing in users' git
+  history. `.local` stays deliberately unroutable. Commits already written keep
+  the old address; a test now fails if either retired name returns.
+
 ## [0.184.2] — 2026-08-09
 
 ### Changed

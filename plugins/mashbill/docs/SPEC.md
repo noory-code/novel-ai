@@ -117,7 +117,7 @@ repairs user-visible state.
   `{error: "git not initialized", needs_git_init: true}` and the viewer
   surfaces an **"Initialize git repo at `<workspace>`?"** modal; only an
   explicit Yes triggers `POST /api/workspace/git-init`. Novel-authored commits
-  carry identity inline (`git -c user.name=Novel -c user.email=plot@noory-ai.local
+  carry identity inline (`git -c user.name=Novel -c user.email=novel@novel-ai.local
   …`) so the user's repo-level config stays untouched. Novel's tag/publish
   stages **only `.noory/novel/`** (`git add -A -- .noory/novel/`) so the user's
   working-tree edits outside that path are never folded into a Novel commit.

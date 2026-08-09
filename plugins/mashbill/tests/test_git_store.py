@@ -111,8 +111,8 @@ def test_tag_snapshot_creates_commit_and_tag(workspace: Path) -> None:
     assert head == result["sha"]
 
 
-def test_tag_snapshot_uses_inline_plot_identity(workspace: Path) -> None:
-    """Novel's commit is authored as `Novel <plot@noory-ai.local>` regardless
+def test_tag_snapshot_uses_inline_novel_identity(workspace: Path) -> None:
+    """Novel's commit is authored as `Novel <novel@novel-ai.local>` regardless
     of repo / global config, because identity is passed inline."""
     init_workspace_repo(workspace)
     tag_snapshot(workspace, "v1")
@@ -122,7 +122,7 @@ def test_tag_snapshot_uses_inline_plot_identity(workspace: Path) -> None:
         capture_output=True,
         text=True,
     ).stdout.strip()
-    assert author == "Novel plot@noory-ai.local"
+    assert author == "Novel novel@novel-ai.local"
 
 
 def test_tag_snapshot_uses_message_when_given(workspace: Path) -> None:
