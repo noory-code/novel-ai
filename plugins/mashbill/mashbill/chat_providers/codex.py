@@ -12,6 +12,7 @@ Codex's ``-C`` flag, so every provider shares one root-resolution path.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from mashbill.chat_providers.base import (
@@ -21,6 +22,7 @@ from mashbill.chat_providers.base import (
     _SubprocessFactory,
 )
 from mashbill.mcp_registration import codex_mashbill_config
+from mashbill.tool_log import TOOL_LOG_ENV
 
 # Reasoning levels codex accepts via `-c model_reasoning_effort=<level>`. The
 # chat model selector encodes the user's pick as "<slug>:<effort>"
@@ -44,6 +46,20 @@ class CodexProvider(_SubprocessChatProvider):
             cli_path=cli_path,
             subprocess_factory=subprocess_factory,
         )
+
+    def _tool_log_args(self) -> list[str]:
+        """Hand the injected tool server the path to record its calls to.
+
+        The server is a grandchild — engine spawns codex, codex spawns the
+        server — and whether it inherits our environment is codex's business,
+        not ours. State it explicitly rather than trust two spawns we do not
+        control (W-00000177). Empty unless a simulator run asked for recording,
+        so a user's own session carries no stray override.
+        """
+        path = os.environ.get(TOOL_LOG_ENV)
+        if not path:
+            return []
+        return ["-c", f"mcp_servers.mashbill.env.{TOOL_LOG_ENV}={json.dumps(path)}"]
 
     def _model_args(self) -> list[str]:
         # Split the composite "<slug>:<effort>" the selector produces
@@ -87,6 +103,7 @@ class CodexProvider(_SubprocessChatProvider):
             f"mcp_servers.mashbill.command={json.dumps(mcp_entry['command'])}",
             "-c",
             f"mcp_servers.mashbill.args={json.dumps(mcp_entry['args'])}",
+            *self._tool_log_args(),
             *self._model_args(),
         ]
         if self._first_turn or self._session_id is None:

@@ -16,6 +16,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from mashbill.chat_context import (
     COACH_TONE,
     HALLUCINATION_GUARD,
@@ -232,6 +234,35 @@ def test_codex_attaches_own_mashbill_tools_noninteractively(tmp_path: Path) -> N
     assert mcp_args[:3] == ["run", "--directory", str(Path(__file__).parents[1])]
     assert mcp_args[-4:] == ["python", "-m", "mashbill", "--mcp-stdio"]
     assert cmd[-1] == "hi"
+
+
+def test_codex_hands_the_tool_log_path_to_the_injected_server(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """W-177 — the coach's tool server is a grandchild process (engine → codex →
+    server), and whether it inherits our environment is codex's business, not
+    ours. State the path explicitly instead of trusting two spawns we do not
+    control, or the recording silently covers nothing."""
+    monkeypatch.setenv("MASHBILL_TOOL_LOG", str(tmp_path / "tool-calls.jsonl"))
+    p = CodexProvider(workspace_root=tmp_path)
+    overrides = [
+        c[i + 1] for c in [p._build_command("hi")] for i, arg in enumerate(c) if arg == "-c"
+    ]
+    env_value = next(
+        v for v in overrides if v.startswith("mcp_servers.mashbill.env.MASHBILL_TOOL_LOG=")
+    )
+    assert json.loads(env_value.split("=", 1)[1]) == str(tmp_path / "tool-calls.jsonl")
+
+
+def test_codex_says_nothing_about_the_tool_log_when_no_run_asked_for_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Recording is a simulator concern. A user's own session must not carry a
+    stray override."""
+    monkeypatch.delenv("MASHBILL_TOOL_LOG", raising=False)
+    p = CodexProvider(workspace_root=tmp_path)
+    cmd = p._build_command("hi")
+    assert not any("MASHBILL_TOOL_LOG" in str(arg) for arg in cmd)
 
 
 def test_codex_prepends_system_prompt_to_message(tmp_path: Path) -> None:

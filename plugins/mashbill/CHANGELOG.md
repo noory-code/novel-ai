@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.185.1] — 2026-08-10
+
+### Fixed
+
+- The Codex coach now hands `MASHBILL_TOOL_LOG` to the tool server it injects,
+  instead of trusting the value to be inherited. The server is a grandchild —
+  engine spawns Codex, Codex spawns the server — and the entry Codex receives
+  declares an empty environment, so nothing arrived. A first smoke plate
+  recorded zero lookups while the coach was demonstrably calling other tools;
+  with the path stated explicitly the same plate records five. A recorder that
+  silently covers nothing is worse than none, because its zero reads as an
+  answer.
+
 ## [0.185.0] — 2026-08-10
 
 ### Added
