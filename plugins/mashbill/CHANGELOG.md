@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.185.0] — 2026-08-10
+
+### Added
+
+- `MASHBILL_TOOL_LOG` names a JSONL file that gets one line per
+  `get_design_principles` lookup. The design discriminators do not ride in the
+  per-turn prompt — the coach reaches them only by calling that tool — and
+  nothing recorded whether it ever did. A coach experiment that changed one line
+  of the discriminators measured no difference across 24 plates and could not
+  tell "the wording does not help" from "the coach never read it". Opt-in: only
+  a simulator run sets the variable, so a user's own project writes nothing.
+  Recording never raises; the answer is for the founder.
+
 ## [0.184.4] — 2026-08-09
 
 ### Changed

@@ -53,6 +53,7 @@ from mashbill.node_search import search_nodes
 from mashbill.references import (
     set_node_references as _set_node_references,
 )
+from mashbill.tool_log import record_tool_call
 from mashbill.viewer_context import read_viewer_context
 from mashbill.workspace import (
     discover_projects,
@@ -88,6 +89,7 @@ def get_design_principles(area: str | None = None) -> str:
     (D-2026-07-03-O/P). ``area``: mission | values | identity | actors |
     entities | services | features | omitted for all. Consult before challenging
     weak content."""
+    record_tool_call("get_design_principles", area=area)
     return get_principles(area)
 
 

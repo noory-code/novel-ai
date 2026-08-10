@@ -220,6 +220,52 @@ def test_tag_project_without_git_raises_actionable_error(tmp_path: Path) -> None
         mcp_tools.tag_project(ws, "p1", "x")
 
 
+def test_design_principles_call_is_recorded_when_a_log_path_is_set(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """W-177 — the discriminators ride as a tool the coach may or may not call,
+    and nothing recorded whether it did. A coach experiment that changes the
+    tool's text then cannot tell "the text does not help" from "the coach never
+    read it" (O-00000043). The sim points this at the run directory."""
+    import json as _json
+
+    from mashbill import mcp_tools as tools
+
+    log = tmp_path / "tool-calls.jsonl"
+    monkeypatch.setenv("MASHBILL_TOOL_LOG", str(log))
+    tools.get_design_principles(area="values")
+    tools.get_design_principles(area="services")
+
+    lines = [_json.loads(x) for x in log.read_text("utf-8").splitlines() if x.strip()]
+    assert [x["area"] for x in lines] == ["values", "services"]
+    assert all(x["tool"] == "get_design_principles" for x in lines)
+    assert all(isinstance(x.get("ts"), (int, float)) for x in lines)
+
+
+def test_design_principles_works_and_writes_nothing_without_a_log_path(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Recording is opt-in. Outside a sim run nobody sets the variable, and the
+    tool must answer exactly as before rather than fail or write somewhere."""
+    from mashbill import mcp_tools as tools
+
+    monkeypatch.delenv("MASHBILL_TOOL_LOG", raising=False)
+    monkeypatch.chdir(tmp_path)
+    assert "판별" in tools.get_design_principles(area="values")
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_design_principles_survives_an_unwritable_log_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The coach's turn must not die because a log path went bad — recording is
+    for us, the answer is for the founder."""
+    from mashbill import mcp_tools as tools
+
+    monkeypatch.setenv("MASHBILL_TOOL_LOG", str(tmp_path / "no" / "such" / "dir.jsonl"))
+    assert "판별" in tools.get_design_principles(area="values")
+
+
 def test_design_principles_serve_discriminators_per_area() -> None:
     """D-2026-07-03-P — the coach's evaluation knowledge (distilled principles,
     D-2026-07-03-O) rides in the engine as an MCP tool, not the per-turn prompt
