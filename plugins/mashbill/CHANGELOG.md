@@ -4,6 +4,18 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.185.2] — 2026-08-11
+
+### Fixed
+
+- A canvas PUT now echoes what was **saved** rather than what arrived. The save
+  path mints a project-anchor spoke for an orphan top-level node, but
+  `write_canvas` rebound a local name and returned `None`, so the endpoint sent
+  the request document straight back. A viewer that placed a node saw no line to
+  the project until a full reload and could not tell whether the node had landed
+  (novel-workspace O-00000047). `write_canvas` now returns the saved document;
+  the caller's own object is left untouched.
+
 ## [0.185.1] — 2026-08-10
 
 ### Fixed

@@ -164,3 +164,25 @@ def test_existing_foundation_and_entity_anchor_edges_keep_create_edge_format(
             )
             == 1
         )
+
+
+def test_write_canvas_hands_back_what_it_saved(tmp_path: Path) -> None:
+    # The sweep rebinds a local name, so the caller kept the pre-sweep document
+    # and the PUT response carried a canvas with no anchor spoke. The viewer
+    # therefore drew nothing until a full reload, and the node the user had just
+    # placed looked unattached (novel-workspace O-00000047).
+    plot_root = _setup(tmp_path)
+    sent = CanvasDoc(
+        canvas_id="services",
+        canvas_kind="services",
+        nodes=[ServiceNode(id="svc", label="Payments")],
+    )
+
+    saved = write_canvas(plot_root, "alpha", sent)
+
+    assert [(edge.source, edge.target) for edge in saved.edges] == [
+        (PROJECT_ANCHOR_ID, "svc")
+    ]
+    assert saved.edges == read_canvas(plot_root, "alpha", "services").edges
+    # The caller's own object is untouched — the sweep is not a mutation.
+    assert sent.edges == []

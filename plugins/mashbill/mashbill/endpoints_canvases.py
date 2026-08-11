@@ -120,7 +120,11 @@ async def canvas_put_endpoint(request: Request) -> JSONResponse:
     except ValidationError as exc:
         return _error(str(exc), status=422)
     try:
-        write_canvas(plot_root, project_id, canvas)
+        # Echo what was SAVED, not what arrived. The save path mints an anchor
+        # spoke for an orphan top-level node, and echoing the request meant the
+        # viewer never saw it: the node the user had just placed drew no line to
+        # the project until a full reload (novel-workspace O-00000047).
+        canvas = write_canvas(plot_root, project_id, canvas)
     except FileNotFoundError as exc:
         return _error(str(exc), status=404)
     sync: dict[str, list[str]] = {"created": [], "archived": [], "skipped_archive": []}

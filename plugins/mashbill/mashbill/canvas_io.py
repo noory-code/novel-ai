@@ -200,7 +200,16 @@ def read_canvas(
 # v0.23.0+ layout groups by kind + slug: ``<canvas>/published/<kind>/<slug>/vN.M.md``.
 # Same data, better navigation: all versions of a logical document live in
 # one folder, and that folder is grouped under its kind.
-def write_canvas(plot_root: Path, project_id: str, canvas: CanvasDoc) -> None:
+def write_canvas(plot_root: Path, project_id: str, canvas: CanvasDoc) -> CanvasDoc:
+    """Persist ``canvas`` and hand back what was actually saved.
+
+    The save path adds things the caller did not send — carried-forward publish
+    baselines and anchor spokes for orphans. Returning ``None`` meant a caller
+    holding the sent document believed that was the state on disk; the HTTP PUT
+    handler echoed it, so the viewer never learned about a spoke the server had
+    just minted and drew an unattached node until the next full load
+    (novel-workspace O-00000047). The caller's own object is never mutated.
+    """
     _ensure_project(plot_root, project_id)
     service_id = canvas.feature_ref if canvas.canvas_kind == "feature" else None
     path = _canvas_file(plot_root, project_id, canvas.canvas_kind, service_id)
@@ -242,11 +251,12 @@ def write_canvas(plot_root: Path, project_id: str, canvas: CanvasDoc) -> None:
     try:
         meta = read_project(plot_root, project_id)
     except FileNotFoundError:
-        return
+        return canvas
     # v0.13 Phase 0: project label SSOT is ProjectDoc.name; no longer derived
     # from a per-canvas project node (the node is gone). Renames go through
     # ``rename_project`` directly. We just bump updated below.
     write_project(plot_root, meta)
+    return canvas
 
 
 # ---------------------------------------------------------------------------
