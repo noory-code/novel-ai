@@ -39,6 +39,28 @@
 
 ## Log
 
+### D-2026-08-12-A — a canvas the server just removed is dropped quietly; an error line can be closed
+
+- **What:** two viewer behaviours. (1) When the project socket announces a
+  canvas changed and the refetch answers 404, the viewer drops that canvas from
+  its cache instead of surfacing the message. (2) The header error line gets a
+  ✕ that clears it.
+- **Why:** deleting a feature archives its `detail.json`, and the engine
+  announces that as a canvas change. The viewer went to fetch a file that no
+  longer exists and put the raw engine string in the header —
+  `file not found: <project>/.noory/novel/services/<id>/detail.json` — an
+  English filesystem path on a Korean screen, with no way to close it. It then
+  stayed for the rest of the session and pushed the project name out of the
+  header. Observed 2026-08-12 walking the app (workspace `O-00000052`).
+- **Alternatives:** swallow every fetch error after a socket event — rejected,
+  it would bury real breakage; make the engine announce removal distinctly —
+  correct but larger, and the viewer has to tolerate a 404 either way.
+- **Approval:** Accepted — Claude + user walkthrough, 2026-08-12.
+- **Spec impact:** none. Also raises the `App.tsx` LOC ceiling 531 → 537 in
+  `viewer/tests/structural-guards.test.tsx` for the two handlers this wires;
+  the behaviour lives in `useStableHandlers` and `Header`, App holds the wiring.
+  Splitting `App.tsx` stays open as follow-up.
+
 ### D-2026-07-23-B — Values listens beneath explicit labels
 
 - **What:** add a buried-in-telling discriminator to the Values coaching

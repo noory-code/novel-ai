@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.185.3] — 2026-08-12
+
+### Documentation
+
+- `SPEC.md` §Drag-and-drop: a nested drop lands at the cursor in **absolute**
+  coordinates. The line still described the parent-local system that
+  D-2026-05-25-A removed, and the viewer was following it — a feature dropped
+  onto a service landed as far from the cursor as the service sat from the
+  origin.
+- `DECISIONS.md`: **D-2026-08-12-A** — a canvas the server just removed is
+  dropped from the cache quietly instead of putting a raw `file not found` path
+  in the header, and the header error line can now be closed.
+
 ## [0.185.2] — 2026-08-11
 
 ### Fixed
