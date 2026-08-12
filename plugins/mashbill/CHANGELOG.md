@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.185.4] — 2026-08-12
+
+### Documentation
+
+- `I18N_KO_GLOSSARY.md`: the `step` kind's Korean name is **인터랙션**, not 단계 (user product
+  spec 2026-08-12). One kind had three user-facing names — the palette said 인터랙션, dropping it
+  stamped 단계, and an entity node counted them as "스텝 N개". The kind id stays `step`; only the
+  words people read were unified. Logged in §4 with the date and source.
+
 ## [0.185.3] — 2026-08-12
 
 ### Documentation

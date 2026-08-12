@@ -35,7 +35,7 @@ spelling between locales, files, or commits.
 | Entity | **엔티티** | AI-maintained data object; 액터=누가 ↔ 엔티티=무엇 (D-2026-06-17-I). |
 | Note | **노트** | edgeless canvas-global context node (D-2026-06-17-F). |
 | Metric | **지표** | |
-| Step | **단계** | |
+| Step / Interaction | **인터랙션** | The `step` kind's user-facing name. NOT 단계 — user product spec 2026-08-12. Palette, node label, kind tag, and the entity node's count all say 인터랙션. |
 | Rule | **규칙** | |
 | Content | **콘텐츠** | NOT 컨텐츠. |
 | ~~User journey~~ | ~~유저저니~~ | **RETIRED — service→service "유저저니" edges dropped (D-2026-06-17-C).** |
@@ -109,6 +109,8 @@ commits.
 | 2026-05-11 | Actors (tab) | 행위자 | **액터** | user product spec |
 | 2026-05-12 | "one per aspect — Voice, Energy, Speech style, …" | 측면별로 하나씩 — 목소리, 에너지, 말투, … | **속성별로 하나씩 — 목소리, 에너지, 말투, …** | user pointed out 측면 is unnatural; user picked 속성. (측면→속성 rule still applies. ⚠ The identity "facet/aspect" framing this hint described is **superseded**: identity is now a **standing execution/expression action-rule list**, not per-aspect attributes — D-2026-06-16-N/O.) |
 | 2026-05-12 | "이 측면이 어떻게 드러나는가" (Identity description hint) | 이 측면이 어떻게 드러나는가 | **이 속성이 어떻게 드러나는가** | follows the 측면→속성 rule above. ⚠ **STALE — the identity `description` field is removed** (inspector = name + action-rule list, D-2026-06-16-O); this hint string no longer exists. Kept for audit trail. |
+
+| 2026-08-12 | Step (the `step` kind) | 단계 (canvas) / 인터랙션 (palette) | **인터랙션** | user product spec. One kind had three user-facing names: the palette said 인터랙션, dropping it stamped 단계, and an entity node counted them as "스텝 N개". The kind id stays `step` — only the words people read were unified. |
 
 ## 5. When this file changes
 
