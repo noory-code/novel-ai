@@ -922,9 +922,12 @@ behaviour:
   where the user released, not snapped to an anchor-radial slot (the old
   drop-time radial snap is removed; the ⊞ auto-layout button still
   arranges on demand).
-- **Nested drop (inside a container):** the new node uses
-  parent-local coordinates relative to the container's top-left. If
-  it overlaps a sibling, the same 32 px diagonal nudge applies among
+- **Nested drop (inside a container):** the new node lands at the cursor
+  flow-point, centred — the same absolute coordinates a free drop uses,
+  because coordinates are flat (D-2026-05-25-A removed the parent-local
+  system). It is held at least 8 px right of and 28 px below the
+  container's top-left so it never covers the container's own title. If
+  it overlaps a sibling, the same 32 px diagonal nudge applies among the
   parent's direct children.
 - **Optional category (v0.67.0, D-2026-06-13-D):** on the Services
   canvas a `service` is **not** required to nest in a `category`.
