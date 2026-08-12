@@ -133,8 +133,8 @@ async def project_at_tag_endpoint(request: Request) -> JSONResponse:
 
     workspace_root = workspace_root_from_plot_root(plot_root)
     # Files in the workspace repo live under the project's data dir. S2
-    # (D-2026-06-21-AB) flattens this to ``.noory/plot`` (no ``{project_id}``
-    # segment); a legacy nested project keeps ``.noory/plot/{project_id}``.
+    # (D-2026-06-21-AB) flattens this to ``.noory/novel`` (no ``{project_id}``
+    # segment); a legacy nested project keeps ``.noory/novel/{project_id}``.
     # Derive the prefix from the resolved dir so git-show paths match disk.
     plot_data_prefix = folder.relative_to(workspace_root).as_posix()
 

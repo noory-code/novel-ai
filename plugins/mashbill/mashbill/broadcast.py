@@ -18,7 +18,7 @@ def _describe_change(plot_root: Path, changed_path: Path) -> dict[str, Any] | No
     """Map a changed file to ``{project_id, canvas_kind?, service_id?}``.
 
     Flat layout (D-2026-06-21-AB) — paths are relative to the project's own
-    data root (``.noory/plot/``), so the leading segment is the **canvas
+    data root (``.noory/novel/``), so the leading segment is the **canvas
     kind**, not a project id (which no longer appears in the path):
       - ``{canvas_kind}/canvas.json`` for singleton canvases
       - ``services/{service_id}/detail.json`` for feature details

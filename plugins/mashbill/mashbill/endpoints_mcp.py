@@ -98,7 +98,7 @@ async def chat_provider_get_endpoint(request: Request) -> JSONResponse:
 
     Body shape: ``{"provider": ProviderName | null}``. A workspace with no
     persisted choice (fresh, or just cleared) returns ``null``. The choice
-    lives at ``<workspace>/.noory/plot/chat-provider``.
+    lives at ``<workspace>/.noory/novel/chat-provider``.
     """
     try:
         plot_root = _require_plot_root(request, create=False)

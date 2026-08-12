@@ -24,7 +24,7 @@ from mashbill.models import (
 def _project_dir(plot_root: Path, project_id: str) -> Path:
     """Directory holding ``project_id``'s files.
 
-    S2 (D-2026-06-21-AB): one project per ``.noory/plot`` root, stored **flat**
+    S2 (D-2026-06-21-AB): one project per ``.noory/novel`` root, stored **flat**
     — its files live directly under ``plot_root``. A legacy nested
     ``{project_id}/`` folder is honoured only while it still physically holds a
     ``project.json`` (un-migrated ``.plot`` read by discovery, or a multi-project

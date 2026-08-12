@@ -2,7 +2,7 @@
 
 When more than one external CLI is installed and Novel-registered, the user
 picks which one drives the R7 chat panel. That pick lives at
-``<workspace>/.noory/plot/chat-provider`` (JSON,
+``<workspace>/.noory/novel/chat-provider`` (JSON,
 ``{"provider": "claude-code" | "codex" | "gemini" | null}``) so it survives
 across reloads and moved machines (the file rides the workspace).
 
@@ -41,7 +41,7 @@ class ChatProviderSelection(BaseModel):
 
 
 def selection_path(plot_root: Path) -> Path:
-    """``<workspace>/.noory/plot/chat-provider`` — the file backing the choice."""
+    """``<workspace>/.noory/novel/chat-provider`` — the file backing the choice."""
     return plot_root / _SELECTION_FILENAME
 
 

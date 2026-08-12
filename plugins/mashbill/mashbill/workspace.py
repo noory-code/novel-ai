@@ -50,7 +50,7 @@ MAX_TREE_CHILDREN = 200
 
 def _existing_data_root(directory: Path) -> Path | None:
     """The directory's Novel data root, if it has one: ``.noory/novel``,
-    else the pre-rename ``.noory/plot`` or the legacy ``.plot`` (read-only
+    else the pre-rename ``.noory/novel`` or the legacy ``.plot`` (read-only
     peek — migration happens when the workspace is actually opened via
     ``resolve_plot_root``)."""
     novel = directory / ".noory" / "novel"
@@ -207,18 +207,18 @@ def resolve_plot_root(project_path: str, *, create: bool = True) -> Path:
     filesystem side effects.
 
     R9 (D-2026-06-10-G): every plugin's per-project artifacts consolidate
-    under ONE ``.noory/`` dotfolder (``.noory/plot/``, ``.noory/distill/``,
+    under ONE ``.noory/`` dotfolder (``.noory/novel/``, ``.noory/distill/``,
     …) so plugin mode and app mode share artifacts continuously. Each
-    project lives at ``.noory/plot/{project_id}/``.
+    project lives at ``.noory/novel/{project_id}/``.
 
     A legacy pre-R9 ``.plot/`` root is migrated lazily on first access: one
     ``shutil.move`` (same volume, atomic-ish). If BOTH roots exist
-    (half-migrated / user-restored), ``.noory/plot`` wins and ``.plot`` is
+    (half-migrated / user-restored), ``.noory/novel`` wins and ``.plot`` is
     left untouched for the user to reconcile — never merged blindly.
 
     Also performs the one-shot v0.59→v0.60 git-location migration (see
     :func:`migrate_legacy_git_to_workspace`): if the workspace was last
-    opened under the design that put ``.git`` inside ``.noory/plot/``, the
+    opened under the design that put ``.git`` inside ``.noory/novel/``, the
     repo moves up to the workspace root — but only when no ``.git/`` is
     already there (the user could legitimately have their own).
     """
@@ -228,10 +228,10 @@ def resolve_plot_root(project_path: str, *, create: bool = True) -> Path:
     if not base.is_dir():
         raise NotADirectoryError(f"project_path is not a directory: {base}")
     # D-2026-06-21-W — guard against double-nesting. If the caller passes a
-    # path that ALREADY points at a ``.noory/plot`` data root (seen from MCP
+    # path that ALREADY points at a ``.noory/novel`` data root (seen from MCP
     # callers — it created an orphaned project under
-    # ``.noory/plot/.noory/plot/{id}``, invisible to discovery), use it
-    # directly instead of appending another ``.noory/plot``. The workspace
+    # ``.noory/novel/.noory/novel/{id}``, invisible to discovery), use it
+    # directly instead of appending another ``.noory/novel``. The workspace
     # root is then two levels up.
     if base.name in ("novel", "plot") and base.parent.name == ".noory":
         if create:
@@ -260,7 +260,7 @@ def resolve_plot_root(project_path: str, *, create: bool = True) -> Path:
 
 def flatten_nested_project(plot_root: Path) -> bool:
     """S2 (D-2026-06-21-AB): migrate a legacy nested ``{project_id}/`` project
-    up to ``plot_root`` so one ``.noory/plot`` holds the project's files
+    up to ``plot_root`` so one ``.noory/novel`` holds the project's files
     directly (one-project-per-dir, flat).
 
     Acts only when the root is **not already flat** (no ``project.json`` under
@@ -288,7 +288,7 @@ def flatten_nested_project(plot_root: Path) -> bool:
 
 def workspace_root_from_plot_root(plot_root: Path) -> Path:
     """Recover the workspace root (= the user's opened folder) from the
-    resolved Novel data root. ``plot_root`` is ``<workspace>/.noory/plot``;
+    resolved Novel data root. ``plot_root`` is ``<workspace>/.noory/novel``;
     the user's workspace is two levels up.
 
     Used by endpoints that need to talk to git (which lives at the
@@ -299,7 +299,7 @@ def workspace_root_from_plot_root(plot_root: Path) -> Path:
 
 
 def migrate_legacy_git_to_workspace(workspace_root: Path) -> bool:
-    """v0.59→v0.60 (D-2026-06-11-C/D): move ``.noory/plot/.git/`` up to
+    """v0.59→v0.60 (D-2026-06-11-C/D): move ``.noory/novel/.git/`` up to
     the workspace root when it's safe.
 
     Safe = the workspace doesn't already have its own ``.git/``. If the

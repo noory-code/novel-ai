@@ -58,7 +58,7 @@ class ClaudeCodeProvider(_SubprocessChatProvider):
             # dead-ends ("press Allow" with nothing to press). Scoped to
             # ``mcp__mashbill__*`` ONLY — Bash / Write / filesystem keep default
             # behaviour, so the in-app agent can't silently touch anything
-            # outside the user's .noory/plot data (which is git-recoverable and
+            # outside the user's .noory/novel data (which is git-recoverable and
             # surfaced on the canvas per build-through-discussion).
             "--allowedTools",
             "mcp__mashbill__*",

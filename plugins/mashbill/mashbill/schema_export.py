@@ -107,7 +107,7 @@ _ALL_KIND_CLASSES: dict[str, type[BaseNodeFields]] = {
 
 def _schema_dir(project_root: Path, project_id: str) -> Path:
     # S2 (D-2026-06-21-AB): flat layout — ``_project_dir`` returns the root
-    # itself, so schema/ lands under ``.noory/plot/schema`` (no {id}/ layer).
+    # itself, so schema/ lands under ``.noory/novel/schema`` (no {id}/ layer).
     from mashbill.storage import _project_dir
 
     return _project_dir(project_root, project_id) / "schema"

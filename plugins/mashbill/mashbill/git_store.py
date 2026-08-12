@@ -145,7 +145,7 @@ def tag_snapshot(workspace_root: Path, name: str, message: str | None = None) ->
     """Snapshot the Novel data root under an annotated git tag.
 
     Flow:
-      1. ``git add -A -- .noory/plot/`` (path-scoped: only Novel's data)
+      1. ``git add -A -- .noory/novel/`` (path-scoped: only Novel's data)
       2. ``git -c user.name=Novel … commit --allow-empty -m <message>``
          (inline identity; ``--allow-empty`` covers end-of-session tags on
          an otherwise untouched project)
@@ -195,7 +195,7 @@ def read_file_at_tag(workspace_root: Path, tag: str, relative_path: str) -> byte
 
     Uses ``git show <tag>:<relative_path>`` so we never touch the working
     tree (no checkout). ``relative_path`` is **repo-root-relative** (e.g.
-    ``.noory/plot/{project_id}/foundation/canvas.json``).
+    ``.noory/novel/{project_id}/foundation/canvas.json``).
 
     Raises:
         FileNotFoundError — when the tag or path doesn't exist at that tag,

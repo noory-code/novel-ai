@@ -67,7 +67,7 @@ mcp = FastMCP(
     "mashbill",
     instructions=(
         "Novel stores projects as folders of per-canvas JSON files under "
-        "``.noory/plot/{project}/``. Use ``list_projects`` / ``get_project`` "
+        "``.noory/novel/{project}/``. Use ``list_projects`` / ``get_project`` "
         "to discover state, ``get_canvas`` / ``update_canvas`` to read or write "
         "a single canvas (``foundation`` / ``actors`` / ``services`` / "
         "``entities`` / ``feature``), ``update_node`` to patch one node's content "
@@ -109,7 +109,7 @@ def get_canvas_framing(scope: str) -> str:
 
 @mcp.tool()
 def list_projects(project_path: str) -> list[dict[str, Any]]:
-    """List every project folder directly under ``.noory/plot/`` (R9 layout)."""
+    """List every project folder directly under ``.noory/novel/`` (R9 layout)."""
     plot_root = resolve_plot_root(project_path)
     return [p.model_dump() for p in enumerate_projects(plot_root)]
 
@@ -398,7 +398,7 @@ def tag_project(
     workspace_root = workspace_root_from_plot_root(plot_root)
     try:
         # D-2026-06-11-C/D — git lives at the workspace root. The tag
-        # snapshots `.noory/plot/` inside that repo, not a single project.
+        # snapshots `.noory/novel/` inside that repo, not a single project.
         # project_id is kept on the tool signature for call-site clarity
         # and future per-project naming.
         return tag_snapshot(workspace_root, name, message=message)

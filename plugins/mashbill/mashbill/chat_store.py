@@ -2,7 +2,7 @@
 
 In-memory chat sessions died on an app restart and the user lost real work. This
 module shadows each live chat scope to one append-only file under the project at
-``.noory/plot/chat/<scope>.json``, so conversations survive a restart and travel
+``.noory/novel/chat/<scope>.json``, so conversations survive a restart and travel
 with the project. The **engine is the sole writer** (no viewer race): the user
 message is appended when a turn is sent, the assistant message on ``turn_complete``.
 

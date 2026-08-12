@@ -86,7 +86,7 @@ def create_project(
     Raises ``FileExistsError`` if ``project_id`` is taken, or — per
     one-project-per-dir (D-2026-06-21-AA, narrowing D-2026-06-12-A) — if
     ``plot_root`` already holds *any* project. A second service goes in a
-    sibling directory with its own ``.noory/plot``. The HTTP create endpoint
+    sibling directory with its own ``.noory/novel``. The HTTP create endpoint
     maps both cases to 409; this is the single chokepoint covering viewer + MCP.
     """
     from mashbill.workspace import enumerate_projects
@@ -94,7 +94,7 @@ def create_project(
     existing = enumerate_projects(plot_root)
     if existing:
         raise FileExistsError(
-            "one project per .noory/plot dir (one-project-per-dir, "
+            "one project per .noory/novel dir (one-project-per-dir, "
             f"D-2026-06-21-AA): {plot_root} already holds {existing[0].id!r}. "
             "Create the new project in a sibling directory."
         )
@@ -136,7 +136,7 @@ def delete_project(plot_root: Path, project_id: str) -> None:
     folder = _ensure_project(plot_root, project_id)
     if folder == plot_root:
         # S2 flat layout: the project IS the root's contents. Wipe them but
-        # keep the ``.noory/plot`` dir itself, so the dir picker shows it as an
+        # keep the ``.noory/novel`` dir itself, so the dir picker shows it as an
         # empty "create here" slot rather than a vanished workspace.
         for child in plot_root.iterdir():
             if child.is_dir():
