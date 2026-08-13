@@ -180,9 +180,7 @@ def test_write_canvas_hands_back_what_it_saved(tmp_path: Path) -> None:
 
     saved = write_canvas(plot_root, "alpha", sent)
 
-    assert [(edge.source, edge.target) for edge in saved.edges] == [
-        (PROJECT_ANCHOR_ID, "svc")
-    ]
+    assert [(edge.source, edge.target) for edge in saved.edges] == [(PROJECT_ANCHOR_ID, "svc")]
     assert saved.edges == read_canvas(plot_root, "alpha", "services").edges
     # The caller's own object is untouched — the sweep is not a mutation.
     assert sent.edges == []

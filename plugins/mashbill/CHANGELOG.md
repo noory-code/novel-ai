@@ -4,6 +4,29 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.186.0] — 2026-08-13
+
+### Added
+
+- Debug channel, drive half (`/api/debug/command`, `/api/debug/result`,
+  `/api/debug/pages`). The read half lets an outside agent see the app's screen; this lets it act
+  on that screen. The agent POSTs a snippet and blocks; the viewer polls, runs it, and POSTs the
+  value back. Without it the app can only be driven by a person's hands — CDP tools cannot attach
+  to the Tauri WKWebView on macOS and `tauri-driver` does not support macOS (D-2026-06-09-D).
+- Every screen names itself when it asks for work, and the answer carries that name. Two screens
+  can be open on one engine, and unnamed answers read as a single screen contradicting itself. A
+  command may also name the screen it wants. `/api/debug/pages` lists who is open.
+- A timeout reports when a screen last asked for work, so "no app is running" is told apart from
+  "the snippet hung".
+
+### Changed
+
+- A second command while one is waiting is refused with 409 rather than silently replacing the
+  first.
+- The three new paths join `/api/health` and `/api/debug` as exact-match open paths in the auth
+  seam. Same flavor gate as the rest: routes exist only under `MASHBILL_DEBUG=1`, which the shell
+  sets only in the debug flavor, so a release build has no route.
+
 ## [0.185.4] — 2026-08-12
 
 ### Documentation

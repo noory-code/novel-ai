@@ -53,7 +53,20 @@ _BEARER_PREFIX = "Bearer "
 #     per-launch token; the auth seam (added after the channel) must not break
 #     it. Harmless in release builds — the route isn't registered there
 #     (D-2026-06-23-C).
-_OPEN_PATHS: frozenset[str] = frozenset({"/api/health", "/api/debug"})
+#   - ``/api/debug/command`` + ``/api/debug/result`` — the drive half of the same
+#     channel, under the same flavor gate and for the same reason: the agent and
+#     the viewer's runner both call it with a plain fetch.
+# Exact matches, never a prefix: a prefix rule would open every future path that
+# happens to start with one of these.
+_OPEN_PATHS: frozenset[str] = frozenset(
+    {
+        "/api/health",
+        "/api/debug",
+        "/api/debug/command",
+        "/api/debug/result",
+        "/api/debug/pages",
+    }
+)
 
 
 def configured_token() -> str | None:

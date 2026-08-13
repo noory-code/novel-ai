@@ -43,7 +43,14 @@ from mashbill.api_endpoints import (
 from mashbill.auth import WS_TOKEN_PARAM, AuthMiddleware, check_ws_token, configured_token
 from mashbill.broadcast import BroadcastHub
 from mashbill.chat_session import ChatSessionRegistry, chat_registry
-from mashbill.debug_endpoints import debug_get_endpoint, debug_post_endpoint
+from mashbill.debug_endpoints import (
+    debug_command_get_endpoint,
+    debug_command_post_endpoint,
+    debug_get_endpoint,
+    debug_pages_endpoint,
+    debug_post_endpoint,
+    debug_result_post_endpoint,
+)
 from mashbill.endpoints_chat import (
     chat_conversation_get_endpoint,
     chat_conversations_list_endpoint,
@@ -244,6 +251,12 @@ def create_http_app(
     if os.environ.get("MASHBILL_DEBUG") == "1":
         routes.append(Route("/api/debug", debug_get_endpoint, methods=["GET"]))
         routes.append(Route("/api/debug", debug_post_endpoint, methods=["POST"]))
+        # Drive half — the agent hands the app a snippet, the viewer picks it up
+        # and answers. Same gate: never registered in a release build.
+        routes.append(Route("/api/debug/command", debug_command_get_endpoint, methods=["GET"]))
+        routes.append(Route("/api/debug/command", debug_command_post_endpoint, methods=["POST"]))
+        routes.append(Route("/api/debug/result", debug_result_post_endpoint, methods=["POST"]))
+        routes.append(Route("/api/debug/pages", debug_pages_endpoint, methods=["GET"]))
     viewer_dist = find_viewer_dist()
     if viewer_dist is not None:
         routes.append(Mount("/", app=StaticFiles(directory=viewer_dist, html=True)))
