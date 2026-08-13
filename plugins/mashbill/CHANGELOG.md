@@ -4,6 +4,21 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.186.1] — 2026-08-13
+
+### Fixed
+
+- A timeout on a command that named a screen reported when *any* screen last asked for work. A
+  screen stays listed after it closes, so a departed screen read as a live one whose snippet hung
+  — backwards from the one thing the field exists to tell apart. The answer now speaks about the
+  named screen.
+
+### Added
+
+- `/api/debug/pages` says how long ago each screen asked (`seen_ago_s`). A screen that closes
+  cannot say so and stays on the list; a live one asks every quarter second, so this is how the
+  two are told apart.
+
 ## [0.186.0] — 2026-08-13
 
 ### Added

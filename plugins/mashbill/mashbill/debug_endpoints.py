@@ -119,8 +119,16 @@ async def debug_command_post_endpoint(request: Request) -> JSONResponse:
             _PENDING = None  # never taken — drop it rather than leave it armed
         _WAITERS.pop(command_id, None)
         _RESULTS.pop(command_id, None)
+        # Speak about the screen this command named, not about any screen. A
+        # screen stays on the list after it closes, so borrowing another
+        # screen's check-in would report a departed screen as a live one whose
+        # snippet hung — backwards from what this field is for.
+        if isinstance(wanted, str) and wanted:
+            last_poll_at = _PAGES.get(wanted, {}).get("last_poll_at")
+        else:
+            last_poll_at = _LAST_POLL_AT
         return JSONResponse(
-            {"id": command_id, "error": "timeout", "last_poll_at": _LAST_POLL_AT},
+            {"id": command_id, "error": "timeout", "last_poll_at": last_poll_at},
             status_code=504,
         )
 
@@ -156,8 +164,17 @@ async def debug_command_get_endpoint(request: Request) -> JSONResponse:
 
 
 async def debug_pages_endpoint(request: Request) -> JSONResponse:
-    """Which screens are open and answering, newest check-in first."""
-    pages = sorted(_PAGES.values(), key=lambda p: p["last_poll_at"], reverse=True)
+    """Which screens have asked for work, newest check-in first.
+
+    A screen that closes cannot say so, so it stays here. ``seen_ago_s`` is how
+    the caller tells a live screen from a departed one — a screen polls every
+    quarter second, so anything past a second or two is gone.
+    """
+    now = time.time()
+    pages = [
+        {**p, "seen_ago_s": round(now - p["last_poll_at"], 1)}
+        for p in sorted(_PAGES.values(), key=lambda p: p["last_poll_at"], reverse=True)
+    ]
     return JSONResponse({"pages": pages})
 
 

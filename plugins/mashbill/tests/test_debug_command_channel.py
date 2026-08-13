@@ -139,6 +139,33 @@ async def test_silence_says_whether_the_app_was_ever_there() -> None:
         assert after["last_poll_at"] is not None
 
 
+async def test_silence_reports_the_named_screen_not_any_screen() -> None:
+    """A command names one screen, so the timeout must speak about that screen.
+
+    Reporting when *any* screen last checked in makes a screen that has closed
+    read as a live screen whose snippet hung — backwards from the one thing this
+    field exists to tell apart.
+    """
+    async with _async_client() as client:
+        await client.get("/api/debug/command?page=alive")  # another screen is up
+
+        gone = (
+            await client.post(
+                "/api/debug/command", json={"script": "1", "page": "gone", "timeout_ms": 60}
+            )
+        ).json()
+        assert gone["error"] == "timeout"
+        assert gone["last_poll_at"] is None, "떠난 화면이 살아 있는 것으로 읽힌다"
+
+
+async def test_how_long_ago_each_screen_asked_is_listed() -> None:
+    """A screen that has closed stays on the list, so the list must say how stale."""
+    async with _async_client() as client:
+        await client.get("/api/debug/command?page=a")
+        listed = (await client.get("/api/debug/pages")).json()["pages"]
+        assert listed[0]["seen_ago_s"] >= 0
+
+
 async def test_a_second_ask_is_refused_while_one_is_waiting() -> None:
     """Quietly dropping the first one would make a command vanish with no trace."""
     async with _async_client() as client:
