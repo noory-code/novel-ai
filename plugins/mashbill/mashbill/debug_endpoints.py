@@ -131,14 +131,23 @@ async def debug_command_post_endpoint(request: Request) -> JSONResponse:
         _PENDING["page"] = wanted
     _arrived().set()
 
+    def give_up() -> None:
+        """Unarm this command. Runs however the ask ends — timeout, or the
+        asker disappearing (its own deadline, a dropped connection). Cleanup
+        used to live only on the timeout path, so a cancelled ask left the
+        command armed forever and every later ask got 409 until the engine was
+        restarted."""
+        global _PENDING
+        if _PENDING is not None and _PENDING["id"] == command_id:
+            _PENDING = None
+            _arrived().clear()
+        _WAITERS.pop(command_id, None)
+
     timeout_ms = payload.get("timeout_ms", DEFAULT_COMMAND_TIMEOUT_MS)
     try:
         await asyncio.wait_for(waiter.wait(), float(timeout_ms) / 1000)
     except TimeoutError:
-        if _PENDING is not None and _PENDING["id"] == command_id:
-            _PENDING = None  # never taken — drop it rather than leave it armed
-            _arrived().clear()
-        _WAITERS.pop(command_id, None)
+        give_up()
         _RESULTS.pop(command_id, None)
         # Speak about the screen this command named, not about any screen. A
         # screen stays on the list after it closes, so borrowing another
@@ -152,6 +161,10 @@ async def debug_command_post_endpoint(request: Request) -> JSONResponse:
             {"id": command_id, "error": "timeout", "last_poll_at": last_poll_at},
             status_code=504,
         )
+    except asyncio.CancelledError:
+        give_up()
+        _RESULTS.pop(command_id, None)
+        raise
 
     _WAITERS.pop(command_id, None)
     result = _RESULTS.pop(command_id, {})

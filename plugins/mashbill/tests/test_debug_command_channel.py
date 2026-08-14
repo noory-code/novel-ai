@@ -14,6 +14,8 @@ compiled in. A release build has no such route.
 from __future__ import annotations
 
 import asyncio
+import contextlib
+import time
 
 import httpx
 import pytest
@@ -216,6 +218,66 @@ async def test_asking_without_waiting_still_answers_at_once() -> None:
         r = await client.get("/api/debug/command")
     assert r.status_code == 200
     assert r.json() == {}
+
+
+async def test_waiting_does_not_return_at_once_after_work_was_taken() -> None:
+    """The "work is here" flag must come down once the work is taken.
+
+    A screen that waits and is answered at once re-asks at once, which spins it
+    against the engine as fast as the network allows — the built app locked up
+    that way and stopped answering entirely.
+    """
+    async with _async_client() as client:
+        asking = asyncio.create_task(
+            client.post("/api/debug/command", json={"script": "1", "timeout_ms": 2000})
+        )
+        await asyncio.sleep(0.05)
+        taken = (await client.get("/api/debug/command?page=a&wait_ms=500")).json()
+        assert taken["script"] == "1"
+        await client.post("/api/debug/result", json={"id": taken["id"], "ok": True, "value": 1})
+        await asking
+
+        started = time.monotonic()
+        assert (await client.get("/api/debug/command?page=a&wait_ms=300")).json() == {}
+        assert time.monotonic() - started > 0.2, "일감을 가져간 뒤에도 안 기다리고 바로 돌아왔다"
+
+
+async def test_waiting_does_not_return_at_once_after_a_command_for_another_screen() -> None:
+    """Same flag, the other way it stays up: work aimed elsewhere, then gone."""
+    async with _async_client() as client:
+        asking = asyncio.create_task(
+            client.post("/api/debug/command", json={"script": "1", "page": "a", "timeout_ms": 300})
+        )
+        await asyncio.sleep(0.05)
+        assert (await client.get("/api/debug/command?page=b&wait_ms=60")).json() == {}
+        await asking
+
+        started = time.monotonic()
+        assert (await client.get("/api/debug/command?page=b&wait_ms=300")).json() == {}
+        assert time.monotonic() - started > 0.2, "안 기다리고 바로 돌아왔다"
+
+
+async def test_an_asker_that_goes_away_does_not_wedge_the_channel() -> None:
+    """The waiting command must be dropped when the asker disappears.
+
+    An agent that gives up (its own timeout, a dropped connection) cancels the
+    request. Cleanup used to live only on the timeout path, so the command
+    stayed armed forever and every later ask got 409 — the channel locked and
+    the only way out was restarting the engine. This wedged the channel
+    repeatedly before it was understood.
+    """
+    async with _async_client() as client:
+        asking = asyncio.create_task(
+            client.post("/api/debug/command", json={"script": "1", "timeout_ms": 30000})
+        )
+        await asyncio.sleep(0.05)
+        asking.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await asking
+        await asyncio.sleep(0.05)
+
+        second = await client.post("/api/debug/command", json={"script": "2", "timeout_ms": 60})
+        assert second.status_code != 409, "떠난 요청이 통로를 잠갔다"
 
 
 async def test_the_answer_says_which_screen_gave_it() -> None:
