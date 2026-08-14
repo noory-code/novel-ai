@@ -12,16 +12,21 @@
 
 ## Essence — one sentence
 
-**Novel is a collaboration tool where a person and AI together structure and
-define a service's essence and concepts — so the AI works better on top of that,
-and the person thinks faster and deeper.**
+**What you are making — until now stuck in one head and re-explained every
+time — is something the person, the AI, and the team all see as the same
+picture.**
 
-(English: Novel is a collaboration tool where a person and AI together structure
-and define a service's essence and concepts — so the AI works better on top of
-that shared structure, and the person thinks faster and deeper.)
+(한국어: 머릿속에만 있어서 매번 다시 설명해야 했던 '무엇을 만드는지'를, 사람도
+AI 도 팀도 같은 그림으로 본다.)
 
 This one sentence beats all other priorities. If a change does not serve this
 essence, it does not ship.
+
+The first clause is the world without Novel; the second is the world with it.
+What Novel *is* — the product category — belongs to
+[§What Novel is](#what-novel-is--is-not-identity), not here: nail a tool
+category into the mission slot and the mission wobbles the day the tool's shape
+changes.
 
 ---
 
