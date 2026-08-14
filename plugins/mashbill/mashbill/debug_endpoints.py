@@ -50,19 +50,38 @@ _LAST_POLL_AT: float | None = None
 # can be open at once (a stale tab beside a fresh one), and an answer that does
 # not name its screen reads as one screen contradicting itself.
 _PAGES: dict[str, dict[str, Any]] = {}
+# Set when a command is waiting to be taken. A screen may hold its request open
+# on this instead of asking again on a timer — macOS slows timers in a window
+# that sits behind another one, and the viewer's loop stopped for 11 minutes
+# that way (O-00000066).
+# Made on first use, not at import: an Event binds to the loop it was created
+# on, and the app is built fresh per test / per run.
+_ARRIVED: asyncio.Event | None = None
+_ARRIVED_LOOP: asyncio.AbstractEventLoop | None = None
 _NEXT_ID = 1
 
 DEFAULT_COMMAND_TIMEOUT_MS = 10_000
 
 
+def _arrived() -> asyncio.Event:
+    """The "a command is waiting" flag, bound to the loop now running."""
+    global _ARRIVED, _ARRIVED_LOOP
+    loop = asyncio.get_running_loop()
+    if _ARRIVED is None or _ARRIVED_LOOP is not loop:
+        _ARRIVED = asyncio.Event()
+        _ARRIVED_LOOP = loop
+    return _ARRIVED
+
+
 def reset_debug_store() -> None:
     """Clear the in-memory snapshot and any in-flight command (tests + fresh sessions)."""
-    global _PENDING, _LAST_POLL_AT, _NEXT_ID
+    global _PENDING, _LAST_POLL_AT, _NEXT_ID, _ARRIVED
     _DEBUG_STORE.clear()
     _PENDING = None
     _RESULTS.clear()
     _WAITERS.clear()
     _PAGES.clear()
+    _ARRIVED = None
     _LAST_POLL_AT = None
     _NEXT_ID = 1
 
@@ -110,6 +129,7 @@ async def debug_command_post_endpoint(request: Request) -> JSONResponse:
     wanted = payload.get("page")
     if isinstance(wanted, str) and wanted:
         _PENDING["page"] = wanted
+    _arrived().set()
 
     timeout_ms = payload.get("timeout_ms", DEFAULT_COMMAND_TIMEOUT_MS)
     try:
@@ -117,6 +137,7 @@ async def debug_command_post_endpoint(request: Request) -> JSONResponse:
     except TimeoutError:
         if _PENDING is not None and _PENDING["id"] == command_id:
             _PENDING = None  # never taken — drop it rather than leave it armed
+            _arrived().clear()
         _WAITERS.pop(command_id, None)
         _RESULTS.pop(command_id, None)
         # Speak about the screen this command named, not about any screen. A
@@ -146,6 +167,12 @@ async def debug_command_get_endpoint(request: Request) -> JSONResponse:
     global _PENDING, _LAST_POLL_AT
     _LAST_POLL_AT = time.time()
     page = request.query_params.get("page")
+    wait_ms = request.query_params.get("wait_ms")
+    if wait_ms and _PENDING is None:
+        try:
+            await asyncio.wait_for(_arrived().wait(), float(wait_ms) / 1000)
+        except (TimeoutError, ValueError):
+            pass
     if page:
         _PAGES[page] = {
             "id": page,
@@ -160,6 +187,7 @@ async def debug_command_get_endpoint(request: Request) -> JSONResponse:
         return JSONResponse({})
     taken = _PENDING
     _PENDING = None
+    _arrived().clear()
     return JSONResponse(taken)
 
 

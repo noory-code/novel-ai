@@ -88,3 +88,53 @@ def test_results_sorted_newest_first(tmp_path: Path) -> None:
     _make_project(tmp_path, "new", "proj-new", updated="2026-01-01T00:00:00")
     results = discover_projects(tmp_path)
     assert [p.id for p, _ in results] == ["proj-new", "proj-old"]
+
+
+# --- O-00000064: a folder git is told to ignore is not part of the work ------
+
+
+def test_gitignored_folder_is_not_walked(tmp_path: Path) -> None:
+    """A throwaway folder buries the real projects.
+
+    This workspace keeps `playground/` for simulation runs — 379 of them turned
+    up in the picker, so the root could not be opened in the app at all. The
+    user already declared that folder disposable by gitignoring it; discovery
+    now reads the same declaration.
+    """
+    (tmp_path / ".gitignore").write_text("playground/\n")
+    _make_project(tmp_path, ".", "keep")
+    _make_project(tmp_path, "playground/run-1", "throwaway")
+
+    assert _dirs(discover_projects(tmp_path)) == {"."}
+
+
+def test_gitignore_only_counts_at_the_workspace_root(tmp_path: Path) -> None:
+    """A nested repo's ignores are its own business, not the workspace's."""
+    (tmp_path / "sub").mkdir()
+    (tmp_path / "sub" / ".gitignore").write_text("kept/\n")
+    _make_project(tmp_path, "sub/kept", "still-found")
+
+    assert _dirs(discover_projects(tmp_path)) == {"sub/kept"}
+
+
+def test_no_gitignore_changes_nothing(tmp_path: Path) -> None:
+    _make_project(tmp_path, "a", "one")
+    _make_project(tmp_path, "b", "two")
+
+    assert _dirs(discover_projects(tmp_path)) == {"a", "b"}
+
+
+def test_gitignore_patterns_that_are_not_folders_are_left_alone(tmp_path: Path) -> None:
+    """Only whole-folder ignores prune a walk; `*.log` says nothing about dirs."""
+    (tmp_path / ".gitignore").write_text("*.log\n!keep.log\n# a comment\n\n")
+    _make_project(tmp_path, "a", "one")
+
+    assert _dirs(discover_projects(tmp_path)) == {"a"}
+
+
+def test_an_unreadable_gitignore_does_not_stop_discovery(tmp_path: Path) -> None:
+    """A broken ignore file must not take the whole picker down."""
+    (tmp_path / ".gitignore").write_bytes(b"\xff\xfe not text at all")
+    _make_project(tmp_path, "a", "one")
+
+    assert _dirs(discover_projects(tmp_path)) == {"a"}

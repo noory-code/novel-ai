@@ -70,6 +70,38 @@ def _should_prune(name: str) -> bool:
     return name in PRUNE_DIRS or name.startswith(".")
 
 
+def gitignored_dirs(workspace_root: Path) -> frozenset[str]:
+    """Folder names the workspace root's ``.gitignore`` declares disposable.
+
+    A folder the user told git to ignore is a folder they consider outside the
+    work, and discovery treats it the same. Without this, a workspace that
+    keeps scratch runs (this one keeps `playground/`) buries every real project
+    — 379 throwaway ones turned up and the root could not be opened at all
+    (O-00000064).
+
+    Only whole-folder entries count (``playground/``, ``tmp``): a glob like
+    ``*.log`` says nothing about directories, and reading a glob as a folder
+    name would hide folders the user never meant to hide. Nested ``.gitignore``
+    files are a nested repo's own business, so only the root's is read. An
+    unreadable file yields nothing rather than taking discovery down.
+    """
+    path = workspace_root / ".gitignore"
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return frozenset()
+    names: set[str] = set()
+    for raw in lines:
+        line = raw.strip()
+        if not line or line.startswith("#") or line.startswith("!"):
+            continue
+        name = line.rstrip("/").lstrip("/")
+        if not name or any(ch in name for ch in "*?[") or "/" in name:
+            continue
+        names.add(name)
+    return frozenset(names)
+
+
 def enumerate_projects(plot_root: Path) -> list[ProjectDoc]:
     """Read the valid project(s) under a Novel data root, newest first.
 
@@ -120,6 +152,7 @@ def discover_projects(workspace_root: Path) -> list[tuple[ProjectDoc, str]]:
     depth and total count are capped. Symlinks are not followed.
     """
     root = Path(workspace_root).expanduser().resolve()
+    ignored = gitignored_dirs(root)
     results: list[tuple[ProjectDoc, str]] = []
     for current, dirs, _files in os.walk(root, followlinks=False):
         cur = Path(current)
@@ -135,7 +168,9 @@ def discover_projects(workspace_root: Path) -> list[tuple[ProjectDoc, str]]:
         if depth >= MAX_DISCOVERY_DEPTH:
             dirs[:] = []
         else:
-            dirs[:] = sorted(d for d in dirs if not _should_prune(d))
+            # ``ignored`` only names root-level folders, so it applies at depth 0.
+            skip = ignored if depth == 0 else frozenset()
+            dirs[:] = sorted(d for d in dirs if not _should_prune(d) and d not in skip)
     results.sort(key=lambda pr: pr[0].updated, reverse=True)
     return results
 

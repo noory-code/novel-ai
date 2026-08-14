@@ -4,6 +4,24 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.187.0] — 2026-08-14
+
+### Fixed
+
+- Workspace discovery walked folders the root's `.gitignore` declares disposable. This workspace
+  keeps `playground/` for simulation runs; 379 of them turned up and the root could not be opened
+  in the app at all (O-00000064). A folder the user told git to ignore is a folder they consider
+  outside the work, so discovery now reads the same declaration. Only whole-folder entries count —
+  a glob like `*.log` says nothing about directories — and only the root's file is read, since a
+  nested repo's ignores are its own business.
+
+### Added
+
+- `GET /api/debug/command` accepts `wait_ms` and holds the request open until work arrives. The
+  viewer's poll loop slept between asks, and macOS slows timers in a window sitting behind another
+  one — the loop stopped for 11 minutes that way (O-00000066). Waiting on the network instead of a
+  timer removes the sleep from the common path. Omitting `wait_ms` keeps the immediate answer.
+
 ## [0.186.1] — 2026-08-13
 
 ### Fixed

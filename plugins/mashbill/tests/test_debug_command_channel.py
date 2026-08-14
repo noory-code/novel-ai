@@ -183,6 +183,41 @@ def test_an_answer_to_nothing_is_refused() -> None:
     assert r.status_code == 404
 
 
+async def test_the_screen_can_wait_for_work_instead_of_asking_again() -> None:
+    """Holding the request open lets the screen wait on the network, not a timer.
+
+    macOS slows timers in a window that is behind another one, and the viewer's
+    poll loop stopped for 11 minutes that way (O-00000066). A request that stays
+    open until work arrives removes the timer from the loop.
+    """
+    async with _async_client() as client:
+
+        async def ask_later() -> None:
+            await asyncio.sleep(0.15)
+            await client.post("/api/debug/command", json={"script": "1", "timeout_ms": 2000})
+
+        waiting = client.get("/api/debug/command?wait_ms=2000")
+        taken, _ = await asyncio.gather(waiting, ask_later())
+
+    assert taken.json()["script"] == "1"
+
+
+async def test_waiting_gives_up_and_says_nothing_arrived() -> None:
+    """The screen must get an answer either way, or its loop stalls."""
+    async with _async_client() as client:
+        r = await client.get("/api/debug/command?wait_ms=60")
+    assert r.status_code == 200
+    assert r.json() == {}
+
+
+async def test_asking_without_waiting_still_answers_at_once() -> None:
+    """The old shape keeps working — an agent poking the channel by hand."""
+    async with _async_client() as client:
+        r = await client.get("/api/debug/command")
+    assert r.status_code == 200
+    assert r.json() == {}
+
+
 async def test_the_answer_says_which_screen_gave_it() -> None:
     """Two open screens answer in turn, and an answer that does not name its
     screen reads as one screen changing its mind."""
