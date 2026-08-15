@@ -188,9 +188,12 @@ def test_an_answer_to_nothing_is_refused() -> None:
 async def test_the_screen_can_wait_for_work_instead_of_asking_again() -> None:
     """Holding the request open lets the screen wait on the network, not a timer.
 
-    macOS slows timers in a window that is behind another one, and the viewer's
-    poll loop stopped for 11 minutes that way (O-00000066). A request that stays
-    open until work arrives removes the timer from the loop.
+    Added while chasing O-00000066, on the theory that macOS was stopping the
+    viewer's timers behind another window. Measurement later killed that theory
+    — 200s occluded slows a 1s timer to about 1.5s and leaves the network alone
+    — so this is not the fix it was meant to be. It stays because holding the
+    request beats a bare poll either way: work reaches the screen the moment it
+    arrives instead of on the next tick.
     """
     async with _async_client() as client:
 
@@ -278,6 +281,25 @@ async def test_an_asker_that_goes_away_does_not_wedge_the_channel() -> None:
 
         second = await client.post("/api/debug/command", json={"script": "2", "timeout_ms": 60})
         assert second.status_code != 409, "떠난 요청이 통로를 잠갔다"
+
+
+async def test_a_taken_command_that_is_never_answered_does_not_wedge() -> None:
+    """The screen may take work and never report back — it reloaded, it crashed,
+    the user closed the window. The asker's own deadline must still free the
+    channel.
+    """
+    async with _async_client() as client:
+        asking = asyncio.create_task(
+            client.post("/api/debug/command", json={"script": "1", "timeout_ms": 200})
+        )
+        await asyncio.sleep(0.05)
+        taken = (await client.get("/api/debug/command?page=a")).json()
+        assert taken["script"] == "1"  # the screen took it
+        await asking  # and never answered
+        await asyncio.sleep(0.05)
+
+        second = await client.post("/api/debug/command", json={"script": "2", "timeout_ms": 60})
+        assert second.status_code != 409, "답 없이 가져간 일감이 통로를 잠갔다"
 
 
 async def test_the_answer_says_which_screen_gave_it() -> None:
