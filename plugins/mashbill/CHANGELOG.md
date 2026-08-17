@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.188.0] — 2026-08-18
+
+### Fixed
+
+- The services canvas map handed the coach a feature's kind, label and id, and nothing about
+  whether that feature's own canvas already held a flow. So the coach could not tell a drawn
+  feature from an empty one and proposed redrawing one that already held nineteen nodes
+  (O-00000068). Each feature line now carries its step count, or says it has not been drawn yet.
+  Only feature nodes are looked up — they are the sole drill target — so the extra reads stay
+  bounded by how many features one services canvas holds, and every other canvas pays nothing.
+
 ## [0.187.0] — 2026-08-14
 
 ### Fixed

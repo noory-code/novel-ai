@@ -254,13 +254,34 @@ def render_canvas_map(plot_root: Path, scope: str, selection: Any) -> str:
     selected_ids = {
         s.get("id") for s in selection if isinstance(s, dict) and isinstance(s.get("id"), str)
     }
+    project_id = _resolve_project_id(plot_root)
     lines = [f"[Canvas: {scope}] {len(canvas.nodes)} node(s):"]
     for node in canvas.nodes[:CANVAS_MAP_CAP]:
         mark = " [selected]" if node.id in selected_ids else ""
-        lines.append(f'- {node.kind} "{node.label}" ({node.id}){mark}')
+        flow = _render_feature_flow_state(plot_root, project_id, node)
+        lines.append(f'- {node.kind} "{node.label}" ({node.id}){flow}{mark}')
     if len(canvas.nodes) > CANVAS_MAP_CAP:
         lines.append(f"…and {len(canvas.nodes) - CANVAS_MAP_CAP} more")
     return "\n".join(lines)
+
+
+def _render_feature_flow_state(plot_root: Path, project_id: str | None, node: Any) -> str:
+    """Whether this feature's own canvas already holds a flow.
+
+    A feature is the only drill target, and the coach reads this map to pick
+    what to work on next. Without the count it cannot tell a drawn feature from
+    an empty one, so it proposes redrawing a flow that already exists
+    (novel-workspace O-00000068 — it proposed one that held 19 nodes).
+
+    Only feature nodes are looked up, so the extra reads are bounded by how many
+    features one services canvas holds. Every other kind returns ``""`` and pays
+    nothing.
+    """
+    if node.kind != "feature" or project_id is None:
+        return ""
+    detail = _safe_read_canvas(plot_root, project_id, "feature", node.id)
+    steps = 0 if detail is None else sum(1 for n in detail.nodes if n.kind == "step")
+    return f" [단계 {steps}개]" if steps else " [아직 안 그렸다]"
 
 
 def render_cross_canvas_registry(plot_root: Path, scope: str) -> str:

@@ -28,10 +28,12 @@ from mashbill.models import (
     CanvasDoc,
     CoreValueNode,
     EntityNode,
+    FeatureNode,
     IdentityNode,
     MissionNode,
     ServiceNode,
     SketchNode,
+    StepNode,
 )
 from mashbill.workspace import resolve_plot_root
 
@@ -184,6 +186,64 @@ def test_canvas_map_empty_for_project_scope(tmp_path: Path) -> None:
 def test_canvas_map_empty_when_no_project(tmp_path: Path) -> None:
     plot_root = resolve_plot_root(str(tmp_path))
     assert render_canvas_map(plot_root, "foundation", []) == ""
+
+
+def _services_canvas_with_two_features() -> CanvasDoc:
+    return CanvasDoc(
+        canvas_id="services",
+        canvas_kind="services",
+        nodes=[
+            ServiceNode(id="svc1", label="Publishing"),
+            FeatureNode(id="f_drawn", label="Write a post"),
+            FeatureNode(id="f_empty", label="Delete a post"),
+        ],
+    )
+
+
+def _feature_canvas_with_steps(feature_id: str, label: str, step_count: int) -> CanvasDoc:
+    """A feature's own canvas: its root anchor is the feature node itself, and
+    ``canvas_id`` equals the feature id (``_detail_canvas_rules``)."""
+    return CanvasDoc(
+        canvas_id=feature_id,
+        canvas_kind="feature",
+        feature_ref=feature_id,
+        nodes=[
+            FeatureNode(id=feature_id, label=label),
+            *(StepNode(id=f"{feature_id}_s{i}", label=f"Step {i}") for i in range(step_count)),
+        ],
+    )
+
+
+def test_canvas_map_says_which_features_already_have_a_flow(tmp_path: Path) -> None:
+    """novel-workspace O-00000068 — the coach could not tell which features were
+    already drawn, so it proposed redrawing one that had 19 nodes in it. The
+    services map now carries each feature's step count."""
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(plot_root, "alpha", _services_canvas_with_two_features())
+    write_canvas(plot_root, "alpha", _feature_canvas_with_steps("f_drawn", "Write a post", 3))
+
+    out = render_canvas_map(plot_root, "services", [])
+    drawn_line = next(line for line in out.splitlines() if "Write a post" in line)
+    empty_line = next(line for line in out.splitlines() if "Delete a post" in line)
+
+    assert "단계 3개" in drawn_line
+    assert "아직 안 그렸다" in empty_line
+    # the service itself carries no flow marker — only features drill into one
+    service_line = next(line for line in out.splitlines() if "Publishing" in line)
+    assert "단계" not in service_line
+    assert "아직 안 그렸다" not in service_line
+
+
+def test_canvas_map_leaves_other_canvases_alone(tmp_path: Path) -> None:
+    """The extra per-feature reads happen only where feature nodes live. A
+    foundation map must not pay for them, nor gain the marker."""
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(plot_root, "alpha", _two_value_canvas())
+    out = render_canvas_map(plot_root, "foundation", [])
+    assert "단계" not in out
+    assert "아직 안 그렸다" not in out
 
 
 # --- cross-canvas registry (Phase 2b) --------------------------------------
