@@ -114,8 +114,8 @@ When the same word means different things in different places, rename the loser.
 |---|---|---|
 | **Canvas** | a canvas kind (foundation/actors/services/entities + feature drill) | not the HTML canvas element |
 | **Anchor** | the synthetic project node injected at the centre of primary canvases. Holds the name only | lives outside `canvas.json` (`ProjectDoc.anchors`) |
-| **Service** | the value-creation hub node (5-field inspector) | not a REST/microservice |
-| **Feature** | a capability under a service — the drill target | not a service (no multi-actor value exchange) |
+| **Service** | one coherent human outcome and its capabilities (5-field inspector) | not a REST/microservice, screen, or internal process |
+| **Feature** | a capability that helps reach its service outcome — the drill target | does not own a separate outcome |
 | **Actor** | a relational *role* in a hierarchy (not a person) | not an Akka actor, not a persona |
 | **Note** | edgeless canvas-global context (read by human + AI) | not a content node; never gains an edge |
 | **Entity** | a project-wide data object on the AI-maintained Entities canvas (name + one line) | not an ERD table (no fields/FK) |

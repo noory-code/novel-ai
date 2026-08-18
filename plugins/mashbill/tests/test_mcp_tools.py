@@ -300,8 +300,8 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     assert entities and "엔티티" in entities
     assert mcp_tools.get_design_principles(area="entities") == entities
     services = get_principles("services")
-    assert "별도 브랜드와 사업도 확인" in services
-    assert "잘못 합친 예" in services
+    assert "사람이 이루려는 결과 하나" in services
+    assert "액터를 새로 만들지 않는다" in services
     values = get_principles("values")
     assert "대화에서 가치 후보" in values
     # CD-2026-07-25-A was REVERTED (W-121). Values really do get filed as identity
@@ -315,7 +315,7 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     assert "대가" in full and "교환" in full and "체감" in full
     assert "형용사" in full  # identity is included in the all-areas join
     assert "모든 사업에서 필요한 엔티티" in full
-    assert "별도 브랜드와 사업도 확인" in full
+    assert "사람이 이루려는 결과 하나" in full
     assert "대화에서 가치 후보" in full
     import pytest
 

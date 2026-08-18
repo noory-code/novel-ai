@@ -223,17 +223,16 @@ def test_foundation_framing_draws_values_out_until_dry() -> None:
     assert "first two or three" in f
 
 
-def test_services_framing_landscape_spans_exchanges_not_layers() -> None:
-    """Benchmark round 2 (2026-07-02, Uber run): asked for the landscape, the
-    coach mapped four internal layers of ONE marketplace (matching, safety,
-    settlement) and called it the map — surfacing a single value exchange.
-    A service is a value-exchange surface; the landscape spans the DIFFERENT
-    exchanges the mission reaches, and layers of one exchange are not
-    services (tenth sim iteration)."""
+def test_services_framing_maps_outcomes_not_internal_processes() -> None:
+    """D-2026-08-18-B: services divide the outcomes people seek. Internal
+    processes still do not become services, but a multi-actor exchange is no
+    longer required."""
     f = build_framing_preamble("services").lower()
-    assert "one value exchange" in f
+    assert "one coherent outcome" in f
+    assert "one or more human actors" in f
     assert "internal processes" in f
-    assert "other exchanges" in f
+    assert "do not invent actors" in f
+    assert "exchange lines" not in f
 
 
 def test_propose_playbook_switches_to_drafts_on_thin_replies() -> None:
@@ -443,12 +442,11 @@ def test_write_playbook_names_the_anchor_as_foundation_parent() -> None:
 
 
 def test_services_framing_discriminates_feature_from_service() -> None:
-    """B-17 (user live-watch): the coach blurred service-level and
-    feature-level items. The framing must carry the discriminator both ways:
-    a feature is what ONE person does inside a service; a thing naming an
-    audience/market/revenue line is a service candidate, not a feature."""
+    """A feature helps a person reach its service's outcome. A candidate that
+    owns a distinct outcome belongs at service level."""
     f = build_framing_preamble("services").lower()
-    assert "one person does" in f
+    assert "helps a person reach that service outcome" in f
+    assert "owns a distinct outcome" in f
 
 
 def test_entity_relationship_lines_carry_a_verb_label() -> None:
@@ -578,32 +576,27 @@ def test_actors_every_family_gets_an_anchor_spoke() -> None:
     assert "anchor line" in p.lower()
 
 
-def test_services_derive_from_actor_exchange_lines() -> None:
-    """User-pinned chain (2026-07-05): the actors canvas already says WHAT
-    flows between whom — a service is HOW that exchange happens. The coach
-    derives service candidates from the exchange lines and wires each
-    service's participants from its lines' ends."""
+def test_services_use_existing_human_actors_without_requiring_exchange_lines() -> None:
+    """D-2026-08-18-B supersedes the exchange-line derivation rule."""
     f = build_framing_preamble("services").lower()
-    assert "exchange lines" in f
+    assert "existing human actors" in f
+    assert "exchange lines" not in f
     assert "ref_actor_ids" in f
 
 
-def test_services_platform_sweep_before_closing() -> None:
-    """User-pinned (2026-07-05, renamed 접점→플랫폼 same night): category IS
-    the platform (플랫폼 — where the product meets its people). Before
-    closing, the coach groups services into platforms and sets each
-    platform's participants; narrowing keeps a service's participants
-    within its platform's."""
+def test_services_categories_are_optional_and_never_forced() -> None:
+    """A category is useful only when several services truly share a theme or
+    surface. A single service never needs a wrapper for completeness."""
     f = build_framing_preamble("services")
     low = f.lower()
-    assert "platform" in low
-    assert "플랫폼" in f
-    assert "stay within" in low
+    assert "categories are optional" in low
+    assert "do not create a category" in low
+    assert "shared theme or surface" in low
 
 
 def test_feature_subjects_narrow_to_service_participants() -> None:
     f = build_framing_preamble("services").lower()
-    assert "its service's participants" in f
+    assert "existing human actors" in f
 
 
 def test_feature_doers_are_wired_not_just_narrowed() -> None:

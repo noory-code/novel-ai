@@ -48,9 +48,9 @@ class ActorRefNode(BaseNodeFields):
 
 
 class ServiceNode(BaseNodeFields):
-    """``service`` kind — the value-creating hub (PHILOSOPHY P5). A place where
-    several actors create + exchange value (value exchange is a property of the
-    *service*, not a feature).
+    """``service`` kind — the outcome-owning hub (PHILOSOPHY P5). It groups
+    the capabilities that help one or more human actors reach one coherent
+    outcome. Multi-actor value exchange is allowed but not required.
 
     D-2026-06-17-B / D-2026-06-20-F — the inspector is **5 question-titled
     fields**: 2 typed-text (왜 필요한가? = ``problem``; 뭐가 좋아지나? =
@@ -75,9 +75,8 @@ class ServiceNode(BaseNodeFields):
 class FeatureNode(BaseNodeFields):
     """``feature`` kind (D-2026-06-17-D / D-2026-06-19-H). A capability the
     service offers (글쓰기 / 편집) — a **behaviour grouping under a service**,
-    NOT an independent value unit (value exchange is a property of the
-    *service*; a feature that grows its own multi-actor exchange is promoted
-    to a service). The **sole drill target**: clicking a feature opens its
+    not a separate outcome. A feature that starts to own a distinct outcome is
+    promoted to a service. The **sole drill target**: clicking a feature opens its
     Feature canvas (a UX flowchart). Nested under a service via a directed
     edge (the same child mechanism category→service uses).
 
@@ -91,14 +90,11 @@ class FeatureNode(BaseNodeFields):
 
 
 class CategoryNode(BaseNodeFields):
-    """v0.15 Phase 1: ``category`` kind. D-2026-07-05-E (user-pinned) — the
-    category IS the product's **touchpoint (접점)**: where the product meets
-    its people (고객 앱, 사장님 웹). It groups the services delivered through
-    that surface, and ``ref_actor_ids`` names the actor families who meet the
-    product here — the top of the participation-narrowing chain
-    (touchpoint ⊇ service ⊇ feature, coached/UI-soft, never a validator).
-    The wire kind stays ``category``; display/concept renamed. ``theme`` is
-    the one-line statement of the common thread."""
+    """v0.15 Phase 1: ``category`` kind. An optional visual grouping used only
+    when two or more services share a useful theme or surface. It owns no
+    outcome. ``ref_actor_ids`` can name the human roles shared by the group;
+    the relation remains coached/UI-soft, never a validator. ``theme`` is the
+    one-line statement of the common thread."""
 
     kind: Literal["category"] = "category"
     theme: str = ""

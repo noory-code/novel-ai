@@ -1187,6 +1187,16 @@ editor** in the Inspector (headings / lists / bold / italic / code
 edits). The legacy DetailsSection MD-file editor is hidden for all
 10 publish-eligible kinds — JSON SSOT.
 
+**Service and feature boundary ([D-2026-08-18-B](./DECISIONS.md)).** A
+service owns one coherent outcome that one or more human actors seek. It groups
+the features that help them reach that outcome. A feature states something a
+person can do toward the service outcome; it does not own a separate outcome.
+Value exchange between several actors can be part of a service, but is not a
+requirement. A screen, channel, internal process, or revenue line is not a
+service by itself. A category remains optional and is used only when several
+services share a useful theme or surface. The coach must not invent actors or
+categories to satisfy a count.
+
 **Service inspector — 5 question-titled fields ([D-2026-06-17-B](./DECISIONS.md)).**
 The Services-overview `service` inspector is redefined to **5
 question-titled fields**, in order: (1) **"누가 참여하나?"** — multi-select

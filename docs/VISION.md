@@ -12,21 +12,22 @@
 
 ## Essence — one sentence
 
-**What you are making — until now stuck in one head and re-explained every
-time — is something the person, the AI, and the team all see as the same
-picture.**
+**The person and the AI never lose sight of the essence or where the current
+work fits into the whole.**
 
-(한국어: 머릿속에만 있어서 매번 다시 설명해야 했던 '무엇을 만드는지'를, 사람도
-AI 도 팀도 같은 그림으로 본다.)
+(한국어: 사람과 AI가 본질과 전체 맥락을 놓치지 않는다.)
+
+Novel helps the person and the AI discover the essence together. They always
+know why the current work matters and where it fits into the whole. They build
+the service from that essence.
 
 This one sentence beats all other priorities. If a change does not serve this
 essence, it does not ship.
 
-The first clause is the world without Novel; the second is the world with it.
-What Novel *is* — the product category — belongs to
-[§What Novel is](#what-novel-is--is-not-identity), not here: nail a tool
-category into the mission slot and the mission wobbles the day the tool's shape
-changes.
+This sentence states the outcome Novel exists to preserve. What Novel *is* —
+the product category — belongs to
+[§What Novel is](#what-novel-is--is-not-identity), not here. The product may
+change form without changing this essence.
 
 ---
 
@@ -39,7 +40,7 @@ canvas, MCP tool, and inspector field must trace back to one of these three.
 |---|---|---|---|---|
 | 1 | **Discovery** | Draws out an essence not yet put into words | Foundation (mission/core value/identity) | Active discussion coach — interviews and proposes, the person reviews and confirms. No empty forms❌, no silent auto-generation❌ |
 | 2 | **Retention** | Keeps the discovered essence visible and working | Anchor (project node) + later canvases reference earlier ones | Anchors every proposal in the Discovery output — never proposes a service that conflicts with the mission |
-| 3 | **Execution** | Plans and builds the services that realize the essence | Actors → Services (category→service→feature) → Feature canvas (UX flow) | Planning participation (proposes actors, services, features, value flows) + development (code the person reviews against the essence) |
+| 3 | **Execution** | Plans and builds the services that realize the essence | Actors → Services (service→feature; category optional) → Feature canvas (UX flow) | Planning participation (proposes actors, outcome-based services, and features) + development (code the person reviews against the essence) |
 
 > **The cycle is not linear.** While attempting Execution you may belatedly
 > discover part of the essence by realizing what was missing. Novel must support
@@ -73,12 +74,12 @@ deliverable, and it is the source the AI reads and works from.
 
 **4 uses** — every feature serves one or more of these:
 
-1. **Concrete service planning** — draws "what value is created, who exchanges
-   what with whom, what is enforced."
+1. **Concrete service planning** — draws "which outcome each service owns, who
+   takes part, what people can do, and what is enforced."
 2. **Direction alignment** — captures and checks mission, value, and identity in
-   one place so the team and AI move consistently.
+   one place so the person and AI move consistently.
 3. **Position in the big picture** — locate yourself via "today's work" → feature
-   → service → category → mission.
+   → service → mission. A category may group several related services.
 4. **Relationship visualization** — interactions among actors and services that
    only become visible when you look broadly.
 
@@ -102,10 +103,13 @@ deliverable, and it is the source the AI reads and works from.
 - **core value** = the value that wins when a decision is split.
 - **identity** = the execution/expression rule that always applies (AI-derived, person-confirmed).
 - **actor** = a relational *role* (not a person or persona). Hierarchy (operator/user→subordinate, inheritance) + give-and-take.
-- **service** = a playground where multiple actors **create and exchange value**. Value exchange is
-  a property *of the service*. 5-cell question-form inspector (who, why needed, what gets better, what you can't give up, by what tone).
-- **feature** = a *capability* a service provides (writing/editing) — a behaviour grouping under a service.
-  **Not an independent value unit**; once it becomes a multi-actor value exchange → **promote** to a service.
+- **service** = one coherent outcome that one or more human actors seek, together
+  with the capabilities that help them reach it. Multi-actor value exchange is
+  possible, not required. 5-cell question-form inspector (who, why needed, what
+  gets better, what you can't give up, by what tone).
+- **feature** = a capability that helps a person reach its service's outcome
+  (writing/editing) — a behaviour grouping under a service. When it starts to
+  own a distinct outcome, **promote** it to a service.
 - **Feature canvas** = a **UX flowchart** (action → branch → result, action altitude). The implementation
   below it (storage, query, render) is the external agent's job. Here the **actor is a read-only anchor**
   ("who starts / who can"), *not a value exchange* — per-service exchange data is retired, value lives in

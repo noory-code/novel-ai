@@ -58,8 +58,8 @@
 - **People only.** External APIs·systems·bots·infrastructure are not actors (an infra layer, out of scope until mode 2).
 - **Hierarchy (`parent_id` tree, is-a refinement):** user → hero/fan, operator → manager etc. Core.
 - Form = **identity-only** (body). (US-303: `side` field removed from actor — editing and schema. Asymmetry expressed via actor_ref/edges)
-- Count = at least one operator·user pair *emerges* from the hierarchy
-  (not a hard ≥2 validator — retired).
+- Count = one or more human roles. A single person can be the only actor; there
+  is no operator/user pair minimum.
 - **2 kinds of edges** (hierarchy / relationship value arrow) = [`canvases.md`](./canvases.md) Actors.
 
 > **Changed this session:** per-service exchanges (gives/receives/motivation/pain) are no longer
@@ -72,29 +72,33 @@
 
 ### `category` — thematic grouping of services
 - **Asks:** what kind of services does it group?
-- A pure container (creates no value, mindless). Services nest beneath it. Only on the Services canvas.
+- An optional pure container (creates no value, mindless). Use it only when two
+  or more services share a useful theme or surface. Only on the Services canvas.
 - Field: `theme` (one-line common subject).
 
-### `service` — the playground of value creation·exchange
-- **Asks:** what value is created and exchanged here, who participates?
-- Definition = an arena where multiple actors **create and exchange** (not a fixed pipeline·transaction queue). Concurrency·
-  diversity·degrees of freedom. **Value exchange is a property *of the service*** (not of the feature).
+### `service` — one outcome and the capabilities that reach it
+- **Asks:** what coherent outcome does this service help people reach, and who participates?
+- Definition = one coherent outcome that one or more human actors seek, together
+  with the capabilities that help them reach it. A multi-actor value exchange
+  can happen inside a service, but is not required. A screen, channel, internal
+  process, or revenue line is not a service by itself.
 - **Selection = a 5-field inspector, no drill.** Behaviour is one layer down (each `feature` drills into the Feature canvas).
 - **5-field question form** (each title is itself an interview question): ① who participates? (actor reference, plural) ② why is it
   needed? (typing) ③ what gets better? (typing) ④ what can't be given up? (core_value reference, plural)
   ⑤ with what grain do we approach? (identity reference, plural). The 3 reference fields = pick from Foundation/Actors
   (no free typing ❌). Old 9 fields (what/scope/trigger/how/outcome/do/dont/target_side/body) **deleted**.
-- Minimum participants = **≥1 actor_ref** (the operator = the default participant, hard ≥2 retired).
+- Minimum participants = **≥1 human actor reference**. Do not create an actor for AI, software, or infrastructure merely to fill this field.
 
 ### `feature` — the capability a service provides
-- **Asks:** what can a participant do in this service?
+- **Asks:** what can a person do to reach this service's outcome?
 - Definition = a *capability* under the service (writing/editing/emoji reactions) = **a behaviour grouping under the service**.
   Writing/editing/deleting are not services but capabilities the service provides.
-- **Not an independent value unit** (value exchange is a service property). **Promotion rule:** when a proposed feature
-  comes to have *its own multi-actor value exchange* → **promoted to a service** (the value-exchange test).
+- **Does not own a separate outcome. Promotion rule:** when a proposed feature
+  starts to own a distinct outcome → **promoted to a service** (the outcome test).
 - **The only drill target** — click = the Feature canvas (UX flowchart) opens.
 - Inspector = lean (name + behaviour summary; details settled at the implementation stage).
-- Hierarchy: **category → service → feature** (overview) → behaviour/rule (Feature canvas).
+- Hierarchy: **service → feature**, optionally **category → service → feature**
+  (overview) → behaviour/rule (Feature canvas).
 
 ---
 

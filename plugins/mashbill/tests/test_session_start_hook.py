@@ -17,7 +17,7 @@ def test_installed_plugin_finds_vision_mirror() -> None:
     vision = session_start.find_vision()
 
     assert vision == ROOT / "docs" / "VISION.md"
-    assert "Novel is a collaboration tool" in session_start.read_vision_essence(vision)
+    assert "never lose sight of the essence" in session_start.read_vision_essence(vision)
 
 
 def test_public_next_session_queue_has_no_private_tasks() -> None:

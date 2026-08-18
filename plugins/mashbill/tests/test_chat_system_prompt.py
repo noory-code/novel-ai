@@ -52,7 +52,7 @@ def test_services_framing_uses_five_slots_and_jtbd() -> None:
     assert "planning" in f
     assert "five" in f or "5" in f  # the 5 inspector slots
     assert "without it" in f  # JTBD: ask what's frustrating without it, not 'why'
-    assert "one person does inside a service" in f  # feature/service boundary
+    assert "helps a person reach that service outcome" in f  # feature/service boundary
 
 
 def test_feature_framing_is_happy_path_first_with_altitude_guard() -> None:

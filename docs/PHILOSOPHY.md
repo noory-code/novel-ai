@@ -8,34 +8,44 @@
 
 ## Core Definition
 
-> **A service is a device that produces value — value that did not previously exist — through the interaction of multiple actors.**
+> **A service owns one coherent outcome that one or more people seek, and groups the capabilities that help them reach it.**
 
-Korean original: *"서비스란 = 여러 행위자의 상호작용을 통해 이전에 없던 가치를 만들어내는 장치"*
+Korean: *"서비스는 한 명 또는 여러 명이 이루려는 결과 하나를 맡고, 그 결과에 필요한 기능을 묶는다."*
 
 ---
 
 ## 10 Principles
 
-### P1. Value is Relational
-Value doesn't live inside things. It arises *between* actors when they meet and exchange or interact. This aligns with Simmel's relational value theory and Vargo & Lusch's Service-Dominant Logic (value-in-use, not value-in-exchange).
+### P1. Value Arises in Use
+Value does not live inside a feature. It appears when a person uses a service
+and moves toward an outcome. When several people participate, value can also
+arise through their exchange or interaction. This aligns with Service-Dominant
+Logic's value-in-use without making a multi-actor exchange mandatory.
 
 ### P2. Value is Plural
 Money, attention, name recognition, relationships, trust, information, experience, access, time-and-effort — all are forms of value. Reducing any interaction to a single form (e.g., money) misses the point. In a given exchange, each side typically trades *different forms* of value.
 
-### P3. Participation is Asymmetric
-Each participant brings a different set of inputs and takes away a different set of outputs.
+### P3. Participation Can Be Asymmetric
+When several people participate, each may bring different inputs and take away
+different outputs.
 
 - **Hero**: inputs time, creativity, content → outputs money, followers, fame
 - **Fan**: inputs money, attention → outputs access, belonging
 - **Admin**: inputs infrastructure, moderation → outputs fees, trust capital
 
-The service is the mechanism that matches these asymmetric I/O profiles.
+The service can match these asymmetric contributions while still owning one
+coherent outcome. A service used by one person does not need artificial
+participants.
 
-### P4. Added Value is Emergent Surplus
-A service is not a simple exchange. It's a *transformation*. When Fan spends $10 to receive a $15-subjective-value experience, they get +$5 surplus. Hero can simultaneously receive surplus. The service exists precisely because the sum of all participant surpluses > 0 (positive-sum).
+### P4. Added Value Changes the Person's Situation
+A service is not a list of screens or internal steps. It changes a person's
+situation: something becomes clearer, easier, safer, or newly possible. In a
+multi-actor service, several participants may gain surplus at the same time.
 
 ### P5. A Service is a Hub, Not a Wire
-The service itself is not the relation — it's the **field / mechanism** where relations are enabled. It's visualized as a **node**, not an edge. Participant nodes sit around it; arrows flow in and out, carrying inputs and outputs.
+The service itself is not a relation, screen, or process step. It is the
+**outcome-owning hub** that groups the capabilities and relationships needed to
+reach that outcome. It is visualized as a **node**, not an edge.
 
 ### P6. Value-Carrying Arrows Bundle Action and Value
 A **value-carrying (relationship) arrow** bundles three things:
@@ -54,7 +64,8 @@ This principle governs the former, not the latter.
 There are distinct planes of thinking:
 
 - **Actors plane** — who participates and how they relate.
-- **Services plane** — what value-creating machinery they interact through.
+- **Services plane** — which outcomes the product helps people reach and which
+  capabilities belong to each outcome.
 
 Originally this was sketched as a spatial top/bottom split on the canvas, then reframed as two kinds coexisting in one 2D space. The current model gives **each plane its own canvas** (D-2026-06-16-R, D-2026-06-17-C): Foundation, Actors, and Services are separate canvases, not bands or kinds sharing one space — Foundation stays a single canvas whose three concepts compose the essence (D-2026-06-16-R), and the Services overview has no first-class service→service edge (D-2026-06-17-C). Within a canvas users drag freely without positional constraints; edges are governed by their definition, not by y-position.
 
@@ -83,6 +94,9 @@ How we arrived at this philosophy (2026-04-20 session):
 8. **"Service = edge" misread**: AI interpreted "service must be a relation" as "service is an edge." User corrected.
 9. **"Service = hub node" confirmed**: User: "Service is a node — a node that creates value and enables relationships."
 10. **Two-layer structure**: User: "Not 2D, but 2 *layers*." (Superseded by D-2026-06-16-R / D-2026-06-17-C: the model is now **separate canvases per plane**, not layers/bands in one space.)
+11. **Outcome boundary**: D-2026-08-18-B makes one coherent human outcome the
+    service boundary. Multi-actor value exchange remains a valid service shape,
+    but is no longer required.
 
 ---
 
@@ -91,7 +105,7 @@ How we arrived at this philosophy (2026-04-20 session):
 | Principle | Implementation |
 |---|---|
 | P1, P2, P6 | Relationship edges carry `value_form` (plural select) + `action_verb`; hierarchy edges carry neither (D-2026-06-17-A) |
-| P3 | Actor nodes are identity-only (body + inheritance; `side` field removed US-303); per-service asymmetric I/O lives on `actor_ref` in the feature canvas (D-2026-06-17-A/G) |
+| P3 | A service references the human actors who take part; one actor is valid, and multi-actor asymmetry is represented only when it exists |
 | P4 | AI skill detects positive-sum patterns |
 | P5 | Services are a node kind (not edge) |
 | P7 | Separate canvases per plane (Foundation / Actors / Services), not bands in one space (D-2026-06-16-R, D-2026-06-17-C) |

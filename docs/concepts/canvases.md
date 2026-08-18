@@ -11,7 +11,7 @@ Each canvas forces **one sharp question**. That question is that canvas's identi
 | **Foundation** | Who are we, and why do we exist? | `project` · `mission` · `core_value` · `identity` | Discovery |
 | **Actors** | Who participates? | `project` · `actor` | Planning |
 | **Entities** | What does the product deal with? | `project` · `entity` (AI-maintained) | Planning (derived) |
-| **Services** (overview) | What value is created and exchanged? | `project` · `category` · `service` · `feature` | Planning |
+| **Services** (overview) | Which outcomes does the product help people reach? | `project` · `category` · `service` · `feature` | Planning |
 | **Feature** (per-feature, drill target) | How does this feature work? | `step` · `decision` · flow edge · `note` · `rule` · `actor_ref` | Execution |
 
 > All primary canvases (Foundation/Actors/Entities/Services) radiate from the
@@ -55,17 +55,20 @@ Manages the product's **data objects** (post·comment·user) in one place. Symme
 - **A derived canvas filled in last** (emerges from feature work).
 - AI can propose·draw entity↔entity rough relationship edges (edges are governed by definition, not authorship).
 
-## Services (overview) — "What value is created and exchanged?"
+## Services (overview) — "Which outcomes does the product help people reach?"
 
-Maps the value economy at a high level. Hierarchy = **category → service → feature**.
+Maps the product's outcome boundaries at a high level. Hierarchy = **service →
+feature**, with an optional **category → service** level.
 
-- **category** = visual grouping (mindless, no value). Groups services by theme.
-- **service** = an arena where multiple actors **create and exchange value**. **Selection = a 5-field
+- **category** = optional visual grouping (mindless, no value). Use it only when
+  several services share a useful theme or surface.
+- **service** = one coherent outcome that one or more human actors seek, together
+  with the capabilities that help them reach it. **Selection = a 5-field
   question-form inspector, no drill.** 5 fields: who participates? (actor reference) · why is it needed? · what
   gets better? · what can't be given up? (core_value reference) · with what grain do we approach? (identity reference).
 - **feature** = a *capability* the service provides (writing/editing) — a **behaviour grouping** under the service.
-  **Click = drill into the Feature canvas** (the only drill target). Not an independent value unit — when it becomes a
-  multi-actor value exchange → **promoted** to a service.
+  **Click = drill into the Feature canvas** (the only drill target). It does not
+  own a separate outcome; when it starts to do so, **promote** it to a service.
 - **No service↔service edge** (old "user journey edge" retired — flowcharting violates the identity,
   value flow is already held by Actors·actor_ref).
 - References (actor/core_value/identity) = **pick** from Foundation/Actors; if absent, create and register

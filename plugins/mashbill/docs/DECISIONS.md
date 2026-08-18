@@ -39,6 +39,32 @@
 
 ## Log
 
+### D-2026-08-18-B — A service owns one human outcome; exchange is optional
+
+- **What:** define a service as one coherent outcome that one or more human
+  actors seek, together with the features that help them reach it. The coach no
+  longer requires multiple actors, derives services from actor exchange lines,
+  or forces every service into a platform category. AI and software remain
+  helpers unless a product separately models a human role for them.
+- **Why:** Novel itself has one actor: the person designing a service. Its
+  current product still has two clear services — designing through chat and
+  keeping the whole context visible on the canvas. The old exchange-only rule
+  either denied those services or invented actors that do not exist.
+- **Alternatives:** keep the multi-actor exchange test — rejected because it
+  contradicts the confirmed actor model. Model AI as another actor — rejected
+  because it assists the person and does not hold an independent human stake.
+  Treat every screen or delivery channel as a service — rejected because a
+  channel alone does not define the result it helps the person reach.
+- **Approval:** Accepted — user, 2026-08-18 (novel-workspace W-00000237).
+- **Spec impact:** Services overview definition, service/feature boundary, and
+  R7 Services coaching frame.
+- **Principles:** SSOT (canon, runtime frame, and canvas share one definition);
+  MECE (services divide outcomes and features divide what a person can do);
+  Fail Fast (new tests reject the old exchange-only frame); AHA (no new system
+  participant model without repeated need); Completion (focused RED/GREEN,
+  full gates, app walkthrough, and retrospective); Honesty (future execution
+  work is not presented as a current service).
+
 ### D-2026-08-18-A — Coach replies follow the user's language without copying prompt metaphors
 
 - **What:** every coach scope receives one response-language rule. It requires

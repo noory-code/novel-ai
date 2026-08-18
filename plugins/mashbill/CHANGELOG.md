@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.190.0] — 2026-08-18
+
+### Changed
+
+- The coach now treats a service as one coherent outcome sought by one or more
+  human actors. It no longer requires an actor exchange, invents participants,
+  assumes three to six services, or forces platform categories. Features state
+  what a person can do toward the service outcome, and categories remain
+  optional unless several services share a useful theme or surface.
+
 ## [0.189.0] — 2026-08-18
 
 ### Fixed

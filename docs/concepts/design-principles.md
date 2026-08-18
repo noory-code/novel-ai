@@ -93,30 +93,32 @@ slogan anyone could hang) · "Professional and polished tone" (stock voice).
 
 ## Service map — discrimination criteria
 
-- **Unit of exchange** (validated, turn ⑩): One service = one surface where value is given and received.
-  Standing up an internal process (matching·settlement·safety) as a service makes it an org chart, not a map.
-  Discriminate: "Do different parties stand on the two sides of this surface?"
-- **As wide as the mission's reach**: A real product stands on 3–6 exchange surfaces. If the map is a single
-  surface, discriminate: "What exchange the mission reaches is not yet on the map?"
-- **Scan for distinct businesses (brands)** (2026-07-23, W-98): When one company runs several
-  businesses with different party-pairs — food delivery (restaurant↔orderer), streaming
-  (viewer↔content), payments (payer↔merchant) — each is usually its own exchange surface. Do not fold
-  them into facets of the first business. Discriminate: "Of the distinct brands/businesses the founder
-  mentioned, which are not yet on the map as their own surface?" (The same party-pair repeating across
-  surfaces means one business was over-split; a mentioned different party-pair absent from the map means
-  another business was dropped whole.)
-- **A strangers' transaction needs a trust-manufacturing surface** (back-extracted): Products where two
-  strangers transact (Airbnb·Karrot·Uber·Baemin·YouTube) without exception stand up a separate exchange
-  surface that 'manufactures trust' (verification·guarantee·dispute resolution ↔ reporting·reviews).
-  Discriminate: "Do two strangers transact? Then is a trust-manufacturing surface on the map?"
+- **One coherent human outcome** (D-2026-08-18-B): One service owns one result
+  that one or more people seek. Discriminate: "If this service works, what is
+  now true for the person that was not true before?"
+- **Outcome, not channel or internal process**: A screen, channel, matching
+  step, settlement step, or revenue line does not become a service by itself.
+  Discriminate: "Does this candidate own a result, or only describe where or
+  how part of another result happens?"
+- **As wide as the mission's reach**: Cover every distinct outcome needed to
+  realize the mission. Do not require a fixed count. Discriminate: "Which
+  outcome promised by the mission is still missing?"
+- **Use only real human actors**: A single person can be the only actor in a
+  valid service. When several people take part, reference their existing human
+  roles. Do not invent an AI, system, or organization actor to create an
+  exchange. Discriminate: "Does every referenced actor represent a real human
+  role in this product?"
+- **Group only when grouping helps**: A category is optional. Use it only when
+  several services share a useful theme or surface; do not wrap one service to
+  complete a pattern.
 
 **Specimen of a wrong decomposition**: "search→cart→checkout→picking→delivery" as 5 services — all of it is
-the internal process of one exchange surface (shopper↔company). Picking·dispatch have no counterparty: it's
-an org chart, not a map.
+the internal process of one shopping outcome. The steps belong as features or
+feature-flow actions, not as five services.
 
-**Specimen of a wrong collapse**: Modeling Coupang as only "buy·sell / delivery / seller-growth /
-trust" — Coupang Eats (restaurant↔orderer), Play (viewer↔content), and Pay (payer↔merchant) have
-different party-pairs and are distinct businesses collapsed into one commerce facet.
+**Specimen of a wrong collapse**: A product helps a person design a service and
+also helps them run the resulting work, but the map calls both "project work."
+The two results need separate services even if the same person uses both.
 
 ## Feature — discrimination criteria
 
@@ -124,7 +126,8 @@ different party-pairs and are distinct businesses collapsed into one commerce fa
   implementation. Discriminate: "Is the subject of this sentence a person?"
 - **Does the happy path run all the way through?**: Before branches·exceptions, start-to-end must be walkable
   in one line.
-- **Promotion signal**: When one feature starts to hold multiple parties' exchange, it's a service candidate.
+- **Promotion signal**: When one feature starts to own a distinct human outcome,
+  it is a service candidate.
 
 ## Entities — discrimination criteria
 

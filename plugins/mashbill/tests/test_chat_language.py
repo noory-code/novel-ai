@@ -73,6 +73,15 @@ def test_korean_principles_use_direct_wording() -> None:
         assert phrase not in principles, phrase
 
 
+def test_korean_service_principles_follow_the_outcome_definition() -> None:
+    """The tool-provided criteria must not restore the retired exchange test."""
+    principles = get_principles("services")
+    assert "사람이 이루려는 결과 하나" in principles
+    assert "액터를 새로 만들지 않는다" in principles
+    assert "여러 액터가 반드시" in principles
+    assert "서로 주고받는 두 당사자가 있나" not in principles
+
+
 def test_replayed_history_preserves_facts_but_rejects_earlier_style(tmp_path: Path) -> None:
     """A fresh session keeps settled content without treating old prose as a model."""
     plot_root = resolve_plot_root(str(tmp_path))
