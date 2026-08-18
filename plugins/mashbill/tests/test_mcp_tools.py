@@ -298,6 +298,7 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     assert "역할군 아래에 구체적인 역할" in actors
     entities = get_principles("entities")
     assert entities and "엔티티" in entities
+    assert "구현 모델" in entities and "일대일" in entities
     assert mcp_tools.get_design_principles(area="entities") == entities
     services = get_principles("services")
     assert "사람이 이루려는 결과 하나" in services

@@ -204,7 +204,8 @@ def test_services_framing_derives_the_entity_map_unprompted() -> None:
     it AUTONOMOUSLY (no per-entity confirmation question), mentioning it in one
     light line; the user reviews/edits/deletes on the canvas."""
     f = build_framing_preamble("services").lower()
-    assert "derive 2–5 entities" in f
+    assert "every product entity the service actually needs" in f
+    assert "2–5 entities" not in f
     assert "before moving to the next service" in f
     assert "register them on the entities canvas" in f
     assert "without asking permission for each entity" in f

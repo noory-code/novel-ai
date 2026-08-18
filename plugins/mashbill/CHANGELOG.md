@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.190.1] — 2026-08-18
+
+### Fixed
+
+- The Services and Entities coaches now receive the product-entity boundary
+  directly. They keep concepts embedded in another object as values, leave code
+  and storage decisions to the later implementation model, and no longer create
+  two to five entities per service merely to satisfy a count.
+
 ## [0.190.0] — 2026-08-18
 
 ### Changed

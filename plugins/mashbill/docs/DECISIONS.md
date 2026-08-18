@@ -39,6 +39,34 @@
 
 ## Log
 
+### D-2026-08-18-C — Product entities stay separate from implementation models
+
+- **What:** define a product entity as an object the product identifies
+  separately and whose state changes independently. A value that belongs inside
+  another object is not an entity. The Entities canvas remains a conceptual map
+  and does not map one-to-one to code or storage. Both the Services and Entities
+  coach frames receive this rule directly, and the Services frame no longer
+  creates two to five entities per service merely to satisfy a count.
+- **Why:** the discriminator existed only behind
+  `get_design_principles("entities")`, which a coach may not call. Meanwhile the
+  Services frame required a fixed entity count, so it could promote settings or
+  fields into entities before applying the identity and lifecycle test.
+- **Alternatives:** keep the discriminator only in the optional tool — rejected
+  because the main entity-creation path is the Services conversation. Treat the
+  conceptual canvas as the implementation model — rejected because it would
+  pull classes, tables, keys, and field types into Novel. Add a second
+  implementation canvas now — rejected because implementation belongs to the
+  later build phase and would duplicate unfinished truth.
+- **Approval:** Accepted — user, 2026-08-18 (novel-workspace W-00000242).
+- **Spec impact:** R7 per-canvas framing and the public Entities canvas, kind,
+  collaboration, and discriminator definitions.
+- **Principles:** SSOT (one boundary is shared by both creation paths); MECE
+  (entities and embedded values do not overlap); Fail Fast (the coach applies
+  the boundary before registration); AHA (no implementation model before build
+  work repeats the need); Completion (public canon, runtime prompt, tests,
+  release records, and the live app are checked together); Honesty (the
+  conceptual map does not claim to be a finished implementation model).
+
 ### D-2026-08-18-B — A service owns one human outcome; exchange is optional
 
 - **What:** define a service as one coherent outcome that one or more human

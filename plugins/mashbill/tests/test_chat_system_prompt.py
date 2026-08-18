@@ -73,6 +73,23 @@ def test_entities_framing_enforces_identity_dedup() -> None:
     assert "never" in f  # never finalise silently / never auto-scan
 
 
+def test_entity_boundary_is_inlined_for_services_and_entities() -> None:
+    for scope in ("services", "entities"):
+        prompt = build_system_prompt(scope).lower()
+        for rule in (
+            "identified separately",
+            "state changes independently",
+            "embedded value",
+            "not one-to-one",
+            "build agent",
+        ):
+            assert rule in prompt, (scope, rule)
+
+    services = build_framing_preamble("services").lower()
+    assert "2–5 entities" not in services
+    assert "every product entity the service actually needs" in services
+
+
 def test_system_prompt_includes_coach_tone_on_canvas_scopes() -> None:
     sp = build_system_prompt("foundation")
     assert COACH_TONE in sp

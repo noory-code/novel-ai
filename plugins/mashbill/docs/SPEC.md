@@ -158,6 +158,16 @@ frame (`chat.claudeBillingWarning`) pointing the user to the non-double-charged
 MCP path. There is no server-side block; the user opts in with the warning
 visible.
 
+**Product-entity boundary (D-2026-08-18-C).** Both the Services and Entities
+system frames directly state that a product entity is identified separately
+and changes state independently. A concept that belongs inside another object
+stays an embedded value. The conceptual Entities canvas does not map one-to-one
+to the implementation model; code and storage are decided during the build.
+The Services frame finds every entity its confirmed features actually need and
+does not create a fixed number per service. This boundary is in the system
+prompt itself rather than depending on an optional `get_design_principles`
+call.
+
 | Aspect | Behaviour |
 |---|---|
 | **Brain** | The user's external CLI. For in-app chat Novel spawns `codex` / `agy` / `claude` (`claude -p`) inside the workspace folder and parses streamed output. The **`gemini` provider's transport is the `agy` (Antigravity) CLI** as Google consolidates Gemini onto it (D-2026-06-22-A): `agy -p --dangerously-skip-permissions` emits plain text (no `stream-json`), so its turns are plain-text passthrough and **stateless** (no per-scope resume — agy exposes no resume handle on stdout). Claude Code in-app shows a billing warning (D-2026-06-14-B) since `claude -p` bills separately from the subscription. |

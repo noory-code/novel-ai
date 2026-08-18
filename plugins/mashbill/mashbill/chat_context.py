@@ -72,6 +72,16 @@ EVALUATE_PLAYBOOK = (
 )
 
 
+# D-2026-08-18-C — this boundary must ride directly in both places where the
+# coach creates or reviews entities.  Keeping it only behind the optional
+# get_design_principles tool lets a turn skip the distinction entirely.
+ENTITY_BOUNDARY = (
+    "Product entities are identified separately; their state changes independently. "
+    "An embedded value is not an entity. Canvas and implementation model are not "
+    "one-to-one; the build agent decides storage. "
+)
+
+
 # Layer 3 (CHAT_ARCH.md) — per-canvas system framing. Each base scope maps to a
 # VISION.md phase + the coach's interview for that canvas. Code constants, not
 # ``.noory/``-editable (decision 4). Content SSOT = docs/concepts/
@@ -174,8 +184,10 @@ SCOPE_FRAMING: dict[str, str] = {
         "a useful shared theme or surface. Do not create a category around one "
         "service or merely to complete a hierarchy. "
         "ENTITIES ARE YOUR OWN JUDGMENT because the entities canvas is AI-maintained. "
-        "For each service, derive 2–5 entities from its confirmed features and "
-        "register them on the entities canvas at the same time as the features, "
+        + ENTITY_BOUNDARY
+        + "For each service, find every product entity the service actually needs "
+        "from confirmed features; register them on the entities canvas at the same time as "
+        "the features, "
         "without asking permission for each entity. Connect related entities with "
         "create_edge and label each relationship with a verb (주문 —담는다→ 상품). "
         "An unlabeled relationship is unfinished. A service with features but zero "
@@ -188,7 +200,9 @@ SCOPE_FRAMING: dict[str, str] = {
         "objects the product acts on (글, 댓글, 사용자). It is produced during "
         "feature and service design rather than drawn directly by the user. When "
         "a behavior handles a distinct object, propose an entity and register it "
-        "after confirmation; do not scan and add entities automatically. Before "
+        "after confirmation; do not scan and add entities automatically. "
+        + ENTITY_BOUNDARY
+        + "Before "
         "creating one, match by IDENTITY rather than name: 글, 게시물, and 포스트 "
         "can be one entity, while 글 and 댓글 remain separate. Ask only when the "
         "identity is genuinely ambiguous. Never merge or duplicate silently. "

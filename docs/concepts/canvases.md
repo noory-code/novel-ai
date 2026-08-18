@@ -52,6 +52,8 @@ Manages the product's **data objects** (post·comment·user) in one place. Symme
   design → human reviews·confirms (never done silently). Bottom-up creation (during feature work) + top-down management.
 - **A conceptual map, not a physical ERD.** Name + one-line "what it holds" + rough relationships only. Normalization·FK·
   cardinality·types are outside Novel (the external agent's job) — putting them in violates the identity.
+- The conceptual map and the implementation model are **not one-to-one**. The build agent later decides
+  which concepts become code entities, embedded values, aggregates, read models, or storage records.
 - **A derived canvas filled in last** (emerges from feature work).
 - AI can propose·draw entity↔entity rough relationship edges (edges are governed by definition, not authorship).
 

@@ -137,8 +137,12 @@ The two results need separate services even if the same person uses both.
   · ad) has a half-drawn data map. Discriminate: "Does every service surface's core noun appear as an entity?"
 - **An identity-bearing noun, not a field** (value-vs-entity): An entity is tracked by id and changes state
   independently. A noun that lives as one field of another thing is a value, not an entity (a delivery address
-  is a field of 주문; a coupon carries its own lifecycle and state). Discriminate: "Is this tracked by id with
+  is a field of 주문; a coupon carries its own lifecycle and state). A canvas node's technical id is not proof
+  that the product identifies the concept separately. Discriminate: "Does the product track this separately with
   its own state, or is it a field of something else?"
+- **Conceptual entity, not implementation model**: The Entities canvas says what the product identifies and tracks.
+  It does not decide classes, tables, aggregate boundaries, or storage records, and the two models need not map
+  one-to-one. Discriminate: "Are we defining what the product deals with, or how the build stores it?"
 - **Service↔entity pairing (missing-noun signal)**: A service surface with no core noun in the entity set is a
   gap. Discriminate: "This surface exists — where is the noun it moves?"
 - **Not a role noun**: Do not duplicate an actor (an exchange party) as an entity. 라이더 is an actor; 라이더 보수

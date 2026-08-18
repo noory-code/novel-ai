@@ -129,11 +129,16 @@ Draft an actor-anchored action flowchart.
 
 ### 2.5 Entities — AI-maintained (cross-cutting)
 During feature/service conversation, discover data concepts (post·comment·user) and propose·register them (the user doesn't draw directly).
+- **Entity boundary:** register a concept only when the product identifies it separately and its state changes
+  independently. If it belongs inside another object, keep it as a value. Find every entity the services actually
+  need, but never create entities to satisfy a count.
 - **Propose mid-chat (B4):** when a behaviour deals with "something" → "이건 '글' 엔티티네요 — 등록할까요?" (this is a 'post' entity — shall we register it?)
   → register on confirmation. No auto-scan ❌.
 - **Strong dedup (B2):** before creating, **match by identity** (post=article=write-up=one; post≠comment). Ask
   only when ambiguous. No silent merging·duplicates ❌. *Semantic matching = LLM / integrity guard = code.*
 - Back-reference ("where it's used") = read-only. AI can propose rough relationship edges (no normalization ❌).
+- **Implementation hand-off:** the conceptual canvas and implementation model are not one-to-one. The build agent
+  later decides code entities, embedded values, aggregate boundaries, field types, and storage.
 
 ---
 
