@@ -39,6 +39,69 @@
 
 ## Log
 
+### D-2026-08-18-E — Every coach receives the Foundation
+
+- **What:** every chat scope receives the agreed mission and core-value
+  definitions in its system prompt. Every in-app turn also receives the current
+  Mission, Core value, and Identity content from the Foundation canvas. The
+  external agent receives the same current content in `get_viewer_context`.
+  Detailed diagnostic questions remain in `get_design_principles`; the common
+  definitions and current project facts no longer depend on an optional tool
+  call.
+- **Why:** only the Foundation coach received the new definitions directly.
+  Other coaches were told to call `get_design_principles(area)`, but a model may
+  skip that call. Their turn context also listed actors and entities without the
+  Foundation content that should guide every later choice. A coach cannot keep
+  the essence in view if the engine does not give it the essence.
+- **Alternatives:** leave the optional tool call as the only path — rejected
+  because it cannot guarantee that the coach reads the definitions. Copy the
+  full diagnostic catalog into every system prompt — rejected because the
+  current prompts are already near their size limit. Send only Foundation node
+  labels — rejected because a one-word value name does not carry its conflict,
+  priority, or accepted cost.
+- **Approval:** Accepted — user, 2026-08-18 (novel-workspace W-00000243).
+- **Spec impact:** R7 system framing, per-turn context, and MCP-path context.
+- **Principles:** SSOT (one shared definition and one Foundation reader feed
+  every path); MECE (definitions explain the concepts, current Foundation
+  content supplies project facts, and the diagnostic tool keeps deeper
+  questions); Fail Fast (tests cover every scope instead of trusting an
+  optional call); AHA (reuse the existing context seam rather than add a new
+  service); Completion (in-app and external paths, tests, docs, and the live app
+  move together); Honesty (the engine passes the actual current canvas and
+  returns nothing when it is empty).
+
+### D-2026-08-18-D — Mission and core values guide continuing choices
+
+- **What:** define a mission as a continuing commitment to decide what needs
+  to improve in people's lives or society, then keep putting solutions into the
+  world and refining them. Define a core value as the value that decides what
+  takes priority when choices conflict. A core value uses a one-word name when
+  that name carries the priority; its body states the recurring conflict, what
+  takes priority, and the cost accepted. The Foundation coach receives these
+  definitions directly and does not force a target number of values.
+- **Why:** the old mission rule stopped at a fundamental change or recurring
+  problem and did not say that solutions are released and revised. The old
+  value rule rejected a noun label even though the agreed canvas uses one-word
+  names and carries the full decision in the body. It also pushed the coach to
+  search across a checklist until it found several values, whether or not the
+  person faced those conflicts.
+- **Alternatives:** require every value name to be an action sentence — rejected
+  because the name identifies the value while the body carries the choice.
+  Keep a target count and domain sweep — rejected because real conflicts, not a
+  quota, decide which values belong. Put the current solution in the mission —
+  rejected because a mission must keep guiding the work when the solution
+  changes.
+- **Approval:** Accepted — user, 2026-08-18 (novel-workspace W-00000243).
+- **Spec impact:** R7 Foundation framing, the public mission and core-value
+  definitions, and the coach's evaluation criteria.
+- **Principles:** SSOT (public canon owns the meaning and every runtime copy
+  follows it); MECE (mission owns continuing improvement, core value owns
+  conflict priority, identity remains separate); Fail Fast (the coach checks a
+  real conflict before accepting a value); AHA (no quota or extra category is
+  added before a real need appears); Completion (canon, runtime, tests, release
+  records, and the live canvas are checked together); Honesty (the coach does
+  not invent values to fill a number).
+
 ### D-2026-08-18-C — Product entities stay separate from implementation models
 
 - **What:** define a product entity as an object the product identifies

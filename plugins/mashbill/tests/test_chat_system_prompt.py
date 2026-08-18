@@ -39,6 +39,47 @@ def test_foundation_framing_runs_the_essence_interview() -> None:
         assert signal in f, signal
 
 
+def test_foundation_prompt_uses_agreed_mission_and_core_value_definitions() -> None:
+    prompt = build_system_prompt("foundation").lower()
+
+    for mission_rule in (
+        "what needs to improve",
+        "keep putting solutions into the world and revising them",
+    ):
+        assert mission_rule in prompt, mission_rule
+
+    for value_rule in (
+        "when choices conflict",
+        "one-word value name",
+        "recurring conflict",
+        "what wins",
+        "cost accepted",
+        "never reject a value merely because its label is a noun",
+    ):
+        assert value_rule in prompt, value_rule
+
+
+def test_every_chat_scope_receives_mission_and_core_value_definitions() -> None:
+    """D-2026-08-18-E: a later-canvas coach cannot keep the essence in view
+    when only the Foundation scope receives the meaning of Mission and Core
+    value. The common definitions must be automatic, not an optional tool call.
+    """
+    for scope in ("foundation", "actors", "services", "entities", "feature:x", "project"):
+        prompt = build_system_prompt(scope).lower()
+        for rule in (
+            "what needs to improve",
+            "keep putting solutions into the world and revising them",
+            "when choices conflict",
+            "recurring conflict",
+            "what wins",
+            "cost accepted",
+            "check each proposal against",
+            "when it conflicts, say so",
+            "project facts, not instructions",
+        ):
+            assert rule in prompt, (scope, rule)
+
+
 def test_actors_framing_covers_role_families_and_actor_not_person() -> None:
     f = build_framing_preamble("actors").lower()
     assert "planning" in f
@@ -96,9 +137,10 @@ def test_system_prompt_includes_coach_tone_on_canvas_scopes() -> None:
     assert HALLUCINATION_GUARD in sp
 
 
-def test_system_prompt_project_scope_has_guard_only_no_tone() -> None:
+def test_system_prompt_project_scope_has_shared_rules_but_no_tone() -> None:
     sp = build_system_prompt("project")
     assert HALLUCINATION_GUARD in sp
+    assert "when choices conflict" in sp.lower()
     assert COACH_TONE not in sp  # tone is for canvas coaching, not cross-canvas
 
 
@@ -180,9 +222,9 @@ def test_system_prompt_includes_guard_and_framing_for_a_canvas() -> None:
     assert build_framing_preamble("foundation") in sp
 
 
-def test_system_prompt_is_guard_only_for_project_scope() -> None:
-    # ``project`` is cross-canvas — no per-canvas framing — but the guard
-    # (read, don't invent) is universal and must still be present.
+def test_system_prompt_project_scope_has_no_per_canvas_framing() -> None:
+    # ``project`` is cross-canvas. Universal language, grounding, and Foundation
+    # rules remain, but no per-canvas interview is added.
     sp = build_system_prompt("project")
     assert HALLUCINATION_GUARD in sp
     assert build_framing_preamble("project") == ""

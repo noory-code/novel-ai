@@ -200,6 +200,39 @@ def test_mcp_tool_reads_what_the_viewer_posted(tmp_path: Path) -> None:
     assert "Execution" in ctx["framing"]
 
 
+def test_mcp_tool_carries_current_foundation_context(tmp_path: Path) -> None:
+    """The external agent receives the same current Foundation as in-app chat."""
+    from mashbill.folder_io import create_project, write_canvas
+    from mashbill.mcp_tools import get_viewer_context
+    from mashbill.models import CanvasDoc, CoreValueNode, IdentityNode, MissionNode
+
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="foundation",
+            canvas_kind="foundation",
+            nodes=[
+                MissionNode(id="m1", label="더 나은 일", statement="더 나은 일"),
+                CoreValueNode(id="v1", label="본질", body="미션을 고르고 지연을 감수한다."),
+                IdentityNode(id="i1", label="분명함", summary="맞지 않으면 말한다"),
+            ],
+        ),
+    )
+    _client().post(
+        "/api/viewer/context",
+        json={"project_path": str(tmp_path), "scope": "services", "selection": []},
+    )
+
+    ctx = get_viewer_context(str(tmp_path))
+
+    assert "when choices conflict" in ctx["framing"].lower()
+    assert "[Project foundation]" in ctx["context"]
+    assert "미션을 고르고 지연을 감수한다" in ctx["context"]
+
+
 def test_mcp_tool_empty_when_no_viewer(tmp_path: Path) -> None:
     from mashbill.mcp_tools import get_viewer_context
 
@@ -208,3 +241,4 @@ def test_mcp_tool_empty_when_no_viewer(tmp_path: Path) -> None:
     assert ctx["has_viewer"] is False
     assert ctx["active_canvas"] is None
     assert ctx["selection"] == []
+    assert ctx["context"] == ""

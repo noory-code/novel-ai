@@ -168,6 +168,15 @@ does not create a fixed number per service. This boundary is in the system
 prompt itself rather than depending on an optional `get_design_principles`
 call.
 
+**Foundation concept boundaries (D-2026-08-18-D).** The Foundation system frame
+defines a mission as a continuing commitment to decide what needs to improve in
+people's lives or society, then keep putting solutions into the world and
+revising them. It defines a core value as the value that decides what takes
+priority when choices conflict. A core value may use a one-word label; its body
+records the recurring conflict, what takes priority, and the accepted cost. The
+coach does not reject a value merely because its label is a noun, and it does
+not force a target number of values or artificial opposing pairs.
+
 | Aspect | Behaviour |
 |---|---|
 | **Brain** | The user's external CLI. For in-app chat Novel spawns `codex` / `agy` / `claude` (`claude -p`) inside the workspace folder and parses streamed output. The **`gemini` provider's transport is the `agy` (Antigravity) CLI** as Google consolidates Gemini onto it (D-2026-06-22-A): `agy -p --dangerously-skip-permissions` emits plain text (no `stream-json`), so its turns are plain-text passthrough and **stateless** (no per-scope resume — agy exposes no resume handle on stdout). Claude Code in-app shows a billing warning (D-2026-06-14-B) since `claude -p` bills separately from the subscription. |

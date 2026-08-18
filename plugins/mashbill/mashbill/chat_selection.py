@@ -1,14 +1,15 @@
-"""Lever 1a — render the selected nodes' actual content for the chat context.
+"""Render current project facts and selected-node detail for every chat turn.
 
 ``chat_context.build_context_preamble`` lists each selected node's kind / label
 / id (cheap, no I/O). That tells the agent *which* node "this" is, but not what
 the node *says* — so "polish this mission" reached the agent without the mission
 text and it invented one (context starvation, ``docs/idea/chat/00-problem.md``).
 
-This module reads the active canvas engine-side — the SSOT both delivery layers
-share (D-2026-06-15-D) — and renders the selected nodes' typed text fields. It
-imports ``canvas_io`` (filesystem), so it lives apart from the pure
-``chat_context`` module; the in-app endpoint and the MCP path both call it.
+This module reads canvases engine-side — the SSOT both delivery layers share
+(D-2026-06-15-D) — and renders the full current Foundation plus the selected
+nodes' typed text fields. It imports ``canvas_io`` (filesystem), so it lives
+apart from the pure ``chat_context`` module; the in-app endpoint and the MCP
+path both call it.
 
 The project is resolved from the single project under the data root (canonical
 one-project-per-root layout, D-2026-06-21-AB). Every failure mode is graceful:
@@ -82,8 +83,9 @@ def build_turn_preamble(
     """Assemble the per-turn user-message context — the context-provider seam.
 
     Single place that builds "what the agent should see this turn" (D-2026-06-17-L):
-    active-canvas map → cross-canvas registry → write target → selected-node
-    detail, joined in that order (empty parts skipped). The Layer-3 system prompt
+    current Foundation → active-canvas map → cross-canvas registry → write
+    target → selected-node detail, joined in that order (empty parts skipped).
+    The Layer-3 system prompt
     is delivered separately (``build_system_prompt``); this is the Layer-2
     user-message body.
 
@@ -106,12 +108,13 @@ def build_turn_preamble(
     """
     if not isinstance(selection, list):
         selection = []
+    foundation = render_foundation_context(plot_root)
     canvas_map = render_canvas_map(plot_root, scope, selection)
     context = canvas_map or build_context_preamble(scope, selection)
     registry = render_cross_canvas_registry(plot_root, scope)
     target = render_write_target(plot_root, scope, project_path)
     detail = render_selection_detail(plot_root, scope, selection)
-    return "\n\n".join(p for p in (context, registry, target, detail) if p)
+    return "\n\n".join(p for p in (foundation, context, registry, target, detail) if p)
 
 
 def render_write_target(plot_root: Path, scope: str, project_path: str | None) -> str:
@@ -189,6 +192,34 @@ def render_node_content(node: dict[str, Any]) -> str:
         if text:
             lines.append(f"{key}: {text}")
     return "\n".join(lines)
+
+
+def render_foundation_context(plot_root: Path) -> str:
+    """Render the current Mission, Core values, and Identities for every coach.
+
+    D-2026-08-18-E: later-canvas choices must use the full Foundation content,
+    not only one-word labels or an optional tool call. The canvas remains the
+    source of truth; missing or unreadable content contributes nothing.
+    """
+    project_id = _resolve_project_id(plot_root)
+    if project_id is None:
+        return ""
+    canvas = _safe_read_canvas(plot_root, project_id, "foundation")
+    if canvas is None:
+        return ""
+
+    blocks: list[str] = []
+    for node in canvas.nodes:
+        if node.kind not in {"mission", "core_value", "identity"}:
+            continue
+        lines = [f'- {node.kind} "{node.label}" ({node.id}):']
+        content = render_node_content(node.model_dump())
+        if content:
+            lines.append(content)
+        blocks.append("\n".join(lines))
+    if not blocks:
+        return ""
+    return "[Project foundation]\n" + "\n\n".join(blocks)
 
 
 def render_selection_detail(plot_root: Path, scope: str, selection: Any) -> str:

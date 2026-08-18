@@ -244,11 +244,9 @@ async def chat_send_endpoint(request: Request) -> JSONResponse:
     provider.set_system_prompt(build_system_prompt(scope))
 
     # Layer 2 user-message context comes from the single context-provider seam
-    # (D-2026-06-17-L): active-canvas map → cross-canvas registry → selected-node
-    # detail, all read engine-side, so the agent sees the current screen + what
-    # already exists + the selected node's real content instead of inventing.
-    # The seam is "" when it has nothing to add (e.g. ``project`` scope with no
-    # selection); the user's text follows.
+    # (D-2026-06-17-L, D-2026-08-18-E): current Foundation → active-canvas map →
+    # cross-canvas registry → selected-node detail, all read engine-side. Even
+    # project scope receives the current Foundation; the user's text follows.
     selection_nodes = body.get("selection")
     # ``project_path`` rides into the preamble so the agent gets the exact ids
     # ``update_node`` needs to save a confirmed change into the selected node

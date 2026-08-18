@@ -89,8 +89,7 @@ def test_canvas_system_prompt_instructs_proactive_proposing() -> None:
 
 
 def test_project_scope_has_no_propose_playbook() -> None:
-    """The cross-canvas project scope gets the anti-hallucination guard alone —
-    no tone, no write/propose playbook, no framing (parity with COACH_TONE)."""
+    """Project gets universal rules but no tone, write/propose playbook, or framing."""
     assert PROPOSE_PLAYBOOK not in build_system_prompt("project")
 
 
@@ -212,16 +211,13 @@ def test_services_framing_derives_the_entity_map_unprompted() -> None:
     assert "등록해둘까요" not in f  # the ask-first gate is gone for entities
 
 
-def test_foundation_framing_draws_values_out_until_dry() -> None:
-    """Benchmark round 2 (2026-07-02): J-values was the weakest axis in every
-    run — the coach lands 2–3 core values and moves on, while founders hold
-    more (ground truths run 4–8). Each recurring fork is a candidate value:
-    after one lands, hunt the NEXT fork and keep drawing until the user runs
-    dry — never settle for the first two or three (ninth sim iteration)."""
+def test_foundation_framing_does_not_force_a_value_count() -> None:
+    """D-2026-08-18-D: real conflicts decide which values belong. A benchmark
+    count is not a quota for a particular project."""
     f = build_framing_preamble("foundation").lower()
-    assert "ask about another decision" in f
-    assert "until the user says there are no more" in f
-    assert "first two or three" in f
+    assert "do not target a number" in f
+    assert "real conflict" in f
+    assert "two or three" not in f
 
 
 def test_services_framing_maps_outcomes_not_internal_processes() -> None:
@@ -374,20 +370,14 @@ def test_foundation_framing_lands_values_in_batches() -> None:
     assert "register all of them together" in f
 
 
-def test_foundation_framing_sweeps_value_domains_without_numeric_anchor() -> None:
-    """Nineteenth iteration (2026-07-03, user: 셋 다): values coverage sat
-    flat at ~2/7 across five measurements while registration hit the "two or
-    three" numbers the prompt itself names — the anchors became quotas, and
-    the registered values all orbit the mission (customer/quality kin) while
-    corpus values span operating principles the coach never fishes for. The
-    framing must sweep the value TERRAIN (distinct domains, probing one the
-    talk hasn't touched) and must not anchor the count: no "two or three"
-    except the anti-anchor warning ("never settle for the first two or
-    three")."""
+def test_foundation_framing_uses_value_domains_as_prompts_not_a_quota() -> None:
+    """D-2026-08-18-D: domain examples help recall conflicts but do not force
+    coverage or a target number."""
     f = build_framing_preamble("foundation").lower()
-    assert "ask across distinct areas" in f
-    assert "hasn't touched" in f
-    assert f.count("two or three") == 1  # only the anti-anchor survives
+    assert "prompts, not a quota" in f
+    assert "only when the person needs help" in f
+    assert "ask across distinct areas" not in f
+    assert "two or three" not in f
 
 
 def test_write_playbook_fills_placeholder_labels_too() -> None:

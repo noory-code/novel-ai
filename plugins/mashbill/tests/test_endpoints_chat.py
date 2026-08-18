@@ -435,6 +435,46 @@ def test_chat_send_routes_framing_to_system_prompt_context_to_message(
     assert sent.index("Trust") < sent.index("fix this")
 
 
+def test_chat_send_carries_shared_definitions_and_current_foundation(
+    app_client: TestClient, workspace: Path, fake_provider: _CannedProvider
+) -> None:
+    """The actual HTTP send path supplies both the definition and project facts."""
+    from mashbill.folder_io import create_project, write_canvas
+    from mashbill.models import CanvasDoc, CoreValueNode, IdentityNode, MissionNode
+
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="foundation",
+            canvas_kind="foundation",
+            nodes=[
+                MissionNode(id="m1", label="더 나은 일", statement="더 나은 일"),
+                CoreValueNode(id="v1", label="본질", body="미션을 고르고 지연을 감수한다."),
+                IdentityNode(id="i1", label="분명함", summary="맞지 않으면 말한다"),
+            ],
+        ),
+    )
+    _select_provider(app_client, workspace, "codex")
+
+    response = app_client.post(
+        "/api/chat/send",
+        json={
+            "project_path": str(workspace),
+            "message": "서비스를 이어서 정리해줘",
+            "scope": "services",
+            "selection": [],
+        },
+    )
+
+    assert response.status_code == 202
+    assert "when choices conflict" in (fake_provider.system_prompts[0] or "").lower()
+    assert "[Project foundation]" in fake_provider.calls[0]
+    assert "미션을 고르고 지연을 감수한다" in fake_provider.calls[0]
+
+
 def test_chat_send_injects_selected_node_content(
     app_client: TestClient, workspace: Path, fake_provider: _CannedProvider
 ) -> None:

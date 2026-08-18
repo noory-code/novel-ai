@@ -4,6 +4,25 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.190.3] — 2026-08-18
+
+### Fixed
+
+- Every chat scope now receives the same Mission and Core-value definitions.
+  Each turn also receives the current full Foundation, so later-canvas coaches
+  can check proposals against the actual mission, value conflicts, priorities,
+  accepted costs, and identity instead of depending on an optional principle
+  tool call. `get_viewer_context` gives the external agent the same context.
+
+## [0.190.2] — 2026-08-18
+
+### Fixed
+
+- The Foundation coach now treats a mission as a continuing commitment to
+  improve people's lives or society while solutions evolve. It accepts a
+  one-word core-value name and checks the body for the real conflict, priority,
+  and accepted cost instead of forcing action-sentence labels or a value count.
+
 ## [0.190.1] — 2026-08-18
 
 ### Fixed

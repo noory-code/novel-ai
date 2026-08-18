@@ -99,8 +99,9 @@ deliverable, and it is the source the AI reads and works from.
 > fields* are in `concepts/`.
 
 - **essence** = the **emergent whole** of the 3 Foundation kinds (mission, core value, identity). No separate node — the core is the mission, the anchor is name-only (a visual grouping).
-- **mission** = the fundamental change to make in the world (the root of existence).
-- **core value** = the value that wins when a decision is split.
+- **mission** = a commitment to decide what needs to improve in people's lives or society, then keep
+  putting solutions into the world and refining them.
+- **core value** = a value that decides what takes priority when choices conflict.
 - **identity** = the execution/expression rule that always applies (AI-derived, person-confirmed).
 - **actor** = a relational *role* (not a person or persona). Hierarchy (operator/user→subordinate, inheritance) + give-and-take.
 - **service** = one coherent outcome that one or more human actors seek, together

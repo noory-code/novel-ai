@@ -305,6 +305,12 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     assert "액터를 새로 만들지 않는다" in services
     values = get_principles("values")
     assert "대화에서 가치 후보" in values
+    assert "이름은 한 단어" in values
+    assert "이름만 보고 가치가 아니라고 판단하지 않는다" in values
+    assert "충돌 상황" in values and "무엇을 감수" in values
+    mission = get_principles("mission")
+    assert "무엇이 더 나아져야 하는지" in mission
+    assert "해결 방법을 계속 내놓고 고쳐 가는" in mission
     # CD-2026-07-25-A was REVERTED (W-121). Values really do get filed as identity
     # lines (novel-workspace O-00000019), but two probe passes over the corpus
     # showed the coach already spots them under the criteria above — the gap was
@@ -313,7 +319,7 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     assert "정체성으로 흡수했나" not in values
     assert "가치를 삼키지 마라" not in get_principles("identity")
     full = get_principles(None)
-    assert "대가" in full and "교환" in full and "체감" in full
+    assert "대가" in full and "교환" in full and "더 나아져야" in full
     assert "형용사" in full  # identity is included in the all-areas join
     assert "모든 사업에서 필요한 엔티티" in full
     assert "사람이 이루려는 결과 하나" in full

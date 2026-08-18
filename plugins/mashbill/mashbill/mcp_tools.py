@@ -17,6 +17,7 @@ from typing import Any
 from fastmcp import FastMCP
 
 from mashbill.chat_context import build_system_prompt
+from mashbill.chat_selection import build_turn_preamble
 from mashbill.coaching_principles import get_principles
 from mashbill.folder_io import (
     create_edge as _create_edge,
@@ -461,17 +462,27 @@ def get_viewer_context(project_path: str) -> dict[str, Any]:
           "framing": "<canvas coaching system prompt>",  # guard + tone +
                                                 # the canvas's coaching playbook
                                                 # (same as in-app, Phase 3)
+          "context": "<current Foundation + active-canvas turn context>",
           "updated_at": <epoch seconds> | null,
           "stale": <bool>,                       # report older than the TTL
           "has_viewer": <bool>                   # a live viewer is reporting
         }
 
     When ``has_viewer`` is false (no viewer open, or the last report is stale)
-    ``active_canvas`` is null and ``selection`` is empty — do NOT treat an old
-    selection as the user's current one.
+    ``active_canvas`` is null, ``selection`` is empty, and ``context`` is empty —
+    do NOT treat an old selection as the user's current one.
     """
     plot_root = resolve_plot_root(project_path)
-    return read_viewer_context(plot_root, now=time.time())
+    context = read_viewer_context(plot_root, now=time.time())
+    scope = context.get("active_canvas")
+    selection = context.get("selection")
+    if context.get("has_viewer") and isinstance(scope, str):
+        context["context"] = build_turn_preamble(
+            plot_root, scope, selection, project_path=project_path
+        )
+    else:
+        context["context"] = ""
+    return context
 
 
 @mcp.tool()

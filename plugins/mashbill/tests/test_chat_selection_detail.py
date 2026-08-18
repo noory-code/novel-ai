@@ -340,11 +340,72 @@ def test_turn_preamble_composes_map_registry_and_detail(tmp_path: Path) -> None:
     assert "Existing actors" in out  # registry composed in
 
 
-def test_turn_preamble_empty_for_project_scope_without_selection(tmp_path: Path) -> None:
+def test_turn_preamble_carries_foundation_content_on_every_scope(tmp_path: Path) -> None:
+    """D-2026-08-18-E: every coach sees the current Foundation automatically.
+
+    Labels alone are insufficient: the value body carries its conflict, chosen
+    priority, and accepted cost. Project scope is included even though it has no
+    active-canvas map or write target.
+    """
     plot_root = resolve_plot_root(str(tmp_path))
     create_project(plot_root, "alpha", "Alpha")
-    write_canvas(plot_root, "alpha", _mission_canvas())
-    assert build_turn_preamble(plot_root, "project", []) == ""
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="foundation",
+            canvas_kind="foundation",
+            nodes=[
+                MissionNode(
+                    id="m1",
+                    label="사람과 AI가 본질을 놓치지 않는다",
+                    statement="사람과 AI가 본질을 놓치지 않는다",
+                    body="지금 하는 일이 왜 필요한지 항상 안다.",
+                ),
+                CoreValueNode(
+                    id="v1",
+                    label="본질",
+                    body="익숙한 기능과 미션이 부딪히면 미션을 고르고 늦은 출시를 감수한다.",
+                ),
+                IdentityNode(
+                    id="i1",
+                    label="분명한 코치",
+                    summary="맞지 않으면 분명히 말한다",
+                    description="무조건 수긍하지 않고 제안을 따져 본다.",
+                ),
+            ],
+        ),
+    )
+
+    for scope in ("foundation", "actors", "services", "entities", "feature:x", "project"):
+        out = build_turn_preamble(plot_root, scope, [])
+        assert "[Project foundation]" in out, scope
+        assert "사람과 AI가 본질을 놓치지 않는다" in out, scope
+        assert "늦은 출시를 감수한다" in out, scope
+        assert "맞지 않으면 분명히 말한다" in out, scope
+
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="foundation",
+            canvas_kind="foundation",
+            nodes=[
+                MissionNode(id="m1", label="더 나은 방향", statement="더 나은 방향"),
+                CoreValueNode(id="v1", label="본질", body="미션을 고르고 범위를 줄인다."),
+                IdentityNode(id="i1", label="분명한 코치", summary="맞지 않으면 말한다"),
+            ],
+        ),
+    )
+    updated = build_turn_preamble(plot_root, "services", [])
+    assert "미션을 고르고 범위를 줄인다" in updated
+    assert "늦은 출시를 감수한다" not in updated
+
+
+def test_turn_preamble_omits_foundation_block_when_foundation_is_empty(tmp_path: Path) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    assert "[Project foundation]" not in build_turn_preamble(plot_root, "services", [])
 
 
 def test_turn_preamble_includes_selected_detail(tmp_path: Path) -> None:
