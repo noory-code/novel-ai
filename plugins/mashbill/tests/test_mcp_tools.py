@@ -251,7 +251,7 @@ def test_design_principles_works_and_writes_nothing_without_a_log_path(
 
     monkeypatch.delenv("MASHBILL_TOOL_LOG", raising=False)
     monkeypatch.chdir(tmp_path)
-    assert "판별" in tools.get_design_principles(area="values")
+    assert "확인하는 기준" in tools.get_design_principles(area="values")
     assert list(tmp_path.iterdir()) == []
 
 
@@ -263,7 +263,7 @@ def test_design_principles_survives_an_unwritable_log_path(
     from mashbill import mcp_tools as tools
 
     monkeypatch.setenv("MASHBILL_TOOL_LOG", str(tmp_path / "no" / "such" / "dir.jsonl"))
-    assert "판별" in tools.get_design_principles(area="values")
+    assert "확인하는 기준" in tools.get_design_principles(area="values")
 
 
 def test_design_principles_serve_discriminators_per_area() -> None:
@@ -284,7 +284,7 @@ def test_design_principles_serve_discriminators_per_area() -> None:
         "features",
     ):
         text = get_principles(area)
-        assert "판별" in text, area
+        assert "확인" in text and "기준" in text, area
     # identity (D-2026-06-16-K listed it as a foundation pillar; W-27 fills the
     # one discriminator set that was missing) must carry its own criteria, not
     # just ride the mission/values framing.
@@ -295,15 +295,15 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     # reached the coach's evaluation knowledge and canvases came out flat. The
     # actors quality principles must now carry the nesting discriminator.
     actors = get_principles("actors")
-    assert "중첩" in actors
+    assert "역할군 아래에 구체적인 역할" in actors
     entities = get_principles("entities")
     assert entities and "엔티티" in entities
     assert mcp_tools.get_design_principles(area="entities") == entities
     services = get_principles("services")
-    assert "별개 브랜드 사업 스캔" in services
-    assert "틀린 뭉침의 표본" in services
+    assert "별도 브랜드와 사업도 확인" in services
+    assert "잘못 합친 예" in services
     values = get_principles("values")
-    assert "대화 속에 묻힌 가치" in values
+    assert "대화에서 가치 후보" in values
     # CD-2026-07-25-A was REVERTED (W-121). Values really do get filed as identity
     # lines (novel-workspace O-00000019), but two probe passes over the corpus
     # showed the coach already spots them under the criteria above — the gap was
@@ -314,9 +314,9 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     full = get_principles(None)
     assert "대가" in full and "교환" in full and "체감" in full
     assert "형용사" in full  # identity is included in the all-areas join
-    assert "모든 사업라인을 덮나" in full
-    assert "별개 브랜드 사업 스캔" in full
-    assert "대화 속에 묻힌 가치" in full
+    assert "모든 사업에서 필요한 엔티티" in full
+    assert "별도 브랜드와 사업도 확인" in full
+    assert "대화에서 가치 후보" in full
     import pytest
 
     with pytest.raises(ValueError):

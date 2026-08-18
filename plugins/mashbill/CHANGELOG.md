@@ -4,6 +4,19 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.189.0] — 2026-08-18
+
+### Fixed
+
+- Coach replies now follow the user's language as a separate contract from
+  canvas text. Korean replies use ordinary wording, correct particles and
+  spacing, and standard technical terms in their normal form. The shared
+  English coaching prompts and Korean design criteria no longer model
+  figurative shorthand for the coach to copy. A fresh session still receives
+  saved facts and decisions, but is told not to imitate earlier assistant
+  wording. The same rule reaches Claude, Codex, Gemini, project scope, canvas
+  scopes, and the external MCP framing path.
+
 ## [0.188.0] — 2026-08-18
 
 ### Fixed

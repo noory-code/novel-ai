@@ -36,8 +36,8 @@ def test_foundation_framing_reads_a_tradeoff_answer_as_a_value() -> None:
     fails — the principles catalog cannot reach it there (0.178-0.180 saga)."""
     framing = build_framing_preamble("foundation")
     assert "identity confirmation" in framing
-    assert "not mere agreement" in framing
-    assert "never absorbs a value" in framing
+    assert "treat it as a VALUE rather than agreement" in framing
+    assert "register that value in the same turn" in framing
 
 
 def test_framing_empty_for_project_and_unknown_scope() -> None:
@@ -138,7 +138,7 @@ def test_services_framing_pulls_features_forward() -> None:
     slots are filled."""
     f = build_framing_preamble("services").lower()
     assert "as soon as" in f
-    assert "don't wait for every slot" in f or "do not wait for every slot" in f
+    assert "do not wait for every service field" in f
 
 
 def test_services_framing_surfaces_entities_as_byproduct() -> None:
@@ -158,9 +158,9 @@ def test_entities_framing_defends_cross_context_intent_without_overruling_user()
     f = build_framing_preamble("entities").lower()
     assert "removing, merging, or simplifying" in f
     assert "reverse references" in f
-    assert "cross-context intent" in f
+    assert "intent accumulated across" in f
     assert "steps, services, and features" in f
-    assert "follow their decision" in f
+    assert "follow the user's final decision" in f
     assert "never decide for them" in f
 
 
@@ -193,8 +193,8 @@ def test_services_framing_maps_the_landscape_first() -> None:
     canvas-level map: propose the full set of candidate services (derived from
     the mission and actors), confirm the map, THEN detail each one."""
     f = build_framing_preamble("services").lower()
-    assert "map the service landscape first" in f
-    assert "then detail" in f
+    assert "identify the full set of services first" in f
+    assert "then describe each service" in f
 
 
 def test_services_framing_derives_the_entity_map_unprompted() -> None:
@@ -204,9 +204,10 @@ def test_services_framing_derives_the_entity_map_unprompted() -> None:
     it AUTONOMOUSLY (no per-entity confirmation question), mentioning it in one
     light line; the user reviews/edits/deletes on the canvas."""
     f = build_framing_preamble("services").lower()
-    assert "derive the entity map" in f
-    assert "before leaving" in f
-    assert "register them yourself" in f
+    assert "derive 2–5 entities" in f
+    assert "before moving to the next service" in f
+    assert "register them on the entities canvas" in f
+    assert "without asking permission for each entity" in f
     assert "등록해둘까요" not in f  # the ask-first gate is gone for entities
 
 
@@ -217,8 +218,8 @@ def test_foundation_framing_draws_values_out_until_dry() -> None:
     after one lands, hunt the NEXT fork and keep drawing until the user runs
     dry — never settle for the first two or three (ninth sim iteration)."""
     f = build_framing_preamble("foundation").lower()
-    assert "next fork" in f
-    assert "runs dry" in f
+    assert "ask about another decision" in f
+    assert "until the user says there are no more" in f
     assert "first two or three" in f
 
 
@@ -230,8 +231,8 @@ def test_services_framing_landscape_spans_exchanges_not_layers() -> None:
     exchanges the mission reaches, and layers of one exchange are not
     services (tenth sim iteration)."""
     f = build_framing_preamble("services").lower()
-    assert "value-exchange surface" in f
-    assert "internal layers" in f
+    assert "one value exchange" in f
+    assert "internal processes" in f
     assert "other exchanges" in f
 
 
@@ -244,8 +245,8 @@ def test_propose_playbook_switches_to_drafts_on_thin_replies() -> None:
     one concrete candidate at a time, answerable in a word (eleventh sim
     iteration)."""
     p = build_system_prompt("foundation").lower()
-    assert "thin" in p
-    assert "draft-first" in p
+    assert "for a short reply" in p
+    assert "offer one draft first" in p
     assert "in a word" in p
 
 
@@ -257,9 +258,9 @@ def test_propose_playbook_distills_flooding_replies() -> None:
     its node while fresh, then steer back to the thread (twelfth sim
     iteration)."""
     p = build_system_prompt("actors").lower()
-    assert "flood" in p
-    assert "distill" in p
-    assert "back to the thread" in p
+    assert "for a long reply" in p
+    assert "summarize the useful parts" in p
+    assert "return to the current topic" in p
 
 
 def test_feature_framing_says_the_coach_places_the_actor_anchor_itself() -> None:
@@ -301,7 +302,7 @@ def test_foundation_framing_takes_the_counter_stance_once_per_pillar() -> None:
     pillar — the gentle-invitation tone (§0.1③) must survive the debate."""
     f = build_framing_preamble("foundation").lower()
     assert "counter-stance" in f
-    assert "opposite side once" in f
+    assert "opposite position once" in f
     assert "never more" in f
 
 
@@ -312,7 +313,7 @@ def test_services_framing_registers_entities_with_each_feature_batch() -> None:
     batch; a service with features but zero entities is unfinished
     (fifteenth sim iteration)."""
     f = build_framing_preamble("services").lower()
-    assert "same breath" in f
+    assert "at the same time as the features" in f
     assert "zero entities is unfinished" in f
 
 
@@ -329,10 +330,10 @@ def test_foundation_framing_lands_identity_mid_phase() -> None:
     lost its number — "two or three" anchored the coach to stop at 2-3, so
     the checkpoint is now "once the first values stand".)"""
     f = build_framing_preamble("foundation").lower()
-    assert "identity lands mid-phase" in f
+    assert "start identity before the end" in f
     assert "failed session" in f
-    assert "once the first values stand" in f
-    assert "then return" in f
+    assert "once the first values are confirmed" in f
+    assert "then continue asking about values" in f
     assert "identity still empty is a failed" in f
 
 
@@ -344,8 +345,8 @@ def test_foundation_framing_resumes_value_hunt_after_identity() -> None:
     framing must name the checkpoint as a pit stop: registering the identity
     does NOT end the value hunt."""
     f = build_framing_preamble("foundation").lower()
-    assert "pit stop" in f
-    assert "does not end the value hunt" in f
+    assert "confirming identity does not finish the value work" in f
+    assert "continue asking about values" in f
 
 
 def test_write_playbook_demands_natural_korean() -> None:
@@ -369,8 +370,8 @@ def test_foundation_framing_lands_values_in_batches() -> None:
     keeps session energy on values). Keep the rule; never judge a prompt rule
     by compliance alone."""
     f = build_framing_preamble("foundation").lower()
-    assert "batch" in f
-    assert "drip" in f
+    assert "collect the confirmed values" in f
+    assert "register all of them together" in f
 
 
 def test_foundation_framing_sweeps_value_domains_without_numeric_anchor() -> None:
@@ -384,7 +385,7 @@ def test_foundation_framing_sweeps_value_domains_without_numeric_anchor() -> Non
     except the anti-anchor warning ("never settle for the first two or
     three")."""
     f = build_framing_preamble("foundation").lower()
-    assert "sweep the value terrain" in f
+    assert "ask across distinct areas" in f
     assert "hasn't touched" in f
     assert f.count("two or three") == 1  # only the anti-anchor survives
 
@@ -472,7 +473,7 @@ def test_new_entities_get_a_project_anchor_spoke_in_the_same_action() -> None:
     expected = "create_edge source __project_anchor__ target <new entity>"
     for scope in ("services", "entities", "feature:feature_1"):
         prompt = build_system_prompt(scope)
-        assert "EVERY new entity gets a stored anchor spoke" in prompt, scope
+        assert "EVERY new entity gets a stored anchor edge" in prompt, scope
         assert expected in prompt, scope
 
 
@@ -482,7 +483,7 @@ def test_services_framing_draws_entity_relationships() -> None:
     relationship edges on the entities canvas; the framing must instruct the
     coach to connect related entities as it registers them."""
     f = build_framing_preamble("services").lower()
-    assert "relationship edges" in f
+    assert "connect related entities" in f
     assert "create_edge" in f
 
 
@@ -494,7 +495,7 @@ def test_actors_framing_draws_value_flow_edges() -> None:
     lines is unfinished."""
     f = build_framing_preamble("actors").lower()
     assert "create_edge" in f
-    assert "no lines is unfinished" in f
+    assert "without a value-flow line is unfinished" in f
 
 
 def test_foundation_framing_draws_multiple_identity_facets() -> None:
@@ -622,9 +623,9 @@ def test_foundation_every_pillar_gets_anchor_line() -> None:
     floated again. Same lesson as the actors families: the rule must bind
     EVERY registration, in the same turn."""
     f = build_framing_preamble("foundation").lower()
-    assert "anchor line" in f
+    assert "anchor edge" in f
     assert "same turn" in f
-    assert "floats" in f
+    assert "every new foundation node" in f
 
 
 def test_actor_is_defined_by_exchange_not_persona_card() -> None:
@@ -664,7 +665,7 @@ def test_actors_flows_land_with_each_registration() -> None:
     ate the turn budget): each concrete actor's exchanges are drawn in the
     SAME turn it registers, never deferred until the taxonomy is done."""
     f = build_framing_preamble("actors").lower()
-    assert "same turn it registers" in f
+    assert "same turn each actor is registered" in f
 
 
 def test_system_prompt_stays_under_saturation_budget() -> None:

@@ -151,7 +151,9 @@ def read_recent_transcript(
     picked.reverse()
     header = (
         "[Earlier in this conversation — continue from here; what is already "
-        "agreed below is settled, do not re-ask it]"
+        "agreed below is settled, do not re-ask it. Treat earlier messages as "
+        "facts and decisions only; do not imitate the wording or style of earlier "
+        "assistant replies]"
     )
     return header + "\n" + "\n".join(picked)
 

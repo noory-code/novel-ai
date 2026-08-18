@@ -39,6 +39,32 @@
 
 ## Log
 
+### D-2026-08-18-A — Coach replies follow the user's language without copying prompt metaphors
+
+- **What:** every coach scope receives one response-language rule. It requires
+  the user's language, ordinary Korean wording, correct Korean particles and
+  spacing, standard technical terms in their normal form, and a final reread.
+  The English coaching prompts and Korean design principles now state their
+  behavior directly. When a saved conversation is passed to a fresh session,
+  earlier turns provide facts and decisions but not a style example.
+- **Why:** live Korean replies included phrases such as `자를 갖게 됐네요`,
+  `값을 불렀습니다`, and particles separated from `MCP` or `AI`. The existing
+  natural-Korean rule applied only to text written onto the canvas. The reply
+  prompt itself contained many metaphors, and a fresh session also received
+  earlier assistant wording without a rule against imitating it.
+- **Alternatives:** force Korean for every user — rejected because the product
+  supports other languages. Rewrite the model's answer after generation —
+  rejected because it can change meaning and hide the original result. Remove
+  or rewrite saved chat JSON — rejected because the transcript contains
+  decisions the next session must retain.
+- **Approval:** Accepted — user, 2026-08-18 (novel-workspace W-00000231).
+- **Spec impact:** R7 system framing and conversation persistence rows.
+- **Principles:** SSOT (one shared rule in `build_system_prompt` reaches every
+  provider and MCP); MECE (reply wording is separate from canvas-write wording);
+  Completion (RED tests, full gates, and a same-question Claude comparison);
+  Honesty (stored history is preserved, and one live comparison is evidence for
+  that run rather than a guarantee about every generated reply).
+
 ### D-2026-08-12-A — a canvas the server just removed is dropped quietly; an error line can be closed
 
 - **What:** two viewer behaviours. (1) When the project socket announces a

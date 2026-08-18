@@ -52,17 +52,16 @@ def test_services_framing_uses_five_slots_and_jtbd() -> None:
     assert "planning" in f
     assert "five" in f or "5" in f  # the 5 inspector slots
     assert "without it" in f  # JTBD: ask what's frustrating without it, not 'why'
-    assert "promotion" in f  # the feature→service promotion test
+    assert "one person does inside a service" in f  # feature/service boundary
 
 
 def test_feature_framing_is_happy_path_first_with_altitude_guard() -> None:
     f = build_framing_preamble("feature:svc1").lower()
     assert "execution" in f
-    assert "happy path" in f
-    assert "build agent" in f  # altitude guard hands implementation to the build agent
-    # A branch instruction placed after the whole path is drawn is never reached
-    # inside the turn budget, so the branch stands up at the step it belongs to.
-    assert "right there" in f
+    assert "main successful sequence" in f
+    assert "build agent" in f  # implementation belongs to the build agent
+    # A branch must be added when the relevant step is discussed, not at the end.
+    assert "add the decision and its branches there" in f
     assert "unfinished" in f
 
 
@@ -141,8 +140,9 @@ def test_guard_keeps_read_ask_machinery_silent() -> None:
     # rule is universal (present even on the cross-canvas ``project`` scope).
     for scope in ("foundation", "project"):
         g = build_system_prompt(scope).lower()
-        assert "narrate" in g, scope  # never narrate tools / a read that didn't land
-        assert "fresh start" in g, scope  # empty canvas = invite, not a gap to announce
+        assert "do not describe" in g, scope
+        assert "tool use" in g and "failed reads" in g, scope
+        assert "when a canvas is empty, start the interview" in g, scope
 
 
 def test_coach_tone_keeps_warmth_light_not_stacked() -> None:
@@ -150,8 +150,8 @@ def test_coach_tone_keeps_warmth_light_not_stacked() -> None:
     # a wall. The tone principle: warmth is one light touch led by the question,
     # not stacked caveats. Canvas scopes only (tone is absent from ``project``).
     t = build_system_prompt("foundation").lower()
-    assert "warmth" in t
-    assert "reassurance" in t  # "don't pile reassurance on reassurance"
+    assert "ask the question directly" in t
+    assert "do not add repeated reassurance" in t
 
 
 # --- build_system_prompt (chat_context SSOT) -------------------------------
