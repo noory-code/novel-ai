@@ -39,6 +39,44 @@
 
 ## Log
 
+### D-2026-08-18-F — Identity is the standing way the service behaves
+
+- **What:** define identity as the attitude and way a service consistently
+  behaves while it is designed, built, and presented to people. A short
+  directive such as "Bright and clear" is a valid name when its summary and
+  description turn it into concrete actions. AI drafts identity guidelines
+  from the mission and core values; the person refines and confirms them. A
+  project may have several identity guidelines, but the coach does not impose
+  a count or fixed facets such as voice, energy, and speech style. Every coach
+  receives this definition and checks its proposals and replies against the
+  current identities. When an identity conflicts with a core value, the core
+  value wins.
+- **Why:** the public canon already called identity an always-applied
+  execution and expression rule, but that wording was hard to understand.
+  Other guidance narrowed it to voice and attitude, required a refusal and
+  cost that belong to core-value judgment, and told the Foundation coach to
+  create fixed voice, energy, and speech-style facets. The shared Foundation
+  guide defined mission and core value but omitted identity, while the write
+  playbook treated identity as a unique kind even though the current canvas
+  contains several confirmed behavior guidelines.
+- **Alternatives:** limit identity to brand voice — rejected because product
+  behavior and the way the coach works would be left out. Reject adjective or
+  adverb phrases — rejected because a memorable directive is useful when the
+  body makes it actionable. Require every identity to reject something and pay
+  a cost — rejected because that repeats the job of a core value. Require one
+  identity or a fixed facet list — rejected because real guidelines, not a
+  quota, decide what belongs.
+- **Approval:** Accepted — user, 2026-08-18 (novel-workspace W-00000244).
+- **Spec impact:** R7 shared and Foundation coaching frames, identity
+  evaluation criteria, and the public Foundation kind definition.
+- **Principles:** SSOT (the public definition owns the meaning and every coach
+  follows it); MECE (core value owns conflict priority while identity owns the
+  standing way of acting); Fail Fast (tests reject voice-only, fixed-facet, and
+  unique-identity guidance); AHA (no count or facet taxonomy before repeated
+  need appears); Completion (canon, runtime prompts, tests, release records,
+  and the current canvas are checked together); Honesty (the coach derives a
+  draft from actual mission and values and the person confirms it).
+
 ### D-2026-08-18-E — Every coach receives the Foundation
 
 - **What:** every chat scope receives the agreed mission and core-value

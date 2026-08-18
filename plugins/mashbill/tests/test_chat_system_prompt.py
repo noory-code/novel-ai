@@ -80,6 +80,24 @@ def test_every_chat_scope_receives_mission_and_core_value_definitions() -> None:
             assert rule in prompt, (scope, rule)
 
 
+def test_every_chat_scope_receives_identity_definition() -> None:
+    """D-2026-08-18-F: every coach must apply the service's standing way of
+    behaving, not reduce identity to a Foundation-only voice exercise.
+    """
+    for scope in ("foundation", "actors", "services", "entities", "feature:x", "project"):
+        prompt = build_system_prompt(scope).lower()
+        for rule in (
+            "while it is designed, built, and shown to users",
+            "short directive",
+            "concrete actions",
+            "derive identity from the current mission and core values",
+            "the ai drafts it and the person confirms it",
+            "use the current identities to shape every proposal and reply",
+            "the core value wins",
+        ):
+            assert rule in prompt, (scope, rule)
+
+
 def test_actors_framing_covers_role_families_and_actor_not_person() -> None:
     f = build_framing_preamble("actors").lower()
     assert "planning" in f

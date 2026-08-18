@@ -15,38 +15,33 @@
 
 ## Mission — discrimination criteria
 
-- **Change, not direction**: A good mission captures whose what becomes different. "We provide ~" is a
-  feature statement, not a mission. Discriminate: "On the morning this is achieved, who in the world is doing
-  what differently?"
-- **A sustainable problem**: A mission built on a problem that ends once solved is a project, not a company.
-  Discriminate: "Ten years from now, is this problem still being born anew?"
-- **Is the reason it has to be you inside it?**: A sentence anyone could use is a slogan, not a mission.
-  Discriminate: "If a competitor hung this exact sentence and it wouldn't feel odd — redo it."
-- **Did it descend to a felt state?** (back-extracted): The strongest missions write the change not as an
-  abstract noun (accessibility·creativity) but as one person's felt experience — "How did we ever live
-  without Coupang?" is the specimen. Discriminate: "Is this mission a third-person noun, or one person's felt
-  state?"
+- **Better, not merely different**: A good mission states what in people's lives or society needs to improve.
+  "Things will change" has no direction. Discriminate: "Whose what needs to become better, and in what way?"
+- **A continuing commitment, not a finish line**: The condition can keep arising even after one solution works.
+  Discriminate: "After the first solution succeeds, what are you still committed to improving?"
+- **The solution can change**: A mission commits to the improvement, not to today's product or method. Solutions
+  are put into the world, tested, and refined. Discriminate: "If this solution is replaced, does the mission
+  still tell you what to improve next?"
+- **Concrete enough to choose**: A sentence anyone could use cannot guide a difficult choice. Discriminate:
+  "When two solutions compete, does this sentence help you choose which one better serves the mission?"
 
-**Example pair**: Strong — Toss "not difficult, inconvenient, distant finance, but finance that is easy and
-common-sense for everyone" (before→after is inside the sentence). Weak — "anyone finishes transfers·investing·
-payments in one app with a few taps" (a feature statement posing as a mission, a completed form that ends once
-done) · "make the world better for everyone" (a slogan anyone could hang, no change).
+**Example pair**: Strong — "People and AI never lose sight of the essence or where the current work fits into
+the whole" (the better state is clear while the solution may change). Weak — "provide an AI canvas" (a current
+solution, not the improvement) · "change the world" (no direction for what should become better).
 
 ## Core value — discrimination criteria
 
+- **A real conflict, not a preference**: A core value earns its place when choices cannot all be kept.
+  Discriminate: "What are the two choices, and when do they actually conflict?"
+- **A one-word name, with the full choice in the body**: The name may be one word such as "Essence". Never
+  reject a value merely because its label is a noun. The body must name the recurring conflict, what takes
+  priority, and the cost accepted. Discriminate: "Can I see the conflict, the choice, and the cost without
+  guessing?"
 - **A value with no price is decoration** (validated, benchmark turn ⑨): Filter out any value that doesn't
-  name what you lose by keeping it. Discriminate: "When did keeping this cost you something recently?"
-- **Are the domains split apart?** (validated, turn 19): A mature value system is spread across different
-  domains — customer treatment·quality·speed·money vs principle·way of working. If they're all in the customer
-  family, it's still the mission's echo. Discriminate: "Is there a moment where these values collide with each
-  other?" (a good system holds internal tension)
-- **Is it an action statement?**: A noun like "honesty" is a word, not a value. The mature values in the
-  answer keys are all action-directives ("Wow the customer", "don't block first"). Discriminate: "Can a new
-  hire read this sentence alone and act differently tomorrow?"
-- **Is there an opposing-pair tension?** (back-extracted): A mature system goes beyond domain spread and names
-  pairs that pull against each other — Baemin hangs "be fast" and "good enough is not good enough" as an
-  intended tension. Discriminate: "Are there two values that are flatly opposite? If not, you've still only
-  seen one face."
+  name what is given up by keeping it. Discriminate: "What do you accept losing when this value wins?"
+- **Values can conflict with each other**: Two core values can point in different directions. Do not force an
+  artificial pair or a target count; record only conflicts the person truly faces. Discriminate: "If two values
+  apply here, what decides which one takes priority in this situation?"
 - **Values buried in the telling** (2026-07-23, W-106): A founder needn't label something a "value"
   for it to be one — decision criteria, communication habits, and what they refuse to tolerate already
   carry candidate values in the sentences that describe them. Discriminate: "Did the coach catch the
@@ -54,31 +49,27 @@ done) · "make the world better for everyone" (a slogan anyone could hang, no ch
   rather than wait for a named 'our value is …'?" (Missing the buried candidates leaves the value map
   half-drawn.)
 
-**Example pair**: Strong — Coupang "Customer Wow" (price = margin), Shopify "software should never make people
-feel stupid" (price = ship date), Duolingo "take the long view" (price = immediate revenue), Netflix "dream
-team" (price = job security). Weak — "Honesty: always be honest" (no price·a noun) · "Innovation: innovate
-ceaselessly" (nothing given up·an unmeasurable decorative word).
+**Example pair**: Strong — "Essence": when familiar or profitable additions conflict with the mission, the
+mission wins; slower delivery is accepted. Weak — "Honesty: always be honest" (no conflict or cost) ·
+"Innovation: keep innovating" (no choice it resolves).
 
 ## Identity — discrimination criteria
 
-- **Behavioral, not adjectival**: A pile of adjectives ("friendly, innovative, trustworthy") is not an
-  identity — it's a word list. Discriminate: "In the same moment, does one scene come to mind where this
-  voice speaks or acts differently from a competitor?"
-- **Does it refuse something?**: A strong identity rules a tone or behavior out; it pays a price. If it
-  chose warmth, it gave up some authority/formality. Discriminate: "Is there a 'we don't do it this way'
-  the identity refuses? An identity that gives up nothing is decoration."
-- **Grown from mission and values, not borrowed**: A strong identity is the felt surface of the mission +
-  values, not a stock brand-voice template. Discriminate: "Erase the mission and values — does this voice
-  survive, or is it a stock voice you could paste onto any service?"
-- **A coherent persona, not scattered adjectives**: Identity is one character — how it speaks, what it
-  assumes about the user. Discriminate: "Drawn as one person, does a single scene of how they talk and
-  treat the user come into focus?"
+- **Standing behavior, not only a voice**: Identity sets the attitude and way the service behaves while it
+  is designed, built, and shown to users. Discriminate: "Can we tell what the service will do differently
+  because of this guideline?"
+- **A short directive becomes concrete action**: A label such as "밝고 명쾌하게" is valid when its summary
+  and description say how to act. A vague aspiration is not enough.
+- **Derived from mission and core values**: Ask whether the guideline turns the intended change and choice
+  criteria into everyday behavior rather than borrowing a generic brand voice.
+- **Applied continuously**: Every proposal and reply should follow the current identities. If an identity
+  conflicts with a core value, follow the core value.
+- **No fixed facets or count**: Keep as many guidelines as the service needs. Do not require voice, energy,
+  speech style, or any other predefined set.
 
-**Example pair**: Strong — "Finance as common sense — plain, no jargon to intimidate" (refuses banking's
-authority/formality) · "A mischievous but relentless coach — pokes guilt with humor" (refuses polite
-distance) · "Restrained conviction — show more, explain less" (refuses spec-listing). Weak — "Friendly,
-innovative, and trustworthy" (adjective pile, refuses nothing) · "Delivers the best user experience" (a
-slogan anyone could hang) · "Professional and polished tone" (stock voice).
+**Example pair**: Strong — "밝고 명쾌하게 — explain difficult ideas in plain words and lead with the
+conclusion" · "The coach drafts first and shows it" · "The coach says clearly when a proposal does not
+fit." Weak — "Deliver a good experience" (no behavior) · "Friendly" (no action).
 
 ## Actors — discrimination criteria
 

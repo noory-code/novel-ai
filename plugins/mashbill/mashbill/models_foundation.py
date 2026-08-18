@@ -101,10 +101,12 @@ class CoreValueNode(BaseNodeFields):
 
 
 class IdentityNode(BaseNodeFields):
-    """v0.44.0 (D-2026-06-07-A): identity = ``description`` + ``body`` plus the
-    **output-model** structural fields ``status`` + ``provenance``. identity is
-    an output kind (AI-derived from mission + core_value), so it tracks its
-    derivation lineage and a derive→confirm lifecycle the input kinds lack:
+    """Identity is a standing behavior guideline drafted from the mission and
+    core values, then confirmed by the person (D-2026-08-18-F).
+
+    ``summary`` gives the one-line meaning and ``description`` states concrete
+    behavior. ``body`` remains only for backward-compatible reads and folds into
+    ``description``. The structural output fields track derivation:
 
     - ``status`` — ``manual`` (hand-authored; graceful-degradation default) /
       ``derived`` (AI draft, unconfirmed) / ``confirmed`` (AI-derived + user-locked).
@@ -114,7 +116,7 @@ class IdentityNode(BaseNodeFields):
     MD typed-text split, so absent from FOUNDATION_TYPED_TEXT_FIELDS /
     FOUNDATION_MD_FIELDS. ``evolution`` (revision history) is deferred — overlaps
     git + ``version``, no writer yet. v0.43.2 (D-2026-06-06-B) removed the legacy
-    ``do`` / ``dont`` (folded into ``body`` on read). See
+    ``do`` / ``dont``. See
     docs/node-format/foundation/identity.md."""
 
     kind: Literal["identity"] = "identity"

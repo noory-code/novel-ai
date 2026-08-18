@@ -2,28 +2,40 @@
 kind: identity
 canvas: foundation
 field_count_before: 4   # description, do, dont, body
-field_count_after: 4    # description, body + status(enum) + provenance(string[]); evolution deferred
+field_count_after: 5    # summary, description, legacy body + status(enum) + provenance(string[])
 status: done   # draft → reviewing → done — v0.44.0 (D-2026-06-07-A)
 ---
 
 # identity — 아이덴티티
 
 > **개념(정본): [`concepts/kinds.md`](https://github.com/noory-code/novel-ai/blob/main/docs/concepts/kinds.md).** (옛 FOUNDATION_CONCEPT 흡수.)
-> 아이덴티티 = **쌓여가는 지향. 어떤 존재이고 싶은가** (미래/지향).
-> **★ 입력이 아니라 출력** — AI 가 미션+코어밸류(+누적 설계/행동)에서
-> 도출하고 계속 갱신. 필드 정본: `viewer/src/domain/Identity.ts`.
+> 아이덴티티 = **서비스를 설계하고 만들고 사용자에게 보여 주는 동안 늘 지킬 태도와 행동
+> 방식**이다.
+> **★ 입력이 아니라 출력** — AI가 미션과 코어밸류에서 초안을 만들고 사람이 다듬어 확정한다.
+> 코어밸류와 부딪히면 코어밸류를 따른다. 정본 결정은 `D-2026-08-18-F`다.
 
-## 출력값 렌즈 — 이게 핵심 (2026-06-06)
+## 지금 쓰는 형식
 
-미션·코어밸류는 **입력**(인터뷰로 받음)이라 "사람이 어느 필드를 채우나"가
-질문이었다. **아이덴티티는 출력**이라 그 질문이 바뀐다 — "AI 가 무엇을
-도출·누적하고, 그걸 어떻게 추적·진화시키나."
+- `label`: "밝고 명쾌하게"처럼 짧은 지침
+- `summary`: 뜻을 한 줄로 설명
+- `description`: 실제로 어떻게 행동할지 구체적으로 설명
+- `body`: 예전 데이터를 읽기 위한 필드. 값이 있으면 `description`으로 옮겨 읽는다.
+- `status`·`provenance`: AI가 만든 초안과 그 근거를 추적하는 구조 필드
 
-> ⚠️ **현실 caveat:** 현재 BANAS 14개 identity 는 *손으로 작성*된 것
-> (AI 도출은 아직 미구현). 아래는 **출력값 모델의 목표 설계** + 손작성으로도
-> 동작하는 graceful degradation.
+아이덴티티는 여러 개 둘 수 있다. 개수나 목소리·활기·말투 같은 항목을 미리 정하지 않는다.
+코치는 설계안을 내고 답할 때마다 현재 아이덴티티를 적용한다.
 
-### 3개 열린 질문, 출력 렌즈로 재판정
+## 출력으로 만드는 까닭
+
+미션과 코어밸류는 사람에게 묻고 확인한다. 아이덴티티는 그 답을 실제 행동으로 옮긴다. 따라서
+AI가 먼저 초안을 보여 주고 사람이 고친 뒤 확정한다.
+
+손으로 직접 써도 동작한다. 이때도 `label`·`summary`·`description`에 같은 뜻을 담는다.
+
+### 2026-06-06에 검토한 내용
+
+아래 표는 지금 계약이 아니라 예전 설계를 검토한 기록이다. 지금 계약은 위의 `지금 쓰는 형식`을
+따른다.
 
 | # | 1차 비판 | 출력 렌즈 재판정 |
 |---|---|---|
@@ -57,10 +69,9 @@ structural-vs-prose 원칙상 자리값 있음):
 - 캔버스 AI 대화창에서: 미션·코어밸류 인터뷰가 끝나면 AI 가 identity 를 제안,
   사용자가 대화로 다듬음.
 
-### Graceful degradation
-AI 도출이 약하거나 미구현이어도 identity 는 **손작성으로 동작**해야 한다:
-label + description (현재 14개가 그러함). provenance/evolution/status 는
-*AI 도출이 붙을 때의 향상 레이어* — 단계적 구현.
+### 직접 작성할 때
+AI가 초안을 만들지 못해도 사람이 직접 작성할 수 있다. `label`에는 짧은 지침을, `summary`에는
+한 줄 뜻을, `description`에는 구체적인 행동 방식을 적는다.
 
 ## 데이터 근거 (현재 14개, 손작성)
 | 필드 | 충전율 |
@@ -84,7 +95,7 @@ label + description (현재 14개가 그러함). provenance/evolution/status 는
 |---|---|---|---|
 | mission | 입력 | label + body | — |
 | core_value | 입력 | label + definition (+body) | — |
-| identity | **출력** | label + description | **provenance · evolution · status** (목표) |
+| identity | **출력** | label + summary + description | **provenance · status** |
 
 → 입력 2종은 label+단일 prose 로 수렴. **출력 1종(identity)만 구조가 다르다**
 — 그게 본질(입력 vs 출력)의 차이를 정확히 반영.
@@ -95,7 +106,7 @@ label + description (현재 14개가 그러함). provenance/evolution/status 는
 - [x] (구현) status(manual/derived/confirmed) 플래그. v0.44.0 (D-2026-06-07-A).
 - [ ] (보류) evolution 추적 — git+version 중복 + writer 부재. AI 도출 writer 착륙 시 재개.
 - [ ] (보류) facet 분류 — deliverable 의 facet 묶음 수요 발생 시.
-- [x] (못박음) graceful degradation — 손작성(label+description, status=manual, provenance=[])만으로 동작.
+- [x] (못박음) 직접 작성 — label+summary+description, status=manual, provenance=[]로 동작.
 
 ## 검토 히스토리
 
@@ -111,3 +122,4 @@ label + description (현재 14개가 그러함). provenance/evolution/status 는
 | 5차 | 2026-06-06 | 채우는 방식 명시 — 인터뷰(입력) 아니라 **AI 도출→사용자 확인·교정**(출력). identity 의 "인터뷰 등가물"은 확인 단계. |
 | 6차 | 2026-06-06 | **do/dont 컷 구현 (v0.43.2).** identity = description + body. 옛 do/dont → body 로 fold. 출력모델(provenance/evolution/status)·facet 은 여전히 미래 TARGET. |
 | 7차 | 2026-06-07 | **출력모델 구현 (v0.44.0, D-2026-06-07-A).** `status`(manual/derived/confirmed, default manual) + `provenance`(string[]) 를 구조 필드로 추가 (canvas.json only, MD split 아님). **evolution 보류** — git+version 중복 + writer 부재 (YAGNI). graceful degradation: 손작성 manual 로 계속 동작. node-format **done**. |
+| 8차 | 2026-08-18 | **뜻과 현재 형식을 바로잡음 (D-2026-08-18-F).** 늘 지킬 태도와 행동 방식으로 정의. label+summary+description을 현재 계약으로 명시. 고정 항목과 개수 요구를 없앰. |

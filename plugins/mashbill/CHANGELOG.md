@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.190.4] — 2026-08-18
+
+### Fixed
+
+- Identity now means the attitude and behavior the service keeps while it is
+  designed, built, and shown to users. Every coach applies the current identity
+  guidelines, while core values still decide conflicts. The Foundation coach
+  accepts several short directives and turns each into concrete behavior
+  without forcing voice, energy, or speech-style facets.
+
 ## [0.190.3] — 2026-08-18
 
 ### Fixed

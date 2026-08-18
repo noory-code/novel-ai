@@ -58,7 +58,7 @@ def test_get_canvas_framing_returns_the_scope_system_prompt() -> None:
         assert mcp_tools.get_canvas_framing(scope) == build_system_prompt(scope)
     # A per-service thread resolves to the services framing (DRY), not empty.
     assert mcp_tools.get_canvas_framing("service:abc123") == build_system_prompt("service:abc123")
-    # A framed scope is a strict superset of the guard-only cross-canvas
+    # A framed scope is a strict superset of the universal cross-canvas
     # ``project`` scope — proving the composed prompt carries the playbooks
     # (incl. the WRITE gate: "no silent auto-generation", VISION AICollaboration)
     # the headless coach needs to be first-class.
@@ -289,7 +289,8 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     # one discriminator set that was missing) must carry its own criteria, not
     # just ride the mission/values framing.
     identity = get_principles("identity")
-    assert "거절" in identity and "형용사" in identity
+    assert "늘 지킬 태도와 행동 방식" in identity
+    assert "구체적인 행동" in identity
     # W-61 (P-00000004 ⓐ, coach finding 1): the nesting/hierarchy discriminator
     # lived only in the actors *framing* (manipulation prompt), so it never
     # reached the coach's evaluation knowledge and canvases came out flat. The
@@ -320,7 +321,7 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     assert "가치를 삼키지 마라" not in get_principles("identity")
     full = get_principles(None)
     assert "대가" in full and "교환" in full and "더 나아져야" in full
-    assert "형용사" in full  # identity is included in the all-areas join
+    assert "늘 지킬 태도와 행동 방식" in full  # identity is included in the all-areas join
     assert "모든 사업에서 필요한 엔티티" in full
     assert "사람이 이루려는 결과 하나" in full
     assert "대화에서 가치 후보" in full
@@ -328,6 +329,27 @@ def test_design_principles_serve_discriminators_per_area() -> None:
 
     with pytest.raises(ValueError):
         get_principles("nope")
+
+
+def test_identity_principles_match_agreed_definition() -> None:
+    """D-2026-08-18-F: identity applies throughout the service's work and turns
+    a short directive into concrete behavior. Conflict judgment stays with values.
+    """
+    from mashbill.coaching_principles import get_principles
+
+    identity = get_principles("identity")
+    for rule in (
+        "늘 지킬 태도와 행동 방식",
+        "설계하고 만들고 사용자에게 보여 주는 동안",
+        "밝고 명쾌하게",
+        "구체적인 행동",
+        "미션과 코어밸류",
+        "코어밸류를 따른다",
+        "개수나 항목을 미리 정하지 않는다",
+    ):
+        assert rule in identity, rule
+    assert "거절하는 게 있나" not in identity
+    assert "목소리·태도" not in identity
 
 
 def test_get_canvas_surfaces_the_synthetic_anchor(tmp_path: Path) -> None:

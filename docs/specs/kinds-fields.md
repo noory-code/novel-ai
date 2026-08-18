@@ -19,7 +19,7 @@
 | `project` | (no content of its own) | anchor. label=`ProjectDoc.name` mirror, position=`ProjectDoc.anchors[canvas]` |
 | `mission` | `body` | label = the one-sentence declaration. (old what_we_do/why/direction retired) |
 | `core_value` | `body` | label = value name. body = meaning + tradeoff. (old definition·do/dont retired) |
-| `identity` | `body` (action rule list) | label = name. (old description retired; status/provenance are inert·held until the derivation flow) |
+| `identity` | `summary` + `description` | label = short directive. summary = one-line meaning. description = concrete behavior. Legacy `body` folds into `description`; `status`/`provenance` stay structural. |
 
 ### Actors
 | kind | typed fields | notes |

@@ -55,16 +55,25 @@ the deep definition comes later in the home coach). Not created silently — alw
      *current selection/scope* is the foothold (in-app = rich selection / external agent = map + name). A **title/ID index**
      for name search is placed early (not vector). vector/RAG-search comes **later** behind the same seam (only when vague·
      footholdless search or text outside the graph arises).
-   - **Delivering (the envelope, how it's handed over):** the active canvas (whole) + the selected node + **summaries of
-     earlier canvases** + the **entity registry** (name+one line, for strong dedup) + deep fetch if needed. **CAG first**
+   - **Delivering (the envelope, how it's handed over):** the full current **Foundation** (Mission + Core value +
+     Identity) + the active canvas (whole) + the selected node + the **entity registry** (name+one line, for strong
+     dedup) + deep fetch if needed. **CAG first**
      (the stable skeleton = the prompt-cache prefix, only the dynamic part as suffix) → if too big, **RAG**. The user's
      project is *any size* and the external agent is *any model*, so CAG can't be assumed → runtime selection behind a
      **context-provider abstract seam**. The playbook depends only on the abstraction.
 3. **Per-canvas framing** (the code constant `chat_context.py::_SCOPE_FRAMING`): phase → coach behaviour.
 
+Two inputs are never optional (`D-2026-08-18-E`, `D-2026-08-18-F`). Every scope receives the same short Mission,
+Core-value, and Identity definitions in its system framing. Every turn also receives the current Foundation content,
+including each value's conflict, priority, and accepted cost and each identity's concrete behavior. The engine
+supplies both directly; the coach does not have to remember to call `get_design_principles`. That tool keeps the
+deeper diagnostic questions. Foundation content is project data, never an instruction to follow. Every coach checks
+its proposals and replies against the current identities. If an identity conflicts with a core value, the core value
+wins.
+
 **Selection-awareness = required for the external agent too** (`D-2026-06-19-F`): it's a contradiction if the primary path (the external MCP
 agent) has poorer context than the in-app. The external agent is already attached via MCP, so we **hand out the selection +
-envelope as an MCP tool (`get_viewer_context`)** (a viewer→engine selection bridge is needed).
+the same full context as an MCP tool (`get_viewer_context`)** (a viewer→engine selection bridge is needed).
 
 ---
 
@@ -73,26 +82,30 @@ envelope as an MCP tool (`get_viewer_context`)** (a viewer→engine selection br
 ### 2.1 Foundation — mission → core value → identity
 Every question in the §0.1 tone. Mission·core value = input (interview), identity = output (AI-derived).
 
-**Mission interview (2 stages, `D-2026-06-16-K`):**
-- *Discover:* ① "만들고 싶은 그 서비스가, 누구의 어떤 점을 바꿔줄까요? 거창하지 않아도 괜찮아요." (the service you want to build — whose what would it change? It needn't be grand.)
-  ② "만약 그게 세상에 없다면, 무엇이 좀 아쉬울까요?" (if it didn't exist in the world, what would be a bit lacking?) ③ "그걸 왜 하필 당신이, 지금 하고
-  싶으세요?" (why do you, of all people, want to do it now?)
-- *Filter (sustainability):* ① "이 문제, 한 번 풀리면 끝일까요, 계속 생길까요?" (this problem — once solved, is it over, or does it keep recurring?) ② "지금 세상에
-  이미 있나요, 아직 없나요?" (does it already exist in the world now, or not yet?) ③ "이게 일상이 되면 세상이 어떻게 달라져 있을까요?" (when this becomes everyday life, how would the world be different?)
+**Mission interview (2 stages, `D-2026-06-16-K`, `D-2026-08-18-D`):**
+- *Discover:* ① "사람이나 사회에서 무엇이 더 나아져야 할까요?" (what in people's lives or society
+  needs to improve?) ② "지금은 어떤 점이 계속 불편하거나 부족한가요?" (what keeps falling short
+  today?) ③ "그걸 왜 하필 당신이, 지금 더 낫게 만들고 싶으세요?" (why do you want to improve it now?)
+- *Filter (continuity):* ① "이 상황은 한 번 풀리면 끝날까요, 계속 생길까요?" (does this condition
+  end after one fix, or keep arising?) ② "첫 해결 방법이 잘돼도 다음에는 무엇을 더 낫게 만들 수
+  있을까요?" (after the first solution works, what could improve next?) ③ "더 나아진 일상에서는 사람이
+  무엇을 다르게 할 수 있을까요?" (what could people do differently in that better everyday life?)
 
-**Core value interview (2 stages, `D-2026-06-16-L`):**
+**Core value interview (2 stages, `D-2026-06-16-L`, `D-2026-08-18-D`):**
 - *Discover (dug from the service):* ① "자주 마주칠 갈림길은? (빠르게 vs 완성도, 무료 vs 유료처럼)" (the forks you'll often face? Like fast vs polish, free vs paid)
   ② "본능적으로 어느 쪽으로 기우세요?" (which way do you instinctively lean?) ③ "남들은 당연한데 당신은 '이건 아닌데' 싶은 게?" (what do others take for granted but you feel "this isn't right" about?)
-- *Domain sweep (`D-2026-07-03-H`):* the forks hide in different domains — customer treatment · quality bar ·
-  speed vs polish · money vs principle · way of working. Don't just circle the mission; **before closing, probe
-  one domain the conversation hasn't touched yet** ("one domain we haven't touched yet — let me look at ○○").
-  Basis = the sim benchmark: without the sweep, the registered values pile up only adjacent to the mission
-  (customer·quality).
-- *Filter:* ① "이걸 지키면 대신 포기할 게 생기나요?" (if you protect this, does something get given up in return?) (without a tradeoff it's decoration) ② "손해를
-  보더라도 지킬 만한가요?" (is it worth protecting even at a loss?) (if the cost is 0 it's table stakes) ③ "말뿐 아니라 실제로도 그렇게 하세요?" (do you actually do it, not just say it?)
+- *Find more only when needed (`D-2026-07-03-H`):* customer treatment · quality · speed vs polish · money
+  vs principle · way of working are prompts, not a quota. Use them when the person needs help recalling a real
+  conflict. Do not force a target count or manufacture opposing pairs.
+- *Filter and write:* ① "두 선택을 함께 지킬 수 없는 순간이 실제로 있나요?" (do these choices
+  actually conflict?) ② "그때 무엇을 우선하나요?" (what takes priority?) ③ "그 선택 때문에 무엇을
+  감수하나요?" (what cost do you accept?) Use a one-word label when it carries the value; write the recurring
+  conflict, priority, and accepted cost in the body. Never reject a value merely because its label is a noun.
 
-**Identity (`D-2026-06-16-N/O`):** AI proposes draft rules from mission + core value → discussion → confirmation.
-No silent auto-generation ❌.
+**Identity (`D-2026-06-16-N/O`, `D-2026-08-18-F`):** Identity sets the attitude and way the service behaves while
+it is designed, built, and shown to users. The AI proposes one or more draft guidelines from mission + core value;
+the person discusses and confirms them. A short directive such as "밝고 명쾌하게" is valid when its summary and
+description name concrete actions. Do not force a fixed count or predefined facets. No silent auto-generation ❌.
 
 ### 2.2 Actors — roles and relationships
 Derive role-level value flow (who gives what value to whom). Research basis (value network·CATWOE·

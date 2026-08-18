@@ -109,13 +109,13 @@ def test_coach_keeps_mechanics_and_field_names_out_of_sight() -> None:
 
 def test_coach_leads_and_covers_full_concept() -> None:
     """B-7 (regression, user report + transcript 2026-07-02): the coach declared a
-    canvas 'done' with only one identity facet and handed the wheel back ('what
+    canvas 'done' after one thin identity and handed the wheel back ('what
     next?'), forcing the user to point out what was missing. The prompt must
-    instruct it to keep leading and draw out a concept's full set of facets before
-    moving on."""
+    keep leading until each concept is clear enough to guide action, without
+    imposing a fixed number of identity guidelines."""
     p = build_system_prompt("foundation").lower()
-    assert "several facets" in p
-    assert "before moving on" in p
+    assert "declare a canvas complete after one item" in p
+    assert "check every facet before moving on" in p
 
 
 def test_canvas_system_prompt_paces_the_whole_canvas() -> None:
@@ -381,16 +381,15 @@ def test_foundation_framing_uses_value_domains_as_prompts_not_a_quota() -> None:
 
 
 def test_write_playbook_fills_placeholder_labels_too() -> None:
-    """D-2026-07-03-L + B-12 refinement (user live-watch, 2026-07-03): unique
-    kinds (mission, identity) KEEP the kind name as the label — the coach must
-    never put the content sentence in the label; content goes in the fields.
-    Multi-instance kinds (core values) still get a short meaningful label in
-    the same write so siblings are tellable apart."""
+    """D-2026-08-18-F: only Mission is unique. Values and identities use short,
+    meaningful labels so several guidelines remain distinguishable."""
     p = build_system_prompt("foundation").lower()
     assert "placeholder" in p
     assert "same update_node call" in p or "same write" in p
     assert "never the label" in p
-    assert "keep the kind name" in p
+    assert "mission is the only unique kind" in p
+    assert "values and identities get a short meaningful label" in p
+    assert "ask which" in p
 
 
 def test_coach_consults_design_principles_when_judging() -> None:
@@ -487,14 +486,19 @@ def test_actors_framing_draws_value_flow_edges() -> None:
     assert "without a value-flow line is unfinished" in f
 
 
-def test_foundation_framing_draws_multiple_identity_facets() -> None:
-    """B-25 (user, 2026-07-04): "왜 아이덴티티는 하나뿐이죠?" — the concept is
-    flat N peers (one node per facet: voice / energy / speech style) but the
-    coach only ever filled the seeded Voice. The framing must call for
-    several facets, each its own node."""
+def test_foundation_framing_derives_identity_as_behavior_guidelines() -> None:
+    """D-2026-08-18-F: identity may contain several standing guidelines, but
+    Novel must not force voice, energy, speech style, or any other fixed set."""
     f = build_framing_preamble("foundation").lower()
-    assert "several facets" in f
-    assert "voice, energy" in f
+    for rule in (
+        "one or more identity guidelines",
+        "short directive",
+        "one-line summary",
+        "concrete actions",
+        "do not target a count or force predefined facets",
+    ):
+        assert rule in f, rule
+    assert "voice, energy, and speech style" not in f
 
 
 def test_actors_framing_nests_roles_under_families() -> None:

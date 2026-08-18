@@ -102,7 +102,8 @@ deliverable, and it is the source the AI reads and works from.
 - **mission** = a commitment to decide what needs to improve in people's lives or society, then keep
   putting solutions into the world and refining them.
 - **core value** = a value that decides what takes priority when choices conflict.
-- **identity** = the execution/expression rule that always applies (AI-derived, person-confirmed).
+- **identity** = the attitude and way the service consistently behaves while it is designed, built, and
+  shown to users (AI-drafted, person-confirmed). If it conflicts with a core value, the core value wins.
 - **actor** = a relational *role* (not a person or persona). Hierarchy (operator/user→subordinate, inheritance) + give-and-take.
 - **service** = one coherent outcome that one or more human actors seek, together
   with the capabilities that help them reach it. Multi-actor value exchange is

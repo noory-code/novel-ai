@@ -27,25 +27,31 @@
 - Auto-seeded, exactly 1 per project, cannot be deleted. A circle at the center of every primary canvas.
 - Label = mirror of `ProjectDoc.name` (edit in one place → propagates everywhere). Holds **name only** (not a content container).
 
-### `mission` — the root of existence (input)
-- **Asks:** what fundamental change does it bring to the world?
-- Definition = the fundamental change it will bring to the world (MTP). Test = is it sustainable (a problem that keeps recurring + value that didn't exist before).
+### `mission` — continuing commitment (input)
+- **Asks:** what in people's lives or society needs to improve?
+- Definition = a commitment to decide what needs to improve, then keep putting solutions into the world and
+  refining them. The mission stays while particular solutions change.
 - Form = **one declaration sentence + body** (merges old label/statement·what_we_do/why/direction).
 - Count 0..N.
 
-### `core_value` — decision criterion (input)
-- **Asks:** what do you protect when there's a conflict?
-- Definition = the value that *wins* when decisions diverge (how you decide right now). Not future-oriented (that's identity).
-- Form = **name (label) + body** (meaning + tradeoff). Old `definition`·do/dont retired.
-- The name is load-bearing (referenced in decisions as "with 'tolerance and support'…"). Count 0..N (usually 3–7).
+### `core_value` — priority in a conflict (input)
+- **Asks:** when choices conflict, what takes priority?
+- Definition = a value that decides what takes priority when choices cannot all be kept. Not a rule that always
+  applies (that is identity).
+- Form = **one-word name (label) + body**. The body names the recurring conflict, what takes priority, and the
+  cost accepted. Old `definition`·do/dont retired.
+- The name is load-bearing (referenced in decisions as "with 'tolerance and support'…"). Count 0..N; do not
+  target a number.
 
-### `identity` — consistent execution·expression rule (output)
-- **Asks:** how do we consistently execute·express?
-- Definition = the accumulation of always-applied action rules ("this is how we do it"). *Not value-conflict judgment*
-  (that's core_value). When they clash, core_value is higher.
-- **Output kind** — AI derives a draft from mission + core value → refined·confirmed with the human (no silent auto-generation ❌).
-- Form = **name + action rule list**. Old `description` retired. `status`/`provenance` are
-  dropped because they're inert until the AI-derivation flow (plans).
+### `identity` — the service's standing way of behaving (output)
+- **Asks:** what attitude and way of behaving do we keep throughout designing, building, and showing the
+  service to users?
+- Definition = one or more guidelines that always shape action. It is *not value-conflict judgment*; that is
+  the job of `core_value`. When they clash, the core value wins.
+- **Output kind** — AI drafts it from mission + core value → the person refines and confirms it. Never create
+  it silently.
+- Form = **short directive (label) + one-line summary + concrete description**. A label such as
+  "밝고 명쾌하게" is valid. Do not force a fixed count or predefined facets.
 
 ---
 
@@ -151,9 +157,12 @@
 - **Asks:** what does the product deal with?
 - Definition = the product's data object (post·comment·user), the project-level Entities canvas. Symmetric with Actors
   (who/what).
+- A product entity is identified separately and its state changes independently. A noun stored only inside another
+  object is a value, not a product entity. A canvas node's technical id alone does not establish product identity.
 - **AI-maintained, the user does not draw it directly.** AI emerges·registers it as a byproduct of feature/service design → human confirms.
 - **Altitude guard:** name + one-line "what it holds" + rough relationships only. **Not a physical ERD** (normalization·FK·
-  cardinality·types = outside Novel). Putting them in turns it into a DB-modeling tool = an identity violation.
+  cardinality·types = outside Novel). The conceptual map does not map one-to-one to the later implementation model.
+  Putting implementation details here turns it into a DB-modeling tool = an identity violation.
 - **Strong dedup:** semantic matching by identity before creating (post=article=write-up → one; post≠comment). Ask
   only when ambiguous. No silent merging·duplicates ❌ (a first-class duty of the AI coach + code integrity guard, ai-collaboration).
 - Inspector (lean): name + "what it holds" (rough fields, no types ❌) + where it's used (back-reference, read-only)
