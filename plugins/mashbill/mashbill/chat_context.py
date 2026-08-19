@@ -139,12 +139,7 @@ SCOPE_FRAMING: dict[str, str] = {
         "them. Each gets a short directive as its label, a one-line summary, and a "
         "description of concrete actions. Do not target a count or force predefined "
         "facets. "
-        "A foundation session that ends with identity still empty is a failed session. "
-        "COUNTER-STANCE: before confirming each mission or value, gently state "
-        "the opposite position ONCE ('반대로 보면 ~라는 반론도 가능한데, 그래도 "
-        "이걸 지키시겠어요?'). If the user maintains the choice, save that reason "
-        "in its note. If not, refine the candidate first. Do this once per mission "
-        "or value, never more."
+        "A foundation session that ends with identity still empty is a failed session."
     ),
     "actors": (
         "You are the Planning coach on Novel's Actors canvas. Organize WHO "
@@ -359,6 +354,26 @@ PROPOSE_PLAYBOOK = (
 )
 
 
+# Layer 3 (CHAT_ARCH.md) — the steering playbook (W-00000249). The Novel design
+# canvas draws a decision the coach makes every turn: ask deeper, ask wider, or
+# come at it from the opposite side. COACH_TONE governs HOW to ask (one thing,
+# gently) and SCOPE_FRAMING supplies WHAT to ask per canvas; nothing said WHICH
+# WAY to turn when a thread stalls, so the coach re-asked the same question.
+# The counter-stance rule (argue the opposite side once before confirming —
+# DE-00000003, W-133, measured challenge major +2.24) moves here from the
+# foundation framing: it is the OPPOSITE direction, and the user asked for it on
+# every canvas, not only foundation. Canvas scopes only (like COACH_TONE).
+ASK_DIRECTION_PLAYBOOK = (
+    "Steering: pick the next question's direction — DEEPER (why this, what "
+    "must hold), WIDER (who it affects, where it sits), or the OPPOSITE side "
+    "(the reverse choice, an unexamined assumption). Switch when a direction "
+    "stalls; never repeat it. Before confirming, gently put "
+    "the opposite side ONCE ('반대로 보면 ~라는 반론도 가능한데, 그래도 이걸 "
+    "지키시겠어요?'), never more; if the user holds the choice, save that "
+    "reason in its note, otherwise refine the candidate first."
+)
+
+
 # Layer 3 (CHAT_ARCH.md) — the pace playbook (D-2026-07-02-H). First finding of
 # the coach-sim benchmark (2026-07-02, Airbnb full-flow baseline): the coach is
 # thorough but SLOW — 8 foundation turns never reached identity, 8 services
@@ -397,7 +412,7 @@ def build_system_prompt(scope: str) -> str:
         return shared
     return (
         f"{shared}\n\n{COACH_TONE}\n\n"
-        f"{EVALUATE_PLAYBOOK}\n\n"
+        f"{EVALUATE_PLAYBOOK}\n\n{ASK_DIRECTION_PLAYBOOK}\n\n"
         f"{PROPOSE_PLAYBOOK}\n\n{PACE_PLAYBOOK}\n\n{WRITE_PLAYBOOK}\n\n{framing}"
     )
 

@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.191.0] — 2026-08-19
+
+### Added
+
+- The coach now chooses where the next question goes: deeper into why a choice
+  holds, wider into who it affects and where it sits, or at the opposite side of
+  it. A direction that stops working gets switched instead of repeated. Arguing
+  the opposite side once before confirming used to run on the Foundation canvas
+  alone and now reaches every canvas.
+
 ## [0.190.4] — 2026-08-18
 
 ### Fixed

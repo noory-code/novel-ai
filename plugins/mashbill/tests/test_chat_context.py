@@ -295,11 +295,13 @@ def test_foundation_framing_takes_the_counter_stance_once_per_pillar() -> None:
     lets the founder defend it. Measured over 14 baseline vs 12 experiment
     plates: challenge major +2.24 against a plate-to-plate spread of 1.83, with
     founder turns getting LONGER (no defensive withdrawal). Bounded to ONE per
-    pillar — the gentle-invitation tone (§0.1③) must survive the debate."""
-    f = build_framing_preamble("foundation").lower()
-    assert "counter-stance" in f
-    assert "opposite position once" in f
-    assert "never more" in f
+    pillar — the gentle-invitation tone (§0.1③) must survive the debate.
+    W-00000249 moved the rule out of the foundation framing into the shared
+    ASK_DIRECTION_PLAYBOOK, where it is the OPPOSITE direction and reaches every
+    canvas; foundation still receives it through the composed system prompt."""
+    p = build_system_prompt("foundation").lower()
+    assert "opposite side once" in p
+    assert "never more" in p
 
 
 def test_services_framing_registers_entities_with_each_feature_batch() -> None:
@@ -684,9 +686,40 @@ def test_system_prompt_stays_under_saturation_budget() -> None:
     are each pinned by an earlier measured decision. NOTE: where saturation
     actually begins has never been measured — the 1,800-2,000 figure above is
     the only observation, and every raise since has been an inference from it.
+    Raised 1500 -> 1560 (W-00000249): the steering rule — pick the next
+    question's direction, and argue the opposite side once — is what the Novel
+    design canvas draws for every canvas, and the counter-stance half moved out
+    of foundation into it, so foundation barely moved while services grew by the
+    whole block. The user chose the raise over compressing the services framing,
+    whose phrasings are each pinned by an earlier measured decision. It stays far
+    below the 1,800-2,000 words where instruction slips were actually observed.
     The budget still forces compress-before-add:
     content is pinned by the phrase guards in this file and
     ``test_chat_system_prompt.py``; this test pins the SIZE."""
     for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
         words = len(build_system_prompt(scope).split())
-        assert words <= 1500, f"{scope}: {words} words > 1500 budget"
+        assert words <= 1560, f"{scope}: {words} words > 1560 budget"
+
+
+def test_every_canvas_steers_the_next_question_direction() -> None:
+    """W-00000249: the coach asked one thing at a time but nothing told it WHICH
+    WAY to turn next, so a stalled thread got the same question again. The
+    Novel design canvas draws this as a decision the coach makes every turn —
+    ask deeper, ask wider, or come at it from the opposite side. It rides in
+    the shared playbook, so every canvas steers, not only foundation."""
+    for scope in ("foundation", "actors", "services", "entities", "feature:x"):
+        p = build_system_prompt(scope).lower()
+        assert "deeper" in p, scope
+        assert "wider" in p, scope
+        assert "opposite" in p, scope
+        assert "switch" in p, scope
+
+
+def test_counter_stance_reaches_every_canvas() -> None:
+    """W-00000249: arguing the opposite side once before confirming used to run
+    on foundation only. The canvas puts it on every canvas — a service split or
+    an entity is worth one challenge too — so it moves into the shared
+    playbook and foundation stops carrying its own copy."""
+    for scope in ("foundation", "actors", "services", "entities", "feature:x"):
+        p = build_system_prompt(scope).lower()
+        assert "opposite side once" in p, scope
