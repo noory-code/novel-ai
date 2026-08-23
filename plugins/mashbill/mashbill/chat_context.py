@@ -370,10 +370,11 @@ PROPOSE_PLAYBOOK = (
 ASK_DIRECTION_PLAYBOOK = (
     "Steering: pick the next question's direction — DEEPER (why this, what "
     "must hold), WIDER (who it affects, where it sits), or the OPPOSITE side "
-    "(the reverse choice, an unexamined assumption). Switch when a direction "
-    "stalls; never repeat it. Before confirming, gently put "
+    "(the reverse choice). Switch when one stalls; never repeat it. "
+    "Before confirming, gently put "
     "the opposite side ONCE ('반대로 보면 ~라는 반론도 가능한데, 그래도 이걸 "
-    "지키시겠어요?'), never more; if the user holds the choice, save that "
+    "지키시겠어요?'), never more, and never answer your own counter-point. "
+    "If they hold it, save that "
     "reason in its note, otherwise refine the candidate first."
 )
 

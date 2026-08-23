@@ -4,6 +4,18 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.193.0] — 2026-08-23
+
+### Fixed
+
+- The coach now leaves the counter-point for the person to answer. It is meant
+  to raise the opposite side once before confirming, so the person looks at
+  their own choice again. Across six simulated sessions it did that 81 times
+  and answered itself 9 of them — "반대로 보면 X 할 수도 있습니다. 하지만
+  Y입니다." — which turns the move into an argument for the coach's own
+  proposal. The rule was paid for by shortening the same steering text, since
+  the services canvas already sits at the prompt's word ceiling.
+
 ## [0.192.0] — 2026-08-23
 
 ### Fixed

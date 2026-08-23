@@ -732,6 +732,22 @@ def test_every_canvas_steers_the_next_question_direction() -> None:
         assert "switch" in p, scope
 
 
+def test_counter_stance_hands_the_choice_back() -> None:
+    """W-00000255 (2026-08-23): across six plates the coach put the opposite
+    side 81 times and answered its own counter-point 9 of them — "반대로 보면 X
+    할 수도 있습니다. 하지만 Y입니다." The counter-stance exists so the person
+    reconsiders their own choice (DE-00000003, challenge major +2.24); a coach
+    that raises the objection and then dismisses it has turned the move into
+    support for its own proposal. The clustering (5 in one plate's services
+    talk, 4 across two entity talks) rules out a single canvas as the cause.
+
+    Word budget note: services sits at the 1560 cap, so this rule was paid for
+    by compressing the same playbook, not by adding to it."""
+    for scope in ("foundation", "actors", "services", "entities", "feature:x"):
+        p = build_system_prompt(scope).lower()
+        assert "never answer your own counter-point" in p, scope
+
+
 def test_counter_stance_reaches_every_canvas() -> None:
     """W-00000249: arguing the opposite side once before confirming used to run
     on foundation only. The canvas puts it on every canvas — a service split or
