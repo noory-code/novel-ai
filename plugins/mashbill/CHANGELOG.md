@@ -4,6 +4,20 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.192.0] — 2026-08-23
+
+### Fixed
+
+- The coach now comes back to a mission the person turned down, instead of
+  leaving it and moving on to values. Two simulated sessions with a founder who
+  turns down the first draft ended with no mission on the canvas at all, while
+  three values and an identity landed: the coach offered a mission twice, was
+  turned down twice, went off to collect the values those objections gave, and
+  only came back on the second-to-last turn. Every later canvas points at the
+  mission, so leaving it out costs more than leaving out anything else. A
+  foundation session that ends with an empty mission now counts as failed, the
+  way one ending with an empty identity already did.
+
 ## [0.191.0] — 2026-08-19
 
 ### Added

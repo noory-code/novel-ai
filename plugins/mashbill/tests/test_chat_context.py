@@ -335,6 +335,23 @@ def test_foundation_framing_lands_identity_mid_phase() -> None:
     assert "identity still empty is a failed" in f
 
 
+def test_foundation_framing_returns_to_a_declined_mission() -> None:
+    """W-00000254 (2026-08-23): two coupang plates run with a founder who
+    declines the first draft ended with NO mission on the canvas, while three
+    values and an identity landed. The coach offered a mission twice, was
+    pushed back twice, dropped it to harvest the values the pushback gave, and
+    only came back on the second-to-last turn — too late to confirm anything.
+
+    A mission is what every later canvas points at, so parking it is worse than
+    parking anything else. The framing must send the coach back to the mission
+    right after folding in the objection, and must name an empty mission at the
+    end as a failed session, the way it already does for identity."""
+    f = build_framing_preamble("foundation").lower()
+    assert "re-offer the mission" in f
+    assert "never park it" in f
+    assert "mission still empty is a failed session" in f
+
+
 def test_foundation_framing_resumes_value_hunt_after_identity() -> None:
     """Iteration 17 (2026-07-03): values stalled at 1-3 registered in all 11
     runs of the day, across personas AND founder model families — the

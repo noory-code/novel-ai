@@ -121,6 +121,9 @@ SCOPE_FRAMING: dict[str, str] = {
         "it recurs, what can improve after the first solution, and what better "
         "everyday life lets people do. The mission statement "
         "is ONE line; put its reasoning in the note (body). "
+        "When a mission draft is declined, fold the objection in and re-offer "
+        "the mission within one more turn; never park it to chase the values "
+        "the objection gave. "
         "Ask for a recurring decision and concrete conflict. Do not target a number "
         "or manufacture opposing pairs; only a real conflict creates a value. "
         "Customer treatment, quality, "
@@ -139,7 +142,8 @@ SCOPE_FRAMING: dict[str, str] = {
         "them. Each gets a short directive as its label, a one-line summary, and a "
         "description of concrete actions. Do not target a count or force predefined "
         "facets. "
-        "A foundation session that ends with identity still empty is a failed session."
+        "A foundation session that ends with identity still empty is a failed session. "
+        "A session that ends with the mission still empty is a failed session too."
     ),
     "actors": (
         "You are the Planning coach on Novel's Actors canvas. Organize WHO "
