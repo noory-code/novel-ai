@@ -1,21 +1,35 @@
-# PUBLISH — Novel per-node publish reference
+# PUBLISH — retired per-node publish, file-format reference
 
-> Companion to [`SPEC.md` §Publish](./SPEC.md#publish-v0180) and
-> [`D-2026-05-16-E`](./DECISIONS.md). This document is the
-> reference for **what publish writes to disk** and **how to
-> recover from a misclick** until the automated Unpublish button
-> ships.
+> ## ⚠ This describes a mechanism that no longer runs
+>
+> Per-node publish was retired in engine **v0.108.0**
+> ([`D-2026-06-22-H`](./DECISIONS.md)). There is no 📤 per-node
+> button, no per-node `version` bump, no dirty gate, and no
+> `…/nodes/{id}/published` endpoint. **Nothing on this page
+> describes current behaviour.**
+>
+> **Publishing today** freezes a 2-layer bundle — `vP` (project
+> snapshot) and `vS` (service release). See
+> [`../../../docs/specs/format-f.md`](../../../docs/specs/format-f.md)
+> (contract) and
+> [`../../../docs/specs/storage-publish.md`](../../../docs/specs/storage-publish.md)
+> (§Publish).
+>
+> **Why this page is kept:** projects created before v0.108.0 still
+> carry these MD files on disk, and `canvas_io.py` still migrates
+> their layout on read. This is the only reference for reading
+> them. Treat it as a file-format archive, not as a spec.
 
 ---
 
-## What publish writes
+## What publish wrote
 
-Each click of the **📤** button in the Inspector header (after the
-confirm dialog), Novel atomically performs:
+On each click of the **📤** button in the Inspector header (after
+the confirm dialog), Novel atomically performed:
 
-1. Bumps the node's ``version`` MAJOR component (``v1.0 → v2.0``;
-   MINOR resets to ``0``). Phase 4 will introduce MINOR
-   propagation up the ancestor chain.
+1. Bumped the node's ``version`` MAJOR component (``v1.0 → v2.0``;
+   MINOR resets to ``0``). Phase 4 added MINOR propagation up the
+   ancestor chain; both were retired in v0.108.0.
 2. Renders a per-node MD file at
    ``<project_id>/<canvas>/published/{kind}-{slug}-{version}.md``.
 3. Writes the bumped ``canvas.json`` via the regular atomic-write
@@ -240,11 +254,12 @@ the file on disk; ``rm`` it manually:
 rm .plot/<project_id>/<canvas>/published/<kind>-<slug>-<version>.md
 ```
 
-### v0.18.x follow-up
+### v0.18.x follow-up — never shipped
 
-An automated **Unpublish** button on the Inspector is queued as a
-follow-up in [`NEXT_SESSION.md`](./NEXT_SESSION.md). It will
-encapsulate steps 1–3 above into one user action.
+An automated **Unpublish** button was once queued for the
+Inspector. It was never built, and per-node publish was retired
+before it could be. Format F has no unpublish either: reverting is
+manual (see `storage-publish.md` §Publish).
 
 ---
 

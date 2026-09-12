@@ -4,6 +4,24 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.193.1] — 2026-09-13
+
+### Documentation
+
+- `docs/PUBLISH.md` and `docs/SPEC.md` §Publish described per-node publish as
+  live behaviour, three months after v0.108.0 deleted it (`D-2026-06-22-H`).
+  Both now open by saying so and point at format F — `vP` project snapshot plus
+  `vS` service release — as the publish model. The one part that still runs, the
+  legacy publish-file layout migration in `canvas_io.py`, is marked as such.
+  Two follow-ups that will never ship (the automated Unpublish button, the
+  propagated-by-descendant badge) no longer read as queued.
+
+### Fixed
+
+- The Codex manifest version had been stuck at 0.190.4 since that release while
+  the package moved to 0.193.0, so `scripts/validate_repository.py` had been
+  failing for three releases. All three version SSOTs are back in step.
+
 ## [0.193.0] — 2026-08-23
 
 ### Fixed

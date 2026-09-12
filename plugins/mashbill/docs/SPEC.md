@@ -1179,15 +1179,36 @@ and a `D-YYYY-MM-DD-X` entry is added to
 
 ---
 
-## Publish (v0.18.0+)
+## Publish — retired per-node mechanism (v0.18.0–v0.107.x)
 
-Per [D-2026-05-16-E](./DECISIONS.md). Publish is an explicit
-per-node action: the user selects a node, clicks the **📤** button
-in the Inspector header, confirms the dialog, and three things
-happen atomically — the node's ``version`` bumps MAJOR
-(``v1.0 → v2.0``), a uniform MD file lands at
+> ## ⚠ Retired in v0.108.0 — this section is history
+>
+> [`D-2026-06-22-H`](./DECISIONS.md) retired per-node publish and
+> the engine deleted it in **v0.108.0**. Everything below —
+> the 📤 button, the eligibility table, the Published-versions
+> section, MINOR propagation, the dirty gate — **no longer
+> exists**. It is kept because projects created before v0.108.0
+> still hold these files on disk.
+>
+> **One thing below still runs:** the legacy publish-file layout
+> migration (§What lands on disk per publish), which `canvas_io.py`
+> applies on read so old artifacts stay readable.
+>
+> **Publishing today** is format F, a 2-layer bundle: `vP` (project
+> snapshot) + `vS` (service release), written by `format_f.py`. No
+> node is publishable on its own. See
+> [`../../../docs/specs/format-f.md`](../../../docs/specs/format-f.md)
+> (contract) and
+> [`../../../docs/specs/storage-publish.md`](../../../docs/specs/storage-publish.md)
+> (§Publish).
+
+Per [D-2026-05-16-E](./DECISIONS.md). Publish was an explicit
+per-node action: the user selected a node, clicked the **📤**
+button in the Inspector header, confirmed the dialog, and three
+things happened atomically — the node's ``version`` bumped MAJOR
+(``v1.0 → v2.0``), a uniform MD file landed at
 ``<canvas>/published/{kind}-{slug}-{version}.md``, and a git commit
-is recorded with machine-readable ``Publish-*:`` trailers.
+was recorded with machine-readable ``Publish-*:`` trailers.
 
 ### What the Inspector shows
 
@@ -1292,6 +1313,11 @@ monospace MD textarea for input consistency, but no MD file is
 emitted on publish.
 
 ### What lands on disk per publish
+
+> The **layout migration** described in this subsection is the one
+> part of §Publish that still runs. `canvas_io.py` applies it on
+> every `read_canvas` so pre-v0.108.0 files stay readable. The
+> publish act that produced them does not run.
 
 - **MD file** at
   ``<project_id>/<canvas>/published/<kind>/<node_id>/v<MAJOR>.<MINOR>.md``
@@ -1413,8 +1439,9 @@ No Unpublish button in v0.20.0. Manual recovery is documented in
 [`PUBLISH.md`](./PUBLISH.md) — ``git revert HEAD`` plus optional
 MD-file cleanup. Revert is atomic across the MAJOR bump, the new
 MD file, every mirror bump, and every ancestor MINOR bump — they
-all live in one commit. An automated **Unpublish** button is queued
-as a follow-up in [`NEXT_SESSION.md`](./NEXT_SESSION.md).
+all live in one commit. An automated **Unpublish** button was once
+queued as a follow-up; it was never built, and per-node publish was
+retired before it could be.
 
 ### What Phase 4 explicitly does NOT do
 
@@ -1431,8 +1458,9 @@ as a follow-up in [`NEXT_SESSION.md`](./NEXT_SESSION.md).
   viewer. Out of scope.
 - **Bulk publish** / publish-history viewer / batched publish.
   Out of scope.
-- **Inspector "propagated by descendant X" badge.** YAGNI; queued
-  for a future release if usage warrants.
+- **Inspector "propagated by descendant X" badge.** YAGNI; never
+  built, and moot since v0.108.0 retired the propagation it would
+  have reported.
 
 ---
 

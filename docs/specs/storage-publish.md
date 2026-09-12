@@ -1,7 +1,10 @@
 # Storage · versioning · publish
 
-> Canonical (design level). Publish MD format detail = Mashbill [`PUBLISH.md`](../../plugins/mashbill/docs/PUBLISH.md).
-> The publish contract for mashbill↔Solera is **format F** — see §format F below (resolves the old T5/T6 versioning question).
+> Canonical (design level). The publish contract for mashbill↔Solera is **format F** — see §format F below
+> (resolves the old T5/T6 versioning question). Bundle layout and file rendering are pinned in
+> [`format-f.md`](./format-f.md).
+> Mashbill's [`PUBLISH.md`](../../plugins/mashbill/docs/PUBLISH.md) documents the **retired** per-node MD
+> format; it is kept only so the files older projects still carry on disk stay readable.
 
 ## Storage layout (`.noory/`)
 
@@ -26,24 +29,43 @@
   inline in `canvas.json`. **MD files = publish deliverables only** (not the work SSOT).
 - The filesystem is the SSOT; the Novel UI is one editor on top of it.
 
-## Publish (per-node, explicit)
+## Publish (2-layer, explicit)
 
-Select node → inspector 📤 → confirm. An atomic 3 effects:
-1. **per-node `version` MAJOR bump** (`v1.0 → v2.0`).
-2. **MD file creation** = `{project}/{canvas}/published/{kind}/{node_id}/v{MAJOR}.{MINOR}.md`.
-3. **git commit** (subject `publish: {kind} "{label}" → {version}` + `Publish-*:` trailer;
-   on ancestor propagation, adds `Publish-Propagated-Ancestor:`).
+Publishing freezes a **bundle**, never a single node. There are exactly two publish acts, both explicit:
 
-- **dirty gate:** there must be ≥1 content change since the last publish (typed text·label·body·touched edge;
-  visual x/y/w/h/color etc. are not dirty) for publish to be possible. Judged via `_publish_baseline`.
-- **MINOR propagation:** on a descendant publish, bump only the ancestor's `version` MINOR (no new MD made).
-- **git consent:** Novel never auto `git init`. On the first publish/tag, if there is no `.git`,
-  `{needs_git_init: true}` → viewer modal → `POST /api/workspace/git-init`. Stages `.noory/novel/` only.
-- **Publish history:** `GET …/nodes/{id}/published` → version list. No Unpublish button (manual `git revert`).
+- **`vP` project snapshot** — the shared structure (foundation · actors · entities).
+- **`vS` service release** — one service, pinned to the `vP` it is based on.
 
-> **Publish-eligibility list needs reconciliation:** the old list (visible: mission/core_value/identity/actor/service/
-> category/**metric**/step/rule/**content**) is **pre-marathon** — metric/content retired, feature/
-> note/entity added; must be re-derived against the new palette (plans/). No predictive assertion made.
+The model is §format F below; [`format-f.md`](./format-f.md) is the contract. Both write **files only**, under
+`published/`: `_project/vP{N}/` for a `vP`, `{service-slug}/vS{N}/` for a `vS`. Each manifest records the
+workspace git sha as a best-effort provenance stamp (empty string when there is no repo) — **neither publish
+commits or tags**, and neither is blocked by the absence of a git repo.
+
+`POST /api/projects/{id}/publish` is a **separate third act** and the only publish-named one that touches git:
+it bumps `blueprint_version` and git-tags the workspace at that version (`D-2026-05-21-B`). It writes no
+format F bundle. There is no "unchanged since the last publish" gate on it — every call bumps and tags.
+
+- **git consent** applies to the acts that write git (the blueprint publish above, and tagging). Novel never
+  auto `git init`: when the workspace root has no `.git` those endpoints answer `409 {needs_git_init: true}`
+  → viewer modal → `POST /api/workspace/git-init`, which stages `.noory/novel/` only.
+- **No Unpublish button** anywhere. Reverting is manual. A fresh `vP`/`vS` directory is not in git yet, so
+  deleting it is enough — until the next blueprint publish or tag, whose `git add -A -- .noory/novel/` sweeps
+  the whole data root (bundles included) into that commit. After that, `git revert`.
+
+### Retired: per-node publish (`D-2026-06-22-H`, engine v0.108.0)
+
+Selecting one node and publishing it on its own **no longer exists**. Retired with it: the per-node `version`
+MAJOR bump, the `{canvas}/published/{kind}/{node_id}/v{MAJOR}.{MINOR}.md` layout, the dirty gate judged via
+`_publish_baseline`, MINOR propagation up the ancestor chain, and the `…/nodes/{id}/published` history
+endpoint. **There is no publish-eligibility list**, because no kind is individually publishable — a node is an
+element *inside* a `vP`/`vS`, not its own release.
+
+Two node fields outlive the mechanism because removing them is a wire-breaking schema regen: `version` and
+`_publish_baseline` (`mashbill/models_kinds.py`). Nothing reads them — not `format_f.py`, not
+`endpoints_publish.py`. Treat them as dead weight, not as state.
+
+Legacy publish **files** on disk are still migrated in place on read (`canvas_io.py` — flat → `{kind}/{slug}/`
+→ `{kind}/{node_id}/`). That migration keeps old artifacts readable; it does not mean per-node publish runs.
 
 ## format F — 2-layer publish bundle (resolves T5·T6, `D-2026-06-22-D`)
 
@@ -60,11 +82,9 @@ The mashbill↔Solera publish contract is a **2-layer frozen bundle ("format F")
   (changed/removed/added, derived). **The per-node `version` number axis is retired** (format F does not use it).
   `blueprint_version` = the identity of vP.
 - **Gates:** bootstrap (reject a `vS` without a `vP`) + refs-integrity (reject a ref that does not resolve in `vP`).
-- **Implementation (INT, walking skeleton):** mashbill `mashbill/format_f.py` (write) + Solera `intake.py` (read, with a
-  `format_f_version` contract guard). **Coexists with the existing per-node publish** — retirement is a follow-on migration.
-
-> ⚠ The "## Publish (per-node, explicit)" section above is the **current code (pre-transition)**. format F is the new
-> contract, and the two coexist until per-node is retired.
+- **Implementation:** mashbill `mashbill/format_f.py` (write) + Solera `intake.py` (read, with a
+  `format_f_version` contract guard). **format F is the only publish model** — per-node publish was retired in
+  engine v0.108.0 (`D-2026-06-22-H`), so the two no longer coexist.
 
 ## Schema parity (repository boundary)
 
