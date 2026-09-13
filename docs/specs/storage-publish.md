@@ -41,13 +41,20 @@ The model is §format F below; [`format-f.md`](./format-f.md) is the contract. B
 workspace git sha as a best-effort provenance stamp (empty string when there is no repo) — **neither publish
 commits or tags**, and neither is blocked by the absence of a git repo.
 
-`POST /api/projects/{id}/publish` is a **separate third act** and the only publish-named one that touches git:
-it bumps `blueprint_version` and git-tags the workspace at that version (`D-2026-05-21-B`). It writes no
-format F bundle. There is no "unchanged since the last publish" gate on it — every call bumps and tags.
+`POST /api/projects/{id}/publish` is a **third, separate endpoint** and the only publish-named one that
+touches git: it bumps `blueprint_version` and git-tags the workspace at that version (`D-2026-05-21-B`). It
+writes no format F bundle. There is no "unchanged since the last publish" gate on it — every call bumps and
+tags.
+
+**In the app these are one action, not three.** The `📤 설계도 발행` button calls `/publish` and then
+`/publish/snapshot` in sequence, under a single git-consent prompt (`viewer` `useProject.ts`
+`publishBlueprint`, `D-2026-06-22-H`). So a `vP` published from the app is always accompanied by a bump and a
+tag, even though the snapshot endpoint neither needs nor performs them. Only `vS` is triggered on its own.
 
 - **git consent** applies to the acts that write git (the blueprint publish above, and tagging). Novel never
   auto `git init`: when the workspace root has no `.git` those endpoints answer `409 {needs_git_init: true}`
-  → viewer modal → `POST /api/workspace/git-init`, which stages `.noory/novel/` only.
+  → viewer modal → `POST /api/workspace/git-init`, which stages `.noory/novel/` only. Because the app pairs
+  the two calls, this prompt effectively precedes an in-app `vP` too.
 - **No Unpublish button** anywhere. Reverting is manual. A fresh `vP`/`vS` directory is not in git yet, so
   deleting it is enough — until the next blueprint publish or tag, whose `git add -A -- .noory/novel/` sweeps
   the whole data root (bundles included) into that commit. After that, `git revert`.
@@ -61,8 +68,10 @@ endpoint. **There is no publish-eligibility list**, because no kind is individua
 element *inside* a `vP`/`vS`, not its own release.
 
 Two node fields outlive the mechanism because removing them is a wire-breaking schema regen: `version` and
-`_publish_baseline` (`mashbill/models_kinds.py`). Nothing reads them — not `format_f.py`, not
-`endpoints_publish.py`. Treat them as dead weight, not as state.
+`_publish_baseline` (`mashbill/models_kinds.py`). **Nothing interprets either one** — no publish path reads
+them, so neither affects any behaviour. `_publish_baseline` is still *carried*: `canvas_io.py` copies a
+non-`None` on-disk baseline forward across a PUT, so a viewer write does not clobber it. That is preservation,
+not use. Treat both fields as inert payload, not as state.
 
 Legacy publish **files** on disk are still migrated in place on read (`canvas_io.py` — flat → `{kind}/{slug}/`
 → `{kind}/{node_id}/`). That migration keeps old artifacts readable; it does not mean per-node publish runs.
