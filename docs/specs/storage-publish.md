@@ -58,6 +58,13 @@ tag, even though the snapshot endpoint neither needs nor performs them. Only `vS
 - **No Unpublish button** anywhere. Reverting is manual. A fresh `vP`/`vS` directory is not in git yet, so
   deleting it is enough — until the next blueprint publish or tag, whose `git add -A -- .noory/novel/` sweeps
   the whole data root (bundles included) into that commit. After that, `git revert`.
+- **Empty parts are named, not blocked** (`DE-00000012`). A bundle is what an external agent reads as the
+  frozen truth, so publishing one with nothing in it is worth surfacing — but keeping an intermediate
+  snapshot mid-design is legitimate, so the app does not refuse. The confirm dialog lists which of the six
+  `vP` slots are empty (mission / core values / identity / actors / services / entities) and publishes on an
+  explicit yes. A foundation slot counts as empty when the published section would carry nothing but its
+  heading: both the kind's primary field and `body` blank. The counting lives in `viewer`
+  `src/domain/publishGaps.ts`, mirroring `format_f.py`'s `_FOUNDATION_PRIMARY`.
 
 ### Retired: per-node publish (`D-2026-06-22-H`, engine v0.108.0)
 
