@@ -74,3 +74,46 @@ def test_tree_rels_are_relative_and_safe(tmp_path: Path) -> None:
         if node.rel != ".":
             # round-trips the path-traversal guard without raising
             resolve_safe_path(tmp_path, node.rel)
+
+
+# O-00000080 — 만들 수 있는 자리와 열 수 있는 자리가 달랐다.
+#
+# ``discover_projects`` 는 워크스페이스 루트의 ``.gitignore`` 가 무시하라고 적은 폴더를
+# 건너뛴다(2026-08-14). 그런데 폴더 나무는 그대로 내주어, 사람이 그 안에 프로젝트를 만들 수
+# 있었다. 만들고 나면 찾기가 못 보니 앱이 "불러오는 중"에서 멈췄고 오류도 안 났다.
+#
+# 두 쪽이 같은 기준을 써야 한다.
+def test_dir_tree_skips_gitignored_root_folders(tmp_path: Path) -> None:
+    (tmp_path / ".gitignore").write_text("playground/\ntemp/\n", encoding="utf-8")
+    for name in ("playground", "temp", "design", "docs"):
+        (tmp_path / name).mkdir()
+
+    tree = build_dir_tree(tmp_path)
+    names = {child.name for child in tree.children}
+
+    assert names == {"design", "docs"}
+
+
+def test_dir_tree_still_shows_a_folder_the_gitignore_does_not_name(tmp_path: Path) -> None:
+    # 글자 무늬(``*.log``)는 폴더 이름을 말하는 것이 아니므로 폴더를 숨기면 안 된다.
+    (tmp_path / ".gitignore").write_text("*.log\n", encoding="utf-8")
+    (tmp_path / "playground").mkdir()
+
+    tree = build_dir_tree(tmp_path)
+
+    assert {child.name for child in tree.children} == {"playground"}
+
+
+def test_dir_tree_gitignore_only_applies_at_the_root(tmp_path: Path) -> None:
+    # 루트의 ``.gitignore`` 만 읽는다. 같은 이름의 하위 폴더까지 숨기면, 사람이 안 숨긴 것을
+    # 숨기게 된다.
+    (tmp_path / ".gitignore").write_text("playground/\n", encoding="utf-8")
+    (tmp_path / "playground").mkdir()
+    nested = tmp_path / "design" / "playground"
+    nested.mkdir(parents=True)
+
+    tree = build_dir_tree(tmp_path)
+    design = next(c for c in tree.children if c.name == "design")
+
+    assert {c.name for c in tree.children} == {"design"}
+    assert {c.name for c in design.children} == {"playground"}

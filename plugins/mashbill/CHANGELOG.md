@@ -4,6 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.193.2] — 2026-09-19
+
+### Fixed
+
+- The new-project picker offered folders discovery refuses to look in, so a
+  project could be created somewhere it could never be opened. `discover_projects`
+  skips what the workspace root's `.gitignore` names; `build_dir_tree` did not,
+  even though its docstring claimed the same prune set. Creating a project under
+  such a folder left the app on "loading" forever with no error (O-00000080).
+  Both now apply the same ignore set at the same depth-0 scope.
+
 ## [0.193.1] — 2026-09-13
 
 ### Documentation

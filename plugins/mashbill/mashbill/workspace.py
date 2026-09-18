@@ -184,14 +184,24 @@ def build_dir_tree(workspace_root: Path, max_depth: int = MAX_TREE_DEPTH) -> Dir
     from mashbill.models import DirTreeNode
 
     root = Path(workspace_root).expanduser().resolve()
+    # O-00000080 — the picker must not offer a folder discovery will refuse to
+    # look in. ``discover_projects`` skips what the root ``.gitignore`` names;
+    # offering those here let a project be CREATED somewhere that could then
+    # never be opened, and the app hung on "loading" with no error. Same set,
+    # same depth-0 scope.
+    ignored = gitignored_dirs(root)
 
     def node_for(path: Path, depth: int) -> DirTreeNode:
         rel = path.relative_to(root).as_posix() or "."
         children: list[DirTreeNode] = []
         if depth < max_depth:
+            # ``ignored`` only names root-level folders, so it applies at depth 0.
+            skip = ignored if depth == 0 else frozenset()
             try:
                 entries = sorted(
-                    p for p in path.iterdir() if p.is_dir() and not _should_prune(p.name)
+                    p
+                    for p in path.iterdir()
+                    if p.is_dir() and not _should_prune(p.name) and p.name not in skip
                 )
             except OSError:
                 entries = []
