@@ -60,8 +60,8 @@ tag, even though the snapshot endpoint neither needs nor performs them. Only `vS
   the whole data root (bundles included) into that commit. After that, `git revert`.
 - **Empty parts are named, not blocked** (`DE-00000012`). A bundle is what an external agent reads as the
   frozen truth, so publishing one with nothing in it is worth surfacing — but keeping an intermediate
-  snapshot mid-design is legitimate, so the app does not refuse. The confirm dialog lists which of the six
-  `vP` slots are empty (mission / core values / identity / actors / services / entities) and publishes on an
+  snapshot mid-design is legitimate, so the app does not refuse. The confirm dialog lists which of the five
+  `vP` slots are empty (mission / core values / identity / actors / entities) and publishes on an
   explicit yes. A foundation slot counts as empty when the published section would carry nothing but its
   heading: both the kind's primary field and `body` blank. The counting lives in `viewer`
   `src/domain/publishGaps.ts`, mirroring `format_f.py`'s `_FOUNDATION_PRIMARY`.
