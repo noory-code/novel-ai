@@ -403,6 +403,109 @@ def test_feature_design_renders_capability_and_flow(plot_root: Path) -> None:
     assert "모바일 우선" in md  # ambient note
 
 
+def test_feature_flow_follows_edges_and_keeps_every_step() -> None:
+    from mashbill.format_f import _render_feature_flow
+    from mashbill.models import (
+        ActorRefNode,
+        CanvasDoc,
+        DecisionNode,
+        FeatureNode,
+        SketchEdge,
+        StepNode,
+    )
+
+    detail = CanvasDoc(
+        canvas_id="feat-flow",
+        canvas_kind="feature",
+        feature_ref="feat-flow",
+        nodes=[
+            FeatureNode(id="feat-flow", label="Flow", proposed="흐름을 따른다"),
+            ActorRefNode(id="actor", label="→ 사용자", ref_actor_id="user"),
+            StepNode(id="z-start", label="시작한다"),
+            DecisionNode(id="m-choice", label="어느 쪽인가"),
+            StepNode(id="a-confirm", label="확인한다"),
+            StepNode(id="b-confirm", label="확인한다"),
+            StepNode(id="c-finish", label="마친다"),
+            StepNode(id="0-unreachable", label="연결되지 않았다"),
+        ],
+        edges=[
+            SketchEdge(id="e-actor", source="actor", target="z-start"),
+            SketchEdge(id="e-next", source="z-start", target="m-choice"),
+            SketchEdge(id="e-left", source="m-choice", target="a-confirm", label="왼쪽"),
+            SketchEdge(id="e-loop", source="a-confirm", target="z-start", label="다시"),
+            SketchEdge(id="e-right", source="m-choice", target="b-confirm", label="오른쪽"),
+            SketchEdge(id="e-finish", source="b-confirm", target="c-finish"),
+        ],
+    )
+
+    rendered = _render_feature_flow(detail)
+
+    assert "### 행동" not in rendered
+    assert "### 분기" not in rendered
+    assert (
+        """### 흐름
+1. 시작한다
+   - 다음 → 2. (분기) 어느 쪽인가
+2. (분기) 어느 쪽인가
+   - 왼쪽 → 3. 확인한다
+   - 오른쪽 → 4. 확인한다
+3. 확인한다
+   - 다시 → 1. 시작한다
+4. 확인한다
+   - 다음 → 5. 마친다
+5. 마친다
+6. 연결되지 않았다"""
+        in rendered
+    )
+
+
+def test_feature_flow_renders_rules_with_linked_step_numbers() -> None:
+    from mashbill.format_f import _render_feature_flow
+    from mashbill.models import (
+        ActorRefNode,
+        CanvasDoc,
+        DecisionNode,
+        FeatureNode,
+        RuleNode,
+        SketchEdge,
+        StepNode,
+    )
+
+    detail = CanvasDoc(
+        canvas_id="feat-rules",
+        canvas_kind="feature",
+        feature_ref="feat-rules",
+        nodes=[
+            FeatureNode(id="feat-rules", label="Rules", proposed="규칙을 따른다"),
+            ActorRefNode(id="actor", label="→ 사용자", ref_actor_id="user"),
+            StepNode(id="z-start", label="시작한다"),
+            DecisionNode(id="m-check", label="계속할 수 있는가"),
+            RuleNode(id="r-body", label="본문 규칙", body="되돌리는 단추는 없다"),
+            RuleNode(id="r-policy", label="정책 규칙", policy="확인해야 한다"),
+            RuleNode(id="r-unlinked-b", label="미연결 둘", body="항상 기록한다"),
+            RuleNode(id="r-unlinked-a", label="미연결 하나"),
+        ],
+        edges=[
+            SketchEdge(id="e-actor", source="actor", target="z-start"),
+            SketchEdge(id="e-next", source="z-start", target="m-check"),
+            SketchEdge(id="e-body-start", source="r-body", target="z-start"),
+            SketchEdge(id="e-body-check", source="m-check", target="r-body"),
+            SketchEdge(id="e-policy", source="r-policy", target="m-check"),
+        ],
+    )
+
+    rendered = _render_feature_flow(detail)
+
+    assert (
+        """### 규칙
+- 본문 규칙: 되돌리는 단추는 없다 (걸린 단계: 1, 2)
+- 정책 규칙: 확인해야 한다 (걸린 단계: 2)
+- 미연결 하나
+- 미연결 둘: 항상 기록한다"""
+        in rendered
+    )
+
+
 def test_feature_element_hash_tracks_flow_change(plot_root: Path) -> None:
     """The feature element hash is the ID-diff input — it must move when the
     UX flow changes so a republish surfaces the feature as ``changed``."""

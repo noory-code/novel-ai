@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.193.3] — 2026-09-24
+
+### Fixed
+
+- Published feature flows now follow canvas edges in drawn order, include every
+  step-to-step transition, preserve loops and duplicate labels through numbered
+  references, and carry linked rules into the builder-facing format F bundle.
+
 ## [0.193.2] — 2026-09-19
 
 ### Fixed

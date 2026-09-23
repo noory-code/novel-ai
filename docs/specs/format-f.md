@@ -132,9 +132,37 @@ kind: feature
 # Login
 **What it lets you do:** a user opens a session with credentials.
 
-## UX flow (action altitude)
-- [user] enter credentials → validation branch (success/failure) → success: create session / failure: retry
+## UX 흐름 (action 고도)
+
+참여자: user
+
+### 흐름
+1. enter credentials
+   - 다음 → 2. (분기) credentials valid?
+2. (분기) credentials valid?
+   - success → 3. create session
+   - failure → 1. enter credentials
+3. create session
+
+### 규칙
+- lock after five failures (걸린 단계: 2)
 ```
+
+The rendered section headings are Korean (`## UX 흐름 (action 고도)`, `### 흐름`, `### 규칙`,
+`### 참고 (ambient)`); node labels are the user's own text. The flow body follows these rules:
+
+- **`### 흐름` keeps the drawn order.** Every `step` and `decision` node gets a number in the
+  first-visit order of a depth-first walk along the canvas edges, starting from the edges that
+  leave the actor. Steps no edge reaches are appended after the walk, so none is lost. A
+  decision is prefixed `(분기)`.
+- **Every edge between steps and decisions is written** under its source, as
+  `- {edge label, or 다음} → {n}. {target}`. A loop points back to the earlier number. Two steps
+  with the same text stay distinguishable by number.
+- **`### 규칙` lists the flow's rule nodes**: the label, then the policy (or body) when present,
+  then the numbers of the steps each rule is attached to. Rules are constraints the external
+  agent must honour while realising the feature.
+- Ambient notes follow under `### 참고 (ambient)`. A feature with no steps or decisions renders
+  `_아직 흐름이 그려지지 않음._`.
 
 `hash` is computed from this design payload (normalized body excluding frontmatter + that element's manifest meta).
 
