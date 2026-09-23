@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.193.4] — 2026-09-24
+
+### Changed
+
+- File-level publication tests now pin numbered feature-flow edge order, branch
+  labels, loops, and linked rule step numbers in the generated format F Markdown.
+
 ## [0.193.3] — 2026-09-24
 
 ### Fixed

@@ -506,6 +506,100 @@ def test_feature_flow_renders_rules_with_linked_step_numbers() -> None:
     )
 
 
+def _publish_feature_flow_with_rules(plot_root: Path) -> str:
+    from mashbill.folder_io import write_canvas
+    from mashbill.format_f import publish_project_snapshot, publish_service
+    from mashbill.models import (
+        ActorRefNode,
+        CanvasDoc,
+        DecisionNode,
+        FeatureNode,
+        RuleNode,
+        SketchEdge,
+        StepNode,
+    )
+
+    create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
+    _add_service_with_features(plot_root)
+    detail = CanvasDoc(
+        canvas_id="feat-login",
+        canvas_kind="feature",
+        feature_ref="feat-login",
+        nodes=[
+            FeatureNode(id="feat-login", label="Login", proposed="자격으로 세션을 연다"),
+            ActorRefNode(id="actor", label="→ 사용자", ref_actor_id="user"),
+            StepNode(id="z-start", label="시작한다"),
+            StepNode(id="y-prepare", label="준비한다"),
+            DecisionNode(id="m-choice", label="진행할 수 있는가"),
+            StepNode(id="a-approve", label="완료한다"),
+            StepNode(id="b-reject", label="멈춘다"),
+            RuleNode(id="r-policy", label="확인 규칙", policy="두 번 확인한다"),
+            RuleNode(id="r-body", label="되돌리기 규칙", body="앞 단계로 돌아간다"),
+        ],
+        edges=[
+            SketchEdge(id="e-actor", source="actor", target="z-start"),
+            SketchEdge(id="e-prepare", source="z-start", target="y-prepare"),
+            SketchEdge(id="e-choice", source="y-prepare", target="m-choice"),
+            SketchEdge(id="e-approve", source="m-choice", target="a-approve", label="승인"),
+            SketchEdge(id="e-loop", source="a-approve", target="z-start", label="다시"),
+            SketchEdge(id="e-reject", source="m-choice", target="b-reject", label="거절"),
+            SketchEdge(id="e-body-start", source="r-body", target="z-start"),
+            SketchEdge(id="e-body-end", source="a-approve", target="r-body"),
+            SketchEdge(id="e-policy-prepare", source="r-policy", target="y-prepare"),
+            SketchEdge(id="e-policy-stop", source="b-reject", target="r-policy"),
+        ],
+    )
+    write_canvas(plot_root, "alpha", detail)
+
+    publish_project_snapshot(plot_root, "alpha")
+    manifest = publish_service(plot_root, "alpha", "svc-auth")
+    feature_slug = next(
+        element["id"]
+        for element in manifest["elements"]
+        if element["kind"] == "feature" and "login" in element["id"]
+    )
+    return (
+        plot_root
+        / "published"
+        / "auth"
+        / "vS1"
+        / "design"
+        / "features"
+        / f"{feature_slug.split('/')[-1]}.md"
+    ).read_text(encoding="utf-8")
+
+
+def test_published_feature_file_keeps_numbered_flow_in_edge_order(plot_root: Path) -> None:
+    published = _publish_feature_flow_with_rules(plot_root)
+
+    assert (
+        """### 흐름
+1. 시작한다
+   - 다음 → 2. 준비한다
+2. 준비한다
+   - 다음 → 3. (분기) 진행할 수 있는가
+3. (분기) 진행할 수 있는가
+   - 승인 → 4. 완료한다
+   - 거절 → 5. 멈춘다
+4. 완료한다
+   - 다시 → 1. 시작한다
+5. 멈춘다"""
+        in published
+    )
+
+
+def test_published_feature_file_keeps_rules_with_linked_step_numbers(plot_root: Path) -> None:
+    published = _publish_feature_flow_with_rules(plot_root)
+
+    assert (
+        """### 규칙
+- 되돌리기 규칙: 앞 단계로 돌아간다 (걸린 단계: 1, 4)
+- 확인 규칙: 두 번 확인한다 (걸린 단계: 2, 5)"""
+        in published
+    )
+
+
 def test_feature_element_hash_tracks_flow_change(plot_root: Path) -> None:
     """The feature element hash is the ID-diff input — it must move when the
     UX flow changes so a republish surfaces the feature as ``changed``."""
