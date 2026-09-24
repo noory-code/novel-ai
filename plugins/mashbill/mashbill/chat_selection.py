@@ -271,10 +271,11 @@ def render_canvas_map(plot_root: Path, scope: str, selection: Any) -> str:
     ones in ``selection`` so the agent sees the **whole current screen**, not just
     what's selected — and which of those nodes "this" refers to. Labels only (no
     bodies — those ride in :func:`render_selection_detail` for the selected
-    subset, and the agent fetches the rest via its MCP tools). Capped at
-    :data:`CANVAS_MAP_CAP` nodes. Returns ``""`` for the cross-canvas ``project``
-    scope and every unresolvable-canvas case, so the caller can fall back to the
-    cheap wire-label header.
+    subset, and the agent fetches the rest via its MCP tools). The node list is
+    capped at :data:`CANVAS_MAP_CAP`; the feature-flow summary still counts every
+    feature on the canvas. Returns ``""`` for the cross-canvas ``project`` scope
+    and every unresolvable-canvas case, so the caller can fall back to the cheap
+    wire-label header.
     """
     if scope == "project":
         return ""
@@ -286,17 +287,50 @@ def render_canvas_map(plot_root: Path, scope: str, selection: Any) -> str:
         s.get("id") for s in selection if isinstance(s, dict) and isinstance(s.get("id"), str)
     }
     project_id = _resolve_project_id(plot_root)
+    feature_nodes = [node for node in canvas.nodes if node.kind == "feature"]
+    flow_counts = {
+        node.id: _count_feature_flow_nodes(plot_root, project_id, node) for node in feature_nodes
+    }
     lines = [f"[Canvas: {scope}] {len(canvas.nodes)} node(s):"]
     for node in canvas.nodes[:CANVAS_MAP_CAP]:
         mark = " [selected]" if node.id in selected_ids else ""
-        flow = _render_feature_flow_state(plot_root, project_id, node)
+        flow = _render_feature_flow_state(plot_root, project_id, node, flow_counts.get(node.id))
         lines.append(f'- {node.kind} "{node.label}" ({node.id}){flow}{mark}')
     if len(canvas.nodes) > CANVAS_MAP_CAP:
         lines.append(f"…and {len(canvas.nodes) - CANVAS_MAP_CAP} more")
+    if feature_nodes:
+        undrawn = [node for node in feature_nodes if not any(flow_counts[node.id])]
+        drawn_count = len(feature_nodes) - len(undrawn)
+        summary = f"기능 {len(feature_nodes)}개 가운데 흐름이 그려진 것 {drawn_count}개."
+        if undrawn:
+            labels = ", ".join(f'"{node.label}"' for node in undrawn[:10])
+            if len(undrawn) > 10:
+                labels += f" 외 {len(undrawn) - 10}개"
+            summary += f" 아직 안 그린 기능: {labels}"
+        lines.append(summary)
     return "\n".join(lines)
 
 
-def _render_feature_flow_state(plot_root: Path, project_id: str | None, node: Any) -> str:
+def _count_feature_flow_nodes(
+    plot_root: Path, project_id: str | None, node: Any
+) -> tuple[int, int]:
+    """Return this feature's ``(step, decision)`` counts after one canvas read."""
+    if node.kind != "feature" or project_id is None:
+        return (0, 0)
+    detail = _safe_read_canvas(plot_root, project_id, "feature", node.id)
+    if detail is None:
+        return (0, 0)
+    steps = sum(1 for detail_node in detail.nodes if detail_node.kind == "step")
+    decisions = sum(1 for detail_node in detail.nodes if detail_node.kind == "decision")
+    return (steps, decisions)
+
+
+def _render_feature_flow_state(
+    plot_root: Path,
+    project_id: str | None,
+    node: Any,
+    counts: tuple[int, int] | None = None,
+) -> str:
     """Whether this feature's own canvas already holds a flow.
 
     A feature is the only drill target, and the coach reads this map to pick
@@ -310,9 +344,14 @@ def _render_feature_flow_state(plot_root: Path, project_id: str | None, node: An
     """
     if node.kind != "feature" or project_id is None:
         return ""
-    detail = _safe_read_canvas(plot_root, project_id, "feature", node.id)
-    steps = 0 if detail is None else sum(1 for n in detail.nodes if n.kind == "step")
-    return f" [단계 {steps}개]" if steps else " [아직 안 그렸다]"
+    steps, decisions = (
+        counts if counts is not None else _count_feature_flow_nodes(plot_root, project_id, node)
+    )
+    if steps:
+        return f" [단계 {steps}개]"
+    if decisions:
+        return f" [분기 {decisions}개]"
+    return " [아직 안 그렸다]"
 
 
 def render_cross_canvas_registry(plot_root: Path, scope: str) -> str:

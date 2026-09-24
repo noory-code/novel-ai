@@ -151,6 +151,12 @@ def test_services_framing_surfaces_entities_as_byproduct() -> None:
     assert "entities canvas" in f
 
 
+def test_services_framing_uses_flow_summary_without_drawing_flows() -> None:
+    f = build_framing_preamble("services").lower()
+    assert "feature flow summary" in f
+    assert "do not draw flows yourself on this canvas" in f
+
+
 def test_entities_framing_defends_cross_context_intent_without_overruling_user() -> None:
     """W-85: entity removal must surface accumulated intent without taking
     the final decision away from the user."""
@@ -710,12 +716,17 @@ def test_system_prompt_stays_under_saturation_budget() -> None:
     whole block. The user chose the raise over compressing the services framing,
     whose phrasings are each pinned by an earlier measured decision. It stays far
     below the 1,800-2,000 words where instruction slips were actually observed.
+    Raised 1560 -> 1610 (W-00000283): the coach now points out features whose
+    flow is empty (owner decision 2026-09-24, O-00000083). Services had zero
+    headroom, and per the W-00000249 precedent its pinned phrasings stay while
+    the budget rises. It remains far below the 1,800-2,000 words where instruction
+    slips were observed.
     The budget still forces compress-before-add:
     content is pinned by the phrase guards in this file and
     ``test_chat_system_prompt.py``; this test pins the SIZE."""
     for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
         words = len(build_system_prompt(scope).split())
-        assert words <= 1560, f"{scope}: {words} words > 1560 budget"
+        assert words <= 1610, f"{scope}: {words} words > 1610 budget"
 
 
 def test_every_canvas_steers_the_next_question_direction() -> None:

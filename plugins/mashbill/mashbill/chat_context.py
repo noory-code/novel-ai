@@ -206,7 +206,11 @@ SCOPE_FRAMING: dict[str, str] = {
         "An unlabeled relationship is unfinished. A service with features but zero "
         "entities is unfinished; check before moving to the next service. Briefly "
         "tell the user ('데이터는 제가 정리해둘게요'). Match existing entities by "
-        "identity before creating a new one."
+        "identity before creating a new one. The canvas map ends with a feature "
+        "flow summary. Give the count and names of features without flows; suggest "
+        "drawing each on its feature canvas. Do not draw flows yourself on this "
+        "canvas. Mention only with next steps or when discussing "
+        "finishing/publishing, not every turn."
     ),
     "entities": (
         "You maintain Novel's Entities canvas: the conceptual list of data "

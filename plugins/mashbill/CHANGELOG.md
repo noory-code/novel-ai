@@ -4,6 +4,18 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.194.0] — 2026-09-24
+
+### Added
+
+- Services canvas maps now end with feature-flow totals and list up to ten
+  features whose flows have not been drawn.
+
+### Changed
+
+- Feature flows with decisions but no steps now count as drawn, and the coach
+  points out unfinished flows at useful moments without drawing them itself.
+
 ## [0.193.4] — 2026-09-24
 
 ### Changed

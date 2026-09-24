@@ -15,6 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from mashbill.chat_selection import (
+    CANVAS_MAP_CAP,
     build_turn_preamble,
     render_canvas_map,
     render_cross_canvas_registry,
@@ -27,6 +28,7 @@ from mashbill.models import (
     ActorNode,
     CanvasDoc,
     CoreValueNode,
+    DecisionNode,
     EntityNode,
     FeatureNode,
     IdentityNode,
@@ -214,6 +216,21 @@ def _feature_canvas_with_steps(feature_id: str, label: str, step_count: int) -> 
     )
 
 
+def _feature_canvas_with_decisions(feature_id: str, label: str, decision_count: int) -> CanvasDoc:
+    return CanvasDoc(
+        canvas_id=feature_id,
+        canvas_kind="feature",
+        feature_ref=feature_id,
+        nodes=[
+            FeatureNode(id=feature_id, label=label),
+            *(
+                DecisionNode(id=f"{feature_id}_d{i}", label=f"Decision {i}")
+                for i in range(decision_count)
+            ),
+        ],
+    )
+
+
 def test_canvas_map_says_which_features_already_have_a_flow(tmp_path: Path) -> None:
     """novel-workspace O-00000068 — the coach could not tell which features were
     already drawn, so it proposed redrawing one that had 19 nodes in it. The
@@ -233,6 +250,130 @@ def test_canvas_map_says_which_features_already_have_a_flow(tmp_path: Path) -> N
     service_line = next(line for line in out.splitlines() if "Publishing" in line)
     assert "단계" not in service_line
     assert "아직 안 그렸다" not in service_line
+
+
+def test_canvas_map_summarizes_drawn_and_undrawn_features_in_order(tmp_path: Path) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(plot_root, "alpha", _services_canvas_with_two_features())
+    write_canvas(plot_root, "alpha", _feature_canvas_with_steps("f_drawn", "Write a post", 3))
+
+    out = render_canvas_map(plot_root, "services", [])
+
+    assert out.splitlines()[-1] == (
+        '기능 2개 가운데 흐름이 그려진 것 1개. 아직 안 그린 기능: "Delete a post"'
+    )
+
+
+def test_canvas_map_counts_decision_only_feature_as_drawn(tmp_path: Path) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="services",
+            canvas_kind="services",
+            nodes=[FeatureNode(id="f_decisions", label="Choose a plan")],
+        ),
+    )
+    write_canvas(
+        plot_root,
+        "alpha",
+        _feature_canvas_with_decisions("f_decisions", "Choose a plan", 2),
+    )
+
+    out = render_canvas_map(plot_root, "services", [])
+
+    feature_line = next(line for line in out.splitlines() if "Choose a plan" in line)
+    assert " [분기 2개]" in feature_line
+    assert out.splitlines()[-1] == "기능 1개 가운데 흐름이 그려진 것 1개."
+
+
+def test_canvas_map_all_drawn_summary_has_no_undrawn_sentence(tmp_path: Path) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="services",
+            canvas_kind="services",
+            nodes=[
+                FeatureNode(id="f_steps", label="Write a post"),
+                FeatureNode(id="f_decisions", label="Choose a plan"),
+            ],
+        ),
+    )
+    write_canvas(plot_root, "alpha", _feature_canvas_with_steps("f_steps", "Write a post", 1))
+    write_canvas(
+        plot_root,
+        "alpha",
+        _feature_canvas_with_decisions("f_decisions", "Choose a plan", 1),
+    )
+
+    out = render_canvas_map(plot_root, "services", [])
+
+    assert out.splitlines()[-1] == "기능 2개 가운데 흐름이 그려진 것 2개."
+    assert "아직 안 그린 기능:" not in out
+
+
+def test_canvas_map_limits_undrawn_summary_to_first_ten_features(tmp_path: Path) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    features: list[SketchNode] = [FeatureNode(id=f"f{i}", label=f"Feature {i}") for i in range(12)]
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(canvas_id="services", canvas_kind="services", nodes=features),
+    )
+
+    summary = render_canvas_map(plot_root, "services", []).splitlines()[-1]
+
+    assert summary == (
+        '기능 12개 가운데 흐름이 그려진 것 0개. 아직 안 그린 기능: "Feature 0", '
+        '"Feature 1", "Feature 2", "Feature 3", "Feature 4", "Feature 5", '
+        '"Feature 6", "Feature 7", "Feature 8", "Feature 9" 외 2개'
+    )
+
+
+def test_canvas_map_summary_counts_features_beyond_map_cap(tmp_path: Path) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    nodes: list[SketchNode] = [
+        ServiceNode(id=f"svc{i}", label=f"Service {i}") for i in range(CANVAS_MAP_CAP)
+    ]
+    nodes.append(FeatureNode(id="f_overflow", label="Overflow feature"))
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(canvas_id="services", canvas_kind="services", nodes=nodes),
+    )
+
+    out = render_canvas_map(plot_root, "services", [])
+
+    assert f"…and {len(nodes) - CANVAS_MAP_CAP} more" in out
+    assert out.splitlines()[-1] == (
+        '기능 1개 가운데 흐름이 그려진 것 0개. 아직 안 그린 기능: "Overflow feature"'
+    )
+
+
+def test_canvas_map_has_no_feature_summary_without_features(tmp_path: Path) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="services",
+            canvas_kind="services",
+            nodes=[ServiceNode(id="svc1", label="Publishing")],
+        ),
+    )
+
+    out = render_canvas_map(plot_root, "services", [])
+
+    assert "기능 " not in out
 
 
 def test_canvas_map_leaves_other_canvases_alone(tmp_path: Path) -> None:
