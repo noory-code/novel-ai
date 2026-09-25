@@ -23,7 +23,8 @@ authoritative; flipping the direction reassigns):
 | `injection` | essence injected into the target | — | excluded from fold (the overlay doesn't include the target) |
 | `inheritance` | actors tree | target = upper (reversed) | folding the upper hides the lower |
 
-- **Invariant:** every directional edge on the actors canvas = `inheritance` (single type).
+- **Invariant:** every hierarchy edge between actors on the actors canvas = `inheritance`; the only other edge between
+  actors is a value exchange (`flow` with a label, see below).
 - (Old: essence source mission/value/identity [+ their *_ref] → `injection`. Those *_ref were retired, so
   the Feature canvas has no injection source → effectively `flow`-centric. The injection relation itself is kept.)
 
@@ -50,10 +51,13 @@ Multiple parents can be expressed; the ancestor walk picks the lexicographically
 - A selected edge = accent 3px. `interactionWidth` widened.
 - **Edit:** double-click → edge modal (label·value-form·dashed). Right-click → context menu (toggle direction·
   **flip** [swap source↔target, preserving directed/dashed/label]·delete). flip works on every canvas.
-- **`anchorArrowMode`** (direction override at render time, the document edge stays the SSOT): Foundation/Actors=
-  `converge`, Services=`diverge`, Feature=`none`.
+- **`anchorArrowMode`** (direction override at render time, the document edge stays the SSOT): Foundation=`converge`,
+  Actors=`diverge-structure` (structure lines point out from the anchor; value-exchange lines keep giver→receiver,
+  `D-2026-07-04-K`), Services=`diverge`, Feature=`none`.
 
-## Actors relationship edge (later — ROADMAP 5.9)
+## Actors value-exchange edge
 
-The **relationship edge** on the Actors canvas (distinct from the hierarchy edge; an arrow carrying value+direction; mutual=2 arrows) still needs
-its model·render implementation. Current code is inheritance (hierarchy)-centric. [`../concepts/canvases.md`](../concepts/canvases.md) Actors.
+On the Actors canvas a **value-exchange edge** is a labeled `flow` edge from the giver to the receiver, distinct from the
+hierarchy (`inheritance`) edge; a mutual exchange is two edges. Connecting two actors by hand asks which meaning the line
+has (`D-2026-07-05-D`). Value-exchange lines render dashed in amber, keep their own direction, and rank below structure
+lines in auto-layout (`D-2026-07-04-I`, `D-2026-07-05-A`). [`../concepts/canvases.md`](../concepts/canvases.md) Actors.

@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.195.3] — 2026-09-26
+
+### Documentation
+
+- Specs now match the shipped canvas: the inspector fills the sidebar with no width toggle, Actors arrows radiate outward, value-exchange lines are implemented, the Feature canvas has no always-on service panel, the folder picker offers New folder, and reopened conversations continue in their own scope. D-2026-07-04-K is recorded.
+
 ## [0.195.2] — 2026-09-25
 
 ### Fixed

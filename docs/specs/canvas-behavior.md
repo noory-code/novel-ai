@@ -13,8 +13,10 @@
 - Drag·resize persist via **`PATCH /api/projects/:id/anchor`** (not `onDocChange`).
 - Visual: 2px slate-600 **border** (no outline — triggers cursor flicker). Square auto-fit.
 - 4-side handles visible, the user can draw edges to the anchor. Holds **the name only** (not a content container).
-- `anchorArrowMode` (arrow direction at render time, the document edge stays the SSOT): Foundation/Actors=`converge`
-  (converge toward the anchor), Services=`diverge` (out from the anchor), Feature=`none`.
+- `anchorArrowMode` (arrow direction at render time, the document edge stays the SSOT): Foundation=`converge`
+  (converge toward the anchor), Actors=`diverge-structure` (structure lines — anchor spokes and inheritance — point out
+  from the anchor; value-exchange lines keep their giver→receiver direction, `D-2026-07-04-K`), Services=`diverge`
+  (out from the anchor), Feature=`none`.
 - On every engine canvas write, a root-capable node with neither an anchor edge nor a hierarchy parent edge receives
   one persisted `__project_anchor__→node` spoke. Root-capable kinds are Foundation=`mission/core_value/identity`,
   Actors=`actor`, Services=`category/service`, and Entities=`entity`; Feature canvases are excluded because they have
@@ -29,9 +31,9 @@
 - **Drill:** none.
 - **Edges:** user-drawn except for the common save-time orphan→anchor normalization above. There is still **no edge
   emission inside node creation**; the stored spoke is added only when the complete canvas is written.
-- **Inspector:** right `<aside>` (when selected), sections = header (kind·delete·width-toggle·close) → label →
-  per-kind typed form. Width toggle 320 ↔ min(720,60vw), localStorage persisted. (Typed-text
-  kinds hide the legacy details-MD section.)
+- **Inspector:** selecting a node fills the sidebar panel with its inspector, covering the palette; deselecting
+  returns the palette (`D-2026-06-21-Q`). Sections = header (kind·delete·close) → label → per-kind typed form. There
+  is no width toggle; the user resizes the panel. (Typed-text kinds hide the legacy details-MD section.)
 - **Layout:** auto-layout ON (`layoutAlgo="tree"` = anchor BFS angle-preserving depth ring; ⊞ button,
   touches position only, Cmd+Z undo). Drag-dropped nodes settle **where dropped** (no snap);
   pressing ⊞ aligns them. (The old anchor-radial forced placement is retired for drop only.)
@@ -40,12 +42,15 @@
 ## Actors — Planning
 
 - **Nodes:** `actor` only (rounded). Color is per-node user-selected.
-- **Hierarchy = inheritance tree** (anchor root). Every directional edge on the actors canvas = `relation:"inheritance"`
-  (child→parent, toward the anchor). Inheritance fields = `[body]` (US-303: side removed). (self→nearest ancestor→blank, computed
+- **Hierarchy = inheritance tree** (anchor root). A hierarchy edge is stored as `relation:"inheritance"`
+  (child→parent, toward the anchor); value-exchange edges are the other kind below. Inheritance fields = `[body]` (US-303: side removed). (self→nearest ancestor→blank, computed
   at render time, not stored; grey `↳ inherited from {parent}` caption). An **abstract root** (actor with no
   actor parent and actor children ≥1) shows body only.
-- **2 edge kinds:** hierarchy (inheritance, valueless quiet edge) + relationship (value arrow). The relationship-edge model·render
-  is implemented in ROADMAP 5.9 (current code is inheritance-centric). [`../concepts/canvases.md`](../concepts/canvases.md) Actors.
+- **2 edge kinds:** hierarchy (inheritance, valueless quiet edge) + value exchange (a labeled `flow` edge from giver to
+  receiver). Connecting two actors by hand asks what the line means — "소속" (belongs to: child→family inheritance) or
+  "가치 교환" (value exchange: who gives and what moves) — and Cancel creates nothing (`D-2026-07-05-D`). Value-exchange
+  lines render dashed in amber and rank below structure lines in auto-layout (`D-2026-07-04-I`, `D-2026-07-05-A`).
+  [`../concepts/canvases.md`](../concepts/canvases.md) Actors.
 - **Root safety:** a top-level actor family with no actor parent receives the common save-time anchor spoke; an actor
   with an `inheritance` parent remains nested and receives no spoke.
 - **Drill:** none.
@@ -85,9 +90,9 @@ canvas tab (`{feature/service name}` label). Not a modal.
 - **Drill:** this canvas is the drill target. `actor_ref` click (single/double) = inspector only, no jump to Actors.
 - **Edges:** governed by definition. Flow edge = `flow` (step→step). [The old injection edge was from when a foundation ref was a
   node — those refs moved out as chips, so the Feature canvas has no injection source.]
-- **Inspector (3-state, Option 1):** (a) no detail node selected → **subject-service read-only
-  inspector** (cross-doc from Services, 5-field summary; renders empty when the service is deleted, no crash);
-  (b) node selected → that node's editing inspector; (c) click on empty space → return to the service.
+- **Inspector:** like every other canvas — the sidebar shows the palette until a node is selected, then that node's
+  inspector; clicking empty space returns the palette. The always-on read-only subject-service inspector is retired
+  (`D-2026-06-21-Q`).
 - **Node render:** `step` = STEP tag + label (user action) + `⑂` badge (outgoing edges ≥2, derived) +
   `outcome` subtitle (inline edit) + `polarity` tint (positive=green/negative=red/neutral=user color).
   `decision` = diamond forced (no tag). Shape=meaning (master=rounded rectangle, `*_ref`=circle, decision=◇).

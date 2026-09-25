@@ -819,6 +819,24 @@
 - **Approval:** Accepted by user (live review, 2026-07-04).
 - **Spec impact:** `test_sync.py::test_sync_seeds_one_real_user_side_ref_not_english_stubs`.
 
+### D-2026-07-04-K — actors structure arrows radiate outward; spokes never dash
+
+- **What:** viewer — the actors canvas gets its own `anchorArrowMode`,
+  `"diverge-structure"`: structure lines (anchor spokes and inheritance)
+  render from the anchor outward like a tree, instead of converging on the
+  anchor as Foundation does. Value-exchange lines keep their semantic
+  giver → receiver direction and are the only dashed lines; anchor spokes
+  are never dashed even though they are stored as `relation: "flow"`.
+- **Why:** live review, 2026-07-04 — "실선 화살표 방향은 앵커로 향하게 하지 말고
+  앵커 밖으로 향하게 합시다" — and the first dashed cut (D-2026-07-04-I) had
+  wrongly dashed the anchor spokes too.
+- **Approval:** Accepted by user (live directive, 2026-07-04). The viewer
+  change shipped that day under this id; this entry was recorded on
+  2026-09-26 when the public spec was brought in line with it.
+- **Spec impact:** `specs/canvas-behavior.md` common anchor rules + Actors,
+  `specs/edges.md` render rules, `SPEC.md` anchor-relative direction row and
+  the Actors arrows paragraph.
+
 ### D-2026-07-04-L — entity relationship lines carry their verb
 
 - **What:** services + entities framings require a verb label on every
