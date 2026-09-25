@@ -14,6 +14,8 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator
 
+import pytest
+
 from mashbill.chat_output_filter import filter_save_announcements, strip_save_announcement
 from mashbill.chat_providers.base import ChatStreamEvent
 
@@ -82,6 +84,29 @@ def test_save_clause_is_stripped_without_flattening_paragraphs() -> None:
     assert strip_save_announcement(src) == "미션 좋네요.\n\n이제 가치를 볼까요?"
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        "VISION.md",
+        "3.5",
+        "https://novel.app/docs",
+        "**굵게.** 다음",
+        "1,000명",
+        "A. B. C.",
+        "- 하나\n- 둘",
+    ],
+)
+def test_unchanged_text_preserves_original_separators(text: str) -> None:
+    assert strip_save_announcement(text) == text
+
+
+def test_save_clause_is_removed_without_changing_other_separators() -> None:
+    assert (
+        strip_save_announcement("미션 좋네요, 저장했어요. 다음은 VISION.md 입니다.")
+        == "미션 좋네요. 다음은 VISION.md 입니다."
+    )
+
+
 def test_stream_chunks_concatenate_to_the_full_cleaned_text_across_paragraphs() -> None:
     # The live viewer renders deltas as they land and reconciles on
     # turn_complete. If per-chunk cleaning drops a chunk's trailing paragraph
@@ -137,3 +162,57 @@ def test_stream_filter_buffers_across_deltas_and_reconciles() -> None:
     assert "저장했어요" not in deltas
     assert "미션 좋네요" in deltas and "이제 가치를 볼까요?" in deltas
     assert complete.text == deltas  # stream and reconcile text agree
+
+
+def test_stream_cleans_the_join_after_a_removed_leading_sentence() -> None:
+    full = "미션이 저장됐어요. 다음은 가치를 볼까요?"
+    raw = [
+        ChatStreamEvent(type="turn_start", turn_id="t4"),
+        ChatStreamEvent(type="delta", turn_id="t4", text="미션이 저장됐어요."),
+        ChatStreamEvent(type="delta", turn_id="t4", text=" 다음은 가치를 볼까요?"),
+        ChatStreamEvent(type="turn_complete", turn_id="t4", text=full),
+    ]
+
+    async def _run() -> list[ChatStreamEvent]:
+        async def gen() -> AsyncIterator[ChatStreamEvent]:
+            for event in raw:
+                yield event
+
+        return [event async for event in filter_save_announcements(gen())]
+
+    out = asyncio.run(_run())
+    deltas = "".join(event.text for event in out if event.type == "delta")
+    complete = next(event for event in out if event.type == "turn_complete")
+    assert deltas == "다음은 가치를 볼까요?"
+    assert complete.text == deltas
+
+
+@pytest.mark.parametrize(
+    ("chunks", "full"),
+    [
+        (("VISION.", "md 를 따른다."), "VISION.md 를 따른다."),
+        (("Gemini 3.", "5 Flash 를 씁니다."), "Gemini 3.5 Flash 를 씁니다."),
+    ],
+)
+def test_stream_preserves_punctuation_at_delta_boundaries(
+    chunks: tuple[str, str], full: str
+) -> None:
+    raw = [
+        ChatStreamEvent(type="turn_start", turn_id="t3"),
+        *(ChatStreamEvent(type="delta", turn_id="t3", text=chunk) for chunk in chunks),
+        ChatStreamEvent(type="turn_complete", turn_id="t3", text=full),
+    ]
+
+    async def _run() -> list[ChatStreamEvent]:
+        async def gen() -> AsyncIterator[ChatStreamEvent]:
+            for event in raw:
+                yield event
+
+        return [event async for event in filter_save_announcements(gen())]
+
+    out = asyncio.run(_run())
+    deltas = "".join(event.text for event in out if event.type == "delta")
+    complete = next(event for event in out if event.type == "turn_complete")
+    assert deltas == full
+    assert complete.text == full
+    assert deltas == complete.text

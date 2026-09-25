@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.195.2] — 2026-09-25
+
+### Fixed
+
+- Coach replies no longer gain spaces after periods or commas when save announcements are filtered.
+
 ## [0.195.1] — 2026-09-25
 
 ### Changed

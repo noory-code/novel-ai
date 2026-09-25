@@ -13,6 +13,9 @@ Language scope: Korean (the coach speaks the user's language; every observed lea
 was Korean) plus the English 'saved'/'done' forms B-6 first named. Novel is a
 global service, so this is best-effort for KO/EN — it does not claim to catch a
 save-report in every language.
+
+Every character outside a removed save report keeps its original spelling and
+spacing; only the join exposed by a removal is cleaned up.
 """
 
 from __future__ import annotations
@@ -50,8 +53,46 @@ def _is_save_clause(segment: str) -> bool:
 
 def _strip_clauses(sentence: str) -> str:
     """Drop save-report clauses from ONE sentence, keep the rest (comma-bounded)."""
-    kept = [c.strip() for c in sentence.split(",") if c.strip() and not _is_save_clause(c)]
-    return ", ".join(kept)
+    clauses = sentence.split(",")
+    removed = [_is_save_clause(clause) for clause in clauses]
+    if not any(removed):
+        return sentence
+
+    commas = [match.start() for match in re.finditer(",", sentence)]
+    starts = [0, *(comma + 1 for comma in commas)]
+    ends = [*commas, len(sentence)]
+    ranges: list[tuple[int, int]] = []
+    index = 0
+    while index < len(clauses):
+        if not removed[index]:
+            index += 1
+            continue
+
+        first = index
+        while index + 1 < len(clauses) and removed[index + 1]:
+            index += 1
+        last = index
+
+        if first > 0:
+            start = commas[first - 1]
+            while start > starts[first - 1] and sentence[start - 1] in " \t":
+                start -= 1
+            end = ends[last]
+        elif last + 1 < len(clauses):
+            start = starts[first]
+            end = commas[last] + 1
+            while end < len(sentence) and sentence[end] in " \t":
+                end += 1
+        else:
+            start = starts[first]
+            end = ends[last]
+        ranges.append((start, end))
+        index += 1
+
+    cleaned = sentence
+    for start, end in reversed(ranges):
+        cleaned = cleaned[:start] + cleaned[end:]
+    return cleaned
 
 
 def strip_save_announcement(text: str) -> str:
@@ -64,23 +105,29 @@ def strip_save_announcement(text: str) -> str:
     read as stuttering. Trailing newlines are kept too, so cleaning a
     sentence-buffered CHUNK and cleaning the whole turn agree — the stream
     filter relies on that to avoid its resend fallback.
+
+    When no save report is removed, the input is returned byte-for-byte; any
+    separator cleanup is confined to the join exposed by a removal.
     """
     out: list[str] = []
+    removed_before_output = False
     tokens = _SENT_SPLIT.split(text)
     for i in range(0, len(tokens), 2):
         body = tokens[i]
         term = tokens[i + 1] if i + 1 < len(tokens) else ""
         cleaned = _strip_clauses(body)
-        if cleaned:
+        changed = cleaned != body
+        if cleaned or not changed:
             # A pure-newline terminator (a list item or heading line has no
             # sentence punctuation) still separates lines — dropping it glued
             # "- 하나\n- 둘" into one line.
-            out.append(cleaned + (term if term.strip() or "\n" in term else ""))
-    joined = " ".join(out)
-    joined = re.sub(r"[ \t]+", " ", joined)
-    joined = re.sub(r" *\n *", "\n", joined)
-    joined = re.sub(r"\n{3,}", "\n\n", joined)
-    return joined.strip(" \t")
+            piece = cleaned + term
+            if removed_before_output and not out:
+                piece = piece.lstrip(" \t")
+            out.append(piece)
+        elif changed:
+            removed_before_output = True
+    return "".join(out)
 
 
 async def filter_save_announcements(
@@ -93,10 +140,14 @@ async def filter_save_announcements(
     authoritative full cleaned reply (from the event's own text, or the accumulated
     deltas as fallback); the deltas concatenate to exactly that, so a delta-only
     subscriber and a late subscriber reconcile to identical text.
+
+    Original separators cross delta boundaries unchanged; the filter never
+    inserts a space between emitted pieces.
     """
     buffer = ""  # in-progress (unterminated) sentence, held back
     raw = ""  # every raw delta char seen, for fallback reconciliation
     emitted = ""  # cleaned text already sent as deltas
+    removed_before_emission = False  # clean the leading join after a dropped sentence
 
     def _delta(piece: str, turn_id: str) -> ChatStreamEvent:
         nonlocal emitted
@@ -113,8 +164,12 @@ async def filter_save_announcements(
                 complete, buffer = buffer[:cut], buffer[cut:]
                 cleaned = strip_save_announcement(complete)
                 if cleaned:
-                    sep = " " if emitted and not emitted.endswith((" ", "\n")) else ""
-                    yield _delta(sep + cleaned, ev.turn_id)
+                    if removed_before_emission and not emitted:
+                        cleaned = cleaned.lstrip(" \t")
+                    removed_before_emission = False
+                    yield _delta(cleaned, ev.turn_id)
+                elif complete:
+                    removed_before_emission = removed_before_emission or not emitted
             # no terminator yet → hold the buffer, emit nothing this delta
         elif ev.type == "turn_complete":
             full_cleaned = strip_save_announcement(ev.text or raw)
