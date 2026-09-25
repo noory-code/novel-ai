@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.195.1] — 2026-09-25
+
+### Changed
+
+- The standard pytest suite now checks that the Codex plugin manifest version
+  matches the Mashbill package version to catch release drift.
+
 ## [0.195.0] — 2026-09-24
 
 ### Added

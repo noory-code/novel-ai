@@ -39,6 +39,14 @@ def test_plugin_manifest_matches_package_version() -> None:
     )
 
 
+def test_codex_plugin_manifest_matches_package_version() -> None:
+    manifest = json.loads((_MASHBILL_ROOT / ".codex-plugin" / "plugin.json").read_text("utf-8"))
+    assert manifest["version"] == __version__, (
+        ".codex-plugin/plugin.json version drifted from mashbill.__version__ — "
+        "Gate 4 must bump both in lock-step."
+    )
+
+
 def test_pyproject_derives_version_dynamically_from_init() -> None:
     """No static ``version =`` in ``[project]``; hatchling reads ``__init__``."""
     pp = tomllib.loads((_MASHBILL_ROOT / "pyproject.toml").read_text("utf-8"))
