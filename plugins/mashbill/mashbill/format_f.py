@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from mashbill.folder_io import read_canvas, read_project
+from mashbill.format_f_flow import _render_feature_flow as _render_feature_flow
 from mashbill.models import CanvasDoc
 from mashbill.storage import _project_dir, _read_json, _write_json
 
@@ -88,6 +89,13 @@ def _hash(payload: str) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
+def _manifest_element(slug: str, node: Any, payload: str, *, flow: bool = False) -> dict[str, Any]:
+    element = {"id": slug, "label": node.label, "kind": node.kind, "hash": _hash(payload)}
+    if flow:
+        element["flow"] = True
+    return element
+
+
 def _git_sha(plot_root: Path) -> str:
     """Best-effort workspace git sha (the anchor of immutability). Empty when
     there is no repo — the walking skeleton does not require one."""
@@ -150,13 +158,7 @@ def publish_project_snapshot(plot_root: Path, project_id: str) -> dict[str, Any]
         slug = mint_slug(plot_root, project_id, node)
         primary = str(getattr(node, _FOUNDATION_PRIMARY[node.kind], "") or "")
         body = str(getattr(node, "body", "") or "")
-        elements.append(
-            {
-                "id": slug,
-                "kind": node.kind,
-                "hash": _hash(f"{node.kind}|{node.label}|{primary}|{body}"),
-            }
-        )
+        elements.append(_manifest_element(slug, node, f"{node.kind}|{node.label}|{primary}|{body}"))
         block = f"### {node.label} (`{slug}`)\n"
         if primary:
             block += f"\n{primary}\n"
@@ -184,7 +186,7 @@ def publish_project_snapshot(plot_root: Path, project_id: str) -> dict[str, Any]
         slug = mint_slug(plot_root, project_id, node)
         body = str(getattr(node, "body", "") or "")
         # side removed (US-303); only body for identity now
-        elements.append({"id": slug, "kind": "actor", "hash": _hash(f"actor|{node.label}|{body}")})
+        elements.append(_manifest_element(slug, node, f"actor|{node.label}|{body}"))
         block = f"### {node.label} (`{slug}`)\n"
         if body:
             block += f"\n{body}\n"
@@ -210,9 +212,7 @@ def publish_project_snapshot(plot_root: Path, project_id: str) -> dict[str, Any]
             continue
         slug = mint_slug(plot_root, project_id, node)
         summary = str(getattr(node, "summary", "") or "")
-        elements.append(
-            {"id": slug, "kind": "entity", "hash": _hash(f"entity|{node.label}|{summary}")}
-        )
+        elements.append(_manifest_element(slug, node, f"entity|{node.label}|{summary}"))
         ent_dir = design / "entities"
         ent_dir.mkdir(parents=True, exist_ok=True)
         (ent_dir / f"{slug.split('/')[-1]}.md").write_text(
@@ -243,108 +243,6 @@ def _features_under_service(services: CanvasDoc, service_id: str) -> list[Any]:
     return [by_id[fid] for fid in children]
 
 
-def _render_feature_flow(detail: CanvasDoc) -> str:
-    """Render a feature's UX flow as one numbered graph followed by its rules.
-    Numbers follow a depth-first walk in edge order, including loops. Rules name
-    linked numbers; unreached flow nodes and unlinked rules follow by node id.
-    """
-    by_id = {n.id: n for n in detail.nodes}
-    lines: list[str] = []
-
-    subjects = [
-        (n.label or "").removeprefix("→ ").strip() for n in detail.nodes if n.kind == "actor_ref"
-    ]
-    subjects = [s for s in subjects if s]
-    if subjects:
-        lines.append(f"참여자: {', '.join(subjects)}")
-        lines.append("")
-
-    flow = {n.id for n in detail.nodes if n.kind in {"step", "decision"}}
-    outgoing: dict[str, list[Any]] = {node_id: [] for node_id in flow}
-    for edge in detail.edges:
-        if edge.source in flow and edge.target in flow:
-            outgoing[edge.source].append(edge)
-
-    ordered_ids: list[str] = []
-    visited: set[str] = set()
-
-    def visit(start: str) -> None:
-        stack = [start]
-        while stack:
-            node_id = stack.pop()
-            if node_id not in visited:
-                visited.add(node_id)
-                ordered_ids.append(node_id)
-                stack.extend(edge.target for edge in reversed(outgoing[node_id]))
-
-    actors = {n.id for n in detail.nodes if n.kind == "actor_ref"}
-    starts = [e.target for e in detail.edges if e.source in actors and e.target in flow]
-    if not starts:
-        incoming = {e.target for e in detail.edges if e.source in flow and e.target in flow}
-        starts = sorted(flow - incoming)
-    for node_id in starts:
-        visit(node_id)
-    ordered_ids.extend(sorted(flow - visited))
-    number_by_id = {node_id: number for number, node_id in enumerate(ordered_ids, 1)}
-
-    def node_text(node: Any, include_outcome: bool = False) -> str:
-        prefix = "(분기) " if node.kind == "decision" else ""
-        if node.kind == "step" and getattr(node, "polarity", "neutral") == "negative":
-            prefix = "(실패) "
-        outcome = getattr(node, "outcome", "") if include_outcome else ""
-        return f"{prefix}{node.label}{f' → {outcome}' if outcome else ''}"
-
-    if ordered_ids:
-        lines.append("### 흐름")
-        for node_id in ordered_ids:
-            node = by_id[node_id]
-            lines.append(f"{number_by_id[node_id]}. {node_text(node, include_outcome=True)}")
-            for edge in outgoing[node_id]:
-                target = by_id[edge.target]
-                lines.append(
-                    f"   - {edge.label or '다음'} → {number_by_id[edge.target]}. "
-                    f"{node_text(target)}"
-                )
-        lines.append("")
-    else:
-        lines.append("_아직 흐름이 그려지지 않음._")
-        lines.append("")
-
-    links: dict[str, set[int]] = {n.id: set() for n in detail.nodes if n.kind == "rule"}
-    for edge in detail.edges:
-        if edge.source in links and edge.target in number_by_id:
-            links[edge.source].add(number_by_id[edge.target])
-        if edge.target in links and edge.source in number_by_id:
-            links[edge.target].add(number_by_id[edge.source])
-
-    rule_ids = sorted(
-        links, key=lambda rule_id: (not links[rule_id], min(links[rule_id] or {0}), rule_id)
-    )
-    if rule_ids:
-        lines.append("### 규칙")
-        for rule_id in rule_ids:
-            rule = by_id[rule_id]
-            detail_text = getattr(rule, "policy", "") or getattr(rule, "body", "")
-            text = f"- {rule.label}"
-            if detail_text:
-                text += f": {detail_text}"
-            if links[rule_id]:
-                linked_numbers = ", ".join(str(number) for number in sorted(links[rule_id]))
-                text += f" (걸린 단계: {linked_numbers})"
-            lines.append(text)
-        lines.append("")
-
-    notes = sorted((n for n in detail.nodes if n.kind == "note"), key=lambda n: n.id)
-    if notes:
-        lines.append("### 참고 (ambient)")
-        for n in notes:
-            body = getattr(n, "body", "") or ""
-            lines.append(f"- {n.label}{f': {body}' if body else ''}")
-        lines.append("")
-
-    return "\n".join(lines).rstrip() + "\n"
-
-
 def publish_service(plot_root: Path, project_id: str, service_id: str) -> dict[str, Any]:
     """Freeze one **service** (5칸 + its features + each feature's UX flow) into
     a ``published/{service-slug}/vS{N}/`` release — the service-scope layer.
@@ -361,6 +259,9 @@ def publish_service(plot_root: Path, project_id: str, service_id: str) -> dict[s
     Entity refs roll up from the features' steps (``ref_entity_ids``).
     refs-integrity gate (§1.4): every ref must resolve in that ``vP`` — else the
     publish is refused at the write boundary (before any file is written).
+    Shared-element references are rendered as ``name (`id`)`` using the pinned
+    vP manifest labels, falling back to the current canvas label for manifests
+    written before labels existed.
     """
     read_project(plot_root, project_id)  # validate id
     pdir = _project_dir(plot_root, project_id)
@@ -371,7 +272,9 @@ def publish_service(plot_root: Path, project_id: str, service_id: str) -> dict[s
         raise ValueError(
             "no project snapshot (vP) — run publish_project_snapshot first (bootstrap)"
         )
-    vp_ids = {e["id"] for e in _read_json(snap_dir / vp / "manifest.json")["elements"]}
+    vp_elements = _read_json(snap_dir / vp / "manifest.json")["elements"]
+    vp_ids = {e["id"] for e in vp_elements}
+    vp_labels = {e["id"]: e["label"] for e in vp_elements if "label" in e}
 
     services = read_canvas(plot_root, project_id, "services")
     svc = next((n for n in services.nodes if n.id == service_id and n.kind == "service"), None)
@@ -380,6 +283,23 @@ def publish_service(plot_root: Path, project_id: str, service_id: str) -> dict[s
 
     store_path = _slug_store_path(plot_root, project_id)
     store: dict[str, str] = _read_json(store_path) if store_path.exists() else {}
+    canvas_labels = {
+        node.id: node.label
+        for canvas in (
+            read_canvas(plot_root, project_id, "foundation"),
+            read_canvas(plot_root, project_id, "actors"),
+            read_canvas(plot_root, project_id, "entities"),
+        )
+        for node in canvas.nodes
+    }
+    ref_labels = {
+        slug: vp_labels.get(slug, canvas_labels.get(node_id)) for node_id, slug in store.items()
+    }
+
+    def _display_refs(slugs: list[str]) -> list[str]:
+        return [
+            f"{ref_labels[slug]} (`{slug}`)" if ref_labels.get(slug) else slug for slug in slugs
+        ]
 
     def _resolve(ids: list[str]) -> tuple[list[str], list[str]]:
         ok: list[str] = []
@@ -431,22 +351,21 @@ def publish_service(plot_root: Path, project_id: str, service_id: str) -> dict[s
     )
     # Surface what the service stands on in its vP (refs by slug, resolvable
     # there) so service.md reads standalone for the external agent.
-    if actor_slugs or value_slugs or identity_slugs:
+    # Each ref shows its frozen vP label next to the slug.
+    if actor_slugs or value_slugs or identity_slugs or entity_slugs:
         svc_md += "\n## 이 서비스가 딛는 것 (vP 참조)\n\n"
         if actor_slugs:
-            svc_md += f"- 참여 액터: {', '.join(actor_slugs)}\n"
+            svc_md += f"- 참여 액터: {', '.join(_display_refs(actor_slugs))}\n"
         if value_slugs:
-            svc_md += f"- 지키는 가치: {', '.join(value_slugs)}\n"
+            svc_md += f"- 지키는 가치: {', '.join(_display_refs(value_slugs))}\n"
         if identity_slugs:
-            svc_md += f"- 정체성 결: {', '.join(identity_slugs)}\n"
+            svc_md += f"- 정체성 결: {', '.join(_display_refs(identity_slugs))}\n"
+        if entity_slugs:
+            svc_md += f"- 쓰는 데이터: {', '.join(_display_refs(entity_slugs))}\n"
     (design / "service.md").write_text(svc_md, encoding="utf-8")
 
-    elements: list[dict[str, Any]] = [
-        {
-            "id": svc_slug,
-            "kind": "service",
-            "hash": _hash(f"service|{svc.label}|{svc.problem}|{svc.value_created}"),
-        }
+    elements = [
+        _manifest_element(svc_slug, svc, f"service|{svc.label}|{svc.problem}|{svc.value_created}")
     ]
 
     if feature_plan:
@@ -462,12 +381,9 @@ def publish_service(plot_root: Path, project_id: str, service_id: str) -> dict[s
             encoding="utf-8",
         )
         elements.append(
-            {
-                "id": feat_slug,
-                "kind": "feature",
-                "hash": _hash(f"feature|{feat.label}|{proposed}|{flow_text}"),
-                "flow": True,
-            }
+            _manifest_element(
+                feat_slug, feat, f"feature|{feat.label}|{proposed}|{flow_text}", flow=True
+            )
         )
 
     manifest: dict[str, Any] = {

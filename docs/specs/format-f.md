@@ -107,7 +107,11 @@ realization design, referencing `vP`). Solera imports `vS` + the `vP` slice it p
 - `git_sha` — the workspace git sha at publish time (the anchor of immutability).
 - `based_on` (service only) — the referenced project snapshot's `release`.
 - `category` (service, optional) — the parent category ID (omitted if none — a root service).
-- `elements[]` — the elements this release *owns*. `{id, kind, hash}` (+ a feature carries `flow: true`).
+- `elements[]` — the elements this release *owns*. `{id, label, kind, hash}` (+ a feature carries `flow: true`).
+  `label` is the node's name at publish time. The id is a slug frozen at first publish and can be
+  opaque (a non-ASCII label slugs to `x`, `x-2`, …), so readers match ids to names through `label`.
+  Wherever a rendered design file cites another element it writes the name followed by the id,
+  e.g. 본질 (`core_value/x`).
   `hash` = the sha256 of that element's design payload (the ID-diff input).
 - `refs` (service only) — the shared-element IDs inside the `based_on` vP that this service *references* (not copied).
   `anchors.mission` **always** points to that project's single mission (`"mission"`) — the mission is

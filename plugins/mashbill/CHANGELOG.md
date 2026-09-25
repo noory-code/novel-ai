@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.195.0] — 2026-09-24
+
+### Added
+
+- Format F manifests now preserve each published element's label, and service
+  design files pair shared-element references with their pinned snapshot names.
+- Service design files now list entities used by feature steps and recover names
+  from the current canvas when reading an older project manifest without labels.
+
 ## [0.194.0] — 2026-09-24
 
 ### Added

@@ -7,6 +7,7 @@ are minted into a per-project registry — explicit, stable, decoupled from labe
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -348,6 +349,68 @@ def _add_service_with_features(plot_root: Path) -> str:
     return "svc-auth"
 
 
+def _prepare_named_reference_bundle(plot_root: Path) -> None:
+    """Create Korean shared elements and wire one entity into a service flow."""
+    from mashbill.folder_io import write_canvas
+    from mashbill.models import EntityNode
+
+    create_project(plot_root, "alpha", "Alpha")
+    _plant_baseline(plot_root)
+
+    foundation = read_canvas(plot_root, "alpha", "foundation")
+    labels = {"mission": "목적", "core_value": "신뢰", "identity": "차분함"}
+    write_canvas(
+        plot_root,
+        "alpha",
+        foundation.model_copy(
+            update={
+                "nodes": [
+                    node.model_copy(update={"label": labels[node.kind]})
+                    for node in foundation.nodes
+                ]
+            }
+        ),
+    )
+    entities = read_canvas(plot_root, "alpha", "entities")
+    write_canvas(
+        plot_root,
+        "alpha",
+        entities.model_copy(
+            update={"nodes": [EntityNode(id="ent-session", label="세션", summary="a login")]}
+        ),
+    )
+    _add_service_with_features(plot_root)
+    detail = read_canvas(plot_root, "alpha", "feature", service_id="feat-login")
+    wired = [
+        node.model_copy(update={"ref_entity_ids": ["ent-session"]})
+        if node.id == "s-session"
+        else node
+        for node in detail.nodes
+    ]
+    write_canvas(plot_root, "alpha", detail.model_copy(update={"nodes": wired}))
+
+
+def _rename_shared_reference_nodes(plot_root: Path) -> None:
+    """Rename shared nodes after vP publication to distinguish live labels."""
+    from mashbill.folder_io import write_canvas
+
+    replacements = {
+        "core-value-1": "현재 신뢰",
+        "identity": "현재 차분함",
+        "operator": "현재 운영자",
+        "ent-session": "현재 세션",
+    }
+    for canvas_kind in ("foundation", "actors", "entities"):
+        canvas = read_canvas(plot_root, "alpha", canvas_kind)
+        nodes = [
+            node.model_copy(update={"label": replacements[node.id]})
+            if node.id in replacements
+            else node
+            for node in canvas.nodes
+        ]
+        write_canvas(plot_root, "alpha", canvas.model_copy(update={"nodes": nodes}))
+
+
 def test_publish_service_includes_feature_elements(plot_root: Path) -> None:
     from mashbill.format_f import publish_project_snapshot, publish_service
 
@@ -655,6 +718,98 @@ def test_service_entity_refs_collected_from_steps(plot_root: Path) -> None:
     m = publish_service(plot_root, "alpha", "svc-auth")
     assert m["refs"]["entities"]
     assert all(e.startswith("entity/") for e in m["refs"]["entities"])
+
+
+def test_published_manifests_and_service_refs_include_labels(plot_root: Path) -> None:
+    """Published manifests carry labels, and service refs use frozen vP labels."""
+    from mashbill.format_f import publish_project_snapshot, publish_service
+
+    _prepare_named_reference_bundle(plot_root)
+    published_vp = publish_project_snapshot(plot_root, "alpha")
+    vp_path = plot_root / "published" / "_project" / "vP1" / "manifest.json"
+    vp = json.loads(vp_path.read_text(encoding="utf-8"))
+
+    assert vp == published_vp
+    assert all("label" in element for element in vp["elements"])
+    assert {element["label"] for element in vp["elements"]} == {
+        "목적",
+        "신뢰",
+        "차분함",
+        "운영자",
+        "사용자",
+        "세션",
+    }
+    id_by_label = {element["label"]: element["id"] for element in vp["elements"]}
+    assert id_by_label["신뢰"].startswith("core_value/x")
+    assert id_by_label["차분함"].startswith("identity/x")
+    assert id_by_label["운영자"].startswith("actor/x")
+    assert id_by_label["세션"].startswith("entity/x")
+
+    _rename_shared_reference_nodes(plot_root)
+    published_vs = publish_service(plot_root, "alpha", "svc-auth")
+    vs_path = plot_root / "published" / "auth" / "vS1" / "manifest.json"
+    vs = json.loads(vs_path.read_text(encoding="utf-8"))
+    assert vs == published_vs
+    assert [(element["kind"], element["label"]) for element in vs["elements"]] == [
+        ("service", "Auth"),
+        ("feature", "Login"),
+        ("feature", "Sign up"),
+    ]
+
+    service_md = (vs_path.parent / "design" / "service.md").read_text(encoding="utf-8")
+    assert f"- 참여 액터: 운영자 (`{id_by_label['운영자']}`)" in service_md
+    assert f"- 지키는 가치: 신뢰 (`{id_by_label['신뢰']}`)" in service_md
+    assert f"- 정체성 결: 차분함 (`{id_by_label['차분함']}`)" in service_md
+    assert f"- 쓰는 데이터: 세션 (`{id_by_label['세션']}`)" in service_md
+
+
+def test_service_ref_labels_fall_back_to_current_canvas_for_legacy_vp(plot_root: Path) -> None:
+    """A vP manifest without labels falls back to current canvas node labels."""
+    from mashbill.format_f import publish_project_snapshot, publish_service
+
+    _prepare_named_reference_bundle(plot_root)
+    publish_project_snapshot(plot_root, "alpha")
+    vp_path = plot_root / "published" / "_project" / "vP1" / "manifest.json"
+    vp = json.loads(vp_path.read_text(encoding="utf-8"))
+    id_by_label = {element["label"]: element["id"] for element in vp["elements"]}
+    for element in vp["elements"]:
+        element.pop("label")
+    vp_path.write_text(json.dumps(vp, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _rename_shared_reference_nodes(plot_root)
+
+    publish_service(plot_root, "alpha", "svc-auth")
+    service_md = (plot_root / "published" / "auth" / "vS1" / "design" / "service.md").read_text(
+        encoding="utf-8"
+    )
+    assert f"- 참여 액터: 현재 운영자 (`{id_by_label['운영자']}`)" in service_md
+    assert f"- 지키는 가치: 현재 신뢰 (`{id_by_label['신뢰']}`)" in service_md
+    assert f"- 정체성 결: 현재 차분함 (`{id_by_label['차분함']}`)" in service_md
+    assert f"- 쓰는 데이터: 현재 세션 (`{id_by_label['세션']}`)" in service_md
+
+
+def test_service_design_writes_reference_section_for_entities_only(plot_root: Path) -> None:
+    """Entity refs alone are enough to write the service reference section."""
+    from mashbill.folder_io import write_canvas
+    from mashbill.format_f import publish_project_snapshot, publish_service
+
+    _prepare_named_reference_bundle(plot_root)
+    services = read_canvas(plot_root, "alpha", "services")
+    nodes = [
+        node.model_copy(update={"ref_actor_ids": [], "ref_value_ids": [], "ref_identity_ids": []})
+        if node.id == "svc-auth"
+        else node
+        for node in services.nodes
+    ]
+    write_canvas(plot_root, "alpha", services.model_copy(update={"nodes": nodes}))
+    vp = publish_project_snapshot(plot_root, "alpha")
+    entity = next(element for element in vp["elements"] if element["kind"] == "entity")
+
+    publish_service(plot_root, "alpha", "svc-auth")
+    service_md = (plot_root / "published" / "auth" / "vS1" / "design" / "service.md").read_text(
+        encoding="utf-8"
+    )
+    assert "## 이 서비스가 딛는 것 (vP 참조)" in service_md
+    assert f"- 쓰는 데이터: 세션 (`{entity['id']}`)" in service_md
 
 
 def test_publish_service_with_dangling_entity_ref_is_rejected(plot_root: Path) -> None:
