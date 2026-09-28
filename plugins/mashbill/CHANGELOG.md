@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.195.5] — 2026-09-28
+
+### Changed
+
+- A blueprint publish now bumps the version and tags only when the canvas content changed since the current version's tag; an unchanged publish answers `409 {unchanged: true}` and writes nothing (D-2026-09-28-B).
+
+### Added
+
+- `GET /api/projects/{id}/publish/status` reports `{current_version, changed}` without writing.
+
 ## [0.195.4] — 2026-09-28
 
 ### Documentation

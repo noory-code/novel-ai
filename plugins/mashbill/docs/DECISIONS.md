@@ -39,6 +39,37 @@
 
 ## Log
 
+### D-2026-09-28-B — A blueprint publish bumps only when the blueprint changed
+
+- **What:** "Publish blueprint" bumps `blueprint_version`, tags, and writes a
+  `vP` only when the canvas content (`foundation/`, `actors/`, `services/`
+  with feature details, `entities/`) differs from the commit the current
+  version's tag points at. Otherwise nothing is written and the user is told
+  nothing changed since that version. The app checks first
+  (`GET …/publish/status`) so the user is not asked to choose a bump for
+  nothing; `POST …/publish` repeats the check and answers
+  `409 {unchanged: true}`. The confirm dialog adds one line: a published
+  version can't be deleted in the app.
+- **Why:** every press used to bump and tag, so identical blueprints could
+  carry different version numbers and an external agent would read a new
+  number as a change. The user: "변경이 있으면 버전이 올라야 합니다" — a
+  version number means the design changed. The dialog promised only that the
+  user could come back to this point; it never said the publish itself
+  cannot be undone in the app.
+- **Alternatives:** ask "nothing changed — publish anyway?" — not chosen; a
+  number would again stop meaning a change. Keep bumping every time — not
+  chosen, same reason. Count chat or `project.json` (name, anchor positions,
+  timestamps) as change — rejected: chat is not the design, and the
+  timestamp changes on every save.
+- **Approval:** Accepted — user, 2026-09-28 (novel-workspace W-00000302,
+  W-00000303).
+- **Spec impact:** `docs/specs/storage-publish.md` — the "no unchanged gate"
+  sentence is replaced; the no-Unpublish bullet names the dialog line.
+- **Principles:** SSOT (one check in `git_store.blueprint_canvas_changed`
+  serves the status read and the publish write); Fail Fast (the write
+  boundary refuses an unchanged publish even if a caller skipped the check);
+  Honesty (the dialog says the publish can't be undone in the app).
+
 ### D-2026-09-28-A — A coach's canvas change is one undo step
 
 - **What:** when a canvas changes outside the viewer (the in-app coach's

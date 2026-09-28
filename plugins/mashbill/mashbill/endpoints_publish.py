@@ -19,7 +19,12 @@ from mashbill.endpoints_common import (
     _require_plot_root,
 )
 from mashbill.folder_io import _project_dir
-from mashbill.git_store import GitNotInitializedError, TagAlreadyExistsError, tag_snapshot
+from mashbill.git_store import (
+    GitNotInitializedError,
+    TagAlreadyExistsError,
+    blueprint_canvas_changed,
+    tag_snapshot,
+)
 from mashbill.workspace import workspace_root_from_plot_root
 
 
@@ -68,11 +73,10 @@ async def project_publish_endpoint(request: Request) -> JSONResponse:
 
     Body: ``{"bump": "major" | "minor" | "patch", "message": "..."}``
 
-    Bumps ``ProjectDoc.blueprint_version``, persists the project, and
-    creates a git tag at the resulting version. Tag name = the new
-    version string (e.g. ``v0.2.0``). Idempotent for the *project*
-    write (tags are unique, second call with the same target version
-    after manual revert would 409).
+    When canvas content changed since the current-version tag, bumps
+    ``ProjectDoc.blueprint_version``, persists the project, and creates a git
+    tag at the resulting version. Tag name = the new version string (e.g.
+    ``v0.2.0``). An unchanged call returns 409 without writing.
 
     Returns ``{from_version, to_version, tag}``.
     """
@@ -102,9 +106,21 @@ async def project_publish_endpoint(request: Request) -> JSONResponse:
         to_version = _bump_blueprint_version(from_version, bump)
     except ValueError as exc:
         return _error(str(exc))
+    workspace_root = workspace_root_from_plot_root(plot_root)
+    try:
+        changed = blueprint_canvas_changed(workspace_root, folder, from_version)
+    except GitNotInitializedError:
+        return _git_not_initialized_response(workspace_root)
+    if not changed:
+        return JSONResponse(
+            {
+                "error": f"blueprint is unchanged since {from_version}",
+                "unchanged": True,
+            },
+            status_code=409,
+        )
     bumped = project.model_copy(update={"blueprint_version": to_version})
     write_project(plot_root, bumped)
-    workspace_root = workspace_root_from_plot_root(plot_root)
     try:
         tag = tag_snapshot(workspace_root, to_version, message=message or to_version)
     except GitNotInitializedError:
@@ -118,6 +134,36 @@ async def project_publish_endpoint(request: Request) -> JSONResponse:
         {"from_version": from_version, "to_version": to_version, "tag": tag},
         status_code=201,
     )
+
+
+async def project_publish_status_endpoint(request: Request) -> JSONResponse:
+    """``GET /api/projects/{project_id}/publish/status``
+
+    Report whether canvas content differs from the current blueprint-version
+    tag without changing project files or git state; no git repo means changed.
+    """
+    try:
+        plot_root = _require_plot_root(request)
+    except _ApiError as exc:
+        return exc.response
+    project_id = request.path_params["project_id"]
+    folder = _project_dir(plot_root, project_id)
+    if not (folder / "project.json").is_file():
+        return _error(f"project not found: {project_id}", status=404)
+
+    from mashbill.folder_io import read_project
+
+    project = read_project(plot_root, project_id)
+    workspace_root = workspace_root_from_plot_root(plot_root)
+    try:
+        changed = blueprint_canvas_changed(
+            workspace_root,
+            folder,
+            project.blueprint_version,
+        )
+    except GitNotInitializedError:
+        changed = True
+    return JSONResponse({"current_version": project.blueprint_version, "changed": changed})
 
 
 # ---------------------------------------------------------------------------

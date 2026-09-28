@@ -33,6 +33,7 @@ from mashbill.api_endpoints import (
     project_patch_endpoint,
     project_post_endpoint,
     project_publish_endpoint,
+    project_publish_status_endpoint,
     projects_list_endpoint,
     tag_delete_endpoint,
     tag_post_endpoint,
@@ -224,6 +225,11 @@ def create_http_app(
             "/api/projects/{project_id}/publish",
             project_publish_endpoint,
             methods=["POST"],
+        ),
+        Route(
+            "/api/projects/{project_id}/publish/status",
+            project_publish_status_endpoint,
+            methods=["GET"],
         ),
         # v0.24.14 (D-2026-05-21-C) — read-only snapshot at git tag.
         Route(

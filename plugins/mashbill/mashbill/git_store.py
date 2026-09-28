@@ -59,6 +59,7 @@ _MASHBILL_IDENTITY = (
 # Novel's tag/publish commits stage ONLY the Novel data root. The user's
 # working-tree edits outside this path are never folded into a Novel commit.
 _MASHBILL_PATHSPEC = ".noory/novel"
+_PUBLISHED_DIRNAME = "published"
 
 
 @dataclass
@@ -139,6 +140,61 @@ def _tag_exists(workspace_root: Path, name: str) -> bool:
         check=False,
     )
     return result.returncode == 0
+
+
+def blueprint_canvas_changed(
+    workspace_root: Path,
+    project_dir: Path,
+    current_version: str,
+) -> bool:
+    """Whether canvas content differs from ``current_version``'s tag.
+
+    Only the four primary canvas directories participate. This includes
+    feature-detail files below Services, plus tracked deletions and untracked
+    additions. Project metadata, chat, publish bundles, schema, slugs, and
+    provider state live outside those directories and therefore do not make a
+    blueprint publishable.
+
+    A missing current-version tag is a publishable baseline (first publish or
+    a manually removed tag). A missing git repository remains a separate
+    consent gate and raises :class:`GitNotInitializedError` before comparison.
+    """
+    assert_repo_initialized(workspace_root)
+    if not _tag_exists(workspace_root, current_version):
+        return True
+
+    from mashbill.project_io import _PRIMARY_CANVASES
+
+    relative_project = project_dir.resolve().relative_to(workspace_root.resolve())
+    pathspecs = [(relative_project / canvas_kind).as_posix() for canvas_kind in _PRIMARY_CANVASES]
+    pathspecs.append(f":(exclude,glob){relative_project.as_posix()}/**/{_PUBLISHED_DIRNAME}/**")
+    diff = _git(
+        "diff",
+        "--quiet",
+        current_version,
+        "--",
+        *pathspecs,
+        cwd=workspace_root,
+        check=False,
+    )
+    if diff.returncode == 1:
+        return True
+    if diff.returncode != 0:
+        raise subprocess.CalledProcessError(
+            diff.returncode,
+            ["git", "diff", "--quiet", current_version, "--", *pathspecs],
+            stderr=diff.stderr,
+        )
+
+    untracked = _git(
+        "ls-files",
+        "--others",
+        "--exclude-standard",
+        "--",
+        *pathspecs,
+        cwd=workspace_root,
+    )
+    return bool(untracked.stdout.strip())
 
 
 def tag_snapshot(workspace_root: Path, name: str, message: str | None = None) -> dict[str, Any]:

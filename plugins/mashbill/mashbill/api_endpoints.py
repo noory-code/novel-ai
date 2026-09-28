@@ -95,6 +95,9 @@ from mashbill.endpoints_publish import (
 from mashbill.endpoints_publish import (
     project_publish_endpoint as project_publish_endpoint,
 )
+from mashbill.endpoints_publish import (
+    project_publish_status_endpoint as project_publish_status_endpoint,
+)
 from mashbill.endpoints_tags import (
     project_at_tag_endpoint as project_at_tag_endpoint,
 )

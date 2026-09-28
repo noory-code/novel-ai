@@ -43,8 +43,14 @@ commits or tags**, and neither is blocked by the absence of a git repo.
 
 `POST /api/projects/{id}/publish` is a **third, separate endpoint** and the only publish-named one that
 touches git: it bumps `blueprint_version` and git-tags the workspace at that version (`D-2026-05-21-B`). It
-writes no format F bundle. There is no "unchanged since the last publish" gate on it — every call bumps and
-tags.
+writes no format F bundle. It bumps and tags only when the blueprint changed (`D-2026-09-28-B`): the
+canvas content — `foundation/`, `actors/`, `services/` (feature details included) and `entities/` — differs
+from the commit the current `blueprint_version` tag points at, counting untracked new files and deletions.
+Chat, `project.json`, publish bundles, `schema/` and provider state are not compared. With no such tag (first
+publish, or the tag was removed) the blueprint counts as changed. An unchanged call answers
+`409 {unchanged: true}` and writes nothing. `GET /api/projects/{id}/publish/status` answers
+`{current_version, changed}` without writing; with no git repo it answers `changed: true`, and the git-consent
+gate stays on the publish call itself.
 
 **In the app these are one action, not three.** The `📤 설계도 발행` button calls `/publish` and then
 `/publish/snapshot` in sequence, under a single git-consent prompt (`viewer` `useProject.ts`
@@ -57,7 +63,8 @@ tag, even though the snapshot endpoint neither needs nor performs them. Only `vS
   the two calls, this prompt effectively precedes an in-app `vP` too.
 - **No Unpublish button** anywhere. Reverting is manual. A fresh `vP`/`vS` directory is not in git yet, so
   deleting it is enough — until the next blueprint publish or tag, whose `git add -A -- .noory/novel/` sweeps
-  the whole data root (bundles included) into that commit. After that, `git revert`.
+  the whole data root (bundles included) into that commit. After that, `git revert`. The blueprint confirm
+  dialog says so before the user confirms: a published version can't be deleted in the app (`D-2026-09-28-B`).
 - **Empty parts are named, not blocked** (`DE-00000012`). A bundle is what an external agent reads as the
   frozen truth, so publishing one with nothing in it is worth surfacing — but keeping an intermediate
   snapshot mid-design is legitimate, so the app does not refuse. The confirm dialog lists which of the five

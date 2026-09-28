@@ -144,6 +144,17 @@ def test_publish_without_git_returns_needs_init_and_rolls_back(
     assert proj["blueprint_version"] == "v0.1.0"
 
 
+def test_publish_status_without_git_reports_changed(client: TestClient, workspace: Path) -> None:
+    _make_project(workspace)
+
+    resp = client.get(
+        f"/api/projects/alpha/publish/status?project_path={workspace}",
+    )
+
+    assert resp.status_code == 200
+    assert resp.json() == {"current_version": "v0.1.0", "changed": True}
+
+
 def test_publish_tag_collision_returns_409_and_rolls_back(
     client: TestClient, workspace: Path
 ) -> None:

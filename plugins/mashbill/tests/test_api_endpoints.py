@@ -14,7 +14,9 @@ import pytest
 from starlette.testclient import TestClient
 
 from mashbill.broadcast import BroadcastHub
+from mashbill.folder_io import _project_dir
 from mashbill.http_app import create_http_app
+from mashbill.workspace import resolve_plot_root
 
 
 @pytest.fixture
@@ -297,6 +299,9 @@ def test_project_publish_minor_and_major_bumps(
         json={"bump": "minor"},
     ).json()
     assert minor["to_version"] == "v0.2.0"
+    plot_root = resolve_plot_root(project_path)
+    actors = _project_dir(plot_root, "alpha") / "actors" / "canvas.json"
+    actors.write_text(actors.read_text(encoding="utf-8") + "\n", encoding="utf-8")
     major = client.post(
         "/api/projects/alpha/publish",
         params={"project_path": project_path},
@@ -371,6 +376,135 @@ def test_project_publish_invalid_bump_is_400(
         json={"bump": "huge"},
     )
     assert resp.status_code == 400
+
+
+def test_project_publish_only_when_canvas_content_changed(
+    app_client: tuple[TestClient, str],
+) -> None:
+    client, project_path = app_client
+    _create(client, project_path, "alpha", "Alpha")
+    plot_root = resolve_plot_root(project_path)
+    project_dir = _project_dir(plot_root, "alpha")
+
+    status_before = client.get(
+        "/api/projects/alpha/publish/status",
+        params={"project_path": project_path},
+    )
+    assert status_before.status_code == 200
+    assert status_before.json() == {"current_version": "v0.1.0", "changed": True}
+
+    first = client.post(
+        "/api/projects/alpha/publish",
+        params={"project_path": project_path},
+        json={"bump": "patch"},
+    )
+    assert first.status_code == 201
+    assert first.json()["to_version"] == "v0.1.1"
+
+    status_after = client.get(
+        "/api/projects/alpha/publish/status",
+        params={"project_path": project_path},
+    )
+    assert status_after.json() == {"current_version": "v0.1.1", "changed": False}
+
+    second = client.post(
+        "/api/projects/alpha/publish",
+        params={"project_path": project_path},
+        json={"bump": "patch"},
+    )
+    assert second.status_code == 409
+    assert second.json()["unchanged"] is True
+    assert (
+        client.get("/api/projects/alpha", params={"project_path": project_path}).json()[
+            "blueprint_version"
+        ]
+        == "v0.1.1"
+    )
+    assert [
+        tag["name"]
+        for tag in client.get(
+            "/api/projects/alpha/tags", params={"project_path": project_path}
+        ).json()["tags"]
+    ] == ["v0.1.1"]
+
+    actors = project_dir / "actors" / "canvas.json"
+    actors.write_text(actors.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+    assert (
+        client.get(
+            "/api/projects/alpha/publish/status",
+            params={"project_path": project_path},
+        ).json()["changed"]
+        is True
+    )
+    third = client.post(
+        "/api/projects/alpha/publish",
+        params={"project_path": project_path},
+        json={"bump": "patch"},
+    )
+    assert third.status_code == 201
+    assert third.json()["to_version"] == "v0.1.2"
+
+
+@pytest.mark.parametrize(
+    "ignored_path",
+    ["chat/note.md", "project.json", "foundation/published/legacy.md"],
+)
+def test_project_publish_ignores_non_canvas_changes(
+    app_client: tuple[TestClient, str], ignored_path: str
+) -> None:
+    client, project_path = app_client
+    _create(client, project_path, "alpha", "Alpha")
+    first = client.post(
+        "/api/projects/alpha/publish",
+        params={"project_path": project_path},
+        json={"bump": "patch"},
+    )
+    assert first.status_code == 201
+    project_dir = _project_dir(resolve_plot_root(project_path), "alpha")
+    target = project_dir / ignored_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if ignored_path == "project.json":
+        payload = json.loads(target.read_text(encoding="utf-8"))
+        payload["name"] = "metadata only"
+        target.write_text(json.dumps(payload), encoding="utf-8")
+    else:
+        target.write_text("chat only", encoding="utf-8")
+
+    status = client.get(
+        "/api/projects/alpha/publish/status",
+        params={"project_path": project_path},
+    )
+    assert status.json() == {"current_version": "v0.1.1", "changed": False}
+    publish = client.post(
+        "/api/projects/alpha/publish",
+        params={"project_path": project_path},
+        json={"bump": "patch"},
+    )
+    assert publish.status_code == 409
+    assert publish.json()["unchanged"] is True
+
+
+def test_project_publish_detects_untracked_feature_detail(
+    app_client: tuple[TestClient, str],
+) -> None:
+    client, project_path = app_client
+    _create(client, project_path, "alpha", "Alpha")
+    first = client.post(
+        "/api/projects/alpha/publish",
+        params={"project_path": project_path},
+        json={"bump": "patch"},
+    )
+    assert first.status_code == 201
+    project_dir = _project_dir(resolve_plot_root(project_path), "alpha")
+    detail = project_dir / "services" / "feature-new" / "detail.json"
+    detail.parent.mkdir(parents=True)
+    detail.write_text("{}", encoding="utf-8")
+
+    status = client.get(
+        "/api/projects/alpha/publish/status",
+        params={"project_path": project_path},
+    )
+    assert status.json() == {"current_version": "v0.1.1", "changed": True}
 
 
 def test_canvas_put_overview_auto_creates_detail(
