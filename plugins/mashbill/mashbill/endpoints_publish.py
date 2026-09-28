@@ -13,6 +13,7 @@ from typing import Any
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from mashbill.blueprint_content import blueprint_content_fingerprint
 from mashbill.endpoints_common import (
     _ApiError,
     _error,
@@ -75,8 +76,9 @@ async def project_publish_endpoint(request: Request) -> JSONResponse:
 
     When canvas content changed since the current-version tag, bumps
     ``ProjectDoc.blueprint_version``, persists the project, and creates a git
-    tag at the resulting version. Tag name = the new version string (e.g.
-    ``v0.2.0``). An unchanged call returns 409 without writing.
+    tag at the resulting version. The tag message records the normalized canvas
+    content fingerprint. Tag name = the new version string (e.g. ``v0.2.0``).
+    An unchanged call returns 409 without writing.
 
     Returns ``{from_version, to_version, tag}``.
     """
@@ -121,8 +123,12 @@ async def project_publish_endpoint(request: Request) -> JSONResponse:
         )
     bumped = project.model_copy(update={"blueprint_version": to_version})
     write_project(plot_root, bumped)
+    tag_message = message or to_version
+    fingerprint = blueprint_content_fingerprint(workspace_root, folder)
+    if fingerprint is not None:
+        tag_message = f"{tag_message}\n\nNovel-Blueprint-Content: sha256:{fingerprint}"
     try:
-        tag = tag_snapshot(workspace_root, to_version, message=message or to_version)
+        tag = tag_snapshot(workspace_root, to_version, message=tag_message)
     except GitNotInitializedError:
         write_project(plot_root, project)
         return _git_not_initialized_response(workspace_root)

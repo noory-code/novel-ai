@@ -51,9 +51,11 @@ only one side is a change. Presentation is not content: node `x`, `y`, `width`, 
 `icon`, `collapsed` and edge `sourceHandle`, `targetHandle`, `style` are dropped before comparing, and nodes
 and edges are matched by id, so moving, resizing, recolouring or reordering alone is not a change. Every
 other field counts. Chat, `project.json`, publish bundles, `schema/` and provider state are not compared.
-With no such tag (first publish, or the tag was removed) the blueprint counts as changed. **Limit:** when
-the whole data root is gitignored, the tag commit holds no canvas files, so there is no baseline and every
-publish counts as changed. An unchanged call answers
+With no such tag (first publish, or the tag was removed) the blueprint counts as changed. Each blueprint tag
+message ends with a `Novel-Blueprint-Content: sha256:<hex>` trailer — the SHA-256 of that normalized
+content — and the check compares against it first, so a data root the user keeps out of git still has a
+baseline. A tag without the trailer (made before the trailer existed, or by hand) falls back to comparing
+the files in its commit. An unchanged call answers
 `409 {unchanged: true}` and writes nothing. `GET /api/projects/{id}/publish/status` answers
 `{current_version, changed}` without writing; with no git repo it answers `changed: true`, and the git-consent
 gate stays on the publish call itself.

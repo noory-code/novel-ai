@@ -25,11 +25,20 @@ Implementation notes
 
 from __future__ import annotations
 
-import json
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
+
+from mashbill.blueprint_content import (
+    _INVALID_CANVAS,
+    _PUBLISHED_DIRNAME,
+    _canvas_design_content,
+    _load_canvas_json,
+    _read_canvas_json,
+    blueprint_content_fingerprint,
+)
 
 
 class TagAlreadyExistsError(ValueError):
@@ -60,34 +69,11 @@ _MASHBILL_IDENTITY = (
 # Novel's tag/publish commits stage ONLY the Novel data root. The user's
 # working-tree edits outside this path are never folded into a Novel commit.
 _MASHBILL_PATHSPEC = ".noory/novel"
-_PUBLISHED_DIRNAME = "published"
-
-# Canvas presentation is not blueprint content. Keep these deny-lists explicit:
-# an unknown future field is content by default, which may cause an extra publish
-# rather than silently omitting a design change.
-_PRESENTATION_FIELDS_BY_COLLECTION = {
-    "nodes": frozenset(
-        {
-            "x",
-            "y",
-            "width",
-            "height",
-            "color",
-            "shape",
-            "icon",
-            "collapsed",
-        }
-    ),
-    "edges": frozenset(
-        {
-            "sourceHandle",
-            "targetHandle",
-            "style",
-        }
-    ),
-}
-
-_INVALID_CANVAS = object()
+_BLUEPRINT_CONTENT_TRAILER = "Novel-Blueprint-Content"
+_BLUEPRINT_CONTENT_RE = re.compile(
+    rf"^{re.escape(_BLUEPRINT_CONTENT_TRAILER)}: sha256:([0-9a-f]{{64}})$",
+    re.MULTILINE,
+)
 
 
 @dataclass
@@ -180,9 +166,10 @@ def blueprint_canvas_changed(
     Compare JSON files below the four primary canvas directories, including
     feature-detail files at any depth and excluding ``published/`` trees. The
     current side is read directly from the filesystem, so gitignored canvases
-    still participate; the baseline file list and bytes come from the tag.
-    Node and edge presentation fields are removed before comparison, and those
-    arrays are matched by id so ordering alone is not a design change.
+    still participate. A tag content fingerprint is the preferred baseline;
+    old tags without one fall back to their file list and bytes. Node and edge
+    presentation fields are removed before comparison, and those arrays are
+    matched by id so ordering alone is not a design change.
 
     A missing current-version tag is a publishable baseline (first publish or
     a manually removed tag). A missing git repository remains a separate
@@ -192,6 +179,13 @@ def blueprint_canvas_changed(
     assert_repo_initialized(workspace_root)
     if not _tag_exists(workspace_root, current_version):
         return True
+
+    current_fingerprint = blueprint_content_fingerprint(workspace_root, project_dir)
+    if current_fingerprint is None:
+        return True
+    tagged_fingerprint = _blueprint_fingerprint_at_tag(workspace_root, current_version)
+    if tagged_fingerprint is not None:
+        return current_fingerprint != tagged_fingerprint
 
     from mashbill.project_io import _PRIMARY_CANVASES
 
@@ -264,6 +258,19 @@ def blueprint_canvas_changed(
     return False
 
 
+def _blueprint_fingerprint_at_tag(workspace_root: Path, tag: str) -> str | None:
+    """Read a blueprint content fingerprint from an annotated tag message."""
+    result = _git(
+        "for-each-ref",
+        "--format=%(contents)",
+        f"refs/tags/{tag}",
+        cwd=workspace_root,
+        check=False,
+    )
+    matches = _BLUEPRINT_CONTENT_RE.findall(result.stdout)
+    return matches[-1] if matches else None
+
+
 def _is_canvas_json_path(
     path: PurePosixPath,
     canvas_roots: tuple[PurePosixPath, ...],
@@ -278,43 +285,6 @@ def _is_canvas_json_path(
             continue
         return _PUBLISHED_DIRNAME not in relative_path.parts
     return False
-
-
-def _read_canvas_json(path: Path) -> Any:
-    try:
-        return _load_canvas_json(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError):
-        return _INVALID_CANVAS
-
-
-def _load_canvas_json(raw: str) -> Any:
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        return _INVALID_CANVAS
-
-
-def _canvas_design_content(canvas: Any) -> Any:
-    """Return JSON content with presentation-only graph fields removed."""
-    if not isinstance(canvas, dict):
-        return canvas
-    content = dict(canvas)
-    for collection_name, presentation_fields in _PRESENTATION_FIELDS_BY_COLLECTION.items():
-        collection = content.get(collection_name)
-        if not isinstance(collection, list):
-            continue
-        by_id: dict[str, dict[str, Any]] = {}
-        for item in collection:
-            if not isinstance(item, dict) or not isinstance(item.get("id"), str):
-                return _INVALID_CANVAS
-            item_id = item["id"]
-            if item_id in by_id:
-                return _INVALID_CANVAS
-            by_id[item_id] = {
-                key: value for key, value in item.items() if key not in presentation_fields
-            }
-        content[collection_name] = by_id
-    return content
 
 
 def tag_snapshot(workspace_root: Path, name: str, message: str | None = None) -> dict[str, Any]:

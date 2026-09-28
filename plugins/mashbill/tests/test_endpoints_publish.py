@@ -18,6 +18,8 @@ temp workspace so a broken branch fails the assert, not a mock.
 from __future__ import annotations
 
 import json
+import re
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -339,6 +341,100 @@ def test_publish_detects_canvas_change_when_novel_data_is_gitignored(
 
     response = client.get(f"/api/projects/alpha/publish/status?project_path={workspace}")
     assert response.json() == {"current_version": "v0.1.1", "changed": True}
+
+
+def test_publish_uses_content_fingerprint_when_novel_data_is_gitignored(
+    client: TestClient, workspace: Path
+) -> None:
+    plot_root = _make_project(workspace)
+    init_workspace_repo(workspace)
+    (workspace / ".gitignore").write_text(".noory/novel/\n", encoding="utf-8")
+    canvas = _foundation_canvas(plot_root)
+    payload = json.loads(canvas.read_text(encoding="utf-8"))
+    payload["nodes"] = [
+        {"id": "mission-1", "kind": "mission", "label": "Original", "x": 10, "y": 20}
+    ]
+    _write_canvas(canvas, payload)
+
+    first = client.post(
+        f"/api/projects/alpha/publish?project_path={workspace}",
+        json={"bump": "patch"},
+    )
+    assert first.status_code == 201, first.text
+
+    _assert_publish_unchanged(client, workspace)
+
+    payload["nodes"][0]["x"] = 999
+    payload["nodes"][0]["y"] = -999
+    _write_canvas(canvas, payload)
+    _assert_publish_unchanged(client, workspace)
+
+    payload["nodes"][0]["label"] = "Changed"
+    _write_canvas(canvas, payload)
+    response = client.get(f"/api/projects/alpha/publish/status?project_path={workspace}")
+    assert response.json() == {"current_version": "v0.1.1", "changed": True}
+
+
+def test_publish_tag_message_includes_content_fingerprint_after_user_message(
+    client: TestClient, workspace: Path
+) -> None:
+    _make_project(workspace)
+    init_workspace_repo(workspace)
+
+    response = client.post(
+        f"/api/projects/alpha/publish?project_path={workspace}",
+        json={"bump": "patch", "message": "Ready for review"},
+    )
+    assert response.status_code == 201, response.text
+
+    tag_message = subprocess.run(
+        ["git", "tag", "-l", "v0.1.1", "--format=%(contents)"],
+        cwd=workspace,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.rstrip("\n")
+    assert re.fullmatch(
+        r"Ready for review\n\nNovel-Blueprint-Content: sha256:[0-9a-f]{64}",
+        tag_message,
+    )
+
+
+def test_publish_falls_back_to_file_comparison_for_legacy_tag(
+    client: TestClient, workspace: Path
+) -> None:
+    plot_root = _make_project(workspace)
+    init_workspace_repo(workspace)
+    canvas = _foundation_canvas(plot_root)
+    payload = json.loads(canvas.read_text(encoding="utf-8"))
+    payload["nodes"] = [{"id": "mission-1", "kind": "mission", "label": "Original"}]
+    _write_canvas(canvas, payload)
+    subprocess.run(["git", "add", ".noory/novel"], cwd=workspace, check=True)
+    identity = [
+        "-c",
+        "user.name=Legacy User",
+        "-c",
+        "user.email=legacy@example.com",
+    ]
+    subprocess.run(
+        ["git", *identity, "commit", "-m", "legacy publish"],
+        cwd=workspace,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", *identity, "tag", "-a", "v0.1.0", "-m", "legacy publish"],
+        cwd=workspace,
+        check=True,
+    )
+
+    response = client.get(f"/api/projects/alpha/publish/status?project_path={workspace}")
+    assert response.json() == {"current_version": "v0.1.0", "changed": False}
+
+    payload["nodes"][0]["label"] = "Changed"
+    _write_canvas(canvas, payload)
+    response = client.get(f"/api/projects/alpha/publish/status?project_path={workspace}")
+    assert response.json() == {"current_version": "v0.1.0", "changed": True}
 
 
 def test_publish_ignores_node_array_order(client: TestClient, workspace: Path) -> None:

@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.195.7] — 2026-09-29
+
+### Fixed
+
+- A project whose data root is kept out of git no longer publishes an unchanged blueprint: each blueprint tag message records a `Novel-Blueprint-Content: sha256:` fingerprint of the normalized design content, and the change check compares against it first.
+
 ## [0.195.6] — 2026-09-28
 
 ### Fixed

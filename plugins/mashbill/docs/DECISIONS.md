@@ -66,9 +66,12 @@
   timestamps) as change — rejected: chat is not the design, and the
   timestamp changes on every save. Compare whole canvas files with `git diff`
   — rejected in review: a move or recolour would bump, and a gitignored data
-  root would never look changed. **Known limit:** with the whole data root
-  gitignored the tag holds no canvas files, so every publish counts as
-  changed.
+  root would never look changed. Accept "a gitignored data root has no
+  baseline, so every publish counts as changed" as a known limit — rejected
+  in review: the rule must hold there too. Each blueprint tag message now
+  carries a `Novel-Blueprint-Content: sha256:<hex>` trailer of the
+  normalized content and the check compares against it first; tags without
+  it fall back to the files in their commit.
 - **Approval:** Accepted — user, 2026-09-28 (novel-workspace W-00000302,
   W-00000303).
 - **Spec impact:** `docs/specs/storage-publish.md` — the "no unchanged gate"
