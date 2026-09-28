@@ -39,6 +39,29 @@
 
 ## Log
 
+### D-2026-09-29-A — An installed AI can be picked for chat without Novel registration
+
+- **What:** the chat partner can be any installed CLI (Claude Code, Codex);
+  "Register Novel" is no longer a precondition. Registration — writing
+  Novel's MCP server into the CLI's own config — stays as the way to let an
+  agent used *outside* the app work on the canvas. Unregistering no longer
+  clears the chat choice; the choice clears only when the chosen CLI is no
+  longer installed.
+- **Why:** since `D-2026-06-26-E` / `D-2026-07-21-B` the in-app coach
+  attaches this build's own Novel server on every turn and never reads the
+  global registration, yet the app still required registration before a CLI
+  could be picked. A person who only wanted to talk to the coach had to
+  change their own CLI config for nothing. An external reader of the
+  published design also could not tell what registration was for.
+- **Alternatives:** keep registration as the gate — not chosen: it adds a
+  step and a config change with no effect on the chat.
+- **Approval:** Accepted — user, 2026-09-29 ("안 눌러도 된다";
+  novel-workspace W-00000306, W-00000307).
+- **Spec impact:** `SPEC.md` §R7 chat Provider selection row.
+- **Principles:** SoC (chat choice and external-agent registration are
+  separate concerns); Fail Fast (the choice still clears when the CLI is
+  gone, so it never names an unreachable CLI).
+
 ### D-2026-09-28-B — A blueprint publish bumps only when the blueprint changed
 
 - **What:** "Publish blueprint" bumps `blueprint_version`, tags, and writes a

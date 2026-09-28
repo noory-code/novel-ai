@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.195.10] — 2026-09-29
+
+### Documentation
+
+- An installed AI can be picked for the in-app chat without Novel registration; registration only lets an agent used outside the app work on the canvas, and unregistering leaves the chat choice alone (D-2026-09-29-A).
+
 ## [0.195.9] — 2026-09-29
 
 ### Changed
