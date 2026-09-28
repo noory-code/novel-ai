@@ -237,6 +237,43 @@ def test_tag_delete_removes_existing_tag(client: TestClient, workspace: Path) ->
     assert list_tags(workspace) == []  # disk side effect: tag removed
 
 
+def test_tag_delete_preserves_published_version_tag(
+    client: TestClient, workspace: Path
+) -> None:
+    _make_project(workspace)
+    init_workspace_repo(workspace)
+    created = client.post(
+        f"/api/projects/alpha/tags?project_path={workspace}",
+        json={"name": "v0.1.1"},
+    )
+    assert created.status_code == 201
+
+    resp = client.delete(
+        f"/api/projects/alpha/tags/v0.1.1?project_path={workspace}"
+    )
+
+    assert resp.status_code == 409
+    assert resp.json()["published_version"] is True
+    assert [tag["name"] for tag in list_tags(workspace)] == ["v0.1.1"]
+
+
+def test_tag_delete_removes_session_tag(client: TestClient, workspace: Path) -> None:
+    _make_project(workspace)
+    init_workspace_repo(workspace)
+    created = client.post(
+        f"/api/projects/alpha/tags?project_path={workspace}",
+        json={"name": "session-2026-09-28"},
+    )
+    assert created.status_code == 201
+
+    resp = client.delete(
+        f"/api/projects/alpha/tags/session-2026-09-28?project_path={workspace}"
+    )
+
+    assert resp.status_code == 200
+    assert list_tags(workspace) == []
+
+
 # ---------------------------------------------------------------------------
 # project_at_tag_endpoint — GET /api/projects/{id}/at-tag/{tag}
 # ---------------------------------------------------------------------------

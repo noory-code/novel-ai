@@ -73,6 +73,10 @@ tag, even though the snapshot endpoint neither needs nor performs them. Only `vS
   deleting it is enough — until the next blueprint publish or tag, whose `git add -A -- .noory/novel/` sweeps
   the whole data root (bundles included) into that commit. After that, `git revert`. The blueprint confirm
   dialog says so before the user confirms: a published version can't be deleted in the app (`D-2026-09-28-B`).
+  To keep that true, a blueprint version tag — a name of the form `v<MAJOR>.<MINOR>.<PATCH>` — cannot be
+  deleted through Novel: `git_store.delete_tag` refuses it (HTTP `409 {published_version: true}`, MCP
+  `delete_project_tag` raises), and the sidebar shows no delete button on it. Session tags with other names
+  are still deletable. Deleting a version tag would also remove the baseline the change check compares against.
 - **Empty parts are named, not blocked** (`DE-00000012`). A bundle is what an external agent reads as the
   frozen truth, so publishing one with nothing in it is worth surfacing — but keeping an intermediate
   snapshot mid-design is legitimate, so the app does not refuse. The confirm dialog lists which of the five

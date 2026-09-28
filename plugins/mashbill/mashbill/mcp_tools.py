@@ -422,7 +422,10 @@ def list_project_tags(project_path: str, project_id: str) -> list[dict[str, Any]
 
 @mcp.tool()
 def delete_project_tag(project_path: str, project_id: str, name: str) -> str:
-    """Drop a tag from a project. The commit it pointed at stays reachable."""
+    """Drop a tag from a project. The commit it pointed at stays reachable.
+
+    Published blueprint version tags cannot be deleted.
+    """
     plot_root = resolve_plot_root(project_path)
     try:
         delete_tag(workspace_root_from_plot_root(plot_root), name)

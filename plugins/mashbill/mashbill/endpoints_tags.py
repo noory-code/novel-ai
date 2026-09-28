@@ -18,6 +18,7 @@ from mashbill.endpoints_common import _ApiError, _error, _require_plot_root
 from mashbill.folder_io import _project_dir
 from mashbill.git_store import (
     GitNotInitializedError,
+    PublishedVersionTagError,
     TagAlreadyExistsError,
     delete_tag,
     list_tags,
@@ -88,6 +89,10 @@ async def tag_delete_endpoint(request: Request) -> JSONResponse:
         return _error(f"project not found: {project_id}", status=404)
     try:
         delete_tag(workspace_root_from_plot_root(plot_root), name)
+    except PublishedVersionTagError as exc:
+        return JSONResponse(
+            {"error": str(exc), "published_version": True}, status_code=409
+        )
     except KeyError as exc:
         return _error(f"tag not found: {exc.args[0]}", status=404)
     return JSONResponse({"ok": True})

@@ -26,6 +26,7 @@ from mashbill.git_store import (
     blueprint_canvas_changed,
     tag_snapshot,
 )
+from mashbill.tag_names import is_blueprint_version_tag
 from mashbill.workspace import workspace_root_from_plot_root
 
 
@@ -57,7 +58,7 @@ def _bump_blueprint_version(current: str, bump: str) -> str:
     if not current.startswith("v"):
         raise ValueError(f"invalid blueprint version (must start with 'v'): {current!r}")
     parts = current[1:].split(".")
-    if len(parts) != 3 or not all(p.isdigit() for p in parts):
+    if not is_blueprint_version_tag(current):
         raise ValueError(f"invalid semver (need v<MAJOR>.<MINOR>.<PATCH>): {current!r}")
     major, minor, patch = (int(p) for p in parts)
     if bump == "major":

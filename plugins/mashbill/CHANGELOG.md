@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.195.8] — 2026-09-29
+
+### Changed
+
+- Published blueprint version tags (`v<MAJOR>.<MINOR>.<PATCH>`) can no longer be deleted through Novel: the tag delete endpoint answers `409 {published_version: true}` and the `delete_project_tag` MCP tool refuses. Other session tags are still deletable (D-2026-09-28-B).
+
 ## [0.195.7] — 2026-09-29
 
 ### Fixed

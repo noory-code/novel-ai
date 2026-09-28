@@ -71,7 +71,11 @@
   in review: the rule must hold there too. Each blueprint tag message now
   carries a `Novel-Blueprint-Content: sha256:<hex>` trailer of the
   normalized content and the check compares against it first; tags without
-  it fall back to the files in their commit.
+  it fall back to the files in their commit. Leave version tags deletable
+  from the sidebar — rejected in review: deleting one removes the baseline
+  and contradicts the dialog. Version tags (`v<MAJOR>.<MINOR>.<PATCH>`) are
+  now refused by `git_store.delete_tag` (HTTP 409 `published_version`, MCP
+  error) and show no delete button; session tags stay deletable.
 - **Approval:** Accepted — user, 2026-09-28 (novel-workspace W-00000302,
   W-00000303).
 - **Spec impact:** `docs/specs/storage-publish.md` — the "no unchanged gate"

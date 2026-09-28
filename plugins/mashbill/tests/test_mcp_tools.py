@@ -212,6 +212,25 @@ def test_tag_lifecycle_against_real_git(tmp_path: Path) -> None:
     assert "session-start" not in {t["name"] for t in mcp_tools.list_project_tags(ws, "p1")}
 
 
+def test_delete_project_tag_preserves_published_version_and_removes_session_tag(
+    tmp_path: Path,
+) -> None:
+    ws = str(tmp_path)
+    mcp_tools.create_project_tool(ws, "p1", "P1")
+    init_workspace_repo(Path(ws))
+    mcp_tools.tag_project(ws, "p1", "v0.1.1")
+    mcp_tools.tag_project(ws, "p1", "session-2026-09-28")
+
+    with pytest.raises(ValueError, match="published version"):
+        mcp_tools.delete_project_tag(ws, "p1", "v0.1.1")
+
+    assert "v0.1.1" in {t["name"] for t in mcp_tools.list_project_tags(ws, "p1")}
+    mcp_tools.delete_project_tag(ws, "p1", "session-2026-09-28")
+    assert "session-2026-09-28" not in {
+        t["name"] for t in mcp_tools.list_project_tags(ws, "p1")
+    }
+
+
 def test_tag_project_without_git_raises_actionable_error(tmp_path: Path) -> None:
     ws = str(tmp_path)
     mcp_tools.create_project_tool(ws, "p1", "P1")

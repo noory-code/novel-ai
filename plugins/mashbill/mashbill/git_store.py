@@ -39,10 +39,15 @@ from mashbill.blueprint_content import (
     _read_canvas_json,
     blueprint_content_fingerprint,
 )
+from mashbill.tag_names import is_blueprint_version_tag
 
 
 class TagAlreadyExistsError(ValueError):
     """Raised when ``tag_snapshot`` is called with a name that's already taken."""
+
+
+class PublishedVersionTagError(ValueError):
+    """Raised when deletion targets a published blueprint version tag."""
 
 
 class GitNotInitializedError(Exception):
@@ -425,7 +430,10 @@ def delete_tag(workspace_root: Path, name: str) -> None:
 
     Raises:
         KeyError — when no such tag exists (or the workspace has no repo).
+        PublishedVersionTagError — when the tag is a published blueprint version.
     """
     if not is_workspace_repo(workspace_root) or not _tag_exists(workspace_root, name):
         raise KeyError(name)
+    if is_blueprint_version_tag(name):
+        raise PublishedVersionTagError(f"published version tag cannot be deleted: {name}")
     _git("tag", "-d", name, cwd=workspace_root)
