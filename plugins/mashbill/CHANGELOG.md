@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.195.6] — 2026-09-28
+
+### Fixed
+
+- The blueprint change check compares design content only: moving, resizing, recolouring, or reordering nodes and edges no longer counts as a change, and canvases kept out of git are read from disk so their edits are seen. Tagging a gitignored data root no longer fails.
+
 ## [0.195.5] — 2026-09-28
 
 ### Changed

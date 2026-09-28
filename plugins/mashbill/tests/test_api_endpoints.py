@@ -301,7 +301,9 @@ def test_project_publish_minor_and_major_bumps(
     assert minor["to_version"] == "v0.2.0"
     plot_root = resolve_plot_root(project_path)
     actors = _project_dir(plot_root, "alpha") / "actors" / "canvas.json"
-    actors.write_text(actors.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+    actors_payload = json.loads(actors.read_text(encoding="utf-8"))
+    actors_payload["nodes"].append({"id": "new-actor", "kind": "actor", "label": "New"})
+    actors.write_text(json.dumps(actors_payload), encoding="utf-8")
     major = client.post(
         "/api/projects/alpha/publish",
         params={"project_path": project_path},
@@ -428,7 +430,9 @@ def test_project_publish_only_when_canvas_content_changed(
     ] == ["v0.1.1"]
 
     actors = project_dir / "actors" / "canvas.json"
-    actors.write_text(actors.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+    actors_payload = json.loads(actors.read_text(encoding="utf-8"))
+    actors_payload["nodes"].append({"id": "new-actor", "kind": "actor", "label": "New"})
+    actors.write_text(json.dumps(actors_payload), encoding="utf-8")
     assert (
         client.get(
             "/api/projects/alpha/publish/status",

@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 from starlette.testclient import TestClient
@@ -50,6 +51,81 @@ def _make_project(workspace: Path, project_id: str = "alpha") -> Path:
     plot_root = resolve_plot_root(str(workspace))
     create_project(plot_root, project_id, project_id.title())
     return plot_root
+
+
+def _foundation_canvas(plot_root: Path) -> Path:
+    return _project_dir(plot_root, "alpha") / "foundation" / "canvas.json"
+
+
+def _write_canvas(path: Path, payload: dict[str, Any]) -> None:
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _publish_seeded_foundation(
+    client: TestClient,
+    workspace: Path,
+    *,
+    edges: list[dict[str, Any]] | None = None,
+) -> tuple[Path, dict[str, Any]]:
+    plot_root = _make_project(workspace)
+    init_workspace_repo(workspace)
+    canvas = _foundation_canvas(plot_root)
+    payload: dict[str, Any] = {
+        "canvas_id": "foundation",
+        "canvas_kind": "foundation",
+        "feature_ref": None,
+        "nodes": [
+            {
+                "id": "mission-1",
+                "kind": "mission",
+                "label": "Original mission",
+                "x": 10,
+                "y": 20,
+                "width": 160,
+                "height": 80,
+                "color": "#ffffff",
+                "shape": "rounded",
+                "icon": None,
+                "collapsed": False,
+                "statement": "Build the right thing",
+            },
+            {
+                "id": "mission-2",
+                "kind": "mission",
+                "label": "Second mission",
+                "x": 30,
+                "y": 40,
+                "width": 160,
+                "height": 80,
+                "color": "#eeeeee",
+                "shape": "rounded",
+                "icon": None,
+                "collapsed": False,
+                "statement": "Keep it understandable",
+            },
+        ],
+        "edges": edges or [],
+    }
+    _write_canvas(canvas, payload)
+    response = client.post(
+        f"/api/projects/alpha/publish?project_path={workspace}",
+        json={"bump": "patch"},
+    )
+    assert response.status_code == 201, response.text
+    assert response.json()["to_version"] == "v0.1.1"
+    return canvas, payload
+
+
+def _assert_publish_unchanged(client: TestClient, workspace: Path) -> None:
+    response = client.post(
+        f"/api/projects/alpha/publish?project_path={workspace}",
+        json={"bump": "patch"},
+    )
+    assert response.status_code == 409, response.text
+    assert response.json()["unchanged"] is True
+    project = client.get(f"/api/projects/alpha?project_path={workspace}").json()
+    assert project["blueprint_version"] == "v0.1.1"
+    assert [tag["name"] for tag in list_tags(workspace)] == ["v0.1.1"]
 
 
 # ---------------------------------------------------------------------------
@@ -172,6 +248,115 @@ def test_publish_tag_collision_returns_409_and_rolls_back(
     assert proj["blueprint_version"] == "v0.1.0"
     names = [t["name"] for t in list_tags(workspace)]
     assert names.count("v0.1.1") == 1
+
+
+def test_publish_ignores_node_position_changes(client: TestClient, workspace: Path) -> None:
+    canvas, payload = _publish_seeded_foundation(client, workspace)
+    node = payload["nodes"][0]
+    node["x"] = 700
+    node["y"] = -300
+    _write_canvas(canvas, payload)
+
+    _assert_publish_unchanged(client, workspace)
+
+
+def test_publish_ignores_node_color_and_width_changes(client: TestClient, workspace: Path) -> None:
+    canvas, payload = _publish_seeded_foundation(client, workspace)
+    node = payload["nodes"][0]
+    node["color"] = "#123456"
+    node["width"] = 420
+    _write_canvas(canvas, payload)
+
+    _assert_publish_unchanged(client, workspace)
+
+
+def test_publish_detects_node_label_change(client: TestClient, workspace: Path) -> None:
+    canvas, payload = _publish_seeded_foundation(client, workspace)
+    payload["nodes"][0]["label"] = "Changed mission"
+    _write_canvas(canvas, payload)
+
+    response = client.get(f"/api/projects/alpha/publish/status?project_path={workspace}")
+    assert response.json() == {"current_version": "v0.1.1", "changed": True}
+
+
+def test_publish_ignores_edge_handle_but_detects_added_edge(
+    client: TestClient, workspace: Path
+) -> None:
+    canvas, payload = _publish_seeded_foundation(
+        client,
+        workspace,
+        edges=[
+            {
+                "id": "edge-1",
+                "source": "mission-1",
+                "target": "mission-2",
+                "sourceHandle": "right",
+                "targetHandle": "left",
+                "label": "supports",
+                "style": "solid",
+                "directed": True,
+                "relation": "flow",
+                "action_verb": None,
+                "value_form": [],
+            }
+        ],
+    )
+    payload["edges"][0]["sourceHandle"] = "bottom"
+    _write_canvas(canvas, payload)
+    _assert_publish_unchanged(client, workspace)
+
+    payload["edges"].append(
+        {
+            "id": "edge-2",
+            "source": "mission-2",
+            "target": "mission-1",
+            "label": "informs",
+        }
+    )
+    _write_canvas(canvas, payload)
+    response = client.get(f"/api/projects/alpha/publish/status?project_path={workspace}")
+    assert response.json() == {"current_version": "v0.1.1", "changed": True}
+
+
+def test_publish_detects_canvas_change_when_novel_data_is_gitignored(
+    client: TestClient, workspace: Path
+) -> None:
+    plot_root = _make_project(workspace)
+    init_workspace_repo(workspace)
+    (workspace / ".gitignore").write_text(".noory/novel/\n", encoding="utf-8")
+    canvas = _foundation_canvas(plot_root)
+    payload = json.loads(canvas.read_text(encoding="utf-8"))
+    payload["nodes"] = [{"id": "mission-1", "kind": "mission", "label": "Original"}]
+    _write_canvas(canvas, payload)
+    first = client.post(
+        f"/api/projects/alpha/publish?project_path={workspace}",
+        json={"bump": "patch"},
+    )
+    assert first.status_code == 201, first.text
+
+    payload["nodes"][0]["label"] = "Changed"
+    _write_canvas(canvas, payload)
+
+    response = client.get(f"/api/projects/alpha/publish/status?project_path={workspace}")
+    assert response.json() == {"current_version": "v0.1.1", "changed": True}
+
+
+def test_publish_ignores_node_array_order(client: TestClient, workspace: Path) -> None:
+    canvas, payload = _publish_seeded_foundation(client, workspace)
+    payload["nodes"] = list(reversed(payload["nodes"]))
+    _write_canvas(canvas, payload)
+
+    _assert_publish_unchanged(client, workspace)
+
+
+def test_publish_treats_unreadable_canvas_json_as_changed(
+    client: TestClient, workspace: Path
+) -> None:
+    canvas, _ = _publish_seeded_foundation(client, workspace)
+    canvas.write_text("{not json", encoding="utf-8")
+
+    response = client.get(f"/api/projects/alpha/publish/status?project_path={workspace}")
+    assert response.json() == {"current_version": "v0.1.1", "changed": True}
 
 
 # ---------------------------------------------------------------------------

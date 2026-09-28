@@ -42,9 +42,13 @@
 ### D-2026-09-28-B — A blueprint publish bumps only when the blueprint changed
 
 - **What:** "Publish blueprint" bumps `blueprint_version`, tags, and writes a
-  `vP` only when the canvas content (`foundation/`, `actors/`, `services/`
-  with feature details, `entities/`) differs from the commit the current
-  version's tag points at. Otherwise nothing is written and the user is told
+  `vP` only when the design content of the canvas files (`foundation/`,
+  `actors/`, `services/` with feature details, `entities/`) differs from the
+  same files in the commit the current version's tag points at. Presentation
+  (node position, size, colour, shape, icon, collapsed; edge handles and
+  style) and array order are not content — moving or recolouring alone does
+  not bump. The current side is read from disk, so gitignored canvases still
+  count. Otherwise nothing is written and the user is told
   nothing changed since that version. The app checks first
   (`GET …/publish/status`) so the user is not asked to choose a bump for
   nothing; `POST …/publish` repeats the check and answers
@@ -60,7 +64,11 @@
   number would again stop meaning a change. Keep bumping every time — not
   chosen, same reason. Count chat or `project.json` (name, anchor positions,
   timestamps) as change — rejected: chat is not the design, and the
-  timestamp changes on every save.
+  timestamp changes on every save. Compare whole canvas files with `git diff`
+  — rejected in review: a move or recolour would bump, and a gitignored data
+  root would never look changed. **Known limit:** with the whole data root
+  gitignored the tag holds no canvas files, so every publish counts as
+  changed.
 - **Approval:** Accepted — user, 2026-09-28 (novel-workspace W-00000302,
   W-00000303).
 - **Spec impact:** `docs/specs/storage-publish.md` — the "no unchanged gate"

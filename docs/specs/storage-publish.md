@@ -44,10 +44,16 @@ commits or tags**, and neither is blocked by the absence of a git repo.
 `POST /api/projects/{id}/publish` is a **third, separate endpoint** and the only publish-named one that
 touches git: it bumps `blueprint_version` and git-tags the workspace at that version (`D-2026-05-21-B`). It
 writes no format F bundle. It bumps and tags only when the blueprint changed (`D-2026-09-28-B`): the
-canvas content — `foundation/`, `actors/`, `services/` (feature details included) and `entities/` — differs
-from the commit the current `blueprint_version` tag points at, counting untracked new files and deletions.
-Chat, `project.json`, publish bundles, `schema/` and provider state are not compared. With no such tag (first
-publish, or the tag was removed) the blueprint counts as changed. An unchanged call answers
+design content of the canvas files under `foundation/`, `actors/`, `services/` (feature details included) and
+`entities/` differs from the same files in the commit the current `blueprint_version` tag points at. The
+current side is read from the files on disk, so a canvas the user keeps out of git still counts; a file on
+only one side is a change. Presentation is not content: node `x`, `y`, `width`, `height`, `color`, `shape`,
+`icon`, `collapsed` and edge `sourceHandle`, `targetHandle`, `style` are dropped before comparing, and nodes
+and edges are matched by id, so moving, resizing, recolouring or reordering alone is not a change. Every
+other field counts. Chat, `project.json`, publish bundles, `schema/` and provider state are not compared.
+With no such tag (first publish, or the tag was removed) the blueprint counts as changed. **Limit:** when
+the whole data root is gitignored, the tag commit holds no canvas files, so there is no baseline and every
+publish counts as changed. An unchanged call answers
 `409 {unchanged: true}` and writes nothing. `GET /api/projects/{id}/publish/status` answers
 `{current_version, changed}` without writing; with no git repo it answers `changed: true`, and the git-consent
 gate stays on the publish call itself.

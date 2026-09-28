@@ -25,9 +25,10 @@ Implementation notes
 
 from __future__ import annotations
 
+import json
 import subprocess
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 
@@ -60,6 +61,33 @@ _MASHBILL_IDENTITY = (
 # working-tree edits outside this path are never folded into a Novel commit.
 _MASHBILL_PATHSPEC = ".noory/novel"
 _PUBLISHED_DIRNAME = "published"
+
+# Canvas presentation is not blueprint content. Keep these deny-lists explicit:
+# an unknown future field is content by default, which may cause an extra publish
+# rather than silently omitting a design change.
+_PRESENTATION_FIELDS_BY_COLLECTION = {
+    "nodes": frozenset(
+        {
+            "x",
+            "y",
+            "width",
+            "height",
+            "color",
+            "shape",
+            "icon",
+            "collapsed",
+        }
+    ),
+    "edges": frozenset(
+        {
+            "sourceHandle",
+            "targetHandle",
+            "style",
+        }
+    ),
+}
+
+_INVALID_CANVAS = object()
 
 
 @dataclass
@@ -147,17 +175,19 @@ def blueprint_canvas_changed(
     project_dir: Path,
     current_version: str,
 ) -> bool:
-    """Whether canvas content differs from ``current_version``'s tag.
+    """Whether filesystem canvas design differs from ``current_version``'s tag.
 
-    Only the four primary canvas directories participate. This includes
-    feature-detail files below Services, plus tracked deletions and untracked
-    additions. Project metadata, chat, publish bundles, schema, slugs, and
-    provider state live outside those directories and therefore do not make a
-    blueprint publishable.
+    Compare JSON files below the four primary canvas directories, including
+    feature-detail files at any depth and excluding ``published/`` trees. The
+    current side is read directly from the filesystem, so gitignored canvases
+    still participate; the baseline file list and bytes come from the tag.
+    Node and edge presentation fields are removed before comparison, and those
+    arrays are matched by id so ordering alone is not a design change.
 
     A missing current-version tag is a publishable baseline (first publish or
     a manually removed tag). A missing git repository remains a separate
     consent gate and raises :class:`GitNotInitializedError` before comparison.
+    Unreadable JSON is treated as changed rather than silently skipped.
     """
     assert_repo_initialized(workspace_root)
     if not _tag_exists(workspace_root, current_version):
@@ -166,35 +196,125 @@ def blueprint_canvas_changed(
     from mashbill.project_io import _PRIMARY_CANVASES
 
     relative_project = project_dir.resolve().relative_to(workspace_root.resolve())
-    pathspecs = [(relative_project / canvas_kind).as_posix() for canvas_kind in _PRIMARY_CANVASES]
-    pathspecs.append(f":(exclude,glob){relative_project.as_posix()}/**/{_PUBLISHED_DIRNAME}/**")
-    diff = _git(
-        "diff",
-        "--quiet",
+    canvas_roots = tuple(
+        PurePosixPath((relative_project / canvas_kind).as_posix())
+        for canvas_kind in _PRIMARY_CANVASES
+    )
+    pathspecs = [root.as_posix() for root in canvas_roots]
+    tagged_tree = _git(
+        "ls-tree",
+        "-r",
+        "-z",
+        "--name-only",
         current_version,
         "--",
         *pathspecs,
         cwd=workspace_root,
-        check=False,
     )
-    if diff.returncode == 1:
-        return True
-    if diff.returncode != 0:
-        raise subprocess.CalledProcessError(
-            diff.returncode,
-            ["git", "diff", "--quiet", current_version, "--", *pathspecs],
-            stderr=diff.stderr,
-        )
+    tagged_paths = {
+        path
+        for raw_path in tagged_tree.stdout.split("\0")
+        if raw_path
+        for path in (PurePosixPath(raw_path),)
+        if _is_canvas_json_path(path, canvas_roots)
+    }
 
-    untracked = _git(
-        "ls-files",
-        "--others",
-        "--exclude-standard",
-        "--",
-        *pathspecs,
-        cwd=workspace_root,
-    )
-    return bool(untracked.stdout.strip())
+    current_files: dict[PurePosixPath, Path] = {}
+    for canvas_kind in _PRIMARY_CANVASES:
+        canvas_root = project_dir / canvas_kind
+        if not canvas_root.is_dir():
+            continue
+        for path in canvas_root.rglob("*.json"):
+            relative_canvas_path = path.relative_to(canvas_root)
+            if _PUBLISHED_DIRNAME in relative_canvas_path.parts or not path.is_file():
+                continue
+            relative_repo_path = path.resolve().relative_to(workspace_root.resolve())
+            repo_path = PurePosixPath(relative_repo_path.as_posix())
+            current_files[repo_path] = path
+
+    if set(current_files) != tagged_paths:
+        return True
+
+    for repo_path, current_path in current_files.items():
+        current_canvas = _read_canvas_json(current_path)
+        if current_canvas is _INVALID_CANVAS:
+            return True
+        try:
+            tagged_file = _git(
+                "show",
+                f"{current_version}:{repo_path.as_posix()}",
+                cwd=workspace_root,
+                check=False,
+            )
+        except UnicodeDecodeError:
+            return True
+        if tagged_file.returncode != 0:
+            return True
+        tagged_canvas = _load_canvas_json(tagged_file.stdout)
+        if tagged_canvas is _INVALID_CANVAS:
+            return True
+        current_design = _canvas_design_content(current_canvas)
+        tagged_design = _canvas_design_content(tagged_canvas)
+        if (
+            current_design is _INVALID_CANVAS
+            or tagged_design is _INVALID_CANVAS
+            or current_design != tagged_design
+        ):
+            return True
+    return False
+
+
+def _is_canvas_json_path(
+    path: PurePosixPath,
+    canvas_roots: tuple[PurePosixPath, ...],
+) -> bool:
+    """Return whether a tagged path is an included canvas JSON file."""
+    if path.suffix != ".json":
+        return False
+    for root in canvas_roots:
+        try:
+            relative_path = path.relative_to(root)
+        except ValueError:
+            continue
+        return _PUBLISHED_DIRNAME not in relative_path.parts
+    return False
+
+
+def _read_canvas_json(path: Path) -> Any:
+    try:
+        return _load_canvas_json(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError):
+        return _INVALID_CANVAS
+
+
+def _load_canvas_json(raw: str) -> Any:
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return _INVALID_CANVAS
+
+
+def _canvas_design_content(canvas: Any) -> Any:
+    """Return JSON content with presentation-only graph fields removed."""
+    if not isinstance(canvas, dict):
+        return canvas
+    content = dict(canvas)
+    for collection_name, presentation_fields in _PRESENTATION_FIELDS_BY_COLLECTION.items():
+        collection = content.get(collection_name)
+        if not isinstance(collection, list):
+            continue
+        by_id: dict[str, dict[str, Any]] = {}
+        for item in collection:
+            if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+                return _INVALID_CANVAS
+            item_id = item["id"]
+            if item_id in by_id:
+                return _INVALID_CANVAS
+            by_id[item_id] = {
+                key: value for key, value in item.items() if key not in presentation_fields
+            }
+        content[collection_name] = by_id
+    return content
 
 
 def tag_snapshot(workspace_root: Path, name: str, message: str | None = None) -> dict[str, Any]:
@@ -218,7 +338,17 @@ def tag_snapshot(workspace_root: Path, name: str, message: str | None = None) ->
 
     commit_message = message or name
 
-    _git("add", "-A", "--", _MASHBILL_PATHSPEC, cwd=workspace_root)
+    tracked = _git("ls-files", "--", _MASHBILL_PATHSPEC, cwd=workspace_root).stdout.strip()
+    untracked = _git(
+        "ls-files",
+        "--others",
+        "--exclude-standard",
+        "--",
+        _MASHBILL_PATHSPEC,
+        cwd=workspace_root,
+    ).stdout.strip()
+    if tracked or untracked:
+        _git("add", "-A", "--", _MASHBILL_PATHSPEC, cwd=workspace_root)
     # ``--allow-empty`` covers the "nothing changed since last snapshot" case.
     _git_as_plot(
         "commit",
