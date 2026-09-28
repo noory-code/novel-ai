@@ -63,6 +63,10 @@ def _render_feature_flow(detail: CanvasDoc) -> str:
         for node_id in ordered_ids:
             node = by_id[node_id]
             lines.append(f"{number_by_id[node_id]}. {node_text(node, include_outcome=True)}")
+            body = getattr(node, "body", "").strip()
+            if body:
+                for body_line in body.splitlines():
+                    lines.append(f"   > {body_line}" if body_line else "   >")
             for edge in outgoing[node_id]:
                 target = by_id[edge.target]
                 lines.append(

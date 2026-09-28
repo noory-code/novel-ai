@@ -522,6 +522,71 @@ def test_feature_flow_follows_edges_and_keeps_every_step() -> None:
     )
 
 
+def test_feature_flow_renders_node_bodies_before_outgoing_edges() -> None:
+    from mashbill.format_f import _render_feature_flow
+    from mashbill.models import (
+        ActorRefNode,
+        CanvasDoc,
+        DecisionNode,
+        FeatureNode,
+        SketchEdge,
+        StepNode,
+    )
+
+    detail = CanvasDoc(
+        canvas_id="feat-bodies",
+        canvas_kind="feature",
+        feature_ref="feat-bodies",
+        nodes=[
+            FeatureNode(id="feat-bodies", label="Bodies", proposed="본문을 싣는다"),
+            ActorRefNode(id="actor", label="→ 사용자", ref_actor_id="user"),
+            StepNode(id="ask", label="질문한다", body="  첫 질문\n\n둘째 질문  "),
+            DecisionNode(id="choose", label="계속할까", body="  답을 기준으로 판단한다  "),
+            StepNode(id="finish", label="마친다"),
+        ],
+        edges=[
+            SketchEdge(id="e-actor", source="actor", target="ask"),
+            SketchEdge(id="e-choose", source="ask", target="choose"),
+            SketchEdge(id="e-finish", source="choose", target="finish", label="예"),
+        ],
+    )
+
+    rendered = _render_feature_flow(detail)
+
+    assert (
+        """### 흐름
+1. 질문한다
+   > 첫 질문
+   >
+   > 둘째 질문
+   - 다음 → 2. (분기) 계속할까
+2. (분기) 계속할까
+   > 답을 기준으로 판단한다
+   - 예 → 3. 마친다
+3. 마친다"""
+        in rendered
+    )
+    assert rendered.count("첫 질문") == 1
+    assert rendered.count("답을 기준으로 판단한다") == 1
+
+
+def test_feature_flow_without_node_body_is_unchanged() -> None:
+    from mashbill.format_f import _render_feature_flow
+    from mashbill.models import CanvasDoc, FeatureNode, StepNode
+
+    detail = CanvasDoc(
+        canvas_id="feat-no-body",
+        canvas_kind="feature",
+        feature_ref="feat-no-body",
+        nodes=[
+            FeatureNode(id="feat-no-body", label="No body", proposed="출력을 유지한다"),
+            StepNode(id="only", label="마친다"),
+        ],
+    )
+
+    assert _render_feature_flow(detail) == "### 흐름\n1. 마친다\n"
+
+
 def test_feature_flow_renders_rules_with_linked_step_numbers() -> None:
     from mashbill.format_f import _render_feature_flow
     from mashbill.models import (

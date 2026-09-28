@@ -159,6 +159,9 @@ The rendered section headings are Korean (`## UX 흐름 (action 고도)`, `### �
   first-visit order of a depth-first walk along the canvas edges, starting from the edges that
   leave the actor. Steps no edge reaches are appended after the walk, so none is lost. A
   decision is prefixed `(분기)`.
+- **A step's or decision's body follows its numbered line**, before its edges, one `   > {line}` per
+  body line (`   >` for a blank line), so the design prose written on the node reaches the external
+  agent. A node with an empty body adds no line. Edge targets repeat only the name, never the body.
 - **Every edge between steps and decisions is written** under its source, as
   `- {edge label, or 다음} → {n}. {target}`. A loop points back to the earlier number. Two steps
   with the same text stay distinguishable by number.

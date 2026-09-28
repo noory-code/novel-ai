@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.195.11] — 2026-09-29
+
+### Fixed
+
+- Published feature flows now carry each step's and decision's body under its numbered line (`   > …`), so the design prose on a node reaches the external agent instead of only its name.
+
 ## [0.195.10] — 2026-09-29
 
 ### Documentation
