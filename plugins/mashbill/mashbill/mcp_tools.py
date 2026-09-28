@@ -45,7 +45,7 @@ from mashbill.git_store import (
     TagAlreadyExistsError,
     delete_tag,
     list_tags,
-    tag_snapshot,
+    tag_session,
 )
 from mashbill.migrate import migrate_v01_to_v02
 from mashbill.models import CanvasDoc, CanvasKind
@@ -402,7 +402,7 @@ def tag_project(
         # snapshots `.noory/novel/` inside that repo, not a single project.
         # project_id is kept on the tool signature for call-site clarity
         # and future per-project naming.
-        return tag_snapshot(workspace_root, name, message=message)
+        return tag_session(workspace_root, name, message=message)
     except GitNotInitializedError as exc:
         raise ValueError(
             f"git not initialized at workspace root {workspace_root}. "

@@ -20,11 +20,13 @@ import pytest
 
 from mashbill.git_store import (
     GitNotInitializedError,
+    ReservedVersionTagError,
     TagAlreadyExistsError,
     delete_tag,
     init_workspace_repo,
     is_workspace_repo,
     list_tags,
+    tag_session,
     tag_snapshot,
 )
 
@@ -184,6 +186,22 @@ def test_tag_snapshot_with_no_changes_still_tags(workspace: Path) -> None:
     tag_snapshot(workspace, "b")
     tags = {t["name"] for t in list_tags(workspace)}
     assert {"a", "b"} <= tags
+
+
+def test_tag_session_rejects_reserved_version_name_before_git_access(
+    workspace: Path,
+) -> None:
+    with pytest.raises(ReservedVersionTagError, match="reserved"):
+        tag_session(workspace, "v0.1.0")
+
+
+def test_tag_session_delegates_non_version_name(workspace: Path) -> None:
+    init_workspace_repo(workspace)
+
+    result = tag_session(workspace, "session-2026-09-29")
+
+    assert result["name"] == "session-2026-09-29"
+    assert [tag["name"] for tag in list_tags(workspace)] == ["session-2026-09-29"]
 
 
 # ---------------------------------------------------------------------------

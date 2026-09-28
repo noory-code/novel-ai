@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.195.9] — 2026-09-29
+
+### Changed
+
+- Version-shaped names (`v<MAJOR>.<MINOR>.<PATCH>`) are reserved for the blueprint publish: creating a session tag with one through the HTTP tag endpoint or the `tag_project` MCP tool is refused (`409 {reserved_version_name: true}`) before any git write.
+
 ## [0.195.8] — 2026-09-29
 
 ### Changed

@@ -17,13 +17,14 @@ test fails if the handler's branch logic breaks.
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
 from starlette.testclient import TestClient
 
 from mashbill.broadcast import BroadcastHub
-from mashbill.git_store import init_workspace_repo, list_tags
+from mashbill.git_store import init_workspace_repo, list_tags, tag_snapshot
 from mashbill.http_app import create_http_app
 from mashbill.project_io import create_project
 from mashbill.workspace import resolve_plot_root
@@ -159,6 +160,45 @@ def test_tag_post_409_when_git_not_initialized(client: TestClient, workspace: Pa
     assert body["workspace_root"] == str(workspace)
 
 
+def test_tag_post_rejects_reserved_version_name_without_git_side_effects(
+    client: TestClient, workspace: Path
+) -> None:
+    _make_project(workspace)
+    init_workspace_repo(workspace)
+
+    resp = client.post(
+        f"/api/projects/alpha/tags?project_path={workspace}",
+        json={"name": "v0.1.0"},
+    )
+
+    assert resp.status_code == 409
+    body = resp.json()
+    assert "reserved" in body["error"]
+    assert body["reserved_version_name"] is True
+    assert list_tags(workspace) == []
+    head = subprocess.run(
+        ["git", "rev-parse", "--verify", "HEAD"],
+        cwd=workspace,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert head.returncode != 0
+
+
+def test_tag_post_accepts_session_name(client: TestClient, workspace: Path) -> None:
+    _make_project(workspace)
+    init_workspace_repo(workspace)
+
+    resp = client.post(
+        f"/api/projects/alpha/tags?project_path={workspace}",
+        json={"name": "session-2026-09-29"},
+    )
+
+    assert resp.status_code == 201
+    assert resp.json()["name"] == "session-2026-09-29"
+
+
 def test_tag_post_creates_annotated_tag_on_disk(client: TestClient, workspace: Path) -> None:
     # Happy path: 201 + the tag is physically present in the repo afterwards.
     _make_project(workspace)
@@ -242,11 +282,7 @@ def test_tag_delete_preserves_published_version_tag(
 ) -> None:
     _make_project(workspace)
     init_workspace_repo(workspace)
-    created = client.post(
-        f"/api/projects/alpha/tags?project_path={workspace}",
-        json={"name": "v0.1.1"},
-    )
-    assert created.status_code == 201
+    tag_snapshot(workspace, "v0.1.1")
 
     resp = client.delete(
         f"/api/projects/alpha/tags/v0.1.1?project_path={workspace}"

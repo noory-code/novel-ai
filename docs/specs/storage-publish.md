@@ -77,6 +77,10 @@ tag, even though the snapshot endpoint neither needs nor performs them. Only `vS
   deleted through Novel: `git_store.delete_tag` refuses it (HTTP `409 {published_version: true}`, MCP
   `delete_project_tag` raises), and the sidebar shows no delete button on it. Session tags with other names
   are still deletable. Deleting a version tag would also remove the baseline the change check compares against.
+  The same names are reserved for the blueprint publish: a session tag (HTTP tag endpoint, MCP `tag_project`,
+  both through `git_store.tag_session`) named `v<MAJOR>.<MINOR>.<PATCH>` is refused before any git write
+  (HTTP `409 {reserved_version_name: true}`), so no session tag can pose as a version baseline or collide with
+  the next version's tag.
 - **Empty parts are named, not blocked** (`DE-00000012`). A bundle is what an external agent reads as the
   frozen truth, so publishing one with nothing in it is worth surfacing — but keeping an intermediate
   snapshot mid-design is legitimate, so the app does not refuse. The confirm dialog lists which of the five

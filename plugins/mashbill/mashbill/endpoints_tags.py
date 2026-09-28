@@ -19,10 +19,11 @@ from mashbill.folder_io import _project_dir
 from mashbill.git_store import (
     GitNotInitializedError,
     PublishedVersionTagError,
+    ReservedVersionTagError,
     TagAlreadyExistsError,
     delete_tag,
     list_tags,
-    tag_snapshot,
+    tag_session,
 )
 from mashbill.workspace import workspace_root_from_plot_root
 
@@ -69,7 +70,11 @@ async def tag_post_endpoint(request: Request) -> JSONResponse:
         return _error("'name' is required and must be a non-empty string")
     workspace_root = workspace_root_from_plot_root(plot_root)
     try:
-        result = tag_snapshot(workspace_root, name, message=message)
+        result = tag_session(workspace_root, name, message=message)
+    except ReservedVersionTagError as exc:
+        return JSONResponse(
+            {"error": str(exc), "reserved_version_name": True}, status_code=409
+        )
     except GitNotInitializedError:
         return _git_not_initialized_response(workspace_root)
     except TagAlreadyExistsError as exc:

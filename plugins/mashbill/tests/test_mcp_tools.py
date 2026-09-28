@@ -10,13 +10,14 @@ A registry guard covers (1); end-to-end calls through the real functions cover (
 
 from __future__ import annotations
 
+import subprocess
 import webbrowser
 from pathlib import Path
 
 import pytest
 
 from mashbill import mcp_tools
-from mashbill.git_store import init_workspace_repo
+from mashbill.git_store import init_workspace_repo, tag_snapshot
 
 # Core verbs the agent (and the in-app coach) rely on. Removing/renaming any of
 # these is a breaking change to the tool contract — this set makes it loud.
@@ -212,13 +213,44 @@ def test_tag_lifecycle_against_real_git(tmp_path: Path) -> None:
     assert "session-start" not in {t["name"] for t in mcp_tools.list_project_tags(ws, "p1")}
 
 
+def test_tag_project_rejects_reserved_version_name_without_git_side_effects(
+    tmp_path: Path,
+) -> None:
+    ws = str(tmp_path)
+    mcp_tools.create_project_tool(ws, "p1", "P1")
+    init_workspace_repo(Path(ws))
+
+    with pytest.raises(ValueError, match="reserved"):
+        mcp_tools.tag_project(ws, "p1", "v0.1.0")
+
+    assert mcp_tools.list_project_tags(ws, "p1") == []
+    head = subprocess.run(
+        ["git", "rev-parse", "--verify", "HEAD"],
+        cwd=ws,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert head.returncode != 0
+
+
+def test_tag_project_accepts_session_name(tmp_path: Path) -> None:
+    ws = str(tmp_path)
+    mcp_tools.create_project_tool(ws, "p1", "P1")
+    init_workspace_repo(Path(ws))
+
+    tagged = mcp_tools.tag_project(ws, "p1", "session-2026-09-29")
+
+    assert tagged["name"] == "session-2026-09-29"
+
+
 def test_delete_project_tag_preserves_published_version_and_removes_session_tag(
     tmp_path: Path,
 ) -> None:
     ws = str(tmp_path)
     mcp_tools.create_project_tool(ws, "p1", "P1")
     init_workspace_repo(Path(ws))
-    mcp_tools.tag_project(ws, "p1", "v0.1.1")
+    tag_snapshot(Path(ws), "v0.1.1")
     mcp_tools.tag_project(ws, "p1", "session-2026-09-28")
 
     with pytest.raises(ValueError, match="published version"):

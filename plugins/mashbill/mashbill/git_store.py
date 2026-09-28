@@ -50,6 +50,10 @@ class PublishedVersionTagError(ValueError):
     """Raised when deletion targets a published blueprint version tag."""
 
 
+class ReservedVersionTagError(ValueError):
+    """Raised when a session tag uses a name reserved for blueprint publishing."""
+
+
 class GitNotInitializedError(Exception):
     """Raised when a git op runs on a workspace without ``.git/``.
 
@@ -346,6 +350,15 @@ def tag_snapshot(workspace_root: Path, name: str, message: str | None = None) ->
         "sha": sha,
         "message": commit_message,
     }
+
+
+def tag_session(workspace_root: Path, name: str, message: str | None = None) -> dict[str, Any]:
+    """Create a session tag unless its name is reserved for blueprint publishing."""
+    if is_blueprint_version_tag(name):
+        raise ReservedVersionTagError(
+            f"blueprint version tag name is reserved for publishing: {name}"
+        )
+    return tag_snapshot(workspace_root, name, message=message)
 
 
 _LIST_FORMAT = "%(refname:short)%09%(objectname)%09%(taggerdate:iso-strict)%09%(contents:subject)"

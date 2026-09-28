@@ -75,7 +75,10 @@
   from the sidebar — rejected in review: deleting one removes the baseline
   and contradicts the dialog. Version tags (`v<MAJOR>.<MINOR>.<PATCH>`) are
   now refused by `git_store.delete_tag` (HTTP 409 `published_version`, MCP
-  error) and show no delete button; session tags stay deletable.
+  error) and show no delete button; session tags stay deletable. The same
+  names are reserved for publishing: `git_store.tag_session` (HTTP tag
+  endpoint, MCP `tag_project`) refuses a version-shaped session tag name
+  (HTTP 409 `reserved_version_name`) so none can pose as a baseline.
 - **Approval:** Accepted — user, 2026-09-28 (novel-workspace W-00000302,
   W-00000303).
 - **Spec impact:** `docs/specs/storage-publish.md` — the "no unchanged gate"
