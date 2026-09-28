@@ -39,6 +39,32 @@
 
 ## Log
 
+### D-2026-09-28-A — A coach's canvas change is one undo step
+
+- **What:** when a canvas changes outside the viewer (the in-app coach's
+  `update_node` / `create_node`, an external MCP agent, another editor), the
+  viewer no longer clears the project undo history. It records the change as
+  one step on the same history — the canvas as it was before, and the canvas
+  that arrived — so Cmd+Z undoes the coach's change and, pressed again, keeps
+  walking back through the person's earlier edits; Cmd+Shift+Z re-applies it.
+  A canvas the viewer never opened adds no step, and neither does a change
+  whose content is identical.
+- **Why:** clearing the history meant the person could not take back a change
+  the coach made after their "yes", nor anything they had done themselves
+  before it. That contradicts the identity "the person confirms": confirming
+  a draft in words is not the same as accepting the saved result, and the
+  person needs to be able to undo it the same way as their own edit.
+- **Alternatives:** keep clearing and warn before the coach writes that
+  earlier changes can no longer be undone — rejected by the user. A separate
+  coach-only undo — rejected: one timeline is what Cmd+Z already means.
+- **Approval:** Accepted — user, 2026-09-28 (novel-workspace Q-00000024,
+  W-00000299).
+- **Spec impact:** SPEC.md coach-write rows (`D-2026-06-26-D`,
+  `D-2026-06-27-B`) — the "undo-stack clear" known limit is removed.
+- **Principles:** SSOT (one project history holds every change, whoever made
+  it); Honesty (the person's confirmation stays reversible); AHA (reuses the
+  existing history entry shape — no new undo mechanism).
+
 ### D-2026-08-18-F — Identity is the standing way the service behaves
 
 - **What:** define identity as the attitude and way a service consistently
@@ -1756,7 +1782,7 @@
 - **Why:** Empirically reproduced (2026-06-27, the real frozen-binary coach driven against a copy of a live project): **filling an existing node works reliably**, but **adding** a new node had *no* dedicated tool, so the coach fell back to `update_canvas` — rewriting the WHOLE canvas to slip one node in, with an **LLM-guessed position**. That is the clobber-unsafe path `D-2026-06-26-D` explicitly rejected (drops a concurrent edit / risks the model dropping fields on a large JSON round-trip, on the load-bearing path). A safe single-node append closes it. This is the missing half of Novel's core promise (the AI fills the canvas through discussion).
 - **Accepted kinds per canvas** (verified against `_ALLOWED_KINDS_BY_CANVAS` + each validator): foundation → mission / core_value / identity; actors → actor; services → category / service / feature (the feature *node* = drill anchor; the detail canvas is a separate orchestration); entities → entity; feature → step / decision / rule / note / actor_ref. **Rejected everywhere:** `project` (the synthetic anchor lives in `ProjectDoc.anchors`, not as a node). **Rejected on the feature canvas:** `feature` (its validator requires the root feature to already exist — bootstrap, not append). The tool adds a **bare** node only; containment/edges are user/coach-drawn separately (parent_id is gone since v0.26.0 / D-2026-05-25-A — containment is directed-edge-only), never auto-wired silently. A cross-canvas master (e.g. a new actor referenced from a service) uses the existing reference pick-or-create flow, not `create_node`.
 - **Alternatives:** (a) keep adding via `update_canvas` with better playbook guidance — rejected: clobber-unsafe on the load-bearing path (the reproduced failure mode). (b) a singleton guard that errors when a mission/identity already exists — rejected as **backwards**: the schema enforces only a *minimum* of one (`_foundation_canvas_rules` checks `< 1`, never `> 1`), and `D-2026-06-27-A`'s playbook already routes a unique kind to *find-and-update*, never re-create; `create_node` does not second-guess create-vs-update — the playbook owns it. (c) 409-conflict / file-lock / count-gate concurrency machinery — rejected as out of scope: `create_node` inherits `update_node`'s last-write-wins semantics, which the user already accepted at human pace (`D-2026-06-26-D`); only the limit is named, no machinery added.
-- **Known limits (named, inherited):** last-write-wins (same as `update_node`) — a concurrent edit to another node on the same canvas, or two concurrent same-kind creates, may collide/be lost; acceptable at human pace. Undo-stack clear (same as `D-2026-06-26-D`) — a coach create lands via the file watcher, treated as an external change, so it clears the undo stack (recover via git / re-edit).
+- **Known limits (named, inherited):** last-write-wins (same as `update_node`) — a concurrent edit to another node on the same canvas, or two concurrent same-kind creates, may collide/be lost; acceptable at human pace. Undo-stack clear (same as `D-2026-06-26-D`) — a coach create lands via the file watcher, treated as an external change, so it clears the undo stack (recover via git / re-edit). *Undo-stack clear superseded by `D-2026-09-28-A`: a coach create is one undo step.*
 - **Approval:** User direction, 2026-06-27 ("작업합시다" — build the confirm-then-create model). Design adversarially red-teamed before code (six lenses → GO-WITH-FIXES; the singleton-guard reversal + the create_master generalization came from that review).
 - **Spec impact:** `SPEC.md` §R7 chat — the coach adds a node via `create_node` on an explicit confirmation; accepted-kinds matrix + named limits. Engine guards: `tests/test_create_node.py`, `tests/test_chat_system_prompt.py` (create branch of `WRITE_PLAYBOOK`).
 
@@ -1789,7 +1815,7 @@
 - **Why:** User dogfood (2026-06-26): confirming a mission didn't fill the mission node — the coach said "I can't write, paste it yourself", breaking Novel's core promise (the AI fills the canvas). Root cause was two independent gaps: the playbook never told the coach to write (Gap A), and even if it tried, every write tool needs `project_path` / `project_id` which were never in its context and which the sandboxed agent had no allowed way to discover (Gap B — the write path was architecturally unreachable). Reload already worked (file watcher → WS broadcast → viewer refetch), and Foundation typed text has been a single JSON SSOT since `D-2026-05-16-A`, so only A + B needed closing. Design red-teamed before code; that surfaced the empty-node field-schema need, the structural-field write-guard, the anchor-is-not-a-node guard, and the confirmation-gate risk.
 - **Relation to `D-2026-06-16-P` ("everything through discussion, never silent"):** This does **not** weaken P. P bans (a) a blank form and (b) silent auto-generation the AI commits *without* the user. Writing *after* an explicit confirmation is the *completion* of build-through-discussion, with the human as the confirmer — exactly what P mandates. The guardrail is unchanged in force, sharpened in wording: never write *without* a confirmation. Rule 7 in `CLAUDE.md` ("no silent automated change to user-visible state") gets the same caveat.
 - **Alternatives:** (a) reuse whole-canvas `update_canvas` (agent does get → mutate → put) — rejected: clobbers a concurrent user edit and risks the LLM dropping fields on a large JSON round-trip, on the load-bearing path. (b) a two-step "propose on canvas → user clicks accept" — rejected for v1 (more build; the verbal confirm + the visible result + the git backstop are enough; revisit if false-positive writes bite). (c) give the agent the open project via server state — rejected: the in-app agent's MCP server is a separate, stateless process with no shared open-project binding.
-- **Known limit (named):** a coach write lands via the file watcher, which the viewer treats as an external change and so **clears the undo stack** — Cmd+Z does not undo a coach write (recover via git / re-edit). Acceptable for a *confirmed* write; the one-line "saved" confirm makes a mistake visible immediately. An undo-preserving write path is a follow-up if it bites.
+- **Known limit (named):** a coach write lands via the file watcher, which the viewer treats as an external change and so **clears the undo stack** — Cmd+Z does not undo a coach write (recover via git / re-edit). Acceptable for a *confirmed* write; the one-line "saved" confirm makes a mistake visible immediately. An undo-preserving write path is a follow-up if it bites. *Superseded by `D-2026-09-28-A`: the viewer records a coach write as one undo step.*
 - **Approval:** Accepted by user, 2026-06-26 (design + the granular-tool choice confirmed; "코드도 짜고 빌드도 하고 검증도 하고").
 - **Spec impact:** `SPEC.md` §AI collaboration — the coach saves a confirmed value into the selected node via `update_node`. Engine guards: `tests/test_update_node.py`, `tests/test_chat_selection_detail.py` (write-target + writable-field schema), `tests/test_chat_system_prompt.py` (`WRITE_PLAYBOOK`).
 

@@ -378,8 +378,8 @@ def create_node(
     Like every Novel write this is **last-write-wins** at human pace (same as
     ``update_node``): a concurrent edit to another node on the same canvas, or two
     concurrent same-kind creates, may collide / be lost. The write also reaches
-    the viewer via the file watcher, which clears the undo stack (same limit as
-    D-2026-06-26-D). ``canvas_kind`` ∈ ``foundation`` / ``actors`` / ``services``
+    the viewer via the file watcher, becoming one step on the project undo history
+    (D-2026-09-28-A). ``canvas_kind`` ∈ ``foundation`` / ``actors`` / ``services``
     / ``entities`` / ``feature``; ``service_id`` is required when
     ``canvas_kind == "feature"``. Raises ``ValueError`` when ``kind`` is not
     creatable on the canvas.

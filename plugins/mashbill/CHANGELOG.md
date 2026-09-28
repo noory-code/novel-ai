@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.195.4] — 2026-09-28
+
+### Documentation
+
+- A coach's canvas change is now one undo step instead of clearing the undo history; the spec, the decision log (D-2026-09-28-A), and the `create_node` docstring say so.
+
 ## [0.195.3] — 2026-09-26
 
 ### Documentation
