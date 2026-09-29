@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-import re
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -13,19 +13,13 @@ from mashbill.draft_store import read_draft
 from mashbill.draft_store import record_applied_draft as persist_applied_draft
 from mashbill.draft_store import record_draft as persist_draft
 from mashbill.draft_store import resolve_draft as persist_resolution
+from mashbill.draft_write_split import WriteFragment, normalize_draft_text, split_write_by_draft
 from mashbill.field_policy import writable_node_fields
 from mashbill.models_canvas import CanvasDoc, CanvasKind
 from mashbill.models_draft import DraftDoc, ResolvedDraftStatus
 from mashbill.workspace import resolve_plot_root
 
 AUTO_DRAFT_RATIONALE = "Coach applied the change directly without recording a draft."
-DRAFT_TEXT_WORD_OVERLAP_THRESHOLD = 0.6
-DRAFT_FIELD_NAME_MAX_LENGTH = 12
-
-_DRAFT_FIELD_PREFIX_RE = re.compile(
-    rf"(?m)^[^\s:]{{1,{DRAFT_FIELD_NAME_MAX_LENGTH}}}:[^\S\r\n]+"
-)
-_DRAFT_REMOVED_QUOTES = str.maketrans("", "", "'\"‘’“”「」")
 
 
 def _draft_result(draft: DraftDoc) -> dict[str, Any]:
@@ -95,21 +89,25 @@ def draft_matches_write(
     written_texts: list[str] | None = None,
 ) -> bool:
     """Return whether a supplied draft describes the successful write."""
-    draft = read_draft(plot_root, project_id, draft_id)
-    if draft.status == "rejected" or draft.canvas_kind != canvas_kind:
-        return False
-    if canvas_kind == "feature" and draft.service_id != service_id:
-        return False
-    if draft.target_node_ids and not set(draft.target_node_ids).intersection(touched_node_ids):
-        return False
     normalized_written_texts = [
-        normalized for text in written_texts or [] if (normalized := _normalize_draft_text(text))
+        normalized for text in written_texts or [] if (normalized := normalize_draft_text(text))
     ]
-    if normalized_written_texts and not _draft_text_matches(
-        _normalize_draft_text(draft.proposed_text), normalized_written_texts
-    ):
-        return False
-    return True
+    matching, _ = split_write_by_draft(
+        plot_root,
+        project_id,
+        draft_id,
+        canvas_kind,
+        [
+            WriteFragment(
+                None,
+                node_ids=tuple(touched_node_ids),
+                written_texts=tuple(written_texts or ()),
+                matches_without_text=not normalized_written_texts,
+            )
+        ],
+        service_id,
+    )
+    return bool(matching)
 
 
 def confirm_draft(plot_root: Path, project_id: str, draft_id: str, node_ids: list[str]) -> None:
@@ -173,20 +171,57 @@ def finish_node_write_draft(
     """Confirm the supplied draft or create the fallback for a successful write."""
     node_id = str(write_result["node"]["id"])
     touched_node_ids = [node_id, *(additional_touched_node_ids or [])]
-    written_texts = _written_node_texts(fields, write_result)
-    if draft_id is not None and draft_matches_write(
+    node = write_result["node"]
+    rejected = set(write_result["rejected_fields"])
+    written_fields = [name for name in (fields or {}) if name not in rejected]
+    has_written_fields = bool(written_fields)
+    if not written_fields:
+        written_fields = ["label"]
+    fragments = [
+        WriteFragment(
+            name,
+            node_ids=tuple(touched_node_ids),
+            written_texts=(value,)
+            if has_written_fields and isinstance((value := node.get(name)), str)
+            else (),
+            matching_node_ids=(node_id,),
+            matches_without_text=not has_written_fields,
+        )
+        for name in written_fields
+    ]
+    matching, remainder = split_write_by_draft(
         plot_root,
         project_id,
         draft_id,
         canvas_kind,
-        touched_node_ids,
+        fragments,
         service_id,
-        written_texts,
-    ):
+    )
+    if matching:
+        assert draft_id is not None
         confirm_draft(plot_root, project_id, draft_id, [node_id])
-        return None
+        if not remainder:
+            return None
+        unmatched_fields = {fragment.value: node.get(fragment.value) for fragment in remainder}
+        record_applied_draft(
+            plot_root,
+            project_id,
+            canvas_kind,
+            unmatched_fields,
+            write_result,
+            chat_scope,
+            service_id,
+        )
+        return _partial_draft_mismatch_warning(draft_id)
+    fallback_fields = {fragment.value: node.get(fragment.value) for fragment in remainder}
     record_applied_draft(
-        plot_root, project_id, canvas_kind, fields, write_result, chat_scope, service_id
+        plot_root,
+        project_id,
+        canvas_kind,
+        fallback_fields,
+        write_result,
+        chat_scope,
+        service_id,
     )
     if draft_id is None:
         return None
@@ -253,16 +288,6 @@ def finish_canvas_write_draft(
         if node_id in before_nodes and after_nodes[node_id] != before_nodes[node_id]
     ]
     removed = [node_id for node_id in before_nodes if node_id not in after_nodes]
-
-    def names(node_ids: list[str], nodes: dict[str, dict[str, Any]]) -> str:
-        labels = (str(nodes[node_id].get("label") or node_id) for node_id in node_ids)
-        return ", ".join(labels) or "없음"
-
-    proposed_text = (
-        f"더함: {names(added, after_nodes)} / "
-        f"바꿈: {names(changed, after_nodes)} / "
-        f"뺌: {names(removed, before_nodes)}"
-    )
     before_edges = before_content["edges"]
     after_edges = after_content["edges"]
     edges_added = [edge_id for edge_id in after_edges if edge_id not in before_edges]
@@ -272,24 +297,153 @@ def finish_canvas_write_draft(
         if edge_id in before_edges and after_edges[edge_id] != before_edges[edge_id]
     ]
     edges_removed = [edge_id for edge_id in before_edges if edge_id not in after_edges]
-    if edges_added or edges_changed or edges_removed:
-        proposed_text += (
-            f"\n선: 더함 {len(edges_added)} / 바꿈 {len(edges_changed)} / 뺌 {len(edges_removed)}"
-        )
-
-    return finish_write_draft(
+    fragments: list[WriteFragment[tuple[str, str]]] = [
+        *(
+            WriteFragment(
+                ("node_added", node_id),
+                node_ids=(node_id,),
+                written_texts=tuple(_canvas_written_texts(after, [node_id])),
+                matching_node_ids=(node_id,),
+                added_node=True,
+            )
+            for node_id in added
+        ),
+        *(
+            WriteFragment(
+                ("node_changed", node_id),
+                node_ids=(node_id,),
+                written_texts=tuple(_canvas_written_texts(after, [node_id])),
+                matching_node_ids=(node_id,),
+            )
+            for node_id in changed
+        ),
+        *(WriteFragment(("node_removed", node_id), node_ids=(node_id,)) for node_id in removed),
+        *(
+            WriteFragment(
+                ("edge_added", edge_id),
+                node_ids=_edge_node_ids(after_edges[edge_id]),
+                follows_matching_node=True,
+            )
+            for edge_id in edges_added
+        ),
+        *(
+            WriteFragment(
+                ("edge_changed", edge_id),
+                node_ids=tuple(
+                    dict.fromkeys(
+                        (
+                            *_edge_node_ids(before_edges[edge_id]),
+                            *_edge_node_ids(after_edges[edge_id]),
+                        )
+                    )
+                ),
+                follows_matching_node=True,
+            )
+            for edge_id in edges_changed
+        ),
+        *(
+            WriteFragment(
+                ("edge_removed", edge_id),
+                node_ids=_edge_node_ids(before_edges[edge_id]),
+                follows_matching_node=True,
+            )
+            for edge_id in edges_removed
+        ),
+    ]
+    service_id = after.feature_ref if after.canvas_kind == "feature" else None
+    matching, remainder = split_write_by_draft(
         plot_root,
         project_id,
         draft_id,
         after.canvas_kind,
-        proposed_text,
-        "canvas",
-        [*added, *changed, *removed],
-        [*added, *changed],
-        chat_scope,
-        after.feature_ref if after.canvas_kind == "feature" else None,
-        written_texts=_canvas_written_texts(after, [*added, *changed]),
+        fragments,
+        service_id,
     )
+    if matching:
+        assert draft_id is not None
+        resolved_node_ids = [
+            item_id
+            for fragment in matching
+            for category, item_id in [fragment.value]
+            if category in ("node_added", "node_changed")
+        ]
+        confirm_draft(plot_root, project_id, draft_id, resolved_node_ids)
+        if not remainder:
+            return None
+        _record_canvas_auto_draft(
+            plot_root,
+            project_id,
+            after,
+            before_nodes,
+            after_nodes,
+            remainder,
+            chat_scope,
+        )
+        return _partial_draft_mismatch_warning(draft_id)
+
+    _record_canvas_auto_draft(
+        plot_root,
+        project_id,
+        after,
+        before_nodes,
+        after_nodes,
+        remainder,
+        chat_scope,
+    )
+    if draft_id is None:
+        return None
+    return _draft_mismatch_warning(draft_id)
+
+
+def _record_canvas_auto_draft(
+    plot_root: Path,
+    project_id: str,
+    canvas: CanvasDoc,
+    before_nodes: dict[str, dict[str, Any]],
+    after_nodes: dict[str, dict[str, Any]],
+    fragments: Sequence[WriteFragment[tuple[str, str]]],
+    chat_scope: str,
+) -> None:
+    """Record only the canvas-diff fragments not claimed by a supplied draft."""
+
+    def fragment_ids(category: str) -> list[str]:
+        return [fragment.value[1] for fragment in fragments if fragment.value[0] == category]
+
+    def names(node_ids: list[str], nodes: dict[str, dict[str, Any]]) -> str:
+        labels = (str(nodes[node_id].get("label") or node_id) for node_id in node_ids)
+        return ", ".join(labels) or "없음"
+
+    added = fragment_ids("node_added")
+    changed = fragment_ids("node_changed")
+    removed = fragment_ids("node_removed")
+    edges_added = fragment_ids("edge_added")
+    edges_changed = fragment_ids("edge_changed")
+    edges_removed = fragment_ids("edge_removed")
+    proposed_text = (
+        f"더함: {names(added, after_nodes)} / "
+        f"바꿈: {names(changed, after_nodes)} / "
+        f"뺌: {names(removed, before_nodes)}"
+    )
+    if edges_added or edges_changed or edges_removed:
+        proposed_text += (
+            f"\n선: 더함 {len(edges_added)} / 바꿈 {len(edges_changed)} / 뺌 {len(edges_removed)}"
+        )
+    persist_applied_draft(
+        plot_root,
+        project_id,
+        canvas.canvas_kind,
+        proposed_text,
+        AUTO_DRAFT_RATIONALE,
+        effective_chat_scope(chat_scope),
+        [*added, *changed, *removed],
+        "canvas",
+        canvas.feature_ref if canvas.canvas_kind == "feature" else None,
+        [*added, *changed],
+    )
+
+
+def _edge_node_ids(edge: dict[str, Any]) -> tuple[str, str]:
+    return str(edge["source"]), str(edge["target"])
 
 
 def _draft_mismatch_warning(draft_id: str) -> str:
@@ -299,42 +453,8 @@ def _draft_mismatch_warning(draft_id: str) -> str:
     )
 
 
-def _normalize_draft_text(text: str) -> str:
-    normalized = text.casefold()
-    normalized = normalized.replace("**", "").replace("__", "").replace("`", "")
-    normalized = normalized.translate(_DRAFT_REMOVED_QUOTES)
-    normalized = _DRAFT_FIELD_PREFIX_RE.sub("", normalized)
-    normalized = re.sub(r"\s+", " ", normalized).strip()
-    return normalized.rstrip(".")
-
-
-def _draft_text_matches(draft_text: str, written_texts: list[str]) -> bool:
-    if not draft_text:
-        return False
-    draft_words = set(draft_text.split())
-    for written_text in written_texts:
-        if draft_text in written_text or written_text in draft_text:
-            return True
-        written_words = set(written_text.split())
-        smaller_word_count = min(len(draft_words), len(written_words))
-        if smaller_word_count and (
-            len(draft_words.intersection(written_words)) / smaller_word_count
-            >= DRAFT_TEXT_WORD_OVERLAP_THRESHOLD
-        ):
-            return True
-    return False
-
-
-def _written_node_texts(
-    fields: dict[str, Any] | None, write_result: dict[str, Any]
-) -> list[str]:
-    node = write_result["node"]
-    rejected = set(write_result["rejected_fields"])
-    return [
-        value
-        for name in (fields or {})
-        if name not in rejected and isinstance((value := node.get(name)), str)
-    ]
+def _partial_draft_mismatch_warning(draft_id: str) -> str:
+    return f"some fields did not match draft {draft_id}; recorded an auto draft for them"
 
 
 def _canvas_written_texts(canvas: CanvasDoc, node_ids: list[str]) -> list[str]:

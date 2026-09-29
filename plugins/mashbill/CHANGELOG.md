@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.9] — 2026-09-30
+
+### Fixed
+
+- A write that mixes a drafted change with other changes confirms the draft only for the matching fields or nodes and keeps the rest in an auto draft.
+
 ## [0.196.8] — 2026-09-30
 
 ### Fixed

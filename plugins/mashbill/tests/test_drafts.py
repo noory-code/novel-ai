@@ -133,21 +133,85 @@ def test_update_node_with_draft_id_confirms_and_links_node(tmp_path: Path) -> No
     assert "draft_warning" not in result
 
 
+def test_update_node_splits_matching_and_unmatched_fields_between_drafts(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    node = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Old label"})[
+        "node"
+    ]
+    node_id = str(node["id"])
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            proposed_text="Shared direction",
+            target_node_ids=[node_id],
+        )["draft_id"]
+    )
+
+    result = mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        node_id,
+        {"label": "Shared direction", "statement": "An unrelated mission statement."},
+        draft_id=draft_id,
+    )
+
+    supplied = read_draft(plot_root, "alpha", draft_id)
+    assert supplied.status == "confirmed"
+    assert supplied.resolved_node_ids == [node_id]
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.proposed_text == "statement: An unrelated mission statement."
+    assert auto.resolved_node_ids == [node_id]
+    assert result["draft_warning"] == (
+        f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+    )
+
+
+def test_update_node_single_matching_field_does_not_record_auto_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    node = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Old label"})[
+        "node"
+    ]
+    node_id = str(node["id"])
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            proposed_text="Shared direction",
+            target_node_ids=[node_id],
+        )["draft_id"]
+    )
+
+    result = mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        node_id,
+        {"label": "Shared direction"},
+        draft_id=draft_id,
+    )
+
+    supplied = read_draft(plot_root, "alpha", draft_id)
+    assert supplied.status == "confirmed"
+    assert supplied.resolved_node_ids == [node_id]
+    assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
+    assert "draft_warning" not in result
+
+
 def test_update_node_with_different_proposal_text_records_auto_draft(
     tmp_path: Path,
 ) -> None:
     plot_root, _ = _project(tmp_path)
-    node = create_canvas_node(
-        plot_root, "alpha", "foundation", "mission", {"label": "Mission"}
-    )["node"]
+    node = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Mission"})[
+        "node"
+    ]
     node_id = str(node["id"])
     first_text = (
-        "사람과 AI와 팀이 지금 만드는 것이 왜 필요한지, 전체에서 어디에 놓이는지 늘 알고 "
-        "만든다."
+        "사람과 AI와 팀이 지금 만드는 것이 왜 필요한지, 전체에서 어디에 놓이는지 늘 알고 만든다."
     )
     second_text = (
-        "무엇을 왜 만드는지 매번 다시 설명하지 않아도, 사람과 AI와 팀이 같은 그림을 보며 "
-        "만든다."
+        "무엇을 왜 만드는지 매번 다시 설명하지 않아도, 사람과 AI와 팀이 같은 그림을 보며 만든다."
     )
     first_id = str(
         _record(str(tmp_path), proposed_text=first_text, target_node_ids=[node_id])["draft_id"]
@@ -178,17 +242,15 @@ def test_update_node_with_matching_proposal_text_confirms_selected_draft(
     tmp_path: Path,
 ) -> None:
     plot_root, _ = _project(tmp_path)
-    node = create_canvas_node(
-        plot_root, "alpha", "foundation", "mission", {"label": "Mission"}
-    )["node"]
+    node = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Mission"})[
+        "node"
+    ]
     node_id = str(node["id"])
     first_text = (
-        "사람과 AI와 팀이 지금 만드는 것이 왜 필요한지, 전체에서 어디에 놓이는지 늘 알고 "
-        "만든다."
+        "사람과 AI와 팀이 지금 만드는 것이 왜 필요한지, 전체에서 어디에 놓이는지 늘 알고 만든다."
     )
     second_text = (
-        "무엇을 왜 만드는지 매번 다시 설명하지 않아도, 사람과 AI와 팀이 같은 그림을 보며 "
-        "만든다."
+        "무엇을 왜 만드는지 매번 다시 설명하지 않아도, 사람과 AI와 팀이 같은 그림을 보며 만든다."
     )
     _record(str(tmp_path), proposed_text=first_text, target_node_ids=[node_id])
     second_id = str(
@@ -248,9 +310,9 @@ def test_update_node_text_normalization_confirms_draft(
 
 def test_update_node_with_sixty_percent_word_overlap_confirms_draft(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
-    node = create_canvas_node(
-        plot_root, "alpha", "foundation", "mission", {"label": "Mission"}
-    )["node"]
+    node = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Mission"})[
+        "node"
+    ]
     node_id = str(node["id"])
     proposed_text = "사람과 AI가 같은 그림을 보며 함께 제품을 만든다"
     draft_id = str(
@@ -421,6 +483,40 @@ def test_create_node_with_draft_id_confirms_and_links_minted_node(tmp_path: Path
     assert draft.resolved_node_ids == [node_id]
     assert [item.id for item in list_drafts(plot_root, "alpha")] == [draft_id]
     assert "draft_warning" not in created
+
+
+def test_create_node_splits_matching_and_unmatched_fields_between_drafts(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            proposed_text="Clarity",
+            target_node_ids=[],
+            proposed_kind="core_value",
+        )["draft_id"]
+    )
+
+    result = mcp_tools.create_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        "core_value",
+        {"label": "Clarity", "body": "An unrelated explanation."},
+        draft_id=draft_id,
+    )
+
+    node_id = str(result["node"]["id"])
+    supplied = read_draft(plot_root, "alpha", draft_id)
+    assert supplied.status == "confirmed"
+    assert supplied.resolved_node_ids == [node_id]
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.proposed_text == "body: An unrelated explanation."
+    assert auto.resolved_node_ids == [node_id]
+    assert result["draft_warning"] == (
+        f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+    )
 
 
 def test_create_node_with_different_proposal_text_records_auto_draft(tmp_path: Path) -> None:
@@ -794,6 +890,120 @@ def test_update_canvas_matches_any_written_string_field(tmp_path: Path) -> None:
     assert "draft_warning" not in result
     assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
     assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
+
+
+def test_update_canvas_splits_matching_and_unmatched_node_changes(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    matched = create_canvas_node(
+        plot_root, "alpha", "actors", "actor", {"label": "Matched", "body": "Old body"}
+    )["node"]
+    unmatched = create_canvas_node(
+        plot_root, "alpha", "actors", "actor", {"label": "Unmatched", "body": "Old body"}
+    )["node"]
+    matched_text = "People who need a clear next step"
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text=matched_text,
+            target_node_ids=[str(matched["id"])],
+            proposed_kind="canvas",
+        )["draft_id"]
+    )
+    canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    nodes = {str(node["id"]): node for node in canvas["nodes"]}
+    nodes[str(matched["id"])]["body"] = matched_text
+    nodes[str(unmatched["id"])]["body"] = "A separate actor change"
+
+    result = mcp_tools.update_canvas(str(tmp_path), "alpha", canvas, draft_id=draft_id)
+
+    supplied = read_draft(plot_root, "alpha", draft_id)
+    assert supplied.status == "confirmed"
+    assert supplied.resolved_node_ids == [matched["id"]]
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.proposed_text == "더함: 없음 / 바꿈: Unmatched / 뺌: 없음"
+    assert auto.target_node_ids == [unmatched["id"]]
+    assert auto.resolved_node_ids == [unmatched["id"]]
+    assert result["draft_warning"] == (
+        f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+    )
+
+
+def test_update_canvas_assigns_incident_edge_to_matching_added_node_draft(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    existing = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Existing"})[
+        "node"
+    ]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text="New collaborator",
+            target_node_ids=[],
+            proposed_kind="canvas",
+        )["draft_id"]
+    )
+    canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    canvas["nodes"].append({"id": "actor_new", "kind": "actor", "label": "New collaborator"})
+    canvas["edges"].append({"id": "edge_new", "source": str(existing["id"]), "target": "actor_new"})
+
+    result = mcp_tools.update_canvas(str(tmp_path), "alpha", canvas, draft_id=draft_id)
+
+    supplied = read_draft(plot_root, "alpha", draft_id)
+    assert supplied.status == "confirmed"
+    assert supplied.resolved_node_ids == ["actor_new"]
+    assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
+    assert "draft_warning" not in result
+
+
+def test_update_canvas_keeps_unrelated_edge_in_unmatched_auto_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    matched = create_canvas_node(
+        plot_root, "alpha", "actors", "actor", {"label": "Matched", "body": "Old body"}
+    )["node"]
+    unmatched = create_canvas_node(
+        plot_root, "alpha", "actors", "actor", {"label": "Unmatched", "body": "Old body"}
+    )["node"]
+    first = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "First"})["node"]
+    second = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Second"})["node"]
+    matched_text = "People who need a clear next step"
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text=matched_text,
+            target_node_ids=[str(matched["id"])],
+            proposed_kind="canvas",
+        )["draft_id"]
+    )
+    canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    nodes = {str(node["id"]): node for node in canvas["nodes"]}
+    nodes[str(matched["id"])]["body"] = matched_text
+    nodes[str(unmatched["id"])]["body"] = "A separate actor change"
+    canvas["edges"].append(
+        {
+            "id": "edge_unrelated",
+            "source": str(first["id"]),
+            "target": str(second["id"]),
+        }
+    )
+
+    result = mcp_tools.update_canvas(str(tmp_path), "alpha", canvas, draft_id=draft_id)
+
+    supplied = read_draft(plot_root, "alpha", draft_id)
+    assert supplied.status == "confirmed"
+    assert supplied.resolved_node_ids == [matched["id"]]
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.proposed_text == (
+        "더함: 없음 / 바꿈: Unmatched / 뺌: 없음\n선: 더함 1 / 바꿈 0 / 뺌 0"
+    )
+    assert auto.target_node_ids == [unmatched["id"]]
+    assert auto.resolved_node_ids == [unmatched["id"]]
+    assert result["draft_warning"] == (
+        f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+    )
 
 
 @pytest.mark.parametrize("tool_name", ["create_edge", "set_node_references", "update_canvas"])
