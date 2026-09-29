@@ -8,5 +8,5 @@ CHAT_SCOPE_ENV = "MASHBILL_CHAT_SCOPE"
 
 
 def effective_chat_scope(chat_scope: str) -> str:
-    """Prefer an explicit tool argument, then the in-app server environment."""
-    return chat_scope or os.environ.get(CHAT_SCOPE_ENV, "")
+    """Prefer the in-app server environment, then an explicit tool argument."""
+    return os.environ.get(CHAT_SCOPE_ENV, "") or chat_scope

@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.11] — 2026-09-30
+
+### Fixed
+
+- In the app, the turn's `MASHBILL_CHAT_SCOPE` now wins over the coach's `chat_scope` argument, so a draft is never tied to a conversation the coach named by mistake.
+
 ## [0.196.10] — 2026-09-30
 
 ### Fixed

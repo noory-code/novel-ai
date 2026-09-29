@@ -1179,34 +1179,53 @@ def test_canvas_write_with_draft_id_confirms_without_creating_auto_draft(
     assert [item.id for item in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
-def test_chat_scope_environment_fills_empty_draft_scope_but_explicit_wins(
+def test_chat_scope_environment_wins_and_explicit_fills_when_environment_missing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     plot_root, _ = _project(tmp_path)
-    monkeypatch.setenv("MASHBILL_CHAT_SCOPE", "actors")
+    node = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Reader"})["node"]
+    monkeypatch.setenv("MASHBILL_CHAT_SCOPE", "foundation")
 
-    mcp_tools.create_node(str(tmp_path), "alpha", "actors", "actor", {"label": "Reader"})
-    recorded = mcp_tools.record_draft(
+    environment_over_explicit = mcp_tools.record_draft(
         str(tmp_path),
         "alpha",
         "actors",
         "Reader needs a clear next step.",
         "The conversation established the need.",
+        chat_scope="actors",
     )
-    explicit = mcp_tools.record_draft(
+    environment_over_empty = mcp_tools.record_draft(
         str(tmp_path),
         "alpha",
         "actors",
         "Writer needs a clear next step.",
         "The conversation established the need.",
-        chat_scope="feature:writing",
+    )
+    mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "actors",
+        str(node["id"]),
+        {"label": "Updated reader"},
+        chat_scope="actors",
+    )
+
+    monkeypatch.delenv("MASHBILL_CHAT_SCOPE")
+    explicit_without_environment = mcp_tools.record_draft(
+        str(tmp_path),
+        "alpha",
+        "actors",
+        "Editor needs a clear next step.",
+        "The conversation established the need.",
+        chat_scope="actors",
     )
 
     drafts = {draft.id: draft for draft in list_drafts(plot_root, "alpha")}
     auto = next(draft for draft in drafts.values() if draft.origin == "auto")
-    assert auto.chat_scope == "actors"
-    assert drafts[str(recorded["draft_id"])].chat_scope == "actors"
-    assert drafts[str(explicit["draft_id"])].chat_scope == "feature:writing"
+    assert drafts[str(environment_over_explicit["draft_id"])].chat_scope == "foundation"
+    assert drafts[str(explicit_without_environment["draft_id"])].chat_scope == "actors"
+    assert drafts[str(environment_over_empty["draft_id"])].chat_scope == "foundation"
+    assert auto.chat_scope == "foundation"
 
 
 def test_legacy_draft_without_origin_reads_as_recorded(tmp_path: Path) -> None:
