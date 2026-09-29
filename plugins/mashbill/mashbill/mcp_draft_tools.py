@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -12,11 +13,19 @@ from mashbill.draft_store import read_draft
 from mashbill.draft_store import record_applied_draft as persist_applied_draft
 from mashbill.draft_store import record_draft as persist_draft
 from mashbill.draft_store import resolve_draft as persist_resolution
+from mashbill.field_policy import writable_node_fields
 from mashbill.models_canvas import CanvasDoc, CanvasKind
 from mashbill.models_draft import DraftDoc, ResolvedDraftStatus
 from mashbill.workspace import resolve_plot_root
 
 AUTO_DRAFT_RATIONALE = "Coach applied the change directly without recording a draft."
+DRAFT_TEXT_WORD_OVERLAP_THRESHOLD = 0.6
+DRAFT_FIELD_NAME_MAX_LENGTH = 12
+
+_DRAFT_FIELD_PREFIX_RE = re.compile(
+    rf"(?m)^[^\s:]{{1,{DRAFT_FIELD_NAME_MAX_LENGTH}}}:[^\S\r\n]+"
+)
+_DRAFT_REMOVED_QUOTES = str.maketrans("", "", "'\"‘’“”「」")
 
 
 def _draft_result(draft: DraftDoc) -> dict[str, Any]:
@@ -83,6 +92,7 @@ def draft_matches_write(
     canvas_kind: CanvasKind,
     touched_node_ids: list[str],
     service_id: str | None = None,
+    written_texts: list[str] | None = None,
 ) -> bool:
     """Return whether a supplied draft describes the successful write."""
     draft = read_draft(plot_root, project_id, draft_id)
@@ -90,9 +100,16 @@ def draft_matches_write(
         return False
     if canvas_kind == "feature" and draft.service_id != service_id:
         return False
-    if not draft.target_node_ids:
-        return True
-    return bool(set(draft.target_node_ids).intersection(touched_node_ids))
+    if draft.target_node_ids and not set(draft.target_node_ids).intersection(touched_node_ids):
+        return False
+    normalized_written_texts = [
+        normalized for text in written_texts or [] if (normalized := _normalize_draft_text(text))
+    ]
+    if normalized_written_texts and not _draft_text_matches(
+        _normalize_draft_text(draft.proposed_text), normalized_written_texts
+    ):
+        return False
+    return True
 
 
 def confirm_draft(plot_root: Path, project_id: str, draft_id: str, node_ids: list[str]) -> None:
@@ -111,6 +128,7 @@ def finish_write_draft(
     resolved_node_ids: list[str],
     chat_scope: str,
     service_id: str | None = None,
+    written_texts: list[str] | None = None,
 ) -> str | None:
     """Confirm the supplied draft or record one successful MCP write."""
     if draft_id is not None and draft_matches_write(
@@ -120,6 +138,7 @@ def finish_write_draft(
         canvas_kind,
         target_node_ids,
         service_id,
+        written_texts,
     ):
         confirm_draft(plot_root, project_id, draft_id, resolved_node_ids)
         return None
@@ -154,6 +173,7 @@ def finish_node_write_draft(
     """Confirm the supplied draft or create the fallback for a successful write."""
     node_id = str(write_result["node"]["id"])
     touched_node_ids = [node_id, *(additional_touched_node_ids or [])]
+    written_texts = _written_node_texts(fields, write_result)
     if draft_id is not None and draft_matches_write(
         plot_root,
         project_id,
@@ -161,6 +181,7 @@ def finish_node_write_draft(
         canvas_kind,
         touched_node_ids,
         service_id,
+        written_texts,
     ):
         confirm_draft(plot_root, project_id, draft_id, [node_id])
         return None
@@ -267,11 +288,67 @@ def finish_canvas_write_draft(
         [*added, *changed],
         chat_scope,
         after.feature_ref if after.canvas_kind == "feature" else None,
+        written_texts=_canvas_written_texts(after, [*added, *changed]),
     )
 
 
 def _draft_mismatch_warning(draft_id: str) -> str:
-    return f"draft {draft_id} does not match this write; recorded an auto draft instead"
+    return (
+        f"draft {draft_id} does not match this write; recorded an auto draft instead. "
+        "If the person accepted this draft with edits, call resolve_draft with status='edited'."
+    )
+
+
+def _normalize_draft_text(text: str) -> str:
+    normalized = text.casefold()
+    normalized = normalized.replace("**", "").replace("__", "").replace("`", "")
+    normalized = normalized.translate(_DRAFT_REMOVED_QUOTES)
+    normalized = _DRAFT_FIELD_PREFIX_RE.sub("", normalized)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    return normalized.rstrip(".")
+
+
+def _draft_text_matches(draft_text: str, written_texts: list[str]) -> bool:
+    if not draft_text:
+        return False
+    draft_words = set(draft_text.split())
+    for written_text in written_texts:
+        if draft_text in written_text or written_text in draft_text:
+            return True
+        written_words = set(written_text.split())
+        smaller_word_count = min(len(draft_words), len(written_words))
+        if smaller_word_count and (
+            len(draft_words.intersection(written_words)) / smaller_word_count
+            >= DRAFT_TEXT_WORD_OVERLAP_THRESHOLD
+        ):
+            return True
+    return False
+
+
+def _written_node_texts(
+    fields: dict[str, Any] | None, write_result: dict[str, Any]
+) -> list[str]:
+    node = write_result["node"]
+    rejected = set(write_result["rejected_fields"])
+    return [
+        value
+        for name in (fields or {})
+        if name not in rejected and isinstance((value := node.get(name)), str)
+    ]
+
+
+def _canvas_written_texts(canvas: CanvasDoc, node_ids: list[str]) -> list[str]:
+    nodes = {str(node.id): node for node in canvas.nodes}
+    written_texts: list[str] = []
+    for node_id in node_ids:
+        node = nodes[node_id]
+        values = node.model_dump(by_alias=True)
+        written_texts.extend(
+            value
+            for name in writable_node_fields(node)
+            if isinstance((value := values.get(name)), str)
+        )
+    return written_texts
 
 
 def _display_value(value: Any) -> str:

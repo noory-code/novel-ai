@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.8] — 2026-09-30
+
+### Fixed
+
+- A supplied `draft_id` is confirmed only when its proposed text also matches the written text, so picking the other of two proposals for the same node records an auto draft instead.
+
 ## [0.196.7] — 2026-09-30
 
 ### Fixed

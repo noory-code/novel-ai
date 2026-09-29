@@ -109,7 +109,13 @@ def test_update_node_with_draft_id_confirms_and_links_node(tmp_path: Path) -> No
     plot_root, _ = _project(tmp_path)
     created = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Mission"})
     node_id = str(created["node"]["id"])
-    draft_id = str(_record(str(tmp_path), target_node_ids=[node_id])["draft_id"])
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            proposed_text="Help people shape products together.",
+            target_node_ids=[node_id],
+        )["draft_id"]
+    )
 
     result = mcp_tools.update_node(
         str(tmp_path),
@@ -125,6 +131,143 @@ def test_update_node_with_draft_id_confirms_and_links_node(tmp_path: Path) -> No
     assert draft.resolved_node_ids == [node_id]
     assert [item.id for item in list_drafts(plot_root, "alpha")] == [draft_id]
     assert "draft_warning" not in result
+
+
+def test_update_node_with_different_proposal_text_records_auto_draft(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    node = create_canvas_node(
+        plot_root, "alpha", "foundation", "mission", {"label": "Mission"}
+    )["node"]
+    node_id = str(node["id"])
+    first_text = (
+        "사람과 AI와 팀이 지금 만드는 것이 왜 필요한지, 전체에서 어디에 놓이는지 늘 알고 "
+        "만든다."
+    )
+    second_text = (
+        "무엇을 왜 만드는지 매번 다시 설명하지 않아도, 사람과 AI와 팀이 같은 그림을 보며 "
+        "만든다."
+    )
+    first_id = str(
+        _record(str(tmp_path), proposed_text=first_text, target_node_ids=[node_id])["draft_id"]
+    )
+    _record(str(tmp_path), proposed_text=second_text, target_node_ids=[node_id])
+
+    result = mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        node_id,
+        {"statement": second_text},
+        draft_id=first_id,
+    )
+
+    assert result["draft_warning"] == (
+        f"draft {first_id} does not match this write; recorded an auto draft instead. "
+        "If the person accepted this draft with edits, call resolve_draft with status='edited'."
+    )
+    assert read_draft(plot_root, "alpha", first_id).status == "proposed"
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.status == "confirmed"
+    assert auto.proposed_text == f"statement: {second_text}"
+    assert auto.resolved_node_ids == [node_id]
+
+
+def test_update_node_with_matching_proposal_text_confirms_selected_draft(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    node = create_canvas_node(
+        plot_root, "alpha", "foundation", "mission", {"label": "Mission"}
+    )["node"]
+    node_id = str(node["id"])
+    first_text = (
+        "사람과 AI와 팀이 지금 만드는 것이 왜 필요한지, 전체에서 어디에 놓이는지 늘 알고 "
+        "만든다."
+    )
+    second_text = (
+        "무엇을 왜 만드는지 매번 다시 설명하지 않아도, 사람과 AI와 팀이 같은 그림을 보며 "
+        "만든다."
+    )
+    _record(str(tmp_path), proposed_text=first_text, target_node_ids=[node_id])
+    second_id = str(
+        _record(str(tmp_path), proposed_text=second_text, target_node_ids=[node_id])["draft_id"]
+    )
+
+    result = mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        node_id,
+        {"statement": second_text},
+        draft_id=second_id,
+    )
+
+    assert "draft_warning" not in result
+    assert read_draft(plot_root, "alpha", second_id).status == "confirmed"
+    assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
+
+
+@pytest.mark.parametrize(
+    ("proposed_text", "written_label"),
+    [
+        ("라벨: 한 분야보다 여러 분야", "한 분야보다 여러 분야"),
+        ("**여러 분야에 두루 쓰이는 도구**", "여러 분야에 두루 쓰이는 도구."),
+    ],
+)
+def test_update_node_text_normalization_confirms_draft(
+    tmp_path: Path, proposed_text: str, written_label: str
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    node = create_canvas_node(
+        plot_root, "alpha", "foundation", "core_value", {"label": "Old value"}
+    )["node"]
+    node_id = str(node["id"])
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            proposed_text=proposed_text,
+            target_node_ids=[node_id],
+            proposed_kind="core_value",
+        )["draft_id"]
+    )
+
+    result = mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        node_id,
+        {"label": written_label},
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" not in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
+
+
+def test_update_node_with_sixty_percent_word_overlap_confirms_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    node = create_canvas_node(
+        plot_root, "alpha", "foundation", "mission", {"label": "Mission"}
+    )["node"]
+    node_id = str(node["id"])
+    proposed_text = "사람과 AI가 같은 그림을 보며 함께 제품을 만든다"
+    draft_id = str(
+        _record(str(tmp_path), proposed_text=proposed_text, target_node_ids=[node_id])["draft_id"]
+    )
+
+    result = mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        node_id,
+        {"statement": "사람과 AI가 같은 그림을 보며 빠르게 제품을 완성한다"},
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" not in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
 
 
 def test_update_node_with_wrong_target_keeps_draft_and_records_auto_draft(
@@ -149,7 +292,8 @@ def test_update_node_with_wrong_target_keeps_draft_and_records_auto_draft(
     )
 
     assert result["draft_warning"] == (
-        f"draft {draft_id} does not match this write; recorded an auto draft instead"
+        f"draft {draft_id} does not match this write; recorded an auto draft instead. "
+        "If the person accepted this draft with edits, call resolve_draft with status='edited'."
     )
     supplied = read_draft(plot_root, "alpha", draft_id)
     assert supplied.status == "proposed"
@@ -277,6 +421,33 @@ def test_create_node_with_draft_id_confirms_and_links_minted_node(tmp_path: Path
     assert draft.resolved_node_ids == [node_id]
     assert [item.id for item in list_drafts(plot_root, "alpha")] == [draft_id]
     assert "draft_warning" not in created
+
+
+def test_create_node_with_different_proposal_text_records_auto_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            proposed_text="Clarity",
+            target_node_ids=[],
+            proposed_kind="core_value",
+        )["draft_id"]
+    )
+
+    result = mcp_tools.create_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        "core_value",
+        {"label": "Breadth"},
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.status == "confirmed"
+    assert auto.proposed_text == "label: Breadth"
 
 
 def test_create_node_draft_can_target_near_parent(tmp_path: Path) -> None:
@@ -572,6 +743,59 @@ def test_update_canvas_with_wrong_draft_records_auto_draft_and_warning(tmp_path:
     assert auto.resolved_node_ids == [changed["id"]]
 
 
+def test_update_canvas_with_different_proposal_text_records_auto_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    changed = create_canvas_node(
+        plot_root, "alpha", "actors", "actor", {"label": "Old name", "body": "Old body"}
+    )["node"]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text="A completely different actor",
+            target_node_ids=[str(changed["id"])],
+            proposed_kind="canvas",
+        )["draft_id"]
+    )
+    canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    canvas["nodes"][0]["label"] = "New name"
+    canvas["nodes"][0]["body"] = "People who need a clear next step"
+
+    result = mcp_tools.update_canvas(str(tmp_path), "alpha", canvas, draft_id=draft_id)
+
+    assert "draft_warning" in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.status == "confirmed"
+    assert auto.resolved_node_ids == [changed["id"]]
+
+
+def test_update_canvas_matches_any_written_string_field(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    changed = create_canvas_node(
+        plot_root, "alpha", "actors", "actor", {"label": "Old name", "body": "Old body"}
+    )["node"]
+    written_body = "People who need a clear next step"
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text=written_body,
+            target_node_ids=[str(changed["id"])],
+            proposed_kind="canvas",
+        )["draft_id"]
+    )
+    canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    canvas["nodes"][0]["label"] = "New name"
+    canvas["nodes"][0]["body"] = written_body
+
+    result = mcp_tools.update_canvas(str(tmp_path), "alpha", canvas, draft_id=draft_id)
+
+    assert "draft_warning" not in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
+    assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
+
+
 @pytest.mark.parametrize("tool_name", ["create_edge", "set_node_references", "update_canvas"])
 def test_canvas_write_with_draft_id_confirms_without_creating_auto_draft(
     tmp_path: Path, tool_name: str
@@ -584,7 +808,9 @@ def test_canvas_write_with_draft_id_confirms_without_creating_auto_draft(
         _record(
             str(tmp_path),
             canvas_kind=draft_canvas_kind,
-            proposed_text="Apply the canvas change",
+            proposed_text=(
+                "Changed" if tool_name == "update_canvas" else "Apply the canvas change"
+            ),
             target_node_ids=[],
             proposed_kind=tool_name,
         )["draft_id"]
