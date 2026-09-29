@@ -14,7 +14,7 @@ from mashbill import draft_store, mcp_tools
 from mashbill.broadcast import BroadcastHub
 from mashbill.draft_store import list_drafts, read_draft
 from mashbill.folder_io import create_node as create_canvas_node
-from mashbill.folder_io import read_canvas
+from mashbill.folder_io import read_canvas, sync_details_with_overview
 from mashbill.http_app import create_http_app
 from mashbill.models_draft import DraftDoc
 from mashbill.project_io import create_project
@@ -111,7 +111,7 @@ def test_update_node_with_draft_id_confirms_and_links_node(tmp_path: Path) -> No
     node_id = str(created["node"]["id"])
     draft_id = str(_record(str(tmp_path), target_node_ids=[node_id])["draft_id"])
 
-    mcp_tools.update_node(
+    result = mcp_tools.update_node(
         str(tmp_path),
         "alpha",
         "foundation",
@@ -124,6 +124,131 @@ def test_update_node_with_draft_id_confirms_and_links_node(tmp_path: Path) -> No
     assert draft.status == "confirmed"
     assert draft.resolved_node_ids == [node_id]
     assert [item.id for item in list_drafts(plot_root, "alpha")] == [draft_id]
+    assert "draft_warning" not in result
+
+
+def test_update_node_with_wrong_target_keeps_draft_and_records_auto_draft(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    first = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "First"})[
+        "node"
+    ]
+    second = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Second"})[
+        "node"
+    ]
+    draft_id = str(_record(str(tmp_path), target_node_ids=[str(first["id"])])["draft_id"])
+
+    result = mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        str(second["id"]),
+        {"statement": "Changed second mission."},
+        draft_id=draft_id,
+    )
+
+    assert result["draft_warning"] == (
+        f"draft {draft_id} does not match this write; recorded an auto draft instead"
+    )
+    supplied = read_draft(plot_root, "alpha", draft_id)
+    assert supplied.status == "proposed"
+    assert supplied.resolved_node_ids == []
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.status == "confirmed"
+    assert auto.target_node_ids == [second["id"]]
+    assert auto.resolved_node_ids == [second["id"]]
+
+
+def test_update_node_with_wrong_canvas_keeps_draft_and_records_auto_draft(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    node = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Mission"})[
+        "node"
+    ]
+    draft_id = str(_record(str(tmp_path), canvas_kind="actors", target_node_ids=[])["draft_id"])
+
+    result = mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        str(node["id"]),
+        {"statement": "Changed mission."},
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.canvas_kind == "foundation"
+    assert auto.resolved_node_ids == [node["id"]]
+
+
+def test_feature_draft_for_another_service_does_not_match_write(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    first_feature = create_canvas_node(
+        plot_root, "alpha", "services", "feature", {"label": "First feature"}
+    )["node"]
+    second_feature = create_canvas_node(
+        plot_root, "alpha", "services", "feature", {"label": "Second feature"}
+    )["node"]
+    sync_details_with_overview(plot_root, "alpha")
+    step = create_canvas_node(
+        plot_root,
+        "alpha",
+        "feature",
+        "step",
+        {"label": "Do work"},
+        service_id=str(second_feature["id"]),
+    )["node"]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="feature",
+            target_node_ids=[],
+            proposed_kind="step",
+            service_id=str(first_feature["id"]),
+        )["draft_id"]
+    )
+
+    result = mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "feature",
+        str(step["id"]),
+        {"outcome": "Work is complete."},
+        service_id=str(second_feature["id"]),
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.service_id == second_feature["id"]
+    assert auto.resolved_node_ids == [step["id"]]
+
+
+def test_missing_draft_id_still_fails_before_write(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    node = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Mission"})[
+        "node"
+    ]
+
+    with pytest.raises(FileNotFoundError, match="draft"):
+        mcp_tools.update_node(
+            str(tmp_path),
+            "alpha",
+            "foundation",
+            str(node["id"]),
+            {"statement": "Must not be written."},
+            draft_id="draft_missing",
+        )
+
+    canvas = read_canvas(plot_root, "alpha", "foundation")
+    saved = next(item for item in canvas.nodes if item.id == node["id"])
+    assert saved.model_dump().get("statement") == ""
+    assert list_drafts(plot_root, "alpha") == []
 
 
 def test_create_node_with_draft_id_confirms_and_links_minted_node(tmp_path: Path) -> None:
@@ -151,6 +276,61 @@ def test_create_node_with_draft_id_confirms_and_links_minted_node(tmp_path: Path
     assert draft.status == "confirmed"
     assert draft.resolved_node_ids == [node_id]
     assert [item.id for item in list_drafts(plot_root, "alpha")] == [draft_id]
+    assert "draft_warning" not in created
+
+
+def test_create_node_draft_can_target_near_parent(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    parent = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Mission"})[
+        "node"
+    ]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            proposed_text="Clarity",
+            target_node_ids=[str(parent["id"])],
+            proposed_kind="core_value",
+        )["draft_id"]
+    )
+
+    result = mcp_tools.create_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        "core_value",
+        {"label": "Clarity"},
+        near=str(parent["id"]),
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" not in result
+    draft = read_draft(plot_root, "alpha", draft_id)
+    assert draft.status == "confirmed"
+    assert draft.resolved_node_ids == [result["node"]["id"]]
+
+
+def test_rejected_draft_does_not_match_write(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    node = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Mission"})[
+        "node"
+    ]
+    node_id = str(node["id"])
+    draft_id = str(_record(str(tmp_path), target_node_ids=[node_id])["draft_id"])
+    mcp_tools.resolve_draft(str(tmp_path), "alpha", draft_id, "rejected")
+
+    result = mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        node_id,
+        {"statement": "Changed mission."},
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "rejected"
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.resolved_node_ids == [node_id]
 
 
 def test_update_node_without_draft_id_records_confirmed_auto_draft(tmp_path: Path) -> None:
@@ -222,9 +402,9 @@ def test_create_edge_without_draft_records_both_endpoints_and_relationship(
     tmp_path: Path,
 ) -> None:
     plot_root, _ = _project(tmp_path)
-    source = create_canvas_node(
-        plot_root, "alpha", "entities", "entity", {"label": "Customer"}
-    )["node"]
+    source = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Customer"})[
+        "node"
+    ]
     target = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Order"})[
         "node"
     ]
@@ -247,14 +427,48 @@ def test_create_edge_without_draft_records_both_endpoints_and_relationship(
     assert draft.resolved_node_ids == [source["id"], target["id"]]
 
 
-def test_set_node_references_without_draft_records_reference_change(tmp_path: Path) -> None:
+def test_create_edge_with_wrong_draft_records_auto_draft_and_warning(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
-    actor = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Reader"})[
+    source = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Customer"})[
         "node"
     ]
-    service = create_canvas_node(
-        plot_root, "alpha", "services", "service", {"label": "Reading"}
-    )["node"]
+    target = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Order"})[
+        "node"
+    ]
+    other = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Invoice"})[
+        "node"
+    ]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="entities",
+            target_node_ids=[str(other["id"])],
+            proposed_kind="edge",
+        )["draft_id"]
+    )
+
+    result = mcp_tools.create_edge(
+        str(tmp_path),
+        "alpha",
+        "entities",
+        str(source["id"]),
+        str(target["id"]),
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.target_node_ids == [source["id"], target["id"]]
+    assert auto.resolved_node_ids == [source["id"], target["id"]]
+
+
+def test_set_node_references_without_draft_records_reference_change(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    actor = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Reader"})["node"]
+    service = create_canvas_node(plot_root, "alpha", "services", "service", {"label": "Reading"})[
+        "node"
+    ]
 
     mcp_tools.set_node_references(
         str(tmp_path),
@@ -273,11 +487,43 @@ def test_set_node_references_without_draft_records_reference_change(tmp_path: Pa
     assert draft.resolved_node_ids == [service["id"]]
 
 
+def test_set_node_references_with_wrong_draft_records_auto_draft_and_warning(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    actor = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Reader"})["node"]
+    service = create_canvas_node(plot_root, "alpha", "services", "service", {"label": "Reading"})[
+        "node"
+    ]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="services",
+            target_node_ids=["service_other"],
+            proposed_kind="references",
+        )["draft_id"]
+    )
+
+    result = mcp_tools.set_node_references(
+        str(tmp_path),
+        "alpha",
+        "services",
+        str(service["id"]),
+        {"ref_actor_ids": [str(actor["id"])]},
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.resolved_node_ids == [service["id"]]
+
+
 def test_update_canvas_records_content_diff_but_not_position_only_change(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
-    existing = create_canvas_node(
-        plot_root, "alpha", "actors", "actor", {"label": "Old name"}
-    )["node"]
+    existing = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Old name"})[
+        "node"
+    ]
     before = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
     before["nodes"][0]["label"] = "Renamed"
     before["nodes"].append({"id": "actor_added", "kind": "actor", "label": "Added"})
@@ -300,21 +546,44 @@ def test_update_canvas_records_content_diff_but_not_position_only_change(tmp_pat
     assert len(list_drafts(plot_root, "alpha")) == 1
 
 
+def test_update_canvas_with_wrong_draft_records_auto_draft_and_warning(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    changed = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Old name"})[
+        "node"
+    ]
+    other = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Other"})["node"]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            target_node_ids=[str(other["id"])],
+            proposed_kind="canvas",
+        )["draft_id"]
+    )
+    canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    canvas["nodes"][0]["label"] = "New name"
+
+    result = mcp_tools.update_canvas(str(tmp_path), "alpha", canvas, draft_id=draft_id)
+
+    assert "draft_warning" in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
+    assert auto.target_node_ids == [changed["id"]]
+    assert auto.resolved_node_ids == [changed["id"]]
+
+
 @pytest.mark.parametrize("tool_name", ["create_edge", "set_node_references", "update_canvas"])
 def test_canvas_write_with_draft_id_confirms_without_creating_auto_draft(
     tmp_path: Path, tool_name: str
 ) -> None:
     plot_root, _ = _project(tmp_path)
-    first = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "First"})[
-        "node"
-    ]
-    second = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Second"})[
-        "node"
-    ]
+    first = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "First"})["node"]
+    second = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Second"})["node"]
+    draft_canvas_kind = "services" if tool_name == "set_node_references" else "actors"
     draft_id = str(
         _record(
             str(tmp_path),
-            canvas_kind="actors",
+            canvas_kind=draft_canvas_kind,
             proposed_text="Apply the canvas change",
             target_node_ids=[],
             proposed_kind=tool_name,

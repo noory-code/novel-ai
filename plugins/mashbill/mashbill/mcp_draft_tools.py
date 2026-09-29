@@ -76,9 +76,26 @@ def ensure_draft(plot_root: Path, project_id: str, draft_id: str) -> None:
     read_draft(plot_root, project_id, draft_id)
 
 
-def confirm_draft(
-    plot_root: Path, project_id: str, draft_id: str, node_ids: list[str]
-) -> None:
+def draft_matches_write(
+    plot_root: Path,
+    project_id: str,
+    draft_id: str,
+    canvas_kind: CanvasKind,
+    touched_node_ids: list[str],
+    service_id: str | None = None,
+) -> bool:
+    """Return whether a supplied draft describes the successful write."""
+    draft = read_draft(plot_root, project_id, draft_id)
+    if draft.status == "rejected" or draft.canvas_kind != canvas_kind:
+        return False
+    if canvas_kind == "feature" and draft.service_id != service_id:
+        return False
+    if not draft.target_node_ids:
+        return True
+    return bool(set(draft.target_node_ids).intersection(touched_node_ids))
+
+
+def confirm_draft(plot_root: Path, project_id: str, draft_id: str, node_ids: list[str]) -> None:
     """Link a successful write back to its draft."""
     persist_resolution(plot_root, project_id, draft_id, "confirmed", node_ids)
 
@@ -94,11 +111,18 @@ def finish_write_draft(
     resolved_node_ids: list[str],
     chat_scope: str,
     service_id: str | None = None,
-) -> None:
+) -> str | None:
     """Confirm the supplied draft or record one successful MCP write."""
-    if draft_id is not None:
+    if draft_id is not None and draft_matches_write(
+        plot_root,
+        project_id,
+        draft_id,
+        canvas_kind,
+        target_node_ids,
+        service_id,
+    ):
         confirm_draft(plot_root, project_id, draft_id, resolved_node_ids)
-        return
+        return None
     persist_applied_draft(
         plot_root,
         project_id,
@@ -111,6 +135,9 @@ def finish_write_draft(
         service_id,
         resolved_node_ids,
     )
+    if draft_id is None:
+        return None
+    return _draft_mismatch_warning(draft_id)
 
 
 def finish_node_write_draft(
@@ -122,14 +149,27 @@ def finish_node_write_draft(
     write_result: dict[str, Any],
     chat_scope: str,
     service_id: str | None,
-) -> None:
+    additional_touched_node_ids: list[str] | None = None,
+) -> str | None:
     """Confirm the supplied draft or create the fallback for a successful write."""
-    if draft_id is not None:
-        confirm_draft(plot_root, project_id, draft_id, [str(write_result["node"]["id"])])
-        return
+    node_id = str(write_result["node"]["id"])
+    touched_node_ids = [node_id, *(additional_touched_node_ids or [])]
+    if draft_id is not None and draft_matches_write(
+        plot_root,
+        project_id,
+        draft_id,
+        canvas_kind,
+        touched_node_ids,
+        service_id,
+    ):
+        confirm_draft(plot_root, project_id, draft_id, [node_id])
+        return None
     record_applied_draft(
         plot_root, project_id, canvas_kind, fields, write_result, chat_scope, service_id
     )
+    if draft_id is None:
+        return None
+    return _draft_mismatch_warning(draft_id)
 
 
 def record_applied_draft(
@@ -171,14 +211,17 @@ def finish_canvas_write_draft(
     before: CanvasDoc,
     after: CanvasDoc,
     chat_scope: str,
-) -> None:
+) -> str | None:
     """Confirm or record a whole-canvas write from its normalized content diff."""
     before_content = _canvas_design_content(before.model_dump(by_alias=True))
     after_content = _canvas_design_content(after.model_dump(by_alias=True))
     if before_content == after_content:
-        if draft_id is not None:
+        service_id = after.feature_ref if after.canvas_kind == "feature" else None
+        if draft_id is not None and draft_matches_write(
+            plot_root, project_id, draft_id, after.canvas_kind, [], service_id
+        ):
             confirm_draft(plot_root, project_id, draft_id, [])
-        return
+        return None
 
     before_nodes = before_content["nodes"]
     after_nodes = after_content["nodes"]
@@ -213,7 +256,7 @@ def finish_canvas_write_draft(
             f"\n선: 더함 {len(edges_added)} / 바꿈 {len(edges_changed)} / 뺌 {len(edges_removed)}"
         )
 
-    finish_write_draft(
+    return finish_write_draft(
         plot_root,
         project_id,
         draft_id,
@@ -225,6 +268,10 @@ def finish_canvas_write_draft(
         chat_scope,
         after.feature_ref if after.canvas_kind == "feature" else None,
     )
+
+
+def _draft_mismatch_warning(draft_id: str) -> str:
+    return f"draft {draft_id} does not match this write; recorded an auto draft instead"
 
 
 def _display_value(value: Any) -> str:

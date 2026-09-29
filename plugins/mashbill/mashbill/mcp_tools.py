@@ -217,10 +217,14 @@ def update_canvas(
     confirmed; otherwise a content change records a confirmed fallback draft."""
     plot_root = resolve_plot_root(project_path)
     validated = CanvasDoc.model_validate(canvas)
-    sync = update_canvas_with_draft(
-        plot_root, project_id, validated, draft_id, chat_scope
-    )
-    return {"canvas": validated.model_dump(by_alias=True), "sync": sync}
+    sync, warning = update_canvas_with_draft(plot_root, project_id, validated, draft_id, chat_scope)
+    result: dict[str, Any] = {
+        "canvas": validated.model_dump(by_alias=True),
+        "sync": sync,
+    }
+    if warning is not None:
+        result["draft_warning"] = warning
+    return result
 
 
 @mcp.tool()
@@ -253,9 +257,11 @@ def update_node(
     if draft_id is not None:
         ensure_draft(plot_root, project_id, draft_id)
     out = _update_node(plot_root, project_id, canvas_kind, node_id, fields, service_id)
-    finish_node_write_draft(
+    warning = finish_node_write_draft(
         plot_root, project_id, draft_id, canvas_kind, fields, out, chat_scope, service_id
     )
+    if warning is not None:
+        out["draft_warning"] = warning
     return out
 
 
@@ -310,9 +316,19 @@ def create_node(
         # its detail canvas exactly like the app's endpoint flow does, so a
         # coach-registered feature is drillable too ("기능 캔버스 뜨지 않네" fix).
         sync_details_with_overview(plot_root, project_id)
-    finish_node_write_draft(
-        plot_root, project_id, draft_id, canvas_kind, fields, out, chat_scope, service_id
+    warning = finish_node_write_draft(
+        plot_root,
+        project_id,
+        draft_id,
+        canvas_kind,
+        fields,
+        out,
+        chat_scope,
+        service_id,
+        [near] if near is not None else None,
     )
+    if warning is not None:
+        out["draft_warning"] = warning
     return out
 
 

@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.7] — 2026-09-30
+
+### Fixed
+
+- A canvas write confirms the `draft_id` it is given only when that draft matches the write; otherwise it records an auto draft for the real change and returns `draft_warning`.
+
 ## [0.196.6] — 2026-09-30
 
 ### Fixed

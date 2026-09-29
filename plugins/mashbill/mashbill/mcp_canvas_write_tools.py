@@ -17,7 +17,7 @@ def update_canvas_with_draft(
     validated: CanvasDoc,
     draft_id: str | None,
     chat_scope: str,
-) -> dict[str, list[str]]:
+) -> tuple[dict[str, list[str]], str | None]:
     """Persist a whole canvas, reconcile details, and finish its draft."""
     if draft_id is not None:
         ensure_draft(plot_root, project_id, draft_id)
@@ -27,8 +27,8 @@ def update_canvas_with_draft(
     sync: dict[str, list[str]] = {"created": [], "archived": [], "skipped_archive": []}
     if validated.canvas_kind == "services":
         sync = sync_details_with_overview(plot_root, project_id)
-    finish_canvas_write_draft(plot_root, project_id, draft_id, before, saved, chat_scope)
-    return sync
+    warning = finish_canvas_write_draft(plot_root, project_id, draft_id, before, saved, chat_scope)
+    return sync, warning
 
 
 def create_edge_with_draft(
@@ -47,16 +47,14 @@ def create_edge_with_draft(
         ensure_draft(plot_root, project_id, draft_id)
     canvas = read_canvas(plot_root, project_id, canvas_kind, service_id)
     labels = {str(node.id): node.label for node in canvas.nodes}
-    out = create_edge(
-        plot_root, project_id, canvas_kind, source_id, target_id, service_id, label
-    )
+    out = create_edge(plot_root, project_id, canvas_kind, source_id, target_id, service_id, label)
     source_label = labels.get(source_id) or source_id
     target_label = labels.get(target_id) or target_id
     proposed_text = f"관계: {source_label} → {target_label}"
     written_label = str(out["edge"].get("label") or "")
     if written_label:
         proposed_text += f" ({written_label})"
-    finish_write_draft(
+    warning = finish_write_draft(
         plot_root,
         project_id,
         draft_id,
@@ -68,6 +66,8 @@ def create_edge_with_draft(
         chat_scope,
         service_id,
     )
+    if warning is not None:
+        out["draft_warning"] = warning
     return out
 
 
@@ -86,10 +86,9 @@ def set_node_references_with_draft(
         ensure_draft(plot_root, project_id, draft_id)
     out = set_node_references(plot_root, project_id, canvas_kind, node_id, refs, service_id)
     proposed_text = "참조: " + " / ".join(
-        f"{field} = {', '.join(ref_ids) if ref_ids else '없음'}"
-        for field, ref_ids in refs.items()
+        f"{field} = {', '.join(ref_ids) if ref_ids else '없음'}" for field, ref_ids in refs.items()
     )
-    finish_write_draft(
+    warning = finish_write_draft(
         plot_root,
         project_id,
         draft_id,
@@ -101,4 +100,6 @@ def set_node_references_with_draft(
         chat_scope,
         service_id,
     )
+    if warning is not None:
+        out["draft_warning"] = warning
     return out
