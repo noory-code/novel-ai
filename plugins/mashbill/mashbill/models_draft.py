@@ -10,6 +10,7 @@ from mashbill.models_canvas import CanvasKind
 
 DraftStatus = Literal["proposed", "confirmed", "edited", "rejected"]
 ResolvedDraftStatus = Literal["confirmed", "edited", "rejected"]
+DraftOrigin = Literal["recorded", "auto"]
 
 
 class DraftDoc(BaseModel):
@@ -25,5 +26,6 @@ class DraftDoc(BaseModel):
     proposed_text: str
     rationale: str
     status: DraftStatus = "proposed"
+    origin: DraftOrigin = "recorded"
     chat_scope: str
     resolved_node_ids: list[str] = Field(default_factory=list)

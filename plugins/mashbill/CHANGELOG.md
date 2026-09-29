@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.2] — 2026-09-29
+
+### Fixed
+
+- An AI `update_node` / `create_node` without `draft_id` now leaves a confirmed draft marked `origin: "auto"`, so every AI canvas write has a draft even when the coach forgets `record_draft`; both tools accept an optional `chat_scope`.
+
 ## [0.196.1] — 2026-09-29
 
 ### Fixed

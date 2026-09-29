@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from starlette.testclient import TestClient
 from mashbill import draft_store, mcp_tools
 from mashbill.broadcast import BroadcastHub
 from mashbill.draft_store import list_drafts, read_draft
+from mashbill.folder_io import create_node as create_canvas_node
 from mashbill.http_app import create_http_app
 from mashbill.project_io import create_project
 from mashbill.workspace import resolve_plot_root
@@ -59,6 +61,7 @@ def test_record_draft_writes_one_file_and_lists_it(tmp_path: Path) -> None:
     assert [draft.id for draft in drafts] == [draft_id]
     assert drafts[0].target_node_ids == ["mission_1"]
     assert drafts[0].status == "proposed"
+    assert drafts[0].origin == "recorded"
 
 
 def test_concurrent_record_draft_calls_do_not_lose_records(tmp_path: Path) -> None:
@@ -102,9 +105,7 @@ def test_resolve_missing_draft_is_an_error(tmp_path: Path) -> None:
 
 def test_update_node_with_draft_id_confirms_and_links_node(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
-    created = mcp_tools.create_node(
-        str(tmp_path), "alpha", "foundation", "mission", {"label": "Mission"}
-    )
+    created = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Mission"})
     node_id = str(created["node"]["id"])
     draft_id = str(_record(str(tmp_path), target_node_ids=[node_id])["draft_id"])
 
@@ -120,6 +121,7 @@ def test_update_node_with_draft_id_confirms_and_links_node(tmp_path: Path) -> No
     draft = read_draft(plot_root, "alpha", draft_id)
     assert draft.status == "confirmed"
     assert draft.resolved_node_ids == [node_id]
+    assert [item.id for item in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_create_node_with_draft_id_confirms_and_links_minted_node(tmp_path: Path) -> None:
@@ -146,21 +148,95 @@ def test_create_node_with_draft_id_confirms_and_links_minted_node(tmp_path: Path
     draft = read_draft(plot_root, "alpha", draft_id)
     assert draft.status == "confirmed"
     assert draft.resolved_node_ids == [node_id]
+    assert [item.id for item in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
-def test_node_tools_without_draft_id_do_not_create_drafts(tmp_path: Path) -> None:
+def test_update_node_without_draft_id_records_confirmed_auto_draft(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
-    created = mcp_tools.create_node(
-        str(tmp_path), "alpha", "foundation", "mission", {"label": "Mission"}
-    )
+    created = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Old label"})
     mcp_tools.update_node(
         str(tmp_path),
         "alpha",
-        "foundation",
+        "actors",
         str(created["node"]["id"]),
-        {"statement": "Keep the current behavior."},
+        {"label": "Reader", "body": "Needs a clear next step."},
     )
 
+    drafts = list_drafts(plot_root, "alpha")
+    assert len(drafts) == 1
+    draft = drafts[0]
+    node_id = str(created["node"]["id"])
+    assert draft.status == "confirmed"
+    assert draft.origin == "auto"
+    assert draft.target_node_ids == [node_id]
+    assert draft.resolved_node_ids == [node_id]
+    assert draft.proposed_kind == "actor"
+    assert draft.proposed_text == "label: Reader\nbody: Needs a clear next step."
+    assert draft.rationale
+    assert draft.chat_scope == ""
+
+
+def test_create_node_without_draft_id_records_confirmed_auto_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+
+    created = mcp_tools.create_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        "core_value",
+        {"label": "Clarity", "body": "Make the next step visible."},
+    )
+
+    drafts = list_drafts(plot_root, "alpha")
+    assert len(drafts) == 1
+    draft = drafts[0]
+    node_id = str(created["node"]["id"])
+    assert draft.status == "confirmed"
+    assert draft.origin == "auto"
+    assert draft.target_node_ids == [node_id]
+    assert draft.resolved_node_ids == [node_id]
+    assert draft.proposed_kind == "core_value"
+    assert draft.proposed_text == "label: Clarity\nbody: Make the next step visible."
+    assert draft.rationale
+    assert draft.chat_scope == ""
+
+
+def test_auto_draft_keeps_supplied_chat_scope(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+
+    mcp_tools.create_node(
+        str(tmp_path),
+        "alpha",
+        "entities",
+        "entity",
+        {"label": "Order"},
+        chat_scope="entities",
+    )
+
+    assert list_drafts(plot_root, "alpha")[0].chat_scope == "entities"
+
+
+def test_legacy_draft_without_origin_reads_as_recorded(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(_record(str(tmp_path))["draft_id"])
+    path = plot_root / "drafts" / f"{draft_id}.json"
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    raw.pop("origin", None)
+    path.write_text(json.dumps(raw), encoding="utf-8")
+
+    assert read_draft(plot_root, "alpha", draft_id).origin == "recorded"
+
+
+def test_viewer_canvas_put_does_not_create_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    client = TestClient(create_http_app(hub=BroadcastHub(enable_watchers=False)))
+    url = "/api/projects/alpha/canvases/actors"
+    canvas = client.get(url, params={"project_path": str(tmp_path)}).json()
+    canvas["nodes"].append({"id": "reader", "kind": "actor", "label": "Reader"})
+
+    response = client.put(url, params={"project_path": str(tmp_path)}, json=canvas)
+
+    assert response.status_code == 200
     assert list_drafts(plot_root, "alpha") == []
     assert not (plot_root / "drafts").exists()
 

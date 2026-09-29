@@ -532,6 +532,7 @@ def test_create_node_is_a_registered_mcp_tool() -> None:
         "service_id",
         "near",
         "draft_id",
+        "chat_scope",
     }
     assert set(tool.parameters["required"]) == {
         "project_path",

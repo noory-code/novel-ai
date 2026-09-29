@@ -12,7 +12,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from mashbill.models_canvas import CanvasKind
-from mashbill.models_draft import DraftDoc, DraftStatus, ResolvedDraftStatus
+from mashbill.models_draft import DraftDoc, DraftOrigin, DraftStatus, ResolvedDraftStatus
 from mashbill.storage import _ensure_project, _project_dir, _read_json, _write_json
 
 _DRAFT_DIRNAME = "drafts"
@@ -44,6 +44,66 @@ def record_draft(
     service_id: str | None = None,
 ) -> DraftDoc:
     """Persist a newly shown proposal as an immutable-identity draft document."""
+    return _record_new_draft(
+        plot_root,
+        project_id,
+        canvas_kind,
+        proposed_text,
+        rationale,
+        chat_scope,
+        target_node_ids or [],
+        proposed_kind,
+        service_id,
+        status="proposed",
+        origin="recorded",
+        resolved_node_ids=[],
+    )
+
+
+def record_applied_draft(
+    plot_root: Path,
+    project_id: str,
+    canvas_kind: CanvasKind,
+    proposed_text: str,
+    rationale: str,
+    chat_scope: str,
+    node_id: str,
+    proposed_kind: str,
+    service_id: str | None = None,
+) -> DraftDoc:
+    """Persist the confirmed fallback record for an MCP node write."""
+    return _record_new_draft(
+        plot_root,
+        project_id,
+        canvas_kind,
+        proposed_text,
+        rationale,
+        chat_scope,
+        [node_id],
+        proposed_kind,
+        service_id,
+        status="confirmed",
+        origin="auto",
+        resolved_node_ids=[node_id],
+    )
+
+
+def _record_new_draft(
+    plot_root: Path,
+    project_id: str,
+    canvas_kind: CanvasKind,
+    proposed_text: str,
+    rationale: str,
+    chat_scope: str,
+    target_node_ids: list[str],
+    proposed_kind: str | None,
+    service_id: str | None,
+    *,
+    status: DraftStatus,
+    origin: DraftOrigin,
+    resolved_node_ids: list[str],
+) -> DraftDoc:
+    """Write one new draft file with its initial resolution state."""
     _ensure_project(plot_root, project_id)
     now = _now()
     draft = DraftDoc(
@@ -52,11 +112,14 @@ def record_draft(
         updated=now,
         canvas_kind=canvas_kind,
         service_id=service_id,
-        target_node_ids=list(target_node_ids or []),
+        target_node_ids=list(target_node_ids),
         proposed_kind=proposed_kind,
         proposed_text=proposed_text,
         rationale=rationale,
+        status=status,
+        origin=origin,
         chat_scope=chat_scope,
+        resolved_node_ids=list(resolved_node_ids),
     )
     _write_json(_draft_path(plot_root, project_id, draft.id), draft.model_dump())
     return draft

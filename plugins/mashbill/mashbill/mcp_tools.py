@@ -50,8 +50,8 @@ from mashbill.mcp_context_tools import (
     get_design_principles,
 )
 from mashbill.mcp_draft_tools import (
-    confirm_draft,
     ensure_draft,
+    finish_node_write_draft,
     record_draft,
     resolve_draft,
 )
@@ -223,6 +223,7 @@ def update_node(
     fields: dict[str, Any],
     service_id: str | None = None,
     draft_id: str | None = None,
+    chat_scope: str = "",
 ) -> dict[str, Any]:
     """Save content into ONE node — the clobber-safe way to write a single node.
 
@@ -237,13 +238,15 @@ def update_node(
     ``actors`` / ``services`` / ``entities`` / ``feature``; ``service_id`` is
     required when ``canvas_kind == "feature"``. Errors if ``node_id`` is absent
     (the project anchor is not a node). Only call this after the user confirms —
-    never to finalise something they haven't agreed to."""
+    never to finalise something they haven't agreed to. Pass [Write target]
+    ``chat_scope``; omitting ``draft_id`` records a confirmed fallback draft."""
     plot_root = resolve_plot_root(project_path)
     if draft_id is not None:
         ensure_draft(plot_root, project_id, draft_id)
     out = _update_node(plot_root, project_id, canvas_kind, node_id, fields, service_id)
-    if draft_id is not None:
-        confirm_draft(plot_root, project_id, draft_id, node_id)
+    finish_node_write_draft(
+        plot_root, project_id, draft_id, canvas_kind, fields, out, chat_scope, service_id
+    )
     return out
 
 
@@ -257,6 +260,7 @@ def create_node(
     service_id: str | None = None,
     near: str | None = None,
     draft_id: str | None = None,
+    chat_scope: str = "",
 ) -> dict[str, Any]:
     """Add ONE new node to a canvas — the clobber-safe way to create a node.
 
@@ -282,14 +286,12 @@ def create_node(
     ``services`` / ``entities`` / ``feature``; ``service_id`` is required when
     ``canvas_kind == "feature"``. Only call this after the user confirms the new
     node — never to add something they haven't agreed to.
-
     ``near`` places the new node beside an existing node (its parent's column)
     instead of the generic kind pile — pass the parent's id when registering a
     child (a feature near its service, a step near the previous step), so the
     canvas stays visually grouped (D-2026-07-02-L).
-
-    Returns ``{"node": <new node dict>, "rejected_fields": [...]}``.
-    """
+    Pass [Write target] ``chat_scope``; omitting ``draft_id`` records a confirmed fallback draft.
+    Returns ``{"node": <new node dict>, "rejected_fields": [...]}``."""
     plot_root = resolve_plot_root(project_path)
     if draft_id is not None:
         ensure_draft(plot_root, project_id, draft_id)
@@ -299,8 +301,9 @@ def create_node(
         # its detail canvas exactly like the app's endpoint flow does, so a
         # coach-registered feature is drillable too ("기능 캔버스 뜨지 않네" fix).
         sync_details_with_overview(plot_root, project_id)
-    if draft_id is not None:
-        confirm_draft(plot_root, project_id, draft_id, out["node"]["id"])
+    finish_node_write_draft(
+        plot_root, project_id, draft_id, canvas_kind, fields, out, chat_scope, service_id
+    )
     return out
 
 

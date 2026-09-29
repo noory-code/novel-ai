@@ -395,9 +395,8 @@ def test_update_node_is_a_registered_mcp_tool() -> None:
         "fields",
         "service_id",
         "draft_id",
+        "chat_scope",
     }
-    # service_id is the only optional arg
-    # W-00000316 adds draft_id as a second optional arg.
     assert set(tool.parameters["required"]) == {
         "project_path",
         "project_id",

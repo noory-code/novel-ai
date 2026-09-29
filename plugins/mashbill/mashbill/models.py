@@ -97,6 +97,9 @@ from mashbill.models_draft import (
     DraftDoc as DraftDoc,
 )
 from mashbill.models_draft import (
+    DraftOrigin as DraftOrigin,
+)
+from mashbill.models_draft import (
     DraftStatus as DraftStatus,
 )
 from mashbill.models_draft import (
