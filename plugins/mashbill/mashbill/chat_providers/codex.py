@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 from pathlib import Path
 
 from mashbill.chat_providers.base import (
@@ -75,12 +76,15 @@ class CodexProvider(_SubprocessChatProvider):
         # Split the composite "<slug>:<effort>" the selector produces
         # (D-2026-06-22-C): a known effort suffix becomes a separate
         # ``-c model_reasoning_effort=`` override; anything else is a bare model.
-        if not self._model:
+        return self._model_args_for(self._model)
+
+    def _model_args_for(self, model: str | None) -> list[str]:
+        if not model:
             return []
-        slug, sep, effort = self._model.rpartition(":")
+        slug, sep, effort = model.rpartition(":")
         if sep and slug and effort in _CODEX_EFFORTS:
             return ["--model", slug, "-c", f"model_reasoning_effort={effort}"]
-        return ["--model", self._model]
+        return ["--model", model]
 
     def _build_command(self, user_message: str) -> list[str]:
         # Until we've captured a thread_id, every turn starts a fresh session
@@ -159,3 +163,36 @@ class CodexProvider(_SubprocessChatProvider):
                     accumulator.append(text)
                     return ChatStreamEvent(type="delta", turn_id=turn_id, text=text)
         return None
+
+    async def complete_once(self, prompt: str, *, model: str | None = None) -> str:
+        """Run an ephemeral, read-only Codex completion without injected MCP tools."""
+        with tempfile.TemporaryDirectory(prefix="mashbill-draft-extract-") as isolated_root:
+            raw = await self._capture_once(
+                [
+                    self._cli_path,
+                    "exec",
+                    "--json",
+                    "--skip-git-repo-check",
+                    "--ephemeral",
+                    "--ignore-user-config",
+                    "--ignore-rules",
+                    "--sandbox",
+                    "read-only",
+                    "--cd",
+                    isolated_root,
+                    *self._model_args_for(model),
+                    prompt,
+                ]
+            )
+        messages: list[str] = []
+        for line in raw.splitlines():
+            obj = _decode_jsonl(line.encode())
+            if obj is None or obj.get("type") != "item.completed":
+                continue
+            item = obj.get("item")
+            if not isinstance(item, dict) or item.get("type") != "agent_message":
+                continue
+            text = item.get("text")
+            if isinstance(text, str) and text:
+                messages.append(text)
+        return "\n\n".join(messages)

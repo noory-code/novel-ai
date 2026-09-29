@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.4] — 2026-09-29
+
+### Added
+
+- After each in-app coach turn, the engine extracts concrete proposals the coach showed but did not record and keeps them as `origin: "extracted"` proposed drafts, then tells the app to refresh; the next turn lists the scope's open drafts as `[Open drafts]`.
+
 ## [0.196.3] — 2026-09-29
 
 ### Fixed

@@ -89,6 +89,34 @@ def record_applied_draft(
     )
 
 
+def record_extracted_draft(
+    plot_root: Path,
+    project_id: str,
+    canvas_kind: CanvasKind,
+    proposed_text: str,
+    rationale: str,
+    chat_scope: str,
+    target_node_ids: list[str] | None = None,
+    proposed_kind: str | None = None,
+    service_id: str | None = None,
+) -> DraftDoc:
+    """Persist a concrete proposal recovered from a completed coach turn."""
+    return _record_new_draft(
+        plot_root,
+        project_id,
+        canvas_kind,
+        proposed_text,
+        rationale,
+        chat_scope,
+        target_node_ids or [],
+        proposed_kind,
+        service_id,
+        status="proposed",
+        origin="extracted",
+        resolved_node_ids=[],
+    )
+
+
 def _record_new_draft(
     plot_root: Path,
     project_id: str,

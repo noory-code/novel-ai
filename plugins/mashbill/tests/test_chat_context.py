@@ -725,12 +725,14 @@ def test_system_prompt_stays_under_saturation_budget() -> None:
     every concrete proposal, including question-shaped proposals, and its later
     resolution without changing any measured prompt wording. Services remains
     below the observed saturation range.
+    Raised 1740 -> 1770 (W-00000316): the [Open drafts] resolution sentence adds
+    the draft id handoff without changing the existing pinned wording.
     The budget still forces compress-before-add:
     content is pinned by the phrase guards in this file and
     ``test_chat_system_prompt.py``; this test pins the SIZE."""
     for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
         words = len(build_system_prompt(scope).split())
-        assert words <= 1740, f"{scope}: {words} words > 1740 budget"
+        assert words <= 1770, f"{scope}: {words} words > 1770 budget"
 
 
 def test_every_canvas_steers_the_next_question_direction() -> None:

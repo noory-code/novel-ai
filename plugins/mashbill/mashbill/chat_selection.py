@@ -24,6 +24,7 @@ from typing import Any
 
 from mashbill.canvas_io import read_canvas
 from mashbill.chat_context import SELECTION_DETAIL_CAP, build_context_preamble
+from mashbill.draft_store import list_drafts
 from mashbill.field_policy import writable_node_fields
 from mashbill.models_canvas import CanvasDoc, CanvasKind
 from mashbill.workspace import enumerate_projects
@@ -76,6 +77,11 @@ _REGISTRY_SCOPES: frozenset[str] = frozenset({"feature", "services", "service"})
 # registry can't blow the context window.
 REGISTRY_CAP = 40
 
+# Open proposals shown to the coach on the next turn stay bounded independently
+# from the canvas map and selected-node detail.
+OPEN_DRAFTS_CAP = 8
+OPEN_DRAFT_TEXT_CAP = 160
+
 
 def build_turn_preamble(
     plot_root: Path, scope: str, selection: Any, project_path: str | None = None
@@ -85,6 +91,7 @@ def build_turn_preamble(
     Single place that builds "what the agent should see this turn" (D-2026-06-17-L):
     current Foundation → active-canvas map → cross-canvas registry → write
     target → selected-node detail, joined in that order (empty parts skipped).
+    Open drafts are inserted after the write target and before selected-node detail.
     The Layer-3 system prompt
     is delivered separately (``build_system_prompt``); this is the Layer-2
     user-message body.
@@ -113,8 +120,33 @@ def build_turn_preamble(
     context = canvas_map or build_context_preamble(scope, selection)
     registry = render_cross_canvas_registry(plot_root, scope)
     target = render_write_target(plot_root, scope, project_path)
+    open_drafts = render_open_drafts(plot_root, scope)
     detail = render_selection_detail(plot_root, scope, selection)
-    return "\n\n".join(p for p in (foundation, context, registry, target, detail) if p)
+    return "\n\n".join(p for p in (foundation, context, registry, target, open_drafts, detail) if p)
+
+
+def render_open_drafts(plot_root: Path, scope: str) -> str:
+    """Render the newest unresolved proposals for this conversation scope."""
+    project_id = _resolve_project_id(plot_root)
+    if project_id is None:
+        return ""
+    try:
+        drafts = [
+            draft
+            for draft in list_drafts(plot_root, project_id, status="proposed")
+            if draft.chat_scope == scope
+        ][:OPEN_DRAFTS_CAP]
+    except Exception:  # noqa: BLE001 — draft context must never break a chat turn
+        return ""
+    if not drafts:
+        return ""
+    lines = ["[Open drafts]"]
+    for draft in drafts:
+        text = " ".join(draft.proposed_text.split())
+        if len(text) > OPEN_DRAFT_TEXT_CAP:
+            text = text[: OPEN_DRAFT_TEXT_CAP - 1].rstrip() + "…"
+        lines.append(f"- {draft.id}: {text}")
+    return "\n".join(lines)
 
 
 def render_write_target(plot_root: Path, scope: str, project_path: str | None) -> str:

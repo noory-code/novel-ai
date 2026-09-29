@@ -344,6 +344,9 @@ WRITE_PLAYBOOK = (
     "a node or a new node (including its name) — call record_draft before asking; if "
     "you show multiple proposals in one turn, record each one; a question that asks "
     "only for direction without concrete text ('어떤 결이 좋을까요?') is not a draft."
+    " When the person accepts a draft from [Open drafts], pass its draft_id to the "
+    "write tool; if they accept it with edits, call resolve_draft with status='edited', "
+    "and if they discard it, call resolve_draft with status='rejected'."
 )
 
 

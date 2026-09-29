@@ -10,7 +10,7 @@ from mashbill.models_canvas import CanvasKind
 
 DraftStatus = Literal["proposed", "confirmed", "edited", "rejected"]
 ResolvedDraftStatus = Literal["confirmed", "edited", "rejected"]
-DraftOrigin = Literal["recorded", "auto"]
+DraftOrigin = Literal["recorded", "auto", "extracted"]
 
 
 class DraftDoc(BaseModel):

@@ -442,6 +442,67 @@ async def test_stream_turn_closes_child_stdin(tmp_path: Path) -> None:
     assert process.spawn_stdin == asyncio.subprocess.DEVNULL
 
 
+async def test_claude_complete_once_is_tool_free_and_session_isolated(tmp_path: Path) -> None:
+    process = _FakeProcess(stdout_lines=[b'[{"proposal":"x"}]\n'], returncode=0)
+    provider = ClaudeCodeProvider(
+        workspace_root=tmp_path,
+        session_id="sid",
+        cli_path="claude",
+        subprocess_factory=_build_fake_factory(process),
+    )
+
+    result = await provider.complete_once("extract", model="sonnet")
+
+    assert result == '[{"proposal":"x"}]\n'
+    assert "--no-session-persistence" in process.spawn_args
+    assert "--safe-mode" in process.spawn_args
+    tools = process.spawn_args.index("--tools")
+    assert process.spawn_args[tools + 1] == ""
+    assert "--model" in process.spawn_args
+    assert "sonnet" in process.spawn_args
+    assert "--session-id" not in process.spawn_args
+    assert "--resume" not in process.spawn_args
+    assert "--mcp-config" not in process.spawn_args
+    assert provider.is_first_turn
+
+
+async def test_codex_complete_once_is_ephemeral_without_mcp_or_resume(tmp_path: Path) -> None:
+    process = _FakeProcess(
+        stdout_lines=[
+            json.dumps(
+                {
+                    "type": "item.completed",
+                    "item": {"type": "agent_message", "text": '[{"proposal":"x"}]'},
+                }
+            ).encode()
+            + b"\n"
+        ],
+        returncode=0,
+    )
+    provider = CodexProvider(
+        workspace_root=tmp_path,
+        cli_path="codex",
+        subprocess_factory=_build_fake_factory(process),
+    )
+
+    result = await provider.complete_once("extract", model="gpt-test:high")
+
+    assert result == '[{"proposal":"x"}]'
+    assert "--ephemeral" in process.spawn_args
+    assert "--ignore-user-config" in process.spawn_args
+    assert "--sandbox" in process.spawn_args
+    assert "read-only" in process.spawn_args
+    isolated = process.spawn_args.index("--cd")
+    assert process.spawn_args[isolated + 1] != str(tmp_path)
+    assert "--model" in process.spawn_args
+    assert "gpt-test" in process.spawn_args
+    assert "model_reasoning_effort=high" in process.spawn_args
+    assert "resume" not in process.spawn_args
+    assert not any("mcp_servers" in arg for arg in process.spawn_args)
+    assert provider.is_first_turn
+    assert provider.session_id is None
+
+
 async def test_stream_turn_resumes_on_second_turn(tmp_path: Path) -> None:
     """First turn uses ``--session-id``; the next reuses ``--resume <id>``."""
     process_a = _FakeProcess(stdout_lines=[], returncode=0)

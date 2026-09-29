@@ -206,8 +206,14 @@ def test_write_playbook_appends_draft_tracking_without_changing_existing_words()
         "you show multiple proposals in one turn, record each one; a question that asks "
         "only for direction without concrete text ('어떤 결이 좋을까요?') is not a draft."
     )
-    suffix = existing_draft_rule + question_draft_rule
+    open_draft_rule = (
+        " When the person accepts a draft from [Open drafts], pass its draft_id to the "
+        "write tool; if they accept it with edits, call resolve_draft with status='edited', "
+        "and if they discard it, call resolve_draft with status='rejected'."
+    )
+    suffix = existing_draft_rule + question_draft_rule + open_draft_rule
     assert existing_draft_rule in WRITE_PLAYBOOK
+    assert open_draft_rule in WRITE_PLAYBOOK
     assert WRITE_PLAYBOOK.endswith(suffix)
     existing = WRITE_PLAYBOOK[: -len(suffix)]
     assert hashlib.sha256(existing.encode()).hexdigest() == (

@@ -22,6 +22,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 from uuid import uuid4
@@ -49,6 +50,7 @@ from mashbill.chat_store import (
     read_conversation,
     read_recent_transcript,
 )
+from mashbill.draft_extraction import extract_turn_drafts
 from mashbill.mcp_registration import ProviderName
 from mashbill.workspace import enumerate_projects, resolve_plot_root
 
@@ -119,6 +121,8 @@ _log = logging.getLogger(__name__)
 # Event name carried on the WS payload. Viewer demultiplexes on ``event``;
 # the existing project_changed payload uses ``"project_changed"``.
 _CHAT_EVENT = "chat_stream_event"
+_DRAFTS_EVENT = "drafts_changed"
+_draft_extraction_tasks: set[asyncio.Task[None]] = set()
 
 
 def _hub_from_request(request: Request) -> BroadcastHub | None:
@@ -133,6 +137,37 @@ def _registry_from_request(request: Request) -> ChatSessionRegistry:
     return chat_registry()
 
 
+async def _extract_turn_drafts_and_notify(
+    provider: ChatProvider,
+    hub: BroadcastHub,
+    plot_root: Path,
+    project_id: str,
+    scope: str,
+    coach_reply: str,
+    turn_started_at: str,
+    model: str | None,
+) -> None:
+    persisted_count = await extract_turn_drafts(
+        provider,
+        plot_root,
+        project_id,
+        scope,
+        coach_reply,
+        turn_started_at,
+        model=model,
+    )
+    if persisted_count == 0:
+        return
+    try:
+        await hub.notify_event(
+            plot_root,
+            _DRAFTS_EVENT,
+            {"project_id": project_id, "scope": scope},
+        )
+    except Exception:  # noqa: BLE001 — notification must not affect chat
+        _log.exception("chat draft notification failed for %s", plot_root)
+
+
 async def stream_chat_turn(
     provider: ChatProvider,
     hub: BroadcastHub,
@@ -141,6 +176,7 @@ async def stream_chat_turn(
     scope: str = DEFAULT_CHAT_SCOPE,
     project_id: str | None = None,
     provider_name: str = "",
+    model: str | None = None,
 ) -> None:
     """Pull stream events from ``provider`` and fan them out to ``plot_root``.
 
@@ -153,7 +189,9 @@ async def stream_chat_turn(
     When ``project_id`` is set, the assistant turn is persisted on
     ``turn_complete`` (D-2026-06-26-B) — best-effort, so a write failure never
     breaks the live turn.
+    Proposal extraction is scheduled after that save and never delays the stream.
     """
+    turn_started_at = datetime.now(UTC).isoformat()
     try:
         async for event in filter_save_announcements(provider.stream_turn(user_message)):
             payload = event.model_dump()
@@ -171,6 +209,20 @@ async def stream_chat_turn(
                     )
                 except Exception:  # noqa: BLE001 — persistence must not break chat
                     _log.exception("chat persist (assistant) failed for %s", plot_root)
+                task = asyncio.create_task(
+                    _extract_turn_drafts_and_notify(
+                        provider,
+                        hub,
+                        plot_root,
+                        project_id,
+                        scope,
+                        event.text,
+                        turn_started_at,
+                        model=model,
+                    )
+                )
+                _draft_extraction_tasks.add(task)
+                task.add_done_callback(_draft_extraction_tasks.discard)
     except Exception as exc:  # noqa: BLE001 — boundary catch
         _log.exception("chat turn crashed for %s", plot_root)
         await hub.notify_event(
@@ -284,7 +336,14 @@ async def chat_send_endpoint(request: Request) -> JSONResponse:
 
     asyncio.create_task(
         stream_chat_turn(
-            provider, hub, plot_root, full_message, scope, project_id, selection.provider
+            provider,
+            hub,
+            plot_root,
+            full_message,
+            scope,
+            project_id,
+            selection.provider,
+            selection.model,
         )
     )
     return JSONResponse({"accepted": True}, status_code=202)

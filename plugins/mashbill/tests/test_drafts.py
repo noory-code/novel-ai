@@ -16,6 +16,7 @@ from mashbill.draft_store import list_drafts, read_draft
 from mashbill.folder_io import create_node as create_canvas_node
 from mashbill.folder_io import read_canvas
 from mashbill.http_app import create_http_app
+from mashbill.models_draft import DraftDoc
 from mashbill.project_io import create_project
 from mashbill.workspace import resolve_plot_root
 
@@ -394,6 +395,26 @@ def test_legacy_draft_without_origin_reads_as_recorded(tmp_path: Path) -> None:
     path.write_text(json.dumps(raw), encoding="utf-8")
 
     assert read_draft(plot_root, "alpha", draft_id).origin == "recorded"
+
+
+def test_existing_auto_draft_file_still_reads_with_origin(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    raw = DraftDoc(
+        id="draft_auto_existing",
+        created="2026-09-29T00:00:00+00:00",
+        updated="2026-09-29T00:00:00+00:00",
+        canvas_kind="actors",
+        proposed_text="label: Reader",
+        rationale="Recorded after a write.",
+        status="confirmed",
+        origin="auto",
+        chat_scope="actors",
+    ).model_dump()
+    path = plot_root / "drafts" / "draft_auto_existing.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps(raw), encoding="utf-8")
+
+    assert read_draft(plot_root, "alpha", "draft_auto_existing").origin == "auto"
 
 
 def test_viewer_canvas_put_does_not_create_draft(tmp_path: Path) -> None:
