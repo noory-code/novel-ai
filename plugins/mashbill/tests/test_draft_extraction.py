@@ -27,7 +27,7 @@ from mashbill.draft_store import (
     resolve_draft,
 )
 from mashbill.endpoints_chat import stream_chat_turn
-from mashbill.folder_io import create_node
+from mashbill.folder_io import create_node, sync_details_with_overview
 from mashbill.models_canvas import CanvasKind
 from mashbill.models_kinds import NodeKind
 from mashbill.project_io import create_project
@@ -121,6 +121,40 @@ def _create_primary_canvas_nodes(plot_root: Path) -> dict[str, str]:
     }
 
 
+def _create_feature_canvas_node(plot_root: Path) -> tuple[str, str]:
+    feature = create_node(
+        plot_root,
+        "alpha",
+        "services",
+        "feature",
+        {"label": "Review submission"},
+    )
+    feature_id = str(feature["node"]["id"])
+    sync_details_with_overview(plot_root, "alpha")
+    step = create_node(
+        plot_root,
+        "alpha",
+        "feature",
+        "step",
+        {"label": "Check required fields"},
+        service_id=feature_id,
+    )
+    return feature_id, str(step["node"]["id"])
+
+
+def _create_empty_feature_canvas(plot_root: Path, label: str) -> str:
+    feature = create_node(
+        plot_root,
+        "alpha",
+        "services",
+        "feature",
+        {"label": label},
+    )
+    feature_id = str(feature["node"]["id"])
+    sync_details_with_overview(plot_root, "alpha")
+    return feature_id
+
+
 async def test_project_scope_extracts_with_all_primary_canvas_nodes(tmp_path: Path) -> None:
     plot_root = _project(tmp_path)
     node_ids = _create_primary_canvas_nodes(plot_root)
@@ -147,6 +181,132 @@ async def test_project_scope_extracts_with_all_primary_canvas_nodes(tmp_path: Pa
         }
         for canvas_kind in ("foundation", "actors", "services", "entities")
     ]
+
+
+async def test_project_scope_includes_feature_canvas_nodes_after_primary_nodes(
+    tmp_path: Path,
+) -> None:
+    plot_root = _project(tmp_path)
+    _create_primary_canvas_nodes(plot_root)
+    feature_id, step_id = _create_feature_canvas_node(plot_root)
+    provider = _ExtractingProvider()
+
+    count = await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "project",
+        "A feature-flow proposal.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert count == 0
+    prompt, _model = provider.extraction_calls[0]
+    assert "canvas_kind: feature" in prompt
+    assert "feature_id" in prompt
+    canvas_nodes = _prompt_input(provider)["canvas_nodes"]
+    first_feature_index = next(
+        index for index, node in enumerate(canvas_nodes) if node["canvas"] == "feature"
+    )
+    assert all(node["canvas"] != "feature" for node in canvas_nodes[:first_feature_index])
+    assert canvas_nodes[first_feature_index:] == [
+        {
+            "id": feature_id,
+            "name": "Review submission",
+            "canvas": "feature",
+            "feature_id": feature_id,
+        },
+        {
+            "id": step_id,
+            "name": "Check required fields",
+            "canvas": "feature",
+            "feature_id": feature_id,
+        },
+    ]
+
+
+async def test_project_scope_lists_empty_feature_canvas_in_features(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = _project(tmp_path)
+    feature_id = _create_empty_feature_canvas(plot_root, "Review submission")
+    original_canvas_nodes = draft_extraction._canvas_nodes
+
+    def canvas_nodes_without_feature_flow(
+        plot_root: Path,
+        project_id: str,
+        canvas_kind: CanvasKind,
+        service_id: str | None,
+    ) -> list[dict[str, str]]:
+        if canvas_kind == "feature":
+            return []
+        return original_canvas_nodes(plot_root, project_id, canvas_kind, service_id)
+
+    monkeypatch.setattr(draft_extraction, "_canvas_nodes", canvas_nodes_without_feature_flow)
+    provider = _ExtractingProvider()
+
+    await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "project",
+        "Propose the first flow step.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    prompt_input = _prompt_input(provider)
+    assert prompt_input["features"] == [{"feature_id": feature_id, "name": "Review submission"}]
+    assert all(node.get("feature_id") != feature_id for node in prompt_input["canvas_nodes"])
+
+
+async def test_project_scope_persists_draft_for_empty_feature_canvas(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = _project(tmp_path)
+    feature_id = _create_empty_feature_canvas(plot_root, "Review submission")
+    original_canvas_nodes = draft_extraction._canvas_nodes
+
+    def canvas_nodes_without_feature_flow(
+        plot_root: Path,
+        project_id: str,
+        canvas_kind: CanvasKind,
+        service_id: str | None,
+    ) -> list[dict[str, str]]:
+        if canvas_kind == "feature":
+            return []
+        return original_canvas_nodes(plot_root, project_id, canvas_kind, service_id)
+
+    monkeypatch.setattr(draft_extraction, "_canvas_nodes", canvas_nodes_without_feature_flow)
+    provider = _ExtractingProvider(
+        json.dumps(
+            [
+                {
+                    "proposed_text": "Start by validating required fields.",
+                    "canvas_kind": "feature",
+                    "feature_id": feature_id,
+                    "target_node_ids": [feature_id, "unknown"],
+                    "rationale": "It is a concrete first flow step.",
+                }
+            ]
+        )
+    )
+
+    count = await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "project",
+        "Propose the first flow step.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert count == 1
+    draft = list_drafts(plot_root, "alpha")[0]
+    assert draft.canvas_kind == "feature"
+    assert draft.service_id == feature_id
+    assert draft.target_node_ids == []
 
 
 async def test_project_scope_persists_selected_canvas_and_filters_target_ids(
@@ -183,6 +343,78 @@ async def test_project_scope_persists_selected_canvas_and_filters_target_ids(
     assert draft.chat_scope == "project"
     assert draft.service_id is None
     assert draft.target_node_ids == [node_ids["actors"]]
+
+
+async def test_project_scope_persists_feature_draft_and_filters_target_ids(
+    tmp_path: Path,
+) -> None:
+    plot_root = _project(tmp_path)
+    node_ids = _create_primary_canvas_nodes(plot_root)
+    feature_id, step_id = _create_feature_canvas_node(plot_root)
+    provider = _ExtractingProvider(
+        json.dumps(
+            [
+                {
+                    "proposed_text": "Reject submissions with missing fields.",
+                    "canvas_kind": "feature",
+                    "feature_id": feature_id,
+                    "target_node_ids": [step_id, node_ids["foundation"], "unknown"],
+                    "rationale": "It is a concrete flow decision.",
+                }
+            ]
+        )
+    )
+
+    count = await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "project",
+        "Reject submissions with missing fields.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert count == 1
+    draft = list_drafts(plot_root, "alpha")[0]
+    assert draft.origin == "extracted"
+    assert draft.canvas_kind == "feature"
+    assert draft.service_id == feature_id
+    assert draft.chat_scope == "project"
+    assert draft.target_node_ids == [step_id]
+
+
+@pytest.mark.parametrize("feature_fields", [{}, {"feature_id": "unknown"}])
+async def test_project_scope_skips_feature_proposals_without_known_feature_id(
+    tmp_path: Path,
+    feature_fields: dict[str, str],
+) -> None:
+    plot_root = _project(tmp_path)
+    _create_primary_canvas_nodes(plot_root)
+    _create_feature_canvas_node(plot_root)
+    provider = _ExtractingProvider(
+        json.dumps(
+            [
+                {
+                    "proposed_text": "Do not persist this feature proposal.",
+                    "canvas_kind": "feature",
+                    "rationale": "It lacks a known feature id.",
+                    **feature_fields,
+                }
+            ]
+        )
+    )
+
+    count = await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "project",
+        "A feature proposal.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert count == 0
+    assert list_drafts(plot_root, "alpha") == []
 
 
 @pytest.mark.parametrize("invalid_item", [{}, {"canvas_kind": "feature"}])
@@ -231,7 +463,7 @@ async def test_project_scope_caps_combined_canvas_nodes(
 ) -> None:
     plot_root = _project(tmp_path)
     _create_primary_canvas_nodes(plot_root)
-    assert draft_extraction.DRAFT_EXTRACTION_PROJECT_NODE_CAP == 200
+    assert draft_extraction.DRAFT_EXTRACTION_PROJECT_NODE_CAP == 400
     monkeypatch.setattr(draft_extraction, "DRAFT_EXTRACTION_PROJECT_NODE_CAP", 3)
     provider = _ExtractingProvider()
 
@@ -245,6 +477,65 @@ async def test_project_scope_caps_combined_canvas_nodes(
     )
 
     assert len(_prompt_input(provider)["canvas_nodes"]) == 3
+
+
+async def test_project_scope_persists_feature_draft_when_its_nodes_are_capped(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = _project(tmp_path)
+    _create_primary_canvas_nodes(plot_root)
+    _create_empty_feature_canvas(plot_root, "First feature")
+    capped_feature_id = _create_empty_feature_canvas(plot_root, "Capped feature")
+    monkeypatch.setattr(draft_extraction, "DRAFT_EXTRACTION_PROJECT_NODE_CAP", 3)
+    provider = _ExtractingProvider(
+        json.dumps(
+            [
+                {
+                    "proposed_text": "Start the capped feature flow.",
+                    "canvas_kind": "feature",
+                    "feature_id": capped_feature_id,
+                    "target_node_ids": [capped_feature_id],
+                    "rationale": "It is a concrete flow step.",
+                }
+            ]
+        )
+    )
+
+    count = await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "project",
+        "Propose a flow step.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert count == 1
+    assert len(_prompt_input(provider)["canvas_nodes"]) == 3
+    assert {feature["feature_id"] for feature in _prompt_input(provider)["features"]} >= {
+        capped_feature_id
+    }
+    draft = list_drafts(plot_root, "alpha")[0]
+    assert draft.canvas_kind == "feature"
+    assert draft.service_id == capped_feature_id
+    assert draft.target_node_ids == []
+
+
+async def test_single_canvas_scope_does_not_include_features_input(tmp_path: Path) -> None:
+    plot_root = _project(tmp_path)
+    provider = _ExtractingProvider()
+
+    await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "foundation",
+        "A foundation proposal.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert "features" not in _prompt_input(provider)
 
 
 async def test_project_scope_omits_only_an_unreadable_canvas(

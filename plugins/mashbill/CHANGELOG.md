@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.6] — 2026-09-30
+
+### Fixed
+
+- Project-conversation extraction also keeps proposals for a feature's flow, including a feature whose flow is still empty.
+
 ## [0.196.5] — 2026-09-30
 
 ### Fixed
