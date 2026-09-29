@@ -192,7 +192,7 @@ def test_write_playbook_forbids_announcing_the_save_saliently() -> None:
 
 
 def test_write_playbook_appends_draft_tracking_without_changing_existing_words() -> None:
-    suffix = (
+    existing_draft_rule = (
         " Drafts: whenever you show the person a concrete draft (text for a node or a new "
         "node), call record_draft with a one-line rationale and the chat_scope from [Write "
         "target]. When the person approves it, pass that draft_id to update_node or "
@@ -200,6 +200,14 @@ def test_write_playbook_appends_draft_tracking_without_changing_existing_words()
         "status='edited'; if they discard it, call resolve_draft with status='rejected'. Do "
         "not announce draft recording, just as you do not announce saves."
     )
+    question_draft_rule = (
+        " A proposal phrased as a question is still a draft if it shows concrete text for "
+        "a node or a new node (including its name) — call record_draft before asking; if "
+        "you show multiple proposals in one turn, record each one; a question that asks "
+        "only for direction without concrete text ('어떤 결이 좋을까요?') is not a draft."
+    )
+    suffix = existing_draft_rule + question_draft_rule
+    assert existing_draft_rule in WRITE_PLAYBOOK
     assert WRITE_PLAYBOOK.endswith(suffix)
     existing = WRITE_PLAYBOOK[: -len(suffix)]
     assert hashlib.sha256(existing.encode()).hexdigest() == (

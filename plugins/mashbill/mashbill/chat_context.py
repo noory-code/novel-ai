@@ -340,6 +340,10 @@ WRITE_PLAYBOOK = (
     "create_node. If the person confirms a revision, call resolve_draft with "
     "status='edited'; if they discard it, call resolve_draft with status='rejected'. Do "
     "not announce draft recording, just as you do not announce saves."
+    " A proposal phrased as a question is still a draft if it shows concrete text for "
+    "a node or a new node (including its name) — call record_draft before asking; if "
+    "you show multiple proposals in one turn, record each one; a question that asks "
+    "only for direction without concrete text ('어떤 결이 좋을까요?') is not a draft."
 )
 
 

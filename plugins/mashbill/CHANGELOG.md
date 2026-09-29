@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.1] — 2026-09-29
+
+### Fixed
+
+- The coach now records a proposal phrased as a question as a draft when it shows concrete node text or a new node, and records each proposal separately when it offers several in one turn.
+
 ## [0.196.0] — 2026-09-29
 
 ### Added
