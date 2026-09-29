@@ -18,6 +18,7 @@ from mashbill.folder_io import read_canvas, sync_details_with_overview
 from mashbill.http_app import create_http_app
 from mashbill.models_draft import DraftDoc
 from mashbill.project_io import create_project
+from mashbill.references import set_node_references as set_canvas_node_references
 from mashbill.workspace import resolve_plot_root
 
 
@@ -131,6 +132,39 @@ def test_update_node_with_draft_id_confirms_and_links_node(tmp_path: Path) -> No
     assert draft.resolved_node_ids == [node_id]
     assert [item.id for item in list_drafts(plot_root, "alpha")] == [draft_id]
     assert "draft_warning" not in result
+
+
+def test_update_node_same_value_does_not_confirm_draft_or_record_auto_draft(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    statement = "Help people shape products together."
+    node = create_canvas_node(
+        plot_root,
+        "alpha",
+        "foundation",
+        "mission",
+        {"label": "Mission", "statement": statement},
+    )["node"]
+    node_id = str(node["id"])
+    draft_id = str(
+        _record(str(tmp_path), proposed_text=statement, target_node_ids=[node_id])["draft_id"]
+    )
+
+    result = mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "foundation",
+        node_id,
+        {"statement": statement},
+        draft_id=draft_id,
+    )
+
+    assert result["draft_warning"] == (
+        f"draft {draft_id} was not confirmed: this write changed no design content (layout only)"
+    )
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_update_node_splits_matching_and_unmatched_fields_between_drafts(
@@ -786,6 +820,42 @@ def test_set_node_references_with_wrong_draft_records_auto_draft_and_warning(
     assert auto.resolved_node_ids == [service["id"]]
 
 
+def test_set_node_references_same_value_does_not_confirm_draft_or_record_auto_draft(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    actor = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Reader"})["node"]
+    service = create_canvas_node(plot_root, "alpha", "services", "service", {"label": "Reading"})[
+        "node"
+    ]
+    refs = {"ref_actor_ids": [str(actor["id"])]}
+    set_canvas_node_references(plot_root, "alpha", "services", str(service["id"]), refs)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="services",
+            proposed_text="Keep Reader linked",
+            target_node_ids=[str(service["id"])],
+            proposed_kind="references",
+        )["draft_id"]
+    )
+
+    result = mcp_tools.set_node_references(
+        str(tmp_path),
+        "alpha",
+        "services",
+        str(service["id"]),
+        refs,
+        draft_id=draft_id,
+    )
+
+    assert result["draft_warning"] == (
+        f"draft {draft_id} was not confirmed: this write changed no design content (layout only)"
+    )
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
+
+
 def test_update_canvas_records_content_diff_but_not_position_only_change(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
     existing = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Old name"})[
@@ -811,6 +881,54 @@ def test_update_canvas_records_content_diff_but_not_position_only_change(tmp_pat
     mcp_tools.update_canvas(str(tmp_path), "alpha", moved)
 
     assert len(list_drafts(plot_root, "alpha")) == 1
+
+
+def test_update_canvas_layout_only_keeps_empty_target_draft_proposed(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Reader"})
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text="A new actor",
+            target_node_ids=[],
+            proposed_kind="canvas",
+        )["draft_id"]
+    )
+    canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    canvas["nodes"][0]["x"] += 200
+
+    result = mcp_tools.update_canvas(str(tmp_path), "alpha", canvas, draft_id=draft_id)
+
+    assert result["draft_warning"] == (
+        f"draft {draft_id} was not confirmed: this write changed no design content (layout only)"
+    )
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
+
+
+def test_update_canvas_layout_only_keeps_targeted_draft_proposed(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    actor = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Reader"})["node"]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text="Refine Reader",
+            target_node_ids=[str(actor["id"])],
+            proposed_kind="canvas",
+        )["draft_id"]
+    )
+    canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    canvas["nodes"][0]["x"] += 200
+
+    result = mcp_tools.update_canvas(str(tmp_path), "alpha", canvas, draft_id=draft_id)
+
+    assert result["draft_warning"] == (
+        f"draft {draft_id} was not confirmed: this write changed no design content (layout only)"
+    )
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_update_canvas_with_wrong_draft_records_auto_draft_and_warning(tmp_path: Path) -> None:

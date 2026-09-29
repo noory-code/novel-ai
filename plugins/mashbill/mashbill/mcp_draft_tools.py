@@ -127,8 +127,11 @@ def finish_write_draft(
     chat_scope: str,
     service_id: str | None = None,
     written_texts: list[str] | None = None,
+    design_content_changed: bool = True,
 ) -> str | None:
     """Confirm the supplied draft or record one successful MCP write."""
+    if not design_content_changed:
+        return _no_design_content_warning(draft_id)
     if draft_id is not None and draft_matches_write(
         plot_root,
         project_id,
@@ -167,6 +170,7 @@ def finish_node_write_draft(
     chat_scope: str,
     service_id: str | None,
     additional_touched_node_ids: list[str] | None = None,
+    before_node: dict[str, Any] | None = None,
 ) -> str | None:
     """Confirm the supplied draft or create the fallback for a successful write."""
     node_id = str(write_result["node"]["id"])
@@ -174,6 +178,10 @@ def finish_node_write_draft(
     node = write_result["node"]
     rejected = set(write_result["rejected_fields"])
     written_fields = [name for name in (fields or {}) if name not in rejected]
+    if before_node is not None and all(
+        before_node.get(name) == node.get(name) for name in written_fields
+    ):
+        return _no_design_content_warning(draft_id)
     has_written_fields = bool(written_fields)
     if not written_fields:
         written_fields = ["label"]
@@ -272,12 +280,7 @@ def finish_canvas_write_draft(
     before_content = _canvas_design_content(before.model_dump(by_alias=True))
     after_content = _canvas_design_content(after.model_dump(by_alias=True))
     if before_content == after_content:
-        service_id = after.feature_ref if after.canvas_kind == "feature" else None
-        if draft_id is not None and draft_matches_write(
-            plot_root, project_id, draft_id, after.canvas_kind, [], service_id
-        ):
-            confirm_draft(plot_root, project_id, draft_id, [])
-        return None
+        return _no_design_content_warning(draft_id)
 
     before_nodes = before_content["nodes"]
     after_nodes = after_content["nodes"]
@@ -455,6 +458,12 @@ def _draft_mismatch_warning(draft_id: str) -> str:
 
 def _partial_draft_mismatch_warning(draft_id: str) -> str:
     return f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+
+
+def _no_design_content_warning(draft_id: str | None) -> str | None:
+    if draft_id is None:
+        return None
+    return f"draft {draft_id} was not confirmed: this write changed no design content (layout only)"
 
 
 def _canvas_written_texts(canvas: CanvasDoc, node_ids: list[str]) -> list[str]:

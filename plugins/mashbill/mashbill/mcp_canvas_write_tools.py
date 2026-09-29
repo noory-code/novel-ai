@@ -5,8 +5,19 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from mashbill.folder_io import create_edge, read_canvas, sync_details_with_overview, write_canvas
-from mashbill.mcp_draft_tools import ensure_draft, finish_canvas_write_draft, finish_write_draft
+from mashbill.folder_io import (
+    create_edge,
+    read_canvas,
+    sync_details_with_overview,
+    update_node,
+    write_canvas,
+)
+from mashbill.mcp_draft_tools import (
+    ensure_draft,
+    finish_canvas_write_draft,
+    finish_node_write_draft,
+    finish_write_draft,
+)
 from mashbill.models import CanvasDoc, CanvasKind
 from mashbill.references import set_node_references
 
@@ -29,6 +40,38 @@ def update_canvas_with_draft(
         sync = sync_details_with_overview(plot_root, project_id)
     warning = finish_canvas_write_draft(plot_root, project_id, draft_id, before, saved, chat_scope)
     return sync, warning
+
+
+def update_node_with_draft(
+    plot_root: Path,
+    project_id: str,
+    canvas_kind: CanvasKind,
+    node_id: str,
+    fields: dict[str, Any],
+    service_id: str | None,
+    draft_id: str | None,
+    chat_scope: str,
+) -> dict[str, Any]:
+    """Patch one node and finish its draft only when design content changed."""
+    if draft_id is not None:
+        ensure_draft(plot_root, project_id, draft_id)
+    before = read_canvas(plot_root, project_id, canvas_kind, service_id)
+    before_node = next((node for node in before.nodes if node.id == node_id), None)
+    out = update_node(plot_root, project_id, canvas_kind, node_id, fields, service_id)
+    warning = finish_node_write_draft(
+        plot_root,
+        project_id,
+        draft_id,
+        canvas_kind,
+        fields,
+        out,
+        chat_scope,
+        service_id,
+        before_node=before_node.model_dump(by_alias=True) if before_node is not None else None,
+    )
+    if warning is not None:
+        out["draft_warning"] = warning
+    return out
 
 
 def create_edge_with_draft(
@@ -84,6 +127,8 @@ def set_node_references_with_draft(
     """Assign references and confirm or record their draft."""
     if draft_id is not None:
         ensure_draft(plot_root, project_id, draft_id)
+    canvas = read_canvas(plot_root, project_id, canvas_kind, service_id)
+    before_node = next((node for node in canvas.nodes if node.id == node_id), None)
     out = set_node_references(plot_root, project_id, canvas_kind, node_id, refs, service_id)
     proposed_text = "참조: " + " / ".join(
         f"{field} = {', '.join(ref_ids) if ref_ids else '없음'}" for field, ref_ids in refs.items()
@@ -99,6 +144,8 @@ def set_node_references_with_draft(
         [node_id],
         chat_scope,
         service_id,
+        design_content_changed=before_node is None
+        or any(before_node.model_dump().get(field) != out["node"].get(field) for field in refs),
     )
     if warning is not None:
         out["draft_warning"] = warning

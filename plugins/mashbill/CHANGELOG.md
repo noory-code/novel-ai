@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.10] — 2026-09-30
+
+### Fixed
+
+- A write that changes no design content (layout-only `update_canvas`, same-value `update_node` or `set_node_references`) no longer confirms the supplied draft.
+
 ## [0.196.9] — 2026-09-30
 
 ### Fixed

@@ -31,9 +31,6 @@ from mashbill.folder_io import (
 from mashbill.folder_io import (
     rename_project as rename_project_folder,
 )
-from mashbill.folder_io import (
-    update_node as _update_node,
-)
 from mashbill.git_store import (
     list_tags,
 )
@@ -41,6 +38,7 @@ from mashbill.mcp_canvas_write_tools import (
     create_edge_with_draft,
     set_node_references_with_draft,
     update_canvas_with_draft,
+    update_node_with_draft,
 )
 from mashbill.mcp_context_tools import (
     get_canvas_framing,
@@ -254,15 +252,16 @@ def update_node(
     never to finalise something they haven't agreed to. Pass [Write target]
     ``chat_scope``; omitting ``draft_id`` records a confirmed fallback draft."""
     plot_root = resolve_plot_root(project_path)
-    if draft_id is not None:
-        ensure_draft(plot_root, project_id, draft_id)
-    out = _update_node(plot_root, project_id, canvas_kind, node_id, fields, service_id)
-    warning = finish_node_write_draft(
-        plot_root, project_id, draft_id, canvas_kind, fields, out, chat_scope, service_id
+    return update_node_with_draft(
+        plot_root,
+        project_id,
+        canvas_kind,
+        node_id,
+        fields,
+        service_id,
+        draft_id,
+        chat_scope,
     )
-    if warning is not None:
-        out["draft_warning"] = warning
-    return out
 
 
 @mcp.tool()
