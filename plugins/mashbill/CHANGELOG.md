@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.5] — 2026-09-30
+
+### Fixed
+
+- Turn extraction also runs in the project-wide conversation: the extractor sees the four base canvases' nodes and records each proposal on the canvas it names.
+
 ## [0.196.4] — 2026-09-29
 
 ### Added

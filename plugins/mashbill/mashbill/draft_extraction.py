@@ -6,7 +6,7 @@ import asyncio
 import json
 import logging
 from pathlib import Path
-from typing import get_args
+from typing import cast, get_args
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -17,7 +17,14 @@ from mashbill.models_canvas import CanvasKind
 from mashbill.models_kinds import NodeKind
 
 DRAFT_EXTRACTION_KNOWN_CAP = 30
+DRAFT_EXTRACTION_PROJECT_NODE_CAP = 200
 DRAFT_EXTRACTION_TIMEOUT_SECONDS = 60.0
+_PROJECT_CANVAS_KINDS: tuple[CanvasKind, ...] = (
+    "foundation",
+    "actors",
+    "services",
+    "entities",
+)
 _NODE_KINDS: frozenset[str] = frozenset(get_args(NodeKind))
 _NODE_KIND_OPTIONS = ", ".join(get_args(NodeKind))
 
@@ -33,6 +40,8 @@ Return only a JSON array. Each item must have:
 It may also have:
 - proposed_kind: only when proposing a new node, and only one of: {_NODE_KIND_OPTIONS}
 - target_node_ids: ids chosen only from the supplied canvas nodes
+When canvas_nodes include a canvas field (project scope), each item must also have:
+- canvas_kind: one of foundation, actors, services, entities
 
 Exclude proposals represented by any existing draft, including rejected drafts. A coach repeating
 an earlier proposal or referring to a rejected proposal is not a new proposal. Do not use tools,
@@ -51,6 +60,7 @@ class ExtractedProposal(BaseModel):
     proposed_kind: str | None = None
     target_node_ids: list[str] = Field(default_factory=list)
     rationale: str = Field(min_length=1)
+    canvas_kind: str | None = None
 
 
 def build_draft_extraction_prompt(
@@ -82,10 +92,14 @@ async def extract_turn_drafts(
     Every failure stays inside this background boundary. The completed chat turn has
     already been streamed and persisted before this coroutine is scheduled.
     """
+    project_scope = scope == "project"
     target = _target_for_scope(scope)
-    if target is None:
+    if target is None and not project_scope:
         return 0
-    canvas_kind, service_id = target
+    canvas_kind: CanvasKind | None = None
+    service_id: str | None = None
+    if target is not None:
+        canvas_kind, service_id = target
     try:
         scope_drafts = [
             draft
@@ -99,7 +113,11 @@ async def extract_turn_drafts(
             for draft in scope_drafts
             if draft.created >= turn_started_at and draft.id not in known_ids
         )
-        nodes = _canvas_nodes(plot_root, project_id, canvas_kind, service_id)
+        if project_scope:
+            nodes = _project_canvas_nodes(plot_root, project_id)
+        else:
+            assert canvas_kind is not None
+            nodes = _canvas_nodes(plot_root, project_id, canvas_kind, service_id)
         prompt = build_draft_extraction_prompt(
             coach_reply,
             [
@@ -117,10 +135,29 @@ async def extract_turn_drafts(
             _log.warning("chat draft extraction returned invalid JSON for %s", plot_root)
             return 0
 
-        known_node_ids = {node["id"] for node in nodes}
+        if project_scope:
+            known_node_ids_by_canvas = {
+                project_canvas_kind: {
+                    node["id"] for node in nodes if node["canvas"] == project_canvas_kind
+                }
+                for project_canvas_kind in _PROJECT_CANVAS_KINDS
+            }
+        else:
+            known_node_ids = {node["id"] for node in nodes}
         seen = {draft.proposed_text.strip().casefold() for draft in known_drafts}
         persisted_count = 0
         for proposal in proposals:
+            if project_scope:
+                if proposal.canvas_kind not in _PROJECT_CANVAS_KINDS:
+                    continue
+                proposal_canvas_kind = cast(CanvasKind, proposal.canvas_kind)
+                proposal_service_id = None
+                proposal_known_node_ids = known_node_ids_by_canvas[proposal_canvas_kind]
+            else:
+                assert canvas_kind is not None
+                proposal_canvas_kind = canvas_kind
+                proposal_service_id = service_id
+                proposal_known_node_ids = known_node_ids
             normalized = proposal.proposed_text.strip().casefold()
             if normalized in seen:
                 continue
@@ -128,13 +165,17 @@ async def extract_turn_drafts(
             record_extracted_draft(
                 plot_root,
                 project_id,
-                canvas_kind,
+                proposal_canvas_kind,
                 proposal.proposed_text,
                 proposal.rationale,
                 scope,
-                [node_id for node_id in proposal.target_node_ids if node_id in known_node_ids],
+                [
+                    node_id
+                    for node_id in proposal.target_node_ids
+                    if node_id in proposal_known_node_ids
+                ],
                 proposal.proposed_kind if proposal.proposed_kind in _NODE_KINDS else None,
-                service_id,
+                proposal_service_id,
             )
             persisted_count += 1
         return persisted_count
@@ -175,3 +216,22 @@ def _canvas_nodes(
 ) -> list[dict[str, str]]:
     canvas = read_canvas(plot_root, project_id, canvas_kind, service_id)
     return [{"id": node.id, "name": node.label} for node in canvas.nodes]
+
+
+def _project_canvas_nodes(plot_root: Path, project_id: str) -> list[dict[str, str]]:
+    nodes: list[dict[str, str]] = []
+    for canvas_kind in _PROJECT_CANVAS_KINDS:
+        try:
+            canvas_nodes = _canvas_nodes(plot_root, project_id, canvas_kind, None)
+        except Exception:  # noqa: BLE001 — one unreadable canvas must not stop extraction
+            _log.warning(
+                "chat draft extraction could not read %s canvas for %s",
+                canvas_kind,
+                plot_root,
+                exc_info=True,
+            )
+            continue
+        nodes.extend({**node, "canvas": canvas_kind} for node in canvas_nodes)
+        if len(nodes) >= DRAFT_EXTRACTION_PROJECT_NODE_CAP:
+            return nodes[:DRAFT_EXTRACTION_PROJECT_NODE_CAP]
+    return nodes

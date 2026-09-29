@@ -11,7 +11,7 @@ from typing import Any, get_args
 
 import pytest
 
-from mashbill import endpoints_chat
+from mashbill import draft_extraction, endpoints_chat
 from mashbill.broadcast import BroadcastHub
 from mashbill.chat_providers.base import ChatProvider, ChatStreamEvent
 from mashbill.chat_selection import OPEN_DRAFTS_CAP, build_turn_preamble
@@ -28,6 +28,7 @@ from mashbill.draft_store import (
 )
 from mashbill.endpoints_chat import stream_chat_turn
 from mashbill.folder_io import create_node
+from mashbill.models_canvas import CanvasKind
 from mashbill.models_kinds import NodeKind
 from mashbill.project_io import create_project
 from mashbill.workspace import resolve_plot_root
@@ -97,6 +98,193 @@ async def _wait_for_extraction_tasks() -> None:
 def _prompt_input(provider: _ExtractingProvider) -> dict[str, Any]:
     prompt, _model = provider.extraction_calls[0]
     return json.loads(prompt.rsplit("\nInput:\n", 1)[1])
+
+
+def _create_primary_canvas_nodes(plot_root: Path) -> dict[str, str]:
+    cases: dict[CanvasKind, str] = {
+        "foundation": "core_value",
+        "actors": "actor",
+        "services": "service",
+        "entities": "entity",
+    }
+    return {
+        canvas_kind: str(
+            create_node(
+                plot_root,
+                "alpha",
+                canvas_kind,
+                node_kind,
+                {"label": f"{canvas_kind.title()} node"},
+            )["node"]["id"]
+        )
+        for canvas_kind, node_kind in cases.items()
+    }
+
+
+async def test_project_scope_extracts_with_all_primary_canvas_nodes(tmp_path: Path) -> None:
+    plot_root = _project(tmp_path)
+    node_ids = _create_primary_canvas_nodes(plot_root)
+    provider = _ExtractingProvider()
+
+    count = await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "project",
+        "A project-wide proposal.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert count == 0
+    assert len(provider.extraction_calls) == 1
+    prompt, _model = provider.extraction_calls[0]
+    assert "- canvas_kind: one of foundation, actors, services, entities" in prompt
+    assert _prompt_input(provider)["canvas_nodes"] == [
+        {
+            "id": node_ids[canvas_kind],
+            "name": f"{canvas_kind.title()} node",
+            "canvas": canvas_kind,
+        }
+        for canvas_kind in ("foundation", "actors", "services", "entities")
+    ]
+
+
+async def test_project_scope_persists_selected_canvas_and_filters_target_ids(
+    tmp_path: Path,
+) -> None:
+    plot_root = _project(tmp_path)
+    node_ids = _create_primary_canvas_nodes(plot_root)
+    provider = _ExtractingProvider(
+        json.dumps(
+            [
+                {
+                    "proposed_text": "Clarify the primary actor.",
+                    "canvas_kind": "actors",
+                    "target_node_ids": [node_ids["actors"], node_ids["foundation"]],
+                    "rationale": "It is concrete actor copy.",
+                }
+            ]
+        )
+    )
+
+    count = await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "project",
+        "Clarify the primary actor.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert count == 1
+    draft = list_drafts(plot_root, "alpha")[0]
+    assert draft.origin == "extracted"
+    assert draft.canvas_kind == "actors"
+    assert draft.chat_scope == "project"
+    assert draft.service_id is None
+    assert draft.target_node_ids == [node_ids["actors"]]
+
+
+@pytest.mark.parametrize("invalid_item", [{}, {"canvas_kind": "feature"}])
+async def test_project_scope_skips_proposals_without_primary_canvas_kind(
+    tmp_path: Path,
+    invalid_item: dict[str, str],
+) -> None:
+    plot_root = _project(tmp_path)
+    node_ids = _create_primary_canvas_nodes(plot_root)
+    provider = _ExtractingProvider(
+        json.dumps(
+            [
+                {
+                    "proposed_text": "Do not persist this.",
+                    "rationale": "It lacks a valid project canvas.",
+                    **invalid_item,
+                },
+                {
+                    "proposed_text": "Persist this actor proposal.",
+                    "canvas_kind": "actors",
+                    "target_node_ids": [node_ids["actors"]],
+                    "rationale": "It has a valid project canvas.",
+                },
+            ]
+        )
+    )
+
+    count = await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "project",
+        "Two proposals.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert count == 1
+    assert [draft.proposed_text for draft in list_drafts(plot_root, "alpha")] == [
+        "Persist this actor proposal."
+    ]
+
+
+async def test_project_scope_caps_combined_canvas_nodes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = _project(tmp_path)
+    _create_primary_canvas_nodes(plot_root)
+    assert draft_extraction.DRAFT_EXTRACTION_PROJECT_NODE_CAP == 200
+    monkeypatch.setattr(draft_extraction, "DRAFT_EXTRACTION_PROJECT_NODE_CAP", 3)
+    provider = _ExtractingProvider()
+
+    await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "project",
+        "A project-wide proposal.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert len(_prompt_input(provider)["canvas_nodes"]) == 3
+
+
+async def test_project_scope_omits_only_an_unreadable_canvas(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = _project(tmp_path)
+    _create_primary_canvas_nodes(plot_root)
+    original_read_canvas = draft_extraction.read_canvas
+    requested_canvases: list[CanvasKind] = []
+
+    def read_canvas_with_failure(
+        plot_root: Path,
+        project_id: str,
+        canvas_kind: CanvasKind,
+        service_id: str | None = None,
+    ) -> Any:
+        requested_canvases.append(canvas_kind)
+        if canvas_kind == "services":
+            raise OSError("services canvas is unreadable")
+        return original_read_canvas(plot_root, project_id, canvas_kind, service_id)
+
+    monkeypatch.setattr(draft_extraction, "read_canvas", read_canvas_with_failure)
+    provider = _ExtractingProvider()
+
+    await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "project",
+        "A project-wide proposal.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert {node["canvas"] for node in _prompt_input(provider)["canvas_nodes"]} == {
+        "foundation",
+        "actors",
+        "entities",
+    }
+    assert requested_canvases == ["foundation", "actors", "services", "entities"]
 
 
 async def test_turn_complete_extracts_unrecorded_proposal_in_background(tmp_path: Path) -> None:
