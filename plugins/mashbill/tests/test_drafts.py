@@ -10,12 +10,13 @@ from pathlib import Path
 import pytest
 from starlette.testclient import TestClient
 
-from mashbill import draft_store, mcp_tools
+from mashbill import draft_store, mcp_project_tools, mcp_tools
 from mashbill.broadcast import BroadcastHub
 from mashbill.draft_store import list_drafts, read_draft
 from mashbill.folder_io import create_node as create_canvas_node
 from mashbill.folder_io import read_canvas, sync_details_with_overview
 from mashbill.http_app import create_http_app
+from mashbill.mcp_draft_tools import AUTO_DRAFT_RATIONALE
 from mashbill.models_draft import DraftDoc
 from mashbill.project_io import create_project
 from mashbill.references import set_node_references as set_canvas_node_references
@@ -1259,6 +1260,123 @@ def test_existing_auto_draft_file_still_reads_with_origin(tmp_path: Path) -> Non
     assert read_draft(plot_root, "alpha", "draft_auto_existing").origin == "auto"
 
 
+@pytest.mark.parametrize(
+    "canvas_kind", ["foundation", "actors", "services", "entities", "feature"]
+)
+def test_existing_canvas_draft_files_still_read(
+    tmp_path: Path, canvas_kind: str
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = f"draft_existing_{canvas_kind}"
+    path = plot_root / "drafts" / f"{draft_id}.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        json.dumps(
+            {
+                "id": draft_id,
+                "created": "2026-09-29T00:00:00+00:00",
+                "updated": "2026-09-29T00:00:00+00:00",
+                "canvas_kind": canvas_kind,
+                "service_id": "feature_1" if canvas_kind == "feature" else None,
+                "target_node_ids": [],
+                "proposed_kind": None,
+                "proposed_text": "Existing proposal",
+                "rationale": "Existing rationale",
+                "status": "proposed",
+                "origin": "recorded",
+                "chat_scope": canvas_kind,
+                "resolved_node_ids": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert read_draft(plot_root, "alpha", draft_id).canvas_kind == canvas_kind
+
+
+def test_mcp_rename_project_records_confirmed_project_draft(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    monkeypatch.setenv("MASHBILL_CHAT_SCOPE", "project")
+
+    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "Renamed Alpha")
+
+    assert renamed["name"] == "Renamed Alpha"
+    drafts = list_drafts(plot_root, "alpha")
+    assert len(drafts) == 1
+    draft = drafts[0]
+    assert draft.origin == "auto"
+    assert draft.status == "confirmed"
+    assert draft.canvas_kind == "project"
+    assert draft.proposed_text == "프로젝트 이름: Alpha → Renamed Alpha"
+    assert draft.rationale == AUTO_DRAFT_RATIONALE
+    assert draft.target_node_ids == []
+    assert draft.resolved_node_ids == []
+    assert draft.chat_scope == "project"
+
+
+def test_mcp_rename_project_to_same_name_records_no_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+
+    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "Alpha")
+
+    assert renamed["name"] == "Alpha"
+    assert list_drafts(plot_root, "alpha") == []
+
+
+def test_mcp_rename_project_returns_rename_when_draft_recording_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plot_root, _ = _project(tmp_path)
+
+    def fail_to_record(*_args: object, **_kwargs: object) -> None:
+        raise OSError("draft storage unavailable")
+
+    monkeypatch.setattr(mcp_project_tools, "persist_applied_draft", fail_to_record)
+
+    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "Renamed Alpha")
+
+    assert renamed["name"] == "Renamed Alpha"
+    assert list_drafts(plot_root, "alpha") == []
+
+
+def test_project_drafts_can_be_filtered_in_store_and_http(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "Renamed Alpha")
+    assert renamed["name"] == "Renamed Alpha"
+    other = _record(str(tmp_path))
+
+    project_drafts = list_drafts(plot_root, "alpha", canvas_kind="project")
+    assert len(project_drafts) == 1
+    assert project_drafts[0].canvas_kind == "project"
+    assert project_drafts[0].id != other["draft_id"]
+
+    client = TestClient(create_http_app(hub=BroadcastHub(enable_watchers=False)))
+    response = client.get(
+        "/api/projects/alpha/drafts",
+        params={"project_path": str(tmp_path), "canvas_kind": "project"},
+    )
+
+    assert response.status_code == 200
+    assert [row["id"] for row in response.json()["drafts"]] == [project_drafts[0].id]
+
+
+def test_http_rename_project_records_no_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    client = TestClient(create_http_app(hub=BroadcastHub(enable_watchers=False)))
+
+    response = client.patch(
+        "/api/projects/alpha",
+        params={"project_path": str(tmp_path)},
+        json={"name": "Renamed Alpha"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["name"] == "Renamed Alpha"
+    assert list_drafts(plot_root, "alpha") == []
+
+
 def test_viewer_canvas_put_does_not_create_draft(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
     client = TestClient(create_http_app(hub=BroadcastHub(enable_watchers=False)))
@@ -1360,6 +1478,13 @@ def test_draft_tools_have_pinned_mcp_schemas() -> None:
         "proposed_text",
         "rationale",
     }
+    assert record.parameters["properties"]["canvas_kind"]["enum"] == [
+        "foundation",
+        "actors",
+        "services",
+        "entities",
+        "feature",
+    ]
 
     for tool_name in ("create_edge", "set_node_references", "update_canvas"):
         tool = asyncio.run(mcp_tools.mcp.get_tool(tool_name))

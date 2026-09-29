@@ -9,8 +9,7 @@ from starlette.responses import JSONResponse
 
 from mashbill.draft_store import list_drafts
 from mashbill.endpoints_common import _ApiError, _error, _parse_canvas_kind, _require_plot_root
-from mashbill.models_canvas import CanvasKind
-from mashbill.models_draft import DraftStatus
+from mashbill.models_draft import DraftCanvasKind, DraftStatus
 
 _DRAFT_STATUSES: frozenset[str] = frozenset({"proposed", "confirmed", "edited", "rejected"})
 
@@ -25,9 +24,11 @@ async def drafts_list_endpoint(request: Request) -> JSONResponse:
     if raw_status is not None and raw_status not in _DRAFT_STATUSES:
         return _error(f"unknown draft status: {raw_status!r}")
     raw_canvas_kind = request.query_params.get("canvas_kind")
-    canvas_kind: CanvasKind | None = None
+    canvas_kind: DraftCanvasKind | None = None
     if raw_canvas_kind is not None:
-        canvas_kind = _parse_canvas_kind(raw_canvas_kind)
+        canvas_kind = (
+            "project" if raw_canvas_kind == "project" else _parse_canvas_kind(raw_canvas_kind)
+        )
         if canvas_kind is None:
             return _error(f"unknown canvas kind: {raw_canvas_kind!r}")
     try:

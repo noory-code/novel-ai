@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.12] — 2026-09-30
+
+### Added
+
+- An AI `rename_project` leaves an auto draft with `canvas_kind: "project"`, and the drafts list accepts `canvas_kind=project`.
+
 ## [0.196.11] — 2026-09-30
 
 ### Fixed

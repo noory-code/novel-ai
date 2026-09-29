@@ -11,6 +11,7 @@ from mashbill.models_canvas import CanvasKind
 DraftStatus = Literal["proposed", "confirmed", "edited", "rejected"]
 ResolvedDraftStatus = Literal["confirmed", "edited", "rejected"]
 DraftOrigin = Literal["recorded", "auto", "extracted"]
+DraftCanvasKind = CanvasKind | Literal["project"]
 
 
 class DraftDoc(BaseModel):
@@ -19,7 +20,7 @@ class DraftDoc(BaseModel):
     id: str
     created: str
     updated: str
-    canvas_kind: CanvasKind
+    canvas_kind: DraftCanvasKind
     service_id: str | None = None
     target_node_ids: list[str] = Field(default_factory=list)
     proposed_kind: str | None = None

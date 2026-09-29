@@ -11,8 +11,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
-from mashbill.models_canvas import CanvasKind
-from mashbill.models_draft import DraftDoc, DraftOrigin, DraftStatus, ResolvedDraftStatus
+from mashbill.models_draft import (
+    DraftCanvasKind,
+    DraftDoc,
+    DraftOrigin,
+    DraftStatus,
+    ResolvedDraftStatus,
+)
 from mashbill.storage import _ensure_project, _project_dir, _read_json, _write_json
 
 _DRAFT_DIRNAME = "drafts"
@@ -35,7 +40,7 @@ def _draft_path(plot_root: Path, project_id: str, draft_id: str) -> Path:
 def record_draft(
     plot_root: Path,
     project_id: str,
-    canvas_kind: CanvasKind,
+    canvas_kind: DraftCanvasKind,
     proposed_text: str,
     rationale: str,
     chat_scope: str,
@@ -63,7 +68,7 @@ def record_draft(
 def record_applied_draft(
     plot_root: Path,
     project_id: str,
-    canvas_kind: CanvasKind,
+    canvas_kind: DraftCanvasKind,
     proposed_text: str,
     rationale: str,
     chat_scope: str,
@@ -92,7 +97,7 @@ def record_applied_draft(
 def record_extracted_draft(
     plot_root: Path,
     project_id: str,
-    canvas_kind: CanvasKind,
+    canvas_kind: DraftCanvasKind,
     proposed_text: str,
     rationale: str,
     chat_scope: str,
@@ -120,7 +125,7 @@ def record_extracted_draft(
 def _record_new_draft(
     plot_root: Path,
     project_id: str,
-    canvas_kind: CanvasKind,
+    canvas_kind: DraftCanvasKind,
     proposed_text: str,
     rationale: str,
     chat_scope: str,
@@ -194,7 +199,7 @@ def list_drafts(
     project_id: str,
     *,
     status: DraftStatus | None = None,
-    canvas_kind: CanvasKind | None = None,
+    canvas_kind: DraftCanvasKind | None = None,
     node_id: str | None = None,
 ) -> list[DraftDoc]:
     """List matching drafts newest-updated first."""

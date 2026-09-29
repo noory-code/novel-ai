@@ -28,9 +28,6 @@ from mashbill.folder_io import (
     read_project,
     sync_details_with_overview,
 )
-from mashbill.folder_io import (
-    rename_project as rename_project_folder,
-)
 from mashbill.git_store import (
     list_tags,
 )
@@ -51,6 +48,7 @@ from mashbill.mcp_draft_tools import (
     resolve_draft,
 )
 from mashbill.mcp_git_tools import delete_project_tag, list_project_tags, tag_project
+from mashbill.mcp_project_tools import rename_project_with_draft
 from mashbill.migrate import migrate_v01_to_v02
 from mashbill.models import CanvasDoc, CanvasKind
 from mashbill.models_foundation import PROJECT_ANCHOR_ID
@@ -157,7 +155,7 @@ def rename_project(project_path: str, project_id: str, name: str) -> dict[str, A
     """Update a project's ``name`` and mirror it onto the Core canvas's
     Project anchor label in one shot."""
     plot_root = resolve_plot_root(project_path)
-    return rename_project_folder(plot_root, project_id, name).model_dump()
+    return rename_project_with_draft(plot_root, project_id, name).model_dump()
 
 
 @mcp.tool()

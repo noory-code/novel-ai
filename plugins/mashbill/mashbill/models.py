@@ -94,6 +94,9 @@ from mashbill.models_discovery import (
     WorkspaceDiscoveryResponse as WorkspaceDiscoveryResponse,
 )
 from mashbill.models_draft import (
+    DraftCanvasKind as DraftCanvasKind,
+)
+from mashbill.models_draft import (
     DraftDoc as DraftDoc,
 )
 from mashbill.models_draft import (
