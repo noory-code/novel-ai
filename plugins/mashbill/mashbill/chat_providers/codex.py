@@ -21,6 +21,7 @@ from mashbill.chat_providers.base import (
     _SubprocessChatProvider,
     _SubprocessFactory,
 )
+from mashbill.chat_scope_env import CHAT_SCOPE_ENV
 from mashbill.mcp_registration import codex_mashbill_config
 from mashbill.tool_log import TOOL_LOG_ENV
 
@@ -60,6 +61,15 @@ class CodexProvider(_SubprocessChatProvider):
         if not path:
             return []
         return ["-c", f"mcp_servers.mashbill.env.{TOOL_LOG_ENV}={json.dumps(path)}"]
+
+    def _chat_scope_args(self) -> list[str]:
+        """Hand the injected tool server this turn's conversation scope."""
+        if not self._chat_scope:
+            return []
+        return [
+            "-c",
+            f"mcp_servers.mashbill.env.{CHAT_SCOPE_ENV}={json.dumps(self._chat_scope)}",
+        ]
 
     def _model_args(self) -> list[str]:
         # Split the composite "<slug>:<effort>" the selector produces
@@ -104,6 +114,7 @@ class CodexProvider(_SubprocessChatProvider):
             "-c",
             f"mcp_servers.mashbill.args={json.dumps(mcp_entry['args'])}",
             *self._tool_log_args(),
+            *self._chat_scope_args(),
             *self._model_args(),
         ]
         if self._first_turn or self._session_id is None:

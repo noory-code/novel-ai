@@ -311,6 +311,14 @@ def test_claude_attaches_own_mashbill_strictly(tmp_path: Path) -> None:
     assert cmd[-1] == "hi"  # user message still trails
 
 
+def test_claude_passes_turn_scope_to_the_injected_server(tmp_path: Path) -> None:
+    p = ClaudeCodeProvider(workspace_root=tmp_path)
+    p.set_chat_scope("feature:writing")
+    cmd = p._build_command("hi")
+    cfg = json.loads(Path(cmd[cmd.index("--mcp-config") + 1]).read_text(encoding="utf-8"))
+    assert cfg["mcpServers"]["mashbill"]["env"]["MASHBILL_CHAT_SCOPE"] == "feature:writing"
+
+
 # --- codex: no system-prompt flag → prepend to the message -----------------
 
 
@@ -354,6 +362,19 @@ def test_codex_hands_the_tool_log_path_to_the_injected_server(
         v for v in overrides if v.startswith("mcp_servers.mashbill.env.MASHBILL_TOOL_LOG=")
     )
     assert json.loads(env_value.split("=", 1)[1]) == str(tmp_path / "tool-calls.jsonl")
+
+
+def test_codex_passes_turn_scope_to_the_injected_server(tmp_path: Path) -> None:
+    p = CodexProvider(workspace_root=tmp_path)
+    p.set_chat_scope("services")
+    cmd = p._build_command("hi")
+    overrides = [cmd[i + 1] for i, arg in enumerate(cmd) if arg == "-c"]
+    env_value = next(
+        value
+        for value in overrides
+        if value.startswith("mcp_servers.mashbill.env.MASHBILL_CHAT_SCOPE=")
+    )
+    assert json.loads(env_value.split("=", 1)[1]) == "services"
 
 
 def test_codex_says_nothing_about_the_tool_log_when_no_run_asked_for_it(

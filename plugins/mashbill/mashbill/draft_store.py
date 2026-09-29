@@ -67,11 +67,12 @@ def record_applied_draft(
     proposed_text: str,
     rationale: str,
     chat_scope: str,
-    node_id: str,
-    proposed_kind: str,
+    target_node_ids: list[str],
+    proposed_kind: str | None,
     service_id: str | None = None,
+    resolved_node_ids: list[str] | None = None,
 ) -> DraftDoc:
-    """Persist the confirmed fallback record for an MCP node write."""
+    """Persist the confirmed fallback record for a successful MCP write."""
     return _record_new_draft(
         plot_root,
         project_id,
@@ -79,12 +80,12 @@ def record_applied_draft(
         proposed_text,
         rationale,
         chat_scope,
-        [node_id],
+        target_node_ids,
         proposed_kind,
         service_id,
         status="confirmed",
         origin="auto",
-        resolved_node_ids=[node_id],
+        resolved_node_ids=list(resolved_node_ids or []),
     )
 
 

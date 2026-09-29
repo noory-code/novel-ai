@@ -60,9 +60,13 @@ class _CannedProvider(ChatProvider):
         self._events = events
         self.calls: list[str] = []
         self.system_prompts: list[str | None] = []
+        self.chat_scopes: list[str] = []
 
     def set_system_prompt(self, text: str | None) -> None:
         self.system_prompts.append(text)
+
+    def set_chat_scope(self, scope: str) -> None:
+        self.chat_scopes.append(scope)
 
     async def stream_turn(self, user_message: str) -> Any:
         self.calls.append(user_message)
@@ -279,6 +283,19 @@ def test_chat_send_accepts_valid_request_and_calls_provider(
     # The async task fired during the synchronous TestClient call (Starlette's
     # TestClient drives the loop to completion before returning the response).
     assert fake_provider.calls == ["explain plot"]
+
+
+def test_chat_send_gives_the_turn_scope_to_the_provider(
+    app_client: TestClient, workspace: Path, fake_provider: _CannedProvider
+) -> None:
+    _select_provider(app_client, workspace, "codex")
+    response = app_client.post(
+        "/api/chat/send",
+        json={"project_path": str(workspace), "message": "explain plot", "scope": "actors"},
+    )
+
+    assert response.status_code == 202
+    assert fake_provider.chat_scopes == ["actors"]
 
 
 def test_chat_send_dispatches_each_provider_to_its_own_session(

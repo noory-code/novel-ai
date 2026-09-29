@@ -14,6 +14,7 @@ from mashbill import draft_store, mcp_tools
 from mashbill.broadcast import BroadcastHub
 from mashbill.draft_store import list_drafts, read_draft
 from mashbill.folder_io import create_node as create_canvas_node
+from mashbill.folder_io import read_canvas
 from mashbill.http_app import create_http_app
 from mashbill.project_io import create_project
 from mashbill.workspace import resolve_plot_root
@@ -216,6 +217,174 @@ def test_auto_draft_keeps_supplied_chat_scope(tmp_path: Path) -> None:
     assert list_drafts(plot_root, "alpha")[0].chat_scope == "entities"
 
 
+def test_create_edge_without_draft_records_both_endpoints_and_relationship(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    source = create_canvas_node(
+        plot_root, "alpha", "entities", "entity", {"label": "Customer"}
+    )["node"]
+    target = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Order"})[
+        "node"
+    ]
+
+    mcp_tools.create_edge(
+        str(tmp_path),
+        "alpha",
+        "entities",
+        str(source["id"]),
+        str(target["id"]),
+        label="places",
+    )
+
+    draft = list_drafts(plot_root, "alpha")[0]
+    assert draft.status == "confirmed"
+    assert draft.origin == "auto"
+    assert draft.proposed_kind == "edge"
+    assert draft.proposed_text == "관계: Customer → Order (places)"
+    assert draft.target_node_ids == [source["id"], target["id"]]
+    assert draft.resolved_node_ids == [source["id"], target["id"]]
+
+
+def test_set_node_references_without_draft_records_reference_change(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    actor = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Reader"})[
+        "node"
+    ]
+    service = create_canvas_node(
+        plot_root, "alpha", "services", "service", {"label": "Reading"}
+    )["node"]
+
+    mcp_tools.set_node_references(
+        str(tmp_path),
+        "alpha",
+        "services",
+        str(service["id"]),
+        {"ref_actor_ids": [str(actor["id"])]},
+    )
+
+    draft = list_drafts(plot_root, "alpha")[0]
+    assert draft.status == "confirmed"
+    assert draft.origin == "auto"
+    assert draft.proposed_kind == "references"
+    assert draft.proposed_text == f"참조: ref_actor_ids = {actor['id']}"
+    assert draft.target_node_ids == [service["id"]]
+    assert draft.resolved_node_ids == [service["id"]]
+
+
+def test_update_canvas_records_content_diff_but_not_position_only_change(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    existing = create_canvas_node(
+        plot_root, "alpha", "actors", "actor", {"label": "Old name"}
+    )["node"]
+    before = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    before["nodes"][0]["label"] = "Renamed"
+    before["nodes"].append({"id": "actor_added", "kind": "actor", "label": "Added"})
+
+    mcp_tools.update_canvas(str(tmp_path), "alpha", before)
+
+    draft = list_drafts(plot_root, "alpha")[0]
+    assert draft.status == "confirmed"
+    assert draft.origin == "auto"
+    assert draft.proposed_kind == "canvas"
+    assert draft.proposed_text.startswith("더함: Added / 바꿈: Renamed / 뺌: 없음")
+    assert "선:" in draft.proposed_text
+    assert draft.target_node_ids == ["actor_added", existing["id"]]
+    assert draft.resolved_node_ids == ["actor_added", existing["id"]]
+
+    moved = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    moved["nodes"][0]["x"] += 200
+    mcp_tools.update_canvas(str(tmp_path), "alpha", moved)
+
+    assert len(list_drafts(plot_root, "alpha")) == 1
+
+
+@pytest.mark.parametrize("tool_name", ["create_edge", "set_node_references", "update_canvas"])
+def test_canvas_write_with_draft_id_confirms_without_creating_auto_draft(
+    tmp_path: Path, tool_name: str
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    first = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "First"})[
+        "node"
+    ]
+    second = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Second"})[
+        "node"
+    ]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text="Apply the canvas change",
+            target_node_ids=[],
+            proposed_kind=tool_name,
+        )["draft_id"]
+    )
+
+    if tool_name == "create_edge":
+        mcp_tools.create_edge(
+            str(tmp_path),
+            "alpha",
+            "actors",
+            str(first["id"]),
+            str(second["id"]),
+            draft_id=draft_id,
+        )
+        expected_ids = [first["id"], second["id"]]
+    elif tool_name == "set_node_references":
+        service = create_canvas_node(
+            plot_root, "alpha", "services", "service", {"label": "Reading"}
+        )["node"]
+        mcp_tools.set_node_references(
+            str(tmp_path),
+            "alpha",
+            "services",
+            str(service["id"]),
+            {"ref_actor_ids": [str(first["id"])]},
+            draft_id=draft_id,
+        )
+        expected_ids = [service["id"]]
+    else:
+        canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+        canvas["nodes"][0]["label"] = "Changed"
+        mcp_tools.update_canvas(str(tmp_path), "alpha", canvas, draft_id=draft_id)
+        expected_ids = [first["id"]]
+
+    draft = read_draft(plot_root, "alpha", draft_id)
+    assert draft.status == "confirmed"
+    assert draft.resolved_node_ids == expected_ids
+    assert [item.id for item in list_drafts(plot_root, "alpha")] == [draft_id]
+
+
+def test_chat_scope_environment_fills_empty_draft_scope_but_explicit_wins(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    monkeypatch.setenv("MASHBILL_CHAT_SCOPE", "actors")
+
+    mcp_tools.create_node(str(tmp_path), "alpha", "actors", "actor", {"label": "Reader"})
+    recorded = mcp_tools.record_draft(
+        str(tmp_path),
+        "alpha",
+        "actors",
+        "Reader needs a clear next step.",
+        "The conversation established the need.",
+    )
+    explicit = mcp_tools.record_draft(
+        str(tmp_path),
+        "alpha",
+        "actors",
+        "Writer needs a clear next step.",
+        "The conversation established the need.",
+        chat_scope="feature:writing",
+    )
+
+    drafts = {draft.id: draft for draft in list_drafts(plot_root, "alpha")}
+    auto = next(draft for draft in drafts.values() if draft.origin == "auto")
+    assert auto.chat_scope == "actors"
+    assert drafts[str(recorded["draft_id"])].chat_scope == "actors"
+    assert drafts[str(explicit["draft_id"])].chat_scope == "feature:writing"
+
+
 def test_legacy_draft_without_origin_reads_as_recorded(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
     draft_id = str(_record(str(tmp_path))["draft_id"])
@@ -327,8 +496,14 @@ def test_draft_tools_have_pinned_mcp_schemas() -> None:
         "canvas_kind",
         "proposed_text",
         "rationale",
-        "chat_scope",
     }
+
+    for tool_name in ("create_edge", "set_node_references", "update_canvas"):
+        tool = asyncio.run(mcp_tools.mcp.get_tool(tool_name))
+        assert tool is not None
+        assert {"draft_id", "chat_scope"} <= set(tool.parameters["properties"])
+        assert "draft_id" not in tool.parameters["required"]
+        assert "chat_scope" not in tool.parameters["required"]
 
     resolve = asyncio.run(mcp_tools.mcp.get_tool("resolve_draft"))
     assert resolve is not None

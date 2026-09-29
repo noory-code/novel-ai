@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.3] — 2026-09-29
+
+### Fixed
+
+- `create_edge`, `set_node_references`, and `update_canvas` also auto-record a draft when called without `draft_id`, and the in-app coach's turn scope reaches the MCP server as `MASHBILL_CHAT_SCOPE`, so its drafts always name their conversation.
+
 ## [0.196.2] — 2026-09-29
 
 ### Fixed

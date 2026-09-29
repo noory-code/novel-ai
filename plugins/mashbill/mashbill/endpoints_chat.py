@@ -242,6 +242,7 @@ async def chat_send_endpoint(request: Request) -> JSONResponse:
     # guard go to the CLI as an authoritative system prompt, not glued into the
     # user message. The provider maps it per CLI (claude flag / codex prepend).
     provider.set_system_prompt(build_system_prompt(scope))
+    provider.set_chat_scope(scope)
 
     # Layer 2 user-message context comes from the single context-provider seam
     # (D-2026-06-17-L, D-2026-08-18-E): current Foundation → active-canvas map →

@@ -6,11 +6,13 @@ import json
 from pathlib import Path
 from typing import Any
 
+from mashbill.blueprint_content import _canvas_design_content
+from mashbill.chat_scope_env import effective_chat_scope
 from mashbill.draft_store import read_draft
 from mashbill.draft_store import record_applied_draft as persist_applied_draft
 from mashbill.draft_store import record_draft as persist_draft
 from mashbill.draft_store import resolve_draft as persist_resolution
-from mashbill.models_canvas import CanvasKind
+from mashbill.models_canvas import CanvasDoc, CanvasKind
 from mashbill.models_draft import DraftDoc, ResolvedDraftStatus
 from mashbill.workspace import resolve_plot_root
 
@@ -27,7 +29,7 @@ def record_draft(
     canvas_kind: CanvasKind,
     proposed_text: str,
     rationale: str,
-    chat_scope: str,
+    chat_scope: str = "",
     target_node_ids: list[str] | None = None,
     proposed_kind: str | None = None,
     service_id: str | None = None,
@@ -45,7 +47,7 @@ def record_draft(
         canvas_kind,
         proposed_text,
         rationale,
-        chat_scope,
+        effective_chat_scope(chat_scope),
         target_node_ids,
         proposed_kind,
         service_id,
@@ -74,9 +76,41 @@ def ensure_draft(plot_root: Path, project_id: str, draft_id: str) -> None:
     read_draft(plot_root, project_id, draft_id)
 
 
-def confirm_draft(plot_root: Path, project_id: str, draft_id: str, node_id: str) -> None:
-    """Link a successful node write back to its draft."""
-    persist_resolution(plot_root, project_id, draft_id, "confirmed", [node_id])
+def confirm_draft(
+    plot_root: Path, project_id: str, draft_id: str, node_ids: list[str]
+) -> None:
+    """Link a successful write back to its draft."""
+    persist_resolution(plot_root, project_id, draft_id, "confirmed", node_ids)
+
+
+def finish_write_draft(
+    plot_root: Path,
+    project_id: str,
+    draft_id: str | None,
+    canvas_kind: CanvasKind,
+    proposed_text: str,
+    proposed_kind: str | None,
+    target_node_ids: list[str],
+    resolved_node_ids: list[str],
+    chat_scope: str,
+    service_id: str | None = None,
+) -> None:
+    """Confirm the supplied draft or record one successful MCP write."""
+    if draft_id is not None:
+        confirm_draft(plot_root, project_id, draft_id, resolved_node_ids)
+        return
+    persist_applied_draft(
+        plot_root,
+        project_id,
+        canvas_kind,
+        proposed_text,
+        AUTO_DRAFT_RATIONALE,
+        effective_chat_scope(chat_scope),
+        target_node_ids,
+        proposed_kind,
+        service_id,
+        resolved_node_ids,
+    )
 
 
 def finish_node_write_draft(
@@ -91,7 +125,7 @@ def finish_node_write_draft(
 ) -> None:
     """Confirm the supplied draft or create the fallback for a successful write."""
     if draft_id is not None:
-        confirm_draft(plot_root, project_id, draft_id, str(write_result["node"]["id"]))
+        confirm_draft(plot_root, project_id, draft_id, [str(write_result["node"]["id"])])
         return
     record_applied_draft(
         plot_root, project_id, canvas_kind, fields, write_result, chat_scope, service_id
@@ -122,10 +156,74 @@ def record_applied_draft(
         canvas_kind,
         proposed_text,
         AUTO_DRAFT_RATIONALE,
-        chat_scope,
-        str(node["id"]),
+        effective_chat_scope(chat_scope),
+        [str(node["id"])],
         str(node["kind"]),
         service_id,
+        [str(node["id"])],
+    )
+
+
+def finish_canvas_write_draft(
+    plot_root: Path,
+    project_id: str,
+    draft_id: str | None,
+    before: CanvasDoc,
+    after: CanvasDoc,
+    chat_scope: str,
+) -> None:
+    """Confirm or record a whole-canvas write from its normalized content diff."""
+    before_content = _canvas_design_content(before.model_dump(by_alias=True))
+    after_content = _canvas_design_content(after.model_dump(by_alias=True))
+    if before_content == after_content:
+        if draft_id is not None:
+            confirm_draft(plot_root, project_id, draft_id, [])
+        return
+
+    before_nodes = before_content["nodes"]
+    after_nodes = after_content["nodes"]
+    added = [node_id for node_id in after_nodes if node_id not in before_nodes]
+    changed = [
+        node_id
+        for node_id in after_nodes
+        if node_id in before_nodes and after_nodes[node_id] != before_nodes[node_id]
+    ]
+    removed = [node_id for node_id in before_nodes if node_id not in after_nodes]
+
+    def names(node_ids: list[str], nodes: dict[str, dict[str, Any]]) -> str:
+        labels = (str(nodes[node_id].get("label") or node_id) for node_id in node_ids)
+        return ", ".join(labels) or "없음"
+
+    proposed_text = (
+        f"더함: {names(added, after_nodes)} / "
+        f"바꿈: {names(changed, after_nodes)} / "
+        f"뺌: {names(removed, before_nodes)}"
+    )
+    before_edges = before_content["edges"]
+    after_edges = after_content["edges"]
+    edges_added = [edge_id for edge_id in after_edges if edge_id not in before_edges]
+    edges_changed = [
+        edge_id
+        for edge_id in after_edges
+        if edge_id in before_edges and after_edges[edge_id] != before_edges[edge_id]
+    ]
+    edges_removed = [edge_id for edge_id in before_edges if edge_id not in after_edges]
+    if edges_added or edges_changed or edges_removed:
+        proposed_text += (
+            f"\n선: 더함 {len(edges_added)} / 바꿈 {len(edges_changed)} / 뺌 {len(edges_removed)}"
+        )
+
+    finish_write_draft(
+        plot_root,
+        project_id,
+        draft_id,
+        after.canvas_kind,
+        proposed_text,
+        "canvas",
+        [*added, *changed, *removed],
+        [*added, *changed],
+        chat_scope,
+        after.feature_ref if after.canvas_kind == "feature" else None,
     )
 
 

@@ -18,9 +18,6 @@ from fastmcp import FastMCP
 
 from mashbill.chat_selection import build_turn_preamble
 from mashbill.folder_io import (
-    create_edge as _create_edge,
-)
-from mashbill.folder_io import (
     create_node as _create_node,
 )
 from mashbill.folder_io import (
@@ -30,7 +27,6 @@ from mashbill.folder_io import (
     read_canvas,
     read_project,
     sync_details_with_overview,
-    write_canvas,
 )
 from mashbill.folder_io import (
     rename_project as rename_project_folder,
@@ -39,11 +35,12 @@ from mashbill.folder_io import (
     update_node as _update_node,
 )
 from mashbill.git_store import (
-    GitNotInitializedError,
-    TagAlreadyExistsError,
-    delete_tag,
     list_tags,
-    tag_session,
+)
+from mashbill.mcp_canvas_write_tools import (
+    create_edge_with_draft,
+    set_node_references_with_draft,
+    update_canvas_with_draft,
 )
 from mashbill.mcp_context_tools import (
     get_canvas_framing,
@@ -55,13 +52,11 @@ from mashbill.mcp_draft_tools import (
     record_draft,
     resolve_draft,
 )
+from mashbill.mcp_git_tools import delete_project_tag, list_project_tags, tag_project
 from mashbill.migrate import migrate_v01_to_v02
 from mashbill.models import CanvasDoc, CanvasKind
 from mashbill.models_foundation import PROJECT_ANCHOR_ID
 from mashbill.node_search import search_nodes
-from mashbill.references import (
-    set_node_references as _set_node_references,
-)
 from mashbill.viewer_context import read_viewer_context
 from mashbill.workspace import (
     discover_projects,
@@ -85,7 +80,15 @@ mcp = FastMCP(
     ),
 )
 
-for _tool in (get_design_principles, get_canvas_framing, record_draft, resolve_draft):
+for _tool in (
+    get_design_principles,
+    get_canvas_framing,
+    record_draft,
+    resolve_draft,
+    tag_project,
+    list_project_tags,
+    delete_project_tag,
+):
     mcp.tool()(_tool)
 
 
@@ -201,16 +204,22 @@ def get_canvas(
 
 
 @mcp.tool()
-def update_canvas(project_path: str, project_id: str, canvas: dict[str, Any]) -> dict[str, Any]:
+def update_canvas(
+    project_path: str,
+    project_id: str,
+    canvas: dict[str, Any],
+    draft_id: str | None = None,
+    chat_scope: str = "",
+) -> dict[str, Any]:
     """Overwrite a canvas. Writing ``services`` auto-creates / archives
     Detail canvases so the Services overview and its feature Details stay
-    1:1. The response reports the reconciliation."""
+    1:1. The response reports the reconciliation. A supplied ``draft_id`` is
+    confirmed; otherwise a content change records a confirmed fallback draft."""
     plot_root = resolve_plot_root(project_path)
     validated = CanvasDoc.model_validate(canvas)
-    write_canvas(plot_root, project_id, validated)
-    sync: dict[str, list[str]] = {"created": [], "archived": [], "skipped_archive": []}
-    if validated.canvas_kind == "services":
-        sync = sync_details_with_overview(plot_root, project_id)
+    sync = update_canvas_with_draft(
+        plot_root, project_id, validated, draft_id, chat_scope
+    )
     return {"canvas": validated.model_dump(by_alias=True), "sync": sync}
 
 
@@ -316,6 +325,8 @@ def create_edge(
     target_id: str,
     service_id: str | None = None,
     label: str = "",
+    draft_id: str | None = None,
+    chat_scope: str = "",
 ) -> dict[str, Any]:
     """Draw ONE directed line between two nodes — the clobber-safe way to
     connect what you just registered (D-2026-07-02-J).
@@ -328,9 +339,21 @@ def create_edge(
     ``relation`` are minted server-side. Idempotent — an existing directed
     source→target line is returned, never duplicated. Every other node and
     edge is left untouched. Do NOT use ``update_canvas`` just to add a line.
+    A supplied ``draft_id`` is confirmed; omitting it records a confirmed
+    fallback draft.
     """
     plot_root = resolve_plot_root(project_path)
-    return _create_edge(plot_root, project_id, canvas_kind, source_id, target_id, service_id, label)
+    return create_edge_with_draft(
+        plot_root,
+        project_id,
+        canvas_kind,
+        source_id,
+        target_id,
+        service_id,
+        label,
+        draft_id,
+        chat_scope,
+    )
 
 
 @mcp.tool()
@@ -341,6 +364,8 @@ def set_node_references(
     node_id: str,
     refs: dict[str, list[str]],
     service_id: str | None = None,
+    draft_id: str | None = None,
+    chat_scope: str = "",
 ) -> dict[str, Any]:
     """Wire a node's REFERENCE slots to masters on other canvases
     (D-2026-07-02-N) — the only way to fill them (they are protected from
@@ -355,10 +380,20 @@ def set_node_references(
     already exist on its home canvas — find them with get_canvas /
     search_project_nodes, or create the master first (create_master /
     create_node on its home canvas). Call this on the user's pick, same
-    confirmation gate as every write.
+    confirmation gate as every write. A supplied ``draft_id`` is confirmed;
+    omitting it records a confirmed fallback draft.
     """
     plot_root = resolve_plot_root(project_path)
-    return _set_node_references(plot_root, project_id, canvas_kind, node_id, refs, service_id)
+    return set_node_references_with_draft(
+        plot_root,
+        project_id,
+        canvas_kind,
+        node_id,
+        refs,
+        service_id,
+        draft_id,
+        chat_scope,
+    )
 
 
 @mcp.tool()
@@ -378,60 +413,6 @@ def search_project_nodes(project_path: str, project_id: str, query: str) -> list
     or ``feature:<service_id>``). Then ``get_canvas`` that scope to read details."""
     plot_root = resolve_plot_root(project_path)
     return search_nodes(plot_root, project_id, query)
-
-
-# ---------------------------------------------------------------------------
-# git session tags
-# ---------------------------------------------------------------------------
-
-
-@mcp.tool()
-def tag_project(
-    project_path: str,
-    project_id: str,
-    name: str,
-    message: str | None = None,
-) -> dict[str, Any]:
-    """Plant a named git tag at the current state of the project. Use this
-    at the start or end of a work session ("session-banas-start",
-    "before-refactor") — day-to-day edits don't commit, only tags do."""
-    plot_root = resolve_plot_root(project_path)
-    workspace_root = workspace_root_from_plot_root(plot_root)
-    try:
-        # D-2026-06-11-C/D — git lives at the workspace root. The tag
-        # snapshots `.noory/novel/` inside that repo, not a single project.
-        # project_id is kept on the tool signature for call-site clarity
-        # and future per-project naming.
-        return tag_session(workspace_root, name, message=message)
-    except GitNotInitializedError as exc:
-        raise ValueError(
-            f"git not initialized at workspace root {workspace_root}. "
-            "Open the workspace in the viewer and accept the 'Initialize "
-            "git repo' prompt, or run `git init` there manually."
-        ) from exc
-    except TagAlreadyExistsError as exc:
-        raise ValueError(str(exc)) from exc
-
-
-@mcp.tool()
-def list_project_tags(project_path: str, project_id: str) -> list[dict[str, Any]]:
-    """Return tags for a project, newest first."""
-    plot_root = resolve_plot_root(project_path)
-    return list_tags(workspace_root_from_plot_root(plot_root))
-
-
-@mcp.tool()
-def delete_project_tag(project_path: str, project_id: str, name: str) -> str:
-    """Drop a tag from a project. The commit it pointed at stays reachable.
-
-    Published blueprint version tags cannot be deleted.
-    """
-    plot_root = resolve_plot_root(project_path)
-    try:
-        delete_tag(workspace_root_from_plot_root(plot_root), name)
-    except KeyError as exc:
-        raise ValueError(f"tag not found: {exc.args[0]}") from exc
-    return f"deleted tag {name}"
 
 
 # ---------------------------------------------------------------------------

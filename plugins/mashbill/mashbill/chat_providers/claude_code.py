@@ -22,6 +22,7 @@ from mashbill.chat_providers.base import (
     _SubprocessChatProvider,
     _SubprocessFactory,
 )
+from mashbill.chat_scope_env import CHAT_SCOPE_ENV
 from mashbill.mcp_registration import mashbill_config
 
 
@@ -115,7 +116,10 @@ class ClaudeCodeProvider(_SubprocessChatProvider):
         and safe if a dev + frozen build ever run side by side (different hash →
         different file). Cross-platform: ``tempfile.gettempdir()`` (never a
         hardcoded ``/tmp``)."""
-        raw = json.dumps(mashbill_config(), indent=2)
+        config = mashbill_config()
+        if self._chat_scope:
+            config["mcpServers"]["mashbill"]["env"][CHAT_SCOPE_ENV] = self._chat_scope
+        raw = json.dumps(config, indent=2)
         digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
         path = Path(tempfile.gettempdir()) / f"mashbill-inapp-mcp-{digest}.json"
         if not path.is_file() or path.read_text(encoding="utf-8") != raw:

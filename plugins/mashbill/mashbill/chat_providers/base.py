@@ -163,6 +163,13 @@ class ChatProvider(ABC):
         """
         ...
 
+    def set_chat_scope(self, scope: str) -> None:
+        """Set the conversation scope for the next in-app coach turn.
+
+        Default no-op keeps non-subprocess providers source-compatible.
+        """
+        ...
+
 
 class _SubprocessChatProvider(ChatProvider):
     """Shared spawn → parse → yield loop for every CLI-backed provider.
@@ -193,6 +200,7 @@ class _SubprocessChatProvider(ChatProvider):
         self._session_id: str | None = None
         self._model: str | None = None
         self._system_prompt: str | None = None
+        self._chat_scope = ""
         self._spawn: _SubprocessFactory = (
             subprocess_factory if subprocess_factory is not None else _default_spawn
         )
@@ -215,6 +223,10 @@ class _SubprocessChatProvider(ChatProvider):
     def set_system_prompt(self, text: str | None) -> None:
         """Store the Layer-3 system prompt (Lever 2). Empty → unset."""
         self._system_prompt = text or None
+
+    def set_chat_scope(self, scope: str) -> None:
+        """Store the scope passed to the injected Mashbill MCP server."""
+        self._chat_scope = scope
 
     def _prepend_system(self, user_message: str) -> str:
         """Fallback delivery for CLIs without a system-prompt flag.
