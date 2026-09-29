@@ -17,6 +17,7 @@ from mashbill.api_endpoints import (
     canvas_put_endpoint,
     dir_create_endpoint,
     dir_tree_endpoint,
+    drafts_list_endpoint,
     entity_usage_endpoint,
     file_get_endpoint,
     file_put_endpoint,
@@ -162,6 +163,11 @@ def create_http_app(
         ),
         Route("/api/viewer/context", viewer_context_endpoint, methods=["POST"]),
         Route("/api/projects/{project_id}", project_get_endpoint, methods=["GET"]),
+        Route(
+            "/api/projects/{project_id}/drafts",
+            drafts_list_endpoint,
+            methods=["GET"],
+        ),
         Route(
             "/api/projects/{project_id}",
             project_patch_endpoint,

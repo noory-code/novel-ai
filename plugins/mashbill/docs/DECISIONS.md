@@ -39,6 +39,30 @@
 
 ## Log
 
+### D-2026-09-29-B — Coach drafts are kept separately from the chat
+
+- **What:** every concrete draft the coach shows is recorded as its own
+  document (`drafts/draft_<hex>.json`) with the proposed text, a one-line
+  rationale, the target concept ids, the chat scope it came from, and a
+  status (proposed / confirmed / edited / rejected). Rejected drafts stay.
+  The coach records drafts with MCP `record_draft`, marks them with
+  `resolve_draft`, and passes `draft_id` to `update_node` / `create_node` on
+  the person's yes. The app reads them through
+  `GET /api/projects/{id}/drafts` to show a node's drafts in its inspector and
+  a project-wide draft list.
+- **Why:** the user wants to find later why a concept became what it is
+  without digging through conversations, including the directions that were
+  discarded. It serves the identity "Novel shows why a feature came about".
+  The design canvas feature is "초안에서 설계 근거 찾아보기".
+- **Alternatives:** leave drafts inside the chat transcript only — not
+  chosen by the user. Copy the concept's content into the draft — rejected:
+  the canvas stays the single current source; a draft points by id.
+- **Approval:** Accepted — user, 2026-09-29 ("따로 남긴다", "둘 다";
+  novel-workspace W-00000313, W-00000316).
+- **Spec impact:** `SPEC.md` Draft records row.
+- **Principles:** SSOT (drafts point at concepts, never copy them); Honesty
+  (discarded directions remain visible).
+
 ### D-2026-09-29-A — An installed AI can be picked for chat without Novel registration
 
 - **What:** the chat partner can be any installed CLI (Claude Code, Codex);

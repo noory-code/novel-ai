@@ -387,8 +387,17 @@ def test_update_node_is_a_registered_mcp_tool() -> None:
     assert tool is not None
     assert tool.name == "update_node"
     props = set(tool.parameters["properties"])
-    assert props == {"project_path", "project_id", "canvas_kind", "node_id", "fields", "service_id"}
+    assert props == {
+        "project_path",
+        "project_id",
+        "canvas_kind",
+        "node_id",
+        "fields",
+        "service_id",
+        "draft_id",
+    }
     # service_id is the only optional arg
+    # W-00000316 adds draft_id as a second optional arg.
     assert set(tool.parameters["required"]) == {
         "project_path",
         "project_id",

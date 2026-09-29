@@ -167,6 +167,7 @@ def render_write_target(plot_root: Path, scope: str, project_path: str | None) -
         + shared
         + ", kind=<the new node's kind>, fields={label: <name>, ...} "
         "(no node_id — the id and position are minted for you)."
+        f"\nDrafts from this conversation use chat_scope={scope!r}."
     )
 
 

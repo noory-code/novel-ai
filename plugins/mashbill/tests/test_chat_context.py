@@ -721,12 +721,16 @@ def test_system_prompt_stays_under_saturation_budget() -> None:
     headroom, and per the W-00000249 precedent its pinned phrasings stay while
     the budget rises. It remains far below the 1,800-2,000 words where instruction
     slips were observed.
+    Raised 1610 -> 1680 (W-00000316): the required draft-tracking rule records
+    every concrete proposal and its later resolution without changing any
+    measured prompt wording. Services remains below the observed saturation
+    range.
     The budget still forces compress-before-add:
     content is pinned by the phrase guards in this file and
     ``test_chat_system_prompt.py``; this test pins the SIZE."""
     for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
         words = len(build_system_prompt(scope).split())
-        assert words <= 1610, f"{scope}: {words} words > 1610 budget"
+        assert words <= 1680, f"{scope}: {words} words > 1680 budget"
 
 
 def test_every_canvas_steers_the_next_question_direction() -> None:

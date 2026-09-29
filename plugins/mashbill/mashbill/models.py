@@ -93,6 +93,15 @@ from mashbill.models_discovery import (
 from mashbill.models_discovery import (
     WorkspaceDiscoveryResponse as WorkspaceDiscoveryResponse,
 )
+from mashbill.models_draft import (
+    DraftDoc as DraftDoc,
+)
+from mashbill.models_draft import (
+    DraftStatus as DraftStatus,
+)
+from mashbill.models_draft import (
+    ResolvedDraftStatus as ResolvedDraftStatus,
+)
 from mashbill.models_entity import (
     EntityNode as EntityNode,
 )

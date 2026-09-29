@@ -334,6 +334,12 @@ WRITE_PLAYBOOK = (
     "exists, create a real one on its upstream canvas — never free text, "
     "never silently. A service whose reference slots stay empty is an "
     "unfinished service."
+    " Drafts: whenever you show the person a concrete draft (text for a node or a new "
+    "node), call record_draft with a one-line rationale and the chat_scope from [Write "
+    "target]. When the person approves it, pass that draft_id to update_node or "
+    "create_node. If the person confirms a revision, call resolve_draft with "
+    "status='edited'; if they discard it, call resolve_draft with status='rejected'. Do "
+    "not announce draft recording, just as you do not announce saves."
 )
 
 

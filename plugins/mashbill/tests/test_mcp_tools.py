@@ -39,6 +39,8 @@ _CORE_TOOLS = {
     "get_viewer_context",
     "get_design_principles",
     "get_canvas_framing",
+    "record_draft",
+    "resolve_draft",
 }
 
 

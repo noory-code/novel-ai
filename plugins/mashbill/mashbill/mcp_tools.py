@@ -16,9 +16,7 @@ from typing import Any
 
 from fastmcp import FastMCP
 
-from mashbill.chat_context import build_system_prompt
 from mashbill.chat_selection import build_turn_preamble
-from mashbill.coaching_principles import get_principles
 from mashbill.folder_io import (
     create_edge as _create_edge,
 )
@@ -47,6 +45,16 @@ from mashbill.git_store import (
     list_tags,
     tag_session,
 )
+from mashbill.mcp_context_tools import (
+    get_canvas_framing,
+    get_design_principles,
+)
+from mashbill.mcp_draft_tools import (
+    confirm_draft,
+    ensure_draft,
+    record_draft,
+    resolve_draft,
+)
 from mashbill.migrate import migrate_v01_to_v02
 from mashbill.models import CanvasDoc, CanvasKind
 from mashbill.models_foundation import PROJECT_ANCHOR_ID
@@ -54,7 +62,6 @@ from mashbill.node_search import search_nodes
 from mashbill.references import (
     set_node_references as _set_node_references,
 )
-from mashbill.tool_log import record_tool_call
 from mashbill.viewer_context import read_viewer_context
 from mashbill.workspace import (
     discover_projects,
@@ -78,34 +85,13 @@ mcp = FastMCP(
     ),
 )
 
+for _tool in (get_design_principles, get_canvas_framing, record_draft, resolve_draft):
+    mcp.tool()(_tool)
+
 
 # ---------------------------------------------------------------------------
 # project CRUD
 # ---------------------------------------------------------------------------
-
-
-@mcp.tool()
-def get_design_principles(area: str | None = None) -> str:
-    """Design-quality discriminator questions for judging content strength
-    (D-2026-07-03-O/P). ``area``: mission | values | identity | actors |
-    entities | services | features | omitted for all. Consult before challenging
-    weak content."""
-    record_tool_call("get_design_principles", area=area)
-    return get_principles(area)
-
-
-@mcp.tool()
-def get_canvas_framing(scope: str) -> str:
-    """The coach's authoritative system framing for a canvas ``scope`` — the
-    SAME prompt the in-app coach receives via ``--append-system-prompt``, so a
-    headless coach (Claude Code / IDE, running the open engine for free) is
-    first-class (D-2026-07-12-A). ``scope``: foundation | actors | services |
-    ``service:<id>`` | ``feature:<id>`` | project. Call it for the canvas the
-    user is designing, then follow it — it carries the hallucination guard,
-    the propose/pace playbooks, and the WRITE gate (confirm before writing;
-    never silently auto-generate). One SSOT: delegates to
-    :func:`mashbill.chat_context.build_system_prompt`."""
-    return build_system_prompt(scope)
 
 
 @mcp.tool()
@@ -236,6 +222,7 @@ def update_node(
     node_id: str,
     fields: dict[str, Any],
     service_id: str | None = None,
+    draft_id: str | None = None,
 ) -> dict[str, Any]:
     """Save content into ONE node — the clobber-safe way to write a single node.
 
@@ -252,7 +239,12 @@ def update_node(
     (the project anchor is not a node). Only call this after the user confirms —
     never to finalise something they haven't agreed to."""
     plot_root = resolve_plot_root(project_path)
-    return _update_node(plot_root, project_id, canvas_kind, node_id, fields, service_id)
+    if draft_id is not None:
+        ensure_draft(plot_root, project_id, draft_id)
+    out = _update_node(plot_root, project_id, canvas_kind, node_id, fields, service_id)
+    if draft_id is not None:
+        confirm_draft(plot_root, project_id, draft_id, node_id)
+    return out
 
 
 @mcp.tool()
@@ -264,6 +256,7 @@ def create_node(
     fields: dict[str, Any] | None = None,
     service_id: str | None = None,
     near: str | None = None,
+    draft_id: str | None = None,
 ) -> dict[str, Any]:
     """Add ONE new node to a canvas — the clobber-safe way to create a node.
 
@@ -298,12 +291,16 @@ def create_node(
     Returns ``{"node": <new node dict>, "rejected_fields": [...]}``.
     """
     plot_root = resolve_plot_root(project_path)
+    if draft_id is not None:
+        ensure_draft(plot_root, project_id, draft_id)
     out = _create_node(plot_root, project_id, canvas_kind, kind, fields, service_id, near)
     if canvas_kind == "services" and kind == "feature":
         # D-2026-07-02-M — a feature is the drill target (D-2026-06-17-D): seed
         # its detail canvas exactly like the app's endpoint flow does, so a
         # coach-registered feature is drillable too ("기능 캔버스 뜨지 않네" fix).
         sync_details_with_overview(plot_root, project_id)
+    if draft_id is not None:
+        confirm_draft(plot_root, project_id, draft_id, out["node"]["id"])
     return out
 
 

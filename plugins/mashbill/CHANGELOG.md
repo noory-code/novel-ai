@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.0] — 2026-09-29
+
+### Added
+
+- Coach drafts are recorded separately from the chat (`drafts/draft_<hex>.json`): MCP `record_draft` and `resolve_draft`, an optional `draft_id` on `update_node` / `create_node`, and a read-only `GET /api/projects/{id}/drafts` list filterable by status, canvas, and node (D-2026-09-29-B).
+
 ## [0.195.11] — 2026-09-29
 
 ### Fixed

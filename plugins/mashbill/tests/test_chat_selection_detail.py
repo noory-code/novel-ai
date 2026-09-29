@@ -615,6 +615,7 @@ def test_write_target_block_names_each_id(tmp_path: Path) -> None:
     assert "project_id='alpha'" in block
     assert "canvas_kind='foundation'" in block
     assert f"project_path={str(tmp_path)!r}" in block
+    assert "chat_scope='foundation'" in block
 
 
 def test_render_write_target_bare_feature_is_empty(tmp_path: Path) -> None:
@@ -631,6 +632,7 @@ def test_render_write_target_feature_scope_includes_service_id(tmp_path: Path) -
     block = render_write_target(plot_root, "feature:svc1", str(tmp_path))
     assert "canvas_kind='feature'" in block
     assert "service_id='svc1'" in block
+    assert "chat_scope='feature:svc1'" in block
 
 
 def test_turn_preamble_write_target_absent_without_project_path(tmp_path: Path) -> None:

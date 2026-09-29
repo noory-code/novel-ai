@@ -13,6 +13,7 @@ prepending it to the message.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -188,6 +189,22 @@ def test_write_playbook_forbids_announcing_the_save_saliently() -> None:
     assert "저장했어요" in head, "no-announce rule must be salient (near the top)"
     # SSOT: the rule states its ONE reason once, not duplicated.
     assert wp.count("the canvas shows") <= 1
+
+
+def test_write_playbook_appends_draft_tracking_without_changing_existing_words() -> None:
+    suffix = (
+        " Drafts: whenever you show the person a concrete draft (text for a node or a new "
+        "node), call record_draft with a one-line rationale and the chat_scope from [Write "
+        "target]. When the person approves it, pass that draft_id to update_node or "
+        "create_node. If the person confirms a revision, call resolve_draft with "
+        "status='edited'; if they discard it, call resolve_draft with status='rejected'. Do "
+        "not announce draft recording, just as you do not announce saves."
+    )
+    assert WRITE_PLAYBOOK.endswith(suffix)
+    existing = WRITE_PLAYBOOK[: -len(suffix)]
+    assert hashlib.sha256(existing.encode()).hexdigest() == (
+        "0ee79eb48daeec21ca8bbf4dcb9e95e3322160c757d991958b4bace3e171c094"
+    )
 
 
 def test_write_playbook_has_create_branch(tmp_path: Path) -> None:

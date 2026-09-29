@@ -44,6 +44,9 @@ from mashbill.endpoints_canvases import (
 from mashbill.endpoints_common import (
     health_endpoint as health_endpoint,
 )
+from mashbill.endpoints_drafts import (
+    drafts_list_endpoint as drafts_list_endpoint,
+)
 from mashbill.endpoints_files import (
     file_get_endpoint as file_get_endpoint,
 )

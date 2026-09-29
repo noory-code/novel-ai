@@ -451,7 +451,12 @@ def test_project_publish_only_when_canvas_content_changed(
 
 @pytest.mark.parametrize(
     "ignored_path",
-    ["chat/note.md", "project.json", "foundation/published/legacy.md"],
+    [
+        "chat/note.md",
+        "drafts/draft_1234.json",
+        "project.json",
+        "foundation/published/legacy.md",
+    ],
 )
 def test_project_publish_ignores_non_canvas_changes(
     app_client: tuple[TestClient, str], ignored_path: str
