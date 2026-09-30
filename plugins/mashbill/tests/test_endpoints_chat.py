@@ -913,6 +913,10 @@ def test_conversations_list_endpoint(app_client: TestClient, workspace: Path) ->
     assert len(rows) == 1
     assert rows[0]["scope"] == "services"
     assert rows[0]["title"] == "the refund flow"
+    assert (
+        rows[0]["conversation_id"]
+        == read_conversation(plot_root, "alpha", "services").conversation_id
+    )
 
 
 def test_conversations_list_requires_project_path(app_client: TestClient) -> None:

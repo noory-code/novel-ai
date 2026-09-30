@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
+from mashbill.chat_store import current_conversation_id
 from mashbill.models_draft import (
     DraftCanvasKind,
     DraftDoc,
@@ -153,6 +154,7 @@ def _record_new_draft(
         status=status,
         origin=origin,
         chat_scope=chat_scope,
+        chat_conversation_id=current_conversation_id(plot_root, project_id, chat_scope),
         resolved_node_ids=list(resolved_node_ids),
     )
     _write_json(_draft_path(plot_root, project_id, draft.id), draft.model_dump())

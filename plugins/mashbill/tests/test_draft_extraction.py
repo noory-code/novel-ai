@@ -313,6 +313,8 @@ async def test_project_scope_persists_selected_canvas_and_filters_target_ids(
     tmp_path: Path,
 ) -> None:
     plot_root = _project(tmp_path)
+    append_user(plot_root, "alpha", "project", "codex", "u1", "Clarify the actor")
+    conversation_id = read_conversation(plot_root, "alpha", "project").conversation_id
     node_ids = _create_primary_canvas_nodes(plot_root)
     provider = _ExtractingProvider(
         json.dumps(
@@ -341,6 +343,7 @@ async def test_project_scope_persists_selected_canvas_and_filters_target_ids(
     assert draft.origin == "extracted"
     assert draft.canvas_kind == "actors"
     assert draft.chat_scope == "project"
+    assert draft.chat_conversation_id == conversation_id
     assert draft.service_id is None
     assert draft.target_node_ids == [node_ids["actors"]]
 

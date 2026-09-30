@@ -39,6 +39,24 @@
 
 ## Log
 
+### D-2026-09-30-B — Claude Code billing is noted once, when it is picked
+
+- **What:** the app shows a short billing notice right after the person picks
+  Claude Code as the chat partner ("may be billed separately from your Claude
+  subscription"). It goes away when closed or when the first message is sent,
+  is not stored, and is not shown for a selection loaded at start.
+- **Why:** the design flow shows a billing notice when Claude Code is chosen,
+  while D-2026-06-21-D removed the banner that sat above every turn as noise.
+  A one-time notice at the moment of choosing keeps both.
+- **Alternatives:** no notice and change the design flow — not chosen.
+- **Approval:** Accepted — user, 2026-09-30 ("고를 때 한 번만 안내";
+  novel-workspace W-00000334). Partly supersedes D-2026-06-21-D (no
+  persistent banner still holds).
+- **Spec impact:** App-repo viewer only (`ChatDock`, i18n
+  `chat.claudeCodeBillingNotice`). No engine change.
+- **Principles:** Honesty (the wording says "may"; the billing fact is the one
+  recorded in D-2026-06-21-D, not re-checked).
+
 ### D-2026-09-30-A — Agents cannot delete a project
 
 - **What:** the MCP tool `delete_project_tool` is removed. Deleting a project

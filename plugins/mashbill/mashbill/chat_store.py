@@ -13,6 +13,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
@@ -34,6 +35,7 @@ class ChatMessageRecord(BaseModel):
 
 class ChatConversationDoc(BaseModel):
     schema_version: int = 1
+    conversation_id: str | None = None
     scope: str
     provider: str = ""
     title: str = ""
@@ -100,6 +102,13 @@ def _archive_path(current_path: Path) -> Path:
     return candidate
 
 
+def _ensure_conversation_id(doc: ChatConversationDoc) -> str:
+    """Assign the durable identity once while preserving existing identities."""
+    if doc.conversation_id is None:
+        doc.conversation_id = uuid4().hex
+    return doc.conversation_id
+
+
 def append_user(
     plot_root: Path, project_id: str, scope: str, provider: str, msg_id: str, text: str
 ) -> None:
@@ -113,12 +122,14 @@ def append_user(
         doc = ChatConversationDoc.model_validate(_read_json(path))
     else:
         doc = ChatConversationDoc(
+            conversation_id=uuid4().hex,
             scope=scope,
             provider=provider,
             title=text.strip()[:_TITLE_CAP],
             created=now,
             updated=now,
         )
+    _ensure_conversation_id(doc)
     doc.provider = provider
     doc.updated = now
     doc.messages.append(ChatMessageRecord(id=msg_id, role="user", text=text, ts=now))
@@ -136,6 +147,7 @@ def append_assistant(
     if not path.exists():
         return
     doc = ChatConversationDoc.model_validate(_read_json(path))
+    _ensure_conversation_id(doc)
     now = _now()
     doc.provider = provider
     doc.updated = now
@@ -148,6 +160,19 @@ def read_conversation(plot_root: Path, project_id: str, scope: str) -> ChatConve
     when no conversation has been saved."""
     path = _conversation_path(plot_root, project_id, scope)
     return ChatConversationDoc.model_validate(_read_json(path))
+
+
+def current_conversation_id(plot_root: Path, project_id: str, scope: str) -> str | None:
+    """Return the current conversation's durable id, backfilling legacy files."""
+    path = _conversation_path(plot_root, project_id, scope)
+    if not path.exists():
+        return None
+    doc = ChatConversationDoc.model_validate(_read_json(path))
+    if doc.conversation_id is not None:
+        return doc.conversation_id
+    conversation_id = _ensure_conversation_id(doc)
+    _write_json(path, doc.model_dump())
+    return conversation_id
 
 
 def read_conversation_by_id(
@@ -242,6 +267,7 @@ def list_conversations(plot_root: Path, project_id: str) -> list[dict[str, Any]]
         rows.append(
             {
                 "id": path.name,
+                "conversation_id": doc.conversation_id,
                 "scope": doc.scope,
                 "title": doc.title,
                 "provider": doc.provider,

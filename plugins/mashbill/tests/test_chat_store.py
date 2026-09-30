@@ -7,10 +7,12 @@ engine-side — so they survive a restart and travel with the project.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 
+from mashbill import chat_store
 from mashbill.chat_store import (
     append_assistant,
     append_user,
@@ -38,6 +40,7 @@ def test_append_user_creates_file_with_title(tmp_path: Path) -> None:
     assert doc.scope == "foundation"
     assert doc.provider == "claude-code"
     assert doc.title == "Define the mission"  # first user message
+    assert doc.conversation_id is not None
     assert doc.created == doc.updated
     assert [(m.role, m.text) for m in doc.messages] == [("user", "Define the mission")]
 
@@ -162,19 +165,30 @@ def test_list_includes_current_and_ended_with_ids_newest_first(tmp_path: Path) -
     assert rows[0]["id"] == "foundation.json"
     assert rows[1]["id"] == ended_id
     assert all(row["scope"] == "foundation" for row in rows)
+    assert all(row["conversation_id"] for row in rows)
+    assert rows[0]["conversation_id"] != rows[1]["conversation_id"]
 
 
 def test_reopen_swaps_current_and_ended_conversations(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     append_user(plot_root, pid, "foundation", "codex", "u1", "chosen old question")
+    chosen_conversation_id = read_conversation(plot_root, pid, "foundation").conversation_id
     chosen_id = archive_current_conversation(plot_root, pid, "foundation")
     assert chosen_id is not None
+    assert (
+        read_conversation_by_id(plot_root, pid, chosen_id).conversation_id == chosen_conversation_id
+    )
     append_user(plot_root, pid, "foundation", "codex", "u2", "current question")
+    current_conversation_id = read_conversation(plot_root, pid, "foundation").conversation_id
+    assert current_conversation_id != chosen_conversation_id
 
     reopened = reopen_conversation(plot_root, pid, chosen_id)
 
     assert reopened.scope == "foundation"
-    assert read_conversation(plot_root, pid, "foundation").title == "chosen old question"
+    assert reopened.conversation_id == chosen_conversation_id
+    current = read_conversation(plot_root, pid, "foundation")
+    assert current.title == "chosen old question"
+    assert current.conversation_id == chosen_conversation_id
     rows = list_conversations(plot_root, pid)
     assert {(row["title"], row["ended"]) for row in rows} == {
         ("chosen old question", False),
@@ -183,6 +197,43 @@ def test_reopen_swaps_current_and_ended_conversations(tmp_path: Path) -> None:
     transcript = read_recent_transcript(plot_root, pid, "foundation")
     assert "chosen old question" in transcript
     assert "current question" not in transcript
+    assert {row["conversation_id"] for row in rows} == {
+        chosen_conversation_id,
+        current_conversation_id,
+    }
+
+
+def test_legacy_conversation_without_id_reads_and_gets_id_on_append(tmp_path: Path) -> None:
+    plot_root, pid = _project(tmp_path)
+    append_user(plot_root, pid, "foundation", "codex", "u1", "legacy question")
+    path = plot_root / "chat" / "foundation.json"
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    raw.pop("conversation_id")
+    path.write_text(json.dumps(raw), encoding="utf-8")
+
+    assert read_conversation(plot_root, pid, "foundation").conversation_id is None
+    assert list_conversations(plot_root, pid)[0]["conversation_id"] is None
+
+    append_user(plot_root, pid, "foundation", "codex", "u2", "continued")
+
+    assigned = read_conversation(plot_root, pid, "foundation").conversation_id
+    assert assigned is not None
+    assert chat_store.current_conversation_id(plot_root, pid, "foundation") == assigned
+
+
+def test_current_conversation_id_backfills_legacy_current_file(tmp_path: Path) -> None:
+    plot_root, pid = _project(tmp_path)
+    append_user(plot_root, pid, "foundation", "codex", "u1", "legacy question")
+    path = plot_root / "chat" / "foundation.json"
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    raw.pop("conversation_id")
+    path.write_text(json.dumps(raw), encoding="utf-8")
+
+    assigned = chat_store.current_conversation_id(plot_root, pid, "foundation")
+
+    assert assigned is not None
+    assert read_conversation(plot_root, pid, "foundation").conversation_id == assigned
+    assert chat_store.current_conversation_id(plot_root, pid, "actors") is None
 
 
 def test_archive_empty_current_is_noop(tmp_path: Path) -> None:

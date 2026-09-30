@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.21] — 2026-09-30
+
+### Added
+
+- Each conversation carries a durable `conversation_id` that survives ending and reopening, the conversation list returns it, and every new draft records the id of the conversation it came from (`chat_conversation_id`), so a draft can find its conversation after a new one has started.
+
 ## [0.196.20] — 2026-09-30
 
 ### Removed

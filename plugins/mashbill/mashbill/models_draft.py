@@ -29,4 +29,5 @@ class DraftDoc(BaseModel):
     status: DraftStatus = "proposed"
     origin: DraftOrigin = "recorded"
     chat_scope: str
+    chat_conversation_id: str | None = None
     resolved_node_ids: list[str] = Field(default_factory=list)

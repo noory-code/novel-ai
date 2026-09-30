@@ -12,6 +12,7 @@ from starlette.testclient import TestClient
 
 from mashbill import draft_store, mcp_canvas_write_tools, mcp_project_tools, mcp_tools
 from mashbill.broadcast import BroadcastHub
+from mashbill.chat_store import append_user, archive_current_conversation, read_conversation
 from mashbill.draft_store import list_drafts, read_draft
 from mashbill.folder_io import create_node as create_canvas_node
 from mashbill.folder_io import read_canvas, sync_details_with_overview, write_canvas
@@ -67,6 +68,30 @@ def test_record_draft_writes_one_file_and_lists_it(tmp_path: Path) -> None:
     assert drafts[0].target_node_ids == ["mission_1"]
     assert drafts[0].status == "proposed"
     assert drafts[0].origin == "recorded"
+
+
+def test_record_draft_tracks_current_conversation_across_reset(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    append_user(plot_root, "alpha", "foundation", "codex", "u1", "First conversation")
+    first_conversation_id = read_conversation(plot_root, "alpha", "foundation").conversation_id
+
+    first = _record(str(tmp_path))
+    archive_current_conversation(plot_root, "alpha", "foundation")
+    append_user(plot_root, "alpha", "foundation", "codex", "u2", "Second conversation")
+    second_conversation_id = read_conversation(plot_root, "alpha", "foundation").conversation_id
+    second = _record(str(tmp_path))
+
+    assert first_conversation_id is not None
+    assert second_conversation_id is not None
+    assert second_conversation_id != first_conversation_id
+    assert (
+        read_draft(plot_root, "alpha", str(first["draft_id"])).chat_conversation_id
+        == first_conversation_id
+    )
+    assert (
+        read_draft(plot_root, "alpha", str(second["draft_id"])).chat_conversation_id
+        == second_conversation_id
+    )
 
 
 def test_concurrent_record_draft_calls_do_not_lose_records(tmp_path: Path) -> None:
@@ -926,6 +951,8 @@ def test_create_node_without_draft_id_records_confirmed_auto_draft(tmp_path: Pat
 
 def test_auto_draft_keeps_supplied_chat_scope(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
+    append_user(plot_root, "alpha", "entities", "codex", "u1", "Define Order")
+    conversation_id = read_conversation(plot_root, "alpha", "entities").conversation_id
 
     mcp_tools.create_node(
         str(tmp_path),
@@ -936,7 +963,9 @@ def test_auto_draft_keeps_supplied_chat_scope(tmp_path: Path) -> None:
         chat_scope="entities",
     )
 
-    assert list_drafts(plot_root, "alpha")[0].chat_scope == "entities"
+    draft = list_drafts(plot_root, "alpha")[0]
+    assert draft.chat_scope == "entities"
+    assert draft.chat_conversation_id == conversation_id
 
 
 def test_create_edge_without_draft_records_both_endpoints_and_relationship(
@@ -1526,7 +1555,9 @@ def test_existing_canvas_draft_files_still_read(tmp_path: Path, canvas_kind: str
         encoding="utf-8",
     )
 
-    assert read_draft(plot_root, "alpha", draft_id).canvas_kind == canvas_kind
+    draft = read_draft(plot_root, "alpha", draft_id)
+    assert draft.canvas_kind == canvas_kind
+    assert draft.chat_conversation_id is None
 
 
 def test_mcp_rename_project_records_confirmed_project_draft(
@@ -1534,6 +1565,8 @@ def test_mcp_rename_project_records_confirmed_project_draft(
 ) -> None:
     plot_root, _ = _project(tmp_path)
     monkeypatch.setenv("MASHBILL_CHAT_SCOPE", "project")
+    append_user(plot_root, "alpha", "project", "codex", "u1", "Rename the project")
+    conversation_id = read_conversation(plot_root, "alpha", "project").conversation_id
 
     renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "Renamed Alpha")
 
@@ -1549,6 +1582,7 @@ def test_mcp_rename_project_records_confirmed_project_draft(
     assert draft.target_node_ids == []
     assert draft.resolved_node_ids == []
     assert draft.chat_scope == "project"
+    assert draft.chat_conversation_id == conversation_id
 
 
 def test_mcp_rename_project_to_same_name_records_no_draft(tmp_path: Path) -> None:
