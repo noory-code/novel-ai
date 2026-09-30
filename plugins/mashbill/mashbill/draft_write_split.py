@@ -62,7 +62,7 @@ def split_write_by_draft(
             continue
         target_matches = (
             not draft_targets
-            or fragment.added_node
+            or (fragment.added_node and draft.proposed_kind is not None)
             or bool(draft_targets.intersection(fragment.node_ids))
         )
         normalized_texts = [

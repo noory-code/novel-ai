@@ -911,6 +911,66 @@ def test_create_node_with_draft_id_confirms_and_links_minted_node(tmp_path: Path
     assert "draft_warning" not in created
 
 
+def test_create_node_does_not_confirm_targeted_existing_node_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    existing = create_canvas_node(
+        plot_root, "alpha", "actors", "actor", {"label": "기존 주문 담당자"}
+    )["node"]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text="주문을 받는다",
+            target_node_ids=[str(existing["id"])],
+            proposed_kind=None,
+        )["draft_id"]
+    )
+
+    created = mcp_tools.create_node(
+        str(tmp_path),
+        "alpha",
+        "actors",
+        "actor",
+        {"label": "주문을 받는다"},
+        draft_id=draft_id,
+    )
+
+    draft = read_draft(plot_root, "alpha", draft_id)
+    assert draft.status == "proposed"
+    assert draft.resolved_node_ids == []
+    assert "draft_warning" in created
+
+
+def test_create_node_confirms_new_node_draft_despite_neighbor_target(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    neighbor = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "곁 노드"})[
+        "node"
+    ]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text="주문을 받는다",
+            target_node_ids=[str(neighbor["id"])],
+            proposed_kind="actor",
+        )["draft_id"]
+    )
+
+    created = mcp_tools.create_node(
+        str(tmp_path),
+        "alpha",
+        "actors",
+        "actor",
+        {"label": "주문을 받는다"},
+        draft_id=draft_id,
+    )
+
+    draft = read_draft(plot_root, "alpha", draft_id)
+    assert draft.status == "confirmed"
+    assert draft.resolved_node_ids == [created["node"]["id"]]
+    assert "draft_warning" not in created
+
+
 def test_create_node_splits_matching_and_unmatched_fields_between_drafts(
     tmp_path: Path,
 ) -> None:
@@ -1462,6 +1522,31 @@ def test_update_canvas_with_wrong_draft_warns_without_new_draft(tmp_path: Path) 
     assert "draft_warning" in result
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
     assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
+
+
+def test_update_canvas_added_node_does_not_confirm_existing_node_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    existing = create_canvas_node(
+        plot_root, "alpha", "actors", "actor", {"label": "기존 주문 담당자"}
+    )["node"]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text="주문을 받는다",
+            target_node_ids=[str(existing["id"])],
+            proposed_kind=None,
+        )["draft_id"]
+    )
+    canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    canvas["nodes"].append({"id": "actor_new", "kind": "actor", "label": "주문을 받는다"})
+
+    result = mcp_tools.update_canvas(str(tmp_path), "alpha", canvas, draft_id=draft_id)
+
+    draft = read_draft(plot_root, "alpha", draft_id)
+    assert draft.status == "proposed"
+    assert draft.resolved_node_ids == []
+    assert "draft_warning" in result
 
 
 def test_update_canvas_with_different_proposal_text_creates_no_new_draft(tmp_path: Path) -> None:

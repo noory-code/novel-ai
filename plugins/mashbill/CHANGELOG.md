@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.197.2] — 2026-10-01
+
+### Fixed
+
+- A draft about existing nodes is no longer confirmed by a write that only adds a new node with the same text; skipping the target-node check for added nodes now applies to new-node proposals only.
+
 ## [0.197.1] — 2026-10-01
 
 ### Fixed
