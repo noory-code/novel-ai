@@ -198,7 +198,7 @@ async def stream_chat_turn(
     When ``project_id`` is set, the assistant turn is persisted on
     ``turn_complete`` (D-2026-06-26-B) — best-effort, so a write failure never
     breaks the live turn.
-    Proposal extraction is scheduled after that save and never delays the stream.
+    Proposal extraction is scheduled after a successful save and never delays the stream.
     """
     turn_started_at = datetime.now(UTC).isoformat()
     try:
@@ -219,21 +219,22 @@ async def stream_chat_turn(
                     )
                 except Exception:  # noqa: BLE001 — persistence must not break chat
                     _log.exception("chat persist (assistant) failed for %s", plot_root)
-                task = asyncio.create_task(
-                    _extract_turn_drafts_and_notify(
-                        provider,
-                        hub,
-                        plot_root,
-                        project_id,
-                        scope,
-                        event.text,
-                        turn_started_at,
-                        conversation_id,
-                        model=model,
+                else:
+                    task = asyncio.create_task(
+                        _extract_turn_drafts_and_notify(
+                            provider,
+                            hub,
+                            plot_root,
+                            project_id,
+                            scope,
+                            event.text,
+                            turn_started_at,
+                            conversation_id,
+                            model=model,
+                        )
                     )
-                )
-                _draft_extraction_tasks.add(task)
-                task.add_done_callback(_draft_extraction_tasks.discard)
+                    _draft_extraction_tasks.add(task)
+                    task.add_done_callback(_draft_extraction_tasks.discard)
     except Exception as exc:  # noqa: BLE001 — boundary catch
         _log.exception("chat turn crashed for %s", plot_root)
         await hub.notify_event(

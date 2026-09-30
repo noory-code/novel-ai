@@ -630,6 +630,39 @@ async def test_turn_complete_extracts_unrecorded_proposal_in_background(tmp_path
     assert model == "gpt-test:high"
 
 
+async def test_turn_complete_skips_extraction_when_assistant_save_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = _project(tmp_path)
+    provider = _ExtractingProvider()
+    hub = _FakeHub()
+
+    def fail_assistant_save(*args: Any, **kwargs: Any) -> None:
+        raise OSError("conversation is unwritable")
+
+    monkeypatch.setattr(
+        endpoints_chat,
+        "append_assistant_to_conversation",
+        fail_assistant_save,
+    )
+
+    await stream_chat_turn(
+        provider,
+        hub,
+        plot_root,
+        "hello",
+        scope="foundation",
+        project_id="alpha",
+        provider_name="codex",
+    )
+    await _wait_for_extraction_tasks()
+
+    assert hub.events[-1]["type"] == "turn_complete"
+    assert hub.events[-1]["text"] == "Mission idea"
+    assert provider.extraction_calls == []
+
+
 async def test_slow_extraction_does_not_delay_stream_or_conversation_save(tmp_path: Path) -> None:
     plot_root = _project(tmp_path)
     append_user(plot_root, "alpha", "foundation", "codex", "user_1", "hello")

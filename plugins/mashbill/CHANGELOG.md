@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.25] — 2026-09-30
+
+### Fixed
+
+- When a coach answer cannot be saved to its conversation, turn extraction is skipped, so no draft points at an answer the conversation does not hold.
+
 ## [0.196.24] — 2026-09-30
 
 ### Fixed
