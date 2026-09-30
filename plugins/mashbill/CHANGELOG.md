@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.24] — 2026-09-30
+
+### Fixed
+
+- `update_canvas` splits a changed node by field, like `update_node`, so a field the supplied draft does not match is kept in an auto draft instead of being tied to that draft.
+
 ## [0.196.23] — 2026-09-30
 
 ### Fixed

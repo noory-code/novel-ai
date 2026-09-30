@@ -1140,7 +1140,7 @@ def test_update_canvas_records_content_diff_but_not_position_only_change(tmp_pat
     assert draft.status == "confirmed"
     assert draft.origin == "auto"
     assert draft.proposed_kind == "canvas"
-    assert draft.proposed_text.startswith("더함: Added / 바꿈: Renamed / 뺌: 없음")
+    assert draft.proposed_text.startswith("더함: Added / 바꿈: Renamed.label / 뺌: 없음")
     assert "선:" in draft.proposed_text
     assert draft.target_node_ids == ["actor_added", existing["id"]]
     assert draft.resolved_node_ids == ["actor_added", existing["id"]]
@@ -1253,7 +1253,9 @@ def test_update_canvas_with_different_proposal_text_records_auto_draft(tmp_path:
     assert auto.resolved_node_ids == [changed["id"]]
 
 
-def test_update_canvas_matches_any_written_string_field(tmp_path: Path) -> None:
+def test_update_canvas_splits_matching_and_unmatched_fields_between_drafts(
+    tmp_path: Path,
+) -> None:
     plot_root, _ = _project(tmp_path)
     changed = create_canvas_node(
         plot_root, "alpha", "actors", "actor", {"label": "Old name", "body": "Old body"}
@@ -1274,9 +1276,44 @@ def test_update_canvas_matches_any_written_string_field(tmp_path: Path) -> None:
 
     result = mcp_tools.update_canvas(str(tmp_path), "alpha", canvas, draft_id=draft_id)
 
-    assert "draft_warning" not in result
-    assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
+    supplied = read_draft(plot_root, "alpha", draft_id)
+    assert supplied.status == "confirmed"
+    assert supplied.resolved_node_ids == [changed["id"]]
+    autos = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
+    assert len(autos) == 1
+    assert autos[0].proposed_text == "더함: 없음 / 바꿈: New name.label / 뺌: 없음"
+    assert autos[0].target_node_ids == [changed["id"]]
+    assert autos[0].resolved_node_ids == [changed["id"]]
+    assert result["draft_warning"] == (
+        f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+    )
+
+
+def test_update_canvas_single_matching_field_does_not_record_auto_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    changed = create_canvas_node(
+        plot_root, "alpha", "actors", "actor", {"label": "Old name", "body": "Old body"}
+    )["node"]
+    written_body = "People who need a clear next step"
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text=written_body,
+            target_node_ids=[str(changed["id"])],
+            proposed_kind="canvas",
+        )["draft_id"]
+    )
+    canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    canvas["nodes"][0]["body"] = written_body
+
+    result = mcp_tools.update_canvas(str(tmp_path), "alpha", canvas, draft_id=draft_id)
+
+    supplied = read_draft(plot_root, "alpha", draft_id)
+    assert supplied.status == "confirmed"
+    assert supplied.resolved_node_ids == [changed["id"]]
     assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
+    assert "draft_warning" not in result
 
 
 def test_update_canvas_splits_matching_and_unmatched_node_changes(tmp_path: Path) -> None:
@@ -1308,7 +1345,7 @@ def test_update_canvas_splits_matching_and_unmatched_node_changes(tmp_path: Path
     assert supplied.status == "confirmed"
     assert supplied.resolved_node_ids == [matched["id"]]
     auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.proposed_text == "더함: 없음 / 바꿈: Unmatched / 뺌: 없음"
+    assert auto.proposed_text == "더함: 없음 / 바꿈: Unmatched.body / 뺌: 없음"
     assert auto.target_node_ids == [unmatched["id"]]
     assert auto.resolved_node_ids == [unmatched["id"]]
     assert result["draft_warning"] == (
@@ -1384,7 +1421,7 @@ def test_update_canvas_keeps_unrelated_edge_in_unmatched_auto_draft(tmp_path: Pa
     assert supplied.resolved_node_ids == [matched["id"]]
     auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
     assert auto.proposed_text == (
-        "더함: 없음 / 바꿈: Unmatched / 뺌: 없음\n선: 더함 1 / 바꿈 0 / 뺌 0"
+        "더함: 없음 / 바꿈: Unmatched.body / 뺌: 없음\n선: 더함 1 / 바꿈 0 / 뺌 0"
     )
     assert auto.target_node_ids == [unmatched["id"]]
     assert auto.resolved_node_ids == [unmatched["id"]]

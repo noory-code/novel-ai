@@ -20,6 +20,7 @@ from mashbill.models_draft import DraftDoc, ResolvedDraftStatus
 from mashbill.workspace import resolve_plot_root
 
 AUTO_DRAFT_RATIONALE = "Coach applied the change directly without recording a draft."
+_CanvasFragmentValue = tuple[str, str, str | None]
 
 
 def _draft_result(draft: DraftDoc) -> dict[str, Any]:
@@ -282,17 +283,12 @@ def finish_canvas_write_draft(
     if before_content == after_content:
         return _no_design_content_warning(draft_id)
 
-    before_nodes = before_content["nodes"]
-    after_nodes = after_content["nodes"]
+    before_nodes: dict[str, dict[str, Any]] = before_content["nodes"]
+    after_nodes: dict[str, dict[str, Any]] = after_content["nodes"]
     added = [node_id for node_id in after_nodes if node_id not in before_nodes]
-    changed = [
-        node_id
-        for node_id in after_nodes
-        if node_id in before_nodes and after_nodes[node_id] != before_nodes[node_id]
-    ]
     removed = [node_id for node_id in before_nodes if node_id not in after_nodes]
-    before_edges = before_content["edges"]
-    after_edges = after_content["edges"]
+    before_edges: dict[str, dict[str, Any]] = before_content["edges"]
+    after_edges: dict[str, dict[str, Any]] = after_content["edges"]
     edges_added = [edge_id for edge_id in after_edges if edge_id not in before_edges]
     edges_changed = [
         edge_id
@@ -300,10 +296,17 @@ def finish_canvas_write_draft(
         if edge_id in before_edges and after_edges[edge_id] != before_edges[edge_id]
     ]
     edges_removed = [edge_id for edge_id in before_edges if edge_id not in after_edges]
-    fragments: list[WriteFragment[tuple[str, str]]] = [
+    changed_fields = [
+        (node_id, field_name)
+        for node_id in after_nodes
+        if node_id in before_nodes
+        for field_name in dict.fromkeys((*before_nodes[node_id], *after_nodes[node_id]))
+        if before_nodes[node_id].get(field_name) != after_nodes[node_id].get(field_name)
+    ]
+    fragments: list[WriteFragment[_CanvasFragmentValue]] = [
         *(
-            WriteFragment(
-                ("node_added", node_id),
+            WriteFragment[_CanvasFragmentValue](
+                ("node_added", node_id, None),
                 node_ids=(node_id,),
                 written_texts=tuple(_canvas_written_texts(after, [node_id])),
                 matching_node_ids=(node_id,),
@@ -312,26 +315,33 @@ def finish_canvas_write_draft(
             for node_id in added
         ),
         *(
-            WriteFragment(
-                ("node_changed", node_id),
+            WriteFragment[_CanvasFragmentValue](
+                ("node_changed", node_id, field_name),
                 node_ids=(node_id,),
-                written_texts=tuple(_canvas_written_texts(after, [node_id])),
+                written_texts=(value,)
+                if isinstance((value := after_nodes[node_id].get(field_name)), str)
+                else (),
                 matching_node_ids=(node_id,),
             )
-            for node_id in changed
+            for node_id, field_name in changed_fields
         ),
-        *(WriteFragment(("node_removed", node_id), node_ids=(node_id,)) for node_id in removed),
         *(
-            WriteFragment(
-                ("edge_added", edge_id),
+            WriteFragment[_CanvasFragmentValue](
+                ("node_removed", node_id, None), node_ids=(node_id,)
+            )
+            for node_id in removed
+        ),
+        *(
+            WriteFragment[_CanvasFragmentValue](
+                ("edge_added", edge_id, None),
                 node_ids=_edge_node_ids(after_edges[edge_id]),
                 follows_matching_node=True,
             )
             for edge_id in edges_added
         ),
         *(
-            WriteFragment(
-                ("edge_changed", edge_id),
+            WriteFragment[_CanvasFragmentValue](
+                ("edge_changed", edge_id, None),
                 node_ids=tuple(
                     dict.fromkeys(
                         (
@@ -345,8 +355,8 @@ def finish_canvas_write_draft(
             for edge_id in edges_changed
         ),
         *(
-            WriteFragment(
-                ("edge_removed", edge_id),
+            WriteFragment[_CanvasFragmentValue](
+                ("edge_removed", edge_id, None),
                 node_ids=_edge_node_ids(before_edges[edge_id]),
                 follows_matching_node=True,
             )
@@ -364,12 +374,14 @@ def finish_canvas_write_draft(
     )
     if matching:
         assert draft_id is not None
-        resolved_node_ids = [
-            item_id
-            for fragment in matching
-            for category, item_id in [fragment.value]
-            if category in ("node_added", "node_changed")
-        ]
+        resolved_node_ids = list(
+            dict.fromkeys(
+                item_id
+                for fragment in matching
+                for category, item_id, _ in [fragment.value]
+                if category in ("node_added", "node_changed")
+            )
+        )
         confirm_draft(plot_root, project_id, draft_id, resolved_node_ids)
         if not remainder:
             return None
@@ -404,24 +416,29 @@ def _record_canvas_auto_draft(
     canvas: CanvasDoc,
     before_nodes: dict[str, dict[str, Any]],
     after_nodes: dict[str, dict[str, Any]],
-    fragments: Sequence[WriteFragment[tuple[str, str]]],
+    fragments: Sequence[WriteFragment[_CanvasFragmentValue]],
     chat_scope: str,
 ) -> None:
     """Record only the canvas-diff fragments not claimed by a supplied draft."""
 
-    def fragment_ids(category: str) -> list[str]:
-        return [fragment.value[1] for fragment in fragments if fragment.value[0] == category]
+    def fragment_items(category: str) -> list[tuple[str, str | None]]:
+        return [(item.value[1], item.value[2]) for item in fragments if item.value[0] == category]
 
-    def names(node_ids: list[str], nodes: dict[str, dict[str, Any]]) -> str:
-        labels = (str(nodes[node_id].get("label") or node_id) for node_id in node_ids)
+    def names(items: list[tuple[str, str | None]], nodes: dict[str, dict[str, Any]]) -> str:
+        labels = (
+            f"{nodes[node_id].get('label') or node_id}.{field_name}"
+            if field_name is not None
+            else str(nodes[node_id].get("label") or node_id)
+            for node_id, field_name in items
+        )
         return ", ".join(labels) or "없음"
 
-    added = fragment_ids("node_added")
-    changed = fragment_ids("node_changed")
-    removed = fragment_ids("node_removed")
-    edges_added = fragment_ids("edge_added")
-    edges_changed = fragment_ids("edge_changed")
-    edges_removed = fragment_ids("edge_removed")
+    added = fragment_items("node_added")
+    changed = fragment_items("node_changed")
+    removed = fragment_items("node_removed")
+    edges_added = fragment_items("edge_added")
+    edges_changed = fragment_items("edge_changed")
+    edges_removed = fragment_items("edge_removed")
     proposed_text = (
         f"더함: {names(added, after_nodes)} / "
         f"바꿈: {names(changed, after_nodes)} / "
@@ -438,10 +455,10 @@ def _record_canvas_auto_draft(
         proposed_text,
         AUTO_DRAFT_RATIONALE,
         effective_chat_scope(chat_scope),
-        [*added, *changed, *removed],
+        list(dict.fromkeys(item_id for item_id, _ in [*added, *changed, *removed])),
         "canvas",
         canvas.feature_ref if canvas.canvas_kind == "feature" else None,
-        [*added, *changed],
+        list(dict.fromkeys(item_id for item_id, _ in [*added, *changed])),
     )
 
 
@@ -468,16 +485,13 @@ def _no_design_content_warning(draft_id: str | None) -> str | None:
 
 def _canvas_written_texts(canvas: CanvasDoc, node_ids: list[str]) -> list[str]:
     nodes = {str(node.id): node for node in canvas.nodes}
-    written_texts: list[str] = []
-    for node_id in node_ids:
-        node = nodes[node_id]
-        values = node.model_dump(by_alias=True)
-        written_texts.extend(
-            value
-            for name in writable_node_fields(node)
-            if isinstance((value := values.get(name)), str)
-        )
-    return written_texts
+    return [
+        value
+        for node_id in node_ids
+        for node in (nodes[node_id],)
+        for name in writable_node_fields(node)
+        if isinstance((value := getattr(node, name, None)), str)
+    ]
 
 
 def _display_value(value: Any) -> str:
