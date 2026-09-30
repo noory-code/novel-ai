@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.197.3] — 2026-10-01
+
+### Fixed
+
+- A write piece with no text never confirms a draft; a node created or updated without accepted fields is compared by its label, so an empty new node no longer confirms a new-node draft.
+
 ## [0.197.2] — 2026-10-01
 
 ### Fixed

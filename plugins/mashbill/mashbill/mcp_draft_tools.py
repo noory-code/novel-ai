@@ -11,7 +11,7 @@ from mashbill.draft_store import read_draft
 from mashbill.draft_store import record_draft as persist_draft
 from mashbill.draft_store import resolve_draft as persist_resolution
 from mashbill.draft_store import update_draft as persist_update
-from mashbill.draft_write_split import WriteFragment, normalize_draft_text, split_write_by_draft
+from mashbill.draft_write_split import WriteFragment, split_write_by_draft
 from mashbill.field_policy import writable_node_fields
 from mashbill.models_canvas import CanvasDoc, CanvasKind
 from mashbill.models_draft import DraftCanvasKind, DraftDoc, ResolvedDraftStatus
@@ -102,9 +102,8 @@ def draft_matches_write(
     written_texts: list[str] | None = None,
 ) -> bool:
     """Return whether a supplied draft describes the successful write."""
-    normalized_written_texts = [
-        normalized for text in written_texts or [] if (normalized := normalize_draft_text(text))
-    ]
+    if not written_texts:
+        return False
     matching, _ = split_write_by_draft(
         plot_root,
         project_id,
@@ -114,8 +113,7 @@ def draft_matches_write(
             WriteFragment(
                 None,
                 node_ids=tuple(touched_node_ids),
-                written_texts=tuple(written_texts or ()),
-                matches_without_text=not normalized_written_texts,
+                written_texts=tuple(written_texts),
             )
         ],
         service_id,
@@ -179,7 +177,6 @@ def finish_node_write_draft(
         before_node.get(name) == node.get(name) for name in written_fields
     ):
         return _no_design_content_warning(draft_id)
-    has_written_fields = bool(written_fields)
     if not written_fields:
         written_fields = ["label"]
     fragments = [
@@ -187,11 +184,10 @@ def finish_node_write_draft(
             name,
             node_ids=tuple(touched_node_ids),
             written_texts=(value,)
-            if has_written_fields and isinstance((value := node.get(name)), str)
+            if isinstance((value := node.get(name)), str) and value
             else (),
             matching_node_ids=(node_id,),
             added_node=before_node is None,
-            matches_without_text=not has_written_fields,
         )
         for name in written_fields
     ]

@@ -30,7 +30,6 @@ class WriteFragment(Generic[T]):
     matching_node_ids: tuple[str, ...] = ()
     added_node: bool = False
     follows_matching_node: bool = False
-    matches_without_text: bool = False
 
 
 def split_write_by_draft(
@@ -70,11 +69,7 @@ def split_write_by_draft(
             for text in fragment.written_texts
             if (normalized := normalize_draft_text(text))
         ]
-        text_matches = (
-            _draft_text_matches(normalized_draft_text, normalized_texts)
-            if normalized_texts
-            else fragment.matches_without_text
-        )
+        text_matches = _draft_text_matches(normalized_draft_text, normalized_texts)
         kind_matches = draft.proposed_kind is None or fragment.added_node
         if target_matches and text_matches and kind_matches:
             matching.append(fragment)

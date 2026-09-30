@@ -911,6 +911,69 @@ def test_create_node_with_draft_id_confirms_and_links_minted_node(tmp_path: Path
     assert "draft_warning" not in created
 
 
+def test_create_node_without_fields_does_not_confirm_new_node_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text="결제 수단",
+            target_node_ids=[],
+            proposed_kind="actor",
+        )["draft_id"]
+    )
+
+    created = mcp_tools.create_node(
+        str(tmp_path),
+        "alpha",
+        "actors",
+        "actor",
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" in created
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+
+
+def test_create_node_label_confirms_matching_new_node_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text="결제 수단",
+            target_node_ids=[],
+            proposed_kind="actor",
+        )["draft_id"]
+    )
+
+    created = mcp_tools.create_node(
+        str(tmp_path),
+        "alpha",
+        "actors",
+        "actor",
+        {"label": "결제 수단"},
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" not in created
+    assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
+
+
+def test_draft_matches_write_without_written_text_is_false(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(_record(str(tmp_path), target_node_ids=[])["draft_id"])
+
+    assert not mcp_draft_tools.draft_matches_write(
+        plot_root,
+        "alpha",
+        draft_id,
+        "foundation",
+        [],
+        written_texts=None,
+    )
+
+
 def test_create_node_does_not_confirm_targeted_existing_node_draft(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
     existing = create_canvas_node(
