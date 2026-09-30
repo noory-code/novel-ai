@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.197.4] — 2026-10-01
+
+### Changed
+
+- `DECISIONS.md` D-2026-10-01-B records that the coach's "ask before writing" stays in its instructions, with no approval button or write-tool check, and that entities stay AI-maintained.
+
 ## [0.197.3] — 2026-10-01
 
 ### Fixed

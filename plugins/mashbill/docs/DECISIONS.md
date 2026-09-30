@@ -39,6 +39,29 @@
 
 ## Log
 
+### D-2026-10-01-B — The coach's "ask before writing" stays in its instructions, not in code
+
+- **What:** the rule that the coach writes a proposal to a canvas only after
+  the person confirms it stays in the coach instructions (`WRITE_PLAYBOOK`,
+  including "ask whether to keep an unkept proposal as a draft before writing
+  it", D-2026-10-01-A). The app does not add an approval button to each AI
+  canvas write, and the engine's write tools do not check for a confirmation.
+  The entities canvas stays the exception set by D-2026-06-17-I: the coach
+  registers the entities a service needs and their labelled relationships
+  without asking for each one.
+- **Why:** the design rule is "사람이 확정해야 캔버스에 올라간다". In the live
+  check for D-2026-10-01-A the coach asked before writing. An approval button
+  on every write would make the person confirm again after already saying yes
+  in the chat. A write the coach makes without asking can be undone.
+- **Alternatives:** an approval button on every AI canvas write — not chosen;
+  the same button with entities excluded — not chosen.
+- **Approval:** Accepted — user, 2026-10-01 ("1번으로 하세요"; novel-workspace
+  W-00000335).
+- **Spec impact:** none (current behaviour recorded).
+- **Principles:** KISS (no second confirmation step); Honesty (the rule is an
+  instruction, so the coach can still write without asking, and that is
+  stated here).
+
 ### D-2026-10-01-A — A draft is kept only when the person chooses to keep it
 
 - **What:** the coach shows and refines concrete proposals in the chat
