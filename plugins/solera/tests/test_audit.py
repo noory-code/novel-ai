@@ -82,3 +82,43 @@ def test_flags_open_container_with_all_children_done(tmp_path: Path) -> None:
     problems = audit_workspace(ws)
 
     assert any(p.kind == "rollup-pending" and story.id in p.detail for p in problems)
+
+
+def test_flags_missing_after_target(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    leaf = create_item(ws, "action", "step", gate="true")
+    ws.write_item(leaf.model_copy(update={"after": ["ACT-404"]}))
+
+    problems = audit_workspace(ws)
+
+    assert any(
+        p.kind == "after-missing" and leaf.id in p.detail and "ACT-404" in p.detail
+        for p in problems
+    )
+
+
+def test_flags_after_cycle(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    first = create_item(ws, "action", "one", gate="true")
+    second = create_item(ws, "action", "two", gate="true")
+    ws.write_item(first.model_copy(update={"after": [second.id]}))
+    ws.write_item(second.model_copy(update={"after": [first.id]}))
+
+    problems = audit_workspace(ws)
+
+    assert any(
+        p.kind == "after-cycle" and first.id in p.detail and second.id in p.detail
+        for p in problems
+    )
+
+
+def test_malformed_after_target_is_not_also_missing(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    leaf = create_item(ws, "action", "step", gate="true")
+    ws.write_item(leaf.model_copy(update={"after": ["BROKEN"]}))
+    ws.item_path("BROKEN").write_text("not frontmatter\n")
+
+    problems = audit_workspace(ws)
+
+    assert any(p.kind == "malformed-item" and "BROKEN" in p.detail for p in problems)
+    assert not any(p.kind == "after-missing" and "BROKEN" in p.detail for p in problems)

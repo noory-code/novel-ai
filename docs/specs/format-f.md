@@ -212,7 +212,8 @@ compares `refs` separately.
   `_project/{based_on}/` beside the service bundle, whose `release` must equal `based_on`); required `elements`
   with unique ids (a service's include the service itself) and required `refs`. It rejects symlinks and a label
   that is not a single safe path name, and refuses a second import of the same release with different content.
-  It does not verify `git_sha` or recompute hashes. `story.md` carries `source: specs/{label}` (points only inside its own folder).
+  It does not verify `git_sha` or recompute hashes. Work items do not store the import label: they point at the
+  design only through stable IDs (below), and re-pin is given the two labels it compares.
 - **link** = a work item's `realizes: feature/login`, the result commit `[realizes feature/login@vS2]`. Bidirectional
   tracing by ID matching, no import.
 - **reverse direction (feedback·retrospective)** = `feedback/{id}.md` (`about: feature/login@vS2`) · `RETROSPECTIVE.md`

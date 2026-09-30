@@ -81,6 +81,8 @@ class WorkItem(BaseModel):
     # connection is by *value* (no import) — the ID-diff on re-publish reopens
     # the items whose realizes-slug changed. Absent in older files → [].
     realizes: list[str] = Field(default_factory=list)
+    # Work-item ids that must be done before this item can start.
+    after: list[str] = Field(default_factory=list)
     goal: str
 
     _check_goal = field_validator("goal")(_require_goal)
@@ -97,6 +99,16 @@ class WorkItem(BaseModel):
             raise ValueError(
                 "a WorkItem cannot be both a leaf (gate) and a container (children)"
             )
+        return self
+
+    @model_validator(mode="after")
+    def _valid_after(self) -> WorkItem:
+        if any(not item_id.strip() for item_id in self.after):
+            raise ValueError("after ids must not be empty or blank")
+        if len(set(self.after)) != len(self.after):
+            raise ValueError("after ids must not contain duplicates")
+        if self.id in self.after:
+            raise ValueError("after must not contain the item's own id")
         return self
 
     @property
@@ -159,15 +171,16 @@ def parse_workitem(text: str, *, item_id: str) -> WorkItem:
 
 def dump_workitem(item: WorkItem) -> str:
     """Serialize a WorkItem back to file text. Inverse of :func:`parse_workitem`."""
-    fm = _frontmatter(
-        {
-            "level": item.level,
-            "status": item.status,
-            "gate": item.gate,
-            "children": list(item.children),
-            "realizes": list(item.realizes),
-        }
-    )
+    fields = {
+        "level": item.level,
+        "status": item.status,
+        "gate": item.gate,
+        "children": list(item.children),
+        "realizes": list(item.realizes),
+    }
+    if item.after:
+        fields["after"] = list(item.after)
+    fm = _frontmatter(fields)
     return f"---\n{fm}\n---\n{item.goal}\n"
 
 

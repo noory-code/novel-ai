@@ -1,5 +1,15 @@
 # Changelog
 
+## [8.1.0] — 2026-10-01
+
+### Added
+
+- Work items can carry order links: `after` lists the items that must be `done` before this one starts. `plan_work`/`add_work_item` (CLI `plan`/`add --after`) accept it, `set_work_item_after` (CLI `after`) replaces it, and writes reject unknown ids or links that can never be satisfied. `next` starts only a leaf whose links are satisfied and fails, naming what each waits for, when every remaining leaf is blocked. `ready_work_items` (CLI `ready`) lists the leaves that can start now and the blocked ones. `workspace_status` returns each container's completion percent (`progress`), and CLI `status` prints it. Files without `after` load and save unchanged; a workspace that uses `after` cannot be read by Solera 8.0.x or earlier.
+
+### Fixed
+
+- `solera.__version__` matches the package version again (it still said 7.4.0).
+
 ## [8.0.1] — 2026-10-01
 
 ### Fixed

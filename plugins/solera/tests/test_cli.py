@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from solera.cli import main
+from solera.workspace import Workspace
 
 
 def _file_gate(name: str) -> str:
@@ -41,6 +42,104 @@ def test_plan_and_add_emit_ids(tmp_path: Path, capsys) -> None:  # type: ignore[
 def test_plan_with_level(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
     assert _run(tmp_path, "plan", "Stand up auth", "--level", "initiative") == 0
     assert capsys.readouterr().out.strip() == "INIT-001"
+
+
+def test_plan_and_add_with_after(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    assert _run(tmp_path, "plan", "First", "--level", "initiative") == 0
+    assert _run(tmp_path, "plan", "Story", "--after", "INIT-001") == 0
+    assert (
+        _run(
+            tmp_path,
+            "add",
+            "STORY-001",
+            "Step",
+            "--gate",
+            "true",
+            "--after",
+            "INIT-001",
+        )
+        == 0
+    )
+    capsys.readouterr()
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    assert ws.load_item("STORY-001").after == ["INIT-001"]
+    assert ws.load_item("ACT-001").after == ["INIT-001"]
+
+
+def test_after_command_sets_and_clears_links(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _run(tmp_path, "plan", "Story")
+    _run(tmp_path, "add", "STORY-001", "First", "--gate", "true")
+    _run(tmp_path, "add", "STORY-001", "Second", "--gate", "true")
+    capsys.readouterr()
+
+    assert _run(tmp_path, "after", "ACT-002", "ACT-001") == 0
+    assert capsys.readouterr().out.strip() == "ACT-002"
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    assert ws.load_item("ACT-002").after == ["ACT-001"]
+
+    assert _run(tmp_path, "after", "ACT-002") == 0
+    assert capsys.readouterr().out.strip() == "ACT-002"
+    assert ws.load_item("ACT-002").after == []
+    assert "after:" not in ws.item_path("ACT-002").read_text()
+
+
+def test_ready_prints_ready_and_blocked(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _run(tmp_path, "plan", "Not split", "--level", "initiative")
+    _run(tmp_path, "plan", "Story")
+    _run(
+        tmp_path,
+        "add",
+        "STORY-001",
+        "Blocked",
+        "--gate",
+        "true",
+        "--after",
+        "INIT-001",
+    )
+    _run(tmp_path, "add", "STORY-001", "Ready", "--gate", "true")
+    capsys.readouterr()
+
+    assert _run(tmp_path, "ready") == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "ready: ACT-002",
+        "blocked: ACT-001 waits for INIT-001",
+    ]
+
+
+def test_status_prints_progress_after_pointer(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _run(tmp_path, "plan", "Story")
+    _run(tmp_path, "add", "STORY-001", "One", "--gate", "true")
+    _run(tmp_path, "add", "STORY-001", "Two", "--gate", "true")
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    ws.write_item(ws.load_item("ACT-001").model_copy(update={"status": "done"}))
+    capsys.readouterr()
+
+    assert _run(tmp_path, "status") == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "pointer: (none)",
+        "progress: STORY-001 1/2 50%",
+    ]
+
+
+def test_next_reports_when_no_leaf_can_start(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _run(tmp_path, "plan", "Not split", "--level", "initiative")
+    _run(tmp_path, "plan", "Story")
+    _run(
+        tmp_path,
+        "add",
+        "STORY-001",
+        "Blocked",
+        "--gate",
+        "true",
+        "--after",
+        "INIT-001",
+    )
+    capsys.readouterr()
+
+    assert _run(tmp_path, "next") == 1
+    output = capsys.readouterr().out
+    assert output.startswith("error: no leaf can start")
+    assert "INIT-001" in output
 
 
 def test_next_prints_instruction(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]

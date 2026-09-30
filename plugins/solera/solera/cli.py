@@ -16,10 +16,11 @@ from pathlib import Path
 from .audit import audit_workspace
 from .errors import SoleraError
 from .formats import Feedback, Retrospective
+from .graph import completion, load_items
 from .intake import import_release, load_imported_release
-from .planning import create_item
+from .planning import create_item, set_after
 from .repin import apply_repin, propose_repin
-from .supervisor import complete, instruction, start_next
+from .supervisor import complete, instruction, ready_leaves, start_next
 from .workspace import Workspace
 
 
@@ -28,13 +29,19 @@ def _ws(root: Path) -> Workspace:
 
 
 def _cmd_plan(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
-    print(create_item(ws, args.level, args.goal).id)
+    print(create_item(ws, args.level, args.goal, after=args.after).id)
     return 0
 
 
 def _cmd_add(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     item = create_item(
-        ws, args.level, args.goal, gate=args.gate, parent=args.parent, realizes=args.realizes
+        ws,
+        args.level,
+        args.goal,
+        gate=args.gate,
+        parent=args.parent,
+        realizes=args.realizes,
+        after=args.after,
     )
     print(item.id)
     return 0
@@ -71,10 +78,26 @@ def _cmd_status(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
         print(f"pointer: item={ws.load_progress().item}")
     else:
         print("pointer: (none)")
+    for item_id, value in completion(load_items(ws)).items():
+        percent = f"{value.percent}%" if value.percent is not None else "-"
+        print(f"progress: {item_id} {value.done}/{value.total} {percent}")
     problems = audit_workspace(ws)
     for problem in problems:
         print(f"problem[{problem.kind}]: {problem.detail}")
     return 1 if problems else 0
+
+
+def _cmd_after(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
+    print(set_after(ws, args.item, list(args.ids)).id)
+    return 0
+
+
+def _cmd_ready(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
+    ready, blocked = ready_leaves(ws)
+    print(f"ready: {', '.join(ready) if ready else '(none)'}")
+    for item_id, predecessors in blocked:
+        print(f"blocked: {item_id} waits for {', '.join(predecessors)}")
+    return 0
 
 
 def _cmd_import(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
@@ -149,6 +172,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_plan = sub.add_parser("plan", help="create a root WorkItem from a goal")
     p_plan.add_argument("goal")
     p_plan.add_argument("--level", default="story", help="initiative/epic/story/action")
+    p_plan.add_argument("--after", action="append", default=[], help="required predecessor id")
     p_plan.set_defaults(func=_cmd_plan)
 
     p_add = sub.add_parser("add", help="add a child WorkItem under a parent")
@@ -162,7 +186,16 @@ def _build_parser() -> argparse.ArgumentParser:
         default=[],
         help="format F slug this item realizes (repeatable, e.g. feature/login)",
     )
+    p_add.add_argument("--after", action="append", default=[], help="required predecessor id")
     p_add.set_defaults(func=_cmd_add)
+
+    p_after = sub.add_parser("after", help="replace a WorkItem's order links")
+    p_after.add_argument("item")
+    p_after.add_argument("ids", nargs="*")
+    p_after.set_defaults(func=_cmd_after)
+
+    p_ready = sub.add_parser("ready", help="list ready and blocked todo leaves")
+    p_ready.set_defaults(func=_cmd_ready)
 
     p_next = sub.add_parser("next", help="start the next leaf and print its instruction")
     p_next.set_defaults(func=_cmd_next)

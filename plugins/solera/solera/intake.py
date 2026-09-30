@@ -7,8 +7,9 @@ directory convention (a service bundle ``vS`` sits next to ``_project/{vP}``).
 
 Two pieces:
 - :func:`import_release` — copy a frozen ``vS`` bundle + its ``based_on`` ``vP``
-  slice into ``specs/{label}/`` (immutable → immutable). Story files then point
-  at ``specs/{label}`` (their own folder), so Solera runs with or without mashbill.
+  slice into ``specs/{label}/`` (immutable → immutable). Work items link to the
+  imported design only by stable ID (``realizes``), so Solera runs with or
+  without mashbill.
 - :func:`diff_releases` — the deterministic ID-diff (changed / removed / added)
   that drives re-pinning on a re-publish. A pure function over two manifests.
 """

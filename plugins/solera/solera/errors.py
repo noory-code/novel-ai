@@ -13,6 +13,10 @@ class FormatError(SoleraError):
     """
 
 
+class OrderError(SoleraError):
+    """Work-item order links are invalid or leave every open leaf blocked."""
+
+
 class GateError(SoleraError):
     """A gate could not be run at all (e.g. empty command, missing gate).
 

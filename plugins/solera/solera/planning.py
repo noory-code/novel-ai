@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import re
 
+from .errors import OrderError
 from .formats import WorkItem
+from .graph import load_items, order_problems
 from .workspace import Workspace, validate_path_name
 
 _LEVEL_PREFIX = {
@@ -46,6 +48,7 @@ def create_item(
     gate: str = "",
     parent: str | None = None,
     realizes: list[str] | None = None,
+    after: list[str] | None = None,
 ) -> WorkItem:
     """Create a WorkItem (optionally a gated leaf, optionally under a parent).
 
@@ -62,8 +65,29 @@ def create_item(
         gate=gate,
         goal=goal,
         realizes=realizes or [],
+        after=after or [],
     )
+    items = load_items(ws)
+    items[item.id] = item
+    if box is not None:
+        items[box.id] = box.model_copy(update={"children": [*box.children, item.id]})
+    problems = order_problems(items)
+    if problems:
+        raise OrderError("; ".join(detail for _kind, detail in problems))
     ws.write_item(item)
     if box is not None:
         ws.write_item(box.model_copy(update={"children": [*box.children, item.id]}))
     return item
+
+
+def set_after(ws: Workspace, item_id: str, after: list[str]) -> WorkItem:
+    """Replace one item's order links after validating the complete future graph."""
+    item = ws.load_item(item_id)
+    updated = WorkItem.model_validate({**item.model_dump(), "after": after})
+    items = load_items(ws)
+    items[item_id] = updated
+    problems = order_problems(items)
+    if problems:
+        raise OrderError("; ".join(detail for _kind, detail in problems))
+    ws.write_item(updated)
+    return updated

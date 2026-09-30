@@ -14,10 +14,11 @@ from fastmcp import FastMCP
 
 from .audit import audit_workspace
 from .formats import Feedback, Retrospective
+from .graph import completion, load_items
 from .intake import import_release, load_imported_release
-from .planning import create_item
+from .planning import create_item, set_after
 from .repin import apply_repin, propose_repin
-from .supervisor import complete, instruction, start_next
+from .supervisor import complete, instruction, ready_leaves, start_next
 from .workspace import Workspace
 
 mcp = FastMCP(
@@ -37,9 +38,14 @@ def _workspace(project_root: str) -> Workspace:
 
 
 @mcp.tool()
-def plan_work(project_root: str, goal: str, level: str = "story") -> dict[str, Any]:
+def plan_work(
+    project_root: str,
+    goal: str,
+    level: str = "story",
+    after: list[str] | None = None,
+) -> dict[str, Any]:
     """Create a root work container. Add gated child leaves before asking for next work."""
-    item = create_item(_workspace(project_root), level, goal)
+    item = create_item(_workspace(project_root), level, goal, after=after)
     return item.model_dump()
 
 
@@ -51,6 +57,7 @@ def add_work_item(
     level: str = "action",
     gate: str = "",
     realizes: list[str] | None = None,
+    after: list[str] | None = None,
 ) -> dict[str, Any]:
     """Add a child to ``parent``. Pass a deterministic command in ``gate`` for a leaf."""
     item = create_item(
@@ -60,8 +67,34 @@ def add_work_item(
         parent=parent,
         gate=gate,
         realizes=realizes,
+        after=after,
     )
     return item.model_dump()
+
+
+@mcp.tool()
+def set_work_item_after(project_root: str, item: str, after: list[str]) -> dict[str, Any]:
+    (
+        "Replace an item's order links (ids that must be done before it starts); "
+        "an empty list clears them."
+    )
+    return set_after(_workspace(project_root), item, after).model_dump()
+
+
+@mcp.tool()
+def ready_work_items(project_root: str) -> dict[str, Any]:
+    (
+        "List todo leaves that can start now (safe to work on together) and blocked "
+        "leaves with what each waits for. Read-only."
+    )
+    ready, blocked = ready_leaves(_workspace(project_root))
+    return {
+        "ready": ready,
+        "blocked": [
+            {"id": item_id, "waiting_on": predecessors}
+            for item_id, predecessors in blocked
+        ],
+    }
 
 
 @mcp.tool()
@@ -94,9 +127,13 @@ def workspace_status(project_root: str) -> dict[str, Any]:
     """Return the active pointer, all work items, and every integrity problem."""
     ws = _workspace(project_root)
     pointer = ws.load_progress().item if ws.progress_path.is_file() else None
+    items = load_items(ws)
     return {
         "current": pointer,
-        "items": [ws.load_item(item_id).model_dump() for item_id in ws.list_items()],
+        "items": [item.model_dump() for item in items.values()],
+        "progress": {
+            item_id: asdict(value) for item_id, value in completion(items).items()
+        },
         "problems": [asdict(problem) for problem in audit_workspace(ws)],
     }
 

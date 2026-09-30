@@ -9,9 +9,13 @@ import shlex
 import sys
 from pathlib import Path
 
+import pytest
+
+from solera.errors import OrderError
 from solera.formats import Progress
+from solera.graph import effective_after, load_items
 from solera.planning import create_item
-from solera.supervisor import complete, find_next_open, instruction, start_next
+from solera.supervisor import complete, find_next_open, instruction, ready_leaves, start_next
 from solera.workspace import Workspace
 
 
@@ -71,6 +75,90 @@ def test_find_next_open_dives_through_deep_tree(tmp_path: Path) -> None:
     story = create_item(ws, "story", "wire it", parent=epic.id)
     leaf = create_item(ws, "action", "do it", gate=_pass(), parent=story.id)
     assert find_next_open(ws) == leaf.id
+
+
+def test_find_next_open_skips_blocked_leaf(tmp_path: Path) -> None:
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    predecessor = create_item(ws, "story", "not split")
+    create_item(ws, "action", "blocked", gate=_pass(), after=[predecessor.id])
+    ready = create_item(ws, "action", "ready", gate=_pass())
+
+    assert find_next_open(ws) == ready.id
+
+
+def test_container_after_is_inherited_until_predecessor_rolls_up(tmp_path: Path) -> None:
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    first = create_item(ws, "story", "first")
+    first_a = create_item(ws, "action", "one", gate=_pass(), parent=first.id)
+    first_b = create_item(ws, "action", "two", gate=_pass(), parent=first.id)
+    second = create_item(ws, "story", "second", after=[first.id])
+    second_leaf = create_item(ws, "action", "later", gate=_pass(), parent=second.id)
+    ws.write_progress(Progress(item=None))
+
+    assert start_next(ws) == first_a.id
+    assert complete(ws, first_a.id, cwd=tmp_path).passed is True
+    assert find_next_open(ws) == first_b.id
+    assert complete(ws, first_b.id, cwd=tmp_path).passed is True
+    assert ws.load_item(first.id).status == "done"
+    assert find_next_open(ws) == second_leaf.id
+
+
+def test_doing_leaf_is_resumed_when_predecessor_reopens(tmp_path: Path) -> None:
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    predecessor = create_item(ws, "action", "first", gate=_pass())
+    dependent = create_item(
+        ws, "action", "second", gate=_pass(), after=[predecessor.id]
+    )
+    ws.write_item(predecessor.model_copy(update={"status": "todo"}))
+    ws.write_item(dependent.model_copy(update={"status": "doing"}))
+
+    assert find_next_open(ws) == dependent.id
+
+
+def test_start_next_blocked_preserves_state_and_pointer(tmp_path: Path) -> None:
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    predecessor = create_item(ws, "story", "not split")
+    dependent = create_item(
+        ws, "action", "blocked", gate=_pass(), after=[predecessor.id]
+    )
+    ws.write_progress(Progress(item=None))
+    before_item = ws.item_path(dependent.id).read_text()
+    before_pointer = ws.progress_path.read_text()
+
+    with pytest.raises(OrderError, match=rf"no leaf can start.*{predecessor.id}"):
+        start_next(ws)
+
+    assert ws.item_path(dependent.id).read_text() == before_item
+    assert ws.progress_path.read_text() == before_pointer
+
+
+def test_missing_after_target_is_reported_as_blocked(tmp_path: Path) -> None:
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    leaf = create_item(ws, "action", "blocked", gate=_pass())
+    ws.write_item(leaf.model_copy(update={"after": ["NOPE-001"]}))
+
+    with pytest.raises(OrderError, match=r"no leaf can start.*NOPE-001"):
+        start_next(ws)
+
+
+def test_ready_leaves_lists_ready_and_blocked_in_order(tmp_path: Path) -> None:
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    first = create_item(ws, "action", "ready one", gate=_pass())
+    predecessor = create_item(ws, "story", "not split")
+    blocked = create_item(
+        ws, "action", "blocked", gate=_pass(), after=[predecessor.id]
+    )
+    second = create_item(ws, "action", "ready two", gate=_pass())
+    doing = create_item(ws, "action", "active", gate=_pass())
+    ws.write_item(doing.model_copy(update={"status": "doing"}))
+
+    ready, waiting = ready_leaves(ws)
+
+    assert ready == [first.id, second.id]
+    assert waiting == [(blocked.id, [predecessor.id])]
+    items = load_items(ws)
+    assert second.id not in effective_after(items, first.id)
+    assert first.id not in effective_after(items, second.id)
 
 
 # --- start / complete / rollup ---------------------------------------------

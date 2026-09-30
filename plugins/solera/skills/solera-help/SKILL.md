@@ -48,7 +48,9 @@ Pass the current workspace as `project_root` to every tool.
 | `plan_work` / `add_work_item` | Build a WorkItem tree. See **solera-plan**. |
 | `next_work_item` | Mark the next open leaf `doing` and return its instruction. |
 | `complete_current` | Run the active leaf's gate; pass means `done` plus rollup. |
-| `workspace_status` | Return the pointer, items, and tree-integrity problems. |
+| `workspace_status` | Return the pointer, items, completion percent per container, and tree-integrity problems. |
+| `set_work_item_after` | Replace an item's order links (`after`); an empty list clears them. |
+| `ready_work_items` | List `todo` leaves that can start now (safe to do together) and blocked leaves with what each waits for. |
 | `import_spec` | Import a format-F service release under `specs/<label>/`. |
 | `propose_spec_repin` / `apply_spec_repin` | Propose by ID, get approval, then apply that ID. |
 | `write_retrospective` | Record what the design lacked after work. |

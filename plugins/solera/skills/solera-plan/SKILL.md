@@ -39,10 +39,20 @@ building starts.
    container. Pass the exact deterministic verification command in `gate` for
    a leaf.
 
-   Add leaves in execution order. Each `add` prints the new id.
+   Each call returns the new id. When one item must finish before another
+   starts, pass the earlier ids in `after` (for example `after=["ACT-001"]`).
+   A link may point at any item, across parents; a link on a container holds
+   back everything under it. Items with no link between them may run in any
+   order, so link only real prerequisites — do not chain every leaf. To add or
+   change links on an existing item, call `set_work_item_after` with the full
+   list (an empty list clears it). Solera rejects an unknown id or a link that
+   could never be satisfied.
 
 ## Rules for good items
 
+- **Order links are facts, not a schedule.** Add `after` only when the later
+  item needs the earlier one done — it reads its output, builds on its code, or
+  needs its decision.
 - **A leaf is one context.** If a chunk needs more than one clean agent context,
   make it a container and split it into smaller leaves.
 - **Every leaf has a gate; containers never do.** The gate is deterministic and

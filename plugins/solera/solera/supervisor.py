@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from . import graph
+from .errors import OrderError
 from .formats import Progress, Status, WorkItem
 from .gate import DEFAULT_TIMEOUT_SECONDS, GateResult, run_item_gate
 from .workspace import Workspace
@@ -38,21 +40,27 @@ def roots(ws: Workspace) -> list[str]:
 
 def _leaves_in_order(ws: Workspace) -> list[str]:
     """Leaf ids in depth-first, declaration order across the forest."""
+    return _leaves_from_items(graph.load_items(ws))
+
+
+def _leaves_from_items(items: dict[str, WorkItem]) -> list[str]:
+    """Leaf ids in depth-first order from an already loaded item mapping."""
     leaves: list[str] = []
     seen: set[str] = set()
+    child_ids = graph.parents(items)
 
     def visit(item_id: str) -> None:
-        if item_id in seen:  # defensive against a malformed cycle
+        if item_id in seen or item_id not in items:
             return
         seen.add(item_id)
-        item = ws.load_item(item_id)
+        item = items[item_id]
         if item.is_container:
             for child_id in item.children:
                 visit(child_id)
         elif item.is_leaf:
             leaves.append(item_id)
 
-    for root in roots(ws):
+    for root in (item_id for item_id in items if item_id not in child_ids):
         visit(root)
     return leaves
 
@@ -63,14 +71,40 @@ def find_next_open(ws: Workspace) -> str | None:
     A ``doing`` leaf is resumed before any ``todo`` leaf is started — one active
     leaf at a time, so a leaf stuck after a failed gate is re-offered, not skipped.
     """
-    first_todo: str | None = None
-    for leaf_id in _leaves_in_order(ws):
-        status = ws.load_item(leaf_id).status
-        if status == "doing":
+    items = graph.load_items(ws)
+    leaves = _leaves_from_items(items)
+    for leaf_id in leaves:
+        if items[leaf_id].status == "doing":
             return leaf_id
-        if status == "todo" and first_todo is None:
-            first_todo = leaf_id
-    return first_todo
+    blocked: list[tuple[str, list[str]]] = []
+    for leaf_id in leaves:
+        if items[leaf_id].status != "todo":
+            continue
+        if graph.can_start(items, leaf_id):
+            return leaf_id
+        blocked.append((leaf_id, graph.waiting_on(items, leaf_id)))
+    if blocked:
+        details = "; ".join(
+            f"{leaf_id} waits for {', '.join(predecessors)}"
+            for leaf_id, predecessors in blocked
+        )
+        raise OrderError(f"no leaf can start: {details}")
+    return None
+
+
+def ready_leaves(ws: Workspace) -> tuple[list[str], list[tuple[str, list[str]]]]:
+    """Return startable and blocked todo leaves in supervisor order."""
+    items = graph.load_items(ws)
+    ready: list[str] = []
+    blocked: list[tuple[str, list[str]]] = []
+    for leaf_id in _leaves_from_items(items):
+        if items[leaf_id].status != "todo":
+            continue
+        if graph.can_start(items, leaf_id):
+            ready.append(leaf_id)
+        else:
+            blocked.append((leaf_id, graph.waiting_on(items, leaf_id)))
+    return ready, blocked
 
 
 def set_item_status(ws: Workspace, item_id: str, status: Status) -> WorkItem:

@@ -45,6 +45,31 @@ children: []
 Stand up auth.
 """
 
+OLD_LEAF = """\
+---
+level: action
+status: todo
+gate: pytest -q
+children: []
+realizes:
+- feature/login
+---
+Build login.
+"""
+
+OLD_CONTAINER = """\
+---
+level: story
+status: doing
+gate: ''
+children:
+- ACT-001
+- ACT-002
+realizes: []
+---
+Ship auth.
+"""
+
 
 def test_parse_leaf() -> None:
     item = parse_workitem(LEAF, item_id="ACT-001")
@@ -101,3 +126,54 @@ def test_round_trips_leaf_and_container() -> None:
     assert parse_workitem(dump_workitem(leaf), item_id="ACT-001") == leaf
     box = parse_workitem(CONTAINER, item_id="STORY-001")
     assert parse_workitem(dump_workitem(box), item_id="STORY-001") == box
+
+
+@pytest.mark.parametrize(
+    ("text", "item_id"),
+    [(OLD_LEAF, "ACT-001"), (OLD_CONTAINER, "STORY-001")],
+)
+def test_old_workitem_round_trips_byte_for_byte(text: str, item_id: str) -> None:
+    item = parse_workitem(text, item_id=item_id)
+    assert item.after == []
+    assert dump_workitem(item) == text
+
+
+def test_after_round_trips_after_realizes() -> None:
+    text = """\
+---
+level: action
+status: todo
+gate: pytest -q
+children: []
+realizes: []
+after:
+- ACT-001
+- STORY-002
+---
+Build login.
+"""
+    item = parse_workitem(text, item_id="ACT-003")
+    assert item.after == ["ACT-001", "STORY-002"]
+    dumped = dump_workitem(item)
+    assert dumped.index("realizes:") < dumped.index("after:")
+    assert parse_workitem(dumped, item_id=item.id) == item
+
+
+@pytest.mark.parametrize(
+    "after_yaml",
+    [
+        "after: [ACT-001, ACT-001]",
+        "after: [ACT-002]",
+        "after: ['']",
+        "after: ['   ']",
+        "after: ACT-001",
+        "after: [1]",
+    ],
+)
+def test_rejects_invalid_after(after_yaml: str) -> None:
+    text = (
+        "---\nlevel: action\nstatus: todo\ngate: pytest -q\nchildren: []\n"
+        f"realizes: []\n{after_yaml}\n---\nBuild login.\n"
+    )
+    with pytest.raises(FormatError, match="after"):
+        parse_workitem(text, item_id="ACT-002")

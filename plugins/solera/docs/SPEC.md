@@ -33,6 +33,7 @@ one-gate, and everything above is grouping and rollup.
 | `formats` / `workspace` | read/write/validate the `.noory/solera/` files (id in the path) | state |
 | `planning` | create WorkItems at any level, append children | S (plan) |
 | `supervisor` | walk the tree to the next open leaf, branch on the gate, roll up | L (order) |
+| `graph` | order links (`after`), readiness, deadlock check, completion percent | L (order) |
 | `gate` | run one command with `shell=False`; exit 0 == pass | V (verify) |
 | `audit` | cross-file tree integrity | guard |
 | `cli` / `skills` | the surface the agent drives | — |
@@ -63,8 +64,25 @@ sequenceDiagram
     end
 ```
 
-`next` dives depth-first to the first open leaf and **resumes a stuck `doing`
-leaf before starting any `todo`** — one active leaf at a time, never skipped.
+`next` **resumes a stuck `doing` leaf before starting any `todo`** — one active
+leaf at a time, never skipped. Otherwise it starts the first `todo` leaf, in
+depth-first declaration order, whose order links are satisfied. If `todo`
+leaves remain but none can start, `next` fails and names what each one waits
+for; it never reports that as nothing open. `ready` lists every `todo` leaf that
+can start now and every blocked one with what it waits for. Ready leaves never
+wait on each other, so they can be worked on together.
+
+### Order links
+
+A WorkItem may list `after`: ids of items that must be `done` before it starts.
+Links may cross parents and point at any level. A leaf can start when every id
+in its own `after` and in each ancestor's `after` is `done`; a container is
+`done` only by rollup, so waiting on a container waits for everything under it.
+`after` gates **start** only: a link never reopens or pauses an item that is
+already `doing` or `done`. `plan`, `add` and `after` reject an id that does not
+exist and any link that could never be satisfied — a cycle of links, a leaf
+waiting on its own ancestor, or a container waiting on its own descendant. A
+file without `after` has no links, and the key is written only when non-empty.
 
 ## Leaf state machine
 
@@ -80,6 +98,12 @@ stateDiagram-v2
 A container's status is **derived**: it becomes `done` when all its children
 are. The `progress.md` pointer names the single active leaf; `next` moves it and
 clears it to `null` when nothing is open.
+
+Its completion percent is derived the same way: of the items under it that have
+no children (gated leaves and items not yet decomposed), the share that is
+`done`, rounded down. It is 100 exactly when the container is `done`.
+`workspace_status` returns it per container as `progress: {id: {done, total,
+percent}}`; clients display it and do not recompute it.
 
 ## File layout
 
@@ -104,11 +128,13 @@ nothing. A malformed file is rejected immediately (`FormatError`).
 ## CLI
 
 ```text
-solera --root <project> plan "goal" [--level story]            -> STORY-001  (a root)
-                        add <parent> "goal" [--level action] [--gate "<cmd>"]  -> ACT-001
+solera --root <project> plan "goal" [--level story] [--after <id>]...   -> STORY-001  (a root)
+                        add <parent> "goal" [--level action] [--gate "<cmd>"] [--after <id>]...  -> ACT-001
+                        after <item> [<id> ...]   # replace the item's order links; no ids clears them
+                        ready       # leaves that can start now, and blocked leaves with what they wait for
                         next        # next open leaf -> doing, print its instruction
                         complete    # run the active leaf's gate; pass -> done + rollup
-                        status      # pointer + tree-integrity audit
+                        status      # pointer + completion percent per container + tree-integrity audit
                         retro <item> "what was learned"
                         feedback <id> "blocker"
                         repin <old> <new> [--apply <proposal_id>]
@@ -149,3 +175,5 @@ same immutable manifests may be copied under another label.
 4. **One active leaf.** A gate failure leaves the leaf `doing`; `next` resumes it.
 5. **Leaf xor container.** A WorkItem never has both a gate and children — only
    leaves are executed, only containers roll up.
+6. **Order links gate start only.** `after` decides which `todo` leaf may start;
+   it never changes the status of an item already started or done.

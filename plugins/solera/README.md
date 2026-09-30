@@ -57,7 +57,8 @@ solera --root "$PWD" add STORY-001 "Add the endpoint" --gate "pytest -q tests/te
 solera --root "$PWD" next        # mark the next leaf doing, print its instruction
 #   ... agent does the work ...
 solera --root "$PWD" complete    # run the gate; pass -> done + rollup, fail -> stop
-solera --root "$PWD" status      # pointer + tree-integrity audit
+solera --root "$PWD" ready       # leaves that can start now, and blocked ones
+solera --root "$PWD" status      # pointer + completion percent + tree-integrity audit
 solera --root "$PWD" retro STORY-001 "The plan under-sized the migration step."
 solera --root "$PWD" feedback FB-001 "Blocked: the spec is ambiguous about auth."
 ```

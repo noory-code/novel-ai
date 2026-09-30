@@ -25,6 +25,10 @@ work and runs each gate.
 
    - Prints `(nothing open)` -> the tree is complete. Stop. Consider
      **solera-retro**.
+   - Fails with `no leaf can start` -> the remaining leaves wait on items that
+     are not done (an item not yet decomposed, or a link to fix). Do not work
+     around it: call `ready_work_items` to see what each waits for, then write
+     a note with **solera-feedback** and stop.
    - Otherwise prints the instruction: the leaf's id, its goal, and the gate.
 
 2. **Build it.** Do the work the goal describes, in the project. Do not run the
@@ -48,5 +52,6 @@ around.
 
 ## Check state any time
 
-Call `workspace_status` to read the current pointer, items, and every integrity
-problem without changing state.
+Call `workspace_status` to read the current pointer, items, completion percent
+per container, and every integrity problem without changing state. Call
+`ready_work_items` to see which leaves can start now and which are blocked.

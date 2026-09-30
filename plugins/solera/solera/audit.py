@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from . import graph
 from .errors import FormatError
 from .formats import WorkItem
 from .workspace import Workspace
@@ -56,6 +57,7 @@ def audit_workspace(ws: Workspace) -> list[Problem]:
 
     problems.extend(_find_cycles(parsed, parent_of))
     problems.extend(_audit_rollups(parsed))
+    problems.extend(_audit_order(ws, parsed))
     problems.extend(_audit_pointer(ws, parsed))
     return problems
 
@@ -100,6 +102,31 @@ def _audit_rollups(parsed: dict[str, WorkItem]) -> list[Problem]:
                 )
             )
     return out
+
+
+def _audit_order(ws: Workspace, parsed: dict[str, WorkItem]) -> list[Problem]:
+    existing_unparsed: set[str] = set()
+    for item in parsed.values():
+        for predecessor in item.after:
+            if predecessor in parsed:
+                continue
+            try:
+                if ws.item_path(predecessor).exists():
+                    existing_unparsed.add(predecessor)
+            except FormatError:
+                pass
+
+    ignored = {
+        f"{item_id} waits for {predecessor} which does not exist"
+        for item_id, item in parsed.items()
+        for predecessor in item.after
+        if predecessor in existing_unparsed
+    }
+    return [
+        Problem(kind, detail)
+        for kind, detail in graph.order_problems(parsed)
+        if kind != "after-missing" or detail not in ignored
+    ]
 
 
 def _audit_pointer(ws: Workspace, parsed: dict[str, WorkItem]) -> list[Problem]:
