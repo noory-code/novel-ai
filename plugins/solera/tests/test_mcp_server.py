@@ -7,6 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+from fastmcp.exceptions import ValidationError as FastMCPValidationError
 
 from solera import mcp_server
 from solera.errors import FormatError
@@ -26,6 +27,20 @@ def test_tool_catalog_is_pinned() -> None:
         "write_feedback",
         "write_retrospective",
     }
+
+
+def test_apply_spec_repin_requires_proposal_id(tmp_path: Path) -> None:
+    with pytest.raises(FastMCPValidationError, match="proposal_id"):
+        asyncio.run(
+            mcp_server.mcp.call_tool(
+                "apply_spec_repin",
+                {
+                    "project_root": str(tmp_path),
+                    "old_label": "old",
+                    "new_label": "new",
+                },
+            )
+        )
 
 
 def test_plan_next_and_notes_round_trip(tmp_path: Path) -> None:

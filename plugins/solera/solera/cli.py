@@ -18,7 +18,7 @@ from .errors import SoleraError
 from .formats import Feedback, Retrospective
 from .intake import import_release, load_imported_release
 from .planning import create_item
-from .repin import propose_repin, reopen_items
+from .repin import apply_repin, propose_repin
 from .supervisor import complete, instruction, start_next
 from .workspace import Workspace
 
@@ -92,9 +92,9 @@ def _cmd_import(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
 
 def _cmd_repin(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     """Re-pin against a re-published release: diff two imported labels, surface
-    which work items go stale / orphan, and (only with ``--apply``) reopen the
-    stale ones. ``removed`` slugs escalate to a human and are never auto-reopened
-    — the human-in-the-loop gate (04-pipeline)."""
+    which work items go stale / orphan, and (only with ``--apply <proposal_id>``)
+    reopen the approved stale ones. ``removed`` slugs escalate to a human and
+    are never auto-reopened — the human-in-the-loop gate (04-pipeline)."""
     try:
         old_release = load_imported_release(ws, args.old)
         new_release = load_imported_release(ws, args.new)
@@ -117,11 +117,15 @@ def _cmd_repin(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     for item_id, reasons in prop["reasons"].items():
         for reason in reasons:
             print(f"  {item_id}: {reason}")
-    if args.apply:
-        reopen_items(ws, prop["stale"])
-        print(f"reopened: {prop['stale']}")
+    print(f"proposal: {prop['proposal_id']}")
+    if args.apply is not None:
+        try:
+            applied = apply_repin(ws, old_release, new_release, args.apply)
+        except ValueError as exc:
+            raise SoleraError(str(exc)) from exc
+        print(f"reopened: {applied['reopened']}")
     else:
-        print("(proposal only — pass --apply to reopen the stale items)")
+        print("(proposal only — pass --apply <proposal_id> after human approval)")
     return 0
 
 
@@ -181,14 +185,14 @@ def _build_parser() -> argparse.ArgumentParser:
     p_import.set_defaults(func=_cmd_import)
 
     p_repin = sub.add_parser(
-        "repin", help="diff two imported releases and reopen stale work (with --apply)"
+        "repin", help="diff two imported releases and reopen stale work by approved proposal ID"
     )
     p_repin.add_argument("old", help="imported release label to diff from (specs/{label})")
     p_repin.add_argument("new", help="imported release label to diff to")
     p_repin.add_argument(
         "--apply",
-        action="store_true",
-        help="reopen the stale items (human approval); without it, propose only",
+        metavar="PROPOSAL_ID",
+        help="reopen stale items from this human-approved proposal; without it, propose only",
     )
     p_repin.set_defaults(func=_cmd_repin)
 

@@ -50,7 +50,7 @@ Pass the current workspace as `project_root` to every tool.
 | `complete_current` | Run the active leaf's gate; pass means `done` plus rollup. |
 | `workspace_status` | Return the pointer, items, and tree-integrity problems. |
 | `import_spec` | Import a format-F service release under `specs/<label>/`. |
-| `propose_spec_repin` / `apply_spec_repin` | Review, then apply stale-item reopens. |
+| `propose_spec_repin` / `apply_spec_repin` | Propose by ID, get approval, then apply that ID. |
 | `write_retrospective` | Record what the design lacked after work. |
 | `write_feedback` | Record a blocker for a human while work is blocked. |
 
@@ -62,3 +62,6 @@ Pass the current workspace as `project_root` to every tool.
   the format valid.
 - A gate that fails leaves the leaf stuck on purpose. Fix the work and re-run
   `complete`, or write `feedback` and stop for a human.
+- Re-pin is approval-bound: show the proposal and its ID to the human, then pass
+  that exact ID to `apply_spec_repin`. If the proposal changed, apply writes
+  nothing; request and review a new proposal.

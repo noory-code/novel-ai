@@ -111,8 +111,8 @@ solera --root <project> plan "goal" [--level story]            -> STORY-001  (a 
                         status      # pointer + tree-integrity audit
                         retro <item> "what was learned"
                         feedback <id> "blocker"
-                        repin <old> <new> [--apply]   # diff two imported releases;
-                                          #   reopen stale work only with --apply
+                        repin <old> <new> [--apply <proposal_id>]
+                                    # propose, or apply the exact human-approved proposal
 ```
 
 `repin` reads the service and project manifests of two imported labels. They
@@ -125,9 +125,15 @@ A changed project element affects service work only when the old or new refs
 points to it. A refs-only change also makes work realizing an old or new service
 element stale. Work that realizes a removed service or project element
 **escalates**, as does work that already realizes an `added` service ID (a
-possible delete/re-add). Escalation takes precedence over stale. Without
-`--apply`, repin only proposes; `--apply` reopens the stale set (`status → todo`).
-Escalated items are never auto-reopened.
+possible delete/re-add). Escalation takes precedence over stale.
+
+Without `--apply`, repin is read-only and prints `proposal: <proposal_id>` with
+the proposed stale and escalation sets. A human reviews that proposal. After
+approval, `--apply <proposal_id>` recalculates the proposal and applies it only
+when the ID still matches. A mismatch means the manifests or realizing work
+changed: repin writes nothing and requires a new proposal and approval. A
+matching apply reopens only the stale set (`status → todo`). Escalated items are
+never auto-reopened.
 
 Import preserves release identity across labels. Different manifest content for
 the same `(service, vS)` or for the same `based_on` vP is rejected, while the

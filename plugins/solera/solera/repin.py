@@ -11,12 +11,15 @@ project elements, and refs. It maps those changes onto work items that
   delete/re-add across releases → *escalate* rather than silently re-pin.
 
 :func:`propose_repin` is **read-only** (deterministic proposal); a human
-approves, then :func:`reopen_items` performs the status mutation. Keeping the
-two apart is the human-in-the-loop gate (04-pipeline).
+approves its ``proposal_id``, then :func:`apply_repin` recalculates and verifies
+that ID before reopening anything. Keeping the two apart is the
+human-in-the-loop gate (04-pipeline).
 """
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from typing import Any
 
@@ -126,7 +129,7 @@ def propose_repin(
         if stale_reasons:
             stale.append(item_id)
             reasons[item_id] = stale_reasons
-    return {
+    proposal: dict[str, Any] = {
         "stale": sorted(stale),
         "escalate": sorted(escalate),
         "diff": diff,
@@ -134,6 +137,67 @@ def propose_repin(
         "refs_changed": refs_changed,
         "reasons": reasons,
     }
+    proposal["proposal_id"] = _proposal_id(old, new, proposal)
+    return proposal
+
+
+def _canonical_json(value: Any) -> bytes:
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+
+
+def _canonical_json_digest(value: Any) -> str:
+    return hashlib.sha256(_canonical_json(value)).hexdigest()
+
+
+def _proposal_id(
+    old: ImportedRelease,
+    new: ImportedRelease,
+    proposal: dict[str, Any],
+) -> str:
+    reasons = proposal["reasons"]
+    identity = {
+        "manifests": {
+            "old": {
+                "service": _canonical_json_digest(old["service"]),
+                "project": _canonical_json_digest(old["project"]),
+            },
+            "new": {
+                "service": _canonical_json_digest(new["service"]),
+                "project": _canonical_json_digest(new["project"]),
+            },
+        },
+        "stale": sorted(proposal["stale"]),
+        "escalate": sorted(proposal["escalate"]),
+        "reasons": {
+            item_id: sorted(reasons[item_id])
+            for item_id in sorted(reasons)
+        },
+    }
+    return _canonical_json_digest(identity)
+
+
+def apply_repin(
+    ws: Workspace,
+    old: ImportedRelease,
+    new: ImportedRelease,
+    proposal_id: str,
+) -> dict[str, Any]:
+    """Apply a still-current, human-approved re-pin proposal.
+
+    The proposal is recalculated from the current manifests and work items. No
+    files are written unless its identity matches the reviewed proposal.
+    """
+    proposal = propose_repin(ws, old, new)
+    if proposal["proposal_id"] != proposal_id:
+        raise ValueError("re-pin proposal changed; request a new proposal before applying")
+    stale = list(proposal["stale"])
+    reopen_items(ws, stale)
+    return {**proposal, "reopened": stale}
 
 
 def _service_release_number(release: Any) -> int:

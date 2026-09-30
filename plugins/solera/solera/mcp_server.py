@@ -16,7 +16,7 @@ from .audit import audit_workspace
 from .formats import Feedback, Retrospective
 from .intake import import_release, load_imported_release
 from .planning import create_item
-from .repin import propose_repin, reopen_items
+from .repin import apply_repin, propose_repin
 from .supervisor import complete, instruction, start_next
 from .workspace import Workspace
 
@@ -26,7 +26,8 @@ mcp = FastMCP(
         "Solera stores an executable work tree under .noory/solera. Plan or add "
         "items, ask for exactly one next leaf, and complete that leaf only after "
         "the implementation is ready for its deterministic gate. Re-pin is a "
-        "two-step operation: inspect the proposal first, then explicitly apply it."
+        "two-step operation: inspect and approve the proposal first, then apply "
+        "that exact proposal ID."
     ),
 )
 
@@ -110,7 +111,7 @@ def import_spec(project_root: str, source: str, label: str) -> dict[str, Any]:
 
 @mcp.tool()
 def propose_spec_repin(project_root: str, old_label: str, new_label: str) -> dict[str, Any]:
-    """Read two imported releases and propose stale items without changing work state."""
+    """Return a proposal and its approval ID without changing work state."""
     ws = _workspace(project_root)
     return propose_repin(
         ws,
@@ -120,12 +121,20 @@ def propose_spec_repin(project_root: str, old_label: str, new_label: str) -> dic
 
 
 @mcp.tool()
-def apply_spec_repin(project_root: str, old_label: str, new_label: str) -> dict[str, Any]:
-    """Reopen exactly the stale items in a previously reviewed re-pin proposal."""
-    proposal = propose_spec_repin(project_root, old_label, new_label)
-    stale = list(proposal["stale"])
-    reopen_items(_workspace(project_root), stale)
-    return {**proposal, "reopened": stale}
+def apply_spec_repin(
+    project_root: str,
+    old_label: str,
+    new_label: str,
+    proposal_id: str,
+) -> dict[str, Any]:
+    """Apply a reviewed proposal by ID, rejecting it if the proposal changed."""
+    ws = _workspace(project_root)
+    return apply_repin(
+        ws,
+        load_imported_release(ws, old_label),
+        load_imported_release(ws, new_label),
+        proposal_id,
+    )
 
 
 @mcp.tool()

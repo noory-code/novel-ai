@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.0.0] — 2026-10-01
+
+### Changed
+
+- **Breaking:** re-pin applies only the proposal a person approved. `propose_spec_repin` returns a `proposal_id` (a digest of both releases' manifests and the proposed stale/escalate/reasons); `apply_spec_repin` requires that `proposal_id` and writes nothing if the recalculated proposal differs. The CLI prints `proposal: <id>` and applies with `repin old new --apply <id>`.
+
 ## [7.9.0] — 2026-10-01
 
 ### Changed

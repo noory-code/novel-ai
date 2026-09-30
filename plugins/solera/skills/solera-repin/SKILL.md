@@ -37,15 +37,17 @@ Call `propose_spec_repin` with `old_label` and `new_label`. The labels must be
 adjacent releases of the same service. If releases were skipped, import every
 intervening release and compare them one step at a time.
 
-The proposal reports the service diff, shared-project diff, whether refs
-changed, the stale and escalation lists, and per-item reasons. No files are
-written. Review the list with the human before applying.
+The proposal reports a `proposal_id`, the service diff, shared-project diff,
+whether refs changed, the stale and escalation lists, and per-item reasons. No
+files are written. Show the complete proposal, including its ID, to the human.
 
 ### 3. Apply (human approval)
 
-If the human approves the proposed reopens:
-
-After explicit human approval, call `apply_spec_repin` with the same labels.
+After the human explicitly approves the proposed reopens, call
+`apply_spec_repin` with the same labels and the exact approved `proposal_id`.
+The apply call recalculates the proposal. If the manifests, realizing work, or
+classification changed, the ID does not match: no files are written. Propose
+again, show the new proposal to the human, and wait for approval of its new ID.
 
 Stale `done` items reopen to `todo`. Ancestor containers whose rollup broke also
 reopen (rollup-invariant repair). The items are now back in the execution queue.
@@ -57,8 +59,8 @@ design.
 
 ## Rules
 
-- Always propose before applying. Show the stale list to the human — they decide
-  whether the change is significant enough to reopen work.
+- Always propose before applying. Show the stale and escalation lists with the
+  `proposal_id` to the human. Apply only the exact ID they approved.
 - Re-pin reads both `service/manifest.json` and `project/manifest.json` under
   each label. A changed project element affects service work only when either
   release's refs points to it. A refs-only change also affects service work.

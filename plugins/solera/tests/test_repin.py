@@ -1,18 +1,19 @@
 """Re-pin (INT-f) maps service and shared format-F changes onto work items.
 
-Proposals are deterministic and read-only; a human approves before
-``reopen_items`` mutates any work state.
+Proposals are deterministic and read-only; a human approves a proposal ID
+before ``apply_repin`` mutates any work state.
 """
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
 
 from solera.intake import ImportedRelease
 from solera.planning import create_item
-from solera.repin import propose_repin, reopen_items
+from solera.repin import apply_repin, propose_repin, reopen_items
 from solera.workspace import Workspace
 
 
@@ -77,6 +78,100 @@ def test_propose_repin_maps_diff_to_realizing_items(tmp_path: Path) -> None:
 
     assert prop["stale"] == [a.id]
     assert prop["escalate"] == [c.id]
+
+
+def test_proposal_id_is_stable_for_the_same_inputs(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    create_item(ws, "action", "A", gate="true", realizes=["feature/login"])
+    old = _release(
+        "vS1",
+        service_elements=[
+            {"id": "service/auth", "hash": "service"},
+            {"id": "feature/login", "hash": "old"},
+        ],
+    )
+    new = _release(
+        "vS2",
+        service_elements=[
+            {"id": "service/auth", "hash": "service"},
+            {"id": "feature/login", "hash": "new"},
+        ],
+    )
+
+    first = propose_repin(ws, old, new)["proposal_id"]
+    second = propose_repin(ws, old, new)["proposal_id"]
+
+    assert first == second
+    assert re.fullmatch(r"[0-9a-f]{64}", first)
+
+
+def test_apply_repin_rejects_changed_proposal_without_writing(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    first = create_item(ws, "action", "A", gate="true", realizes=["feature/login"])
+    ws.write_item(ws.load_item(first.id).model_copy(update={"status": "done"}))
+    old = _release(
+        "vS1",
+        service_elements=[
+            {"id": "service/auth", "hash": "service"},
+            {"id": "feature/login", "hash": "old"},
+        ],
+    )
+    new = _release(
+        "vS2",
+        service_elements=[
+            {"id": "service/auth", "hash": "service"},
+            {"id": "feature/login", "hash": "new"},
+        ],
+    )
+    proposal_id = propose_repin(ws, old, new)["proposal_id"]
+
+    second = create_item(ws, "action", "B", gate="true", realizes=["feature/login"])
+    ws.write_item(ws.load_item(second.id).model_copy(update={"status": "done"}))
+    before = {
+        path.relative_to(ws.root): path.read_bytes()
+        for path in ws.root.rglob("*")
+        if path.is_file()
+    }
+
+    with pytest.raises(ValueError, match="proposal changed"):
+        apply_repin(ws, old, new, proposal_id)
+
+    after = {
+        path.relative_to(ws.root): path.read_bytes()
+        for path in ws.root.rglob("*")
+        if path.is_file()
+    }
+    assert after == before
+
+
+def test_apply_repin_with_current_id_reopens_only_stale_items(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    stale = create_item(ws, "action", "Stale", gate="true", realizes=["feature/login"])
+    escalated = create_item(ws, "action", "Escalated", gate="true", realizes=["entity/old"])
+    for item in (stale, escalated):
+        ws.write_item(ws.load_item(item.id).model_copy(update={"status": "done"}))
+    old = _release(
+        "vS1",
+        service_elements=[
+            {"id": "service/auth", "hash": "service"},
+            {"id": "feature/login", "hash": "old"},
+            {"id": "entity/old", "hash": "old"},
+        ],
+    )
+    new = _release(
+        "vS2",
+        service_elements=[
+            {"id": "service/auth", "hash": "service"},
+            {"id": "feature/login", "hash": "new"},
+        ],
+    )
+    proposal = propose_repin(ws, old, new)
+
+    applied = apply_repin(ws, old, new, proposal["proposal_id"])
+
+    assert applied["reopened"] == [stale.id]
+    assert ws.load_item(stale.id).status == "todo"
+    assert ws.load_item(escalated.id).status == "done"
 
 
 def test_referenced_shared_change_stales_service_work(tmp_path: Path) -> None:

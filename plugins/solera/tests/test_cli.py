@@ -23,6 +23,14 @@ def _run(root: Path, *args: str) -> int:
     return main(["--root", str(root), *args])
 
 
+def _proposal_id(output: str) -> str:
+    return next(
+        line.removeprefix("proposal: ")
+        for line in output.splitlines()
+        if line.startswith("proposal: ")
+    )
+
+
 def test_plan_and_add_emit_ids(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
     assert _run(tmp_path, "plan", "Build a thing.") == 0
     assert capsys.readouterr().out.strip() == "STORY-001"
@@ -134,6 +142,7 @@ def test_repin_proposes_without_mutating_by_default(tmp_path: Path, capsys) -> N
     assert "feature/login" in out  # the changed slug
     assert "shared changed:" in out
     assert "refs changed:" in out
+    assert "proposal: " in out
     assert "ACT-001: realizes changed service element feature/login" in out
     # read-only: the item is still done (no --apply)
     assert "status: done" in item_path.read_text()
@@ -154,7 +163,10 @@ def test_repin_apply_reopens_stale_items(tmp_path: Path, capsys) -> None:  # typ
     )
     capsys.readouterr()
 
-    assert _run(tmp_path, "repin", "v1", "v2", "--apply") == 0
+    assert _run(tmp_path, "repin", "v1", "v2") == 0
+    proposal_id = _proposal_id(capsys.readouterr().out)
+
+    assert _run(tmp_path, "repin", "v1", "v2", "--apply", proposal_id) == 0
     assert "status: todo" in item_path.read_text()  # reopened
 
 
@@ -167,10 +179,41 @@ def test_repin_escalates_removed_but_never_reopens_it(tmp_path: Path, capsys) ->
     _write_imported_release(tmp_path, "v2", [])  # removed
     capsys.readouterr()
 
-    assert _run(tmp_path, "repin", "v1", "v2", "--apply") == 0
+    assert _run(tmp_path, "repin", "v1", "v2") == 0
+    proposal_id = _proposal_id(capsys.readouterr().out)
+
+    assert _run(tmp_path, "repin", "v1", "v2", "--apply", proposal_id) == 0
     out = capsys.readouterr().out
     assert "escalate" in out.lower() and "ACT-001" in out
     # removed → orphaned → a human decides; --apply must NOT reopen it
+    assert "status: done" in item_path.read_text()
+
+
+def test_repin_apply_requires_proposal_id(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    with pytest.raises(SystemExit) as exc_info:
+        _run(tmp_path, "repin", "v1", "v2", "--apply")
+
+    assert exc_info.value.code == 2
+    assert "--apply" in capsys.readouterr().err
+
+
+def test_repin_apply_rejects_wrong_proposal_id(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _run(tmp_path, "plan", "Goal.")
+    _run(
+        tmp_path, "add", "STORY-001", "Build login", "--gate", "true", "--realizes", "feature/login"
+    )
+    item_path = tmp_path / ".noory" / "solera" / "items" / "ACT-001.md"
+    item_path.write_text(item_path.read_text().replace("status: todo", "status: done"))
+    _write_imported_release(
+        tmp_path, "v1", [{"id": "feature/login", "kind": "feature", "hash": "a"}]
+    )
+    _write_imported_release(
+        tmp_path, "v2", [{"id": "feature/login", "kind": "feature", "hash": "b"}]
+    )
+    capsys.readouterr()
+
+    assert _run(tmp_path, "repin", "v1", "v2", "--apply", "0" * 64) == 1
+    assert "proposal changed" in capsys.readouterr().out
     assert "status: done" in item_path.read_text()
 
 
