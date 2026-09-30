@@ -132,7 +132,7 @@ def test_set_work_item_after_propagates_cycle_error(tmp_path: Path) -> None:
     second = mcp_server.add_work_item(root, second_parent["id"], "Two", gate="true")
     mcp_server.set_work_item_after(root, first["id"], [second["id"]])
 
-    with pytest.raises(OrderError, match="never be satisfied"):
+    with pytest.raises(OrderError, match="order links form a cycle"):
         mcp_server.set_work_item_after(root, second["id"], [first["id"]])
 
 

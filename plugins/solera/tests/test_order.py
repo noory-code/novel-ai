@@ -4,8 +4,9 @@ from pathlib import Path
 
 import pytest
 
+from solera.audit import audit_workspace
 from solera.errors import OrderError
-from solera.formats import Progress
+from solera.formats import Progress, WorkItem
 from solera.graph import completion, load_items
 from solera.planning import create_item, set_after
 from solera.supervisor import complete, start_next
@@ -67,6 +68,52 @@ def test_set_after_rejects_cycle_without_writing(tmp_path: Path) -> None:
     assert ws.item_path(b.id).read_text() == before
 
 
+def test_set_after_rejects_unsplit_cycle_without_writing(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    a = create_item(ws, "story", "a")
+    b = create_item(ws, "story", "b")
+    set_after(ws, a.id, [b.id])
+    before = ws.item_path(b.id).read_text()
+
+    with pytest.raises(OrderError, match="order links form a cycle"):
+        set_after(ws, b.id, [a.id])
+
+    assert ws.item_path(b.id).read_text() == before
+
+
+def test_set_after_rejects_three_item_unsplit_cycle(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    a = create_item(ws, "story", "a")
+    b = create_item(ws, "story", "b")
+    c = create_item(ws, "story", "c")
+    set_after(ws, a.id, [b.id])
+    set_after(ws, b.id, [c.id])
+    before = ws.item_path(c.id).read_text()
+
+    with pytest.raises(OrderError, match="order links form a cycle"):
+        set_after(ws, c.id, [a.id])
+
+    assert ws.item_path(c.id).read_text() == before
+
+
+def test_audit_reports_after_cycle_once(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    a = WorkItem(
+        id="A", level="action", status="todo", gate="true", goal="a", after=["B"]
+    )
+    b = WorkItem(
+        id="B", level="action", status="todo", gate="true", goal="b", after=["A"]
+    )
+    ws.write_item(a)
+    ws.write_item(b)
+
+    problems = [problem for problem in audit_workspace(ws) if problem.kind == "after-cycle"]
+
+    assert [problem.detail for problem in problems] == [
+        "order links form a cycle: A -> B -> A"
+    ]
+
+
 def test_leaf_cannot_wait_for_its_ancestor(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
     story = create_item(ws, "story", "box")
@@ -87,19 +134,16 @@ def test_container_cannot_wait_for_its_descendant(tmp_path: Path) -> None:
 
 def test_adding_child_rejects_new_cycle_without_writing(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    c = create_item(ws, "story", "not split yet")
-    x = create_item(ws, "story", "already split")
-    create_item(ws, "action", "x step", gate="true", parent=x.id)
-    set_after(ws, c.id, [x.id])
-    set_after(ws, x.id, [c.id])
+    a = create_item(ws, "initiative", "ancestor")
+    b = create_item(ws, "story", "not split yet", parent=a.id, after=[a.id])
     before_items = ws.list_items()
-    before_parent = ws.item_path(c.id).read_text()
+    before_parent = ws.item_path(b.id).read_text()
 
     with pytest.raises(OrderError, match="never be satisfied"):
-        create_item(ws, "action", "c step", gate="true", parent=c.id)
+        create_item(ws, "action", "gated leaf", gate="true", parent=b.id)
 
     assert ws.list_items() == before_items
-    assert ws.item_path(c.id).read_text() == before_parent
+    assert ws.item_path(b.id).read_text() == before_parent
 
 
 def test_set_after_validates_duplicates(tmp_path: Path) -> None:

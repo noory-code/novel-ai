@@ -90,6 +90,40 @@ def _node_label(node: _Node) -> str:
     return f"{phase}({item_id})"
 
 
+def _after_cycles(items: dict[str, WorkItem]) -> list[list[str]]:
+    edges = {
+        item_id: [predecessor for predecessor in item.after if predecessor in items]
+        for item_id, item in items.items()
+    }
+    state: dict[str, int] = {}
+    stack: list[str] = []
+    positions: dict[str, int] = {}
+    cycles: dict[tuple[str, ...], list[str]] = {}
+
+    def visit(item_id: str) -> None:
+        state[item_id] = 1
+        positions[item_id] = len(stack)
+        stack.append(item_id)
+        for predecessor in edges[item_id]:
+            if state.get(predecessor, 0) == 0:
+                visit(predecessor)
+            elif state.get(predecessor) == 1:
+                cycle = [*stack[positions[predecessor] :], predecessor]
+                body = cycle[:-1]
+                rotations = [
+                    tuple(body[index:] + body[:index]) for index in range(len(body))
+                ]
+                cycles.setdefault(min(rotations), cycle)
+        stack.pop()
+        positions.pop(item_id)
+        state[item_id] = 2
+
+    for item_id in edges:
+        if state.get(item_id, 0) == 0:
+            visit(item_id)
+    return list(cycles.values())
+
+
 def order_problems(items: dict[str, WorkItem]) -> list[tuple[str, str]]:
     """Return missing order targets and unsatisfiable cycles."""
     problems = [
@@ -98,6 +132,13 @@ def order_problems(items: dict[str, WorkItem]) -> list[tuple[str, str]]:
         for predecessor in item.after
         if predecessor not in items
     ]
+    after_cycles = _after_cycles(items)
+    for after_cycle in after_cycles:
+        problems.append(
+            ("after-cycle", f"order links form a cycle: {' -> '.join(after_cycle)}")
+        )
+    after_cycle_ids = [set(after_cycle[:-1]) for after_cycle in after_cycles]
+
     edges = _order_edges(items)
     state: dict[_Node, int] = {}
     stack: list[_Node] = []
@@ -122,8 +163,11 @@ def order_problems(items: dict[str, WorkItem]) -> list[tuple[str, str]]:
         if state.get(node, 0) == 0:
             visit(node)
 
-    for cycle in cycles.values():
-        route = " -> ".join(_node_label(node) for node in cycle)
+    for phase_cycle in cycles.values():
+        cycle_ids = {item_id for _phase, item_id in phase_cycle[:-1]}
+        if any(cycle_ids <= direct_ids for direct_ids in after_cycle_ids):
+            continue
+        route = " -> ".join(_node_label(node) for node in phase_cycle)
         problems.append(
             ("after-cycle", f"order links can never be satisfied: {route}")
         )

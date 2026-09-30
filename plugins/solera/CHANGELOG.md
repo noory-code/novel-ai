@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.1.1] — 2026-10-01
+
+### Fixed
+
+- A cycle made only of order links (`A.after=[B]`, `B.after=[A]`, also between items not yet decomposed) is rejected on write and reported by `audit`, not only deadlocks that appear once items get gates or children.
+
 ## [8.1.0] — 2026-10-01
 
 ### Added
