@@ -75,7 +75,8 @@ def split_write_by_draft(
             if normalized_texts
             else fragment.matches_without_text
         )
-        if target_matches and text_matches:
+        kind_matches = draft.proposed_kind is None or fragment.added_node
+        if target_matches and text_matches and kind_matches:
             matching.append(fragment)
             matched_node_ids.update(fragment.matching_node_ids)
         else:

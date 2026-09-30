@@ -38,7 +38,7 @@ def _record(
     proposed_text: str = "Make difficult planning feel clear.",
     chat_scope: str = "foundation",
     target_node_ids: list[str] | None = None,
-    proposed_kind: str | None = "mission",
+    proposed_kind: str | None = None,
     service_id: str | None = None,
 ) -> dict[str, object]:
     return mcp_tools.record_draft(
@@ -239,6 +239,49 @@ def test_update_node_same_value_does_not_confirm_draft_or_record_auto_draft(
     assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
+def test_new_node_draft_only_matches_a_write_that_adds_a_node(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    existing = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Old reader"})[
+        "node"
+    ]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="actors",
+            proposed_text="Reader",
+            target_node_ids=[],
+            proposed_kind="actor",
+        )["draft_id"]
+    )
+
+    updated = mcp_tools.update_node(
+        str(tmp_path),
+        "alpha",
+        "actors",
+        str(existing["id"]),
+        {"label": "Reader"},
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" in updated
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
+    assert len(auto_drafts) == 1
+
+    created = mcp_tools.create_node(
+        str(tmp_path),
+        "alpha",
+        "actors",
+        "actor",
+        {"label": "Reader"},
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" not in created
+    assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
+    assert len([draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]) == 1
+
+
 def test_update_node_splits_matching_and_unmatched_fields_between_drafts(
     tmp_path: Path,
 ) -> None:
@@ -397,7 +440,7 @@ def test_update_node_text_normalization_confirms_draft(
             str(tmp_path),
             proposed_text=proposed_text,
             target_node_ids=[node_id],
-            proposed_kind="core_value",
+            proposed_kind=None,
         )["draft_id"]
     )
 
@@ -519,7 +562,7 @@ def test_feature_draft_for_another_service_does_not_match_write(tmp_path: Path) 
             str(tmp_path),
             canvas_kind="feature",
             target_node_ids=[],
-            proposed_kind="step",
+            proposed_kind=None,
             service_id=str(first_feature["id"]),
         )["draft_id"]
     )
@@ -1078,6 +1121,66 @@ def test_create_edge_with_wrong_draft_records_auto_draft_and_warning(tmp_path: P
     assert auto.resolved_node_ids == [source["id"], target["id"]]
 
 
+def test_create_edge_does_not_confirm_matching_target_with_unrelated_text(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    source = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "A"})["node"]
+    target = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "B"})["node"]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="entities",
+            proposed_text="A 설명: 주문을 받는다",
+            target_node_ids=[str(source["id"])],
+            proposed_kind=None,
+        )["draft_id"]
+    )
+
+    result = mcp_tools.create_edge(
+        str(tmp_path),
+        "alpha",
+        "entities",
+        str(source["id"]),
+        str(target["id"]),
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
+    assert len(auto_drafts) == 1
+    assert auto_drafts[0].proposed_text == "관계: A → B"
+
+
+def test_create_edge_confirms_draft_with_matching_relationship_text(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    source = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "A"})["node"]
+    target = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "B"})["node"]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="entities",
+            proposed_text="관계: A → B",
+            target_node_ids=[str(source["id"]), str(target["id"])],
+            proposed_kind=None,
+        )["draft_id"]
+    )
+
+    result = mcp_tools.create_edge(
+        str(tmp_path),
+        "alpha",
+        "entities",
+        str(source["id"]),
+        str(target["id"]),
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" not in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
+    assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
+
+
 def test_set_node_references_without_draft_records_reference_change(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
     actor = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Reader"})["node"]
@@ -1097,7 +1200,7 @@ def test_set_node_references_without_draft_records_reference_change(tmp_path: Pa
     assert draft.status == "confirmed"
     assert draft.origin == "auto"
     assert draft.proposed_kind == "references"
-    assert draft.proposed_text == f"참조: ref_actor_ids = {actor['id']}"
+    assert draft.proposed_text == "Reading 참조: Reader"
     assert draft.target_node_ids == [service["id"]]
     assert draft.resolved_node_ids == [service["id"]]
 
@@ -1132,6 +1235,98 @@ def test_set_node_references_with_wrong_draft_records_auto_draft_and_warning(
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
     auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
     assert auto.resolved_node_ids == [service["id"]]
+
+
+def test_set_node_references_does_not_confirm_matching_target_with_unrelated_text(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    entity = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Order"})[
+        "node"
+    ]
+    feature = create_canvas_node(plot_root, "alpha", "services", "feature", {"label": "Feature"})[
+        "node"
+    ]
+    feature_id = str(feature["id"])
+    sync_details_with_overview(plot_root, "alpha")
+    step = create_canvas_node(
+        plot_root,
+        "alpha",
+        "feature",
+        "step",
+        {"label": "A"},
+        service_id=feature_id,
+    )["node"]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="feature",
+            proposed_text="A 설명: 주문을 받는다",
+            target_node_ids=[str(step["id"])],
+            proposed_kind=None,
+            service_id=feature_id,
+        )["draft_id"]
+    )
+
+    result = mcp_tools.set_node_references(
+        str(tmp_path),
+        "alpha",
+        "feature",
+        str(step["id"]),
+        {"ref_entity_ids": [str(entity["id"])]},
+        service_id=feature_id,
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
+    assert len(auto_drafts) == 1
+    assert auto_drafts[0].proposed_text == "A 참조: Order"
+
+
+def test_set_node_references_confirms_draft_with_matching_label_text(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    entity = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Order"})[
+        "node"
+    ]
+    feature = create_canvas_node(plot_root, "alpha", "services", "feature", {"label": "Feature"})[
+        "node"
+    ]
+    feature_id = str(feature["id"])
+    sync_details_with_overview(plot_root, "alpha")
+    step = create_canvas_node(
+        plot_root,
+        "alpha",
+        "feature",
+        "step",
+        {"label": "A"},
+        service_id=feature_id,
+    )["node"]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="feature",
+            proposed_text="A 참조: Order",
+            target_node_ids=[str(step["id"])],
+            proposed_kind=None,
+            service_id=feature_id,
+        )["draft_id"]
+    )
+
+    result = mcp_tools.set_node_references(
+        str(tmp_path),
+        "alpha",
+        "feature",
+        str(step["id"]),
+        {"ref_entity_ids": [str(entity["id"])]},
+        service_id=feature_id,
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" not in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
+    assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
 
 
 def test_set_node_references_same_value_does_not_confirm_draft_or_record_auto_draft(
@@ -1206,7 +1401,7 @@ def test_update_canvas_layout_only_keeps_empty_target_draft_proposed(tmp_path: P
             canvas_kind="actors",
             proposed_text="A new actor",
             target_node_ids=[],
-            proposed_kind="canvas",
+            proposed_kind="actor",
         )["draft_id"]
     )
     canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
@@ -1230,7 +1425,7 @@ def test_update_canvas_layout_only_keeps_targeted_draft_proposed(tmp_path: Path)
             canvas_kind="actors",
             proposed_text="Refine Reader",
             target_node_ids=[str(actor["id"])],
-            proposed_kind="canvas",
+            proposed_kind=None,
         )["draft_id"]
     )
     canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
@@ -1256,7 +1451,7 @@ def test_update_canvas_with_wrong_draft_records_auto_draft_and_warning(tmp_path:
             str(tmp_path),
             canvas_kind="actors",
             target_node_ids=[str(other["id"])],
-            proposed_kind="canvas",
+            proposed_kind=None,
         )["draft_id"]
     )
     canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
@@ -1282,7 +1477,7 @@ def test_update_canvas_with_different_proposal_text_records_auto_draft(tmp_path:
             canvas_kind="actors",
             proposed_text="A completely different actor",
             target_node_ids=[str(changed["id"])],
-            proposed_kind="canvas",
+            proposed_kind=None,
         )["draft_id"]
     )
     canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
@@ -1312,7 +1507,7 @@ def test_update_canvas_splits_matching_and_unmatched_fields_between_drafts(
             canvas_kind="actors",
             proposed_text=written_body,
             target_node_ids=[str(changed["id"])],
-            proposed_kind="canvas",
+            proposed_kind=None,
         )["draft_id"]
     )
     canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
@@ -1346,7 +1541,7 @@ def test_update_canvas_single_matching_field_does_not_record_auto_draft(tmp_path
             canvas_kind="actors",
             proposed_text=written_body,
             target_node_ids=[str(changed["id"])],
-            proposed_kind="canvas",
+            proposed_kind=None,
         )["draft_id"]
     )
     canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
@@ -1376,7 +1571,7 @@ def test_update_canvas_splits_matching_and_unmatched_node_changes(tmp_path: Path
             canvas_kind="actors",
             proposed_text=matched_text,
             target_node_ids=[str(matched["id"])],
-            proposed_kind="canvas",
+            proposed_kind=None,
         )["draft_id"]
     )
     canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
@@ -1411,7 +1606,7 @@ def test_update_canvas_assigns_incident_edge_to_matching_added_node_draft(
             canvas_kind="actors",
             proposed_text="New collaborator",
             target_node_ids=[],
-            proposed_kind="canvas",
+            proposed_kind="actor",
         )["draft_id"]
     )
     canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
@@ -1444,7 +1639,7 @@ def test_update_canvas_keeps_unrelated_edge_in_unmatched_auto_draft(tmp_path: Pa
             canvas_kind="actors",
             proposed_text=matched_text,
             target_node_ids=[str(matched["id"])],
-            proposed_kind="canvas",
+            proposed_kind=None,
         )["draft_id"]
     )
     canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
@@ -1483,15 +1678,23 @@ def test_canvas_write_with_draft_id_confirms_without_creating_auto_draft(
     first = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "First"})["node"]
     second = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Second"})["node"]
     draft_canvas_kind = "services" if tool_name == "set_node_references" else "actors"
+    service = (
+        create_canvas_node(plot_root, "alpha", "services", "service", {"label": "Reading"})["node"]
+        if tool_name == "set_node_references"
+        else None
+    )
+    proposed_text = {
+        "create_edge": "관계: First → Second",
+        "set_node_references": "Reading 참조: First",
+        "update_canvas": "Changed",
+    }[tool_name]
     draft_id = str(
         _record(
             str(tmp_path),
             canvas_kind=draft_canvas_kind,
-            proposed_text=(
-                "Changed" if tool_name == "update_canvas" else "Apply the canvas change"
-            ),
+            proposed_text=proposed_text,
             target_node_ids=[],
-            proposed_kind=tool_name,
+            proposed_kind=None,
         )["draft_id"]
     )
 
@@ -1506,9 +1709,7 @@ def test_canvas_write_with_draft_id_confirms_without_creating_auto_draft(
         )
         expected_ids = [first["id"], second["id"]]
     elif tool_name == "set_node_references":
-        service = create_canvas_node(
-            plot_root, "alpha", "services", "service", {"label": "Reading"}
-        )["node"]
+        assert service is not None
         mcp_tools.set_node_references(
             str(tmp_path),
             "alpha",

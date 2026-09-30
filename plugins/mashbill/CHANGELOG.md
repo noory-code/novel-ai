@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.31] — 2026-09-30
+
+### Fixed
+
+- `create_edge` and `set_node_references` now match a supplied draft by the written relation or referenced labels, and a new-node draft matches only a write that adds a node, so an unrelated draft is no longer confirmed by an edge or reference write. Reference auto drafts show labels instead of ids.
+
 ## [0.196.30] — 2026-09-30
 
 ### Fixed

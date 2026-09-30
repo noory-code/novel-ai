@@ -40,9 +40,8 @@ def record_draft(
 ) -> dict[str, Any]:
     """Keep a concrete proposal shown to the person, separately from chat.
 
-    Call this for concrete node text, a new node, or a new project name.
-    ``rationale`` is one line explaining why; ``chat_scope`` comes from the
-    [Write target]. Project drafts have no node targets, kind, or service id.
+    Call for node text, a new node, or a new project name; ``rationale`` is one line on
+    why, ``chat_scope`` comes from [Write target]. Project drafts have no nodes/kind/service.
     """
     plot_root = resolve_plot_root(project_path)
     draft = persist_draft(
@@ -194,6 +193,7 @@ def finish_node_write_draft(
             if has_written_fields and isinstance((value := node.get(name)), str)
             else (),
             matching_node_ids=(node_id,),
+            added_node=before_node is None,
             matches_without_text=not has_written_fields,
         )
         for name in written_fields

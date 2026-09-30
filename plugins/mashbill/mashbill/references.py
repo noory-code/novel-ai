@@ -38,6 +38,29 @@ _REF_FIELDS: dict[str, dict[str, tuple[str, str]]] = {
 }
 
 
+def reference_labels(
+    plot_root: Path,
+    project_id: str,
+    node_kind: str,
+    refs: dict[str, list[str]],
+) -> list[str]:
+    """Return referenced node labels in write order, falling back to ids."""
+    allowed = _REF_FIELDS.get(node_kind, {})
+    labels: list[str] = []
+    for field, ref_ids in refs.items():
+        target = allowed.get(field)
+        if target is None:
+            labels.extend(ref_ids)
+            continue
+        home_canvas, expected_kind = target
+        home = read_canvas(plot_root, project_id, home_canvas)  # type: ignore[arg-type]
+        labels_by_id = {
+            node.id: node.label for node in home.nodes if node.kind == expected_kind and node.label
+        }
+        labels.extend(labels_by_id.get(ref_id, ref_id) for ref_id in ref_ids)
+    return labels
+
+
 def set_node_references(
     plot_root: Path,
     project_id: str,

@@ -21,7 +21,7 @@ from mashbill.mcp_draft_tools import (
 )
 from mashbill.mcp_write_rollback import with_draft_or_rollback
 from mashbill.models import CanvasDoc, CanvasKind
-from mashbill.references import set_node_references
+from mashbill.references import reference_labels, set_node_references
 
 
 def update_canvas_with_draft(
@@ -185,6 +185,7 @@ def create_edge_with_draft(
             [source_id, target_id],
             chat_scope,
             service_id,
+            written_texts=[written_text],
         )
 
     out, warning = with_draft_or_rollback(
@@ -214,9 +215,14 @@ def set_node_references_with_draft(
         ensure_draft(plot_root, project_id, draft_id)
     before = read_canvas(plot_root, project_id, canvas_kind, service_id)
     before_node = next((node for node in before.nodes if node.id == node_id), None)
-    proposed_text = "참조: " + " / ".join(
-        f"{field} = {', '.join(ref_ids) if ref_ids else '없음'}" for field, ref_ids in refs.items()
+    node_label = before_node.label if before_node is not None and before_node.label else node_id
+    ref_labels = reference_labels(
+        plot_root,
+        project_id,
+        before_node.kind if before_node is not None else "",
+        refs,
     )
+    proposed_text = f"{node_label} 참조: {', '.join(ref_labels) if ref_labels else '없음'}"
     out, warning = with_draft_or_rollback(
         lambda: set_node_references(plot_root, project_id, canvas_kind, node_id, refs, service_id),
         lambda written: finish_write_draft(
@@ -230,6 +236,7 @@ def set_node_references_with_draft(
             [node_id],
             chat_scope,
             service_id,
+            written_texts=[proposed_text],
             design_content_changed=before_node is None
             or any(
                 before_node.model_dump().get(field) != written["node"].get(field) for field in refs
