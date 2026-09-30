@@ -14,7 +14,7 @@ from fastmcp import FastMCP
 
 from .audit import audit_workspace
 from .formats import Feedback, Retrospective
-from .intake import import_release, load_imported_elements
+from .intake import import_release, load_imported_release
 from .planning import create_item
 from .repin import propose_repin, reopen_items
 from .supervisor import complete, instruction, start_next
@@ -114,8 +114,8 @@ def propose_spec_repin(project_root: str, old_label: str, new_label: str) -> dic
     ws = _workspace(project_root)
     return propose_repin(
         ws,
-        load_imported_elements(ws, old_label),
-        load_imported_elements(ws, new_label),
+        load_imported_release(ws, old_label),
+        load_imported_release(ws, new_label),
     )
 
 

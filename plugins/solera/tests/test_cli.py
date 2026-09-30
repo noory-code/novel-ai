@@ -71,17 +71,20 @@ def test_status_reports_audit_problems(tmp_path: Path, capsys) -> None:  # type:
 
 
 def _write_imported_release(root: Path, label: str, elements: list[dict[str, str]]) -> None:
-    """Stand in for an `import_release` — drop a `vS` manifest where the repin
-    CLI reads it (`specs/{label}/service/manifest.json`)."""
-    manifest_dir = root / ".noory" / "solera" / "specs" / label / "service"
-    manifest_dir.mkdir(parents=True, exist_ok=True)
-    (manifest_dir / "manifest.json").write_text(
+    """Stand in for ``import_release`` with a validated vS + vP pair."""
+    release_root = root / ".noory" / "solera" / "specs" / label
+    service_dir = release_root / "service"
+    project_dir = release_root / "project"
+    service_dir.mkdir(parents=True, exist_ok=True)
+    project_dir.mkdir(parents=True, exist_ok=True)
+    release_number = int(label.removeprefix("v"))
+    (service_dir / "manifest.json").write_text(
         json.dumps(
             {
                 "format_f_version": 1,
                 "scope": "service",
                 "service": "service/auth",
-                "release": "vS1",
+                "release": f"vS{release_number}",
                 "based_on": "vP1",
                 "git_sha": "",
                 "elements": [
@@ -93,6 +96,17 @@ def _write_imported_release(root: Path, label: str, elements: list[dict[str, str
                     "actors": [],
                     "entities": [],
                 },
+            }
+        )
+    )
+    (project_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "format_f_version": 1,
+                "scope": "project",
+                "release": "vP1",
+                "git_sha": "",
+                "elements": [],
             }
         )
     )
@@ -118,6 +132,9 @@ def test_repin_proposes_without_mutating_by_default(tmp_path: Path, capsys) -> N
     out = capsys.readouterr().out
     assert "ACT-001" in out  # surfaced as a stale candidate
     assert "feature/login" in out  # the changed slug
+    assert "shared changed:" in out
+    assert "refs changed:" in out
+    assert "ACT-001: realizes changed service element feature/login" in out
     # read-only: the item is still done (no --apply)
     assert "status: done" in item_path.read_text()
 
@@ -146,9 +163,7 @@ def test_repin_escalates_removed_but_never_reopens_it(tmp_path: Path, capsys) ->
     _run(tmp_path, "add", "STORY-001", "Build old", "--gate", "true", "--realizes", "entity/old")
     item_path = tmp_path / ".noory" / "solera" / "items" / "ACT-001.md"
     item_path.write_text(item_path.read_text().replace("status: todo", "status: done"))
-    _write_imported_release(
-        tmp_path, "v1", [{"id": "entity/old", "kind": "entity", "hash": "a"}]
-    )
+    _write_imported_release(tmp_path, "v1", [{"id": "entity/old", "kind": "entity", "hash": "a"}])
     _write_imported_release(tmp_path, "v2", [])  # removed
     capsys.readouterr()
 

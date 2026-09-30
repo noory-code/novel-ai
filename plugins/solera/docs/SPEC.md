@@ -115,12 +115,23 @@ solera --root <project> plan "goal" [--level story]            -> STORY-001  (a 
                                           #   reopen stale work only with --apply
 ```
 
-`repin` reads two imported releases (`specs/{label}/service/manifest.json`),
-runs the ID-diff, and surfaces which work items go **stale** (a `changed` slug
-they realize → reopen candidate) or **escalate** (a `removed` slug → orphaned,
-a human decides). Without `--apply` it only proposes; `--apply` reopens the
-stale set (`status → todo`). `removed`/escalated items are never auto-reopened —
-the human-in-the-loop gate (04-pipeline).
+`repin` reads the service and project manifests of two imported labels. They
+must be adjacent vS releases of the same service; skipped releases must be
+imported and compared one step at a time. It reports the service ID-diff, the
+project ID-diff when `based_on` changes, whether refs changed, and per-item
+reasons.
+
+A changed project element affects service work only when the old or new refs
+points to it. A refs-only change also makes work realizing an old or new service
+element stale. Work that realizes a removed service or project element
+**escalates**, as does work that already realizes an `added` service ID (a
+possible delete/re-add). Escalation takes precedence over stale. Without
+`--apply`, repin only proposes; `--apply` reopens the stale set (`status → todo`).
+Escalated items are never auto-reopened.
+
+Import preserves release identity across labels. Different manifest content for
+the same `(service, vS)` or for the same `based_on` vP is rejected, while the
+same immutable manifests may be copied under another label.
 
 `--root` is the project directory; gates run there.
 

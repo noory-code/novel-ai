@@ -1,7 +1,7 @@
 ---
 name: solera-repin
 user-invocable: true
-description: Diff two imported Novel releases and reopen work items whose realized features have changed.
+description: Compare adjacent imported service releases and surface work affected by service, shared-project, or refs changes.
 metadata:
   version: "7.8.0"
   category: execution
@@ -13,10 +13,10 @@ metadata:
 
 # solera-repin
 
-When Novel republishes a service (`vS+1`), some features may have changed or been
-removed. `repin` diffs the old and new imported releases and surfaces which
-Solera work items have gone stale — items whose `realizes` target has changed or
-disappeared.
+When Novel republishes a service (`vS+1`), service-owned elements, referenced
+project elements, or the service's refs may have changed. `repin` compares the
+old and new imported releases and classifies affected Solera work items as
+stale reopen candidates or escalations that require a human decision.
 
 ## When to use
 
@@ -33,11 +33,13 @@ Use a distinct label from the previous import (e.g. `auth-v2`).
 
 ### 2. Propose the diff
 
-Call `propose_spec_repin` with `old_label` and `new_label`.
+Call `propose_spec_repin` with `old_label` and `new_label`. The labels must be
+adjacent releases of the same service. If releases were skipped, import every
+intervening release and compare them one step at a time.
 
-This prints a proposal — which items are stale and why (changed element hash,
-removed element, or added element with no matching item). No files are written.
-Review the list with the human before applying.
+The proposal reports the service diff, shared-project diff, whether refs
+changed, the stale and escalation lists, and per-item reasons. No files are
+written. Review the list with the human before applying.
 
 ### 3. Apply (human approval)
 
@@ -57,10 +59,12 @@ design.
 
 - Always propose before applying. Show the stale list to the human — they decide
   whether the change is significant enough to reopen work.
-- The diff compares element hashes from
-  `.noory/solera/specs/{label}/service/manifest.json`. A hash
-  change means the feature's UX flow or definition changed in Novel; a missing id
-  means the feature was removed.
-- `added` elements (features in the new release with no matching item) are
-  flagged but not created — plan new items with `add_work_item(realizes=[...])`
-  after the repin.
+- Re-pin reads both `service/manifest.json` and `project/manifest.json` under
+  each label. A changed project element affects service work only when either
+  release's refs points to it. A refs-only change also affects service work.
+- A work item escalates when it realizes a removed service or shared-project
+  element. It also escalates when it already realizes a service element that is
+  `added` in the new release, because that ID may have been deleted and
+  reintroduced. Escalation takes precedence over stale.
+- Other newly added service elements are work candidates, but re-pin does not
+  create items. Plan them with `add_work_item(realizes=[...])` after review.

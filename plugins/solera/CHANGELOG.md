@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.9.0] — 2026-10-01
+
+### Changed
+
+- Re-pin compares only adjacent releases of the same service, and now also flags work whose service is affected by changed or removed shared (`vP`) elements the service references, by changed `refs`, or by a re-added element (escalated). Its result adds `shared_diff`, `refs_changed` and per-item `reasons`; the CLI prints them. A second import of the same service release (or the same `vP`) with different content is refused.
+
 ## [7.8.2] — 2026-10-01
 
 ### Fixed

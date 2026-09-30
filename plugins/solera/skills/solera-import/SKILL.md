@@ -73,10 +73,15 @@ The leaf's `realizes` links trace back to the design in `specs/<label>/`.
 
 - Import before planning. The import step validates the bundle; a broken bundle
   is caught here, not mid-execution.
+- Solera rejects an import when another label already contains different
+  manifest content for the same `(service, vS)` identity, or different project
+  manifest content for the same `based_on` vP. The same immutable manifests may
+  be imported again under another label.
 - Use the feature slug from `.noory/solera/specs/<label>/service/design/features/<slug>.md` as the
   `feature/<slug>` value in `--realizes`. Don't invent slugs — they must match
   the published spec.
-- One label per release. If you import the same service twice (e.g. a patch),
-  use a new label so both versions stay in `specs/`.
-- When Novel publishes an updated vS, use **solera-repin** to surface which items
-  have gone stale.
+- Use a distinct label for every retained import so versions remain separately
+  addressable under `specs/`.
+- When Novel publishes an updated vS, import every release in sequence and use
+  **solera-repin** on adjacent releases. Re-pin accounts for service elements,
+  the referenced project snapshot, and refs changes.

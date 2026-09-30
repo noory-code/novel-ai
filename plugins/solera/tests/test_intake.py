@@ -15,7 +15,12 @@ from typing import Any, cast
 import pytest
 
 from solera.errors import FormatError
-from solera.intake import diff_releases, import_release, load_imported_elements
+from solera.intake import (
+    diff_releases,
+    import_release,
+    load_imported_elements,
+    load_imported_release,
+)
 from solera.workspace import Workspace
 
 
@@ -404,3 +409,79 @@ def test_import_release_copies_service_and_its_project_slice(tmp_path: Path) -> 
     assert (spec / "project" / "manifest.json").is_file()  # its based_on vP slice
     # import is a copy — the source is untouched (immutable→immutable)
     assert (vs_dir / "manifest.json").is_file()
+
+
+def test_load_imported_release_validates_and_returns_both_manifests(
+    tmp_path: Path,
+) -> None:
+    vs_dir, _ = _write_valid_published(tmp_path / "published")
+    ws = Workspace(tmp_path / "ws")
+    import_release(ws, vs_dir, label="auth")
+
+    release = load_imported_release(ws, "auth")
+
+    assert release["service"]["release"] == "vS1"
+    assert release["project"]["release"] == "vP1"
+
+
+def test_import_rejects_conflicting_manifest_for_same_service_release(
+    tmp_path: Path,
+) -> None:
+    published = tmp_path / "published"
+    first = _write_bundle(published, "auth/vS1", _service_manifest())
+    _write_bundle(published, "_project/vP1", _project_manifest())
+    ws = Workspace(tmp_path / "ws")
+    import_release(ws, first, label="first")
+
+    conflicting_root = tmp_path / "conflicting"
+    _write_bundle(conflicting_root, "_project/vP1", _project_manifest())
+    second = _write_bundle(
+        conflicting_root,
+        "auth/vS1",
+        _service_manifest(
+            elements=[{"id": "service/auth", "kind": "service", "hash": "aaaaaaaaaaaaaaaa"}]
+        ),
+    )
+
+    with pytest.raises(ValueError, match="service/auth.*vS1.*different manifest"):
+        import_release(ws, second, label="second")
+
+    assert not ws.spec_dir("second").exists()
+
+
+def test_import_rejects_conflicting_project_manifest_for_same_based_on(
+    tmp_path: Path,
+) -> None:
+    first, _ = _write_valid_published(tmp_path / "published")
+    ws = Workspace(tmp_path / "ws")
+    import_release(ws, first, label="first")
+
+    conflicting_root = tmp_path / "conflicting"
+    _write_bundle(
+        conflicting_root,
+        "_project/vP1",
+        _project_manifest(
+            elements=[{"id": "actor/user", "kind": "actor", "hash": "aaaaaaaaaaaaaaaa"}]
+        ),
+    )
+    second = _write_bundle(
+        conflicting_root,
+        "billing/vS1",
+        _service_manifest(
+            service="service/billing",
+            elements=[{"id": "service/billing", "kind": "service", "hash": "bbbbbbbbbbbbbbbb"}],
+        ),
+    )
+
+    with pytest.raises(ValueError, match="vP1.*different manifest"):
+        import_release(ws, second, label="second")
+
+
+def test_import_allows_same_manifests_under_another_label(tmp_path: Path) -> None:
+    vs_dir, _ = _write_valid_published(tmp_path / "published")
+    ws = Workspace(tmp_path / "ws")
+
+    import_release(ws, vs_dir, label="first")
+    import_release(ws, vs_dir, label="second")
+
+    assert load_imported_release(ws, "first") == load_imported_release(ws, "second")

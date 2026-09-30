@@ -15,12 +15,13 @@ Two pieces:
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Any, Literal, Self, TypeVar
+from typing import Any, Literal, Self, TypedDict, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -123,6 +124,13 @@ class _ProjectManifest(_VersionedManifest):
 _ManifestT = TypeVar("_ManifestT", bound=_FormatFModel)
 
 
+class ImportedRelease(TypedDict):
+    """The validated service and project manifests copied under one label."""
+
+    service: dict[str, Any]
+    project: dict[str, Any]
+
+
 def _load_manifest(path: Path, model: type[_ManifestT]) -> _ManifestT:
     return model.model_validate_json(path.read_text(encoding="utf-8"))
 
@@ -133,6 +141,28 @@ def _validate_release_pair(service: _ServiceManifest, project: _ProjectManifest)
             f"project release {project.release!r} does not match "
             f"service based_on {service.based_on!r}"
         )
+
+
+def _release_data(service: _ServiceManifest, project: _ProjectManifest) -> ImportedRelease:
+    _validate_release_pair(service, project)
+    return {
+        "service": service.model_dump(exclude_none=True),
+        "project": project.model_dump(exclude_none=True),
+    }
+
+
+def _load_release_dir(root: Path, *, description: str) -> ImportedRelease:
+    service_path = root / "service" / "manifest.json"
+    project_path = root / "project" / "manifest.json"
+    if not service_path.is_file():
+        raise FileNotFoundError(f"{description}: {service_path}")
+    service = _load_manifest(service_path, _ServiceManifest)
+    if not project_path.is_file():
+        raise FileNotFoundError(f"{description}: {project_path}")
+    return _release_data(
+        service,
+        _load_manifest(project_path, _ProjectManifest),
+    )
 
 
 def _reject_symlinks(root: Path) -> None:
@@ -181,18 +211,71 @@ def diff_releases(
     }
 
 
-def load_imported_elements(ws: Workspace, label: str) -> list[dict[str, Any]]:
-    """Read the ``elements`` of an already-imported service release
-    (``specs/{label}/service/manifest.json``) — the input to a re-pin ID-diff.
+def load_imported_release(ws: Workspace, label: str) -> ImportedRelease:
+    """Read and validate both manifests copied under one imported label.
 
     Stays inside Solera's own tree (the imported copy), never reaching back into
     Novel (R8). Raises :class:`FileNotFoundError` if the label was not imported.
     """
-    manifest_path = ws.spec_dir(label) / "service" / "manifest.json"
-    if not manifest_path.is_file():
-        raise FileNotFoundError(f"no imported release {label!r} at {manifest_path}")
-    manifest = _load_manifest(manifest_path, _ServiceManifest)
-    return [element.model_dump(exclude_none=True) for element in manifest.elements]
+    return _load_release_dir(ws.spec_dir(label), description=f"no imported release {label!r}")
+
+
+def load_imported_elements(ws: Workspace, label: str) -> list[dict[str, Any]]:
+    """Read the service elements of an imported release.
+
+    Kept as a narrow compatibility helper; re-pin callers should use
+    :func:`load_imported_release` so project changes and refs are not lost.
+    """
+    release = load_imported_release(ws, label)
+    return list(release["service"]["elements"])
+
+
+def _manifest_content(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _reject_conflicting_import(
+    ws: Workspace,
+    incoming: ImportedRelease,
+    *,
+    service_path: Path,
+    project_path: Path,
+) -> None:
+    if not ws.specs_dir.is_dir():
+        return
+    incoming_service = incoming["service"]
+    incoming_service_content = _manifest_content(service_path)
+    incoming_project_content = _manifest_content(project_path)
+    for release_dir in sorted(ws.specs_dir.iterdir()):
+        if not release_dir.is_dir() or release_dir.name.startswith("."):
+            continue
+        if not (release_dir / "service" / "manifest.json").is_file():
+            continue
+        if not (release_dir / "project" / "manifest.json").is_file():
+            continue
+        existing = _load_release_dir(
+            release_dir, description=f"invalid imported release {release_dir.name!r}"
+        )
+        existing_service = existing["service"]
+        existing_service_path = release_dir / "service" / "manifest.json"
+        existing_project_path = release_dir / "project" / "manifest.json"
+        if (
+            existing_service["service"] == incoming_service["service"]
+            and existing_service["release"] == incoming_service["release"]
+            and _manifest_content(existing_service_path) != incoming_service_content
+        ):
+            raise ValueError(
+                f"{incoming_service['service']} {incoming_service['release']} already exists "
+                f"under label {release_dir.name!r} with a different manifest"
+            )
+        if (
+            existing_service["based_on"] == incoming_service["based_on"]
+            and _manifest_content(existing_project_path) != incoming_project_content
+        ):
+            raise ValueError(
+                f"project release {incoming_service['based_on']} already exists under label "
+                f"{release_dir.name!r} with a different manifest"
+            )
 
 
 def import_release(ws: Workspace, source_vs_dir: Path, *, label: str) -> dict[str, Any]:
@@ -232,7 +315,13 @@ def import_release(ws: Workspace, source_vs_dir: Path, *, label: str) -> dict[st
         raise FileNotFoundError(f"based_on snapshot not found: {vp_dir}")
 
     project_manifest = _load_manifest(vp_dir / "manifest.json", _ProjectManifest)
-    _validate_release_pair(manifest, project_manifest)
+    incoming = _release_data(manifest, project_manifest)
+    _reject_conflicting_import(
+        ws,
+        incoming,
+        service_path=source_vs_dir / "manifest.json",
+        project_path=vp_dir / "manifest.json",
+    )
 
     ws.specs_dir.mkdir(parents=True, exist_ok=True)
     temp_dir = Path(tempfile.mkdtemp(prefix=temp_prefix, dir=ws.specs_dir))
@@ -240,13 +329,9 @@ def import_release(ws: Workspace, source_vs_dir: Path, *, label: str) -> dict[st
         shutil.copytree(source_vs_dir, temp_dir / "service")
         shutil.copytree(vp_dir, temp_dir / "project")
 
-        copied_service = _load_manifest(
-            temp_dir / "service" / "manifest.json", _ServiceManifest
-        )
-        copied_project = _load_manifest(
-            temp_dir / "project" / "manifest.json", _ProjectManifest
-        )
-        _validate_release_pair(copied_service, copied_project)
+        copied_service = _load_manifest(temp_dir / "service" / "manifest.json", _ServiceManifest)
+        copied_project = _load_manifest(temp_dir / "project" / "manifest.json", _ProjectManifest)
+        _release_data(copied_service, copied_project)
 
         if dest.exists():
             raise FileExistsError(f"spec already imported: {dest}")
@@ -255,4 +340,4 @@ def import_release(ws: Workspace, source_vs_dir: Path, *, label: str) -> dict[st
         if temp_dir.exists():
             _remove_temp_dir(temp_dir)
 
-    return manifest.model_dump(exclude_none=True)
+    return incoming["service"]

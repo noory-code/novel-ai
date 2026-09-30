@@ -16,7 +16,7 @@ from pathlib import Path
 from .audit import audit_workspace
 from .errors import SoleraError
 from .formats import Feedback, Retrospective
-from .intake import import_release, load_imported_elements
+from .intake import import_release, load_imported_release
 from .planning import create_item
 from .repin import propose_repin, reopen_items
 from .supervisor import complete, instruction, start_next
@@ -96,18 +96,27 @@ def _cmd_repin(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     stale ones. ``removed`` slugs escalate to a human and are never auto-reopened
     — the human-in-the-loop gate (04-pipeline)."""
     try:
-        old_elements = load_imported_elements(ws, args.old)
-        new_elements = load_imported_elements(ws, args.new)
-    except FileNotFoundError as exc:
+        old_release = load_imported_release(ws, args.old)
+        new_release = load_imported_release(ws, args.new)
+        prop = propose_repin(ws, old_release, new_release)
+    except (FileNotFoundError, ValueError) as exc:
         raise SoleraError(str(exc)) from exc
 
-    prop = propose_repin(ws, old_elements, new_elements)
     diff = prop["diff"]
     print(f"changed: {diff['changed']}")
     print(f"removed: {diff['removed']}")
     print(f"added:   {diff['added']}")
+    shared_diff = prop["shared_diff"]
+    print(f"shared changed: {shared_diff['changed']}")
+    print(f"shared removed: {shared_diff['removed']}")
+    print(f"shared added:   {shared_diff['added']}")
+    print(f"refs changed: {prop['refs_changed']}")
     print(f"stale (reopen candidates): {prop['stale']}")
-    print(f"escalate (orphaned, removed slug — a human decides): {prop['escalate']}")
+    print(f"escalate (human decision; never auto-reopened): {prop['escalate']}")
+    print("reasons:")
+    for item_id, reasons in prop["reasons"].items():
+        for reason in reasons:
+            print(f"  {item_id}: {reason}")
     if args.apply:
         reopen_items(ws, prop["stale"])
         print(f"reopened: {prop['stale']}")
