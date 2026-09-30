@@ -273,7 +273,7 @@ guard fails the build if a component reintroduces a raw neutral colour class.
 - **Manual override, persisted.** A theme toggle next to the language toggle
   (sidebar footer + ServiceDetail stencil panel) sets an explicit choice
   stored in `localStorage` (`novel:theme` = `light` | `dark` | `system`),
-  mirroring the `novel:lang` pattern. `system` reverts to following the OS.
+  mirroring the `novel:lang-choice` pattern (only an explicit language choice is stored, D-2026-10-01-D). `system` reverts to following the OS.
 - **`.dark` class on `<html>`.** Tailwind runs in `darkMode: "class"`; the
   resolved theme toggles the `dark` class on `document.documentElement`.
 - **Light appearance is unchanged.** Each token's light value equals the

@@ -39,6 +39,30 @@
 
 ## Log
 
+### D-2026-10-01-D — Only the display language the person picked is remembered
+
+- **What:** the app stores the display language only when the person presses
+  the EN / KO toggle, under the new key `novel:lang-choice`. Without a stored
+  choice it follows the computer language list on every launch: the first of
+  English or Korean in the list wins, and English is the fallback. The
+  earlier key `novel:lang` is no longer read and is left in place.
+- **Why:** the detector stored the first detected language, so a person who
+  never picked a language stayed on it after changing the computer language.
+  The design flow asks "is a language the person picked with EN / KO stored",
+  D-2026-05-11-D says "User choice persists", and the theme toggle already
+  stores only an explicit choice. A value in the old key cannot be told apart
+  as picked or detected, so a new key starts clean; someone who had picked a
+  language different from the computer's picks it once more.
+- **Alternatives:** keep storing the detected language — not chosen: nobody
+  decided it, it was the library default. Keep reading the old key — not
+  chosen: it would keep the detected values.
+- **Approval:** judged by Claude on the design flow and D-2026-05-11-D after
+  the user asked Claude to judge such items (2026-10-01; novel-workspace
+  W-00000340).
+- **Spec impact:** `SPEC.md` dark-mode section (key named `novel:lang-choice`).
+- **Principles:** SSOT (the design flow decides); Honesty (only a real choice
+  is kept as a choice).
+
 ### D-2026-10-01-C — The coach asks in the order the design flows draw
 
 - **What:** the per-canvas coach instructions follow the design flows. On the

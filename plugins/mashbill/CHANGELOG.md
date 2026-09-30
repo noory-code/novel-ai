@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.197.7] — 2026-10-01
+
+### Changed
+
+- `DECISIONS.md` D-2026-10-01-D and `SPEC.md` record that the app stores only the display language the person picked (`novel:lang-choice`); without a choice it follows the computer language list.
+
 ## [0.197.6] — 2026-10-01
 
 ### Changed
