@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.30] — 2026-09-30
+
+### Fixed
+
+- `rename_project` with a `draft_id` confirms that draft only when it matches the new name; a rejected draft or one naming something else is left as it was, the rename records an auto draft, and the result carries `draft_warning`, as node writes do.
+
 ## [0.196.29] — 2026-09-30
 
 ### Fixed

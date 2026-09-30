@@ -8,7 +8,11 @@ from mashbill.chat_scope_env import effective_chat_scope
 from mashbill.draft_store import list_drafts, read_draft
 from mashbill.draft_store import record_applied_draft as persist_applied_draft
 from mashbill.draft_store import resolve_draft as persist_resolution
-from mashbill.mcp_draft_tools import AUTO_DRAFT_RATIONALE, draft_matches_write
+from mashbill.mcp_draft_tools import (
+    AUTO_DRAFT_RATIONALE,
+    draft_matches_write,
+    draft_mismatch_warning,
+)
 from mashbill.mcp_write_rollback import with_draft_or_rollback
 from mashbill.models_canvas import ProjectDoc
 from mashbill.project_io import rename_project
@@ -20,13 +24,24 @@ def rename_project_with_draft(
     project_id: str,
     name: str,
     draft_id: str | None = None,
-) -> ProjectDoc:
+) -> tuple[ProjectDoc, str | None]:
     """Rename a project and record the successful MCP write."""
     confirmed_draft_id = draft_id
+    mismatch_warning = None
     if draft_id is not None:
         draft = read_draft(plot_root, project_id, draft_id)
         if draft.canvas_kind != "project":
             raise ValueError(f"draft {draft_id!r} is not a project draft")
+        if not draft_matches_write(
+            plot_root,
+            project_id,
+            draft_id,
+            "project",
+            [],
+            written_texts=[name],
+        ):
+            confirmed_draft_id = None
+            mismatch_warning = draft_mismatch_warning(draft_id)
     else:
         confirmed_draft_id = next(
             (
@@ -50,9 +65,9 @@ def rename_project_with_draft(
         )
     previous = read_project(plot_root, project_id)
     if previous.name == name:
-        return previous
+        return previous, None
 
-    def record_draft(renamed: ProjectDoc) -> None:
+    def record_draft(renamed: ProjectDoc) -> str | None:
         if confirmed_draft_id is not None:
             persist_resolution(
                 plot_root,
@@ -61,7 +76,7 @@ def rename_project_with_draft(
                 "confirmed",
                 [],
             )
-            return
+            return None
         persist_applied_draft(
             plot_root,
             project_id,
@@ -74,10 +89,11 @@ def rename_project_with_draft(
             None,
             [],
         )
+        return mismatch_warning
 
-    renamed, _ = with_draft_or_rollback(
+    renamed, warning = with_draft_or_rollback(
         lambda: rename_project(plot_root, project_id, name),
         record_draft,
         lambda: rename_project(plot_root, project_id, previous.name),
     )
-    return renamed
+    return renamed, warning

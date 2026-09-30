@@ -152,7 +152,11 @@ def rename_project(
     Project anchor label in one shot. Pass the accepted project-name draft id
     when available."""
     plot_root = resolve_plot_root(project_path)
-    return rename_project_with_draft(plot_root, project_id, name, draft_id).model_dump()
+    renamed, warning = rename_project_with_draft(plot_root, project_id, name, draft_id)
+    result = renamed.model_dump()
+    if warning is not None:
+        result["draft_warning"] = warning
+    return result
 
 
 # ---------------------------------------------------------------------------

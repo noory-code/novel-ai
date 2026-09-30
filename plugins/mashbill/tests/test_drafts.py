@@ -1695,6 +1695,64 @@ def test_mcp_rename_project_confirms_supplied_project_draft(tmp_path: Path) -> N
     assert [draft.id for draft in drafts] == [draft_id]
     assert drafts[0].status == "confirmed"
     assert drafts[0].origin == "recorded"
+    assert "draft_warning" not in renamed
+
+
+def test_mcp_rename_project_keeps_rejected_draft_and_records_applied_draft(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="project",
+            proposed_text="프로젝트 이름: 새이름",
+            chat_scope="foundation",
+            proposed_kind=None,
+        )["draft_id"]
+    )
+    mcp_tools.resolve_draft(str(tmp_path), "alpha", draft_id, "rejected")
+
+    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "새이름", draft_id=draft_id)
+
+    assert renamed["name"] == "새이름"
+    assert read_draft(plot_root, "alpha", draft_id).status == "rejected"
+    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
+    assert len(auto_drafts) == 1
+    assert auto_drafts[0].status == "confirmed"
+    assert auto_drafts[0].proposed_text == "프로젝트 이름: Alpha → 새이름"
+    assert renamed["draft_warning"] == (
+        f"draft {draft_id} does not match this write; recorded an auto draft instead. "
+        "If the person accepted this draft with edits, call resolve_draft with status='edited'."
+    )
+
+
+def test_mcp_rename_project_keeps_mismatched_open_draft_and_records_applied_draft(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="project",
+            proposed_text="프로젝트 이름: 다른이름",
+            chat_scope="foundation",
+            proposed_kind=None,
+        )["draft_id"]
+    )
+
+    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "새이름", draft_id=draft_id)
+
+    assert renamed["name"] == "새이름"
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
+    assert len(auto_drafts) == 1
+    assert auto_drafts[0].status == "confirmed"
+    assert auto_drafts[0].proposed_text == "프로젝트 이름: Alpha → 새이름"
+    assert renamed["draft_warning"] == (
+        f"draft {draft_id} does not match this write; recorded an auto draft instead. "
+        "If the person accepted this draft with edits, call resolve_draft with status='edited'."
+    )
 
 
 def test_mcp_rename_project_confirms_matching_open_project_draft(tmp_path: Path) -> None:

@@ -158,7 +158,7 @@ def finish_write_draft(
     )
     if draft_id is None:
         return None
-    return _draft_mismatch_warning(draft_id)
+    return draft_mismatch_warning(draft_id)
 
 
 def finish_node_write_draft(
@@ -234,7 +234,7 @@ def finish_node_write_draft(
     )
     if draft_id is None:
         return None
-    return _draft_mismatch_warning(draft_id)
+    return draft_mismatch_warning(draft_id)
 
 
 def record_applied_draft(
@@ -407,7 +407,7 @@ def finish_canvas_write_draft(
     )
     if draft_id is None:
         return None
-    return _draft_mismatch_warning(draft_id)
+    return draft_mismatch_warning(draft_id)
 
 
 def _record_canvas_auto_draft(
@@ -466,7 +466,7 @@ def _edge_node_ids(edge: dict[str, Any]) -> tuple[str, str]:
     return str(edge["source"]), str(edge["target"])
 
 
-def _draft_mismatch_warning(draft_id: str) -> str:
+def draft_mismatch_warning(draft_id: str) -> str:
     return (
         f"draft {draft_id} does not match this write; recorded an auto draft instead. "
         "If the person accepted this draft with edits, call resolve_draft with status='edited'."
