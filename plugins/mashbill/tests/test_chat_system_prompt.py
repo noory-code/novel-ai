@@ -205,12 +205,15 @@ def test_write_playbook_forbids_announcing_the_save_saliently() -> None:
 def test_write_playbook_records_drafts_only_after_explicit_consent() -> None:
     draft_rule = (
         " Drafts: during discussion, show and refine concrete proposals in chat without "
-        "recording them. Once a proposal is settled, ask whether to keep it as a draft "
-        "(for example, '초안으로 남길까요?'); call record_draft only after the person "
-        "agrees, using canvas_kind='project' for a new project name. If the person agrees "
+        "recording them. If the person accepts or chooses an unkept proposal, do not write "
+        "it in that reply; first ask whether to keep it as a draft (for example, '초안으로 "
+        "남길까요?'). If they agree, call record_draft, then write it with the returned "
+        "draft_id; if they decline, write it without a draft. Use canvas_kind='project' for "
+        "a new project name. If the person agrees "
         "to revise a kept draft later, call update_draft instead of recording another. "
-        "When they agree to apply a kept draft from [Open drafts], pass its draft_id to "
-        "the write tool (rename_project for a project name). If you apply an edited "
+        "When they agree to apply a kept draft from [Open drafts], do not ask again; pass "
+        "its draft_id to the write tool (rename_project for a project name). If you apply "
+        "an edited "
         "version, call resolve_draft with status='edited'; if they discard it, use "
         "status='rejected'. Do not announce draft recording, just as you do not announce saves."
     )
@@ -221,6 +224,14 @@ def test_write_playbook_records_drafts_only_after_explicit_consent() -> None:
     existing = WRITE_PLAYBOOK[: -len(draft_rule)]
     assert hashlib.sha256(existing.encode()).hexdigest() == (
         "0ee79eb48daeec21ca8bbf4dcb9e95e3322160c757d991958b4bace3e171c094"
+    )
+
+
+def test_write_playbook_asks_before_writing_an_accepted_unkept_proposal() -> None:
+    assert (
+        "accepts or chooses an unkept proposal, do not write it in that reply; "
+        "first ask whether to keep it as a draft"
+        in WRITE_PLAYBOOK
     )
 
 

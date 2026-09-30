@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.197.1] — 2026-10-01
+
+### Fixed
+
+- When the person accepts a proposal that is not yet a kept draft, the coach now asks whether to keep it as a draft before writing it to the canvas, instead of writing it straight away.
+
 ## [0.197.0] — 2026-10-01
 
 ### Changed
