@@ -1325,7 +1325,7 @@ def test_mcp_rename_project_to_same_name_records_no_draft(tmp_path: Path) -> Non
     assert list_drafts(plot_root, "alpha") == []
 
 
-def test_mcp_rename_project_returns_rename_when_draft_recording_fails(
+def test_mcp_rename_project_raises_when_draft_recording_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     plot_root, _ = _project(tmp_path)
@@ -1335,9 +1335,10 @@ def test_mcp_rename_project_returns_rename_when_draft_recording_fails(
 
     monkeypatch.setattr(mcp_project_tools, "persist_applied_draft", fail_to_record)
 
-    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "Renamed Alpha")
+    with pytest.raises(OSError, match="draft storage unavailable"):
+        mcp_tools.rename_project(str(tmp_path), "alpha", "Renamed Alpha")
 
-    assert renamed["name"] == "Renamed Alpha"
+    assert mcp_tools.get_project(str(tmp_path), "alpha")["name"] == "Renamed Alpha"
     assert list_drafts(plot_root, "alpha") == []
 
 

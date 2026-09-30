@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.13] — 2026-09-30
+
+### Fixed
+
+- An AI `rename_project` whose draft cannot be saved now returns the error, like the canvas write tools, instead of reporting success without a draft.
+
 ## [0.196.12] — 2026-09-30
 
 ### Added
