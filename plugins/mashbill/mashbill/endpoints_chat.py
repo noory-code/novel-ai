@@ -128,6 +128,7 @@ _log = logging.getLogger(__name__)
 # the existing project_changed payload uses ``"project_changed"``.
 _CHAT_EVENT = "chat_stream_event"
 _DRAFTS_EVENT = "drafts_changed"
+_PERSIST_FAILED_EVENT = "chat_persist_failed"
 _draft_extraction_tasks: set[asyncio.Task[None]] = set()
 
 
@@ -141,6 +142,23 @@ def _registry_from_request(request: Request) -> ChatSessionRegistry:
     if isinstance(reg, ChatSessionRegistry):
         return reg
     return chat_registry()
+
+
+async def _notify_persist_failed(
+    hub: BroadcastHub,
+    plot_root: Path,
+    project_id: str,
+    scope: str,
+    which: str,
+) -> None:
+    try:
+        await hub.notify_event(
+            plot_root,
+            _PERSIST_FAILED_EVENT,
+            {"project_id": project_id, "scope": scope, "which": which},
+        )
+    except Exception:  # noqa: BLE001 — notification must not affect chat
+        _log.exception("chat persist failure notification failed for %s", plot_root)
 
 
 async def _extract_turn_drafts_and_notify(
@@ -219,6 +237,13 @@ async def stream_chat_turn(
                     )
                 except Exception:  # noqa: BLE001 — persistence must not break chat
                     _log.exception("chat persist (assistant) failed for %s", plot_root)
+                    await _notify_persist_failed(
+                        hub,
+                        plot_root,
+                        project_id,
+                        scope,
+                        "assistant",
+                    )
                 else:
                     task = asyncio.create_task(
                         _extract_turn_drafts_and_notify(
@@ -347,6 +372,7 @@ async def chat_send_endpoint(request: Request) -> JSONResponse:
             conversation_id = current_conversation_id(plot_root, project_id, scope)
         except Exception:  # noqa: BLE001 — persistence must not break chat
             _log.exception("chat persist (user) failed for %s", plot_root)
+            await _notify_persist_failed(hub, plot_root, project_id, scope, "user")
 
     asyncio.create_task(
         stream_chat_turn(

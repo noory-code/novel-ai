@@ -658,8 +658,17 @@ async def test_turn_complete_skips_extraction_when_assistant_save_fails(
     )
     await _wait_for_extraction_tasks()
 
-    assert hub.events[-1]["type"] == "turn_complete"
-    assert hub.events[-1]["text"] == "Mission idea"
+    stream_payloads = [
+        payload
+        for event_name, payload in hub.notifications
+        if event_name == "chat_stream_event" and payload is not None
+    ]
+    assert stream_payloads[-1]["type"] == "turn_complete"
+    assert stream_payloads[-1]["text"] == "Mission idea"
+    assert hub.notifications[-1] == (
+        "chat_persist_failed",
+        {"project_id": "alpha", "scope": "foundation", "which": "assistant"},
+    )
     assert provider.extraction_calls == []
 
 

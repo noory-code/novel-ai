@@ -883,6 +883,147 @@ async def test_stream_chat_turn_persists_assistant_on_turn_complete(tmp_path: Pa
     doc = read_conversation(plot_root, "alpha", "foundation")
     assert [m.role for m in doc.messages] == ["user", "assistant"]
     assert doc.messages[-1].text == "hi there"
+    assert not any(event_name == "chat_persist_failed" for _, event_name, _ in hub.events)
+
+
+async def test_stream_chat_turn_notifies_when_assistant_persistence_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    hub = _FakeHub()
+    provider = _CannedProvider(
+        [ChatStreamEvent(type="turn_complete", turn_id="t1", text="hi there")]
+    )
+
+    def fail_append(*args: Any, **kwargs: Any) -> None:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(endpoints_chat, "append_assistant_to_conversation", fail_append)
+
+    await stream_chat_turn(
+        provider,
+        hub,
+        plot_root,
+        "hello",
+        scope="foundation",
+        project_id="alpha",
+        provider_name="codex",
+    )
+
+    assert hub.events[-1] == (
+        plot_root,
+        "chat_persist_failed",
+        {"project_id": "alpha", "scope": "foundation", "which": "assistant"},
+    )
+
+
+def test_chat_send_notifies_when_user_persistence_fails(
+    workspace: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+    hub = _FakeHub()
+    provider = _CannedProvider([])
+    registry = ChatSessionRegistry(factory=lambda _root, _name: provider)
+    client = TestClient(create_http_app(hub=hub, chat_registry_instance=registry))
+
+    def fail_append(*args: Any, **kwargs: Any) -> None:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(endpoints_chat, "append_user", fail_append)
+    _select_provider(client, workspace, "codex")
+
+    response = client.post(
+        "/api/chat/send",
+        json={
+            "project_path": str(workspace),
+            "message": "define the mission",
+            "scope": "foundation",
+        },
+    )
+
+    assert response.status_code == 202
+    assert hub.events == [
+        (
+            plot_root,
+            "chat_persist_failed",
+            {"project_id": "alpha", "scope": "foundation", "which": "user"},
+        )
+    ]
+
+
+def test_chat_send_successful_user_persistence_emits_no_failure_signal(
+    workspace: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+    hub = _FakeHub()
+    provider = _CannedProvider([])
+    registry = ChatSessionRegistry(factory=lambda _root, _name: provider)
+    client = TestClient(create_http_app(hub=hub, chat_registry_instance=registry))
+
+    async def capture_turn(*args: Any, **kwargs: Any) -> None:
+        return None
+
+    monkeypatch.setattr(endpoints_chat, "stream_chat_turn", capture_turn)
+    _select_provider(client, workspace, "codex")
+
+    response = client.post(
+        "/api/chat/send",
+        json={
+            "project_path": str(workspace),
+            "message": "define the mission",
+            "scope": "foundation",
+        },
+    )
+
+    assert response.status_code == 202
+    assert not any(event_name == "chat_persist_failed" for _, event_name, _ in hub.events)
+
+
+def test_chat_send_continues_when_persistence_failure_notification_fails(
+    workspace: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+
+    class _FailingNotificationHub(_FakeHub):
+        async def notify_event(
+            self,
+            plot_root: Path,
+            event_name: str,
+            payload: dict[str, Any] | None = None,
+        ) -> None:
+            await super().notify_event(plot_root, event_name, payload)
+            if event_name == "chat_persist_failed":
+                raise RuntimeError("websocket unavailable")
+
+    hub = _FailingNotificationHub()
+    provider = _CannedProvider([])
+    registry = ChatSessionRegistry(factory=lambda _root, _name: provider)
+    client = TestClient(create_http_app(hub=hub, chat_registry_instance=registry))
+
+    def fail_append(*args: Any, **kwargs: Any) -> None:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(endpoints_chat, "append_user", fail_append)
+    _select_provider(client, workspace, "codex")
+
+    response = client.post(
+        "/api/chat/send",
+        json={
+            "project_path": str(workspace),
+            "message": "define the mission",
+            "scope": "foundation",
+        },
+    )
+
+    assert response.status_code == 202
+    assert len(provider.calls) == 1
 
 
 def test_chat_send_captures_conversation_id_before_streaming(

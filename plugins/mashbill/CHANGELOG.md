@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.26] — 2026-09-30
+
+### Added
+
+- A `chat_persist_failed` event (`project_id`, `scope`, `which`: user or assistant) tells the app when a chat message could not be saved.
+
 ## [0.196.25] — 2026-09-30
 
 ### Fixed
