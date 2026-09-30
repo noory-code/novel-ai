@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -134,7 +135,19 @@ def _latest_release(scope_dir: Path, prefix: str) -> str | None:
     return f"{prefix}{n}" if n >= 1 else None
 
 
-def publish_project_snapshot(plot_root: Path, project_id: str) -> dict[str, Any]:
+def remove_project_snapshot(plot_root: Path, project_id: str, release: str) -> None:
+    """Remove one project snapshot release if it exists."""
+    release_dir = _project_dir(plot_root, project_id) / "published" / "_project" / release
+    if release_dir.is_dir():
+        shutil.rmtree(release_dir)
+
+
+def publish_project_snapshot(
+    plot_root: Path,
+    project_id: str,
+    *,
+    blueprint_version: str,
+) -> dict[str, Any]:
     """Freeze the project's **shared structure** (本質·Actors·Entities) into a
     ``published/_project/vP{N}/`` snapshot — the project-scope layer of the
     2-layer model (D-2026-06-21-AB). Returns the manifest.
@@ -142,9 +155,31 @@ def publish_project_snapshot(plot_root: Path, project_id: str) -> dict[str, Any]
     read_project(plot_root, project_id)  # validate id (404s on mismatch)
     snap_dir = _project_dir(plot_root, project_id) / "published" / "_project"
     release = f"vP{_next_release(snap_dir, 'vP')}"
-    design = snap_dir / release / "design"
-    design.mkdir(parents=True, exist_ok=True)
+    release_dir = snap_dir / release
+    release_dir.mkdir(parents=True)
+    design = release_dir / "design"
 
+    try:
+        design.mkdir()
+        return _write_project_snapshot(
+            plot_root,
+            project_id,
+            release,
+            blueprint_version,
+            design,
+        )
+    except Exception:
+        remove_project_snapshot(plot_root, project_id, release)
+        raise
+
+
+def _write_project_snapshot(
+    plot_root: Path,
+    project_id: str,
+    release: str,
+    blueprint_version: str,
+    design: Path,
+) -> dict[str, Any]:
     elements: list[dict[str, Any]] = []
 
     # --- Foundation (mission / core_value / identity) ---
@@ -224,10 +259,11 @@ def publish_project_snapshot(plot_root: Path, project_id: str) -> dict[str, Any]
         "format_f_version": FORMAT_F_VERSION,
         "scope": "project",
         "release": release,
+        "blueprint_version": blueprint_version,
         "git_sha": _git_sha(plot_root),
         "elements": elements,
     }
-    _write_json(snap_dir / release / "manifest.json", manifest)
+    _write_json(design.parent / "manifest.json", manifest)
     return manifest
 
 

@@ -23,12 +23,16 @@ including Solera, can import by value.
    to choose from the actual stored ids.
 2. Read the project and service design. Report missing required structure before
    attempting publication.
-3. Call `publish_project_snapshot_tool` to freeze the shared foundation,
-   actors, and entities as the next `vP` snapshot.
+3. Ask the person which blueprint bump to publish (`major`, `minor`, or
+   `patch`) and obtain permission. Pass that bump to
+   `publish_project_snapshot_tool` to freeze the shared foundation, actors,
+   and entities as the next `vP` snapshot. If the blueprint is unchanged,
+   stop and report that no publication was created.
 4. Call `publish_service_tool` for the selected service. It validates references
    and publishes the next `vS` release based on the latest `vP`.
-5. Return both manifest versions and the exact release directory. Do not tag or
-   commit the repository unless the user separately asks for a Git milestone.
+5. Return both manifest versions and the exact release directory. Blueprint
+   publication creates its own commit and tag; create no other tag or commit
+   unless the user separately asks for a Git milestone.
 
 Never edit an existing published directory. A changed design produces a new
 snapshot or release.

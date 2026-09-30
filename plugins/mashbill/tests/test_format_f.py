@@ -62,7 +62,7 @@ def test_publish_project_snapshot_writes_vp1(plot_root: Path) -> None:
 
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
-    m = publish_project_snapshot(plot_root, "alpha")
+    m = publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
 
     assert m["format_f_version"] == 1
     assert m["scope"] == "project"
@@ -104,7 +104,7 @@ def test_foundation_design_renders_primary_statements(plot_root: Path) -> None:
         else:
             enriched.append(n)
     write_canvas(plot_root, "alpha", foundation.model_copy(update={"nodes": enriched}))
-    publish_project_snapshot(plot_root, "alpha")
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
 
     md = (plot_root / "published" / "_project" / "vP1" / "design" / "foundation.md").read_text(
         encoding="utf-8"
@@ -122,7 +122,7 @@ def test_foundation_hash_tracks_primary_statement(plot_root: Path) -> None:
 
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
-    m1 = publish_project_snapshot(plot_root, "alpha")
+    m1 = publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
     h1 = next(e["hash"] for e in m1["elements"] if e["id"] == "mission")
 
     foundation = read_canvas(plot_root, "alpha", "foundation")
@@ -131,7 +131,7 @@ def test_foundation_hash_tracks_primary_statement(plot_root: Path) -> None:
         for n in foundation.nodes
     ]
     write_canvas(plot_root, "alpha", foundation.model_copy(update={"nodes": bumped}))
-    m2 = publish_project_snapshot(plot_root, "alpha")
+    m2 = publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.2")
     h2 = next(e["hash"] for e in m2["elements"] if e["id"] == "mission")
     assert h1 != h2
 
@@ -155,7 +155,7 @@ def test_entity_design_renders_summary(plot_root: Path) -> None:
             }
         ),
     )
-    m = publish_project_snapshot(plot_root, "alpha")
+    m = publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
 
     post_slug = next(e["id"] for e in m["elements"] if e["kind"] == "entity")
     md = (
@@ -199,7 +199,7 @@ def test_actors_design_renders_relationships(plot_root: Path) -> None:
             }
         ),
     )
-    publish_project_snapshot(plot_root, "alpha")
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
 
     md = (plot_root / "published" / "_project" / "vP1" / "design" / "actors.md").read_text(
         encoding="utf-8"
@@ -216,7 +216,7 @@ def test_service_design_surfaces_refs(plot_root: Path) -> None:
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
     _add_service_referencing_seeds(plot_root)
-    publish_project_snapshot(plot_root, "alpha")
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
     m = publish_service(plot_root, "alpha", "svc-auth")
 
     md = (plot_root / "published" / "auth" / "vS1" / "design" / "service.md").read_text(
@@ -235,7 +235,7 @@ def test_service_refs_anchor_to_project_mission(plot_root: Path) -> None:
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
     _add_service_referencing_seeds(plot_root)
-    vp = publish_project_snapshot(plot_root, "alpha")
+    vp = publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
     assert any(e["id"] == "mission" for e in vp["elements"])  # mission lives in vP
     m = publish_service(plot_root, "alpha", "svc-auth")
     assert m["refs"]["anchors"]["mission"] == "mission"
@@ -246,8 +246,12 @@ def test_snapshot_release_bumps(plot_root: Path) -> None:
 
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
-    assert publish_project_snapshot(plot_root, "alpha")["release"] == "vP1"
-    assert publish_project_snapshot(plot_root, "alpha")["release"] == "vP2"
+    assert (
+        publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")["release"] == "vP1"
+    )
+    assert (
+        publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.2")["release"] == "vP2"
+    )
 
 
 def _add_service_referencing_seeds(plot_root: Path) -> str:
@@ -417,7 +421,7 @@ def test_publish_service_includes_feature_elements(plot_root: Path) -> None:
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
     _add_service_with_features(plot_root)
-    publish_project_snapshot(plot_root, "alpha")
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
     m = publish_service(plot_root, "alpha", "svc-auth")
 
     feature_els = [e for e in m["elements"] if e["kind"] == "feature"]
@@ -437,7 +441,7 @@ def test_feature_design_renders_capability_and_flow(plot_root: Path) -> None:
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
     _add_service_with_features(plot_root)
-    publish_project_snapshot(plot_root, "alpha")
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
     m = publish_service(plot_root, "alpha", "svc-auth")
 
     login_slug = next(
@@ -680,7 +684,7 @@ def _publish_feature_flow_with_rules(plot_root: Path) -> str:
     )
     write_canvas(plot_root, "alpha", detail)
 
-    publish_project_snapshot(plot_root, "alpha")
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
     manifest = publish_service(plot_root, "alpha", "svc-auth")
     feature_slug = next(
         element["id"]
@@ -737,7 +741,7 @@ def test_feature_element_hash_tracks_flow_change(plot_root: Path) -> None:
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
     _add_service_with_features(plot_root)
-    publish_project_snapshot(plot_root, "alpha")
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
     m1 = publish_service(plot_root, "alpha", "svc-auth")
     h1 = next(e["hash"] for e in m1["elements"] if "login" in e["id"])
 
@@ -779,7 +783,7 @@ def test_service_entity_refs_collected_from_steps(plot_root: Path) -> None:
     ]
     write_canvas(plot_root, "alpha", detail.model_copy(update={"nodes": wired}))
 
-    publish_project_snapshot(plot_root, "alpha")
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
     m = publish_service(plot_root, "alpha", "svc-auth")
     assert m["refs"]["entities"]
     assert all(e.startswith("entity/") for e in m["refs"]["entities"])
@@ -790,7 +794,7 @@ def test_published_manifests_and_service_refs_include_labels(plot_root: Path) ->
     from mashbill.format_f import publish_project_snapshot, publish_service
 
     _prepare_named_reference_bundle(plot_root)
-    published_vp = publish_project_snapshot(plot_root, "alpha")
+    published_vp = publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
     vp_path = plot_root / "published" / "_project" / "vP1" / "manifest.json"
     vp = json.loads(vp_path.read_text(encoding="utf-8"))
 
@@ -833,7 +837,7 @@ def test_service_ref_labels_fall_back_to_current_canvas_for_legacy_vp(plot_root:
     from mashbill.format_f import publish_project_snapshot, publish_service
 
     _prepare_named_reference_bundle(plot_root)
-    publish_project_snapshot(plot_root, "alpha")
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
     vp_path = plot_root / "published" / "_project" / "vP1" / "manifest.json"
     vp = json.loads(vp_path.read_text(encoding="utf-8"))
     id_by_label = {element["label"]: element["id"] for element in vp["elements"]}
@@ -866,7 +870,7 @@ def test_service_design_writes_reference_section_for_entities_only(plot_root: Pa
         for node in services.nodes
     ]
     write_canvas(plot_root, "alpha", services.model_copy(update={"nodes": nodes}))
-    vp = publish_project_snapshot(plot_root, "alpha")
+    vp = publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
     entity = next(element for element in vp["elements"] if element["kind"] == "entity")
 
     publish_service(plot_root, "alpha", "svc-auth")
@@ -893,7 +897,7 @@ def test_publish_service_with_dangling_entity_ref_is_rejected(plot_root: Path) -
     ]
     write_canvas(plot_root, "alpha", detail.model_copy(update={"nodes": wired}))
 
-    publish_project_snapshot(plot_root, "alpha")
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
     with pytest.raises(ValueError, match="refs|resolve"):
         publish_service(plot_root, "alpha", "svc-auth")
 
@@ -904,7 +908,7 @@ def test_publish_service_release_refs_into_vp(plot_root: Path) -> None:
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
     _add_service_referencing_seeds(plot_root)
-    publish_project_snapshot(plot_root, "alpha")  # vP1 (bootstrap)
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")  # vP1 (bootstrap)
     m = publish_service(plot_root, "alpha", "svc-auth")
 
     assert m["scope"] == "service"
@@ -942,7 +946,9 @@ def test_publish_service_with_dangling_ref_is_rejected(plot_root: Path) -> None:
 
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
-    publish_project_snapshot(plot_root, "alpha")  # vP1 has the seeded actors only
+    publish_project_snapshot(
+        plot_root, "alpha", blueprint_version="v0.1.1"
+    )  # vP1 has the seeded actors only
     svc = ServiceNode(
         id="svc-x",
         label="X",
@@ -972,8 +978,15 @@ def test_manifest_contract_shape_is_pinned(plot_root: Path) -> None:
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
     _add_service_referencing_seeds(plot_root)
-    vp = publish_project_snapshot(plot_root, "alpha")
-    assert set(vp) >= {"format_f_version", "scope", "release", "git_sha", "elements"}
+    vp = publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
+    assert set(vp) >= {
+        "format_f_version",
+        "scope",
+        "release",
+        "blueprint_version",
+        "git_sha",
+        "elements",
+    }
     assert vp["format_f_version"] == FORMAT_F_VERSION
     assert all(set(e) >= {"id", "kind", "hash"} for e in vp["elements"])
 
@@ -1001,9 +1014,12 @@ def test_publish_reachable_via_mcp_surface(tmp_path: Path) -> None:
     )
 
     create_project_tool(str(tmp_path), "alpha", "Alpha")
-    vp = publish_project_snapshot_tool(str(tmp_path), "alpha")
-    assert vp["scope"] == "project"
-    assert vp["release"] == "vP1"
+    from mashbill.git_store import init_workspace_repo
+
+    init_workspace_repo(tmp_path)
+    published = publish_project_snapshot_tool(str(tmp_path), "alpha", "patch")
+    assert published["manifest"]["scope"] == "project"
+    assert published["manifest"]["release"] == "vP1"
     assert callable(publish_service_tool)
 
 

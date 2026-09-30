@@ -39,6 +39,42 @@
 
 ## Log
 
+### D-2026-10-01-E — A blueprint publish is one all-or-nothing act, and publishing stays the person's act
+
+- **What:** (1) `POST /api/projects/{id}/publish` writes the `vP` bundle, bumps
+  `blueprint_version`, and commits and tags the workspace in one request. It
+  checks for a change and for an existing tag before writing anything, writes
+  the bundle before the commit so the tagged commit contains it, and on any
+  failure removes the bundle, restores the version and tags nothing. The
+  separate `POST /api/projects/{id}/publish/snapshot` route is removed. (2) The
+  `vP` manifest records `blueprint_version`; the folder name `vP{N}` keeps its
+  own count. (3) The MCP `publish_project_snapshot_tool` runs the same blueprint
+  publish and requires `bump`. The in-app coach's Novel MCP server is started
+  with `MASHBILL_IN_APP_COACH=1` and does not offer
+  `publish_project_snapshot_tool` or `publish_service_tool`.
+- **Why:** the app published in two requests; when the second failed, only
+  the version and tag were left, and pressing again answered "unchanged", so
+  that version never got its bundle. A half-written `vP` folder without a
+  manifest also blocked later service publishes. The design flow publishes
+  in one uninterrupted act. Publishing cannot be undone in the app
+  (D-2026-09-28-B), so, like project delete (D-2026-09-30-A), it is not left to
+  the in-app coach; external agents keep the tool behind their host's tool
+  approval, and a `vP` without a version bump no longer exists
+  (D-2026-06-22-D: the `vP` is a `blueprint_version`).
+- **Alternatives:** tag first, then write the bundle (the flow's order) — not
+  chosen: a failure would need a git tag and commit undone in the person's
+  repository. Remove the MCP publish tools entirely — not chosen: the public
+  headless plugin would lose its only publish path. Rename bundle folders to
+  the version — not chosen: published folders are immutable (format F).
+- **Approval:** judged by Claude from the design flow and the pinned decisions
+  above, after the user asked Claude to judge such items (2026-10-01;
+  novel-workspace W-00000338). Supersedes the `/publish/snapshot` route of
+  D-2026-06-22-G and the two-call pairing of D-2026-06-22-H.
+- **Spec impact:** public `docs/specs/storage-publish.md` §Publish and
+  `docs/specs/format-f.md` §3.1; `skills/mashbill-publish-service`.
+- **Principles:** Fail Fast (checks before any write); Honesty (no half
+  publish); SSOT (one publish function for the app and MCP).
+
 ### D-2026-10-01-D — Only the display language the person picked is remembered
 
 - **What:** the app stores the display language only when the person presses
@@ -2231,6 +2267,8 @@
 
 ### D-2026-06-22-H — publish UI is format F: 설계도 발행 → vP, service publish → vS, per-node publish retired
 
+> The two-call pairing is superseded by D-2026-10-01-E (one `/publish` request).
+
 - **What:** The viewer's publish surface is repointed at format F (INT-g ⓑ + ⓒ), **reusing the existing buttons** — no net-new publish UI:
   - **vP (project snapshot)** ← the existing Header **`📤 설계도 발행`** action. It still bumps `blueprint_version` + git-tags (the freeze mechanism), and now **also** writes the format F `vP` snapshot (manifest + design). D-2026-06-22-D: "vP = blueprint_version의 진짜 정체."
   - **vS (service release)** ← publishing a **service** node. The inspector publish footer, when the selected node is a `service`, calls the format F `vS` endpoint (the whole service bundle: 5칸 + features + UX flows) instead of a per-node MD.
@@ -2243,6 +2281,8 @@
 - **Spec impact:** `storage-publish.md §발행` — the publish model is now format F 2-layer (per-node section retired). Guards land per-step in `plot/viewer/tests/*` (rewire + eligibility) and `noory-ai/mashbill/tests/*` (endpoint removal).
 
 ### D-2026-06-22-G — format F publish reachable over HTTP (INT-g first step; viewer UI + per-node retirement still gated)
+
+> The `/publish/snapshot` route and the two-call publish are superseded by D-2026-10-01-E (one all-or-nothing `/publish`).
 
 - **What:** Two POST endpoints expose the format F write half on the HTTP surface, mirroring the existing MCP tools: `POST /api/projects/{id}/publish/snapshot` (→ `vP` project snapshot) and `POST /api/projects/{id}/services/{service_id}/publish` (→ `vS` service release). Thin wrappers over the tested `format_f.publish_project_snapshot` / `publish_service`. Error mapping: 404 (project/service not found), **409** for the two write-boundary gates — bootstrap (no `vP` yet) and refs-integrity (a ref does not resolve in the based_on `vP`).
 - **Why:** the MCP path is the 주경로, but the .app is the product (VISION) and its viewer talks to the engine over HTTP — so a format F publish button needs an HTTP endpoint. This is the decision-free precursor to INT-g (the endpoint is needed regardless of where the button lands). User chose "엔진 HTTP 먼저" (2026-06-22).

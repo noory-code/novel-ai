@@ -10,7 +10,8 @@ import uvicorn
 
 from mashbill.broadcast import BroadcastHub
 from mashbill.http_app import create_http_app
-from mashbill.mcp_tools import mcp
+from mashbill.mcp_registration import IN_APP_COACH_ENV
+from mashbill.mcp_tools import hide_person_only_tools, mcp
 from mashbill.workspace import (
     DEFAULT_HTTP_PORT,
     find_viewer_dist,
@@ -96,6 +97,8 @@ def run_mcp_stdio() -> None:
     the port and is unnecessary for a stdio client.
     """
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    if os.environ.get(IN_APP_COACH_ENV) == "1":
+        hide_person_only_tools(mcp)
     try:
         asyncio.run(mcp.run_stdio_async())
     except KeyboardInterrupt:

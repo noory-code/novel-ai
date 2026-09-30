@@ -15,6 +15,7 @@ import webbrowser
 from pathlib import Path
 
 import pytest
+from fastmcp import FastMCP
 
 from mashbill import mcp_tools
 from mashbill.git_store import init_workspace_repo, tag_snapshot
@@ -127,6 +128,59 @@ def test_search_project_nodes_finds_by_label(tmp_path: Path) -> None:
 async def test_registry_does_not_expose_delete_project_tool() -> None:
     tools = await mcp_tools.mcp.list_tools()
     assert "delete_project_tool" not in {tool.name for tool in tools}
+
+
+def test_publish_project_snapshot_requires_bump(tmp_path: Path) -> None:
+    mcp_tools.create_project_tool(str(tmp_path), "alpha", "Alpha")
+    with pytest.raises(TypeError):
+        mcp_tools.publish_project_snapshot_tool(str(tmp_path), "alpha")  # type: ignore[call-arg]
+
+
+def test_publish_project_snapshot_returns_version_and_manifest(tmp_path: Path) -> None:
+    mcp_tools.create_project_tool(str(tmp_path), "alpha", "Alpha")
+    init_workspace_repo(tmp_path)
+
+    result = mcp_tools.publish_project_snapshot_tool(str(tmp_path), "alpha", "patch")
+
+    assert result["to_version"] == "v0.1.1"
+    assert result["manifest"]["release"] == "vP1"
+    assert result["manifest"]["blueprint_version"] == "v0.1.1"
+
+
+def test_publish_project_snapshot_reports_missing_git(tmp_path: Path) -> None:
+    mcp_tools.create_project_tool(str(tmp_path), "alpha", "Alpha")
+
+    with pytest.raises(ValueError, match="git init"):
+        mcp_tools.publish_project_snapshot_tool(str(tmp_path), "alpha", "patch")
+
+
+def test_publish_project_snapshot_reports_unchanged_blueprint(tmp_path: Path) -> None:
+    mcp_tools.create_project_tool(str(tmp_path), "alpha", "Alpha")
+    init_workspace_repo(tmp_path)
+    mcp_tools.publish_project_snapshot_tool(str(tmp_path), "alpha", "patch")
+
+    with pytest.raises(ValueError, match=r"blueprint is unchanged since v0\.1\.1"):
+        mcp_tools.publish_project_snapshot_tool(str(tmp_path), "alpha", "patch")
+
+
+async def test_hide_person_only_tools_removes_only_publish_tools() -> None:
+    server = FastMCP("test")
+
+    @server.tool()
+    def publish_project_snapshot_tool() -> None:
+        return None
+
+    @server.tool()
+    def publish_service_tool() -> None:
+        return None
+
+    @server.tool()
+    def keep_me() -> None:
+        return None
+
+    mcp_tools.hide_person_only_tools(server)
+
+    assert {tool.name for tool in await server.list_tools()} == {"keep_me"}
 
 
 def test_get_canvas_feature_without_service_id_is_rejected(tmp_path: Path) -> None:

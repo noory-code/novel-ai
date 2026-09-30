@@ -93,9 +93,6 @@ from mashbill.endpoints_publish import (
     format_f_service_publish_endpoint as format_f_service_publish_endpoint,
 )
 from mashbill.endpoints_publish import (
-    format_f_snapshot_endpoint as format_f_snapshot_endpoint,
-)
-from mashbill.endpoints_publish import (
     project_publish_endpoint as project_publish_endpoint,
 )
 from mashbill.endpoints_publish import (

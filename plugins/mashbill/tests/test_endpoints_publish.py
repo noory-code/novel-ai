@@ -26,8 +26,8 @@ from typing import Any
 import pytest
 from starlette.testclient import TestClient
 
+from mashbill.blueprint_publish import _bump_blueprint_version
 from mashbill.broadcast import BroadcastHub
-from mashbill.endpoints_publish import _bump_blueprint_version
 from mashbill.folder_io import _project_dir
 from mashbill.git_store import init_workspace_repo, list_tags, tag_snapshot
 from mashbill.http_app import create_http_app
@@ -220,6 +220,7 @@ def test_publish_without_git_returns_needs_init_and_rolls_back(
     # The version bump must be rolled back so a later retry starts clean.
     proj = client.get(f"/api/projects/alpha?project_path={workspace}").json()
     assert proj["blueprint_version"] == "v0.1.0"
+    assert not (_project_dir(resolve_plot_root(str(workspace)), "alpha") / "published").exists()
 
 
 def test_publish_status_without_git_reports_changed(client: TestClient, workspace: Path) -> None:
@@ -250,6 +251,7 @@ def test_publish_tag_collision_returns_409_and_rolls_back(
     assert proj["blueprint_version"] == "v0.1.0"
     names = [t["name"] for t in list_tags(workspace)]
     assert names.count("v0.1.1") == 1
+    assert not (_project_dir(resolve_plot_root(str(workspace)), "alpha") / "published").exists()
 
 
 def test_publish_ignores_node_position_changes(client: TestClient, workspace: Path) -> None:
@@ -460,10 +462,23 @@ def test_publish_treats_unreadable_canvas_json_as_changed(
 # ---------------------------------------------------------------------------
 
 
-def test_snapshot_requires_project_path(client: TestClient) -> None:
+def test_publish_response_includes_format_f_manifest(client: TestClient, workspace: Path) -> None:
+    _make_project(workspace)
+    init_workspace_repo(workspace)
+
+    resp = client.post(
+        f"/api/projects/alpha/publish?project_path={workspace}",
+        json={"bump": "patch"},
+    )
+
+    assert resp.status_code == 201
+    assert resp.json()["manifest"]["release"] == "vP1"
+    assert resp.json()["manifest"]["blueprint_version"] == "v0.1.1"
+
+
+def test_snapshot_route_is_removed(client: TestClient) -> None:
     resp = client.post("/api/projects/alpha/publish/snapshot")
-    assert resp.status_code == 400
-    assert "project_path" in resp.json()["error"]
+    assert resp.status_code in (404, 405)
 
 
 def test_service_publish_requires_project_path(client: TestClient) -> None:

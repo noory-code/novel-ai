@@ -18,9 +18,11 @@ from pathlib import Path
 import pytest
 
 from mashbill.mcp_registration import (
+    IN_APP_COACH_ENV,
     ProviderName,
     detect_providers,
     is_plot_registered,
+    mashbill_config,
     register_plot,
     unregister_plot,
 )
@@ -258,6 +260,17 @@ def test_plot_entry_dev_command_is_stdio_only_too(plugin_root: Path) -> None:
 
     entry = _plot_entry(plugin_root, _spec_for("claude-code"))
     assert entry["args"][-1] == "--mcp-stdio"
+
+
+def test_in_app_config_marks_server_but_global_registration_does_not(
+    fake_home: Path, plugin_root: Path
+) -> None:
+    in_app = mashbill_config(plugin_root)["mcpServers"]["mashbill"]
+    assert in_app["env"][IN_APP_COACH_ENV] == "1"
+
+    register_plot("claude-code", plugin_root)
+    registered = json.loads((fake_home / ".claude.json").read_text(encoding="utf-8"))
+    assert IN_APP_COACH_ENV not in registered["mcpServers"]["mashbill"]["env"]
 
 
 def test_plot_entry_uses_bundled_binary_when_frozen(

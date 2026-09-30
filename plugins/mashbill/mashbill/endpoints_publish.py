@@ -13,7 +13,7 @@ from typing import Any
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from mashbill.blueprint_content import blueprint_content_fingerprint
+from mashbill.blueprint_publish import BlueprintUnchangedError, publish_blueprint
 from mashbill.endpoints_common import (
     _ApiError,
     _error,
@@ -24,9 +24,7 @@ from mashbill.git_store import (
     GitNotInitializedError,
     TagAlreadyExistsError,
     blueprint_canvas_changed,
-    tag_snapshot,
 )
-from mashbill.tag_names import is_blueprint_version_tag
 from mashbill.workspace import workspace_root_from_plot_root
 
 
@@ -43,45 +41,13 @@ def _git_not_initialized_response(workspace_root: object) -> JSONResponse:
     )
 
 
-# ---------------------------------------------------------------------------
-# v0.24.13 (D-2026-05-21-B) — project-level blueprint publish endpoint
-# ---------------------------------------------------------------------------
-
-
-def _bump_blueprint_version(current: str, bump: str) -> str:
-    """Bump ``v<MAJOR>.<MINOR>.<PATCH>`` per the chosen level.
-
-    - "major": ``v1.2.3`` → ``v2.0.0``
-    - "minor": ``v1.2.3`` → ``v1.3.0``
-    - "patch": ``v1.2.3`` → ``v1.2.4``
-    """
-    if not current.startswith("v"):
-        raise ValueError(f"invalid blueprint version (must start with 'v'): {current!r}")
-    parts = current[1:].split(".")
-    if not is_blueprint_version_tag(current):
-        raise ValueError(f"invalid semver (need v<MAJOR>.<MINOR>.<PATCH>): {current!r}")
-    major, minor, patch = (int(p) for p in parts)
-    if bump == "major":
-        return f"v{major + 1}.0.0"
-    if bump == "minor":
-        return f"v{major}.{minor + 1}.0"
-    if bump == "patch":
-        return f"v{major}.{minor}.{patch + 1}"
-    raise ValueError(f"bump must be one of major/minor/patch, got {bump!r}")
-
-
 async def project_publish_endpoint(request: Request) -> JSONResponse:
     """``POST /api/projects/{project_id}/publish``
 
     Body: ``{"bump": "major" | "minor" | "patch", "message": "..."}``
 
-    When canvas content changed since the current-version tag, bumps
-    ``ProjectDoc.blueprint_version``, persists the project, and creates a git
-    tag at the resulting version. The tag message records the normalized canvas
-    content fingerprint. Tag name = the new version string (e.g. ``v0.2.0``).
-    An unchanged call returns 409 without writing.
-
-    Returns ``{from_version, to_version, tag}``.
+    Atomically writes a format-F snapshot, bumps the project version, and tags
+    the resulting Novel data commit.
     """
     try:
         plot_root = _require_plot_root(request)
@@ -92,55 +58,36 @@ async def project_publish_endpoint(request: Request) -> JSONResponse:
     if not (folder / "project.json").is_file():
         return _error(f"project not found: {project_id}", status=404)
     try:
-        body: dict[str, Any] = await request.json()
+        body: Any = await request.json()
     except json.JSONDecodeError:
         return _error("invalid JSON body")
+    if not isinstance(body, dict):
+        return _error("invalid JSON body")
     bump = body.get("bump")
-    if bump not in ("major", "minor", "patch"):
+    if not isinstance(bump, str) or bump not in ("major", "minor", "patch"):
         return _error("'bump' must be one of major/minor/patch")
     message_input = body.get("message")
     message = message_input if isinstance(message_input, str) and message_input.strip() else None
-
-    from mashbill.folder_io import read_project, write_project
-
-    project = read_project(plot_root, project_id)
-    from_version = project.blueprint_version
-    try:
-        to_version = _bump_blueprint_version(from_version, bump)
-    except ValueError as exc:
-        return _error(str(exc))
     workspace_root = workspace_root_from_plot_root(plot_root)
     try:
-        changed = blueprint_canvas_changed(workspace_root, folder, from_version)
+        result = publish_blueprint(plot_root, project_id, bump, message=message)
+    except FileNotFoundError as exc:
+        return _error(str(exc), status=404)
     except GitNotInitializedError:
         return _git_not_initialized_response(workspace_root)
-    if not changed:
+    except BlueprintUnchangedError as exc:
         return JSONResponse(
             {
-                "error": f"blueprint is unchanged since {from_version}",
+                "error": str(exc),
                 "unchanged": True,
             },
             status_code=409,
         )
-    bumped = project.model_copy(update={"blueprint_version": to_version})
-    write_project(plot_root, bumped)
-    tag_message = message or to_version
-    fingerprint = blueprint_content_fingerprint(workspace_root, folder)
-    if fingerprint is not None:
-        tag_message = f"{tag_message}\n\nNovel-Blueprint-Content: sha256:{fingerprint}"
-    try:
-        tag = tag_snapshot(workspace_root, to_version, message=tag_message)
-    except GitNotInitializedError:
-        write_project(plot_root, project)
-        return _git_not_initialized_response(workspace_root)
     except TagAlreadyExistsError as exc:
-        # Roll back the project version on tag collision.
-        write_project(plot_root, project)
         return _error(str(exc), status=409)
-    return JSONResponse(
-        {"from_version": from_version, "to_version": to_version, "tag": tag},
-        status_code=201,
-    )
+    except ValueError as exc:
+        return _error(str(exc))
+    return JSONResponse(result, status_code=201)
 
 
 async def project_publish_status_endpoint(request: Request) -> JSONResponse:
@@ -174,31 +121,9 @@ async def project_publish_status_endpoint(request: Request) -> JSONResponse:
 
 
 # ---------------------------------------------------------------------------
-# format F publish over HTTP (INT-g, D-2026-06-22-G) — the viewer-facing surface
-# mirroring the MCP tools (publish_project_snapshot_tool / publish_service_tool).
+# format F service publish over HTTP (INT-g, D-2026-06-22-G).
 # format F itself is defined in ``format_f.py`` + ``docs/specs/format-f.md``.
 # ---------------------------------------------------------------------------
-
-
-async def format_f_snapshot_endpoint(request: Request) -> JSONResponse:
-    """``POST /api/projects/{project_id}/publish/snapshot``
-
-    Freeze the project's shared structure (foundation / actors / entities) into
-    a format F ``vP`` snapshot (D-2026-06-22-D). Returns the manifest.
-    404 if the project is unknown.
-    """
-    try:
-        plot_root = _require_plot_root(request)
-    except _ApiError as exc:
-        return exc.response
-    project_id = request.path_params["project_id"]
-    from mashbill.format_f import publish_project_snapshot
-
-    try:
-        manifest = publish_project_snapshot(plot_root, project_id)
-    except FileNotFoundError as exc:
-        return _error(str(exc), status=404)
-    return JSONResponse(manifest, status_code=201)
 
 
 async def format_f_service_publish_endpoint(request: Request) -> JSONResponse:

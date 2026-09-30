@@ -146,7 +146,8 @@ def main() -> int:
             "- Novel project data lives under the user's `.noory/novel/` directory.",
             "- Pass the current workspace as `project_path` to Mashbill MCP tools.",
             "- Prefer `update_node` for one node; use `update_canvas` for a full canvas.",
-            "- Publishing format-F snapshots is explicit and never auto-committed.",
+            "- Blueprint publishing bumps the version and commits and tags the data folder; "
+            "service publishing only writes files.",
             "- The public Mashbill plugin is headless; it does not bundle the commercial UI.",
             "",
             "Use the bundled `mashbill-help`, `mashbill-new-project`, "

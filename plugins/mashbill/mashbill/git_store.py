@@ -165,6 +165,11 @@ def _tag_exists(workspace_root: Path, name: str) -> bool:
     return result.returncode == 0
 
 
+def tag_exists(workspace_root: Path, name: str) -> bool:
+    """Return whether ``name`` already exists in the workspace tag namespace."""
+    return _tag_exists(workspace_root, name)
+
+
 def blueprint_canvas_changed(
     workspace_root: Path,
     project_dir: Path,

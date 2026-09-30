@@ -36,14 +36,19 @@ Publishing freezes a **bundle**, never a single node. There are exactly two publ
 - **`vP` project snapshot** — the shared structure (foundation · actors · entities).
 - **`vS` service release** — one service, pinned to the `vP` it is based on.
 
-The model is §format F below; [`format-f.md`](./format-f.md) is the contract. Both write **files only**, under
-`published/`: `_project/vP{N}/` for a `vP`, `{service-slug}/vS{N}/` for a `vS`. Each manifest records the
-workspace git sha as a best-effort provenance stamp (empty string when there is no repo) — **neither publish
-commits or tags**, and neither is blocked by the absence of a git repo.
+The model is §format F below; [`format-f.md`](./format-f.md) is the contract. Bundles live under
+`published/`: `_project/vP{N}/` for a `vP`, `{service-slug}/vS{N}/` for a `vS`. A `vS` writes **files only**:
+it neither commits nor tags, and is not blocked by the absence of a git repo. A `vP` is written only as part
+of the blueprint publish below, which commits and tags it. Each manifest records the workspace git sha at
+write time as a provenance stamp (empty string when there is no repo).
 
-`POST /api/projects/{id}/publish` is a **third, separate endpoint** and the only publish-named one that
-touches git: it bumps `blueprint_version` and git-tags the workspace at that version (`D-2026-05-21-B`). It
-writes no format F bundle. It bumps and tags only when the blueprint changed (`D-2026-09-28-B`): the
+`POST /api/projects/{id}/publish` is the **blueprint publish** (`D-2026-05-21-B`, `D-2026-10-01-E`): one
+request that writes the `vP` bundle, bumps `blueprint_version` and git-tags the workspace at that version,
+all or nothing. Before writing anything it checks that the blueprint changed and that the new version's tag
+does not exist yet. It then writes the `vP` bundle (its manifest carries the new `blueprint_version`), bumps
+the version, and commits and tags, so the bundle is inside the tagged commit. If any step fails, the bundle
+is removed, the version is restored and nothing is tagged. It publishes only when the blueprint changed
+(`D-2026-09-28-B`): the
 design content of the canvas files under `foundation/`, `actors/`, `services/` (feature details included) and
 `entities/` differs from the same files in the commit the current `blueprint_version` tag points at. The
 current side is read from the files on disk, so a canvas the user keeps out of git still counts; a file on
@@ -60,17 +65,19 @@ the files in its commit. An unchanged call answers
 `{current_version, changed}` without writing; with no git repo it answers `changed: true`, and the git-consent
 gate stays on the publish call itself.
 
-**In the app these are one action, not three.** The `📤 설계도 발행` button calls `/publish` and then
-`/publish/snapshot` in sequence, under a single git-consent prompt (`viewer` `useProject.ts`
-`publishBlueprint`, `D-2026-06-22-H`). So a `vP` published from the app is always accompanied by a bump and a
-tag, even though the snapshot endpoint neither needs nor performs them. Only `vS` is triggered on its own.
+**In the app this is one action.** The `📤 설계도 발행` button calls `/publish` once, under a single
+git-consent prompt (`viewer` `useProject.ts` `publishBlueprint`). Only `vS` is triggered on its own. The MCP
+tool `publish_project_snapshot_tool` runs the same blueprint publish and requires a `bump`. Publishing is the
+person's act — the app's confirm dialog, or a host CLI's tool approval — so the in-app coach is not given
+`publish_project_snapshot_tool` or `publish_service_tool` (`D-2026-10-01-E`).
 
 - **git consent** applies to the acts that write git (the blueprint publish above, and tagging). Novel never
   auto `git init`: when the workspace root has no `.git` those endpoints answer `409 {needs_git_init: true}`
-  → viewer modal → `POST /api/workspace/git-init`, which stages `.noory/novel/` only. Because the app pairs
-  the two calls, this prompt effectively precedes an in-app `vP` too.
-- **No Unpublish button** anywhere. Reverting is manual. A fresh `vP`/`vS` directory is not in git yet, so
-  deleting it is enough — until the next blueprint publish or tag, whose `git add -A -- .noory/novel/` sweeps
+  → viewer modal → `POST /api/workspace/git-init`, which stages `.noory/novel/` only. The blueprint publish
+  writes git, so this prompt precedes every `vP`.
+- **No Unpublish button** anywhere. Reverting is manual. A `vP` is committed with its version tag, so it is
+  reverted in git. A fresh `vS` directory is not in git yet, so deleting it is enough — until the next
+  blueprint publish or tag, whose `git add -A -- .noory/novel/` sweeps
   the whole data root (bundles included) into that commit. After that, `git revert`. The blueprint confirm
   dialog says so before the user confirms: a published version can't be deleted in the app (`D-2026-09-28-B`).
   To keep that true, a blueprint version tag — a name of the form `v<MAJOR>.<MINOR>.<PATCH>` — cannot be

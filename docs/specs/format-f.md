@@ -66,6 +66,7 @@ realization design, referencing `vP`). Solera imports `vS` + the `vP` slice it p
   "format_f_version": 1,
   "scope": "project",
   "release": "vP3",
+  "blueprint_version": "v0.4.0",
   "git_sha": "<workspace git sha at publish time>",
   "elements": [
     { "id": "mission",          "kind": "mission",     "hash": "<sha256 of design payload>" },
@@ -104,7 +105,10 @@ realization design, referencing `vP`). Solera imports `vS` + the `vP` slice it p
 - `format_f_version` (int) — the contract format version. +1 on an incompatible change.
 - `scope` — `"project"` | `"service"`.
 - `release` — `vP{N}` or `vS{N}` (N = a monotonically increasing integer).
-- `git_sha` — the workspace git sha at publish time (the anchor of immutability).
+- `blueprint_version` (project only) — the project's blueprint version this `vP` was published as; the
+  blueprint publish tags the commit that contains the bundle with this version, and that tag is the anchor
+  of immutability. `vP{N}` and `blueprint_version` count separately.
+- `git_sha` — the workspace git sha when the bundle was written (the commit before the tagged one for a `vP`).
 - `based_on` (service only) — the referenced project snapshot's `release`.
 - `category` (service, optional) — the parent category ID (omitted if none — a root service).
 - `elements[]` — the elements this release *owns*. `{id, label, kind, hash}` (+ a feature carries `flow: true`).

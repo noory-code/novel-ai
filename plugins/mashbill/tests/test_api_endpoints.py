@@ -949,7 +949,7 @@ def test_list_migrates_v01_sketches_silently(
 
 
 # ---------------------------------------------------------------------------
-# format F publish over HTTP (INT-g, D-2026-06-22-G) — mirrors the MCP tools
+# format F service publish over HTTP (INT-g, D-2026-06-22-G)
 # ---------------------------------------------------------------------------
 
 
@@ -969,18 +969,14 @@ def _add_service_via_store(project_path: str, service_id: str) -> None:
     )
 
 
-def test_format_f_snapshot_endpoint(app_client: tuple[TestClient, str]) -> None:
+def test_format_f_snapshot_endpoint_is_removed(app_client: tuple[TestClient, str]) -> None:
     client, project_path = app_client
     _create(client, project_path, "alpha", "Alpha")
     resp = client.post(
         "/api/projects/alpha/publish/snapshot",
         params={"project_path": project_path},
     )
-    assert resp.status_code == 201, resp.text
-    body = resp.json()
-    assert body["scope"] == "project"
-    assert body["release"] == "vP1"
-    assert body["format_f_version"] == 1
+    assert resp.status_code in (404, 405)
 
 
 def test_format_f_snapshot_unknown_project_is_404(
@@ -997,10 +993,12 @@ def test_format_f_snapshot_unknown_project_is_404(
 def test_format_f_service_publish_endpoint(app_client: tuple[TestClient, str]) -> None:
     client, project_path = app_client
     _create(client, project_path, "alpha", "Alpha")
-    client.post(
-        "/api/projects/alpha/publish/snapshot",
+    published = client.post(
+        "/api/projects/alpha/publish",
         params={"project_path": project_path},
-    )  # vP1 (bootstrap)
+        json={"bump": "patch"},
+    )
+    assert published.status_code == 201
     _add_service_via_store(project_path, "svc1")
     resp = client.post(
         "/api/projects/alpha/services/svc1/publish",
@@ -1033,10 +1031,12 @@ def test_format_f_service_unknown_service_is_404(
 ) -> None:
     client, project_path = app_client
     _create(client, project_path, "alpha", "Alpha")
-    client.post(
-        "/api/projects/alpha/publish/snapshot",
+    published = client.post(
+        "/api/projects/alpha/publish",
         params={"project_path": project_path},
+        json={"bump": "patch"},
     )
+    assert published.status_code == 201
     resp = client.post(
         "/api/projects/alpha/services/ghost/publish",
         params={"project_path": project_path},

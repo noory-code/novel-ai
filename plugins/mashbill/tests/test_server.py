@@ -48,6 +48,34 @@ def test_run_mcp_stdio_drives_only_the_stdio_transport(
     assert ran["arg"] is made
 
 
+@pytest.mark.parametrize("in_app", [False, True])
+def test_run_mcp_stdio_hides_person_only_tools_only_for_in_app_coach(
+    monkeypatch: pytest.MonkeyPatch, in_app: bool
+) -> None:
+    from mashbill.mcp_registration import IN_APP_COACH_ENV
+
+    if in_app:
+        monkeypatch.setenv(IN_APP_COACH_ENV, "1")
+    else:
+        monkeypatch.delenv(IN_APP_COACH_ENV, raising=False)
+    hidden: list[object] = []
+    monkeypatch.setattr(server, "hide_person_only_tools", hidden.append)
+
+    async def _coro() -> None:
+        return None
+
+    monkeypatch.setattr(server.mcp, "run_stdio_async", _coro)
+
+    def fake_run(coro: object) -> None:
+        getattr(coro, "close", lambda: None)()
+
+    monkeypatch.setattr(asyncio, "run", fake_run)
+
+    server.run_mcp_stdio()
+
+    assert hidden == ([server.mcp] if in_app else [])
+
+
 def test_module_main_dispatches_mcp_stdio_flag(monkeypatch: pytest.MonkeyPatch) -> None:
     """B-11 (found by the Chrome-UI smoke): ``python -m mashbill --mcp-stdio``
     (the dev-checkout MCP entry) must run the stdio-only transport, never the

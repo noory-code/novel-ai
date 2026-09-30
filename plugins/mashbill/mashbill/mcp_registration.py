@@ -39,6 +39,7 @@ import tomli_w
 ProviderName = Literal["claude-code", "codex"]
 
 _MASHBILL_SERVER_NAME = "mashbill"
+IN_APP_COACH_ENV = "MASHBILL_IN_APP_COACH"
 
 
 @dataclass(frozen=True)
@@ -251,7 +252,9 @@ def mashbill_config(plugin_root: Path | None = None) -> dict[str, Any]:
     :func:`register_plot`, so the spawned stdio server is the running build.
     """
     root = plugin_root or plot_plugin_root()
-    return {"mcpServers": {_MASHBILL_SERVER_NAME: _plot_entry(root, _spec_for("claude-code"))}}
+    entry = _plot_entry(root, _spec_for("claude-code"))
+    entry["env"][IN_APP_COACH_ENV] = "1"
+    return {"mcpServers": {_MASHBILL_SERVER_NAME: entry}}
 
 
 def codex_mashbill_config(plugin_root: Path | None = None) -> dict[str, Any]:

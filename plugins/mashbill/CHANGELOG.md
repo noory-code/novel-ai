@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.198.0] — 2026-10-01
+
+### Changed
+
+- **Breaking:** a blueprint publish is one all-or-nothing `POST /api/projects/{id}/publish` that writes the `vP` bundle (its manifest now records `blueprint_version`), bumps the version, and commits and tags; `/publish/snapshot` is removed. MCP `publish_project_snapshot_tool` now requires `bump` and runs the same publish; the in-app coach no longer gets the two publish tools (D-2026-10-01-E).
+
 ## [0.197.7] — 2026-10-01
 
 ### Changed

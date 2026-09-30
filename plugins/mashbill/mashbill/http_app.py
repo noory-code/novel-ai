@@ -24,7 +24,6 @@ from mashbill.api_endpoints import (
     file_raw_endpoint,
     folder_post_endpoint,
     format_f_service_publish_endpoint,
-    format_f_snapshot_endpoint,
     health_endpoint,
     master_create_endpoint,
     project_anchor_patch_endpoint,
@@ -249,13 +248,7 @@ def create_http_app(
             project_at_tag_endpoint,
             methods=["GET"],
         ),
-        # format F publish over HTTP (INT-g, D-2026-06-22-G) — vP snapshot +
-        # vS service release, mirroring the MCP tools for the viewer surface.
-        Route(
-            "/api/projects/{project_id}/publish/snapshot",
-            format_f_snapshot_endpoint,
-            methods=["POST"],
-        ),
+        # format F service publish over HTTP (INT-g, D-2026-06-22-G).
         Route(
             "/api/projects/{project_id}/services/{service_id}/publish",
             format_f_service_publish_endpoint,

@@ -237,8 +237,7 @@ def test_write_playbook_records_drafts_only_after_explicit_consent() -> None:
 def test_write_playbook_asks_before_writing_an_accepted_unkept_proposal() -> None:
     assert (
         "accepts or chooses an unkept proposal, do not write it in that reply; "
-        "first ask whether to keep it as a draft"
-        in WRITE_PLAYBOOK
+        "first ask whether to keep it as a draft" in WRITE_PLAYBOOK
     )
 
 
@@ -335,6 +334,7 @@ def test_claude_attaches_own_mashbill_strictly(tmp_path: Path) -> None:
     assert "--mcp-config" in cmd
     cfg = json.loads(Path(cmd[cmd.index("--mcp-config") + 1]).read_text(encoding="utf-8"))
     assert "mashbill" in cfg["mcpServers"]  # the engine's own stdio Novel server
+    assert cfg["mcpServers"]["mashbill"]["env"]["MASHBILL_IN_APP_COACH"] == "1"
     assert cmd[-1] == "hi"  # user message still trails
 
 
@@ -370,6 +370,7 @@ def test_codex_attaches_own_mashbill_tools_noninteractively(tmp_path: Path) -> N
     mcp_args = json.loads(args_value.split("=", 1)[1])
     assert mcp_args[:3] == ["run", "--directory", str(Path(__file__).parents[1])]
     assert mcp_args[-4:] == ["python", "-m", "mashbill", "--mcp-stdio"]
+    assert 'mcp_servers.mashbill.env.MASHBILL_IN_APP_COACH="1"' in overrides
     assert cmd[-1] == "hi"
 
 

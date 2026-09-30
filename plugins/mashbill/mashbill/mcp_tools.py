@@ -12,7 +12,7 @@ from __future__ import annotations
 import time
 import webbrowser
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastmcp import FastMCP
 
@@ -40,6 +40,7 @@ from mashbill.mcp_context_tools import (
 from mashbill.mcp_draft_tools import record_draft, resolve_draft, update_draft
 from mashbill.mcp_git_tools import delete_project_tag, list_project_tags, tag_project
 from mashbill.mcp_project_tools import rename_project_with_draft
+from mashbill.mcp_publish import publish_blueprint_for_person
 from mashbill.migrate import migrate_v01_to_v02
 from mashbill.models import CanvasDoc, CanvasKind
 from mashbill.models_foundation import PROJECT_ANCHOR_ID
@@ -63,7 +64,8 @@ mcp = FastMCP(
         "``entities`` / ``feature``), ``update_node`` to patch one node's content "
         "fields clobber-safely (preferred over ``update_canvas`` for a single-node "
         "edit), and ``tag_project`` to plant a named milestone in the project's "
-        "git repo. Edits are never auto-committed — only the tag tools touch git."
+        "git repo. Edits are never auto-committed — tag tools and blueprint "
+        "publishing touch git."
     ),
 )
 
@@ -123,13 +125,18 @@ def create_project_tool(project_path: str, project_id: str, name: str = "") -> d
 
 
 @mcp.tool()
-def publish_project_snapshot_tool(project_path: str, project_id: str) -> dict[str, Any]:
-    """Freeze the project's shared structure (foundation / actors / entities)
-    into a format F ``vP`` snapshot. Returns the manifest. (D-2026-06-22-D.)"""
-    from mashbill.format_f import publish_project_snapshot
-
+def publish_project_snapshot_tool(
+    project_path: str,
+    project_id: str,
+    bump: Literal["major", "minor", "patch"],
+    message: str | None = None,
+) -> dict[str, Any]:
+    """Bump the blueprint version, commit and tag the data folder, then leave
+    a format F ``vP`` snapshot. Ask the person for the bump and obtain their
+    permission before calling this tool."""
     plot_root = resolve_plot_root(project_path)
-    return publish_project_snapshot(plot_root, project_id)
+    workspace_root = workspace_root_from_plot_root(plot_root)
+    return publish_blueprint_for_person(plot_root, project_id, bump, message, workspace_root)
 
 
 @mcp.tool()
@@ -140,6 +147,15 @@ def publish_service_tool(project_path: str, project_id: str, service_id: str) ->
 
     plot_root = resolve_plot_root(project_path)
     return publish_service(plot_root, project_id, service_id)
+
+
+PERSON_ONLY_TOOLS = ("publish_project_snapshot_tool", "publish_service_tool")
+
+
+def hide_person_only_tools(server: FastMCP) -> None:
+    """Remove publication tools from an in-app coach's local tool catalog."""
+    for name in PERSON_ONLY_TOOLS:
+        server.local_provider.remove_tool(name)
 
 
 @mcp.tool()

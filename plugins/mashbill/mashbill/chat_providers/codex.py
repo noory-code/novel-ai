@@ -22,7 +22,7 @@ from mashbill.chat_providers.base import (
     _SubprocessFactory,
 )
 from mashbill.chat_scope_env import CHAT_SCOPE_ENV
-from mashbill.mcp_registration import codex_mashbill_config
+from mashbill.mcp_registration import IN_APP_COACH_ENV, codex_mashbill_config
 from mashbill.tool_log import TOOL_LOG_ENV
 
 # Reasoning levels codex accepts via `-c model_reasoning_effort=<level>`. The
@@ -117,6 +117,8 @@ class CodexProvider(_SubprocessChatProvider):
             f"mcp_servers.mashbill.command={json.dumps(mcp_entry['command'])}",
             "-c",
             f"mcp_servers.mashbill.args={json.dumps(mcp_entry['args'])}",
+            "-c",
+            f"mcp_servers.mashbill.env.{IN_APP_COACH_ENV}={json.dumps('1')}",
             *self._tool_log_args(),
             *self._chat_scope_args(),
             *self._model_args(),
