@@ -29,8 +29,9 @@ from mashbill.tool_log import TOOL_LOG_ENV
 # Reasoning levels codex accepts via `-c model_reasoning_effort=<level>`. The
 # chat model selector encodes the user's pick as "<slug>:<effort>"
 # (D-2026-06-22-C); this set lets the provider split a known effort suffix back
-# out from the slug. Mirrors the labels in ``chat_models._EFFORT_LABEL``.
-_CODEX_EFFORTS = frozenset({"low", "medium", "high", "xhigh"})
+# out from the slug.
+# Mirrors the effort levels the Codex model catalogue reports (supported_reasoning_levels).
+_CODEX_EFFORTS = frozenset({"low", "medium", "high", "xhigh", "max", "ultra"})
 
 
 class CodexProvider(_SubprocessChatProvider):

@@ -59,6 +59,23 @@ def test_codex_composite_model_splits_into_model_and_effort(tmp_path: Path) -> N
     assert cmd[-1] == "hi"
 
 
+def test_codex_extended_efforts_split_into_model_and_effort(tmp_path: Path) -> None:
+    p = CodexProvider(workspace_root=tmp_path)
+
+    assert p._model_args_for("gpt-5.6-sol:max") == [
+        "--model",
+        "gpt-5.6-sol",
+        "-c",
+        "model_reasoning_effort=max",
+    ]
+    assert p._model_args_for("gpt-5.6-sol:ultra") == [
+        "--model",
+        "gpt-5.6-sol",
+        "-c",
+        "model_reasoning_effort=ultra",
+    ]
+
+
 def test_codex_bare_model_has_no_effort_flag(tmp_path: Path) -> None:
     # A plain slug (no ":effort") stays a bare --model with no -c override.
     p = CodexProvider(workspace_root=tmp_path)

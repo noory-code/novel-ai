@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.18] — 2026-09-30
+
+### Fixed
+
+- Codex reasoning effort `max` and `ultra` are passed as `model_reasoning_effort` instead of being glued onto the model name.
+
 ## [0.196.17] — 2026-09-30
 
 ### Fixed
