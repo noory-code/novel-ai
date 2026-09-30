@@ -22,6 +22,11 @@
   Actors=`actor`, Services=`category/service`, and Entities=`entity`; Feature canvases are excluded because they have
   no project anchor. Existing anchor and parent edges are preserved, so nested nodes are not re-rooted and repeated
   saves are idempotent. `create_node` remains bare; this is write-time normalization, never read-time repair.
+- **Blank-canvas start (`D-2026-07-04-P`).** `create_project` writes the four primary canvases empty: no seed
+  nodes and no seed edges, only the project anchor. An auto-created feature detail canvas holds only its root
+  feature node. The old content minimums (Foundation ≥1 mission / ≥1 identity, Actors ≥2 actors, Feature ≥1
+  `actor_ref`) are gone with the seeds, so **any partial state is saveable** — deleting the last node of a kind
+  must never make the write fail. The coach leads the design to completion, not the schema.
 
 ---
 
@@ -29,8 +34,10 @@
 
 - **Nodes:** `project` (anchor) · `mission` · `core_value` · `identity`. No essence node (emergent).
 - **Drill:** none.
-- **Edges:** user-drawn except for the common save-time orphan→anchor normalization above. There is still **no edge
-  emission inside node creation**; the stored spoke is added only when the complete canvas is written.
+- **Edges:** drawn by the user, or by the coach after the user confirms; the coach gives every pillar its anchor
+  line in the same turn (`D-2026-07-05-C`). The common save-time orphan→anchor normalization above adds any spoke
+  still missing. There is still **no edge emission inside node creation**; the stored spoke is added only when the
+  complete canvas is written.
 - **Inspector:** selecting a node fills the sidebar panel with its inspector, covering the palette; deselecting
   returns the palette (`D-2026-06-21-Q`). Sections = header (kind·delete·close) → label → per-kind typed form. There
   is no width toggle; the user resizes the panel. (Typed-text kinds hide the legacy details-MD section.)
@@ -47,10 +54,19 @@
   at render time, not stored; grey `↳ inherited from {parent}` caption). An **abstract root** (actor with no
   actor parent and actor children ≥1) shows body only.
 - **2 edge kinds:** hierarchy (inheritance, valueless quiet edge) + value exchange (a labeled `flow` edge from giver to
-  receiver). Connecting two actors by hand asks what the line means — "소속" (belongs to: child→family inheritance) or
-  "가치 교환" (value exchange: who gives and what moves) — and Cancel creates nothing (`D-2026-07-05-D`). Value-exchange
-  lines render dashed in amber and rank below structure lines in auto-layout (`D-2026-07-04-I`, `D-2026-07-05-A`).
-  [`../concepts/canvases.md`](../concepts/canvases.md) Actors.
+  receiver). [`../concepts/canvases.md`](../concepts/canvases.md) Actors.
+- **Value-exchange visual convention:** dashed, in its own amber colour with a matching arrowhead
+  (`D-2026-07-04-I`, `D-2026-07-05-A`), so it reads apart from the slate solid structure lines (anchor spokes,
+  hierarchy). Value-exchange lines rank below structure lines in auto-layout (`D-2026-07-04-I`). When two or more
+  lines join the same node pair — a two-way exchange, for example — they separate into symmetric arcs
+  (`D-2026-07-05-B`, [`edges.md`](./edges.md) Render · edit), so overlapping dashes never fill each other's gaps and
+  read as one solid line.
+- **Hand connect (`D-2026-07-05-D`):** a node-to-node line drawn by hand on the Actors canvas first asks
+  "이 선은 무엇을 뜻하나요?" (what does this line mean?): "소속" (belongs to — groups the child under a family as a
+  child→family inheritance line) or "가치 교환" (value exchange — asks who gives and what moves, then stores a labeled
+  giver→receiver `flow`). Cancel creates nothing. The prompts use domain words, not technical terms. A line to or
+  from the anchor has one meaning and is created at once. Handle storage follows [`edges.md`](./edges.md) payload
+  fields.
 - **Root safety:** a top-level actor family with no actor parent receives the common save-time anchor spoke; an actor
   with an `inheritance` parent remains nested and receives no spoke.
 - **Drill:** none.
@@ -59,8 +75,13 @@
 
 ## Services (overview) — Planning
 
-- **Nodes:** `category` (visual grouping, low-friction/dumb) · `service` (5-field inspector) · `feature` (capability).
-  Hierarchy category → service → feature. Services are **optional** under a category (not forced).
+- **Nodes:** `category` (optional grouping, low-friction/dumb) · `service` (5-field inspector) · `feature` (capability).
+  Hierarchy category → service → feature. Services are **optional** under a category (not forced). All three kinds
+  show their kind tag on the node face and have their own colour — category violet, service sky, feature green
+  (`D-2026-07-05-G`, `D-2026-07-05-H`).
+- **Participants per layer (`D-2026-07-05-E`):** each layer can name who takes part (`ref_actor_ids`), narrowing
+  category ⊇ service ⊇ feature. A child's participant picker offers only its parent's participants. The narrowing
+  is **soft**: when the parent names no one, the picker offers the whole actor roster, and no validator enforces it.
 - **Drill:** **Selecting a service = 5-field inspector, no drill. Clicking a feature = drill into the Feature canvas**
   (the sole drill target). [The old "single-click on service = drill" is retired.]
 - **Edges:** user-drawn/coach-confirmed hierarchy plus the common save-time orphan normalization. **No first-class

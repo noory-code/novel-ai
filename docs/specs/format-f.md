@@ -47,7 +47,7 @@ realization design, referencing `vP`). Solera imports `vS` + the `vP` slice it p
 │       └── entities/{slug}.md    # concept map (one-line "what it holds")
 │
 └── {service-slug}/vS{N}/
-    ├── manifest.json             # based_on: _project/vP{N}
+    ├── manifest.json             # based_on: vP{N} (the snapshot at _project/vP{N}/)
     └── design/
         ├── service.md            # 5 cells (value definition)
         └── features/{slug}.md    # proposed + UX flow (action → branch → result)
@@ -69,7 +69,7 @@ realization design, referencing `vP`). Solera imports `vS` + the `vP` slice it p
   "blueprint_version": "v0.4.0",
   "git_sha": "<workspace git sha at publish time>",
   "elements": [
-    { "id": "mission",          "kind": "mission",     "hash": "<sha256 of design payload>" },
+    { "id": "mission",          "kind": "mission",     "hash": "<first 16 hex of sha256(design payload)>" },
     { "id": "core_value/trust", "kind": "core_value",  "hash": "…" },
     { "id": "identity/clear",   "kind": "identity",     "hash": "…" },
     { "id": "actor/user",       "kind": "actor",        "hash": "…" },
@@ -86,7 +86,7 @@ realization design, referencing `vP`). Solera imports `vS` + the `vP` slice it p
   "scope": "service",
   "service": "service/auth",
   "release": "vS2",
-  "based_on": "_project/vP3",
+  "based_on": "vP3",
   "git_sha": "…",
   "category": "category/identity",
   "elements": [
@@ -109,14 +109,15 @@ realization design, referencing `vP`). Solera imports `vS` + the `vP` slice it p
   blueprint publish tags the commit that contains the bundle with this version, and that tag is the anchor
   of immutability. `vP{N}` and `blueprint_version` count separately.
 - `git_sha` — the workspace git sha when the bundle was written (the commit before the tagged one for a `vP`).
-- `based_on` (service only) — the referenced project snapshot's `release`.
+- `based_on` (service only) — the referenced project snapshot's `release`, a bare `vP{N}` (e.g. `vP3`). The
+  snapshot itself sits at `_project/vP{N}/`.
 - `category` (service, optional) — the parent category ID (omitted if none — a root service).
 - `elements[]` — the elements this release *owns*. `{id, label, kind, hash}` (+ a feature carries `flow: true`).
   `label` is the node's name at publish time. The id is a slug frozen at first publish and can be
   opaque (a non-ASCII label slugs to `x`, `x-2`, …), so readers match ids to names through `label`.
   Wherever a rendered design file cites another element it writes the name followed by the id,
   e.g. 본질 (`core_value/x`).
-  `hash` = the sha256 of that element's design payload (the ID-diff input).
+  `hash` = the first 16 hex characters of the sha256 of that element's design payload (the ID-diff input).
 - `refs` (service only) — the shared-element IDs inside the `based_on` vP that this service *references* (not copied).
   `anchors.mission` **always** points to that project's single mission (`"mission"`) — the mission is
   the project's essence and every service stands on it (VISION), so when the mission changes (`vP+1`) that change
@@ -138,7 +139,7 @@ id: feature/login
 kind: feature
 ---
 # Login
-**What it lets you do:** a user opens a session with credentials.
+**무엇을 할 수 있나:** a user opens a session with credentials.
 
 ## UX 흐름 (action 고도)
 
@@ -156,8 +157,8 @@ kind: feature
 - lock after five failures (걸린 단계: 2)
 ```
 
-The rendered section headings are Korean (`## UX 흐름 (action 고도)`, `### 흐름`, `### 규칙`,
-`### 참고 (ambient)`); node labels are the user's own text. The flow body follows these rules:
+The rendered labels and section headings are Korean (`**무엇을 할 수 있나:**`, `## UX 흐름 (action 고도)`, `참여자:`,
+`### 흐름`, `### 규칙`, `### 참고 (ambient)`); node labels are the user's own text. The flow body follows these rules:
 
 - **`### 흐름` keeps the drawn order.** Every `step` and `decision` node gets a number in the
   first-visit order of a depth-first walk along the canvas edges, starting from the edges that
@@ -199,12 +200,13 @@ The rendered section headings are Korean (`## UX 흐름 (action 고도)`, `### �
 
 ## 6. Solera-side contract (read) — summary
 
-- **import** = copy `vS` + its `based_on` vP slice into `solera/specs/{label}/` (immutable→immutable,
-  with git-sha identity verification). `story.md` carries `source: specs/{label}` (points only inside its own folder).
+- **import** = copy `vS` + its `based_on` vP slice into `solera/specs/{label}/` (immutable→immutable). Solera
+  checks `format_f_version` and that the `based_on` snapshot exists at `_project/{based_on}/` beside the service
+  bundle; it does not verify `git_sha`. `story.md` carries `source: specs/{label}` (points only inside its own folder).
 - **link** = a work item's `realizes: feature/login`, the result commit `[realizes feature/login@vS2]`. Bidirectional
   tracing by ID matching, no import.
 - **reverse direction (feedback·retrospective)** = `feedback/{id}.md` (`about: feature/login@vS2`) · `RETROSPECTIVE.md`
-  (ID tags). Reflecting into Novel goes *through the human as the bridge* (no automatic code import). Detail = 04-pipeline.
+  (ID tags). Reflecting into Novel goes *through the human as the bridge* (no automatic code import).
 
 ---
 

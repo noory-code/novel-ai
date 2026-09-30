@@ -25,7 +25,7 @@ written (the old SPEC also stated "Foundation/Actors only full-spec, the rest la
   behavior, Feature canvas body (drill·layout re-description), Entities on-canvas interaction, anchor click→inspector (TBD).
 - These 🚧 get finalized via TDD at the implementation stage (plans/). Here we mark the *model* and the *known unknowns*.
 
-## Code-near goes in noory-ai (not duplicated here)
+## Code-near goes in the Mashbill package (not duplicated here)
 
 Pure code mechanisms are canonical in [`plugins/mashbill/docs/`](../../plugins/mashbill/docs/) — referenced only here:
 - Auto-layout algorithm details (`AUTO_LAYOUT.md`), cursor SSOT (`CURSOR.md`), publish MD format

@@ -9,8 +9,9 @@
 An edge is **governed by its meaning (`relation` + payload), not by who drew it** (`D-2026-06-17-J`,
 retiring the old "every edge is by the user / no auto-emission" [D-2026-05-04-A]). The AI can also propose·draw edges
 (especially the AI-maintained Entities canvas). A human can edit·delete at any time. **Forbidden = a meaningless·silently-uneditable
-edge** (the old v0.13.2 anchor→child auto-edge). A canvas may be user-draw-only by its own spec
-(Foundation/Actors/Services currently) — a per-canvas choice.
+edge** (the old v0.13.2 anchor→child auto-edge). A canvas may narrow who draws which edges by its own spec — a
+per-canvas choice ([`canvas-behavior.md`](./canvas-behavior.md)). On every primary canvas the engine also adds, at
+save time, one anchor spoke to a root node that has neither an anchor edge nor a parent edge (`D-2026-07-21-C`).
 
 ## `relation` classification (3 kinds, SSOT)
 
@@ -37,7 +38,10 @@ authoritative; flipping the direction reassigns):
 - `value_form` — array (VO). The `valueFlowOn` toggle colors per value_form. No editor (follow-up).
 - `label` — user copy (edited in the edge modal).
 - `style` — default solid; the user can set `dashed`. (injection = purple animated dash.)
-- `sourceHandle`/`targetHandle` — per-side type (t/l=target-only, r/b=source-only); null on flip (RF re-routes).
+- `sourceHandle`/`targetHandle` — per-side type (t/l=target-only, r/b=source-only). A node-to-node line stores none,
+  whether drawn by hand or by the engine; the render attaches each end to the side facing the other node
+  (`D-2026-07-04-O`, `D-2026-07-05-D`). An anchor spoke pins the side for its target kind. A self-loop keeps the
+  handles it was dragged from. null on flip (RF re-routes).
 
 ## Hierarchy derivation (from directional edges only)
 
@@ -48,6 +52,8 @@ Multiple parents can be expressed; the ancestor walk picks the lexicographically
 ## Render · edit
 
 - A non-self-loop edge = **floating** (attaches to the boundary point toward the opposite node, ignoring handles). A self-loop = curve.
+- Two or more non-self-loop edges between the same node pair (any relation, either direction) render as symmetric
+  arcs instead of overlapping (`D-2026-07-05-B`). This applies on every canvas.
 - A selected edge = accent 3px. `interactionWidth` widened.
 - **Edit:** double-click → edge modal (label·value-form·dashed). Right-click → context menu (toggle direction·
   **flip** [swap source↔target, preserving directed/dashed/label]·delete). flip works on every canvas.
