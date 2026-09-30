@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.197.5] — 2026-10-01
+
+### Changed
+
+- The coach asks in the order the design flows draw (D-2026-10-01-C): Foundation settles mission, then core values, then identity; Services asks why a service is needed first and proposes features after the service is confirmed; a feature flow walks the main path, then branches, then the end outcome.
+
 ## [0.197.4] — 2026-10-01
 
 ### Changed

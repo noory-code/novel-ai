@@ -130,14 +130,14 @@ def test_canvas_system_prompt_paces_the_whole_canvas() -> None:
         assert "good enough" in p, scope
 
 
-def test_services_framing_pulls_features_forward() -> None:
-    """Same sim finding: the services interview (five slots, then features) is so
-    heavy that features never arrive. The framing must pull feature proposals
-    forward — as soon as the service's problem/value stand, not after all five
-    slots are filled."""
+def test_services_framing_proposes_features_after_service_confirmation() -> None:
+    """W-00000336: finish and confirm the service draft before proposing its
+    feature candidates; only confirmed features are registered."""
     f = build_framing_preamble("services").lower()
-    assert "as soon as" in f
-    assert "do not wait for every service field" in f
+    assert "once the person confirms the service draft" in f
+    assert "propose 3–5 feature candidates" in f
+    assert "register only confirmed features" in f
+    assert "propose features early" not in f
 
 
 def test_services_framing_surfaces_entities_as_byproduct() -> None:
@@ -321,24 +321,16 @@ def test_services_framing_registers_entities_with_each_feature_batch() -> None:
     assert "zero entities is unfinished" in f
 
 
-def test_foundation_framing_lands_identity_mid_phase() -> None:
-    """Round-3 regression (2026-07-03): identity 0/12 — iteration ⑨'s
-    hunt-values-until-dry ate the foundation budget and identity never came
-    (round 2 was 7/8). Depth must not displace completeness: identity lands
-    MID-phase (after 2-3 values stand, draft → quick confirm → back to value
-    hunting); a session ending with identity empty is a failed session.
-
-    (Merged from a same-named twin that shadowed this one — sixteenth sim
-    iteration housekeeping: a duplicate ``def`` means the first body never
-    runs, so its assertions live here now. Nineteenth iteration: the trigger
-    lost its number — "two or three" anchored the coach to stop at 2-3, so
-    the checkpoint is now "once the first values stand".)"""
+def test_foundation_framing_follows_mission_values_identity_order() -> None:
+    """W-00000336: the Foundation interview follows the design flow while
+    allowing the person to revisit earlier decisions."""
     f = build_framing_preamble("foundation").lower()
-    assert "start identity before the end" in f
-    assert "failed session" in f
-    assert "once the first values are confirmed" in f
-    assert "then continue asking about values" in f
-    assert "identity still empty is a failed" in f
+    assert "settle the mission first" in f
+    assert "then work through the core values" in f
+    assert "the core values are sufficient for now" in f
+    assert "draft the identity from the mission and confirmed core values" in f
+    assert "return to any earlier item and revise it at any time" in f
+    assert "start identity before the end" not in f
 
 
 def test_foundation_framing_returns_to_a_declined_mission() -> None:
@@ -350,24 +342,19 @@ def test_foundation_framing_returns_to_a_declined_mission() -> None:
 
     A mission is what every later canvas points at, so parking it is worse than
     parking anything else. The framing must send the coach back to the mission
-    right after folding in the objection, and must name an empty mission at the
-    end as a failed session, the way it already does for identity."""
+    right after folding in the objection and preserve mission-first order."""
     f = build_framing_preamble("foundation").lower()
     assert "re-offer the mission" in f
     assert "never park it" in f
-    assert "mission still empty is a failed session" in f
+    assert "settle the mission first" in f
 
 
-def test_foundation_framing_resumes_value_hunt_after_identity() -> None:
-    """Iteration 17 (2026-07-03): values stalled at 1-3 registered in all 11
-    runs of the day, across personas AND founder model families — the
-    mid-phase identity checkpoint ("once two or three values stand") reads
-    as a stopping point, and the 'then return to hunting' never fires. The
-    framing must name the checkpoint as a pit stop: registering the identity
-    does NOT end the value hunt."""
+def test_foundation_framing_waits_for_value_sufficiency_before_identity() -> None:
+    """W-00000336: identity follows the person's sufficiency judgment instead
+    of interrupting core-value discovery and then resuming it."""
     f = build_framing_preamble("foundation").lower()
-    assert "confirming identity does not finish the value work" in f
-    assert "continue asking about values" in f
+    assert "the core values are sufficient for now" in f
+    assert "confirming identity does not finish the value work" not in f
 
 
 def test_write_playbook_demands_natural_korean() -> None:

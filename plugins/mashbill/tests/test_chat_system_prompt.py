@@ -111,7 +111,12 @@ def test_services_framing_uses_five_slots_and_jtbd() -> None:
     f = build_framing_preamble("services").lower()
     assert "planning" in f
     assert "five" in f or "5" in f  # the 5 inspector slots
-    assert "without it" in f  # JTBD: ask what's frustrating without it, not 'why'
+    questions = (
+        "(1) what frustrates without it (why it is needed); (2) what improves; "
+        "(3) who takes part, chosen from the existing human actors; (4) which core "
+        "values are non-negotiable; and (5) which identity applies"
+    )
+    assert questions in f
     assert "helps a person reach that service outcome" in f  # feature/service boundary
 
 
@@ -120,8 +125,10 @@ def test_feature_framing_is_happy_path_first_with_altitude_guard() -> None:
     assert "execution" in f
     assert "main successful sequence" in f
     assert "build agent" in f  # implementation belongs to the build agent
-    # A branch must be added when the relevant step is discussed, not at the end.
-    assert "add the decision and its branches there" in f
+    assert "from start to finish, one step at a time" in f
+    assert "then ask where outcomes differ" in f
+    assert "finally ask what remains for the person when the flow ends" in f
+    assert "do not postpone branches" not in f
     assert "unfinished" in f
 
 

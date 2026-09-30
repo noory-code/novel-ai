@@ -39,6 +39,39 @@
 
 ## Log
 
+### D-2026-10-01-C — The coach asks in the order the design flows draw
+
+- **What:** the per-canvas coach instructions follow the design flows. On the
+  Foundation canvas: mission, then core values, and the identity is drafted
+  from the mission and confirmed core values once the person says the values
+  are enough for now; the person may return to an earlier item at any time.
+  On the Services canvas the five questions go: why it is needed, what
+  improves, who takes part, which core values are non-negotiable, which
+  identity applies; feature candidates come after the person confirms the
+  service. On a feature canvas: the main successful path from start to end,
+  then where outcomes differ, then what the person is left with when the flow
+  ends. Removed: "start identity before the end", "a session that ends with
+  identity (or mission) empty failed", "propose features early", and "do not
+  postpone branches".
+- **Why:** identity is derived from the mission and core values, and a core
+  value wins a conflict with an identity, so values come first. Asking why a
+  service is needed first fits "a service owns one outcome people seek", and
+  features wait for the confirmed service so they do not drift from it.
+  Walking the main path first keeps the person's train of thought, and the end
+  outcome tells when a flow is done — the instructions never asked it. The
+  removed rules came from simulation tuning (running out of turns), not from
+  a real person's needs.
+- **Alternatives:** redraw the design flows to match the instructions — not
+  chosen: the flows are the drawn intent and the instructions' order had no
+  stronger evidence. Decide per canvas — not needed; the same reasoning holds
+  for all three.
+- **Approval:** the user asked Claude to judge which is better rather than
+  pick (2026-10-01, "뭐가 더 나은가요? 내가 결정해서 그걸 고르면 안됩니다");
+  Claude judged "follow the design flows" (novel-workspace W-00000336).
+- **Spec impact:** none (instruction wording).
+- **Principles:** SSOT (the design flow is the behaviour source); Honesty (the
+  earlier order's simulation origin is stated).
+
 ### D-2026-10-01-B — The coach's "ask before writing" stays in its instructions, not in code
 
 - **What:** the rule that the coach writes a proposal to a canvas only after
