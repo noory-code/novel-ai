@@ -108,7 +108,9 @@ canvas tab (`{feature/service name}` label). Not a modal.
 - **Authorship:** two paths (user decision 2026-09-29). (1) The AI synthesizes·proposes them as a by-product of
   feature/service design → a human confirms. (2) The user drags an `entity` from the canvas toolbar and names it,
   so the design can be finished without AI like the other canvases. The coach's dedup check applies to path (1);
-  on path (2) the user is responsible for not creating a second entity for the same thing.
+  on path (2) the user is responsible for not creating a second entity for the same thing. When two entities already
+  on the canvas look like the same object, the coach points to both and asks whether to merge them; the user decides
+  (user decision 2026-09-30).
 - **Form:** concept map (name + one-line `"무엇을 담나"` (what does it hold) + rough relationship). Not a physical ERD.
 - **Behavior:** strong dedup (identity matching, ask when ambiguous, quiet merge·no duplicates❌) · back-reference (read-only) ·
   proposed during chat (no auto-scan❌) · lean inspector. Integrity = [`../concepts/ai-collaboration.md`](../concepts/ai-collaboration.md) §3.
