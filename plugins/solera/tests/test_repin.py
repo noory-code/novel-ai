@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from solera.formats import WorkItem
 from solera.intake import ImportedRelease
 from solera.planning import create_item
 from solera.repin import apply_repin, propose_repin, reopen_items
@@ -318,3 +319,52 @@ def test_reopen_invalidates_done_ancestors(tmp_path: Path) -> None:
     reopen_items(ws, [leaf.id])
     assert ws.load_item(leaf.id).status == "todo"
     assert ws.load_item(story.id).status != "done"
+
+
+def test_reopen_validates_every_target_before_writing(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    story = create_item(ws, "story", "S")
+    leaf = create_item(ws, "action", "A", gate="true", parent=story.id)
+    ws.write_item(ws.load_item(leaf.id).model_copy(update={"status": "done"}))
+    ws.write_item(ws.load_item(story.id).model_copy(update={"status": "done"}))
+    before = {path: path.read_bytes() for path in ws.items_dir.iterdir()}
+
+    with pytest.raises(FileNotFoundError):
+        reopen_items(ws, [leaf.id, "ACT-404"])
+
+    assert {path: path.read_bytes() for path in ws.items_dir.iterdir()} == before
+
+
+def test_reopen_writes_ancestors_before_leaf_and_recovers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ws = _ws(tmp_path)
+    story = create_item(ws, "story", "S")
+    leaf = create_item(ws, "action", "A", gate="true", parent=story.id)
+    ws.write_item(ws.load_item(leaf.id).model_copy(update={"status": "done"}))
+    ws.write_item(ws.load_item(story.id).model_copy(update={"status": "done"}))
+    original_write_item = ws.write_item
+    calls = 0
+
+    def fail_second_write(item: WorkItem) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise OSError("interrupted write")
+        original_write_item(item)
+
+    monkeypatch.setattr(ws, "write_item", fail_second_write)
+    with pytest.raises(OSError, match="interrupted write"):
+        reopen_items(ws, [leaf.id])
+
+    assert ws.load_item(story.id).status == "todo"
+    assert ws.load_item(leaf.id).status == "done"
+
+    monkeypatch.setattr(ws, "write_item", original_write_item)
+    reopen_items(ws, [leaf.id])
+    assert ws.load_item(story.id).status == "todo"
+    assert ws.load_item(leaf.id).status == "todo"
+
+    settled = {path: path.read_bytes() for path in ws.items_dir.iterdir()}
+    reopen_items(ws, [leaf.id])
+    assert {path: path.read_bytes() for path in ws.items_dir.iterdir()} == settled

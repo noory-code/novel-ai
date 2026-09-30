@@ -138,6 +138,66 @@ def invalidate_done_ancestors(ws: Workspace, item_id: str) -> None:
             break
 
 
+def reopen_items(ws: Workspace, item_ids: list[str]) -> None:
+    """Reopen items without leaving a done ancestor above an open descendant.
+
+    Every target and its ancestor graph is loaded and validated before writes
+    begin. The complete final state is then calculated in memory and written in
+    root-to-leaf order. A retry after an interrupted write therefore converges
+    on the same state without ever falsely claiming that open work is done.
+    """
+    if not item_ids:
+        return
+
+    items = {item_id: ws.load_item(item_id) for item_id in ws.list_items()}
+    targets = set(item_ids)
+    for item_id in targets:
+        if item_id not in items:
+            ws.load_item(item_id)
+
+    parents_of: dict[str, list[str]] = {}
+    for parent_id, item in items.items():
+        for child_id in item.children:
+            parents_of.setdefault(child_id, []).append(parent_id)
+
+    ancestors: set[str] = set()
+    depths: dict[str, int] = {}
+    for target_id in targets:
+        chain = [target_id]
+        current = target_id
+        while current in parents_of:
+            parent_ids = parents_of[current]
+            if len(parent_ids) != 1:
+                joined = ", ".join(sorted(parent_ids))
+                raise ValueError(f"{current} has multiple parents: {joined}")
+            parent_id = parent_ids[0]
+            if parent_id in chain:
+                raise ValueError(f"cycle detected through {parent_id}")
+            chain.append(parent_id)
+            ancestors.add(parent_id)
+            current = parent_id
+        for depth, item_id in enumerate(reversed(chain)):
+            depths[item_id] = max(depths.get(item_id, 0), depth)
+
+    for ancestor_id in ancestors:
+        for child_id in items[ancestor_id].children:
+            if child_id not in items:
+                ws.load_item(child_id)
+
+    final: dict[str, WorkItem] = {}
+    for item_id in targets:
+        item = items[item_id]
+        if item.status != "todo":
+            final[item_id] = item.model_copy(update={"status": "todo"})
+    for item_id in ancestors:
+        item = items[item_id]
+        if item.status == "done":
+            final[item_id] = item.model_copy(update={"status": "todo"})
+
+    for item_id in sorted(final, key=lambda candidate: (depths[candidate], candidate)):
+        ws.write_item(final[item_id])
+
+
 def complete(
     ws: Workspace,
     item_id: str,

@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.0.1] — 2026-10-01
+
+### Fixed
+
+- Work items, progress, retrospectives and feedback are written atomically (temp file + replace). Reopening validates every target and ancestor before writing, writes ancestors before leaves, and never leaves a done container over a reopened child; `audit` reports `rollup-broken` and `rollup-pending`.
+
 ## [8.0.0] — 2026-10-01
 
 ### Changed

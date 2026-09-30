@@ -10,7 +10,9 @@ that id.
 
 from __future__ import annotations
 
+import os
 import re
+import tempfile
 from pathlib import Path
 
 from .errors import FormatError
@@ -30,6 +32,23 @@ from .formats import (
 )
 
 _PATH_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+
+
+def _atomic_write_text(path: Path, text: str) -> None:
+    """Write text beside its destination, then atomically replace the file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+    )
+    os.close(descriptor)
+    temporary_path = Path(temporary_name)
+    try:
+        temporary_path.write_text(text)
+        os.replace(temporary_path, path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
 
 
 def validate_path_name(name: str) -> str:
@@ -111,20 +130,13 @@ class Workspace:
     # --- writes ------------------------------------------------------------
 
     def write_progress(self, progress: Progress) -> None:
-        self.root.mkdir(parents=True, exist_ok=True)
-        self.progress_path.write_text(dump_progress(progress))
+        _atomic_write_text(self.progress_path, dump_progress(progress))
 
     def write_item(self, item: WorkItem) -> None:
-        path = self.item_path(item.id)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(dump_workitem(item))
+        _atomic_write_text(self.item_path(item.id), dump_workitem(item))
 
     def write_retrospective(self, retro: Retrospective) -> None:
-        path = self.retrospective_path(retro.id)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(dump_retrospective(retro))
+        _atomic_write_text(self.retrospective_path(retro.id), dump_retrospective(retro))
 
     def write_feedback(self, feedback: Feedback) -> None:
-        path = self.feedback_path(feedback.id)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(dump_feedback(feedback))
+        _atomic_write_text(self.feedback_path(feedback.id), dump_feedback(feedback))

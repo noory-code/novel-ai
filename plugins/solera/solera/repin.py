@@ -24,7 +24,7 @@ import re
 from typing import Any
 
 from solera.intake import ImportedRelease, diff_releases
-from solera.supervisor import invalidate_done_ancestors
+from solera.supervisor import reopen_items as reopen_work_items
 from solera.workspace import Workspace
 
 
@@ -232,11 +232,5 @@ def _element_ids(elements: list[dict[str, Any]]) -> set[str]:
 
 
 def reopen_items(ws: Workspace, item_ids: list[str]) -> None:
-    """Reopen the given items (status → ``todo``) after a human approves a
-    proposal, then invalidate any ancestor whose ``done`` rollup the reopen
-    broke (a container is ``done`` only when all children are done). Idempotent."""
-    for item_id in item_ids:
-        item = ws.load_item(item_id)
-        if item.status != "todo":
-            ws.write_item(item.model_copy(update={"status": "todo"}))
-        invalidate_done_ancestors(ws, item_id)
+    """Reopen approved items and invalidate their completed ancestors."""
+    reopen_work_items(ws, item_ids)

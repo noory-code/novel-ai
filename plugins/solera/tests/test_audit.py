@@ -60,3 +60,25 @@ def test_flags_malformed_item(tmp_path: Path) -> None:
     ws.items_dir.mkdir(parents=True)
     ws.item_path("STORY-001").write_text("garbage, no frontmatter\n")
     assert any("STORY-001" in p.detail for p in audit_workspace(ws))
+
+
+def test_flags_done_container_with_open_child(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    story = create_item(ws, "story", "box")
+    create_item(ws, "action", "step", gate="true", parent=story.id)
+    ws.write_item(ws.load_item(story.id).model_copy(update={"status": "done"}))
+
+    problems = audit_workspace(ws)
+
+    assert any(p.kind == "rollup-broken" and story.id in p.detail for p in problems)
+
+
+def test_flags_open_container_with_all_children_done(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    story = create_item(ws, "story", "box")
+    leaf = create_item(ws, "action", "step", gate="true", parent=story.id)
+    ws.write_item(ws.load_item(leaf.id).model_copy(update={"status": "done"}))
+
+    problems = audit_workspace(ws)
+
+    assert any(p.kind == "rollup-pending" and story.id in p.detail for p in problems)

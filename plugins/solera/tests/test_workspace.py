@@ -78,3 +78,37 @@ def test_load_malformed_item_raises(tmp_path: Path) -> None:
     ws.item_path("ACT-001").write_text("garbage, no frontmatter\n")
     with pytest.raises(FormatError):
         ws.load_item("ACT-001")
+
+
+def test_interrupted_item_write_preserves_original(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ws = _ws(tmp_path)
+    ws.write_item(LEAF)
+    path = ws.item_path(LEAF.id)
+    original = path.read_text()
+    original_write_text = Path.write_text
+
+    def interrupt_after_partial_write(
+        target: Path,
+        data: str,
+        encoding: str | None = None,
+        errors: str | None = None,
+        newline: str | None = None,
+    ) -> int:
+        original_write_text(
+            target,
+            data[:8],
+            encoding=encoding,
+            errors=errors,
+            newline=newline,
+        )
+        raise OSError("interrupted write")
+
+    monkeypatch.setattr(Path, "write_text", interrupt_after_partial_write)
+
+    with pytest.raises(OSError, match="interrupted write"):
+        ws.write_item(LEAF.model_copy(update={"status": "done"}))
+
+    assert path.read_text() == original
+    assert list(ws.items_dir.iterdir()) == [path]

@@ -2,10 +2,11 @@
 
 Per-file parsing fails fast on its own. This audit checks the relations between
 items: every referenced child has a parseable file, no child has two parents,
-there are no cycles, and the ``progress.md`` pointer points at something that
-exists. It collects problems and returns them rather than raising, so a caller
-can report every issue at once. (An unreferenced item is not a problem — it is
-simply a root of the forest.)
+there are no cycles, container rollups match their children, and the
+``progress.md`` pointer points at something that exists. It collects problems
+and returns them rather than raising, so a caller can report every issue at
+once. (An unreferenced item is not a problem — it is simply a root of the
+forest.)
 """
 
 from __future__ import annotations
@@ -54,6 +55,7 @@ def audit_workspace(ws: Workspace) -> list[Problem]:
                 parent_of[child] = item_id
 
     problems.extend(_find_cycles(parsed, parent_of))
+    problems.extend(_audit_rollups(parsed))
     problems.extend(_audit_pointer(ws, parsed))
     return problems
 
@@ -72,6 +74,31 @@ def _find_cycles(parsed: dict[str, WorkItem], parent_of: dict[str, str]) -> list
                 break
             seen.add(current)
             current = parent_of.get(current)
+    return out
+
+
+def _audit_rollups(parsed: dict[str, WorkItem]) -> list[Problem]:
+    out: list[Problem] = []
+    for item_id, item in parsed.items():
+        if not item.children or any(child_id not in parsed for child_id in item.children):
+            continue
+        open_children = [
+            child_id for child_id in item.children if parsed[child_id].status != "done"
+        ]
+        if item.status == "done" and open_children:
+            out.append(
+                Problem(
+                    "rollup-broken",
+                    f"{item_id} is done but has non-done children: {', '.join(open_children)}",
+                )
+            )
+        elif item.status != "done" and not open_children:
+            out.append(
+                Problem(
+                    "rollup-pending",
+                    f"{item_id} has children that are all done but its status is {item.status}",
+                )
+            )
     return out
 
 
