@@ -10,13 +10,14 @@ from pathlib import Path
 import pytest
 from starlette.testclient import TestClient
 
-from mashbill import draft_store, mcp_project_tools, mcp_tools
+from mashbill import draft_store, mcp_canvas_write_tools, mcp_project_tools, mcp_tools
 from mashbill.broadcast import BroadcastHub
 from mashbill.draft_store import list_drafts, read_draft
 from mashbill.folder_io import create_node as create_canvas_node
 from mashbill.folder_io import read_canvas, sync_details_with_overview
 from mashbill.http_app import create_http_app
 from mashbill.mcp_draft_tools import AUTO_DRAFT_RATIONALE
+from mashbill.mcp_write_rollback import with_draft_or_rollback
 from mashbill.models_draft import DraftDoc
 from mashbill.project_io import create_project
 from mashbill.references import set_node_references as set_canvas_node_references
@@ -490,6 +491,164 @@ def test_missing_draft_id_still_fails_before_write(tmp_path: Path) -> None:
     saved = next(item for item in canvas.nodes if item.id == node["id"])
     assert saved.model_dump().get("statement") == ""
     assert list_drafts(plot_root, "alpha") == []
+
+
+def test_update_node_rolls_back_when_draft_recording_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    node = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Original"})[
+        "node"
+    ]
+    before = read_canvas(plot_root, "alpha", "foundation")
+
+    def fail_to_record(*_args: object, **_kwargs: object) -> None:
+        raise OSError("draft storage unavailable")
+
+    monkeypatch.setattr(mcp_canvas_write_tools, "finish_node_write_draft", fail_to_record)
+
+    with pytest.raises(OSError, match="draft storage unavailable"):
+        mcp_tools.update_node(
+            str(tmp_path),
+            "alpha",
+            "foundation",
+            str(node["id"]),
+            {"label": "Changed"},
+        )
+
+    assert read_canvas(plot_root, "alpha", "foundation") == before
+
+
+def test_update_canvas_rolls_back_when_draft_recording_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    create_canvas_node(plot_root, "alpha", "services", "service", {"label": "Original"})
+    before = read_canvas(plot_root, "alpha", "services")
+    changed = before.model_dump(by_alias=True)
+    changed["nodes"][0]["label"] = "Changed"
+    sync_calls = 0
+    real_sync = mcp_canvas_write_tools.sync_details_with_overview
+
+    def track_sync(sync_plot_root: Path, sync_project_id: str) -> dict[str, list[str]]:
+        nonlocal sync_calls
+        sync_calls += 1
+        return real_sync(sync_plot_root, sync_project_id)
+
+    def fail_to_record(*_args: object, **_kwargs: object) -> None:
+        raise OSError("draft storage unavailable")
+
+    monkeypatch.setattr(mcp_canvas_write_tools, "sync_details_with_overview", track_sync)
+    monkeypatch.setattr(mcp_canvas_write_tools, "finish_canvas_write_draft", fail_to_record)
+
+    with pytest.raises(OSError, match="draft storage unavailable"):
+        mcp_tools.update_canvas(str(tmp_path), "alpha", changed)
+
+    assert read_canvas(plot_root, "alpha", "services") == before
+    assert sync_calls == 2
+
+
+def test_create_node_rolls_back_when_draft_recording_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    before = read_canvas(plot_root, "alpha", "services")
+    sync_calls = 0
+    real_sync = mcp_canvas_write_tools.sync_details_with_overview
+
+    def track_sync(sync_plot_root: Path, sync_project_id: str) -> dict[str, list[str]]:
+        nonlocal sync_calls
+        sync_calls += 1
+        return real_sync(sync_plot_root, sync_project_id)
+
+    def fail_to_record(*_args: object, **_kwargs: object) -> None:
+        raise OSError("draft storage unavailable")
+
+    monkeypatch.setattr(mcp_canvas_write_tools, "sync_details_with_overview", track_sync)
+    monkeypatch.setattr(mcp_canvas_write_tools, "finish_node_write_draft", fail_to_record)
+
+    with pytest.raises(OSError, match="draft storage unavailable"):
+        mcp_tools.create_node(
+            str(tmp_path), "alpha", "services", "feature", {"label": "Reading list"}
+        )
+
+    assert read_canvas(plot_root, "alpha", "services") == before
+    assert sync_calls == 2
+
+
+def test_create_edge_rolls_back_when_draft_recording_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    source = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Customer"})[
+        "node"
+    ]
+    target = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Order"})[
+        "node"
+    ]
+    before = read_canvas(plot_root, "alpha", "entities")
+
+    def fail_to_record(*_args: object, **_kwargs: object) -> None:
+        raise OSError("draft storage unavailable")
+
+    monkeypatch.setattr(mcp_canvas_write_tools, "finish_write_draft", fail_to_record)
+
+    with pytest.raises(OSError, match="draft storage unavailable"):
+        mcp_tools.create_edge(
+            str(tmp_path),
+            "alpha",
+            "entities",
+            str(source["id"]),
+            str(target["id"]),
+        )
+
+    assert read_canvas(plot_root, "alpha", "entities") == before
+
+
+def test_set_node_references_rolls_back_when_draft_recording_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    actor = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Reader"})["node"]
+    service = create_canvas_node(plot_root, "alpha", "services", "service", {"label": "Reading"})[
+        "node"
+    ]
+    before = read_canvas(plot_root, "alpha", "services")
+
+    def fail_to_record(*_args: object, **_kwargs: object) -> None:
+        raise OSError("draft storage unavailable")
+
+    monkeypatch.setattr(mcp_canvas_write_tools, "finish_write_draft", fail_to_record)
+
+    with pytest.raises(OSError, match="draft storage unavailable"):
+        mcp_tools.set_node_references(
+            str(tmp_path),
+            "alpha",
+            "services",
+            str(service["id"]),
+            {"ref_actor_ids": [str(actor["id"])]},
+        )
+
+    assert read_canvas(plot_root, "alpha", "services") == before
+
+
+def test_draft_error_keeps_original_exception_when_rollback_fails() -> None:
+    draft_error = OSError("draft storage unavailable")
+
+    def fail_to_record(_written: object) -> None:
+        raise draft_error
+
+    def fail_to_rollback() -> None:
+        raise RuntimeError("canvas storage unavailable")
+
+    with pytest.raises(OSError, match="draft storage unavailable") as caught:
+        with_draft_or_rollback(lambda: object(), fail_to_record, fail_to_rollback)
+
+    assert caught.value is draft_error
+    assert caught.value.__notes__ == [
+        "rollback after draft persistence failure failed: "
+        "RuntimeError('canvas storage unavailable')"
+    ]
 
 
 def test_create_node_with_draft_id_confirms_and_links_minted_node(tmp_path: Path) -> None:
@@ -1260,12 +1419,8 @@ def test_existing_auto_draft_file_still_reads_with_origin(tmp_path: Path) -> Non
     assert read_draft(plot_root, "alpha", "draft_auto_existing").origin == "auto"
 
 
-@pytest.mark.parametrize(
-    "canvas_kind", ["foundation", "actors", "services", "entities", "feature"]
-)
-def test_existing_canvas_draft_files_still_read(
-    tmp_path: Path, canvas_kind: str
-) -> None:
+@pytest.mark.parametrize("canvas_kind", ["foundation", "actors", "services", "entities", "feature"])
+def test_existing_canvas_draft_files_still_read(tmp_path: Path, canvas_kind: str) -> None:
     plot_root, _ = _project(tmp_path)
     draft_id = f"draft_existing_{canvas_kind}"
     path = plot_root / "drafts" / f"{draft_id}.json"
@@ -1338,7 +1493,7 @@ def test_mcp_rename_project_raises_when_draft_recording_fails(
     with pytest.raises(OSError, match="draft storage unavailable"):
         mcp_tools.rename_project(str(tmp_path), "alpha", "Renamed Alpha")
 
-    assert mcp_tools.get_project(str(tmp_path), "alpha")["name"] == "Renamed Alpha"
+    assert mcp_tools.get_project(str(tmp_path), "alpha")["name"] == "Alpha"
     assert list_drafts(plot_root, "alpha") == []
 
 

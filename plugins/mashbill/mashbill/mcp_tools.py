@@ -18,21 +18,18 @@ from fastmcp import FastMCP
 
 from mashbill.chat_selection import build_turn_preamble
 from mashbill.folder_io import (
-    create_node as _create_node,
-)
-from mashbill.folder_io import (
     create_project,
     delete_project,
     list_feature_details,
     read_canvas,
     read_project,
-    sync_details_with_overview,
 )
 from mashbill.git_store import (
     list_tags,
 )
 from mashbill.mcp_canvas_write_tools import (
     create_edge_with_draft,
+    create_node_with_draft,
     set_node_references_with_draft,
     update_canvas_with_draft,
     update_node_with_draft,
@@ -41,12 +38,7 @@ from mashbill.mcp_context_tools import (
     get_canvas_framing,
     get_design_principles,
 )
-from mashbill.mcp_draft_tools import (
-    ensure_draft,
-    finish_node_write_draft,
-    record_draft,
-    resolve_draft,
-)
+from mashbill.mcp_draft_tools import record_draft, resolve_draft
 from mashbill.mcp_git_tools import delete_project_tag, list_project_tags, tag_project
 from mashbill.mcp_project_tools import rename_project_with_draft
 from mashbill.migrate import migrate_v01_to_v02
@@ -305,28 +297,17 @@ def create_node(
     Pass [Write target] ``chat_scope``; omitting ``draft_id`` records a confirmed fallback draft.
     Returns ``{"node": <new node dict>, "rejected_fields": [...]}``."""
     plot_root = resolve_plot_root(project_path)
-    if draft_id is not None:
-        ensure_draft(plot_root, project_id, draft_id)
-    out = _create_node(plot_root, project_id, canvas_kind, kind, fields, service_id, near)
-    if canvas_kind == "services" and kind == "feature":
-        # D-2026-07-02-M — a feature is the drill target (D-2026-06-17-D): seed
-        # its detail canvas exactly like the app's endpoint flow does, so a
-        # coach-registered feature is drillable too ("기능 캔버스 뜨지 않네" fix).
-        sync_details_with_overview(plot_root, project_id)
-    warning = finish_node_write_draft(
+    return create_node_with_draft(
         plot_root,
         project_id,
-        draft_id,
         canvas_kind,
+        kind,
         fields,
-        out,
-        chat_scope,
         service_id,
-        [near] if near is not None else None,
+        near,
+        draft_id,
+        chat_scope,
     )
-    if warning is not None:
-        out["draft_warning"] = warning
-    return out
 
 
 @mcp.tool()
