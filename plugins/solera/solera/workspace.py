@@ -10,8 +10,10 @@ that id.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
+from .errors import FormatError
 from .formats import (
     Feedback,
     Progress,
@@ -26,6 +28,18 @@ from .formats import (
     parse_retrospective,
     parse_workitem,
 )
+
+_PATH_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+
+
+def validate_path_name(name: str) -> str:
+    """Return a safe single path component or reject it before path composition."""
+    if not _PATH_NAME_RE.fullmatch(name) or name == "..":
+        raise FormatError(
+            f"invalid path name {name!r}: expected a single component matching "
+            "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        )
+    return name
 
 
 class Workspace:
@@ -45,13 +59,13 @@ class Workspace:
         return self.root / "items"
 
     def item_path(self, item_id: str) -> Path:
-        return self.items_dir / f"{item_id}.md"
+        return self.items_dir / f"{validate_path_name(item_id)}.md"
 
     def retrospective_path(self, item_id: str) -> Path:
-        return self.root / "retros" / f"{item_id}.md"
+        return self.root / "retros" / f"{validate_path_name(item_id)}.md"
 
     def artifacts_dir(self, item_id: str) -> Path:
-        return self.root / "artifacts" / item_id
+        return self.root / "artifacts" / validate_path_name(item_id)
 
     @property
     def feedback_dir(self) -> Path:
@@ -64,8 +78,11 @@ class Workspace:
         if the upstream design moves (04-pipeline)."""
         return self.root / "specs"
 
+    def spec_dir(self, label: str) -> Path:
+        return self.specs_dir / validate_path_name(label)
+
     def feedback_path(self, feedback_id: str) -> Path:
-        return self.feedback_dir / f"{feedback_id}.md"
+        return self.feedback_dir / f"{validate_path_name(feedback_id)}.md"
 
     # --- reads -------------------------------------------------------------
 
@@ -98,13 +115,16 @@ class Workspace:
         self.progress_path.write_text(dump_progress(progress))
 
     def write_item(self, item: WorkItem) -> None:
-        self.items_dir.mkdir(parents=True, exist_ok=True)
-        self.item_path(item.id).write_text(dump_workitem(item))
+        path = self.item_path(item.id)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(dump_workitem(item))
 
     def write_retrospective(self, retro: Retrospective) -> None:
-        self.retrospective_path(retro.id).parent.mkdir(parents=True, exist_ok=True)
-        self.retrospective_path(retro.id).write_text(dump_retrospective(retro))
+        path = self.retrospective_path(retro.id)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(dump_retrospective(retro))
 
     def write_feedback(self, feedback: Feedback) -> None:
-        self.feedback_dir.mkdir(parents=True, exist_ok=True)
-        self.feedback_path(feedback.id).write_text(dump_feedback(feedback))
+        path = self.feedback_path(feedback.id)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(dump_feedback(feedback))

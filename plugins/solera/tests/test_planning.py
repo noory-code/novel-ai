@@ -2,6 +2,9 @@
 
 from pathlib import Path
 
+import pytest
+
+from solera.errors import FormatError
 from solera.planning import create_item, next_item_id
 from solera.workspace import Workspace
 
@@ -53,3 +56,13 @@ def test_ids_increment_per_level(tmp_path: Path) -> None:
     create_item(ws, "story", "b")
     assert next_item_id(ws, "story") == "STORY-003"
     assert next_item_id(ws, "action") == "ACT-001"  # independent per level
+
+
+@pytest.mark.parametrize("level", ["../escape", "/absolute", r"bad\level", "..", ""])
+def test_level_prefix_cannot_escape_items_directory(tmp_path: Path, level: str) -> None:
+    ws = _ws(tmp_path)
+
+    with pytest.raises(FormatError, match="name"):
+        create_item(ws, level, "Must not be written")
+
+    assert not ws.root.exists()

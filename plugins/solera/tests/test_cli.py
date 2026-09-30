@@ -9,6 +9,8 @@ import shlex
 import sys
 from pathlib import Path
 
+import pytest
+
 from solera.cli import main
 
 
@@ -74,7 +76,25 @@ def _write_imported_release(root: Path, label: str, elements: list[dict[str, str
     manifest_dir = root / ".noory" / "solera" / "specs" / label / "service"
     manifest_dir.mkdir(parents=True, exist_ok=True)
     (manifest_dir / "manifest.json").write_text(
-        json.dumps({"format_f_version": 1, "scope": "service", "elements": elements})
+        json.dumps(
+            {
+                "format_f_version": 1,
+                "scope": "service",
+                "service": "service/auth",
+                "release": "vS1",
+                "based_on": "vP1",
+                "git_sha": "",
+                "elements": [
+                    {"id": "service/auth", "kind": "service", "hash": "c"},
+                    *elements,
+                ],
+                "refs": {
+                    "anchors": {"core_values": [], "identity": []},
+                    "actors": [],
+                    "entities": [],
+                },
+            }
+        )
     )
 
 
@@ -86,8 +106,12 @@ def test_repin_proposes_without_mutating_by_default(tmp_path: Path, capsys) -> N
     # mark it done so a reopen would be observable
     item_path = tmp_path / ".noory" / "solera" / "items" / "ACT-001.md"
     item_path.write_text(item_path.read_text().replace("status: todo", "status: done"))
-    _write_imported_release(tmp_path, "v1", [{"id": "feature/login", "hash": "a"}])
-    _write_imported_release(tmp_path, "v2", [{"id": "feature/login", "hash": "B"}])  # changed
+    _write_imported_release(
+        tmp_path, "v1", [{"id": "feature/login", "kind": "feature", "hash": "a"}]
+    )
+    _write_imported_release(
+        tmp_path, "v2", [{"id": "feature/login", "kind": "feature", "hash": "b"}]
+    )
     capsys.readouterr()
 
     assert _run(tmp_path, "repin", "v1", "v2") == 0
@@ -105,8 +129,12 @@ def test_repin_apply_reopens_stale_items(tmp_path: Path, capsys) -> None:  # typ
     )
     item_path = tmp_path / ".noory" / "solera" / "items" / "ACT-001.md"
     item_path.write_text(item_path.read_text().replace("status: todo", "status: done"))
-    _write_imported_release(tmp_path, "v1", [{"id": "feature/login", "hash": "a"}])
-    _write_imported_release(tmp_path, "v2", [{"id": "feature/login", "hash": "B"}])
+    _write_imported_release(
+        tmp_path, "v1", [{"id": "feature/login", "kind": "feature", "hash": "a"}]
+    )
+    _write_imported_release(
+        tmp_path, "v2", [{"id": "feature/login", "kind": "feature", "hash": "b"}]
+    )
     capsys.readouterr()
 
     assert _run(tmp_path, "repin", "v1", "v2", "--apply") == 0
@@ -118,7 +146,9 @@ def test_repin_escalates_removed_but_never_reopens_it(tmp_path: Path, capsys) ->
     _run(tmp_path, "add", "STORY-001", "Build old", "--gate", "true", "--realizes", "entity/old")
     item_path = tmp_path / ".noory" / "solera" / "items" / "ACT-001.md"
     item_path.write_text(item_path.read_text().replace("status: todo", "status: done"))
-    _write_imported_release(tmp_path, "v1", [{"id": "entity/old", "hash": "a"}])
+    _write_imported_release(
+        tmp_path, "v1", [{"id": "entity/old", "kind": "entity", "hash": "a"}]
+    )
     _write_imported_release(tmp_path, "v2", [])  # removed
     capsys.readouterr()
 
@@ -143,7 +173,15 @@ def _write_published_bundle(pub: Path) -> Path:
     vp = pub / "_project" / "vP1"
     (vp / "design").mkdir(parents=True)
     (vp / "manifest.json").write_text(
-        json.dumps({"format_f_version": 1, "scope": "project", "release": "vP1", "elements": []})
+        json.dumps(
+            {
+                "format_f_version": 1,
+                "scope": "project",
+                "release": "vP1",
+                "git_sha": "",
+                "elements": [],
+            }
+        )
     )
     vs = pub / "service" / "vS1"
     (vs / "design").mkdir(parents=True)
@@ -155,7 +193,15 @@ def _write_published_bundle(pub: Path) -> Path:
                 "service": "service/auth",
                 "release": "vS1",
                 "based_on": "vP1",
-                "elements": [],
+                "git_sha": "",
+                "elements": [
+                    {"id": "service/auth", "kind": "service", "hash": "a"},
+                ],
+                "refs": {
+                    "anchors": {"core_values": [], "identity": []},
+                    "actors": [],
+                    "entities": [],
+                },
             }
         )
     )
@@ -186,3 +232,24 @@ def test_retro_and_feedback_write_notes(tmp_path: Path) -> None:
     assert (tmp_path / ".noory" / "solera" / "retros" / "STORY-001.md").exists()
     assert _run(tmp_path, "feedback", "FB-001", "Blocked here.") == 0
     assert (tmp_path / ".noory" / "solera" / "feedback" / "FB-001.md").exists()
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ("retro", "../outside", "body"),
+        ("feedback", "../outside", "body"),
+        ("add", "../outside", "goal"),
+        ("plan", "goal", "--level", "../outside"),
+        ("import", "missing", "--label", "../outside"),
+        ("repin", "../outside", "new"),
+    ],
+)
+def test_path_name_errors_are_reported_without_tracebacks(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], arguments: tuple[str, ...]
+) -> None:
+    assert _run(tmp_path, *arguments) == 1
+    output = capsys.readouterr()
+    assert output.out.startswith("error: ")
+    assert "Traceback" not in output.out
+    assert output.err == ""

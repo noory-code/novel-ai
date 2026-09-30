@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.8.2] — 2026-10-01
+
+### Fixed
+
+- Import and planning reject path names that are not a single safe component (labels, item/retro/feedback ids, level prefixes) and bundles with symlinks or a `based_on` that is not a bare `vP{N}`; vS/vP manifests are validated strictly (required elements and refs, no duplicate ids, release pairing), and an import copies into a temporary folder first so a failed import leaves nothing behind.
+
 ## [7.8.1] — 2026-07-17
 
 ### Fixed

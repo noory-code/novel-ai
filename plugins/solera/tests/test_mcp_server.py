@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from pathlib import Path
 
+import pytest
+
 from solera import mcp_server
+from solera.errors import FormatError
 
 
 def test_tool_catalog_is_pinned() -> None:
@@ -44,3 +48,21 @@ def test_plan_next_and_notes_round_trip(tmp_path: Path) -> None:
     feedback = mcp_server.write_feedback(root, "FB-001", "Need a decision.")
     assert retro["id"] == leaf["id"]
     assert feedback["id"] == "FB-001"
+
+
+@pytest.mark.parametrize(
+    ("operation", "arguments"),
+    [
+        (mcp_server.write_retrospective, ("../outside", "body")),
+        (mcp_server.write_feedback, ("../outside", "body")),
+        (mcp_server.add_work_item, ("../outside", "goal")),
+        (mcp_server.plan_work, ("goal", "../outside")),
+    ],
+)
+def test_tools_reject_path_like_names_before_writing(
+    tmp_path: Path, operation: Callable[..., object], arguments: tuple[str, str]
+) -> None:
+    with pytest.raises(FormatError, match="name"):
+        operation(str(tmp_path), *arguments)
+
+    assert not (tmp_path / ".noory").exists()

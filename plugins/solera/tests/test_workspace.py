@@ -23,6 +23,29 @@ def test_paths_compose_from_root(tmp_path: Path) -> None:
     assert ws.item_path("ACT-001") == ws.root / "items" / "ACT-001.md"
     assert ws.retrospective_path("STORY-001") == ws.root / "retros" / "STORY-001.md"
     assert ws.artifacts_dir("X") == ws.root / "artifacts" / "X"
+    assert ws.spec_dir("auth-v1") == ws.root / "specs" / "auth-v1"
+
+
+@pytest.mark.parametrize("name", ["../x", "/abs", "a/b", r"a\b", "..", ""])
+@pytest.mark.parametrize(
+    "path_method",
+    [
+        "item_path",
+        "retrospective_path",
+        "artifacts_dir",
+        "feedback_path",
+        "spec_dir",
+    ],
+)
+def test_user_named_paths_reject_non_single_component_names(
+    tmp_path: Path, name: str, path_method: str
+) -> None:
+    ws = _ws(tmp_path)
+
+    with pytest.raises(FormatError, match="name"):
+        getattr(ws, path_method)(name)
+
+    assert not ws.root.exists()
 
 
 def test_write_then_load_items(tmp_path: Path) -> None:
