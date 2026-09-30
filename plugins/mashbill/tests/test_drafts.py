@@ -548,6 +548,35 @@ def test_update_canvas_rolls_back_when_draft_recording_fails(
     assert sync_calls == 2
 
 
+def test_update_canvas_rolls_back_when_detail_sync_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    before = read_canvas(plot_root, "alpha", "services")
+    create_canvas_node(plot_root, "alpha", "services", "feature", {"label": "Reading list"})
+    changed = read_canvas(plot_root, "alpha", "services").model_dump(by_alias=True)
+    write_canvas(plot_root, "alpha", before)
+    sync_error = OSError("detail sync unavailable")
+    sync_calls = 0
+    real_sync = mcp_canvas_write_tools.sync_details_with_overview
+
+    def fail_once(sync_plot_root: Path, sync_project_id: str) -> dict[str, list[str]]:
+        nonlocal sync_calls
+        sync_calls += 1
+        if sync_calls == 1:
+            raise sync_error
+        return real_sync(sync_plot_root, sync_project_id)
+
+    monkeypatch.setattr(mcp_canvas_write_tools, "sync_details_with_overview", fail_once)
+
+    with pytest.raises(OSError, match="detail sync unavailable") as caught:
+        mcp_tools.update_canvas(str(tmp_path), "alpha", changed)
+
+    assert caught.value is sync_error
+    assert read_canvas(plot_root, "alpha", "services") == before
+    assert sync_calls == 2
+
+
 def test_update_canvas_rollback_restores_archived_feature_detail(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -679,6 +708,27 @@ def test_draft_error_keeps_original_exception_when_rollback_fails() -> None:
         "rollback after draft persistence failure failed: "
         "RuntimeError('canvas storage unavailable')"
     ]
+
+
+def test_write_error_calls_rollback_and_keeps_original_exception() -> None:
+    write_error = OSError("canvas storage unavailable")
+    rollback_called = False
+
+    def fail_to_write() -> object:
+        raise write_error
+
+    def record_draft(_written: object) -> None:
+        pytest.fail("draft recording must not run after a write failure")
+
+    def rollback() -> None:
+        nonlocal rollback_called
+        rollback_called = True
+
+    with pytest.raises(OSError, match="canvas storage unavailable") as caught:
+        with_draft_or_rollback(fail_to_write, record_draft, rollback)
+
+    assert caught.value is write_error
+    assert rollback_called
 
 
 def test_create_node_with_draft_id_confirms_and_links_minted_node(tmp_path: Path) -> None:

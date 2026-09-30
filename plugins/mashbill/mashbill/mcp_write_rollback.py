@@ -14,8 +14,15 @@ def with_draft_or_rollback(
     record_draft: Callable[[_WriteResult], _DraftResult],
     rollback: Callable[[], object],
 ) -> tuple[_WriteResult, _DraftResult]:
-    """Run a write and restore its prior state if draft persistence fails."""
-    written = write()
+    """Run a write and restore its prior state if writing or draft persistence fails."""
+    try:
+        written = write()
+    except Exception as write_error:
+        try:
+            rollback()
+        except Exception as rollback_error:
+            write_error.add_note(f"rollback after write failure failed: {rollback_error!r}")
+        raise
     try:
         draft_result = record_draft(written)
     except Exception as draft_error:
