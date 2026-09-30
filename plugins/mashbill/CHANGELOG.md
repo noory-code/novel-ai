@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.27] — 2026-09-30
+
+### Fixed
+
+- While the coach is answering in a scope, reset and reopen for that scope are refused with 409 `turn_in_progress`, so a draft recorded during the turn stays tied to its conversation.
+
 ## [0.196.26] — 2026-09-30
 
 ### Added

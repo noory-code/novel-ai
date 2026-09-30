@@ -1,20 +1,7 @@
-"""R7 chat — HTTP/WS endpoints (D-2026-06-12-D, Phase C step C2).
+"""Chat HTTP endpoints and the provider-to-WebSocket streaming bridge.
 
-Two endpoints + the streaming bridge that ties them to ``BroadcastHub``:
-
-  ``POST /api/chat/send``  — body ``{project_path, message}``. Validates the
-                             workspace, schedules an async task that walks
-                             ``ChatProvider.stream_turn`` and broadcasts each
-                             event to every WS subscriber of that workspace,
-                             then returns ``202 {accepted: true}``. The
-                             viewer renders the user's own message
-                             optimistically (no need to wait for the POST).
-  ``POST /api/chat/reset`` — body ``{project_path}``. Drops the cached
-                             provider so the next ``send`` starts a fresh
-                             CLI session (new ``--session-id``).
-
-The streaming bridge lives in :func:`stream_chat_turn` so the unit tests
-can exercise it without going through HTTP — POST handlers stay thin.
+``stream_chat_turn`` stays separate from the request handlers so streaming,
+persistence, and in-progress scope tracking remain directly testable.
 """
 
 from __future__ import annotations
@@ -55,6 +42,7 @@ from mashbill.chat_store import (
     reopen_conversation,
     scope_to_filename,
 )
+from mashbill.chat_turn_state import finish_turn, start_turn, turn_in_progress
 from mashbill.draft_extraction import extract_turn_drafts
 from mashbill.mcp_registration import ProviderName
 from mashbill.workspace import enumerate_projects, resolve_plot_root
@@ -205,19 +193,13 @@ async def stream_chat_turn(
     model: str | None = None,
     conversation_id: str | None = None,
 ) -> None:
-    """Pull stream events from ``provider`` and fan them out to ``plot_root``.
+    """Fan provider events out to ``plot_root`` with the requested ``scope``.
 
-    Lives outside the endpoint so it stays directly testable. Each event is
-    stamped with ``scope`` (overriding the provider's default) so the viewer
-    can route it to the matching canvas thread (D-2026-06-13-H). Errors are
-    caught + broadcast as an ``error`` event so the viewer can surface them
-    instead of silently truncating the turn.
-
-    When ``project_id`` is set, the assistant turn is persisted on
-    ``turn_complete`` (D-2026-06-26-B) — best-effort, so a write failure never
-    breaks the live turn.
-    Proposal extraction is scheduled after a successful save and never delays the stream.
+    Errors become stream events. Assistant persistence is best-effort, and
+    proposal extraction is scheduled after a successful save without delaying
+    the stream.
     """
+    start_turn(plot_root, scope)
     turn_started_at = datetime.now(UTC).isoformat()
     try:
         async for event in filter_save_announcements(provider.stream_turn(user_message)):
@@ -272,6 +254,8 @@ async def stream_chat_turn(
                 "scope": scope,
             },
         )
+    finally:
+        finish_turn(plot_root, scope)
 
 
 async def chat_send_endpoint(request: Request) -> JSONResponse:
@@ -457,6 +441,16 @@ async def chat_conversation_reopen_endpoint(request: Request) -> JSONResponse:
     if project_id is None:
         return JSONResponse({"error": "conversation not found"}, status_code=404)
     try:
+        doc = read_conversation_by_id(plot_root, project_id, conversation_id)
+    except (FileNotFoundError, json.JSONDecodeError, ValidationError):
+        return JSONResponse({"error": "conversation not found"}, status_code=404)
+    except ValueError:
+        return JSONResponse({"error": "invalid conversation id"}, status_code=400)
+    if turn_in_progress(plot_root, doc.scope):
+        return JSONResponse(
+            {"error": "turn in progress", "code": "turn_in_progress"}, status_code=409
+        )
+    try:
         doc = reopen_conversation(plot_root, project_id, conversation_id)
     except (FileNotFoundError, json.JSONDecodeError, ValidationError):
         return JSONResponse({"error": "conversation not found"}, status_code=404)
@@ -489,6 +483,10 @@ async def chat_reset_endpoint(request: Request) -> JSONResponse:
         plot_root = resolve_plot_root(project_path)
     except (FileNotFoundError, NotADirectoryError) as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
+    if turn_in_progress(plot_root, scope):
+        return JSONResponse(
+            {"error": "turn in progress", "code": "turn_in_progress"}, status_code=409
+        )
     registry = _registry_from_request(request)
     project_id = _project_id_for(plot_root)
     if project_id is not None:

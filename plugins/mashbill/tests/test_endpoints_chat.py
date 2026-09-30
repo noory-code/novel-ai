@@ -11,9 +11,11 @@ only cover request validation + 202 acceptance + the registry/hub wiring.
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 from typing import Any
 
+import httpx
 import pytest
 from starlette.testclient import TestClient
 
@@ -30,6 +32,7 @@ from mashbill.chat_store import (
     list_conversations,
     read_conversation,
 )
+from mashbill.chat_turn_state import turn_in_progress
 from mashbill.endpoints_chat import (
     build_context_preamble,
     build_framing_preamble,
@@ -84,6 +87,19 @@ class _ExplodingProvider(ChatProvider):
     async def stream_turn(self, user_message: str) -> Any:
         raise RuntimeError("provider blew up mid-turn")
         yield  # pragma: no cover — required to make this an async generator
+
+
+class _BlockingProvider(ChatProvider):
+    """Keep a streamed turn open until the test explicitly releases it."""
+
+    def __init__(self, started: asyncio.Event, release: asyncio.Event) -> None:
+        self._started = started
+        self._release = release
+
+    async def stream_turn(self, user_message: str) -> Any:
+        self._started.set()
+        await self._release.wait()
+        yield ChatStreamEvent(type="turn_complete", turn_id="t", text="done")
 
 
 # ---------------------------------------------------------------------------
@@ -174,6 +190,49 @@ async def test_stream_chat_turn_broadcasts_error_on_provider_crash(
     assert payload["type"] == "error"
     assert payload["error_message"] is not None
     assert "blew up" in payload["error_message"]
+    assert not turn_in_progress(ws, "project")
+
+
+async def test_stream_chat_turn_releases_scope_when_cancelled(tmp_path: Path) -> None:
+    ws = tmp_path / "ws"
+    ws.mkdir()
+    started = asyncio.Event()
+    release = asyncio.Event()
+    task = asyncio.create_task(
+        stream_chat_turn(_BlockingProvider(started, release), _FakeHub(), ws, "hi", "actors")
+    )
+    await asyncio.wait_for(started.wait(), timeout=1)
+    assert turn_in_progress(ws, "actors")
+
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    assert not turn_in_progress(ws, "actors")
+
+
+async def test_stream_chat_turn_keeps_scope_active_until_overlapping_turns_finish(
+    tmp_path: Path,
+) -> None:
+    ws = tmp_path / "ws"
+    ws.mkdir()
+    started_one, release_one = asyncio.Event(), asyncio.Event()
+    started_two, release_two = asyncio.Event(), asyncio.Event()
+    first = asyncio.create_task(
+        stream_chat_turn(_BlockingProvider(started_one, release_one), _FakeHub(), ws, "one")
+    )
+    second = asyncio.create_task(
+        stream_chat_turn(_BlockingProvider(started_two, release_two), _FakeHub(), ws, "two")
+    )
+    await asyncio.gather(started_one.wait(), started_two.wait())
+
+    release_one.set()
+    await first
+    assert turn_in_progress(ws, "project")
+
+    release_two.set()
+    await second
+    assert not turn_in_progress(ws, "project")
 
 
 # ---------------------------------------------------------------------------
@@ -732,6 +791,63 @@ def test_chat_reset_scopes_to_given_scope(workspace: Path) -> None:
     assert registry.session_count() == 1
 
 
+async def test_chat_reset_rejects_active_scope_but_allows_other_scope(
+    workspace: Path,
+) -> None:
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+    append_user(plot_root, "alpha", "foundation", "codex", "u1", "Foundation topic")
+    append_user(plot_root, "alpha", "actors", "codex", "u2", "Actors topic")
+    foundation_path = plot_root / "chat" / "foundation.json"
+    foundation_before = foundation_path.read_bytes()
+    started = asyncio.Event()
+    release = asyncio.Event()
+    turn = asyncio.create_task(
+        stream_chat_turn(
+            _BlockingProvider(started, release),
+            _FakeHub(),
+            plot_root,
+            "hello",
+            scope="foundation",
+        )
+    )
+    await asyncio.wait_for(started.wait(), timeout=1)
+
+    app = create_http_app(hub=BroadcastHub(enable_watchers=False))
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://engine",
+    ) as client:
+        blocked = await client.post(
+            "/api/chat/reset",
+            json={"project_path": str(workspace), "scope": "foundation"},
+        )
+        foundation_while_blocked = (
+            foundation_path.read_bytes() if foundation_path.exists() else None
+        )
+        other_scope = await client.post(
+            "/api/chat/reset",
+            json={"project_path": str(workspace), "scope": "actors"},
+        )
+        foundation_after_other_reset = (
+            foundation_path.read_bytes() if foundation_path.exists() else None
+        )
+        release.set()
+        await turn
+        after_turn = await client.post(
+            "/api/chat/reset",
+            json={"project_path": str(workspace), "scope": "foundation"},
+        )
+
+    assert blocked.status_code == 409
+    assert blocked.json() == {"error": "turn in progress", "code": "turn_in_progress"}
+    assert foundation_while_blocked == foundation_before
+    assert other_scope.status_code == 200
+    assert foundation_after_other_reset == foundation_before
+    assert after_turn.status_code == 200
+    assert not foundation_path.exists()
+
+
 def test_chat_reset_archives_current_and_next_turn_has_no_old_context(workspace: Path) -> None:
     plot_root = resolve_plot_root(str(workspace))
     create_project(plot_root, "alpha", "Alpha")
@@ -1184,6 +1300,54 @@ def test_conversation_reopen_swaps_files_resets_session_and_refeeds_history(
     assert send.status_code == 202
     assert "chosen history" in providers[-1].calls[0]
     assert "current history" not in providers[-1].calls[0]
+
+
+async def test_conversation_reopen_rejects_active_scope_until_turn_finishes(
+    workspace: Path,
+) -> None:
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+    append_user(plot_root, "alpha", "foundation", "codex", "u1", "chosen history")
+    chosen_id = archive_current_conversation(plot_root, "alpha", "foundation")
+    assert chosen_id is not None
+    append_user(plot_root, "alpha", "foundation", "codex", "u2", "current history")
+    chat_dir = plot_root / "chat"
+    before = {path.name: path.read_bytes() for path in chat_dir.glob("*.json")}
+    started = asyncio.Event()
+    release = asyncio.Event()
+    turn = asyncio.create_task(
+        stream_chat_turn(
+            _BlockingProvider(started, release),
+            _FakeHub(),
+            plot_root,
+            "hello",
+            scope="foundation",
+        )
+    )
+    await asyncio.wait_for(started.wait(), timeout=1)
+
+    app = create_http_app(hub=BroadcastHub(enable_watchers=False))
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://engine",
+    ) as client:
+        blocked = await client.post(
+            "/api/chat/conversations/reopen",
+            json={"project_path": str(workspace), "id": chosen_id},
+        )
+        while_blocked = {path.name: path.read_bytes() for path in chat_dir.glob("*.json")}
+        release.set()
+        await turn
+        after_turn = await client.post(
+            "/api/chat/conversations/reopen",
+            json={"project_path": str(workspace), "id": chosen_id},
+        )
+
+    assert blocked.status_code == 409
+    assert blocked.json() == {"error": "turn in progress", "code": "turn_in_progress"}
+    assert while_blocked == before
+    assert after_turn.status_code == 200
+    assert read_conversation(plot_root, "alpha", "foundation").title == "chosen history"
 
 
 def test_conversation_reopen_rejects_path_escape(app_client: TestClient, workspace: Path) -> None:
