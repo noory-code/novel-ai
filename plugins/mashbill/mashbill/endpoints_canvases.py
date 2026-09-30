@@ -127,7 +127,12 @@ async def canvas_put_endpoint(request: Request) -> JSONResponse:
         canvas = write_canvas(plot_root, project_id, canvas)
     except FileNotFoundError as exc:
         return _error(str(exc), status=404)
-    sync: dict[str, list[str]] = {"created": [], "archived": [], "skipped_archive": []}
+    sync: dict[str, list[str]] = {
+        "created": [],
+        "restored": [],
+        "archived": [],
+        "skipped_archive": [],
+    }
     if canvas_kind == "services":
         sync = sync_details_with_overview(plot_root, project_id)
     raw = canvas.model_dump(by_alias=True)

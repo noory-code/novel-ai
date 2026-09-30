@@ -579,6 +579,7 @@ def test_canvas_put_overview_auto_creates_detail(
     )
     assert resp.status_code == 200
     assert resp.json()["sync"]["created"] == ["order"]
+    assert resp.json()["sync"]["restored"] == []
     detail = client.get(
         "/api/projects/alpha/canvases/feature",
         params={"project_path": project_path, "service_id": "order"},

@@ -14,7 +14,7 @@ from mashbill import draft_store, mcp_canvas_write_tools, mcp_project_tools, mcp
 from mashbill.broadcast import BroadcastHub
 from mashbill.draft_store import list_drafts, read_draft
 from mashbill.folder_io import create_node as create_canvas_node
-from mashbill.folder_io import read_canvas, sync_details_with_overview
+from mashbill.folder_io import read_canvas, sync_details_with_overview, write_canvas
 from mashbill.http_app import create_http_app
 from mashbill.mcp_draft_tools import AUTO_DRAFT_RATIONALE
 from mashbill.mcp_write_rollback import with_draft_or_rollback
@@ -546,6 +546,36 @@ def test_update_canvas_rolls_back_when_draft_recording_fails(
 
     assert read_canvas(plot_root, "alpha", "services") == before
     assert sync_calls == 2
+
+
+def test_update_canvas_rollback_restores_archived_feature_detail(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    feature = create_canvas_node(
+        plot_root, "alpha", "services", "feature", {"label": "Reading list"}
+    )["node"]
+    feature_id = str(feature["id"])
+    sync_details_with_overview(plot_root, "alpha")
+    detail = read_canvas(plot_root, "alpha", "feature", service_id=feature_id)
+    edited_detail = detail.model_copy(
+        update={"nodes": [detail.nodes[0].model_copy(update={"label": "Edited detail root"})]}
+    )
+    write_canvas(plot_root, "alpha", edited_detail)
+    before = read_canvas(plot_root, "alpha", "services")
+    changed = before.model_dump(by_alias=True)
+    changed["nodes"] = [node for node in changed["nodes"] if node["id"] != feature_id]
+
+    def fail_to_record(*_args: object, **_kwargs: object) -> None:
+        raise OSError("draft storage unavailable")
+
+    monkeypatch.setattr(mcp_canvas_write_tools, "finish_canvas_write_draft", fail_to_record)
+
+    with pytest.raises(OSError, match="draft storage unavailable"):
+        mcp_tools.update_canvas(str(tmp_path), "alpha", changed)
+
+    assert read_canvas(plot_root, "alpha", "services") == before
+    assert read_canvas(plot_root, "alpha", "feature", service_id=feature_id) == edited_detail
 
 
 def test_create_node_rolls_back_when_draft_recording_fails(

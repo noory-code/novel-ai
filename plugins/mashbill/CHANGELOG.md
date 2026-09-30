@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.15] — 2026-09-30
+
+### Fixed
+
+- A feature that reappears on the services canvas (an undo, or a rolled-back AI write) gets its archived detail back instead of a new empty one; the sync result lists it under `restored`.
+
 ## [0.196.14] — 2026-09-30
 
 ### Fixed

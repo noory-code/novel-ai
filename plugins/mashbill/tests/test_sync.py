@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import pytest
@@ -49,10 +50,65 @@ def test_sync_creates_detail_for_new_feature(plot_root: Path) -> None:
     write_canvas(plot_root, "alpha", _overview_with({"order": "주문"}))
     result = sync_details_with_overview(plot_root, "alpha")
     assert result["created"] == ["order"]
+    assert result["restored"] == []
     assert list_feature_details(plot_root, "alpha") == ["order"]
     detail = read_canvas(plot_root, "alpha", "feature", service_id="order")
     assert detail.feature_ref == "order"
     assert any(n.id == "order" for n in detail.nodes)
+
+
+def test_sync_restores_archived_detail_for_returning_feature(plot_root: Path) -> None:
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(plot_root, "alpha", _overview_with({"order": "주문"}))
+    sync_details_with_overview(plot_root, "alpha")
+    detail = read_canvas(plot_root, "alpha", "feature", service_id="order")
+    edited_root = detail.nodes[0].model_copy(update={"label": "상세에서 고친 주문"})
+    edited_detail = detail.model_copy(update={"nodes": [edited_root]})
+    write_canvas(plot_root, "alpha", edited_detail)
+
+    write_canvas(plot_root, "alpha", _overview_with({}))
+    archived = sync_details_with_overview(plot_root, "alpha")
+    assert archived["archived"] == ["order"]
+
+    write_canvas(plot_root, "alpha", _overview_with({"order": "주문"}))
+    restored = sync_details_with_overview(plot_root, "alpha")
+
+    assert restored["restored"] == ["order"]
+    assert restored["created"] == []
+    assert read_canvas(plot_root, "alpha", "feature", service_id="order") == edited_detail
+
+
+def test_sync_restores_most_recent_archive_for_returning_feature(plot_root: Path) -> None:
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(plot_root, "alpha", _overview_with({"order": "주문"}))
+    sync_details_with_overview(plot_root, "alpha")
+    first = read_canvas(plot_root, "alpha", "feature", service_id="order")
+    first = first.model_copy(
+        update={"nodes": [first.nodes[0].model_copy(update={"label": "첫 번째 보관본"})]}
+    )
+    write_canvas(plot_root, "alpha", first)
+    write_canvas(plot_root, "alpha", _overview_with({}))
+    sync_details_with_overview(plot_root, "alpha")
+
+    services_folder = plot_root / "services"
+    shutil.copytree(services_folder / "_archive" / "order", services_folder / "order")
+    second = read_canvas(plot_root, "alpha", "feature", service_id="order")
+    second = second.model_copy(
+        update={"nodes": [second.nodes[0].model_copy(update={"label": "두 번째 보관본"})]}
+    )
+    write_canvas(plot_root, "alpha", second)
+    second_archive = sync_details_with_overview(plot_root, "alpha")
+    assert second_archive["archived"] == ["order"]
+    assert (services_folder / "_archive" / "order-2").is_dir()
+
+    write_canvas(plot_root, "alpha", _overview_with({"order": "주문"}))
+    restored = sync_details_with_overview(plot_root, "alpha")
+
+    assert restored["restored"] == ["order"]
+    assert restored["created"] == []
+    assert read_canvas(plot_root, "alpha", "feature", service_id="order") == second
+    assert (services_folder / "_archive" / "order").is_dir()
+    assert not (services_folder / "_archive" / "order-2").exists()
 
 
 def test_sync_creates_detail_with_only_root_feature(plot_root: Path) -> None:
@@ -90,13 +146,13 @@ def test_sync_is_noop_when_overview_matches(plot_root: Path) -> None:
     write_canvas(plot_root, "alpha", _overview_with({"order": "주문"}))
     sync_details_with_overview(plot_root, "alpha")
     again = sync_details_with_overview(plot_root, "alpha")
-    assert again == {"created": [], "archived": [], "skipped_archive": []}
+    assert again == {"created": [], "restored": [], "archived": [], "skipped_archive": []}
 
 
 def test_sync_on_empty_overview_is_noop(plot_root: Path) -> None:
     create_project(plot_root, "alpha", "Alpha")
     result = sync_details_with_overview(plot_root, "alpha")
-    assert result == {"created": [], "archived": [], "skipped_archive": []}
+    assert result == {"created": [], "restored": [], "archived": [], "skipped_archive": []}
 
 
 # v0.27.14 (D-2026-05-28-I) — data-loss guard: when a service disappears

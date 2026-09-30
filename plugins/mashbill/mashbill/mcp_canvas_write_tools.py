@@ -39,7 +39,12 @@ def update_canvas_with_draft(
 
     def write_and_sync() -> tuple[CanvasDoc, dict[str, list[str]]]:
         saved = write_canvas(plot_root, project_id, validated)
-        sync: dict[str, list[str]] = {"created": [], "archived": [], "skipped_archive": []}
+        sync: dict[str, list[str]] = {
+            "created": [],
+            "restored": [],
+            "archived": [],
+            "skipped_archive": [],
+        }
         if validated.canvas_kind == "services":
             sync = sync_details_with_overview(plot_root, project_id)
         return saved, sync

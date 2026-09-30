@@ -146,7 +146,12 @@ def test_update_canvas_overwrites_and_reports_sync(tmp_path: Path) -> None:
     canvas = mcp_tools.get_canvas(ws, "p1", "foundation")
     out = mcp_tools.update_canvas(ws, "p1", canvas)
     # foundation is not the services overview, so nothing is reconciled.
-    assert out["sync"] == {"created": [], "archived": [], "skipped_archive": []}
+    assert out["sync"] == {
+        "created": [],
+        "restored": [],
+        "archived": [],
+        "skipped_archive": [],
+    }
     assert out["canvas"]["canvas_kind"] == "foundation"
 
 

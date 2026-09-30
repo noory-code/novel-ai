@@ -40,13 +40,14 @@ def sync_details_with_overview(plot_root: Path, project_id: str) -> dict[str, li
     user work (``index.md``, attachments) on a stray click. Called
     opportunistically after writes to the services canvas.
 
-    Returns ``{"created": [...], "archived": [...]}`` for telemetry.
+    Returns created, restored, archived, and skipped-archive feature ids for
+    telemetry.
     """
     _ensure_project(plot_root, project_id)
     try:
         overview = read_canvas(plot_root, project_id, "services")
     except FileNotFoundError:
-        return {"created": [], "archived": []}
+        return {"created": [], "restored": [], "archived": []}
     overview_feature_ids = {n.id for n in overview.nodes if n.kind == "feature"}
     services_folder = _project_dir(plot_root, project_id) / "services"
     services_folder.mkdir(exist_ok=True)
@@ -63,8 +64,15 @@ def sync_details_with_overview(plot_root: Path, project_id: str) -> dict[str, li
     # which itself replaced two fake English stubs: with no seed actors there
     # is nothing truthful to point at — the subject chip lands through
     # coaching; D-2026-05-28-J's "every step needs a subject" is coached.)
+    archive_folder = services_folder / "_archive"
     created: list[str] = []
+    restored: list[str] = []
     for feature_id in sorted(overview_feature_ids - existing_details):
+        archived_detail = _latest_archived_detail(archive_folder, feature_id)
+        if archived_detail is not None:
+            archived_detail.replace(services_folder / feature_id)
+            restored.append(feature_id)
+            continue
         src = next(n for n in overview.nodes if n.id == feature_id)
         detail = CanvasDoc(
             canvas_id=feature_id,
@@ -83,7 +91,6 @@ def sync_details_with_overview(plot_root: Path, project_id: str) -> dict[str, li
         )
         created.append(feature_id)
 
-    archive_folder = services_folder / "_archive"
     archived: list[str] = []
     skipped_archive: list[str] = []
     for feature_id in sorted(existing_details - overview_feature_ids):
@@ -112,12 +119,37 @@ def sync_details_with_overview(plot_root: Path, project_id: str) -> dict[str, li
         src_path.replace(dst_path)
         archived.append(feature_id)
 
-    result: dict[str, list[str]] = {"created": created, "archived": archived}
+    result: dict[str, list[str]] = {
+        "created": created,
+        "restored": restored,
+        "archived": archived,
+    }
     if skipped_archive:
         result["skipped_archive"] = skipped_archive
     else:
         result["skipped_archive"] = []
     return result
+
+
+def _latest_archived_detail(archive_folder: Path, feature_id: str) -> Path | None:
+    """Return the newest archived detail for ``feature_id`` by name suffix."""
+    if not archive_folder.is_dir():
+        return None
+    candidates: list[tuple[int, Path]] = []
+    for child in archive_folder.iterdir():
+        if not child.is_dir() or not (child / "detail.json").is_file():
+            continue
+        if child.name == feature_id:
+            candidates.append((1, child))
+            continue
+        prefix = f"{feature_id}-"
+        if child.name.startswith(prefix):
+            suffix = child.name.removeprefix(prefix)
+            if suffix.isdigit() and int(suffix) >= 2:
+                candidates.append((int(suffix), child))
+    if not candidates:
+        return None
+    return max(candidates, key=lambda item: item[0])[1]
 
 
 def _detail_has_user_authored_content(detail_dir: Path, feature_id: str) -> bool:
