@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.19] — 2026-09-30
+
+### Changed
+
+- "New conversation" ends the current conversation: it is kept as its own ended conversation (`<scope file>__<UTC>.json`) and the coach no longer gets it back. The conversation list returns current and ended conversations with `id` and `ended`; a conversation can be read by `id`, and `POST /api/chat/conversations/reopen` makes an ended one current again.
+
 ## [0.196.18] — 2026-09-30
 
 ### Fixed

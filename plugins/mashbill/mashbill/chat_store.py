@@ -1,14 +1,11 @@
 """Chat conversation persistence — the disk SSOT for chat (D-2026-06-26-B).
 
 In-memory chat sessions died on an app restart and the user lost real work. This
-module shadows each live chat scope to one append-only file under the project at
+module shadows each live chat scope to one current file under the project at
 ``.noory/novel/chat/<scope>.json``, so conversations survive a restart and travel
-with the project. The **engine is the sole writer** (no viewer race): the user
-message is appended when a turn is sent, the assistant message on ``turn_complete``.
-
-One conversation per scope, mirroring the one-live-session-per-scope registry.
-Reopening restores the transcript *for reading* — it does not revive the CLI
-session (a named v1 limit, see DECISIONS D-2026-06-26-B).
+with the project. Ended conversations sit beside it with a UTC timestamp suffix.
+The **engine is the sole writer** (no viewer race): the user message is appended
+when a turn is sent, the assistant message on ``turn_complete``.
 """
 
 from __future__ import annotations
@@ -73,6 +70,36 @@ def _conversation_path(plot_root: Path, project_id: str, scope: str) -> Path:
     return _chat_dir(plot_root, project_id) / scope_to_filename(scope)
 
 
+def _conversation_id_path(plot_root: Path, project_id: str, conversation_id: str) -> Path:
+    """Resolve a list-row id to one direct child of the chat directory."""
+    if (
+        not conversation_id
+        or not conversation_id.endswith(".json")
+        or "/" in conversation_id
+        or "\\" in conversation_id
+        or ".." in conversation_id
+        or Path(conversation_id).name != conversation_id
+    ):
+        raise ValueError(f"unsafe conversation id: {conversation_id!r}")
+    chat_dir = _chat_dir(plot_root, project_id)
+    path = chat_dir / conversation_id
+    if path.is_symlink() or path.resolve().parent != chat_dir.resolve():
+        raise ValueError(f"unsafe conversation id: {conversation_id!r}")
+    return path
+
+
+def _archive_path(current_path: Path) -> Path:
+    """Choose a filesystem-safe, non-overwriting UTC-stamped archive path."""
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
+    base = current_path.with_name(f"{current_path.stem}__{stamp}{current_path.suffix}")
+    candidate = base
+    collision = 1
+    while candidate.exists():
+        candidate = base.with_stem(f"{base.stem}__{collision}")
+        collision += 1
+    return candidate
+
+
 def append_user(
     plot_root: Path, project_id: str, scope: str, provider: str, msg_id: str, text: str
 ) -> None:
@@ -123,6 +150,47 @@ def read_conversation(plot_root: Path, project_id: str, scope: str) -> ChatConve
     return ChatConversationDoc.model_validate(_read_json(path))
 
 
+def read_conversation_by_id(
+    plot_root: Path, project_id: str, conversation_id: str
+) -> ChatConversationDoc:
+    """Read a current or ended conversation by the opaque id from the list API."""
+    path = _conversation_id_path(plot_root, project_id, conversation_id)
+    return ChatConversationDoc.model_validate(_read_json(path))
+
+
+def archive_current_conversation(plot_root: Path, project_id: str, scope: str) -> str | None:
+    """Move the current conversation aside and return its ended-conversation id.
+
+    A missing current file or a current document with no messages is intentionally
+    left untouched: merely opening a canvas does not create an ended conversation.
+    """
+    _ensure_project(plot_root, project_id)
+    current_path = _conversation_path(plot_root, project_id, scope)
+    if not current_path.exists():
+        return None
+    doc = ChatConversationDoc.model_validate(_read_json(current_path))
+    if not doc.messages:
+        return None
+    archive_path = _archive_path(current_path)
+    current_path.replace(archive_path)
+    return archive_path.name
+
+
+def reopen_conversation(
+    plot_root: Path, project_id: str, conversation_id: str
+) -> ChatConversationDoc:
+    """Make one ended conversation current, archiving the displaced current one."""
+    _ensure_project(plot_root, project_id)
+    ended_path = _conversation_id_path(plot_root, project_id, conversation_id)
+    doc = ChatConversationDoc.model_validate(_read_json(ended_path))
+    current_path = _conversation_path(plot_root, project_id, doc.scope)
+    if ended_path == current_path:
+        raise ValueError("conversation is already current")
+    archive_current_conversation(plot_root, project_id, doc.scope)
+    ended_path.replace(current_path)
+    return doc
+
+
 def read_recent_transcript(
     plot_root: Path, project_id: str, scope: str, max_chars: int = 8000
 ) -> str:
@@ -168,15 +236,18 @@ def list_conversations(plot_root: Path, project_id: str) -> list[dict[str, Any]]
     for path in chat_dir.glob("*.json"):
         try:
             doc = ChatConversationDoc.model_validate(_read_json(path))
+            current_name = scope_to_filename(doc.scope)
         except Exception:  # noqa: BLE001 — a bad file must not break the list
             continue
         rows.append(
             {
+                "id": path.name,
                 "scope": doc.scope,
                 "title": doc.title,
                 "provider": doc.provider,
                 "updated": doc.updated,
                 "message_count": len(doc.messages),
+                "ended": path.name != current_name,
             }
         )
     rows.sort(key=lambda r: r["updated"], reverse=True)

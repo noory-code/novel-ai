@@ -46,9 +46,13 @@ from mashbill.chat_session import ChatProvider, ChatSessionRegistry, chat_regist
 from mashbill.chat_store import (
     append_assistant,
     append_user,
+    archive_current_conversation,
     list_conversations,
     read_conversation,
+    read_conversation_by_id,
     read_recent_transcript,
+    reopen_conversation,
+    scope_to_filename,
 )
 from mashbill.draft_extraction import extract_turn_drafts
 from mashbill.mcp_registration import ProviderName
@@ -65,6 +69,7 @@ __all__ = [
     "chat_models_endpoint",
     "chat_conversations_list_endpoint",
     "chat_conversation_get_endpoint",
+    "chat_conversation_reopen_endpoint",
     "stream_chat_turn",
 ]
 
@@ -366,14 +371,17 @@ async def chat_conversations_list_endpoint(request: Request) -> JSONResponse:
 
 
 async def chat_conversation_get_endpoint(request: Request) -> JSONResponse:
-    """``GET /api/chat/conversations/{scope}?project_path=…`` — one conversation's
-    full message log (D-2026-06-26-B). 400 on a bad scope, 404 when none saved."""
+    """Read one current conversation by scope or any conversation by list-row id."""
     project_path = request.query_params.get("project_path", "")
-    scope = request.path_params.get("scope", "")
+    conversation_ref = request.path_params.get("conversation_ref", "")
     if not project_path:
         return JSONResponse({"error": "project_path required"}, status_code=400)
-    if not is_valid_scope(scope):
+    if not is_valid_scope(conversation_ref) and not conversation_ref.endswith(".json"):
         return JSONResponse({"error": "invalid chat scope"}, status_code=400)
+    if not is_valid_scope(conversation_ref) and (
+        "/" in conversation_ref or "\\" in conversation_ref or ".." in conversation_ref
+    ):
+        return JSONResponse({"error": "invalid conversation id"}, status_code=400)
     try:
         plot_root = resolve_plot_root(project_path, create=False)
     except (FileNotFoundError, NotADirectoryError) as exc:
@@ -382,14 +390,55 @@ async def chat_conversation_get_endpoint(request: Request) -> JSONResponse:
     if project_id is None:
         return JSONResponse({"error": "conversation not found"}, status_code=404)
     try:
-        doc = read_conversation(plot_root, project_id, scope)
+        if is_valid_scope(conversation_ref):
+            doc = read_conversation(plot_root, project_id, conversation_ref)
+        else:
+            doc = read_conversation_by_id(plot_root, project_id, conversation_ref)
     except (FileNotFoundError, json.JSONDecodeError, ValidationError):
         return JSONResponse({"error": "conversation not found"}, status_code=404)
+    except ValueError:
+        return JSONResponse({"error": "invalid conversation id"}, status_code=400)
     return JSONResponse(doc.model_dump())
 
 
+async def chat_conversation_reopen_endpoint(request: Request) -> JSONResponse:
+    """``POST /api/chat/conversations/reopen`` — continue an ended conversation."""
+    try:
+        body: dict[str, Any] = await request.json()
+    except ValueError:
+        return JSONResponse({"error": "invalid JSON body"}, status_code=400)
+    project_path = body.get("project_path")
+    conversation_id = body.get("id")
+    if not isinstance(project_path, str) or not project_path:
+        return JSONResponse({"error": "project_path required"}, status_code=400)
+    if not isinstance(conversation_id, str) or not conversation_id:
+        return JSONResponse({"error": "id required"}, status_code=400)
+    try:
+        plot_root = resolve_plot_root(project_path, create=False)
+    except (FileNotFoundError, NotADirectoryError) as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    project_id = _project_id_for(plot_root)
+    if project_id is None:
+        return JSONResponse({"error": "conversation not found"}, status_code=404)
+    try:
+        doc = reopen_conversation(plot_root, project_id, conversation_id)
+    except (FileNotFoundError, json.JSONDecodeError, ValidationError):
+        return JSONResponse({"error": "conversation not found"}, status_code=404)
+    except ValueError:
+        return JSONResponse({"error": "invalid conversation id"}, status_code=400)
+    registry = _registry_from_request(request)
+    registry.reset(plot_root, scope=doc.scope)
+    return JSONResponse(
+        {
+            "reopened": True,
+            "id": scope_to_filename(doc.scope),
+            "scope": doc.scope,
+        }
+    )
+
+
 async def chat_reset_endpoint(request: Request) -> JSONResponse:
-    """``POST /api/chat/reset`` — drop the workspace's cached CLI session."""
+    """End the current conversation and drop its cached CLI session."""
     try:
         body: dict[str, Any] = await request.json()
     except ValueError:
@@ -405,6 +454,9 @@ async def chat_reset_endpoint(request: Request) -> JSONResponse:
     except (FileNotFoundError, NotADirectoryError) as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
     registry = _registry_from_request(request)
+    project_id = _project_id_for(plot_root)
+    if project_id is not None:
+        archive_current_conversation(plot_root, project_id, scope)
     # Wipe only the active canvas thread across all providers (Q3); other
     # scopes' conversations survive.
     registry.reset(plot_root, scope=scope)

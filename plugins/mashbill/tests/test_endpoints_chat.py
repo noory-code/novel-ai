@@ -23,7 +23,12 @@ from mashbill.chat_session import (
     ChatSessionRegistry,
     ChatStreamEvent,
 )
-from mashbill.chat_store import append_user, read_conversation
+from mashbill.chat_store import (
+    append_user,
+    archive_current_conversation,
+    list_conversations,
+    read_conversation,
+)
 from mashbill.endpoints_chat import (
     build_context_preamble,
     build_framing_preamble,
@@ -726,6 +731,70 @@ def test_chat_reset_scopes_to_given_scope(workspace: Path) -> None:
     assert registry.session_count() == 1
 
 
+def test_chat_reset_archives_current_and_next_turn_has_no_old_context(workspace: Path) -> None:
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+    providers: list[_CannedProvider] = []
+
+    class _FreshProvider(_CannedProvider):
+        @property
+        def is_first_turn(self) -> bool:
+            return not self.calls
+
+    def factory(_root: Path, _name: str) -> ChatProvider:
+        provider = _FreshProvider([ChatStreamEvent(type="turn_complete", turn_id="t", text="ok")])
+        providers.append(provider)
+        return provider
+
+    registry = ChatSessionRegistry(factory=factory)  # type: ignore[arg-type]
+    client = TestClient(
+        create_http_app(
+            hub=BroadcastHub(enable_watchers=False),
+            chat_registry_instance=registry,
+        )
+    )
+    _select_provider(client, workspace, "codex")
+    client.post(
+        "/api/chat/send",
+        json={"project_path": str(workspace), "scope": "foundation", "message": "old topic"},
+    )
+
+    reset = client.post(
+        "/api/chat/reset",
+        json={"project_path": str(workspace), "scope": "foundation"},
+    )
+
+    assert reset.status_code == 200
+    with pytest.raises(FileNotFoundError):
+        read_conversation(plot_root, "alpha", "foundation")
+    ended = list_conversations(plot_root, "alpha")
+    assert len(ended) == 1
+    assert ended[0]["ended"] is True
+
+    client.post(
+        "/api/chat/send",
+        json={"project_path": str(workspace), "scope": "foundation", "message": "new topic"},
+    )
+    assert len(providers) == 2
+    assert "new topic" in providers[-1].calls[0]
+    assert "old topic" not in providers[-1].calls[0]
+
+
+def test_chat_reset_with_no_current_messages_creates_no_archive(
+    app_client: TestClient, workspace: Path
+) -> None:
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+
+    response = app_client.post(
+        "/api/chat/reset",
+        json={"project_path": str(workspace), "scope": "foundation"},
+    )
+
+    assert response.status_code == 200
+    assert list_conversations(plot_root, "alpha") == []
+
+
 # ---------------------------------------------------------------------------
 # notify_event — generalisation of notify()
 # ---------------------------------------------------------------------------
@@ -860,6 +929,94 @@ def test_conversation_get_valid_saved_conversation_200(
     resp = app_client.get(f"/api/chat/conversations/foundation?project_path={workspace}")
     assert resp.status_code == 200
     assert resp.json() == read_conversation(plot_root, "alpha", "foundation").model_dump()
+
+
+def test_conversation_get_accepts_ended_conversation_id(
+    app_client: TestClient, workspace: Path
+) -> None:
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+    append_user(plot_root, "alpha", "foundation", "codex", "user_1", "past question")
+    ended_id = archive_current_conversation(plot_root, "alpha", "foundation")
+    assert ended_id is not None
+
+    resp = app_client.get(f"/api/chat/conversations/{ended_id}?project_path={workspace}")
+
+    assert resp.status_code == 200
+    assert resp.json()["title"] == "past question"
+
+
+def test_conversation_reopen_swaps_files_resets_session_and_refeeds_history(
+    workspace: Path,
+) -> None:
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+    append_user(plot_root, "alpha", "foundation", "codex", "u1", "chosen history")
+    chosen_id = archive_current_conversation(plot_root, "alpha", "foundation")
+    assert chosen_id is not None
+    append_user(plot_root, "alpha", "foundation", "codex", "u2", "current history")
+    providers: list[_CannedProvider] = []
+
+    class _FreshProvider(_CannedProvider):
+        @property
+        def is_first_turn(self) -> bool:
+            return not self.calls
+
+    def factory(_root: Path, _name: str) -> ChatProvider:
+        provider = _FreshProvider(
+            [ChatStreamEvent(type="turn_complete", turn_id="t", text="continued")]
+        )
+        providers.append(provider)
+        return provider
+
+    registry = ChatSessionRegistry(factory=factory)  # type: ignore[arg-type]
+    client = TestClient(
+        create_http_app(
+            hub=BroadcastHub(enable_watchers=False),
+            chat_registry_instance=registry,
+        )
+    )
+    _select_provider(client, workspace, "codex")
+    registry.get_or_create(plot_root, "codex", "foundation")
+
+    response = client.post(
+        "/api/chat/conversations/reopen",
+        json={"project_path": str(workspace), "id": chosen_id},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "reopened": True,
+        "id": "foundation.json",
+        "scope": "foundation",
+    }
+    assert registry.session_count() == 0
+    assert read_conversation(plot_root, "alpha", "foundation").title == "chosen history"
+    assert any(
+        row["title"] == "current history" and row["ended"]
+        for row in list_conversations(plot_root, "alpha")
+    )
+
+    send = client.post(
+        "/api/chat/send",
+        json={"project_path": str(workspace), "scope": "foundation", "message": "continue"},
+    )
+    assert send.status_code == 202
+    assert "chosen history" in providers[-1].calls[0]
+    assert "current history" not in providers[-1].calls[0]
+
+
+def test_conversation_reopen_rejects_path_escape(app_client: TestClient, workspace: Path) -> None:
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+
+    response = app_client.post(
+        "/api/chat/conversations/reopen",
+        json={"project_path": str(workspace), "id": "../outside.json"},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"error": "invalid conversation id"}
 
 
 def test_conversation_get_corrupt_json_404(app_client: TestClient, workspace: Path) -> None:

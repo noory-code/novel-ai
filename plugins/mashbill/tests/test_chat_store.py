@@ -14,9 +14,12 @@ import pytest
 from mashbill.chat_store import (
     append_assistant,
     append_user,
+    archive_current_conversation,
     list_conversations,
     read_conversation,
+    read_conversation_by_id,
     read_recent_transcript,
+    reopen_conversation,
 )
 from mashbill.project_io import create_project
 from mashbill.workspace import resolve_plot_root
@@ -130,3 +133,69 @@ def test_survives_simulated_restart(tmp_path: Path) -> None:
     fresh_root = resolve_plot_root(str(tmp_path))  # as if a new engine process opened it
     doc = read_conversation(fresh_root, pid, "project")
     assert [m.text for m in doc.messages] == ["the mission", "pinned it"]
+
+
+def test_archive_current_moves_messages_and_clears_recent_transcript(tmp_path: Path) -> None:
+    plot_root, pid = _project(tmp_path)
+    append_user(plot_root, pid, "foundation", "codex", "u1", "the old mission")
+
+    ended_id = archive_current_conversation(plot_root, pid, "foundation")
+
+    assert ended_id is not None
+    assert ended_id.startswith("foundation__")
+    assert ended_id.endswith("Z.json")
+    assert not (plot_root / "chat" / "foundation.json").exists()
+    assert read_recent_transcript(plot_root, pid, "foundation") == ""
+    assert read_conversation_by_id(plot_root, pid, ended_id).messages[0].text == "the old mission"
+
+
+def test_list_includes_current_and_ended_with_ids_newest_first(tmp_path: Path) -> None:
+    plot_root, pid = _project(tmp_path)
+    append_user(plot_root, pid, "foundation", "codex", "u1", "old question")
+    ended_id = archive_current_conversation(plot_root, pid, "foundation")
+    append_user(plot_root, pid, "foundation", "codex", "u2", "new question")
+
+    rows = list_conversations(plot_root, pid)
+
+    assert [row["title"] for row in rows] == ["new question", "old question"]
+    assert [row["ended"] for row in rows] == [False, True]
+    assert rows[0]["id"] == "foundation.json"
+    assert rows[1]["id"] == ended_id
+    assert all(row["scope"] == "foundation" for row in rows)
+
+
+def test_reopen_swaps_current_and_ended_conversations(tmp_path: Path) -> None:
+    plot_root, pid = _project(tmp_path)
+    append_user(plot_root, pid, "foundation", "codex", "u1", "chosen old question")
+    chosen_id = archive_current_conversation(plot_root, pid, "foundation")
+    assert chosen_id is not None
+    append_user(plot_root, pid, "foundation", "codex", "u2", "current question")
+
+    reopened = reopen_conversation(plot_root, pid, chosen_id)
+
+    assert reopened.scope == "foundation"
+    assert read_conversation(plot_root, pid, "foundation").title == "chosen old question"
+    rows = list_conversations(plot_root, pid)
+    assert {(row["title"], row["ended"]) for row in rows} == {
+        ("chosen old question", False),
+        ("current question", True),
+    }
+    transcript = read_recent_transcript(plot_root, pid, "foundation")
+    assert "chosen old question" in transcript
+    assert "current question" not in transcript
+
+
+def test_archive_empty_current_is_noop(tmp_path: Path) -> None:
+    plot_root, pid = _project(tmp_path)
+
+    assert archive_current_conversation(plot_root, pid, "foundation") is None
+    assert list_conversations(plot_root, pid) == []
+
+
+def test_conversation_id_cannot_escape_chat_directory(tmp_path: Path) -> None:
+    plot_root, pid = _project(tmp_path)
+
+    with pytest.raises(ValueError, match="unsafe conversation id"):
+        read_conversation_by_id(plot_root, pid, "../outside.json")
+    with pytest.raises(ValueError, match="unsafe conversation id"):
+        reopen_conversation(plot_root, pid, "../outside.json")

@@ -55,6 +55,7 @@ from mashbill.debug_endpoints import (
 )
 from mashbill.endpoints_chat import (
     chat_conversation_get_endpoint,
+    chat_conversation_reopen_endpoint,
     chat_conversations_list_endpoint,
     chat_models_endpoint,
     chat_reset_endpoint,
@@ -157,7 +158,12 @@ def create_http_app(
             methods=["GET"],
         ),
         Route(
-            "/api/chat/conversations/{scope}",
+            "/api/chat/conversations/reopen",
+            chat_conversation_reopen_endpoint,
+            methods=["POST"],
+        ),
+        Route(
+            "/api/chat/conversations/{conversation_ref}",
             chat_conversation_get_endpoint,
             methods=["GET"],
         ),
