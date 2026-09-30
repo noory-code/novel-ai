@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.23] — 2026-09-30
+
+### Fixed
+
+- A coach answer that finishes after a new conversation was started is saved to the conversation it answers (found by its durable id), not to the new one, and its extracted drafts point there too.
+
 ## [0.196.22] — 2026-09-30
 
 ### Fixed

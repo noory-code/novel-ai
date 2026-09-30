@@ -19,6 +19,7 @@ from mashbill.chat_store import (
     append_user,
     archive_current_conversation,
     read_conversation,
+    read_conversation_by_id,
 )
 from mashbill.draft_extraction import (
     DRAFT_EXTRACTION_KNOWN_CAP,
@@ -692,6 +693,7 @@ async def test_slow_extraction_keeps_completed_turn_conversation_after_reset(
         scope="foundation",
         project_id="alpha",
         provider_name="codex",
+        conversation_id=completed_conversation_id,
     )
     await asyncio.wait_for(provider.extraction_called.wait(), timeout=1)
 
@@ -705,6 +707,57 @@ async def test_slow_extraction_keeps_completed_turn_conversation_after_reset(
     assert completed_conversation_id is not None
     assert current_conversation_id != completed_conversation_id
     assert list_drafts(plot_root, "alpha")[0].chat_conversation_id == completed_conversation_id
+
+
+async def test_reset_before_turn_complete_keeps_reply_and_draft_on_original_conversation(
+    tmp_path: Path,
+) -> None:
+    plot_root = _project(tmp_path)
+    append_user(plot_root, "alpha", "foundation", "codex", "user_1", "First conversation")
+    original_conversation_id = read_conversation(plot_root, "alpha", "foundation").conversation_id
+    assert original_conversation_id is not None
+    ended_ids: list[str] = []
+
+    def reset_before_completion() -> None:
+        ended_id = archive_current_conversation(plot_root, "alpha", "foundation")
+        assert ended_id is not None
+        ended_ids.append(ended_id)
+        append_user(
+            plot_root,
+            "alpha",
+            "foundation",
+            "codex",
+            "user_2",
+            "Second conversation",
+        )
+
+    provider = _ExtractingProvider(
+        '[{"proposed_text":"Keep the original conversation.",'
+        '"rationale":"It is a concrete proposal."}]',
+        on_turn=reset_before_completion,
+    )
+
+    await stream_chat_turn(
+        provider,
+        _FakeHub(),
+        plot_root,
+        "hello",
+        scope="foundation",
+        project_id="alpha",
+        provider_name="codex",
+        conversation_id=original_conversation_id,
+    )
+    await _wait_for_drafts(plot_root, 1)
+    await _wait_for_extraction_tasks()
+
+    ended = read_conversation_by_id(plot_root, "alpha", ended_ids[0])
+    current = read_conversation(plot_root, "alpha", "foundation")
+    assert [message.text for message in ended.messages] == [
+        "First conversation",
+        "Mission idea",
+    ]
+    assert [message.text for message in current.messages] == ["Second conversation"]
+    assert list_drafts(plot_root, "alpha")[0].chat_conversation_id == original_conversation_id
 
 
 async def test_turn_drafts_are_passed_to_extractor_for_deduplication(tmp_path: Path) -> None:

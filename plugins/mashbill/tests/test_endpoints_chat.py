@@ -17,6 +17,7 @@ from typing import Any
 import pytest
 from starlette.testclient import TestClient
 
+from mashbill import endpoints_chat
 from mashbill.broadcast import BroadcastHub
 from mashbill.chat_session import (
     ChatProvider,
@@ -863,6 +864,8 @@ async def test_stream_chat_turn_persists_assistant_on_turn_complete(tmp_path: Pa
     plot_root = resolve_plot_root(str(tmp_path))
     create_project(plot_root, "alpha", "Alpha")
     append_user(plot_root, "alpha", "foundation", "codex", "user_1", "hello")
+    conversation_id = read_conversation(plot_root, "alpha", "foundation").conversation_id
+    assert conversation_id is not None
     hub = _FakeHub()
     provider = _CannedProvider(
         [ChatStreamEvent(type="turn_complete", turn_id="t1", text="hi there")]
@@ -875,10 +878,42 @@ async def test_stream_chat_turn_persists_assistant_on_turn_complete(tmp_path: Pa
         scope="foundation",
         project_id="alpha",
         provider_name="codex",
+        conversation_id=conversation_id,
     )
     doc = read_conversation(plot_root, "alpha", "foundation")
     assert [m.role for m in doc.messages] == ["user", "assistant"]
     assert doc.messages[-1].text == "hi there"
+
+
+def test_chat_send_captures_conversation_id_before_streaming(
+    app_client: TestClient,
+    workspace: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The scheduled turn owns the conversation created by its user message."""
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+    captured_ids: list[str | None] = []
+
+    async def capture_turn(*args: Any, conversation_id: str | None = None, **kwargs: Any) -> None:
+        captured_ids.append(conversation_id)
+
+    monkeypatch.setattr(endpoints_chat, "stream_chat_turn", capture_turn)
+    _select_provider(app_client, workspace, "codex")
+
+    response = app_client.post(
+        "/api/chat/send",
+        json={
+            "project_path": str(workspace),
+            "message": "define the mission",
+            "scope": "foundation",
+        },
+    )
+
+    assert response.status_code == 202
+    conversation_id = read_conversation(plot_root, "alpha", "foundation").conversation_id
+    assert conversation_id is not None
+    assert captured_ids == [conversation_id]
 
 
 def test_chat_send_persists_user_message(app_client: TestClient, workspace: Path) -> None:

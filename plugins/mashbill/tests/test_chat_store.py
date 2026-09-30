@@ -15,6 +15,7 @@ import pytest
 from mashbill import chat_store
 from mashbill.chat_store import (
     append_assistant,
+    append_assistant_to_conversation,
     append_user,
     archive_current_conversation,
     list_conversations,
@@ -87,6 +88,29 @@ def test_append_assistant_appends_and_bumps_updated(tmp_path: Path) -> None:
     assert doc.created == created  # unchanged
     assert doc.updated >= created  # advanced (or equal at worst)
     assert doc.title == "Hi"  # never overwritten
+
+
+def test_append_assistant_to_unknown_conversation_falls_back_to_current(
+    tmp_path: Path,
+) -> None:
+    plot_root, pid = _project(tmp_path)
+    append_user(plot_root, pid, "foundation", "codex", "user_1", "Hi")
+
+    append_assistant_to_conversation(
+        plot_root,
+        pid,
+        "foundation",
+        "codex",
+        "turn_1",
+        "Hello back",
+        "unknown-conversation-id",
+    )
+
+    doc = read_conversation(plot_root, pid, "foundation")
+    assert [(message.role, message.text) for message in doc.messages] == [
+        ("user", "Hi"),
+        ("assistant", "Hello back"),
+    ]
 
 
 def test_parametric_scope_filename_and_roundtrip(tmp_path: Path) -> None:

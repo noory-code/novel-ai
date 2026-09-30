@@ -155,6 +155,67 @@ def append_assistant(
     _write_json(path, doc.model_dump())
 
 
+def find_conversation_path_by_conversation_id(
+    plot_root: Path,
+    project_id: str,
+    scope: str,
+    conversation_id: str,
+) -> Path | None:
+    """Find a scope's current or ended file by its durable conversation id.
+
+    The current file is checked first because it is the overwhelmingly common
+    case. Invalid or legacy files are skipped so callers can preserve the old
+    current-file fallback behavior.
+    """
+    chat_dir = _chat_dir(plot_root, project_id)
+    current_path = _conversation_path(plot_root, project_id, scope)
+    candidates = [current_path]
+    if chat_dir.exists():
+        candidates.extend(path for path in chat_dir.glob("*.json") if path != current_path)
+    for path in candidates:
+        if not path.exists():
+            continue
+        try:
+            doc = ChatConversationDoc.model_validate(_read_json(path))
+        except Exception:  # noqa: BLE001 — one bad chat file must not block lookup
+            continue
+        if doc.scope == scope and doc.conversation_id == conversation_id:
+            return path
+    return None
+
+
+def append_assistant_to_conversation(
+    plot_root: Path,
+    project_id: str,
+    scope: str,
+    provider: str,
+    msg_id: str,
+    text: str,
+    conversation_id: str | None,
+) -> None:
+    """Append to the file owning ``conversation_id``, including ended files.
+
+    A missing id or an unmatched legacy file falls back to the current scope,
+    preserving :func:`append_assistant`'s established no-op behavior when no
+    current conversation exists.
+    """
+    _ensure_project(plot_root, project_id)
+    path = (
+        find_conversation_path_by_conversation_id(plot_root, project_id, scope, conversation_id)
+        if conversation_id is not None
+        else None
+    )
+    if path is None:
+        append_assistant(plot_root, project_id, scope, provider, msg_id, text)
+        return
+    doc = ChatConversationDoc.model_validate(_read_json(path))
+    now = _now()
+    doc.provider = provider
+    doc.updated = now
+    doc.messages.append(ChatMessageRecord(id=msg_id, role="assistant", text=text, ts=now))
+    _write_json(path, doc.model_dump())
+
+
 def read_conversation(plot_root: Path, project_id: str, scope: str) -> ChatConversationDoc:
     """The full transcript for ``scope``. Raises ``FileNotFoundError`` (→ 404)
     when no conversation has been saved."""

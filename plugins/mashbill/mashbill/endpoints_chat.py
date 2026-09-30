@@ -44,7 +44,7 @@ from mashbill.chat_providers.base import DEFAULT_CHAT_SCOPE, is_valid_scope
 from mashbill.chat_selection import build_turn_preamble
 from mashbill.chat_session import ChatProvider, ChatSessionRegistry, chat_registry
 from mashbill.chat_store import (
-    append_assistant,
+    append_assistant_to_conversation,
     append_user,
     archive_current_conversation,
     current_conversation_id,
@@ -185,6 +185,7 @@ async def stream_chat_turn(
     project_id: str | None = None,
     provider_name: str = "",
     model: str | None = None,
+    conversation_id: str | None = None,
 ) -> None:
     """Pull stream events from ``provider`` and fan them out to ``plot_root``.
 
@@ -206,17 +207,16 @@ async def stream_chat_turn(
             payload["scope"] = scope
             await hub.notify_event(plot_root, _CHAT_EVENT, payload)
             if event.type == "turn_complete" and project_id:
-                chat_conversation_id = None
                 try:
-                    append_assistant(
+                    append_assistant_to_conversation(
                         plot_root,
                         project_id,
                         scope,
                         provider_name,
                         event.turn_id or f"turn_{uuid4().hex[:12]}",
                         event.text,
+                        conversation_id,
                     )
-                    chat_conversation_id = current_conversation_id(plot_root, project_id, scope)
                 except Exception:  # noqa: BLE001 — persistence must not break chat
                     _log.exception("chat persist (assistant) failed for %s", plot_root)
                 task = asyncio.create_task(
@@ -228,7 +228,7 @@ async def stream_chat_turn(
                         scope,
                         event.text,
                         turn_started_at,
-                        chat_conversation_id,
+                        conversation_id,
                         model=model,
                     )
                 )
@@ -332,6 +332,7 @@ async def chat_send_endpoint(request: Request) -> JSONResponse:
     # Persist the user's turn before scheduling (D-2026-06-26-B) — the raw
     # ``message`` (not the context-injected ``full_message``), engine-side so it
     # survives a viewer crash. Best-effort: a write failure never blocks the turn.
+    conversation_id = None
     if project_id is not None:
         try:
             append_user(
@@ -342,6 +343,7 @@ async def chat_send_endpoint(request: Request) -> JSONResponse:
                 f"user_{uuid4().hex[:12]}",
                 message,
             )
+            conversation_id = current_conversation_id(plot_root, project_id, scope)
         except Exception:  # noqa: BLE001 — persistence must not break chat
             _log.exception("chat persist (user) failed for %s", plot_root)
 
@@ -355,6 +357,7 @@ async def chat_send_endpoint(request: Request) -> JSONResponse:
             project_id,
             selection.provider,
             selection.model,
+            conversation_id=conversation_id,
         )
     )
     return JSONResponse({"accepted": True}, status_code=202)
