@@ -39,6 +39,23 @@
 
 ## Log
 
+### D-2026-09-30-A — Agents cannot delete a project
+
+- **What:** the MCP tool `delete_project_tool` is removed. Deleting a project
+  stays a person's action in the Novel app (the HTTP delete route and
+  `project_io.delete_project` are unchanged).
+- **Why:** deleting removes the whole project folder, including its drafts, so
+  an agent's deletion could leave no record and cannot be undone. Every other
+  AI design change leaves a draft (D-2026-09-29-B); this one could not.
+- **Alternatives:** keep the tool and exclude project deletion from the draft
+  guarantee — not chosen by the user.
+- **Approval:** Accepted — user, 2026-09-30 ("AI 에서 삭제 도구를 뺀다";
+  novel-workspace W-00000316).
+- **Spec impact:** MCP tool catalogue (`tests/test_mcp_tools.py` pin),
+  `skills/mashbill-help`, `skills/mashbill-new-project`.
+- **Principles:** Fail Fast / Honesty (no irreversible change without a
+  record); SSOT (the draft record stays complete).
+
 ### D-2026-09-29-B — Coach drafts are kept separately from the chat
 
 - **What:** every concrete draft the coach shows is recorded as its own

@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.20] — 2026-09-30
+
+### Removed
+
+- The MCP tool `delete_project_tool`. Deleting a project is a person's action in the Novel app; an agent's deletion would remove the project's drafts with it and leave no record (D-2026-09-30-A).
+
 ## [0.196.19] — 2026-09-30
 
 ### Changed

@@ -31,5 +31,5 @@ directory belongs next to the code it describes.
    `open_canvas` unless the user says a compatible Novel UI is already running.
 
 If creation reports that the id exists, show the existing project and ask
-whether to use it or allocate a new id. Deletion requires an explicit user
-request because `delete_project_tool` removes the entire project directory.
+whether to use it or allocate a new id. Agents cannot delete a project; if the
+user wants one removed, they delete it in the Novel app.

@@ -19,7 +19,6 @@ from fastmcp import FastMCP
 from mashbill.chat_selection import build_turn_preamble
 from mashbill.folder_io import (
     create_project,
-    delete_project,
     list_feature_details,
     read_canvas,
     read_project,
@@ -148,14 +147,6 @@ def rename_project(project_path: str, project_id: str, name: str) -> dict[str, A
     Project anchor label in one shot."""
     plot_root = resolve_plot_root(project_path)
     return rename_project_with_draft(plot_root, project_id, name).model_dump()
-
-
-@mcp.tool()
-def delete_project_tool(project_path: str, project_id: str) -> str:
-    """Delete a project folder (and its git repo)."""
-    plot_root = resolve_plot_root(project_path)
-    delete_project(plot_root, project_id)
-    return f"deleted {project_id}"
 
 
 # ---------------------------------------------------------------------------

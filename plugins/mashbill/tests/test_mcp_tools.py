@@ -27,7 +27,6 @@ _CORE_TOOLS = {
     "get_project",
     "create_project_tool",
     "rename_project",
-    "delete_project_tool",
     "get_canvas",
     "update_canvas",
     "update_node",
@@ -124,12 +123,9 @@ def test_search_project_nodes_finds_by_label(tmp_path: Path) -> None:
     assert any(h["label"] == "Reader" for h in hits)
 
 
-def test_delete_project_tool_removes_it(tmp_path: Path) -> None:
-    ws = str(tmp_path)
-    mcp_tools.create_project_tool(ws, "p1", "P1")
-    msg = mcp_tools.delete_project_tool(ws, "p1")
-    assert "p1" in msg
-    assert "p1" not in {p["id"] for p in mcp_tools.list_projects(ws)}
+async def test_registry_does_not_expose_delete_project_tool() -> None:
+    tools = await mcp_tools.mcp.list_tools()
+    assert "delete_project_tool" not in {tool.name for tool in tools}
 
 
 def test_get_canvas_feature_without_service_id_is_rejected(tmp_path: Path) -> None:

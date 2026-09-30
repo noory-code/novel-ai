@@ -28,7 +28,7 @@ foundation, actors, services, features, entities, and relationships under
 ## MCP tool groups
 
 - Project discovery: `list_projects`, `discover_workspace_projects`, `get_project`
-- Project mutation: `create_project_tool`, `rename_project`, `delete_project_tool`
+- Project mutation: `create_project_tool`, `rename_project` (deleting a project is done by the person in the Novel app; agents have no delete tool)
 - Canvas access: `get_canvas`, `update_canvas`, `list_detail_canvases`
 - Narrow graph mutation: `create_node`, `update_node`, `create_edge`,
   `set_node_references`
