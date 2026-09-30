@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.33] — 2026-09-30
+
+### Changed
+
+- `DECISIONS.md` D-2026-09-29-B records that project renames are drafts too (`canvas_kind: "project"`, `rename_project(draft_id)`), with the user's approval.
+
 ## [0.196.32] — 2026-09-30
 
 ### Fixed

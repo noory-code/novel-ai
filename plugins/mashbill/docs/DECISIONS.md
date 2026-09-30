@@ -88,7 +88,10 @@
   every AI canvas write without `draft_id` leaves a confirmed
   `origin: "auto"` draft, and after each in-app coach turn the engine
   extracts proposals the coach showed but did not record from the saved
-  reply and keeps them as `origin: "extracted"`, proposed.
+  reply and keeps them as `origin: "extracted"`, proposed. A project rename is
+  a design change too: a shown project-name proposal is a `canvas_kind:
+  "project"` draft, and `rename_project` takes its `draft_id` (or leaves an
+  auto draft).
 - **Why:** the user wants to find later why a concept became what it is
   without digging through conversations, including the directions that were
   discarded. It serves the identity "Novel shows why a feature came about".
@@ -98,7 +101,8 @@
   the canvas stays the single current source; a draft points by id.
 - **Approval:** Accepted — user, 2026-09-29 ("따로 남긴다", "둘 다";
   novel-workspace W-00000313, W-00000316). Turn extraction accepted — user,
-  2026-09-29 ("대화에서 제안을 찾아 남긴다").
+  2026-09-29 ("대화에서 제안을 찾아 남긴다"). Project renames as drafts
+  accepted — user, 2026-09-30 ("바꾼다면 초안으로 남겨야죠").
 - **Spec impact:** `SPEC.md` Draft records row.
 - **Principles:** SSOT (drafts point at concepts, never copy them); Honesty
   (discarded directions remain visible).
