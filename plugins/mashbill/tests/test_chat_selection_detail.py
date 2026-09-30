@@ -16,6 +16,7 @@ from pathlib import Path
 
 from mashbill.chat_selection import (
     CANVAS_MAP_CAP,
+    OPEN_DRAFTS_CAP,
     build_turn_preamble,
     render_canvas_map,
     render_cross_canvas_registry,
@@ -23,6 +24,7 @@ from mashbill.chat_selection import (
     render_selection_detail,
     render_write_target,
 )
+from mashbill.draft_store import record_draft, resolve_draft
 from mashbill.folder_io import create_project, write_canvas
 from mashbill.models import (
     ActorNode,
@@ -100,6 +102,52 @@ def _setup(tmp_path: Path) -> Path:
     create_project(plot_root, "alpha", "Alpha")
     write_canvas(plot_root, "alpha", _mission_canvas())
     return plot_root
+
+
+def test_turn_preamble_lists_only_recent_open_drafts_for_scope(tmp_path: Path) -> None:
+    plot_root = _setup(tmp_path)
+    open_drafts = [
+        record_draft(
+            plot_root,
+            "alpha",
+            "foundation",
+            f"Open proposal {number} " + "x" * 200,
+            "Concrete proposal.",
+            "foundation",
+        )
+        for number in range(OPEN_DRAFTS_CAP + 2)
+    ]
+    closed = record_draft(
+        plot_root,
+        "alpha",
+        "foundation",
+        "Closed proposal",
+        "Already decided.",
+        "foundation",
+    )
+    resolve_draft(plot_root, "alpha", closed.id, "rejected")
+    other_scope = record_draft(
+        plot_root,
+        "alpha",
+        "actors",
+        "Other scope proposal",
+        "Belongs elsewhere.",
+        "actors",
+    )
+
+    preamble = build_turn_preamble(plot_root, "foundation", [])
+    block = preamble.split("[Open drafts]", 1)[1]
+
+    assert "Closed proposal" not in block
+    assert other_scope.id not in block
+    assert all(draft.id in block for draft in open_drafts[-OPEN_DRAFTS_CAP:])
+    assert all(draft.id not in block for draft in open_drafts[:-OPEN_DRAFTS_CAP])
+    assert "x" * 200 not in block
+
+
+def test_turn_preamble_omits_open_drafts_block_when_none_exist(tmp_path: Path) -> None:
+    plot_root = _setup(tmp_path)
+    assert "[Open drafts]" not in build_turn_preamble(plot_root, "foundation", [])
 
 
 def test_selection_detail_injects_node_body(tmp_path: Path) -> None:

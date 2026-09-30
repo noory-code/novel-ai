@@ -730,6 +730,8 @@ def test_system_prompt_stays_under_saturation_budget() -> None:
     Raised 1770 -> 1795 (W-00000316): project-name proposals now carry their
     draft id through rename_project. The required sentence adds 21 words, and
     services remains below the observed 1,800-word saturation boundary.
+    W-00000342 replaces automatic recording with explicit draft consent and
+    adds update_draft while staying within the same ceiling.
     The budget still forces compress-before-add:
     content is pinned by the phrase guards in this file and
     ``test_chat_system_prompt.py``; this test pins the SIZE."""

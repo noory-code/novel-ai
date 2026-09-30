@@ -14,8 +14,16 @@ DraftOrigin = Literal["recorded", "auto", "extracted"]
 DraftCanvasKind = CanvasKind | Literal["project"]
 
 
+class DraftRevision(BaseModel):
+    """The proposal text and rationale immediately before one agreed edit."""
+
+    proposed_text: str
+    rationale: str
+    updated: str
+
+
 class DraftDoc(BaseModel):
-    """One durable proposal shown by the coach during a design conversation."""
+    """One proposal the person explicitly chose to keep."""
 
     id: str
     created: str
@@ -31,3 +39,4 @@ class DraftDoc(BaseModel):
     chat_scope: str
     chat_conversation_id: str | None = None
     resolved_node_ids: list[str] = Field(default_factory=list)
+    revisions: list[DraftRevision] = Field(default_factory=list)

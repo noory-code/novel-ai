@@ -106,25 +106,6 @@ class ClaudeCodeProvider(_SubprocessChatProvider):
         cmd.append(user_message)
         return cmd
 
-    async def complete_once(self, prompt: str, *, model: str | None = None) -> str:
-        """Run a tool-free, non-persisted Claude completion outside the chat session."""
-        return await self._capture_once(
-            [
-                self._cli_path,
-                "--print",
-                "--output-format",
-                "text",
-                "--safe-mode",
-                "--tools",
-                "",
-                "--no-session-persistence",
-                "--permission-prompts",
-                "none",
-                *self._model_args_for(model),
-                prompt,
-            ]
-        )
-
     def _mcp_config_path(self) -> str:
         """Write the in-app mashbill MCP config to a temp file and return its path
         (D-2026-06-26-E). Passed to claude via ``--mcp-config`` so the coach

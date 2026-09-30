@@ -37,7 +37,7 @@ from mashbill.mcp_context_tools import (
     get_canvas_framing,
     get_design_principles,
 )
-from mashbill.mcp_draft_tools import record_draft, resolve_draft
+from mashbill.mcp_draft_tools import record_draft, resolve_draft, update_draft
 from mashbill.mcp_git_tools import delete_project_tag, list_project_tags, tag_project
 from mashbill.mcp_project_tools import rename_project_with_draft
 from mashbill.migrate import migrate_v01_to_v02
@@ -71,6 +71,7 @@ for _tool in (
     get_design_principles,
     get_canvas_framing,
     record_draft,
+    update_draft,
     resolve_draft,
     tag_project,
     list_project_tags,
@@ -203,7 +204,7 @@ def update_canvas(
     """Overwrite a canvas. Writing ``services`` auto-creates / archives
     Detail canvases so the Services overview and its feature Details stay
     1:1. The response reports the reconciliation. A supplied ``draft_id`` is
-    confirmed; otherwise a content change records a confirmed fallback draft."""
+    confirmed when it matches; writes without one do not create a draft."""
     plot_root = resolve_plot_root(project_path)
     validated = CanvasDoc.model_validate(canvas)
     sync, warning = update_canvas_with_draft(plot_root, project_id, validated, draft_id, chat_scope)
@@ -241,7 +242,7 @@ def update_node(
     required when ``canvas_kind == "feature"``. Errors if ``node_id`` is absent
     (the project anchor is not a node). Only call this after the user confirms —
     never to finalise something they haven't agreed to. Pass [Write target]
-    ``chat_scope``; omitting ``draft_id`` records a confirmed fallback draft."""
+    ``chat_scope``; omitting ``draft_id`` does not create a draft."""
     plot_root = resolve_plot_root(project_path)
     return update_node_with_draft(
         plot_root,
@@ -295,7 +296,7 @@ def create_node(
     instead of the generic kind pile — pass the parent's id when registering a
     child (a feature near its service, a step near the previous step), so the
     canvas stays visually grouped (D-2026-07-02-L).
-    Pass [Write target] ``chat_scope``; omitting ``draft_id`` records a confirmed fallback draft.
+    Pass [Write target] ``chat_scope``; omitting ``draft_id`` does not create a draft.
     Returns ``{"node": <new node dict>, "rejected_fields": [...]}``."""
     plot_root = resolve_plot_root(project_path)
     return create_node_with_draft(
@@ -334,8 +335,8 @@ def create_edge(
     ``relation`` are minted server-side. Idempotent — an existing directed
     source→target line is returned, never duplicated. Every other node and
     edge is left untouched. Do NOT use ``update_canvas`` just to add a line.
-    A supplied ``draft_id`` is confirmed; omitting it records a confirmed
-    fallback draft.
+    A matching supplied ``draft_id`` is confirmed; omitting it does not create
+    a draft.
     """
     plot_root = resolve_plot_root(project_path)
     return create_edge_with_draft(
@@ -375,8 +376,8 @@ def set_node_references(
     already exist on its home canvas — find them with get_canvas /
     search_project_nodes, or create the master first (create_master /
     create_node on its home canvas). Call this on the user's pick, same
-    confirmation gate as every write. A supplied ``draft_id`` is confirmed;
-    omitting it records a confirmed fallback draft.
+    confirmation gate as every write. A matching supplied ``draft_id`` is
+    confirmed; omitting it does not create a draft.
     """
     plot_root = resolve_plot_root(project_path)
     return set_node_references_with_draft(

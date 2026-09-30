@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.197.0] — 2026-10-01
+
+### Changed
+
+- A draft is kept only when the person chooses to keep it (D-2026-10-01-A): the coach asks before calling `record_draft`, turn-end extraction is removed, and AI writes without a matching `draft_id` no longer record a fallback draft.
+
+### Added
+
+- MCP `update_draft` revises a kept, not-yet-applied draft and keeps the earlier text and rationale in `revisions`.
+
 ## [0.196.33] — 2026-09-30
 
 ### Changed

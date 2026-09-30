@@ -61,7 +61,7 @@ def update_canvas_with_draft(
     (saved, sync), warning = with_draft_or_rollback(
         write_and_sync,
         lambda written: finish_canvas_write_draft(
-            plot_root, project_id, draft_id, before, written[0], chat_scope
+            plot_root, project_id, draft_id, before, written[0]
         ),
         rollback,
     )
@@ -92,7 +92,6 @@ def update_node_with_draft(
             canvas_kind,
             fields,
             written,
-            chat_scope,
             service_id,
             before_node=before_node.model_dump(by_alias=True) if before_node is not None else None,
         ),
@@ -142,7 +141,6 @@ def create_node_with_draft(
             canvas_kind,
             fields,
             written,
-            chat_scope,
             service_id,
             [near] if near is not None else None,
         ),
@@ -164,7 +162,7 @@ def create_edge_with_draft(
     draft_id: str | None,
     chat_scope: str,
 ) -> dict[str, Any]:
-    """Append an edge and confirm or record its draft."""
+    """Append an edge and confirm a matching supplied draft."""
     if draft_id is not None:
         ensure_draft(plot_root, project_id, draft_id)
     before = read_canvas(plot_root, project_id, canvas_kind, service_id)
@@ -173,7 +171,7 @@ def create_edge_with_draft(
     target_label = labels.get(target_id) or target_id
     proposed_text = f"관계: {source_label} → {target_label}"
 
-    def record_draft(out: dict[str, Any]) -> str | None:
+    def finish_draft(out: dict[str, Any]) -> str | None:
         written_text = proposed_text
         written_label = str(out["edge"].get("label") or "")
         if written_label:
@@ -183,11 +181,8 @@ def create_edge_with_draft(
             project_id,
             draft_id,
             canvas_kind,
-            written_text,
-            "edge",
             [source_id, target_id],
             [source_id, target_id],
-            chat_scope,
             service_id,
             written_texts=[written_text],
         )
@@ -196,7 +191,7 @@ def create_edge_with_draft(
         lambda: create_edge(
             plot_root, project_id, canvas_kind, source_id, target_id, service_id, label
         ),
-        record_draft,
+        finish_draft,
         lambda: write_canvas(plot_root, project_id, before),
     )
     if warning is not None:
@@ -214,7 +209,7 @@ def set_node_references_with_draft(
     draft_id: str | None,
     chat_scope: str,
 ) -> dict[str, Any]:
-    """Assign references and confirm or record their draft."""
+    """Assign references and confirm matching parts of a supplied draft."""
     if draft_id is not None:
         ensure_draft(plot_root, project_id, draft_id)
     before = read_canvas(plot_root, project_id, canvas_kind, service_id)
@@ -230,7 +225,6 @@ def set_node_references_with_draft(
             refs,
             written,
             before_node_data,
-            chat_scope,
             service_id,
         ),
         lambda: write_canvas(plot_root, project_id, before),
@@ -248,7 +242,6 @@ def _finish_reference_write_draft(
     refs: dict[str, list[str]],
     write_result: dict[str, Any],
     before_node: dict[str, Any] | None,
-    chat_scope: str,
     service_id: str | None,
 ) -> str | None:
     node = write_result["node"]
@@ -262,11 +255,8 @@ def _finish_reference_write_draft(
             project_id,
             draft_id,
             canvas_kind,
-            "",
-            "references",
             [node_id],
             [node_id],
-            chat_scope,
             service_id,
             design_content_changed=False,
         )
@@ -304,18 +294,6 @@ def _finish_reference_write_draft(
         if not remainder:
             return None
 
-    finish_write_draft(
-        plot_root,
-        project_id,
-        None,
-        canvas_kind,
-        "\n".join(fragment.written_texts[0] for fragment in remainder),
-        "references",
-        [node_id],
-        [node_id],
-        chat_scope,
-        service_id,
-    )
     if draft_id is None:
         return None
     if matching:

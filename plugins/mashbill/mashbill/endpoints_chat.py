@@ -9,7 +9,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 from uuid import uuid4
@@ -43,7 +42,6 @@ from mashbill.chat_store import (
     scope_to_filename,
 )
 from mashbill.chat_turn_state import finish_turn, start_turn, turn_in_progress
-from mashbill.draft_extraction import extract_turn_drafts
 from mashbill.mcp_registration import ProviderName
 from mashbill.workspace import enumerate_projects, resolve_plot_root
 
@@ -115,10 +113,7 @@ _log = logging.getLogger(__name__)
 # Event name carried on the WS payload. Viewer demultiplexes on ``event``;
 # the existing project_changed payload uses ``"project_changed"``.
 _CHAT_EVENT = "chat_stream_event"
-_DRAFTS_EVENT = "drafts_changed"
 _PERSIST_FAILED_EVENT = "chat_persist_failed"
-_DRAFTS_SAVE_FAILED_EVENT = "drafts_save_failed"
-_draft_extraction_tasks: set[asyncio.Task[None]] = set()
 
 
 def _hub_from_request(request: Request) -> BroadcastHub | None:
@@ -150,40 +145,6 @@ async def _notify_persist_failed(
         _log.exception("chat persist failure notification failed for %s", plot_root)
 
 
-async def _extract_turn_drafts_and_notify(
-    provider: ChatProvider,
-    hub: BroadcastHub,
-    plot_root: Path,
-    project_id: str,
-    scope: str,
-    coach_reply: str,
-    turn_started_at: str,
-    chat_conversation_id: str | None,
-    model: str | None,
-) -> None:
-    result = await extract_turn_drafts(
-        provider,
-        plot_root,
-        project_id,
-        scope,
-        coach_reply,
-        turn_started_at,
-        chat_conversation_id=chat_conversation_id,
-        model=model,
-    )
-    payload = {"project_id": project_id, "scope": scope}
-    if result.persisted_count > 0:
-        try:
-            await hub.notify_event(plot_root, _DRAFTS_EVENT, payload)
-        except Exception:  # noqa: BLE001 — notification must not affect chat
-            _log.exception("chat draft notification failed for %s", plot_root)
-    if result.save_failed:
-        try:
-            await hub.notify_event(plot_root, _DRAFTS_SAVE_FAILED_EVENT, payload)
-        except Exception:  # noqa: BLE001 — notification must not affect chat
-            _log.exception("chat draft save failure notification failed for %s", plot_root)
-
-
 async def stream_chat_turn(
     provider: ChatProvider,
     hub: BroadcastHub,
@@ -197,12 +158,10 @@ async def stream_chat_turn(
 ) -> None:
     """Fan provider events out to ``plot_root`` with the requested ``scope``.
 
-    Errors become stream events. Assistant persistence is best-effort, and
-    proposal extraction is scheduled after a successful save without delaying
-    the stream.
+    Errors become stream events. Assistant persistence is best-effort; completed
+    turns never create drafts implicitly.
     """
     start_turn(plot_root, scope)
-    turn_started_at = datetime.now(UTC).isoformat()
     try:
         async for event in filter_save_announcements(provider.stream_turn(user_message)):
             payload = event.model_dump()
@@ -228,22 +187,6 @@ async def stream_chat_turn(
                         scope,
                         "assistant",
                     )
-                else:
-                    task = asyncio.create_task(
-                        _extract_turn_drafts_and_notify(
-                            provider,
-                            hub,
-                            plot_root,
-                            project_id,
-                            scope,
-                            event.text,
-                            turn_started_at,
-                            conversation_id,
-                            model=model,
-                        )
-                    )
-                    _draft_extraction_tasks.add(task)
-                    task.add_done_callback(_draft_extraction_tasks.discard)
     except Exception as exc:  # noqa: BLE001 — boundary catch
         _log.exception("chat turn crashed for %s", plot_root)
         await hub.notify_event(

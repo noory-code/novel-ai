@@ -202,37 +202,23 @@ def test_write_playbook_forbids_announcing_the_save_saliently() -> None:
     assert wp.count("the canvas shows") <= 1
 
 
-def test_write_playbook_appends_draft_tracking_without_changing_existing_words() -> None:
-    existing_draft_rule = (
-        " Drafts: whenever you show the person a concrete draft (text for a node or a new "
-        "node), call record_draft with a one-line rationale and the chat_scope from [Write "
-        "target]. When the person approves it, pass that draft_id to update_node or "
-        "create_node. If the person confirms a revision, call resolve_draft with "
-        "status='edited'; if they discard it, call resolve_draft with status='rejected'. Do "
-        "not announce draft recording, just as you do not announce saves."
+def test_write_playbook_records_drafts_only_after_explicit_consent() -> None:
+    draft_rule = (
+        " Drafts: during discussion, show and refine concrete proposals in chat without "
+        "recording them. Once a proposal is settled, ask whether to keep it as a draft "
+        "(for example, '초안으로 남길까요?'); call record_draft only after the person "
+        "agrees, using canvas_kind='project' for a new project name. If the person agrees "
+        "to revise a kept draft later, call update_draft instead of recording another. "
+        "When they agree to apply a kept draft from [Open drafts], pass its draft_id to "
+        "the write tool (rename_project for a project name). If you apply an edited "
+        "version, call resolve_draft with status='edited'; if they discard it, use "
+        "status='rejected'. Do not announce draft recording, just as you do not announce saves."
     )
-    question_draft_rule = (
-        " A proposal phrased as a question is still a draft if it shows concrete text for "
-        "a node or a new node (including its name) — call record_draft before asking; if "
-        "you show multiple proposals in one turn, record each one; a question that asks "
-        "only for direction without concrete text ('어떤 결이 좋을까요?') is not a draft."
-    )
-    open_draft_rule = (
-        " When the person accepts a draft from [Open drafts], pass its draft_id to the "
-        "write tool; if they accept it with edits, call resolve_draft with status='edited', "
-        "and if they discard it, call resolve_draft with status='rejected'."
-    )
-    project_name_rule = (
-        " When you show a proposed new project name, call record_draft with "
-        "canvas_kind='project'; when the person accepts it, pass that draft_id to "
-        "rename_project."
-    )
-    suffix = existing_draft_rule + project_name_rule + question_draft_rule + open_draft_rule
-    assert existing_draft_rule in WRITE_PLAYBOOK
-    assert project_name_rule in WRITE_PLAYBOOK
-    assert open_draft_rule in WRITE_PLAYBOOK
-    assert WRITE_PLAYBOOK.endswith(suffix)
-    existing = WRITE_PLAYBOOK[: -len(suffix)]
+    assert WRITE_PLAYBOOK.endswith(draft_rule)
+    assert "초안으로 남길까요?" in WRITE_PLAYBOOK
+    assert "update_draft" in WRITE_PLAYBOOK
+    assert "whenever you show the person a concrete draft" not in WRITE_PLAYBOOK
+    existing = WRITE_PLAYBOOK[: -len(draft_rule)]
     assert hashlib.sha256(existing.encode()).hexdigest() == (
         "0ee79eb48daeec21ca8bbf4dcb9e95e3322160c757d991958b4bace3e171c094"
     )

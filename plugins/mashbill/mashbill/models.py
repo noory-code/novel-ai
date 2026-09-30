@@ -103,6 +103,9 @@ from mashbill.models_draft import (
     DraftOrigin as DraftOrigin,
 )
 from mashbill.models_draft import (
+    DraftRevision as DraftRevision,
+)
+from mashbill.models_draft import (
     DraftStatus as DraftStatus,
 )
 from mashbill.models_draft import (

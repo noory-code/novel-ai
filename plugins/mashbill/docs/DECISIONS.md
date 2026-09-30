@@ -39,6 +39,36 @@
 
 ## Log
 
+### D-2026-10-01-A — A draft is kept only when the person chooses to keep it
+
+- **What:** the coach shows and refines concrete proposals in the chat
+  without recording them. Once a proposal is settled it asks whether to keep
+  it as a draft ("초안으로 남길까요?") and calls `record_draft` only after the
+  person agrees. When the person agrees to revise a kept, not-yet-applied
+  draft, the coach calls the new `update_draft`, which keeps the earlier text
+  and rationale in `revisions`. The engine no longer records drafts on its
+  own: turn-end extraction is removed, and AI canvas writes and
+  `rename_project` without a matching `draft_id` record no fallback draft
+  (a matching `draft_id` is still confirmed). Draft files written earlier with
+  `origin` `auto` or `extracted` stay readable.
+- **Why:** the user describes drafts as something built up in discussion and
+  kept when the person decides. The earlier rule (record every shown proposal,
+  plus fallback and extracted drafts) came from an explanation the user found
+  too hard to read: "내가 다 읽어보지 않고 그렇게 했을 수 있어요. 니 말이 너무
+  어려우니까". The draft list should hold only what the person chose.
+- **Alternatives:** keep recording every shown proposal and add statuses —
+  not chosen by the user. Keep fallback drafts for AI writes — dropped: they
+  are drafts the person did not choose; canvas history still has the change.
+- **Approval:** Accepted — user, 2026-10-01 ("맞아요" to "토론하며 다듬고, 코치가
+  '초안으로 남길까요?' 묻고 사용자가 좋다고 할 때만 남긴다"; "네 그대로 진행하세요"
+  to removing extraction and fallback drafts and adding draft revision;
+  novel-workspace W-00000342). Supersedes the recording rule of
+  D-2026-09-29-B; its viewing, statuses and append-only rules stand.
+- **Spec impact:** `SPEC.md` Draft records row.
+- **Principles:** Honesty (only what the person chose is presented as their
+  draft); SSOT (a revised draft keeps its history in one record instead of
+  several near-duplicates).
+
 ### D-2026-09-30-B — Claude Code billing is noted once, when it is picked
 
 - **What:** the app shows a short billing notice right after the person picks
@@ -75,6 +105,10 @@
   record); SSOT (the draft record stays complete).
 
 ### D-2026-09-29-B — Coach drafts are kept separately from the chat
+
+> The recording rule below (every shown draft, fallback and extracted drafts)
+> is superseded by D-2026-10-01-A: a draft is kept only when the person
+> chooses to keep it.
 
 - **What:** every concrete draft the coach shows is recorded as its own
   document (`drafts/draft_<hex>.json`) with the proposed text, a one-line

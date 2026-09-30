@@ -1,4 +1,4 @@
-"""Append-preserving storage for coach-proposed design drafts.
+"""Storage for design drafts the person explicitly chose to keep.
 
 Each draft owns one JSON file under ``drafts/``. New records therefore never
 rewrite a shared list and cannot erase a concurrent record; writes use the same
@@ -15,7 +15,7 @@ from mashbill.chat_store import current_conversation_id
 from mashbill.models_draft import (
     DraftCanvasKind,
     DraftDoc,
-    DraftOrigin,
+    DraftRevision,
     DraftStatus,
     ResolvedDraftStatus,
 )
@@ -49,7 +49,7 @@ def record_draft(
     proposed_kind: str | None = None,
     service_id: str | None = None,
 ) -> DraftDoc:
-    """Persist a newly shown proposal as an immutable-identity draft document."""
+    """Persist a proposal after the person chooses to keep it."""
     return _record_new_draft(
         plot_root,
         project_id,
@@ -60,69 +60,6 @@ def record_draft(
         target_node_ids or [],
         proposed_kind,
         service_id,
-        status="proposed",
-        origin="recorded",
-        resolved_node_ids=[],
-    )
-
-
-def record_applied_draft(
-    plot_root: Path,
-    project_id: str,
-    canvas_kind: DraftCanvasKind,
-    proposed_text: str,
-    rationale: str,
-    chat_scope: str,
-    target_node_ids: list[str],
-    proposed_kind: str | None,
-    service_id: str | None = None,
-    resolved_node_ids: list[str] | None = None,
-) -> DraftDoc:
-    """Persist the confirmed fallback record for a successful MCP write."""
-    return _record_new_draft(
-        plot_root,
-        project_id,
-        canvas_kind,
-        proposed_text,
-        rationale,
-        chat_scope,
-        target_node_ids,
-        proposed_kind,
-        service_id,
-        status="confirmed",
-        origin="auto",
-        resolved_node_ids=list(resolved_node_ids or []),
-    )
-
-
-def record_extracted_draft(
-    plot_root: Path,
-    project_id: str,
-    canvas_kind: DraftCanvasKind,
-    proposed_text: str,
-    rationale: str,
-    chat_scope: str,
-    target_node_ids: list[str] | None = None,
-    proposed_kind: str | None = None,
-    service_id: str | None = None,
-    *,
-    chat_conversation_id: str | None = None,
-) -> DraftDoc:
-    """Persist a concrete proposal recovered from a completed coach turn."""
-    return _record_new_draft(
-        plot_root,
-        project_id,
-        canvas_kind,
-        proposed_text,
-        rationale,
-        chat_scope,
-        target_node_ids or [],
-        proposed_kind,
-        service_id,
-        status="proposed",
-        origin="extracted",
-        resolved_node_ids=[],
-        chat_conversation_id=chat_conversation_id,
     )
 
 
@@ -136,13 +73,8 @@ def _record_new_draft(
     target_node_ids: list[str],
     proposed_kind: str | None,
     service_id: str | None,
-    *,
-    status: DraftStatus,
-    origin: DraftOrigin,
-    resolved_node_ids: list[str],
-    chat_conversation_id: str | None = None,
 ) -> DraftDoc:
-    """Write one new draft file with its initial resolution state."""
+    """Write one newly kept draft with its initial open state."""
     if canvas_kind == "project":
         if target_node_ids:
             raise ValueError("project drafts require empty target_node_ids")
@@ -162,15 +94,11 @@ def _record_new_draft(
         proposed_kind=proposed_kind,
         proposed_text=proposed_text,
         rationale=rationale,
-        status=status,
-        origin=origin,
+        status="proposed",
+        origin="recorded",
         chat_scope=chat_scope,
-        chat_conversation_id=(
-            chat_conversation_id
-            if chat_conversation_id is not None
-            else current_conversation_id(plot_root, project_id, chat_scope)
-        ),
-        resolved_node_ids=list(resolved_node_ids),
+        chat_conversation_id=current_conversation_id(plot_root, project_id, chat_scope),
+        resolved_node_ids=[],
     )
     _write_json(_draft_path(plot_root, project_id, draft.id), draft.model_dump())
     return draft
@@ -184,6 +112,39 @@ def read_draft(plot_root: Path, project_id: str, draft_id: str) -> DraftDoc:
         return DraftDoc.model_validate(_read_json(path))
     except FileNotFoundError as exc:
         raise FileNotFoundError(f"draft not found: {draft_id}") from exc
+
+
+def update_draft(
+    plot_root: Path,
+    project_id: str,
+    draft_id: str,
+    proposed_text: str,
+    rationale: str,
+) -> DraftDoc:
+    """Revise an open draft while preserving each prior proposal in order."""
+    draft = read_draft(plot_root, project_id, draft_id)
+    if draft.status != "proposed":
+        raise ValueError(
+            f"draft {draft_id!r} has status {draft.status!r}; record a new draft instead"
+        )
+    revisions = [
+        *draft.revisions,
+        DraftRevision(
+            proposed_text=draft.proposed_text,
+            rationale=draft.rationale,
+            updated=draft.updated,
+        ),
+    ]
+    updated = draft.model_copy(
+        update={
+            "proposed_text": proposed_text,
+            "rationale": rationale,
+            "updated": _now(),
+            "revisions": revisions,
+        }
+    )
+    _write_json(_draft_path(plot_root, project_id, draft_id), updated.model_dump())
+    return updated
 
 
 def resolve_draft(

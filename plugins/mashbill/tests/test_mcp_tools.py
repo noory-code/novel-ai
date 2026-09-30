@@ -39,6 +39,7 @@ _CORE_TOOLS = {
     "get_design_principles",
     "get_canvas_framing",
     "record_draft",
+    "update_draft",
     "resolve_draft",
 }
 
@@ -261,9 +262,7 @@ def test_delete_project_tag_preserves_published_version_and_removes_session_tag(
 
     assert "v0.1.1" in {t["name"] for t in mcp_tools.list_project_tags(ws, "p1")}
     mcp_tools.delete_project_tag(ws, "p1", "session-2026-09-28")
-    assert "session-2026-09-28" not in {
-        t["name"] for t in mcp_tools.list_project_tags(ws, "p1")
-    }
+    assert "session-2026-09-28" not in {t["name"] for t in mcp_tools.list_project_tags(ws, "p1")}
 
 
 def test_tag_project_without_git_raises_actionable_error(tmp_path: Path) -> None:

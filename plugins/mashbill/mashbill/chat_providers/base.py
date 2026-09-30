@@ -170,14 +170,6 @@ class ChatProvider(ABC):
         """
         ...
 
-    async def complete_once(self, prompt: str, *, model: str | None = None) -> str:
-        """Run one session-isolated completion without conversation tools.
-
-        The default empty result keeps lightweight fakes and non-CLI providers
-        source-compatible. CLI providers override this with an ephemeral call.
-        """
-        return "[]"
-
 
 class _SubprocessChatProvider(ChatProvider):
     """Shared spawn → parse → yield loop for every CLI-backed provider.
@@ -260,36 +252,6 @@ class _SubprocessChatProvider(ChatProvider):
     def _model_args_for(self, model: str | None) -> list[str]:
         """Build model arguments without mutating the active chat session."""
         return ["--model", model] if model else []
-
-    async def _capture_once(self, cmd: list[str]) -> str:
-        """Run one independent CLI process and return its complete stdout."""
-        proc = await self._spawn(
-            *cmd,
-            cwd=str(self._workspace),
-            env=self._spawn_env(),
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            stdin=asyncio.subprocess.DEVNULL,
-        )
-        chunks: list[bytes] = []
-        try:
-            if proc.stdout is not None:
-                async for line in proc.stdout:
-                    chunks.append(line)
-            rc = await proc.wait()
-            if rc != 0:
-                stderr_text = ""
-                if proc.stderr is not None:
-                    raw = await proc.stderr.read()
-                    stderr_text = raw.decode("utf-8", errors="replace").strip()
-                raise RuntimeError(stderr_text or f"{self._cli_path} exited {rc}")
-            return b"".join(chunks).decode("utf-8", errors="replace")
-        finally:
-            if proc.returncode is None:
-                try:
-                    proc.kill()
-                except ProcessLookupError:
-                    pass
 
     @abstractmethod
     def _build_command(self, user_message: str) -> list[str]: ...

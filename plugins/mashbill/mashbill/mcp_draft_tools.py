@@ -1,25 +1,22 @@
-"""MCP-callable draft operations and draft-aware node-write helpers."""
+"""MCP draft operations and matching for writes tied to kept proposals."""
 
 from __future__ import annotations
 
-import json
-from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
 from mashbill.blueprint_content import _canvas_design_content
 from mashbill.chat_scope_env import effective_chat_scope
 from mashbill.draft_store import read_draft
-from mashbill.draft_store import record_applied_draft as persist_applied_draft
 from mashbill.draft_store import record_draft as persist_draft
 from mashbill.draft_store import resolve_draft as persist_resolution
+from mashbill.draft_store import update_draft as persist_update
 from mashbill.draft_write_split import WriteFragment, normalize_draft_text, split_write_by_draft
 from mashbill.field_policy import writable_node_fields
 from mashbill.models_canvas import CanvasDoc, CanvasKind
 from mashbill.models_draft import DraftCanvasKind, DraftDoc, ResolvedDraftStatus
 from mashbill.workspace import resolve_plot_root
 
-AUTO_DRAFT_RATIONALE = "Coach applied the change directly without recording a draft."
 _CanvasFragmentValue = tuple[str, str, str | None]
 
 
@@ -38,7 +35,7 @@ def record_draft(
     proposed_kind: str | None = None,
     service_id: str | None = None,
 ) -> dict[str, Any]:
-    """Keep a concrete proposal shown to the person, separately from chat.
+    """Keep a proposal after the person explicitly asks to save it as a draft.
 
     Call for node text, a new node, or a new project name; ``rationale`` is one line on
     why, ``chat_scope`` comes from [Write target]. Project drafts have no nodes/kind/service.
@@ -56,6 +53,22 @@ def record_draft(
         service_id,
     )
     return _draft_result(draft)
+
+
+def update_draft(
+    project_path: str,
+    project_id: str,
+    draft_id: str,
+    proposed_text: str,
+    rationale: str,
+) -> dict[str, Any]:
+    """Revise a kept proposal after the person agrees to the new wording.
+
+    Only an unapplied ``proposed`` draft can be revised. Resolved drafts stay
+    unchanged; record a new draft if the person wants to revisit one.
+    """
+    plot_root = resolve_plot_root(project_path)
+    return _draft_result(persist_update(plot_root, project_id, draft_id, proposed_text, rationale))
 
 
 def resolve_draft(
@@ -120,16 +133,13 @@ def finish_write_draft(
     project_id: str,
     draft_id: str | None,
     canvas_kind: CanvasKind,
-    proposed_text: str,
-    proposed_kind: str | None,
     target_node_ids: list[str],
     resolved_node_ids: list[str],
-    chat_scope: str,
     service_id: str | None = None,
     written_texts: list[str] | None = None,
     design_content_changed: bool = True,
 ) -> str | None:
-    """Confirm the supplied draft or record one successful MCP write."""
+    """Confirm a matching supplied draft without creating implicit drafts."""
     if not design_content_changed:
         return _no_design_content_warning(draft_id)
     if draft_id is not None and draft_matches_write(
@@ -143,18 +153,6 @@ def finish_write_draft(
     ):
         confirm_draft(plot_root, project_id, draft_id, resolved_node_ids)
         return None
-    persist_applied_draft(
-        plot_root,
-        project_id,
-        canvas_kind,
-        proposed_text,
-        AUTO_DRAFT_RATIONALE,
-        effective_chat_scope(chat_scope),
-        target_node_ids,
-        proposed_kind,
-        service_id,
-        resolved_node_ids,
-    )
     if draft_id is None:
         return None
     return draft_mismatch_warning(draft_id)
@@ -167,12 +165,11 @@ def finish_node_write_draft(
     canvas_kind: CanvasKind,
     fields: dict[str, Any] | None,
     write_result: dict[str, Any],
-    chat_scope: str,
     service_id: str | None,
     additional_touched_node_ids: list[str] | None = None,
     before_node: dict[str, Any] | None = None,
 ) -> str | None:
-    """Confirm the supplied draft or create the fallback for a successful write."""
+    """Confirm matching fields of a supplied draft without implicit records."""
     node_id = str(write_result["node"]["id"])
     touched_node_ids = [node_id, *(additional_touched_node_ids or [])]
     node = write_result["node"]
@@ -211,62 +208,10 @@ def finish_node_write_draft(
         confirm_draft(plot_root, project_id, draft_id, [node_id])
         if not remainder:
             return None
-        unmatched_fields = {fragment.value: node.get(fragment.value) for fragment in remainder}
-        record_applied_draft(
-            plot_root,
-            project_id,
-            canvas_kind,
-            unmatched_fields,
-            write_result,
-            chat_scope,
-            service_id,
-        )
         return partial_draft_mismatch_warning(draft_id)
-    fallback_fields = {fragment.value: node.get(fragment.value) for fragment in remainder}
-    record_applied_draft(
-        plot_root,
-        project_id,
-        canvas_kind,
-        fallback_fields,
-        write_result,
-        chat_scope,
-        service_id,
-    )
     if draft_id is None:
         return None
     return draft_mismatch_warning(draft_id)
-
-
-def record_applied_draft(
-    plot_root: Path,
-    project_id: str,
-    canvas_kind: CanvasKind,
-    fields: dict[str, Any] | None,
-    write_result: dict[str, Any],
-    chat_scope: str,
-    service_id: str | None = None,
-) -> None:
-    """Record one successful MCP node write that arrived without a draft id."""
-    node = write_result["node"]
-    rejected = set(write_result["rejected_fields"])
-    written_fields = [name for name in (fields or {}) if name not in rejected]
-    if not written_fields:
-        written_fields = ["label"]
-    proposed_text = "\n".join(
-        f"{name}: {_display_value(node.get(name))}" for name in written_fields
-    )
-    persist_applied_draft(
-        plot_root,
-        project_id,
-        canvas_kind,
-        proposed_text,
-        AUTO_DRAFT_RATIONALE,
-        effective_chat_scope(chat_scope),
-        [str(node["id"])],
-        str(node["kind"]),
-        service_id,
-        [str(node["id"])],
-    )
 
 
 def finish_canvas_write_draft(
@@ -275,9 +220,8 @@ def finish_canvas_write_draft(
     draft_id: str | None,
     before: CanvasDoc,
     after: CanvasDoc,
-    chat_scope: str,
 ) -> str | None:
-    """Confirm or record a whole-canvas write from its normalized content diff."""
+    """Confirm matching parts of a whole-canvas write without implicit drafts."""
     before_content = _canvas_design_content(before.model_dump(by_alias=True))
     after_content = _canvas_design_content(after.model_dump(by_alias=True))
     if before_content == after_content:
@@ -385,81 +329,10 @@ def finish_canvas_write_draft(
         confirm_draft(plot_root, project_id, draft_id, resolved_node_ids)
         if not remainder:
             return None
-        _record_canvas_auto_draft(
-            plot_root,
-            project_id,
-            after,
-            before_nodes,
-            after_nodes,
-            remainder,
-            chat_scope,
-        )
         return partial_draft_mismatch_warning(draft_id)
-
-    _record_canvas_auto_draft(
-        plot_root,
-        project_id,
-        after,
-        before_nodes,
-        after_nodes,
-        remainder,
-        chat_scope,
-    )
     if draft_id is None:
         return None
     return draft_mismatch_warning(draft_id)
-
-
-def _record_canvas_auto_draft(
-    plot_root: Path,
-    project_id: str,
-    canvas: CanvasDoc,
-    before_nodes: dict[str, dict[str, Any]],
-    after_nodes: dict[str, dict[str, Any]],
-    fragments: Sequence[WriteFragment[_CanvasFragmentValue]],
-    chat_scope: str,
-) -> None:
-    """Record only the canvas-diff fragments not claimed by a supplied draft."""
-
-    def fragment_items(category: str) -> list[tuple[str, str | None]]:
-        return [(item.value[1], item.value[2]) for item in fragments if item.value[0] == category]
-
-    def names(items: list[tuple[str, str | None]], nodes: dict[str, dict[str, Any]]) -> str:
-        labels = (
-            f"{nodes[node_id].get('label') or node_id}.{field_name}"
-            if field_name is not None
-            else str(nodes[node_id].get("label") or node_id)
-            for node_id, field_name in items
-        )
-        return ", ".join(labels) or "없음"
-
-    added = fragment_items("node_added")
-    changed = fragment_items("node_changed")
-    removed = fragment_items("node_removed")
-    edges_added = fragment_items("edge_added")
-    edges_changed = fragment_items("edge_changed")
-    edges_removed = fragment_items("edge_removed")
-    proposed_text = (
-        f"더함: {names(added, after_nodes)} / "
-        f"바꿈: {names(changed, after_nodes)} / "
-        f"뺌: {names(removed, before_nodes)}"
-    )
-    if edges_added or edges_changed or edges_removed:
-        proposed_text += (
-            f"\n선: 더함 {len(edges_added)} / 바꿈 {len(edges_changed)} / 뺌 {len(edges_removed)}"
-        )
-    persist_applied_draft(
-        plot_root,
-        project_id,
-        canvas.canvas_kind,
-        proposed_text,
-        AUTO_DRAFT_RATIONALE,
-        effective_chat_scope(chat_scope),
-        list(dict.fromkeys(item_id for item_id, _ in [*added, *changed, *removed])),
-        "canvas",
-        canvas.feature_ref if canvas.canvas_kind == "feature" else None,
-        list(dict.fromkeys(item_id for item_id, _ in [*added, *changed])),
-    )
 
 
 def _edge_node_ids(edge: dict[str, Any]) -> tuple[str, str]:
@@ -468,13 +341,13 @@ def _edge_node_ids(edge: dict[str, Any]) -> tuple[str, str]:
 
 def draft_mismatch_warning(draft_id: str) -> str:
     return (
-        f"draft {draft_id} does not match this write; recorded an auto draft instead. "
+        f"draft {draft_id} does not match this write and was not confirmed. "
         "If the person accepted this draft with edits, call resolve_draft with status='edited'."
     )
 
 
 def partial_draft_mismatch_warning(draft_id: str) -> str:
-    return f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+    return f"draft {draft_id} was confirmed, but some written fields did not match it"
 
 
 def _no_design_content_warning(draft_id: str | None) -> str | None:
@@ -492,9 +365,3 @@ def _canvas_written_texts(canvas: CanvasDoc, node_ids: list[str]) -> list[str]:
         for name in writable_node_fields(node)
         if isinstance((value := getattr(node, name, None)), str)
     ]
-
-
-def _display_value(value: Any) -> str:
-    if isinstance(value, str):
-        return value
-    return json.dumps(value, ensure_ascii=False, sort_keys=True)

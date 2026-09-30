@@ -32,6 +32,8 @@ foundation, actors, services, features, entities, and relationships under
 - Canvas access: `get_canvas`, `update_canvas`, `list_detail_canvases`
 - Narrow graph mutation: `create_node`, `update_node`, `create_edge`,
   `set_node_references`
+- Drafts the person chose to keep: `record_draft`, `update_draft`, `resolve_draft`
+  (record only after the person agrees to keep a proposal)
 - Search and principles: `search_project_nodes`, `get_design_principles`
 - Publication: `publish_project_snapshot_tool`, `publish_service_tool`
 - Milestones: `tag_project`, `list_project_tags`, `delete_project_tag`

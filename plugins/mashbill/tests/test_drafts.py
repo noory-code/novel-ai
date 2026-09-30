@@ -10,14 +10,19 @@ from pathlib import Path
 import pytest
 from starlette.testclient import TestClient
 
-from mashbill import draft_store, mcp_canvas_write_tools, mcp_project_tools, mcp_tools
+from mashbill import (
+    draft_store,
+    mcp_canvas_write_tools,
+    mcp_draft_tools,
+    mcp_project_tools,
+    mcp_tools,
+)
 from mashbill.broadcast import BroadcastHub
 from mashbill.chat_store import append_user, archive_current_conversation, read_conversation
 from mashbill.draft_store import list_drafts, read_draft
 from mashbill.folder_io import create_node as create_canvas_node
 from mashbill.folder_io import read_canvas, sync_details_with_overview, write_canvas
 from mashbill.http_app import create_http_app
-from mashbill.mcp_draft_tools import AUTO_DRAFT_RATIONALE
 from mashbill.mcp_write_rollback import with_draft_or_rollback
 from mashbill.models_draft import DraftDoc
 from mashbill.project_io import create_project
@@ -265,8 +270,7 @@ def test_new_node_draft_only_matches_a_write_that_adds_a_node(tmp_path: Path) ->
 
     assert "draft_warning" in updated
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
-    assert len(auto_drafts) == 1
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
     created = mcp_tools.create_node(
         str(tmp_path),
@@ -279,7 +283,7 @@ def test_new_node_draft_only_matches_a_write_that_adds_a_node(tmp_path: Path) ->
 
     assert "draft_warning" not in created
     assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
-    assert len([draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]) == 1
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_update_node_splits_matching_and_unmatched_fields_between_drafts(
@@ -310,11 +314,9 @@ def test_update_node_splits_matching_and_unmatched_fields_between_drafts(
     supplied = read_draft(plot_root, "alpha", draft_id)
     assert supplied.status == "confirmed"
     assert supplied.resolved_node_ids == [node_id]
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.proposed_text == "statement: An unrelated mission statement."
-    assert auto.resolved_node_ids == [node_id]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
     assert result["draft_warning"] == (
-        f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+        f"draft {draft_id} was confirmed, but some written fields did not match it"
     )
 
 
@@ -348,7 +350,7 @@ def test_update_node_single_matching_field_does_not_record_auto_draft(tmp_path: 
     assert "draft_warning" not in result
 
 
-def test_update_node_with_different_proposal_text_records_auto_draft(
+def test_update_node_with_different_proposal_text_keeps_only_existing_drafts(
     tmp_path: Path,
 ) -> None:
     plot_root, _ = _project(tmp_path)
@@ -377,14 +379,11 @@ def test_update_node_with_different_proposal_text_records_auto_draft(
     )
 
     assert result["draft_warning"] == (
-        f"draft {first_id} does not match this write; recorded an auto draft instead. "
+        f"draft {first_id} does not match this write and was not confirmed. "
         "If the person accepted this draft with edits, call resolve_draft with status='edited'."
     )
     assert read_draft(plot_root, "alpha", first_id).status == "proposed"
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.status == "confirmed"
-    assert auto.proposed_text == f"statement: {second_text}"
-    assert auto.resolved_node_ids == [node_id]
+    assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
 
 
 def test_update_node_with_matching_proposal_text_confirms_selected_draft(
@@ -481,7 +480,7 @@ def test_update_node_with_sixty_percent_word_overlap_confirms_draft(tmp_path: Pa
     assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
 
 
-def test_update_node_with_wrong_target_keeps_draft_and_records_auto_draft(
+def test_update_node_with_wrong_target_keeps_draft_without_new_draft(
     tmp_path: Path,
 ) -> None:
     plot_root, _ = _project(tmp_path)
@@ -503,19 +502,16 @@ def test_update_node_with_wrong_target_keeps_draft_and_records_auto_draft(
     )
 
     assert result["draft_warning"] == (
-        f"draft {draft_id} does not match this write; recorded an auto draft instead. "
+        f"draft {draft_id} does not match this write and was not confirmed. "
         "If the person accepted this draft with edits, call resolve_draft with status='edited'."
     )
     supplied = read_draft(plot_root, "alpha", draft_id)
     assert supplied.status == "proposed"
     assert supplied.resolved_node_ids == []
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.status == "confirmed"
-    assert auto.target_node_ids == [second["id"]]
-    assert auto.resolved_node_ids == [second["id"]]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
-def test_update_node_with_wrong_canvas_keeps_draft_and_records_auto_draft(
+def test_update_node_with_wrong_canvas_keeps_draft_without_new_draft(
     tmp_path: Path,
 ) -> None:
     plot_root, _ = _project(tmp_path)
@@ -535,9 +531,7 @@ def test_update_node_with_wrong_canvas_keeps_draft_and_records_auto_draft(
 
     assert "draft_warning" in result
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.canvas_kind == "foundation"
-    assert auto.resolved_node_ids == [node["id"]]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_feature_draft_for_another_service_does_not_match_write(tmp_path: Path) -> None:
@@ -579,9 +573,7 @@ def test_feature_draft_for_another_service_does_not_match_write(tmp_path: Path) 
 
     assert "draft_warning" in result
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.service_id == second_feature["id"]
-    assert auto.resolved_node_ids == [step["id"]]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_missing_draft_id_still_fails_before_write(tmp_path: Path) -> None:
@@ -606,19 +598,24 @@ def test_missing_draft_id_still_fails_before_write(tmp_path: Path) -> None:
     assert list_drafts(plot_root, "alpha") == []
 
 
-def test_update_node_rolls_back_when_draft_recording_fails(
+def test_update_node_rolls_back_when_draft_confirmation_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     plot_root, _ = _project(tmp_path)
     node = create_canvas_node(plot_root, "alpha", "foundation", "mission", {"label": "Original"})[
         "node"
     ]
+    draft_id = str(
+        _record(str(tmp_path), proposed_text="Changed", target_node_ids=[str(node["id"])])[
+            "draft_id"
+        ]
+    )
     before = read_canvas(plot_root, "alpha", "foundation")
 
-    def fail_to_record(*_args: object, **_kwargs: object) -> None:
+    def fail_to_confirm(*_args: object, **_kwargs: object) -> None:
         raise OSError("draft storage unavailable")
 
-    monkeypatch.setattr(mcp_canvas_write_tools, "finish_node_write_draft", fail_to_record)
+    monkeypatch.setattr(mcp_draft_tools, "confirm_draft", fail_to_confirm)
 
     with pytest.raises(OSError, match="draft storage unavailable"):
         mcp_tools.update_node(
@@ -627,16 +624,27 @@ def test_update_node_rolls_back_when_draft_recording_fails(
             "foundation",
             str(node["id"]),
             {"label": "Changed"},
+            draft_id=draft_id,
         )
 
     assert read_canvas(plot_root, "alpha", "foundation") == before
 
 
-def test_update_canvas_rolls_back_when_draft_recording_fails(
+def test_update_canvas_rolls_back_when_draft_confirmation_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     plot_root, _ = _project(tmp_path)
-    create_canvas_node(plot_root, "alpha", "services", "service", {"label": "Original"})
+    node = create_canvas_node(plot_root, "alpha", "services", "service", {"label": "Original"})[
+        "node"
+    ]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="services",
+            proposed_text="Changed",
+            target_node_ids=[str(node["id"])],
+        )["draft_id"]
+    )
     before = read_canvas(plot_root, "alpha", "services")
     changed = before.model_dump(by_alias=True)
     changed["nodes"][0]["label"] = "Changed"
@@ -648,14 +656,14 @@ def test_update_canvas_rolls_back_when_draft_recording_fails(
         sync_calls += 1
         return real_sync(sync_plot_root, sync_project_id)
 
-    def fail_to_record(*_args: object, **_kwargs: object) -> None:
+    def fail_to_confirm(*_args: object, **_kwargs: object) -> None:
         raise OSError("draft storage unavailable")
 
     monkeypatch.setattr(mcp_canvas_write_tools, "sync_details_with_overview", track_sync)
-    monkeypatch.setattr(mcp_canvas_write_tools, "finish_canvas_write_draft", fail_to_record)
+    monkeypatch.setattr(mcp_draft_tools, "confirm_draft", fail_to_confirm)
 
     with pytest.raises(OSError, match="draft storage unavailable"):
-        mcp_tools.update_canvas(str(tmp_path), "alpha", changed)
+        mcp_tools.update_canvas(str(tmp_path), "alpha", changed, draft_id=draft_id)
 
     assert read_canvas(plot_root, "alpha", "services") == before
     assert sync_calls == 2
@@ -720,11 +728,19 @@ def test_update_canvas_rollback_restores_archived_feature_detail(
     assert read_canvas(plot_root, "alpha", "feature", service_id=feature_id) == edited_detail
 
 
-def test_create_node_rolls_back_when_draft_recording_fails(
+def test_create_node_rolls_back_when_draft_confirmation_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     plot_root, _ = _project(tmp_path)
     before = read_canvas(plot_root, "alpha", "services")
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="services",
+            proposed_text="Reading list",
+            proposed_kind="feature",
+        )["draft_id"]
+    )
     sync_calls = 0
     real_sync = mcp_canvas_write_tools.sync_details_with_overview
 
@@ -733,22 +749,27 @@ def test_create_node_rolls_back_when_draft_recording_fails(
         sync_calls += 1
         return real_sync(sync_plot_root, sync_project_id)
 
-    def fail_to_record(*_args: object, **_kwargs: object) -> None:
+    def fail_to_confirm(*_args: object, **_kwargs: object) -> None:
         raise OSError("draft storage unavailable")
 
     monkeypatch.setattr(mcp_canvas_write_tools, "sync_details_with_overview", track_sync)
-    monkeypatch.setattr(mcp_canvas_write_tools, "finish_node_write_draft", fail_to_record)
+    monkeypatch.setattr(mcp_draft_tools, "confirm_draft", fail_to_confirm)
 
     with pytest.raises(OSError, match="draft storage unavailable"):
         mcp_tools.create_node(
-            str(tmp_path), "alpha", "services", "feature", {"label": "Reading list"}
+            str(tmp_path),
+            "alpha",
+            "services",
+            "feature",
+            {"label": "Reading list"},
+            draft_id=draft_id,
         )
 
     assert read_canvas(plot_root, "alpha", "services") == before
     assert sync_calls == 2
 
 
-def test_create_edge_rolls_back_when_draft_recording_fails(
+def test_create_edge_rolls_back_when_draft_confirmation_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     plot_root, _ = _project(tmp_path)
@@ -758,12 +779,20 @@ def test_create_edge_rolls_back_when_draft_recording_fails(
     target = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Order"})[
         "node"
     ]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="entities",
+            proposed_text="관계: Customer → Order",
+            target_node_ids=[str(source["id"]), str(target["id"])],
+        )["draft_id"]
+    )
     before = read_canvas(plot_root, "alpha", "entities")
 
-    def fail_to_record(*_args: object, **_kwargs: object) -> None:
+    def fail_to_confirm(*_args: object, **_kwargs: object) -> None:
         raise OSError("draft storage unavailable")
 
-    monkeypatch.setattr(mcp_canvas_write_tools, "finish_write_draft", fail_to_record)
+    monkeypatch.setattr(mcp_draft_tools, "confirm_draft", fail_to_confirm)
 
     with pytest.raises(OSError, match="draft storage unavailable"):
         mcp_tools.create_edge(
@@ -772,12 +801,13 @@ def test_create_edge_rolls_back_when_draft_recording_fails(
             "entities",
             str(source["id"]),
             str(target["id"]),
+            draft_id=draft_id,
         )
 
     assert read_canvas(plot_root, "alpha", "entities") == before
 
 
-def test_set_node_references_rolls_back_when_draft_recording_fails(
+def test_set_node_references_rolls_back_when_draft_confirmation_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     plot_root, _ = _project(tmp_path)
@@ -785,12 +815,20 @@ def test_set_node_references_rolls_back_when_draft_recording_fails(
     service = create_canvas_node(plot_root, "alpha", "services", "service", {"label": "Reading"})[
         "node"
     ]
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="services",
+            proposed_text="Reading 참조: Reader",
+            target_node_ids=[str(service["id"])],
+        )["draft_id"]
+    )
     before = read_canvas(plot_root, "alpha", "services")
 
-    def fail_to_record(*_args: object, **_kwargs: object) -> None:
+    def fail_to_confirm(*_args: object, **_kwargs: object) -> None:
         raise OSError("draft storage unavailable")
 
-    monkeypatch.setattr(mcp_canvas_write_tools, "finish_write_draft", fail_to_record)
+    monkeypatch.setattr(mcp_canvas_write_tools, "confirm_draft", fail_to_confirm)
 
     with pytest.raises(OSError, match="draft storage unavailable"):
         mcp_tools.set_node_references(
@@ -799,6 +837,7 @@ def test_set_node_references_rolls_back_when_draft_recording_fails(
             "services",
             str(service["id"]),
             {"ref_actor_ids": [str(actor["id"])]},
+            draft_id=draft_id,
         )
 
     assert read_canvas(plot_root, "alpha", "services") == before
@@ -898,15 +937,13 @@ def test_create_node_splits_matching_and_unmatched_fields_between_drafts(
     supplied = read_draft(plot_root, "alpha", draft_id)
     assert supplied.status == "confirmed"
     assert supplied.resolved_node_ids == [node_id]
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.proposed_text == "body: An unrelated explanation."
-    assert auto.resolved_node_ids == [node_id]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
     assert result["draft_warning"] == (
-        f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+        f"draft {draft_id} was confirmed, but some written fields did not match it"
     )
 
 
-def test_create_node_with_different_proposal_text_records_auto_draft(tmp_path: Path) -> None:
+def test_create_node_with_different_proposal_text_creates_no_new_draft(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
     draft_id = str(
         _record(
@@ -928,9 +965,7 @@ def test_create_node_with_different_proposal_text_records_auto_draft(tmp_path: P
 
     assert "draft_warning" in result
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.status == "confirmed"
-    assert auto.proposed_text == "label: Breadth"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_create_node_draft_can_target_near_parent(tmp_path: Path) -> None:
@@ -983,109 +1018,10 @@ def test_rejected_draft_does_not_match_write(tmp_path: Path) -> None:
 
     assert "draft_warning" in result
     assert read_draft(plot_root, "alpha", draft_id).status == "rejected"
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.resolved_node_ids == [node_id]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
-def test_update_node_without_draft_id_records_confirmed_auto_draft(tmp_path: Path) -> None:
-    plot_root, _ = _project(tmp_path)
-    created = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Old label"})
-    mcp_tools.update_node(
-        str(tmp_path),
-        "alpha",
-        "actors",
-        str(created["node"]["id"]),
-        {"label": "Reader", "body": "Needs a clear next step."},
-    )
-
-    drafts = list_drafts(plot_root, "alpha")
-    assert len(drafts) == 1
-    draft = drafts[0]
-    node_id = str(created["node"]["id"])
-    assert draft.status == "confirmed"
-    assert draft.origin == "auto"
-    assert draft.target_node_ids == [node_id]
-    assert draft.resolved_node_ids == [node_id]
-    assert draft.proposed_kind == "actor"
-    assert draft.proposed_text == "label: Reader\nbody: Needs a clear next step."
-    assert draft.rationale
-    assert draft.chat_scope == ""
-
-
-def test_create_node_without_draft_id_records_confirmed_auto_draft(tmp_path: Path) -> None:
-    plot_root, _ = _project(tmp_path)
-
-    created = mcp_tools.create_node(
-        str(tmp_path),
-        "alpha",
-        "foundation",
-        "core_value",
-        {"label": "Clarity", "body": "Make the next step visible."},
-    )
-
-    drafts = list_drafts(plot_root, "alpha")
-    assert len(drafts) == 1
-    draft = drafts[0]
-    node_id = str(created["node"]["id"])
-    assert draft.status == "confirmed"
-    assert draft.origin == "auto"
-    assert draft.target_node_ids == [node_id]
-    assert draft.resolved_node_ids == [node_id]
-    assert draft.proposed_kind == "core_value"
-    assert draft.proposed_text == "label: Clarity\nbody: Make the next step visible."
-    assert draft.rationale
-    assert draft.chat_scope == ""
-
-
-def test_auto_draft_keeps_supplied_chat_scope(tmp_path: Path) -> None:
-    plot_root, _ = _project(tmp_path)
-    append_user(plot_root, "alpha", "entities", "codex", "u1", "Define Order")
-    conversation_id = read_conversation(plot_root, "alpha", "entities").conversation_id
-
-    mcp_tools.create_node(
-        str(tmp_path),
-        "alpha",
-        "entities",
-        "entity",
-        {"label": "Order"},
-        chat_scope="entities",
-    )
-
-    draft = list_drafts(plot_root, "alpha")[0]
-    assert draft.chat_scope == "entities"
-    assert draft.chat_conversation_id == conversation_id
-
-
-def test_create_edge_without_draft_records_both_endpoints_and_relationship(
-    tmp_path: Path,
-) -> None:
-    plot_root, _ = _project(tmp_path)
-    source = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Customer"})[
-        "node"
-    ]
-    target = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Order"})[
-        "node"
-    ]
-
-    mcp_tools.create_edge(
-        str(tmp_path),
-        "alpha",
-        "entities",
-        str(source["id"]),
-        str(target["id"]),
-        label="places",
-    )
-
-    draft = list_drafts(plot_root, "alpha")[0]
-    assert draft.status == "confirmed"
-    assert draft.origin == "auto"
-    assert draft.proposed_kind == "edge"
-    assert draft.proposed_text == "관계: Customer → Order (places)"
-    assert draft.target_node_ids == [source["id"], target["id"]]
-    assert draft.resolved_node_ids == [source["id"], target["id"]]
-
-
-def test_create_edge_with_wrong_draft_records_auto_draft_and_warning(tmp_path: Path) -> None:
+def test_create_edge_with_wrong_draft_warns_without_new_draft(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
     source = create_canvas_node(plot_root, "alpha", "entities", "entity", {"label": "Customer"})[
         "node"
@@ -1116,9 +1052,7 @@ def test_create_edge_with_wrong_draft_records_auto_draft_and_warning(tmp_path: P
 
     assert "draft_warning" in result
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.target_node_ids == [source["id"], target["id"]]
-    assert auto.resolved_node_ids == [source["id"], target["id"]]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_create_edge_does_not_confirm_matching_target_with_unrelated_text(
@@ -1148,9 +1082,7 @@ def test_create_edge_does_not_confirm_matching_target_with_unrelated_text(
 
     assert "draft_warning" in result
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
-    assert len(auto_drafts) == 1
-    assert auto_drafts[0].proposed_text == "관계: A → B"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_create_edge_confirms_draft_with_matching_relationship_text(tmp_path: Path) -> None:
@@ -1181,31 +1113,7 @@ def test_create_edge_confirms_draft_with_matching_relationship_text(tmp_path: Pa
     assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
 
 
-def test_set_node_references_without_draft_records_reference_change(tmp_path: Path) -> None:
-    plot_root, _ = _project(tmp_path)
-    actor = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Reader"})["node"]
-    service = create_canvas_node(plot_root, "alpha", "services", "service", {"label": "Reading"})[
-        "node"
-    ]
-
-    mcp_tools.set_node_references(
-        str(tmp_path),
-        "alpha",
-        "services",
-        str(service["id"]),
-        {"ref_actor_ids": [str(actor["id"])]},
-    )
-
-    draft = list_drafts(plot_root, "alpha")[0]
-    assert draft.status == "confirmed"
-    assert draft.origin == "auto"
-    assert draft.proposed_kind == "references"
-    assert draft.proposed_text == "Reading 참조: Reader"
-    assert draft.target_node_ids == [service["id"]]
-    assert draft.resolved_node_ids == [service["id"]]
-
-
-def test_set_node_references_with_wrong_draft_records_auto_draft_and_warning(
+def test_set_node_references_with_wrong_draft_warns_without_new_draft(
     tmp_path: Path,
 ) -> None:
     plot_root, _ = _project(tmp_path)
@@ -1233,8 +1141,7 @@ def test_set_node_references_with_wrong_draft_records_auto_draft_and_warning(
 
     assert "draft_warning" in result
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.resolved_node_ids == [service["id"]]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_set_node_references_does_not_confirm_matching_target_with_unrelated_text(
@@ -1280,9 +1187,7 @@ def test_set_node_references_does_not_confirm_matching_target_with_unrelated_tex
 
     assert "draft_warning" in result
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
-    assert len(auto_drafts) == 1
-    assert auto_drafts[0].proposed_text == "A 참조: Order"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_set_node_references_confirms_draft_with_matching_label_text(tmp_path: Path) -> None:
@@ -1339,7 +1244,7 @@ def _multi_reference_nodes(tmp_path: Path) -> tuple[Path, str, str, str]:
     return plot_root, str(service["id"]), str(actor["id"]), str(value["id"])
 
 
-def test_set_node_references_confirms_matching_fragment_and_records_remainder(
+def test_set_node_references_confirms_matching_fragment_without_new_draft(
     tmp_path: Path,
 ) -> None:
     plot_root, service_id, actor_id, value_id = _multi_reference_nodes(tmp_path)
@@ -1362,12 +1267,10 @@ def test_set_node_references_confirms_matching_fragment_and_records_remainder(
     )
 
     assert result["draft_warning"] == (
-        f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+        f"draft {draft_id} was confirmed, but some written fields did not match it"
     )
     assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
-    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
-    assert len(auto_drafts) == 1
-    assert auto_drafts[0].proposed_text == "A 참조: Value E"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_set_node_references_confirms_draft_matching_all_fragments(tmp_path: Path) -> None:
@@ -1395,7 +1298,7 @@ def test_set_node_references_confirms_draft_matching_all_fragments(tmp_path: Pat
     assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
 
 
-def test_set_node_references_records_all_fragments_when_none_match(tmp_path: Path) -> None:
+def test_set_node_references_keeps_draft_when_no_fragments_match(tmp_path: Path) -> None:
     plot_root, service_id, actor_id, value_id = _multi_reference_nodes(tmp_path)
     draft_id = str(
         _record(
@@ -1416,13 +1319,11 @@ def test_set_node_references_records_all_fragments_when_none_match(tmp_path: Pat
     )
 
     assert result["draft_warning"] == (
-        f"draft {draft_id} does not match this write; recorded an auto draft instead. "
+        f"draft {draft_id} does not match this write and was not confirmed. "
         "If the person accepted this draft with edits, call resolve_draft with status='edited'."
     )
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
-    assert len(auto_drafts) == 1
-    assert auto_drafts[0].proposed_text == "A 참조: Actor X\nA 참조: Value E"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_set_node_references_matches_only_fields_that_changed(tmp_path: Path) -> None:
@@ -1454,9 +1355,7 @@ def test_set_node_references_matches_only_fields_that_changed(tmp_path: Path) ->
 
     assert "does not match this write" in result["draft_warning"]
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
-    assert len(auto_drafts) == 1
-    assert auto_drafts[0].proposed_text == "A 참조: Value E"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_set_node_references_same_value_does_not_confirm_draft_or_record_auto_draft(
@@ -1493,33 +1392,6 @@ def test_set_node_references_same_value_does_not_confirm_draft_or_record_auto_dr
     )
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
     assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
-
-
-def test_update_canvas_records_content_diff_but_not_position_only_change(tmp_path: Path) -> None:
-    plot_root, _ = _project(tmp_path)
-    existing = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Old name"})[
-        "node"
-    ]
-    before = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
-    before["nodes"][0]["label"] = "Renamed"
-    before["nodes"].append({"id": "actor_added", "kind": "actor", "label": "Added"})
-
-    mcp_tools.update_canvas(str(tmp_path), "alpha", before)
-
-    draft = list_drafts(plot_root, "alpha")[0]
-    assert draft.status == "confirmed"
-    assert draft.origin == "auto"
-    assert draft.proposed_kind == "canvas"
-    assert draft.proposed_text.startswith("더함: Added / 바꿈: Renamed.label / 뺌: 없음")
-    assert "선:" in draft.proposed_text
-    assert draft.target_node_ids == ["actor_added", existing["id"]]
-    assert draft.resolved_node_ids == ["actor_added", existing["id"]]
-
-    moved = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
-    moved["nodes"][0]["x"] += 200
-    mcp_tools.update_canvas(str(tmp_path), "alpha", moved)
-
-    assert len(list_drafts(plot_root, "alpha")) == 1
 
 
 def test_update_canvas_layout_only_keeps_empty_target_draft_proposed(tmp_path: Path) -> None:
@@ -1570,11 +1442,9 @@ def test_update_canvas_layout_only_keeps_targeted_draft_proposed(tmp_path: Path)
     assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
-def test_update_canvas_with_wrong_draft_records_auto_draft_and_warning(tmp_path: Path) -> None:
+def test_update_canvas_with_wrong_draft_warns_without_new_draft(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
-    changed = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Old name"})[
-        "node"
-    ]
+    create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Old name"})
     other = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Other"})["node"]
     draft_id = str(
         _record(
@@ -1591,12 +1461,10 @@ def test_update_canvas_with_wrong_draft_records_auto_draft_and_warning(tmp_path:
 
     assert "draft_warning" in result
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.target_node_ids == [changed["id"]]
-    assert auto.resolved_node_ids == [changed["id"]]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
-def test_update_canvas_with_different_proposal_text_records_auto_draft(tmp_path: Path) -> None:
+def test_update_canvas_with_different_proposal_text_creates_no_new_draft(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
     changed = create_canvas_node(
         plot_root, "alpha", "actors", "actor", {"label": "Old name", "body": "Old body"}
@@ -1618,9 +1486,7 @@ def test_update_canvas_with_different_proposal_text_records_auto_draft(tmp_path:
 
     assert "draft_warning" in result
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.status == "confirmed"
-    assert auto.resolved_node_ids == [changed["id"]]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_update_canvas_splits_matching_and_unmatched_fields_between_drafts(
@@ -1649,13 +1515,9 @@ def test_update_canvas_splits_matching_and_unmatched_fields_between_drafts(
     supplied = read_draft(plot_root, "alpha", draft_id)
     assert supplied.status == "confirmed"
     assert supplied.resolved_node_ids == [changed["id"]]
-    autos = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
-    assert len(autos) == 1
-    assert autos[0].proposed_text == "더함: 없음 / 바꿈: New name.label / 뺌: 없음"
-    assert autos[0].target_node_ids == [changed["id"]]
-    assert autos[0].resolved_node_ids == [changed["id"]]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
     assert result["draft_warning"] == (
-        f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+        f"draft {draft_id} was confirmed, but some written fields did not match it"
     )
 
 
@@ -1714,12 +1576,9 @@ def test_update_canvas_splits_matching_and_unmatched_node_changes(tmp_path: Path
     supplied = read_draft(plot_root, "alpha", draft_id)
     assert supplied.status == "confirmed"
     assert supplied.resolved_node_ids == [matched["id"]]
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.proposed_text == "더함: 없음 / 바꿈: Unmatched.body / 뺌: 없음"
-    assert auto.target_node_ids == [unmatched["id"]]
-    assert auto.resolved_node_ids == [unmatched["id"]]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
     assert result["draft_warning"] == (
-        f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+        f"draft {draft_id} was confirmed, but some written fields did not match it"
     )
 
 
@@ -1752,7 +1611,9 @@ def test_update_canvas_assigns_incident_edge_to_matching_added_node_draft(
     assert "draft_warning" not in result
 
 
-def test_update_canvas_keeps_unrelated_edge_in_unmatched_auto_draft(tmp_path: Path) -> None:
+def test_update_canvas_partial_match_with_unrelated_edge_creates_no_new_draft(
+    tmp_path: Path,
+) -> None:
     plot_root, _ = _project(tmp_path)
     matched = create_canvas_node(
         plot_root, "alpha", "actors", "actor", {"label": "Matched", "body": "Old body"}
@@ -1789,14 +1650,9 @@ def test_update_canvas_keeps_unrelated_edge_in_unmatched_auto_draft(tmp_path: Pa
     supplied = read_draft(plot_root, "alpha", draft_id)
     assert supplied.status == "confirmed"
     assert supplied.resolved_node_ids == [matched["id"]]
-    auto = next(draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto")
-    assert auto.proposed_text == (
-        "더함: 없음 / 바꿈: Unmatched.body / 뺌: 없음\n선: 더함 1 / 바꿈 0 / 뺌 0"
-    )
-    assert auto.target_node_ids == [unmatched["id"]]
-    assert auto.resolved_node_ids == [unmatched["id"]]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
     assert result["draft_warning"] == (
-        f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+        f"draft {draft_id} was confirmed, but some written fields did not match it"
     )
 
 
@@ -1865,7 +1721,6 @@ def test_chat_scope_environment_wins_and_explicit_fills_when_environment_missing
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     plot_root, _ = _project(tmp_path)
-    node = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Reader"})["node"]
     monkeypatch.setenv("MASHBILL_CHAT_SCOPE", "foundation")
 
     environment_over_explicit = mcp_tools.record_draft(
@@ -1883,15 +1738,6 @@ def test_chat_scope_environment_wins_and_explicit_fills_when_environment_missing
         "Writer needs a clear next step.",
         "The conversation established the need.",
     )
-    mcp_tools.update_node(
-        str(tmp_path),
-        "alpha",
-        "actors",
-        str(node["id"]),
-        {"label": "Updated reader"},
-        chat_scope="actors",
-    )
-
     monkeypatch.delenv("MASHBILL_CHAT_SCOPE")
     explicit_without_environment = mcp_tools.record_draft(
         str(tmp_path),
@@ -1903,11 +1749,9 @@ def test_chat_scope_environment_wins_and_explicit_fills_when_environment_missing
     )
 
     drafts = {draft.id: draft for draft in list_drafts(plot_root, "alpha")}
-    auto = next(draft for draft in drafts.values() if draft.origin == "auto")
     assert drafts[str(environment_over_explicit["draft_id"])].chat_scope == "foundation"
     assert drafts[str(explicit_without_environment["draft_id"])].chat_scope == "actors"
     assert drafts[str(environment_over_empty["draft_id"])].chat_scope == "foundation"
-    assert auto.chat_scope == "foundation"
 
 
 def test_legacy_draft_without_origin_reads_as_recorded(tmp_path: Path) -> None:
@@ -1921,24 +1765,26 @@ def test_legacy_draft_without_origin_reads_as_recorded(tmp_path: Path) -> None:
     assert read_draft(plot_root, "alpha", draft_id).origin == "recorded"
 
 
-def test_existing_auto_draft_file_still_reads_with_origin(tmp_path: Path) -> None:
+@pytest.mark.parametrize("origin", ["auto", "extracted"])
+def test_existing_legacy_draft_file_still_reads_with_origin(tmp_path: Path, origin: str) -> None:
     plot_root, _ = _project(tmp_path)
+    draft_id = f"draft_{origin}_existing"
     raw = DraftDoc(
-        id="draft_auto_existing",
+        id=draft_id,
         created="2026-09-29T00:00:00+00:00",
         updated="2026-09-29T00:00:00+00:00",
         canvas_kind="actors",
         proposed_text="label: Reader",
         rationale="Recorded after a write.",
         status="confirmed",
-        origin="auto",
+        origin=origin,  # type: ignore[arg-type]
         chat_scope="actors",
     ).model_dump()
-    path = plot_root / "drafts" / "draft_auto_existing.json"
+    path = plot_root / "drafts" / f"{draft_id}.json"
     path.parent.mkdir(parents=True)
     path.write_text(json.dumps(raw), encoding="utf-8")
 
-    assert read_draft(plot_root, "alpha", "draft_auto_existing").origin == "auto"
+    assert read_draft(plot_root, "alpha", draft_id).origin == origin
 
 
 @pytest.mark.parametrize("canvas_kind", ["foundation", "actors", "services", "entities", "feature"])
@@ -1971,31 +1817,7 @@ def test_existing_canvas_draft_files_still_read(tmp_path: Path, canvas_kind: str
     draft = read_draft(plot_root, "alpha", draft_id)
     assert draft.canvas_kind == canvas_kind
     assert draft.chat_conversation_id is None
-
-
-def test_mcp_rename_project_records_confirmed_project_draft(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    plot_root, _ = _project(tmp_path)
-    monkeypatch.setenv("MASHBILL_CHAT_SCOPE", "project")
-    append_user(plot_root, "alpha", "project", "codex", "u1", "Rename the project")
-    conversation_id = read_conversation(plot_root, "alpha", "project").conversation_id
-
-    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "Renamed Alpha")
-
-    assert renamed["name"] == "Renamed Alpha"
-    drafts = list_drafts(plot_root, "alpha")
-    assert len(drafts) == 1
-    draft = drafts[0]
-    assert draft.origin == "auto"
-    assert draft.status == "confirmed"
-    assert draft.canvas_kind == "project"
-    assert draft.proposed_text == "프로젝트 이름: Alpha → Renamed Alpha"
-    assert draft.rationale == AUTO_DRAFT_RATIONALE
-    assert draft.target_node_ids == []
-    assert draft.resolved_node_ids == []
-    assert draft.chat_scope == "project"
-    assert draft.chat_conversation_id == conversation_id
+    assert draft.revisions == []
 
 
 def test_mcp_rename_project_to_same_name_records_no_draft(tmp_path: Path) -> None:
@@ -2005,6 +1827,26 @@ def test_mcp_rename_project_to_same_name_records_no_draft(tmp_path: Path) -> Non
 
     assert renamed["name"] == "Alpha"
     assert list_drafts(plot_root, "alpha") == []
+
+
+def test_mcp_rename_project_to_same_name_does_not_confirm_supplied_draft(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="project",
+            proposed_text="Project name: Alpha",
+            proposed_kind=None,
+        )["draft_id"]
+    )
+
+    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "Alpha", draft_id=draft_id)
+
+    assert "changed no design content" in renamed["draft_warning"]
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
 
 
 def test_mcp_rename_project_confirms_supplied_project_draft(tmp_path: Path) -> None:
@@ -2029,7 +1871,7 @@ def test_mcp_rename_project_confirms_supplied_project_draft(tmp_path: Path) -> N
     assert "draft_warning" not in renamed
 
 
-def test_mcp_rename_project_keeps_rejected_draft_and_records_applied_draft(
+def test_mcp_rename_project_keeps_rejected_draft_without_new_draft(
     tmp_path: Path,
 ) -> None:
     plot_root, _ = _project(tmp_path)
@@ -2048,17 +1890,14 @@ def test_mcp_rename_project_keeps_rejected_draft_and_records_applied_draft(
 
     assert renamed["name"] == "새이름"
     assert read_draft(plot_root, "alpha", draft_id).status == "rejected"
-    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
-    assert len(auto_drafts) == 1
-    assert auto_drafts[0].status == "confirmed"
-    assert auto_drafts[0].proposed_text == "프로젝트 이름: Alpha → 새이름"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
     assert renamed["draft_warning"] == (
-        f"draft {draft_id} does not match this write; recorded an auto draft instead. "
+        f"draft {draft_id} does not match this write and was not confirmed. "
         "If the person accepted this draft with edits, call resolve_draft with status='edited'."
     )
 
 
-def test_mcp_rename_project_keeps_mismatched_open_draft_and_records_applied_draft(
+def test_mcp_rename_project_keeps_mismatched_open_draft_without_new_draft(
     tmp_path: Path,
 ) -> None:
     plot_root, _ = _project(tmp_path)
@@ -2076,17 +1915,14 @@ def test_mcp_rename_project_keeps_mismatched_open_draft_and_records_applied_draf
 
     assert renamed["name"] == "새이름"
     assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
-    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
-    assert len(auto_drafts) == 1
-    assert auto_drafts[0].status == "confirmed"
-    assert auto_drafts[0].proposed_text == "프로젝트 이름: Alpha → 새이름"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
     assert renamed["draft_warning"] == (
-        f"draft {draft_id} does not match this write; recorded an auto draft instead. "
+        f"draft {draft_id} does not match this write and was not confirmed. "
         "If the person accepted this draft with edits, call resolve_draft with status='edited'."
     )
 
 
-def test_mcp_rename_project_confirms_matching_open_project_draft(tmp_path: Path) -> None:
+def test_mcp_rename_project_without_id_leaves_matching_open_draft_proposed(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
     draft_id = str(
         _record(
@@ -2103,10 +1939,10 @@ def test_mcp_rename_project_confirms_matching_open_project_draft(tmp_path: Path)
     assert renamed["name"] == "새이름"
     drafts = list_drafts(plot_root, "alpha")
     assert [draft.id for draft in drafts] == [draft_id]
-    assert drafts[0].status == "confirmed"
+    assert drafts[0].status == "proposed"
 
 
-def test_mcp_rename_project_records_applied_draft_without_matching_open_draft(
+def test_mcp_rename_project_without_id_leaves_unmatched_open_draft_unchanged(
     tmp_path: Path,
 ) -> None:
     plot_root, _ = _project(tmp_path)
@@ -2124,12 +1960,8 @@ def test_mcp_rename_project_records_applied_draft_without_matching_open_draft(
 
     assert renamed["name"] == "새이름"
     drafts = list_drafts(plot_root, "alpha")
-    assert len(drafts) == 2
+    assert len(drafts) == 1
     assert read_draft(plot_root, "alpha", proposed_id).status == "proposed"
-    applied = next(draft for draft in drafts if draft.id != proposed_id)
-    assert applied.canvas_kind == "project"
-    assert applied.status == "confirmed"
-    assert applied.origin == "auto"
 
 
 def test_mcp_rename_project_rejects_non_project_draft_before_write(tmp_path: Path) -> None:
@@ -2141,23 +1973,6 @@ def test_mcp_rename_project_rejects_non_project_draft_before_write(tmp_path: Pat
 
     assert mcp_tools.get_project(str(tmp_path), "alpha")["name"] == "Alpha"
     assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
-
-
-def test_mcp_rename_project_raises_when_draft_recording_fails(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    plot_root, _ = _project(tmp_path)
-
-    def fail_to_record(*_args: object, **_kwargs: object) -> None:
-        raise OSError("draft storage unavailable")
-
-    monkeypatch.setattr(mcp_project_tools, "persist_applied_draft", fail_to_record)
-
-    with pytest.raises(OSError, match="draft storage unavailable"):
-        mcp_tools.rename_project(str(tmp_path), "alpha", "Renamed Alpha")
-
-    assert mcp_tools.get_project(str(tmp_path), "alpha")["name"] == "Alpha"
-    assert list_drafts(plot_root, "alpha") == []
 
 
 def test_mcp_rename_project_rolls_back_when_draft_confirmation_fails(
@@ -2189,13 +2004,18 @@ def test_mcp_rename_project_rolls_back_when_draft_confirmation_fails(
 
 def test_project_drafts_can_be_filtered_in_store_and_http(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
-    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "Renamed Alpha")
-    assert renamed["name"] == "Renamed Alpha"
+    project = _record(
+        str(tmp_path),
+        canvas_kind="project",
+        proposed_text="Project name: Renamed Alpha",
+        proposed_kind=None,
+    )
     other = _record(str(tmp_path))
 
     project_drafts = list_drafts(plot_root, "alpha", canvas_kind="project")
     assert len(project_drafts) == 1
     assert project_drafts[0].canvas_kind == "project"
+    assert project_drafts[0].id == project["draft_id"]
     assert project_drafts[0].id != other["draft_id"]
 
     client = TestClient(create_http_app(hub=BroadcastHub(enable_watchers=False)))
@@ -2332,6 +2152,23 @@ def test_draft_tools_have_pinned_mcp_schemas() -> None:
             },
             {"const": "project", "type": "string"},
         ]
+    }
+
+    update = asyncio.run(mcp_tools.mcp.get_tool("update_draft"))
+    assert update is not None
+    assert set(update.parameters["properties"]) == {
+        "project_path",
+        "project_id",
+        "draft_id",
+        "proposed_text",
+        "rationale",
+    }
+    assert set(update.parameters["required"]) == {
+        "project_path",
+        "project_id",
+        "draft_id",
+        "proposed_text",
+        "rationale",
     }
 
     rename = asyncio.run(mcp_tools.mcp.get_tool("rename_project"))
