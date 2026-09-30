@@ -1680,6 +1680,8 @@
 
 ### D-2026-07-02-P — a tool call resets the coach's turn text (pre-tool planning monologue is not reply)
 
+> Also when nothing follows the last tool call: the saved reply is empty (no fallback to the pre-tool text), the app shows a short no-reply note instead of the streamed planning text, and the coach is told to always leave a written reply after its final tool call (2026-10-01, novel-workspace W-00000350).
+
 - **What:** In the claude-code stream parser, a ``tool_use`` ``content_block_start``
   frame clears the accumulated turn text. Only text produced after the LAST tool
   call becomes the persisted assistant message / ``turn_complete`` text (the viewer
