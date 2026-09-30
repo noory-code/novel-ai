@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import sys
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any, cast
@@ -423,6 +424,31 @@ async def test_stream_turn_yields_start_delta_complete_on_success(
     assert process.spawn_env.get("CLAUDE_CODE_DISABLE_AUTO_MEMORY") == "1"
 
 
+async def test_default_spawn_accepts_large_stream_json_line(tmp_path: Path) -> None:
+    class _LargeLineProvider(ClaudeCodeProvider):
+        def _build_command(self, user_message: str) -> list[str]:
+            script = """
+import json
+print(json.dumps({"type": "user", "message": {"content": "x" * 200_000}}))
+print(json.dumps({
+    "type": "stream_event",
+    "event": {
+        "type": "content_block_delta",
+        "delta": {"type": "text_delta", "text": "답입니다."},
+    },
+}))
+"""
+            return [sys.executable, "-c", script]
+
+    provider = _LargeLineProvider(workspace_root=tmp_path, cli_path=sys.executable)
+
+    events = await _drain(provider, "hello")
+
+    assert [event.type for event in events] == ["turn_start", "delta", "turn_complete"]
+    assert events[-1].text == "답입니다."
+    assert not any(event.type == "error" for event in events)
+
+
 async def test_stream_turn_closes_child_stdin(tmp_path: Path) -> None:
     """The prompt is passed as an arg, so the child must NOT read stdin. Without
     an explicit EOF the child inherits the engine sidecar's stdin and blocks —
@@ -498,6 +524,33 @@ async def test_stream_turn_emits_error_on_non_zero_exit(tmp_path: Path) -> None:
     assert "not logged in" in events[-1].error_message
     # turn_complete must NOT fire on error
     assert not any(e.type == "turn_complete" for e in events)
+
+
+async def test_stream_turn_emits_error_when_stdout_iteration_fails(tmp_path: Path) -> None:
+    class _FailingStdout:
+        def __aiter__(self) -> _FailingStdout:
+            return self
+
+        async def __anext__(self) -> bytes:
+            raise ValueError("Separator is not found, and chunk exceed the limit")
+
+    process = _FakeProcess(stdout_lines=[], returncode=0)
+    process.stdout = _FailingStdout()  # type: ignore[assignment]
+    provider = ClaudeCodeProvider(
+        workspace_root=tmp_path,
+        session_id="sid",
+        cli_path="claude-test",
+        subprocess_factory=_build_fake_factory(process),
+    )
+
+    events = await _drain(provider, "hi")
+
+    assert [event.type for event in events] == ["turn_start", "error"]
+    assert events[-1].turn_id == events[0].turn_id
+    assert events[-1].error_message is not None
+    assert "claude-test" in events[-1].error_message
+    assert "Separator is not found" in events[-1].error_message
+    assert process.killed
 
 
 async def test_stream_turn_kills_process_on_cancel(tmp_path: Path) -> None:

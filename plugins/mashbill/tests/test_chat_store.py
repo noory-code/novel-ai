@@ -90,6 +90,59 @@ def test_append_assistant_appends_and_bumps_updated(tmp_path: Path) -> None:
     assert doc.title == "Hi"  # never overwritten
 
 
+def test_rewriting_legacy_messages_does_not_add_null_error_keys(tmp_path: Path) -> None:
+    plot_root, pid = _project(tmp_path)
+    append_user(plot_root, pid, "foundation", "codex", "user_1", "Hi")
+    path = plot_root / "chat" / "foundation.json"
+    before = json.loads(path.read_text(encoding="utf-8"))
+    assert "error" not in before["messages"][0]
+
+    append_assistant(plot_root, pid, "foundation", "codex", "turn_1", "Hello")
+
+    after = json.loads(path.read_text(encoding="utf-8"))
+    assert all("error" not in message for message in after["messages"])
+
+
+def test_error_message_round_trips_through_conversation_file(tmp_path: Path) -> None:
+    plot_root, pid = _project(tmp_path)
+    append_user(plot_root, pid, "foundation", "codex", "user_1", "Hi")
+
+    append_assistant(
+        plot_root,
+        pid,
+        "foundation",
+        "codex",
+        "turn_1",
+        "",
+        error="CLI stdout failed",
+    )
+
+    message = read_conversation(plot_root, pid, "foundation").messages[-1]
+    assert message.error == "CLI stdout failed"
+    raw = json.loads((plot_root / "chat" / "foundation.json").read_text(encoding="utf-8"))
+    assert raw["messages"][-1]["error"] == "CLI stdout failed"
+
+
+def test_recent_transcript_skips_error_messages(tmp_path: Path) -> None:
+    plot_root, pid = _project(tmp_path)
+    append_user(plot_root, pid, "foundation", "codex", "user_1", "keep this")
+    append_assistant(
+        plot_root,
+        pid,
+        "foundation",
+        "codex",
+        "turn_1",
+        "partial reply",
+        error="CLI stdout failed",
+    )
+
+    transcript = read_recent_transcript(plot_root, pid, "foundation")
+
+    assert "keep this" in transcript
+    assert "partial reply" not in transcript
+    assert "CLI stdout failed" not in transcript
+
+
 def test_append_assistant_to_unknown_conversation_falls_back_to_current(
     tmp_path: Path,
 ) -> None:

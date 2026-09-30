@@ -145,6 +145,33 @@ async def _notify_persist_failed(
         _log.exception("chat persist failure notification failed for %s", plot_root)
 
 
+async def _persist_assistant(
+    hub: BroadcastHub,
+    plot_root: Path,
+    project_id: str,
+    scope: str,
+    provider_name: str,
+    turn_id: str,
+    text: str,
+    error: str | None,
+    conversation_id: str | None,
+) -> None:
+    try:
+        append_assistant_to_conversation(
+            plot_root,
+            project_id,
+            scope,
+            provider_name,
+            turn_id or f"turn_{uuid4().hex[:12]}",
+            text,
+            conversation_id,
+            error=error,
+        )
+    except Exception:  # noqa: BLE001 — persistence must not break chat
+        _log.exception("chat persist (assistant) failed for %s", plot_root)
+        await _notify_persist_failed(hub, plot_root, project_id, scope, "assistant")
+
+
 async def stream_chat_turn(
     provider: ChatProvider,
     hub: BroadcastHub,
@@ -162,43 +189,52 @@ async def stream_chat_turn(
     turns never create drafts implicitly.
     """
     start_turn(plot_root, scope)
+    seen_turn_id: str | None = None
     try:
         async for event in filter_save_announcements(provider.stream_turn(user_message)):
+            if event.turn_id:
+                seen_turn_id = event.turn_id
             payload = event.model_dump()
             payload["scope"] = scope
             await hub.notify_event(plot_root, _CHAT_EVENT, payload)
-            if event.type == "turn_complete" and project_id:
-                try:
-                    append_assistant_to_conversation(
-                        plot_root,
-                        project_id,
-                        scope,
-                        provider_name,
-                        event.turn_id or f"turn_{uuid4().hex[:12]}",
-                        event.text,
-                        conversation_id,
-                    )
-                except Exception:  # noqa: BLE001 — persistence must not break chat
-                    _log.exception("chat persist (assistant) failed for %s", plot_root)
-                    await _notify_persist_failed(
-                        hub,
-                        plot_root,
-                        project_id,
-                        scope,
-                        "assistant",
-                    )
+            if event.type in ("turn_complete", "error") and project_id:
+                await _persist_assistant(
+                    hub,
+                    plot_root,
+                    project_id,
+                    scope,
+                    provider_name,
+                    event.turn_id,
+                    event.text,
+                    event.error_message,
+                    conversation_id,
+                )
     except Exception as exc:  # noqa: BLE001 — boundary catch
         _log.exception("chat turn crashed for %s", plot_root)
+        error_turn_id = seen_turn_id or f"turn_{uuid4().hex[:12]}"
+        error_message = f"chat turn crashed: {exc}"
         await hub.notify_event(
             plot_root,
             _CHAT_EVENT,
             {
                 "type": "error",
-                "turn_id": "",
-                "error_message": f"chat turn crashed: {exc}",
+                "turn_id": error_turn_id,
+                "error_message": error_message,
                 "scope": scope,
             },
         )
+        if project_id:
+            await _persist_assistant(
+                hub,
+                plot_root,
+                project_id,
+                scope,
+                provider_name,
+                error_turn_id,
+                "",
+                error_message,
+                conversation_id,
+            )
     finally:
         finish_turn(plot_root, scope)
 

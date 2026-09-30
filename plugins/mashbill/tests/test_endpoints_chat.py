@@ -89,6 +89,12 @@ class _ExplodingProvider(ChatProvider):
         yield  # pragma: no cover — required to make this an async generator
 
 
+class _StartsThenExplodesProvider(ChatProvider):
+    async def stream_turn(self, user_message: str) -> Any:
+        yield ChatStreamEvent(type="turn_start", turn_id="turn-crashed")
+        raise RuntimeError("provider blew up after turn start")
+
+
 class _BlockingProvider(ChatProvider):
     """Keep a streamed turn open until the test explicitly releases it."""
 
@@ -191,6 +197,79 @@ async def test_stream_chat_turn_broadcasts_error_on_provider_crash(
     assert payload["error_message"] is not None
     assert "blew up" in payload["error_message"]
     assert not turn_in_progress(ws, "project")
+
+
+async def test_stream_chat_turn_persists_boundary_error_with_started_turn_id(
+    tmp_path: Path,
+) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    append_user(plot_root, "alpha", "foundation", "codex", "user_1", "hello")
+    conversation_id = read_conversation(plot_root, "alpha", "foundation").conversation_id
+    assert conversation_id is not None
+    hub = _FakeHub()
+
+    await stream_chat_turn(
+        _StartsThenExplodesProvider(),
+        hub,
+        plot_root,
+        "hello",
+        scope="foundation",
+        project_id="alpha",
+        provider_name="codex",
+        conversation_id=conversation_id,
+    )
+
+    payloads = [
+        payload
+        for _, event_name, payload in hub.events
+        if event_name == "chat_stream_event"
+    ]
+    assert payloads[-1] is not None
+    assert payloads[-1]["type"] == "error"
+    assert payloads[-1]["turn_id"] == payloads[0]["turn_id"] == "turn-crashed"
+    doc = read_conversation(plot_root, "alpha", "foundation")
+    assert doc.messages[-1].id == "turn-crashed"
+    assert doc.messages[-1].role == "assistant"
+    assert doc.messages[-1].text == ""
+    assert doc.messages[-1].error is not None
+    assert "blew up after turn start" in doc.messages[-1].error
+
+
+async def test_stream_chat_turn_persists_provider_error_event(tmp_path: Path) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    append_user(plot_root, "alpha", "foundation", "codex", "user_1", "hello")
+    conversation_id = read_conversation(plot_root, "alpha", "foundation").conversation_id
+    assert conversation_id is not None
+    hub = _FakeHub()
+    provider = _CannedProvider(
+        [
+            ChatStreamEvent(type="turn_start", turn_id="turn-provider-error"),
+            ChatStreamEvent(
+                type="error",
+                turn_id="turn-provider-error",
+                error_message="claude failed to read stdout",
+            ),
+        ]
+    )
+
+    await stream_chat_turn(
+        provider,
+        hub,
+        plot_root,
+        "hello",
+        scope="foundation",
+        project_id="alpha",
+        provider_name="claude-code",
+        conversation_id=conversation_id,
+    )
+
+    doc = read_conversation(plot_root, "alpha", "foundation")
+    assert doc.messages[-1].id == "turn-provider-error"
+    assert doc.messages[-1].role == "assistant"
+    assert doc.messages[-1].text == ""
+    assert doc.messages[-1].error == "claude failed to read stdout"
 
 
 async def test_stream_chat_turn_releases_scope_when_cancelled(tmp_path: Path) -> None:

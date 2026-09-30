@@ -21,6 +21,9 @@ from pydantic import BaseModel
 
 ChatStreamEventType = Literal["turn_start", "delta", "turn_complete", "error", "meta"]
 
+# Claude stream-json can repeat one tool result three times on a single line.
+_STDOUT_LINE_LIMIT = 16 * 1024 * 1024
+
 # Conversation scope (D-2026-06-13-H, Layer 1 per-instance refinement
 # D-2026-06-15-B). Chat threads are partitioned per canvas kind plus one
 # shared ``project`` scope for cross-canvas work. ``feature`` is the
@@ -306,11 +309,19 @@ class _SubprocessChatProvider(ChatProvider):
         yield ChatStreamEvent(type="turn_start", turn_id=turn_id)
         accumulator: list[str] = []
         try:
-            if proc.stdout is not None:
-                async for line in proc.stdout:
-                    event = self._parse_line(turn_id, line, accumulator)
-                    if event is not None:
-                        yield event
+            try:
+                if proc.stdout is not None:
+                    async for line in proc.stdout:
+                        event = self._parse_line(turn_id, line, accumulator)
+                        if event is not None:
+                            yield event
+            except Exception as exc:  # noqa: BLE001 — convert CLI stream failures to wire errors
+                yield ChatStreamEvent(
+                    type="error",
+                    turn_id=turn_id,
+                    error_message=f"{self._cli_path}: {exc}",
+                )
+                return
             rc = await proc.wait()
             if rc != 0:
                 stderr_text = ""
@@ -355,6 +366,7 @@ async def _default_spawn(
         stdout=stdout,
         stderr=stderr,
         stdin=stdin,
+        limit=_STDOUT_LINE_LIMIT,
     )
 
 

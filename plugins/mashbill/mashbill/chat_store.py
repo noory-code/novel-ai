@@ -31,6 +31,7 @@ class ChatMessageRecord(BaseModel):
     role: str  # "user" | "assistant"
     text: str
     ts: str
+    error: str | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 class ChatConversationDoc(BaseModel):
@@ -137,7 +138,14 @@ def append_user(
 
 
 def append_assistant(
-    plot_root: Path, project_id: str, scope: str, provider: str, msg_id: str, text: str
+    plot_root: Path,
+    project_id: str,
+    scope: str,
+    provider: str,
+    msg_id: str,
+    text: str,
+    *,
+    error: str | None = None,
 ) -> None:
     """Append the assistant turn to an existing conversation. A no-op when the
     file is absent — an assistant reply with no preceding user message is not a
@@ -151,7 +159,9 @@ def append_assistant(
     now = _now()
     doc.provider = provider
     doc.updated = now
-    doc.messages.append(ChatMessageRecord(id=msg_id, role="assistant", text=text, ts=now))
+    doc.messages.append(
+        ChatMessageRecord(id=msg_id, role="assistant", text=text, ts=now, error=error)
+    )
     _write_json(path, doc.model_dump())
 
 
@@ -192,6 +202,8 @@ def append_assistant_to_conversation(
     msg_id: str,
     text: str,
     conversation_id: str | None,
+    *,
+    error: str | None = None,
 ) -> None:
     """Append to the file owning ``conversation_id``, including ended files.
 
@@ -206,13 +218,17 @@ def append_assistant_to_conversation(
         else None
     )
     if path is None:
-        append_assistant(plot_root, project_id, scope, provider, msg_id, text)
+        append_assistant(
+            plot_root, project_id, scope, provider, msg_id, text, error=error
+        )
         return
     doc = ChatConversationDoc.model_validate(_read_json(path))
     now = _now()
     doc.provider = provider
     doc.updated = now
-    doc.messages.append(ChatMessageRecord(id=msg_id, role="assistant", text=text, ts=now))
+    doc.messages.append(
+        ChatMessageRecord(id=msg_id, role="assistant", text=text, ts=now, error=error)
+    )
     _write_json(path, doc.model_dump())
 
 
@@ -297,6 +313,8 @@ def read_recent_transcript(
     picked: list[str] = []
     total = 0
     for m in reversed(doc.messages):
+        if m.error is not None:
+            continue
         line = f"{m.role}: {m.text.strip()}"
         if total + len(line) > max_chars and picked:
             break

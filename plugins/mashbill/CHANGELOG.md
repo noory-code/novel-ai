@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.198.1] — 2026-10-01
+
+### Fixed
+
+- A coach turn no longer vanishes when a tool result is large: the CLI stdout line limit is 16 MiB (stream-json repeats a tool result three times on one line, so ~21 KB results broke the 64 KiB default). A failed turn now reports its error under its own turn id and is saved in the conversation as an assistant record with `error` (the key is written only when set).
+
 ## [0.198.0] — 2026-10-01
 
 ### Changed
