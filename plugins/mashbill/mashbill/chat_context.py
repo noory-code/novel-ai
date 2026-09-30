@@ -304,7 +304,7 @@ WRITE_PLAYBOOK = (
     "selection. Do not announce the save in ANY language — never "
     "'저장했어요/저장할게요/저장됐어요/기록했어요'. Acknowledge by restating it as "
     "settled ('신뢰가 먼저다 — 좋네요'), never with a save verb; the canvas shows "
-    "it. "
+    "it. After the final tool call, always leave a written reply for the person. "
     "Everything you write onto the canvas must be natural, "
     "correctly-spelled Korean in the user's own words — no translationese, "
     "no typos; reread the text before saving. Target: the selected node, "

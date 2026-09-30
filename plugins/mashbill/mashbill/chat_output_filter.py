@@ -6,8 +6,8 @@ STREAMS token-by-token, so a transcript-only strip would let the user still SEE
 it. :func:`filter_save_announcements` buffers the stream to sentence boundaries and
 runs :func:`strip_save_announcement` on each completed sentence before it is
 broadcast — dropping the save-report clause while keeping the coach's content, and
-making ``turn_complete.text`` exactly the concatenation of the emitted deltas so a
-late subscriber reconciles to the same text.
+cleaning the provider's authoritative ``turn_complete.text`` so a late subscriber
+reconciles to the final post-tool reply.
 
 Language scope: Korean (the coach speaks the user's language; every observed leak
 was Korean) plus the English 'saved'/'done' forms B-6 first named. Novel is a
@@ -137,15 +137,14 @@ async def filter_save_announcements(
 
     Deltas are held until a sentence terminator lands, so a clause split across
     chunks ("...저" | "장했어요.") is judged whole. ``turn_complete.text`` is the
-    authoritative full cleaned reply (from the event's own text, or the accumulated
-    deltas as fallback); the deltas concatenate to exactly that, so a delta-only
-    subscriber and a late subscriber reconcile to identical text.
+    authoritative full cleaned reply from the event's own text. The deltas
+    concatenate to that when possible; a late subscriber always reconciles to
+    the completion text.
 
     Original separators cross delta boundaries unchanged; the filter never
     inserts a space between emitted pieces.
     """
     buffer = ""  # in-progress (unterminated) sentence, held back
-    raw = ""  # every raw delta char seen, for fallback reconciliation
     emitted = ""  # cleaned text already sent as deltas
     removed_before_emission = False  # clean the leading join after a dropped sentence
 
@@ -156,7 +155,6 @@ async def filter_save_announcements(
 
     async for ev in events:
         if ev.type == "delta":
-            raw += ev.text
             buffer += ev.text
             matches = list(_SENT_SPLIT.finditer(buffer))
             if matches:
@@ -172,9 +170,11 @@ async def filter_save_announcements(
                     removed_before_emission = removed_before_emission or not emitted
             # no terminator yet → hold the buffer, emit nothing this delta
         elif ev.type == "turn_complete":
-            full_cleaned = strip_save_announcement(ev.text or raw)
+            full_cleaned = strip_save_announcement(ev.text)
             # Emit whatever is not yet streamed so a delta-only subscriber lands on
-            # the same full text; then reconcile turn_complete.text to it.
+            # the same full text when possible; then reconcile completion to the
+            # provider's authoritative text. Already-emitted pre-tool deltas cannot
+            # be retracted, and an empty completion must not produce an empty delta.
             if full_cleaned.startswith(emitted):
                 tail = full_cleaned[len(emitted) :]
             else:  # whitespace drift — resend the authoritative text as one delta

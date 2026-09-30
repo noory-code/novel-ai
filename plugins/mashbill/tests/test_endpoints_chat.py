@@ -1081,6 +1081,35 @@ async def test_stream_chat_turn_persists_assistant_on_turn_complete(tmp_path: Pa
     assert not any(event_name == "chat_persist_failed" for _, event_name, _ in hub.events)
 
 
+async def test_stream_chat_turn_persists_empty_post_tool_reply(tmp_path: Path) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    append_user(plot_root, "alpha", "foundation", "claude-code", "user_1", "hello")
+    conversation_id = read_conversation(plot_root, "alpha", "foundation").conversation_id
+    assert conversation_id is not None
+    provider = _CannedProvider(
+        [
+            ChatStreamEvent(type="delta", turn_id="t1", text="계획 글."),
+            ChatStreamEvent(type="turn_complete", turn_id="t1", text=""),
+        ]
+    )
+
+    await stream_chat_turn(
+        provider,
+        _FakeHub(),
+        plot_root,
+        "hello",
+        scope="foundation",
+        project_id="alpha",
+        provider_name="claude-code",
+        conversation_id=conversation_id,
+    )
+
+    doc = read_conversation(plot_root, "alpha", "foundation")
+    assert doc.messages[-1].role == "assistant"
+    assert doc.messages[-1].text == ""
+
+
 async def test_stream_chat_turn_notifies_when_assistant_persistence_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

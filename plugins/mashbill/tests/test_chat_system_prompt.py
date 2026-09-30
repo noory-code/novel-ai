@@ -209,6 +209,12 @@ def test_write_playbook_forbids_announcing_the_save_saliently() -> None:
     assert wp.count("the canvas shows") <= 1
 
 
+def test_write_playbook_requires_a_reply_after_the_final_tool_call() -> None:
+    assert "After the final tool call, always leave a written reply for the person." in (
+        WRITE_PLAYBOOK
+    )
+
+
 def test_write_playbook_records_drafts_only_after_explicit_consent() -> None:
     draft_rule = (
         " Drafts: during discussion, show and refine concrete proposals in chat without "
@@ -230,7 +236,7 @@ def test_write_playbook_records_drafts_only_after_explicit_consent() -> None:
     assert "whenever you show the person a concrete draft" not in WRITE_PLAYBOOK
     existing = WRITE_PLAYBOOK[: -len(draft_rule)]
     assert hashlib.sha256(existing.encode()).hexdigest() == (
-        "0ee79eb48daeec21ca8bbf4dcb9e95e3322160c757d991958b4bace3e171c094"
+        "31c0c70485dbe63993e70bbbd09f2a44c700408d2225309467dfe6d1dab2c015"
     )
 
 

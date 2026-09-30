@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.198.4] — 2026-10-01
+
+### Fixed
+
+- When the coach writes nothing after its last tool call, the saved reply is now empty instead of falling back to the pre-tool planning text (D-2026-07-02-P), and the coach is told to always leave a written reply after its final tool call.
+
 ## [0.198.3] — 2026-10-01
 
 ### Changed

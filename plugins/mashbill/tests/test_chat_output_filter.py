@@ -164,6 +164,44 @@ def test_stream_filter_buffers_across_deltas_and_reconciles() -> None:
     assert complete.text == deltas  # stream and reconcile text agree
 
 
+def test_stream_complete_does_not_fall_back_to_pre_tool_deltas() -> None:
+    raw = [
+        ChatStreamEvent(type="delta", turn_id="t-plan", text="계획 글."),
+        ChatStreamEvent(type="turn_complete", turn_id="t-plan", text=""),
+    ]
+
+    async def _run() -> list[ChatStreamEvent]:
+        async def gen() -> AsyncIterator[ChatStreamEvent]:
+            for event in raw:
+                yield event
+
+        return [event async for event in filter_save_announcements(gen())]
+
+    out = asyncio.run(_run())
+    complete = next(event for event in out if event.type == "turn_complete")
+    assert complete.text == ""
+    assert [event.text for event in out if event.type == "delta"] == ["계획 글."]
+
+
+def test_stream_complete_keeps_matching_authoritative_text() -> None:
+    raw = [
+        ChatStreamEvent(type="delta", turn_id="t-answer", text="답."),
+        ChatStreamEvent(type="turn_complete", turn_id="t-answer", text="답."),
+    ]
+
+    async def _run() -> list[ChatStreamEvent]:
+        async def gen() -> AsyncIterator[ChatStreamEvent]:
+            for event in raw:
+                yield event
+
+        return [event async for event in filter_save_announcements(gen())]
+
+    out = asyncio.run(_run())
+    complete = next(event for event in out if event.type == "turn_complete")
+    assert complete.text == "답."
+    assert [event.text for event in out if event.type == "delta"] == ["답."]
+
+
 def test_stream_cleans_the_join_after_a_removed_leading_sentence() -> None:
     full = "미션이 저장됐어요. 다음은 가치를 볼까요?"
     raw = [
