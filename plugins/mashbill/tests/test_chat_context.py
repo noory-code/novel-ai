@@ -651,6 +651,15 @@ def test_foundation_and_actors_start_from_an_empty_canvas() -> None:
         assert "create" in p, scope
 
 
+def test_actors_framing_creates_only_confirmed_human_roles() -> None:
+    framing = build_framing_preamble("actors")
+
+    assert "AI, software, and infrastructure" in framing
+    assert "tools that help people, not human roles" in framing
+    assert "once the person confirms it" in framing
+    assert "when the conversation identifies it" not in framing
+
+
 def test_actors_hierarchy_arrow_points_at_the_family() -> None:
     """B-34 (user live-watch 2026-07-04): fold buttons sat on LEAF actors —
     the coach drew family → actor while the stored fold convention is

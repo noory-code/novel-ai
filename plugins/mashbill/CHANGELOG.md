@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.197.6] — 2026-10-01
+
+### Changed
+
+- The Actors canvas coach and its actor check now say AI, software, and infrastructure are not actors (design rule rule_9e08e46d), and the coach creates a family or actor once the person confirms it.
+
 ## [0.197.5] — 2026-10-01
 
 ### Changed

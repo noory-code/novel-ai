@@ -350,6 +350,9 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     # actors quality principles must now carry the nesting discriminator.
     actors = get_principles("actors")
     assert "역할군 아래에 구체적인 역할" in actors
+    assert "AI·시스템·소프트웨어를 액터로 두지 않았나" in actors
+    assert "사람의 역할만 액터다" in actors
+    assert "AI·시스템을 액터로 둠" in actors
     entities = get_principles("entities")
     assert entities and "엔티티" in entities
     assert "구현 모델" in entities and "일대일" in entities
