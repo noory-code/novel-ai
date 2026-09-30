@@ -16,7 +16,7 @@ from mashbill.draft_store import resolve_draft as persist_resolution
 from mashbill.draft_write_split import WriteFragment, normalize_draft_text, split_write_by_draft
 from mashbill.field_policy import writable_node_fields
 from mashbill.models_canvas import CanvasDoc, CanvasKind
-from mashbill.models_draft import DraftDoc, ResolvedDraftStatus
+from mashbill.models_draft import DraftCanvasKind, DraftDoc, ResolvedDraftStatus
 from mashbill.workspace import resolve_plot_root
 
 AUTO_DRAFT_RATIONALE = "Coach applied the change directly without recording a draft."
@@ -30,7 +30,7 @@ def _draft_result(draft: DraftDoc) -> dict[str, Any]:
 def record_draft(
     project_path: str,
     project_id: str,
-    canvas_kind: CanvasKind,
+    canvas_kind: DraftCanvasKind,
     proposed_text: str,
     rationale: str,
     chat_scope: str = "",
@@ -40,9 +40,9 @@ def record_draft(
 ) -> dict[str, Any]:
     """Keep a concrete proposal shown to the person, separately from chat.
 
-    Call this whenever presenting text for a node or proposing a new node.
+    Call this for concrete node text, a new node, or a new project name.
     ``rationale`` is one line explaining why; ``chat_scope`` comes from the
-    [Write target]. ``target_node_ids`` may be empty for a new concept.
+    [Write target]. Project drafts have no node targets, kind, or service id.
     """
     plot_root = resolve_plot_root(project_path)
     draft = persist_draft(
@@ -84,7 +84,7 @@ def draft_matches_write(
     plot_root: Path,
     project_id: str,
     draft_id: str,
-    canvas_kind: CanvasKind,
+    canvas_kind: DraftCanvasKind,
     touched_node_ids: list[str],
     service_id: str | None = None,
     written_texts: list[str] | None = None,

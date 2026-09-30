@@ -222,8 +222,14 @@ def test_write_playbook_appends_draft_tracking_without_changing_existing_words()
         "write tool; if they accept it with edits, call resolve_draft with status='edited', "
         "and if they discard it, call resolve_draft with status='rejected'."
     )
-    suffix = existing_draft_rule + question_draft_rule + open_draft_rule
+    project_name_rule = (
+        " When you show a proposed new project name, call record_draft with "
+        "canvas_kind='project'; when the person accepts it, pass that draft_id to "
+        "rename_project."
+    )
+    suffix = existing_draft_rule + project_name_rule + question_draft_rule + open_draft_rule
     assert existing_draft_rule in WRITE_PLAYBOOK
+    assert project_name_rule in WRITE_PLAYBOOK
     assert open_draft_rule in WRITE_PLAYBOOK
     assert WRITE_PLAYBOOK.endswith(suffix)
     existing = WRITE_PLAYBOOK[: -len(suffix)]

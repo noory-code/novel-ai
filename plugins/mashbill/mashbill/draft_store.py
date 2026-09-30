@@ -143,6 +143,13 @@ def _record_new_draft(
     chat_conversation_id: str | None = None,
 ) -> DraftDoc:
     """Write one new draft file with its initial resolution state."""
+    if canvas_kind == "project":
+        if target_node_ids:
+            raise ValueError("project drafts require empty target_node_ids")
+        if proposed_kind is not None:
+            raise ValueError("project drafts cannot have proposed_kind")
+        if service_id is not None:
+            raise ValueError("project drafts cannot have service_id")
     _ensure_project(plot_root, project_id)
     now = _now()
     draft = DraftDoc(

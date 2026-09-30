@@ -142,11 +142,17 @@ def publish_service_tool(project_path: str, project_id: str, service_id: str) ->
 
 
 @mcp.tool()
-def rename_project(project_path: str, project_id: str, name: str) -> dict[str, Any]:
+def rename_project(
+    project_path: str,
+    project_id: str,
+    name: str,
+    draft_id: str | None = None,
+) -> dict[str, Any]:
     """Update a project's ``name`` and mirror it onto the Core canvas's
-    Project anchor label in one shot."""
+    Project anchor label in one shot. Pass the accepted project-name draft id
+    when available."""
     plot_root = resolve_plot_root(project_path)
-    return rename_project_with_draft(plot_root, project_id, name).model_dump()
+    return rename_project_with_draft(plot_root, project_id, name, draft_id).model_dump()
 
 
 # ---------------------------------------------------------------------------

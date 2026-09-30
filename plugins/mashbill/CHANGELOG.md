@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.29] — 2026-09-30
+
+### Fixed
+
+- A project-name proposal the coach only shows is now kept as a `project` draft: `record_draft` accepts `canvas_kind="project"`, turn extraction finds new project names in any scope, and `rename_project` confirms the passed or matching project draft instead of recording a second one.
+
 ## [0.196.28] — 2026-09-30
 
 ### Fixed

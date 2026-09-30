@@ -70,6 +70,51 @@ def test_record_draft_writes_one_file_and_lists_it(tmp_path: Path) -> None:
     assert drafts[0].origin == "recorded"
 
 
+def test_record_draft_accepts_project_proposal(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+
+    out = _record(
+        str(tmp_path),
+        canvas_kind="project",
+        proposed_text="프로젝트 이름: 새이름",
+        chat_scope="foundation",
+        proposed_kind=None,
+    )
+
+    draft = read_draft(plot_root, "alpha", str(out["draft_id"]))
+    assert draft.canvas_kind == "project"
+    assert draft.target_node_ids == []
+    assert draft.proposed_kind is None
+    assert draft.service_id is None
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"target_node_ids": ["mission_1"]}, "target_node_ids"),
+        ({"proposed_kind": "mission"}, "proposed_kind"),
+        ({"service_id": "feature_1", "proposed_kind": None}, "service_id"),
+    ],
+)
+def test_record_draft_rejects_canvas_fields_for_project_proposal(
+    tmp_path: Path,
+    kwargs: dict[str, object],
+    message: str,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+
+    with pytest.raises(ValueError, match=message):
+        _record(
+            str(tmp_path),
+            canvas_kind="project",
+            proposed_text="프로젝트 이름: 새이름",
+            chat_scope="foundation",
+            **kwargs,  # type: ignore[arg-type]
+        )
+
+    assert list_drafts(plot_root, "alpha") == []
+
+
 def test_record_draft_tracks_current_conversation_across_reset(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
     append_user(plot_root, "alpha", "foundation", "codex", "u1", "First conversation")
@@ -1631,6 +1676,84 @@ def test_mcp_rename_project_to_same_name_records_no_draft(tmp_path: Path) -> Non
     assert list_drafts(plot_root, "alpha") == []
 
 
+def test_mcp_rename_project_confirms_supplied_project_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="project",
+            proposed_text="프로젝트 이름: 새이름",
+            chat_scope="foundation",
+            proposed_kind=None,
+        )["draft_id"]
+    )
+
+    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "새이름", draft_id=draft_id)
+
+    assert renamed["name"] == "새이름"
+    drafts = list_drafts(plot_root, "alpha")
+    assert [draft.id for draft in drafts] == [draft_id]
+    assert drafts[0].status == "confirmed"
+    assert drafts[0].origin == "recorded"
+
+
+def test_mcp_rename_project_confirms_matching_open_project_draft(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="project",
+            proposed_text="프로젝트 이름: **새이름**",
+            chat_scope="foundation",
+            proposed_kind=None,
+        )["draft_id"]
+    )
+
+    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "새이름")
+
+    assert renamed["name"] == "새이름"
+    drafts = list_drafts(plot_root, "alpha")
+    assert [draft.id for draft in drafts] == [draft_id]
+    assert drafts[0].status == "confirmed"
+
+
+def test_mcp_rename_project_records_applied_draft_without_matching_open_draft(
+    tmp_path: Path,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    proposed_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="project",
+            proposed_text="프로젝트 이름: 다른 이름",
+            chat_scope="foundation",
+            proposed_kind=None,
+        )["draft_id"]
+    )
+
+    renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "새이름")
+
+    assert renamed["name"] == "새이름"
+    drafts = list_drafts(plot_root, "alpha")
+    assert len(drafts) == 2
+    assert read_draft(plot_root, "alpha", proposed_id).status == "proposed"
+    applied = next(draft for draft in drafts if draft.id != proposed_id)
+    assert applied.canvas_kind == "project"
+    assert applied.status == "confirmed"
+    assert applied.origin == "auto"
+
+
+def test_mcp_rename_project_rejects_non_project_draft_before_write(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(_record(str(tmp_path))["draft_id"])
+
+    with pytest.raises(ValueError, match="project draft"):
+        mcp_tools.rename_project(str(tmp_path), "alpha", "새이름", draft_id=draft_id)
+
+    assert mcp_tools.get_project(str(tmp_path), "alpha")["name"] == "Alpha"
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [draft_id]
+
+
 def test_mcp_rename_project_raises_when_draft_recording_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1646,6 +1769,33 @@ def test_mcp_rename_project_raises_when_draft_recording_fails(
 
     assert mcp_tools.get_project(str(tmp_path), "alpha")["name"] == "Alpha"
     assert list_drafts(plot_root, "alpha") == []
+
+
+def test_mcp_rename_project_rolls_back_when_draft_confirmation_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root, _ = _project(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="project",
+            proposed_text="프로젝트 이름: 새이름",
+            chat_scope="foundation",
+            proposed_kind=None,
+        )["draft_id"]
+    )
+
+    def fail_to_confirm(*_args: object, **_kwargs: object) -> None:
+        raise OSError("draft storage unavailable")
+
+    monkeypatch.setattr(mcp_project_tools, "persist_resolution", fail_to_confirm)
+
+    with pytest.raises(OSError, match="draft storage unavailable"):
+        mcp_tools.rename_project(str(tmp_path), "alpha", "새이름", draft_id=draft_id)
+
+    assert mcp_tools.get_project(str(tmp_path), "alpha")["name"] == "Alpha"
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
 
 
 def test_project_drafts_can_be_filtered_in_store_and_http(tmp_path: Path) -> None:
@@ -1785,13 +1935,25 @@ def test_draft_tools_have_pinned_mcp_schemas() -> None:
         "proposed_text",
         "rationale",
     }
-    assert record.parameters["properties"]["canvas_kind"]["enum"] == [
-        "foundation",
-        "actors",
-        "services",
-        "entities",
-        "feature",
-    ]
+    assert record.parameters["properties"]["canvas_kind"] == {
+        "anyOf": [
+            {
+                "enum": ["foundation", "actors", "services", "entities", "feature"],
+                "type": "string",
+            },
+            {"const": "project", "type": "string"},
+        ]
+    }
+
+    rename = asyncio.run(mcp_tools.mcp.get_tool("rename_project"))
+    assert rename is not None
+    assert set(rename.parameters["properties"]) == {
+        "project_path",
+        "project_id",
+        "name",
+        "draft_id",
+    }
+    assert set(rename.parameters["required"]) == {"project_path", "project_id", "name"}
 
     for tool_name in ("create_edge", "set_node_references", "update_canvas"):
         tool = asyncio.run(mcp_tools.mcp.get_tool(tool_name))

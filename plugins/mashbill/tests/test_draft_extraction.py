@@ -179,6 +179,8 @@ async def test_project_scope_extracts_with_all_primary_canvas_nodes(tmp_path: Pa
     assert len(provider.extraction_calls) == 1
     prompt, _model = provider.extraction_calls[0]
     assert "- canvas_kind: one of foundation, actors, services, entities" in prompt
+    assert "canvas_kind: project" in prompt
+    assert "without target_node_ids" in prompt
     assert _prompt_input(provider)["canvas_nodes"] == [
         {
             "id": node_ids[canvas_kind],
@@ -545,6 +547,90 @@ async def test_single_canvas_scope_does_not_include_features_input(tmp_path: Pat
     )
 
     assert "features" not in _prompt_input(provider)
+
+
+async def test_single_canvas_scope_persists_project_name_draft(tmp_path: Path) -> None:
+    plot_root = _project(tmp_path)
+    node_id = str(
+        create_node(
+            plot_root,
+            "alpha",
+            "foundation",
+            "mission",
+            {"label": "Mission"},
+        )["node"]["id"]
+    )
+    provider = _ExtractingProvider(
+        json.dumps(
+            [
+                {
+                    "proposed_text": "프로젝트 이름: 새이름",
+                    "canvas_kind": "project",
+                    "target_node_ids": [node_id],
+                    "proposed_kind": "mission",
+                    "feature_id": "feature_1",
+                    "rationale": "It is a concrete project name.",
+                }
+            ]
+        )
+    )
+
+    count = await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "foundation",
+        "프로젝트 이름은 새이름이 어떨까요?",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert count == DraftExtractionResult(persisted_count=1)
+    draft = list_drafts(plot_root, "alpha")[0]
+    assert draft.canvas_kind == "project"
+    assert draft.target_node_ids == []
+    assert draft.proposed_kind is None
+    assert draft.service_id is None
+    assert draft.chat_scope == "foundation"
+
+
+async def test_extractor_includes_project_drafts_in_every_scope_and_deduplicates(
+    tmp_path: Path,
+) -> None:
+    plot_root = _project(tmp_path)
+    existing = record_draft(
+        plot_root,
+        "alpha",
+        "project",
+        "프로젝트 이름: 새이름",
+        "It is a concrete project name.",
+        "project",
+    )
+    provider = _ExtractingProvider(
+        json.dumps(
+            [
+                {
+                    "proposed_text": "프로젝트 이름: 새이름",
+                    "canvas_kind": "project",
+                    "rationale": "It is a duplicate project name.",
+                }
+            ]
+        )
+    )
+
+    count = await extract_turn_drafts(
+        provider,
+        plot_root,
+        "alpha",
+        "foundation",
+        "프로젝트 이름은 새이름이 어떨까요?",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert count == DraftExtractionResult()
+    assert _prompt_input(provider)["existing_drafts"] == [
+        {"text": existing.proposed_text, "status": "proposed"}
+    ]
+    assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [existing.id]
 
 
 async def test_project_scope_omits_only_an_unreadable_canvas(

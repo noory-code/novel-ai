@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Generic, TypeVar
 
 from mashbill.draft_store import read_draft
-from mashbill.models_canvas import CanvasKind
+from mashbill.models_draft import DraftCanvasKind
 
 DRAFT_TEXT_WORD_OVERLAP_THRESHOLD = 0.6
 DRAFT_FIELD_NAME_MAX_LENGTH = 12
@@ -37,7 +37,7 @@ def split_write_by_draft(
     plot_root: Path,
     project_id: str,
     draft_id: str | None,
-    canvas_kind: CanvasKind,
+    canvas_kind: DraftCanvasKind,
     fragments: Sequence[WriteFragment[T]],
     service_id: str | None = None,
 ) -> tuple[list[WriteFragment[T]], list[WriteFragment[T]]]:

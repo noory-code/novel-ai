@@ -15,6 +15,7 @@ from mashbill.canvas_io import list_feature_details, read_canvas
 from mashbill.chat_providers.base import ChatProvider
 from mashbill.draft_store import list_drafts, record_extracted_draft
 from mashbill.models_canvas import CanvasKind
+from mashbill.models_draft import DraftCanvasKind
 from mashbill.models_kinds import NodeKind
 
 DRAFT_EXTRACTION_KNOWN_CAP = 30
@@ -44,6 +45,8 @@ It may also have:
 When canvas_nodes include a canvas field (project scope), each item must also have:
 - canvas_kind: one of foundation, actors, services, entities
 - or, for a feature-flow canvas, canvas_kind: feature and feature_id: one of the supplied features
+For a concrete new project name, use canvas_kind: project without target_node_ids.
+This is allowed in every conversation scope.
 
 Exclude proposals represented by any existing draft, including rejected drafts. A coach repeating
 an earlier proposal or referring to a rejected proposal is not a new proposal. Do not use tools,
@@ -117,10 +120,11 @@ async def extract_turn_drafts(
     if target is not None:
         canvas_kind, service_id = target
     try:
+        all_drafts = list_drafts(plot_root, project_id)
         scope_drafts = [
             draft
-            for draft in list_drafts(plot_root, project_id)
-            if draft.chat_scope == scope
+            for draft in all_drafts
+            if draft.chat_scope == scope or draft.canvas_kind == "project"
         ]
         known_drafts = scope_drafts[:DRAFT_EXTRACTION_KNOWN_CAP]
         known_ids = {draft.id for draft in known_drafts}
@@ -173,7 +177,14 @@ async def extract_turn_drafts(
             known_node_ids = {node["id"] for node in nodes}
         seen = {draft.proposed_text.strip().casefold() for draft in known_drafts}
         for proposal in proposals:
-            if project_scope:
+            proposal_canvas_kind: DraftCanvasKind
+            if proposal.canvas_kind == "project":
+                proposal_canvas_kind = "project"
+                proposal_service_id = None
+                proposal_known_node_ids: set[str] = set()
+                proposal_target_node_ids: list[str] = []
+                proposal_kind = None
+            elif project_scope:
                 if proposal.canvas_kind in _PROJECT_CANVAS_KINDS:
                     proposal_canvas_kind = cast(CanvasKind, proposal.canvas_kind)
                     proposal_service_id = None
@@ -192,6 +203,15 @@ async def extract_turn_drafts(
                 proposal_canvas_kind = canvas_kind
                 proposal_service_id = service_id
                 proposal_known_node_ids = known_node_ids
+            if proposal.canvas_kind != "project":
+                proposal_target_node_ids = [
+                    node_id
+                    for node_id in proposal.target_node_ids
+                    if node_id in proposal_known_node_ids
+                ]
+                proposal_kind = (
+                    proposal.proposed_kind if proposal.proposed_kind in _NODE_KINDS else None
+                )
             normalized = proposal.proposed_text.strip().casefold()
             if normalized in seen:
                 continue
@@ -204,14 +224,8 @@ async def extract_turn_drafts(
                     proposal.proposed_text,
                     proposal.rationale,
                     scope,
-                    [
-                        node_id
-                        for node_id in proposal.target_node_ids
-                        if node_id in proposal_known_node_ids
-                    ],
-                    proposal.proposed_kind
-                    if proposal.proposed_kind in _NODE_KINDS
-                    else None,
+                    proposal_target_node_ids,
+                    proposal_kind,
                     proposal_service_id,
                     chat_conversation_id=chat_conversation_id,
                 )
