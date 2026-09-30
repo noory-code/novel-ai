@@ -23,6 +23,7 @@ from mashbill.chat_store import (
 )
 from mashbill.draft_extraction import (
     DRAFT_EXTRACTION_KNOWN_CAP,
+    DraftExtractionResult,
     extract_turn_drafts,
 )
 from mashbill.draft_store import (
@@ -174,7 +175,7 @@ async def test_project_scope_extracts_with_all_primary_canvas_nodes(tmp_path: Pa
         datetime.now(UTC).isoformat(),
     )
 
-    assert count == 0
+    assert count == DraftExtractionResult()
     assert len(provider.extraction_calls) == 1
     prompt, _model = provider.extraction_calls[0]
     assert "- canvas_kind: one of foundation, actors, services, entities" in prompt
@@ -205,7 +206,7 @@ async def test_project_scope_includes_feature_canvas_nodes_after_primary_nodes(
         datetime.now(UTC).isoformat(),
     )
 
-    assert count == 0
+    assert count == DraftExtractionResult()
     prompt, _model = provider.extraction_calls[0]
     assert "canvas_kind: feature" in prompt
     assert "feature_id" in prompt
@@ -307,7 +308,7 @@ async def test_project_scope_persists_draft_for_empty_feature_canvas(
         datetime.now(UTC).isoformat(),
     )
 
-    assert count == 1
+    assert count == DraftExtractionResult(persisted_count=1)
     draft = list_drafts(plot_root, "alpha")[0]
     assert draft.canvas_kind == "feature"
     assert draft.service_id == feature_id
@@ -343,7 +344,7 @@ async def test_project_scope_persists_selected_canvas_and_filters_target_ids(
         datetime.now(UTC).isoformat(),
     )
 
-    assert count == 1
+    assert count == DraftExtractionResult(persisted_count=1)
     draft = list_drafts(plot_root, "alpha")[0]
     assert draft.origin == "extracted"
     assert draft.canvas_kind == "actors"
@@ -382,7 +383,7 @@ async def test_project_scope_persists_feature_draft_and_filters_target_ids(
         datetime.now(UTC).isoformat(),
     )
 
-    assert count == 1
+    assert count == DraftExtractionResult(persisted_count=1)
     draft = list_drafts(plot_root, "alpha")[0]
     assert draft.origin == "extracted"
     assert draft.canvas_kind == "feature"
@@ -421,7 +422,7 @@ async def test_project_scope_skips_feature_proposals_without_known_feature_id(
         datetime.now(UTC).isoformat(),
     )
 
-    assert count == 0
+    assert count == DraftExtractionResult()
     assert list_drafts(plot_root, "alpha") == []
 
 
@@ -459,7 +460,7 @@ async def test_project_scope_skips_proposals_without_primary_canvas_kind(
         datetime.now(UTC).isoformat(),
     )
 
-    assert count == 1
+    assert count == DraftExtractionResult(persisted_count=1)
     assert [draft.proposed_text for draft in list_drafts(plot_root, "alpha")] == [
         "Persist this actor proposal."
     ]
@@ -519,7 +520,7 @@ async def test_project_scope_persists_feature_draft_when_its_nodes_are_capped(
         datetime.now(UTC).isoformat(),
     )
 
-    assert count == 1
+    assert count == DraftExtractionResult(persisted_count=1)
     assert len(_prompt_input(provider)["canvas_nodes"]) == 3
     assert {feature["feature_id"] for feature in _prompt_input(provider)["features"]} >= {
         capped_feature_id
@@ -904,7 +905,7 @@ async def test_extractor_receives_recent_scope_drafts_with_status_and_cap(tmp_pa
     )
 
     existing = _prompt_input(provider)["existing_drafts"]
-    assert count == 0
+    assert count == DraftExtractionResult()
     assert existing == expected
     assert len(existing) == DRAFT_EXTRACTION_KNOWN_CAP
     assert {"text": prior.proposed_text, "status": "proposed"} in existing
@@ -937,7 +938,7 @@ async def test_extractor_does_not_revive_rejected_duplicate(tmp_path: Path) -> N
         datetime.now(UTC).isoformat(),
     )
 
-    assert count == 0
+    assert count == DraftExtractionResult()
     assert [draft.id for draft in list_drafts(plot_root, "alpha")] == [rejected.id]
 
 
@@ -981,6 +982,157 @@ async def test_extracted_drafts_notify_viewer_only_when_persisted(
     assert len(draft_events) == expected_events
     if expected_events:
         assert draft_events == [{"project_id": "alpha", "scope": "foundation"}]
+    assert not any(
+        event_name == "drafts_save_failed" for event_name, _payload in hub.notifications
+    )
+
+
+async def test_draft_save_failure_is_returned_and_notified(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = _project(tmp_path)
+
+    def fail_draft_save(*args: Any, **kwargs: Any) -> None:
+        raise OSError("draft store is unwritable")
+
+    monkeypatch.setattr(draft_extraction, "record_extracted_draft", fail_draft_save)
+    extraction_result = (
+        '[{"proposed_text":"A new mission.",'
+        '"rationale":"It is concrete canvas copy."}]'
+    )
+
+    result = await extract_turn_drafts(
+        _ExtractingProvider(extraction_result),
+        plot_root,
+        "alpha",
+        "foundation",
+        "A new mission.",
+        datetime.now(UTC).isoformat(),
+    )
+
+    assert result.persisted_count == 0
+    assert result.save_failed is True
+
+    hub = _FakeHub()
+    await endpoints_chat._extract_turn_drafts_and_notify(
+        _ExtractingProvider(extraction_result),
+        hub,
+        plot_root,
+        "alpha",
+        "foundation",
+        "A new mission.",
+        datetime.now(UTC).isoformat(),
+        None,
+        None,
+    )
+
+    assert hub.notifications == [
+        (
+            "drafts_save_failed",
+            {"project_id": "alpha", "scope": "foundation"},
+        )
+    ]
+
+
+async def test_partial_draft_save_notifies_changed_and_save_failed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = _project(tmp_path)
+    original_record_extracted_draft = draft_extraction.record_extracted_draft
+    save_calls = 0
+
+    def fail_second_draft_save(*args: Any, **kwargs: Any) -> Any:
+        nonlocal save_calls
+        save_calls += 1
+        if save_calls == 2:
+            raise OSError("draft store became unwritable")
+        return original_record_extracted_draft(*args, **kwargs)
+
+    monkeypatch.setattr(
+        draft_extraction,
+        "record_extracted_draft",
+        fail_second_draft_save,
+    )
+    provider = _ExtractingProvider(
+        json.dumps(
+            [
+                {
+                    "proposed_text": "First proposal.",
+                    "rationale": "It is concrete canvas copy.",
+                },
+                {
+                    "proposed_text": "Second proposal.",
+                    "rationale": "It is concrete canvas copy.",
+                },
+            ]
+        )
+    )
+    hub = _FakeHub()
+
+    await endpoints_chat._extract_turn_drafts_and_notify(
+        provider,
+        hub,
+        plot_root,
+        "alpha",
+        "foundation",
+        "Two proposals.",
+        datetime.now(UTC).isoformat(),
+        None,
+        None,
+    )
+
+    assert [draft.proposed_text for draft in list_drafts(plot_root, "alpha")] == [
+        "First proposal."
+    ]
+    assert hub.notifications == [
+        ("drafts_changed", {"project_id": "alpha", "scope": "foundation"}),
+        (
+            "drafts_save_failed",
+            {"project_id": "alpha", "scope": "foundation"},
+        ),
+    ]
+
+
+async def test_draft_notifications_fail_soft_and_independently(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot_root = _project(tmp_path)
+
+    async def partial_save(*args: Any, **kwargs: Any) -> DraftExtractionResult:
+        return DraftExtractionResult(persisted_count=1, save_failed=True)
+
+    class _FailingHub(_FakeHub):
+        async def notify_event(
+            self,
+            plot_root: Path,
+            event_name: str,
+            payload: dict[str, Any] | None = None,
+        ) -> None:
+            await super().notify_event(plot_root, event_name, payload)
+            raise RuntimeError("websocket unavailable")
+
+    monkeypatch.setattr(endpoints_chat, "extract_turn_drafts", partial_save)
+    hub = _FailingHub()
+
+    await endpoints_chat._extract_turn_drafts_and_notify(
+        _ExtractingProvider(),
+        hub,
+        plot_root,
+        "alpha",
+        "foundation",
+        "Two proposals.",
+        datetime.now(UTC).isoformat(),
+        None,
+        None,
+    )
+
+    assert [event_name for event_name, _payload in hub.notifications] == [
+        "drafts_changed",
+        "drafts_save_failed",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -1014,7 +1166,7 @@ async def test_extractor_keeps_only_real_node_kinds(
         datetime.now(UTC).isoformat(),
     )
 
-    assert count == 1
+    assert count == DraftExtractionResult(persisted_count=1)
     assert list_drafts(plot_root, "alpha")[0].proposed_kind == expected_kind
 
 

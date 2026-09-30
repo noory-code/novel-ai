@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import cast, get_args
 
@@ -52,6 +53,14 @@ do not add commentary, and return [] when there is nothing new.
 _log = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True, slots=True)
+class DraftExtractionResult:
+    """Outcome of best-effort extraction and draft persistence."""
+
+    persisted_count: int = 0
+    save_failed: bool = False
+
+
 class ExtractedProposal(BaseModel):
     """One validated item returned by the isolated extraction call."""
 
@@ -92,7 +101,7 @@ async def extract_turn_drafts(
     *,
     chat_conversation_id: str | None = None,
     model: str | None = None,
-) -> int:
+) -> DraftExtractionResult:
     """Run isolated proposal extraction and persist valid, non-duplicate results.
 
     Every failure stays inside this background boundary. The completed chat turn has
@@ -101,9 +110,10 @@ async def extract_turn_drafts(
     project_scope = scope == "project"
     target = _target_for_scope(scope)
     if target is None and not project_scope:
-        return 0
+        return DraftExtractionResult()
     canvas_kind: CanvasKind | None = None
     service_id: str | None = None
+    persisted_count = 0
     if target is not None:
         canvas_kind, service_id = target
     try:
@@ -141,7 +151,7 @@ async def extract_turn_drafts(
         proposals = _parse_proposals(raw)
         if proposals is None:
             _log.warning("chat draft extraction returned invalid JSON for %s", plot_root)
-            return 0
+            return DraftExtractionResult()
 
         if project_scope:
             assert features is not None
@@ -162,7 +172,6 @@ async def extract_turn_drafts(
         else:
             known_node_ids = {node["id"] for node in nodes}
         seen = {draft.proposed_text.strip().casefold() for draft in known_drafts}
-        persisted_count = 0
         for proposal in proposals:
             if project_scope:
                 if proposal.canvas_kind in _PROJECT_CANVAS_KINDS:
@@ -187,30 +196,36 @@ async def extract_turn_drafts(
             if normalized in seen:
                 continue
             seen.add(normalized)
-            record_extracted_draft(
-                plot_root,
-                project_id,
-                proposal_canvas_kind,
-                proposal.proposed_text,
-                proposal.rationale,
-                scope,
-                [
-                    node_id
-                    for node_id in proposal.target_node_ids
-                    if node_id in proposal_known_node_ids
-                ],
-                proposal.proposed_kind if proposal.proposed_kind in _NODE_KINDS else None,
-                proposal_service_id,
-                chat_conversation_id=chat_conversation_id,
-            )
+            try:
+                record_extracted_draft(
+                    plot_root,
+                    project_id,
+                    proposal_canvas_kind,
+                    proposal.proposed_text,
+                    proposal.rationale,
+                    scope,
+                    [
+                        node_id
+                        for node_id in proposal.target_node_ids
+                        if node_id in proposal_known_node_ids
+                    ],
+                    proposal.proposed_kind
+                    if proposal.proposed_kind in _NODE_KINDS
+                    else None,
+                    proposal_service_id,
+                    chat_conversation_id=chat_conversation_id,
+                )
+            except Exception:  # noqa: BLE001 — report persistence failure to the app
+                _log.exception("chat draft save failed for %s", plot_root)
+                return DraftExtractionResult(persisted_count, save_failed=True)
             persisted_count += 1
-        return persisted_count
+        return DraftExtractionResult(persisted_count)
     except TimeoutError:
         _log.warning("chat draft extraction timed out for %s", plot_root)
-        return 0
+        return DraftExtractionResult(persisted_count)
     except Exception:  # noqa: BLE001 — extraction must never affect the chat turn
         _log.exception("chat draft extraction failed for %s", plot_root)
-        return 0
+        return DraftExtractionResult(persisted_count)
 
 
 def _parse_proposals(raw: str) -> list[ExtractedProposal] | None:

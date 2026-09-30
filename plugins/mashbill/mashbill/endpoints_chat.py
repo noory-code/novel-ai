@@ -117,6 +117,7 @@ _log = logging.getLogger(__name__)
 _CHAT_EVENT = "chat_stream_event"
 _DRAFTS_EVENT = "drafts_changed"
 _PERSIST_FAILED_EVENT = "chat_persist_failed"
+_DRAFTS_SAVE_FAILED_EVENT = "drafts_save_failed"
 _draft_extraction_tasks: set[asyncio.Task[None]] = set()
 
 
@@ -160,7 +161,7 @@ async def _extract_turn_drafts_and_notify(
     chat_conversation_id: str | None,
     model: str | None,
 ) -> None:
-    persisted_count = await extract_turn_drafts(
+    result = await extract_turn_drafts(
         provider,
         plot_root,
         project_id,
@@ -170,16 +171,17 @@ async def _extract_turn_drafts_and_notify(
         chat_conversation_id=chat_conversation_id,
         model=model,
     )
-    if persisted_count == 0:
-        return
-    try:
-        await hub.notify_event(
-            plot_root,
-            _DRAFTS_EVENT,
-            {"project_id": project_id, "scope": scope},
-        )
-    except Exception:  # noqa: BLE001 — notification must not affect chat
-        _log.exception("chat draft notification failed for %s", plot_root)
+    payload = {"project_id": project_id, "scope": scope}
+    if result.persisted_count > 0:
+        try:
+            await hub.notify_event(plot_root, _DRAFTS_EVENT, payload)
+        except Exception:  # noqa: BLE001 — notification must not affect chat
+            _log.exception("chat draft notification failed for %s", plot_root)
+    if result.save_failed:
+        try:
+            await hub.notify_event(plot_root, _DRAFTS_SAVE_FAILED_EVENT, payload)
+        except Exception:  # noqa: BLE001 — notification must not affect chat
+            _log.exception("chat draft save failure notification failed for %s", plot_root)
 
 
 async def stream_chat_turn(

@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.28] — 2026-09-30
+
+### Fixed
+
+- When saving a draft found by turn-end extraction fails, the engine now sends `drafts_save_failed` to the project's WebSocket room instead of only logging it; extraction-call failures still only log.
+
 ## [0.196.27] — 2026-09-30
 
 ### Fixed
