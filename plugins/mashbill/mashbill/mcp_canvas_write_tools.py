@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from mashbill.draft_write_split import WriteFragment, split_write_by_draft
 from mashbill.folder_io import (
     create_edge,
     create_node,
@@ -14,10 +15,13 @@ from mashbill.folder_io import (
     write_canvas,
 )
 from mashbill.mcp_draft_tools import (
+    confirm_draft,
+    draft_mismatch_warning,
     ensure_draft,
     finish_canvas_write_draft,
     finish_node_write_draft,
     finish_write_draft,
+    partial_draft_mismatch_warning,
 )
 from mashbill.mcp_write_rollback import with_draft_or_rollback
 from mashbill.models import CanvasDoc, CanvasKind
@@ -215,35 +219,117 @@ def set_node_references_with_draft(
         ensure_draft(plot_root, project_id, draft_id)
     before = read_canvas(plot_root, project_id, canvas_kind, service_id)
     before_node = next((node for node in before.nodes if node.id == node_id), None)
-    node_label = before_node.label if before_node is not None and before_node.label else node_id
-    ref_labels = reference_labels(
-        plot_root,
-        project_id,
-        before_node.kind if before_node is not None else "",
-        refs,
-    )
-    proposed_text = f"{node_label} 참조: {', '.join(ref_labels) if ref_labels else '없음'}"
+    before_node_data = before_node.model_dump() if before_node is not None else None
     out, warning = with_draft_or_rollback(
         lambda: set_node_references(plot_root, project_id, canvas_kind, node_id, refs, service_id),
-        lambda written: finish_write_draft(
+        lambda written: _finish_reference_write_draft(
             plot_root,
             project_id,
             draft_id,
             canvas_kind,
-            proposed_text,
-            "references",
-            [node_id],
-            [node_id],
+            refs,
+            written,
+            before_node_data,
             chat_scope,
             service_id,
-            written_texts=[proposed_text],
-            design_content_changed=before_node is None
-            or any(
-                before_node.model_dump().get(field) != written["node"].get(field) for field in refs
-            ),
         ),
         lambda: write_canvas(plot_root, project_id, before),
     )
     if warning is not None:
         out["draft_warning"] = warning
     return out
+
+
+def _finish_reference_write_draft(
+    plot_root: Path,
+    project_id: str,
+    draft_id: str | None,
+    canvas_kind: CanvasKind,
+    refs: dict[str, list[str]],
+    write_result: dict[str, Any],
+    before_node: dict[str, Any] | None,
+    chat_scope: str,
+    service_id: str | None,
+) -> str | None:
+    node = write_result["node"]
+    node_id = str(node["id"])
+    changed_fields = [
+        field for field in refs if before_node is None or before_node.get(field) != node.get(field)
+    ]
+    if not changed_fields:
+        return finish_write_draft(
+            plot_root,
+            project_id,
+            draft_id,
+            canvas_kind,
+            "",
+            "references",
+            [node_id],
+            [node_id],
+            chat_scope,
+            service_id,
+            design_content_changed=False,
+        )
+
+    node_kind = str(node["kind"])
+    node_label = str(node.get("label") or node_id)
+    fragments = [
+        WriteFragment(
+            field,
+            node_ids=(node_id,),
+            written_texts=(
+                _reference_fragment_text(
+                    plot_root,
+                    project_id,
+                    node_kind,
+                    node_label,
+                    field,
+                    [str(ref_id) for ref_id in node.get(field, [])],
+                ),
+            ),
+        )
+        for field in changed_fields
+    ]
+    matching, remainder = split_write_by_draft(
+        plot_root,
+        project_id,
+        draft_id,
+        canvas_kind,
+        fragments,
+        service_id,
+    )
+    if matching:
+        assert draft_id is not None
+        confirm_draft(plot_root, project_id, draft_id, [node_id])
+        if not remainder:
+            return None
+
+    finish_write_draft(
+        plot_root,
+        project_id,
+        None,
+        canvas_kind,
+        "\n".join(fragment.written_texts[0] for fragment in remainder),
+        "references",
+        [node_id],
+        [node_id],
+        chat_scope,
+        service_id,
+    )
+    if draft_id is None:
+        return None
+    if matching:
+        return partial_draft_mismatch_warning(draft_id)
+    return draft_mismatch_warning(draft_id)
+
+
+def _reference_fragment_text(
+    plot_root: Path,
+    project_id: str,
+    node_kind: str,
+    node_label: str,
+    field: str,
+    ref_ids: list[str],
+) -> str:
+    labels = reference_labels(plot_root, project_id, node_kind, {field: ref_ids})
+    return f"{node_label} 참조: {', '.join(labels) if labels else '없음'}"

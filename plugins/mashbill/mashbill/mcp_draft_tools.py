@@ -221,7 +221,7 @@ def finish_node_write_draft(
             chat_scope,
             service_id,
         )
-        return _partial_draft_mismatch_warning(draft_id)
+        return partial_draft_mismatch_warning(draft_id)
     fallback_fields = {fragment.value: node.get(fragment.value) for fragment in remainder}
     record_applied_draft(
         plot_root,
@@ -394,7 +394,7 @@ def finish_canvas_write_draft(
             remainder,
             chat_scope,
         )
-        return _partial_draft_mismatch_warning(draft_id)
+        return partial_draft_mismatch_warning(draft_id)
 
     _record_canvas_auto_draft(
         plot_root,
@@ -473,7 +473,7 @@ def draft_mismatch_warning(draft_id: str) -> str:
     )
 
 
-def _partial_draft_mismatch_warning(draft_id: str) -> str:
+def partial_draft_mismatch_warning(draft_id: str) -> str:
     return f"some fields did not match draft {draft_id}; recorded an auto draft for them"
 
 

@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.32] — 2026-09-30
+
+### Fixed
+
+- `set_node_references` matches a supplied draft per changed reference field: matching fields confirm the draft, and the remaining fields are kept in one auto draft with a partial-mismatch warning, as `update_node` and `update_canvas` do.
+
 ## [0.196.31] — 2026-09-30
 
 ### Fixed

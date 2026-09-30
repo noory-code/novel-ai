@@ -1329,6 +1329,136 @@ def test_set_node_references_confirms_draft_with_matching_label_text(tmp_path: P
     assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
 
 
+def _multi_reference_nodes(tmp_path: Path) -> tuple[Path, str, str, str]:
+    plot_root, _ = _project(tmp_path)
+    actor = create_canvas_node(plot_root, "alpha", "actors", "actor", {"label": "Actor X"})["node"]
+    value = create_canvas_node(
+        plot_root, "alpha", "foundation", "core_value", {"label": "Value E"}
+    )["node"]
+    service = create_canvas_node(plot_root, "alpha", "services", "service", {"label": "A"})["node"]
+    return plot_root, str(service["id"]), str(actor["id"]), str(value["id"])
+
+
+def test_set_node_references_confirms_matching_fragment_and_records_remainder(
+    tmp_path: Path,
+) -> None:
+    plot_root, service_id, actor_id, value_id = _multi_reference_nodes(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="services",
+            proposed_text="A 참조: Actor X",
+            target_node_ids=[service_id],
+        )["draft_id"]
+    )
+
+    result = mcp_tools.set_node_references(
+        str(tmp_path),
+        "alpha",
+        "services",
+        service_id,
+        {"ref_actor_ids": [actor_id], "ref_value_ids": [value_id]},
+        draft_id=draft_id,
+    )
+
+    assert result["draft_warning"] == (
+        f"some fields did not match draft {draft_id}; recorded an auto draft for them"
+    )
+    assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
+    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
+    assert len(auto_drafts) == 1
+    assert auto_drafts[0].proposed_text == "A 참조: Value E"
+
+
+def test_set_node_references_confirms_draft_matching_all_fragments(tmp_path: Path) -> None:
+    plot_root, service_id, actor_id, value_id = _multi_reference_nodes(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="services",
+            proposed_text="A 참조: Actor X\nA 참조: Value E",
+            target_node_ids=[service_id],
+        )["draft_id"]
+    )
+
+    result = mcp_tools.set_node_references(
+        str(tmp_path),
+        "alpha",
+        "services",
+        service_id,
+        {"ref_actor_ids": [actor_id], "ref_value_ids": [value_id]},
+        draft_id=draft_id,
+    )
+
+    assert "draft_warning" not in result
+    assert read_draft(plot_root, "alpha", draft_id).status == "confirmed"
+    assert not any(draft.origin == "auto" for draft in list_drafts(plot_root, "alpha"))
+
+
+def test_set_node_references_records_all_fragments_when_none_match(tmp_path: Path) -> None:
+    plot_root, service_id, actor_id, value_id = _multi_reference_nodes(tmp_path)
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="services",
+            proposed_text="A 설명: Unrelated",
+            target_node_ids=[service_id],
+        )["draft_id"]
+    )
+
+    result = mcp_tools.set_node_references(
+        str(tmp_path),
+        "alpha",
+        "services",
+        service_id,
+        {"ref_actor_ids": [actor_id], "ref_value_ids": [value_id]},
+        draft_id=draft_id,
+    )
+
+    assert result["draft_warning"] == (
+        f"draft {draft_id} does not match this write; recorded an auto draft instead. "
+        "If the person accepted this draft with edits, call resolve_draft with status='edited'."
+    )
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
+    assert len(auto_drafts) == 1
+    assert auto_drafts[0].proposed_text == "A 참조: Actor X\nA 참조: Value E"
+
+
+def test_set_node_references_matches_only_fields_that_changed(tmp_path: Path) -> None:
+    plot_root, service_id, actor_id, value_id = _multi_reference_nodes(tmp_path)
+    set_canvas_node_references(
+        plot_root,
+        "alpha",
+        "services",
+        service_id,
+        {"ref_actor_ids": [actor_id]},
+    )
+    draft_id = str(
+        _record(
+            str(tmp_path),
+            canvas_kind="services",
+            proposed_text="A 참조: Actor X",
+            target_node_ids=[service_id],
+        )["draft_id"]
+    )
+
+    result = mcp_tools.set_node_references(
+        str(tmp_path),
+        "alpha",
+        "services",
+        service_id,
+        {"ref_actor_ids": [actor_id], "ref_value_ids": [value_id]},
+        draft_id=draft_id,
+    )
+
+    assert "does not match this write" in result["draft_warning"]
+    assert read_draft(plot_root, "alpha", draft_id).status == "proposed"
+    auto_drafts = [draft for draft in list_drafts(plot_root, "alpha") if draft.origin == "auto"]
+    assert len(auto_drafts) == 1
+    assert auto_drafts[0].proposed_text == "A 참조: Value E"
+
+
 def test_set_node_references_same_value_does_not_confirm_draft_or_record_auto_draft(
     tmp_path: Path,
 ) -> None:
