@@ -133,6 +133,17 @@ def test_entities_framing_enforces_identity_dedup() -> None:
     assert "never" in f  # never finalise silently / never auto-scan
 
 
+def test_entities_framing_asks_before_merging_existing_duplicates() -> None:
+    f = build_framing_preamble("entities")
+    rule = (
+        "If two entities already on the canvas — including ones the person placed by hand — "
+        "look like the same object under different names, point to both, say in one line why "
+        "they look the same, and ask whether to merge them; merge only after the person agrees, "
+        "and keep both if they say they differ."
+    )
+    assert rule in f
+
+
 def test_entity_boundary_is_inlined_for_services_and_entities() -> None:
     for scope in ("services", "entities"):
         prompt = build_system_prompt(scope).lower()

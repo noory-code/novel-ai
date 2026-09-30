@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.16] — 2026-09-30
+
+### Changed
+
+- On the Entities canvas the coach points out two existing entities that look like the same object (including hand-placed ones), asks whether to merge them, and merges only after the person agrees.
+
 ## [0.196.15] — 2026-09-30
 
 ### Fixed
