@@ -90,6 +90,7 @@ async def extract_turn_drafts(
     coach_reply: str,
     turn_started_at: str,
     *,
+    chat_conversation_id: str | None = None,
     model: str | None = None,
 ) -> int:
     """Run isolated proposal extraction and persist valid, non-duplicate results.
@@ -200,6 +201,7 @@ async def extract_turn_drafts(
                 ],
                 proposal.proposed_kind if proposal.proposed_kind in _NODE_KINDS else None,
                 proposal_service_id,
+                chat_conversation_id=chat_conversation_id,
             )
             persisted_count += 1
         return persisted_count

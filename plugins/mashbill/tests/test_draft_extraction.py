@@ -15,7 +15,11 @@ from mashbill import draft_extraction, endpoints_chat
 from mashbill.broadcast import BroadcastHub
 from mashbill.chat_providers.base import ChatProvider, ChatStreamEvent
 from mashbill.chat_selection import OPEN_DRAFTS_CAP, build_turn_preamble
-from mashbill.chat_store import append_user, read_conversation
+from mashbill.chat_store import (
+    append_user,
+    archive_current_conversation,
+    read_conversation,
+)
 from mashbill.draft_extraction import (
     DRAFT_EXTRACTION_KNOWN_CAP,
     extract_turn_drafts,
@@ -658,6 +662,49 @@ async def test_slow_extraction_does_not_delay_stream_or_conversation_save(tmp_pa
     assert read_conversation(plot_root, "alpha", "foundation").messages[-1].text == "Mission idea"
     release.set()
     await asyncio.sleep(0)
+
+
+async def test_slow_extraction_keeps_completed_turn_conversation_after_reset(
+    tmp_path: Path,
+) -> None:
+    plot_root = _project(tmp_path)
+    append_user(plot_root, "alpha", "foundation", "codex", "user_1", "First conversation")
+    completed_conversation_id = read_conversation(plot_root, "alpha", "foundation").conversation_id
+    release = asyncio.Event()
+
+    class _SlowProvider(_ExtractingProvider):
+        async def complete_once(self, prompt: str, *, model: str | None = None) -> str:
+            self.extraction_calls.append((prompt, model))
+            self.extraction_called.set()
+            await release.wait()
+            return (
+                '[{"proposed_text":"Keep the original conversation.",'
+                '"rationale":"It is a concrete proposal."}]'
+            )
+
+    provider = _SlowProvider()
+
+    await stream_chat_turn(
+        provider,
+        _FakeHub(),
+        plot_root,
+        "hello",
+        scope="foundation",
+        project_id="alpha",
+        provider_name="codex",
+    )
+    await asyncio.wait_for(provider.extraction_called.wait(), timeout=1)
+
+    archive_current_conversation(plot_root, "alpha", "foundation")
+    append_user(plot_root, "alpha", "foundation", "codex", "user_2", "Second conversation")
+    current_conversation_id = read_conversation(plot_root, "alpha", "foundation").conversation_id
+    release.set()
+    await _wait_for_drafts(plot_root, 1)
+    await _wait_for_extraction_tasks()
+
+    assert completed_conversation_id is not None
+    assert current_conversation_id != completed_conversation_id
+    assert list_drafts(plot_root, "alpha")[0].chat_conversation_id == completed_conversation_id
 
 
 async def test_turn_drafts_are_passed_to_extractor_for_deduplication(tmp_path: Path) -> None:

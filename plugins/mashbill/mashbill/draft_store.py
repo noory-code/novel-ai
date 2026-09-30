@@ -105,6 +105,8 @@ def record_extracted_draft(
     target_node_ids: list[str] | None = None,
     proposed_kind: str | None = None,
     service_id: str | None = None,
+    *,
+    chat_conversation_id: str | None = None,
 ) -> DraftDoc:
     """Persist a concrete proposal recovered from a completed coach turn."""
     return _record_new_draft(
@@ -120,6 +122,7 @@ def record_extracted_draft(
         status="proposed",
         origin="extracted",
         resolved_node_ids=[],
+        chat_conversation_id=chat_conversation_id,
     )
 
 
@@ -137,6 +140,7 @@ def _record_new_draft(
     status: DraftStatus,
     origin: DraftOrigin,
     resolved_node_ids: list[str],
+    chat_conversation_id: str | None = None,
 ) -> DraftDoc:
     """Write one new draft file with its initial resolution state."""
     _ensure_project(plot_root, project_id)
@@ -154,7 +158,11 @@ def _record_new_draft(
         status=status,
         origin=origin,
         chat_scope=chat_scope,
-        chat_conversation_id=current_conversation_id(plot_root, project_id, chat_scope),
+        chat_conversation_id=(
+            chat_conversation_id
+            if chat_conversation_id is not None
+            else current_conversation_id(plot_root, project_id, chat_scope)
+        ),
         resolved_node_ids=list(resolved_node_ids),
     )
     _write_json(_draft_path(plot_root, project_id, draft.id), draft.model_dump())

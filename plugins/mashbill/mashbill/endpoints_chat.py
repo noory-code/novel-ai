@@ -47,6 +47,7 @@ from mashbill.chat_store import (
     append_assistant,
     append_user,
     archive_current_conversation,
+    current_conversation_id,
     list_conversations,
     read_conversation,
     read_conversation_by_id,
@@ -150,6 +151,7 @@ async def _extract_turn_drafts_and_notify(
     scope: str,
     coach_reply: str,
     turn_started_at: str,
+    chat_conversation_id: str | None,
     model: str | None,
 ) -> None:
     persisted_count = await extract_turn_drafts(
@@ -159,6 +161,7 @@ async def _extract_turn_drafts_and_notify(
         scope,
         coach_reply,
         turn_started_at,
+        chat_conversation_id=chat_conversation_id,
         model=model,
     )
     if persisted_count == 0:
@@ -203,6 +206,7 @@ async def stream_chat_turn(
             payload["scope"] = scope
             await hub.notify_event(plot_root, _CHAT_EVENT, payload)
             if event.type == "turn_complete" and project_id:
+                chat_conversation_id = None
                 try:
                     append_assistant(
                         plot_root,
@@ -212,6 +216,7 @@ async def stream_chat_turn(
                         event.turn_id or f"turn_{uuid4().hex[:12]}",
                         event.text,
                     )
+                    chat_conversation_id = current_conversation_id(plot_root, project_id, scope)
                 except Exception:  # noqa: BLE001 — persistence must not break chat
                     _log.exception("chat persist (assistant) failed for %s", plot_root)
                 task = asyncio.create_task(
@@ -223,6 +228,7 @@ async def stream_chat_turn(
                         scope,
                         event.text,
                         turn_started_at,
+                        chat_conversation_id,
                         model=model,
                     )
                 )

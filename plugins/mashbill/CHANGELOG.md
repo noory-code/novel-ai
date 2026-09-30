@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.196.22] — 2026-09-30
+
+### Fixed
+
+- Drafts from turn extraction are tied to the conversation of the turn they came from, even if a new conversation starts while extraction runs.
+
 ## [0.196.21] — 2026-09-30
 
 ### Added
