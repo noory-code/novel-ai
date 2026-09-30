@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.198.2] — 2026-10-01
+
+### Changed
+
+- `SPEC.md` §R7 drops the retired gemini/agy provider (Claude Code and Codex only), names the real billing notice key, and describes that the chat dock clears a chosen AI that is no longer installed and guides to install one when none is.
+
 ## [0.198.1] — 2026-10-01
 
 ### Fixed
