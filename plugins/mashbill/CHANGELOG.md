@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.198.3] — 2026-10-01
+
+### Changed
+
+- `SPEC.md` §R7 states that provider detection checks only that the CLI is on `$PATH`; sign-in is not checked, and a signed-out CLI's failed turn is shown and saved as that turn's error.
+
 ## [0.198.2] — 2026-10-01
 
 ### Changed
