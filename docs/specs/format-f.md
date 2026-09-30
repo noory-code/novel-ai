@@ -176,7 +176,9 @@ The rendered labels and section headings are Korean (`**무엇을 할 수 있나
 - Ambient notes follow under `### 참고 (ambient)`. A feature with no steps or decisions renders
   `_아직 흐름이 그려지지 않음._`.
 
-`hash` is computed from this design payload (normalized body excluding frontmatter + that element's manifest meta).
+`hash` is computed from the element's design fields (`kind|label|<its typed content fields>`), not from the
+rendered file, so a rendering change does not change it. A service's `refs` are not part of its hash; re-pin
+compares `refs` separately.
 
 ---
 
@@ -193,16 +195,24 @@ The rendered labels and section headings are Korean (`**무엇을 할 수 있나
   | `added` | new ID | a new work-item candidate |
 
 - **`vP+1` blast radius:** only the `vS` that *references* the changed vP element ID is affected (refs matching). Work
-  pinned to untouched shared elements is kept.
-- **re-pin = human approval** (the deterministic ID-diff script *proposes*, the human approves, then reopen).
+  pinned to untouched shared elements is kept. A referenced vP element that is removed, or a change in the service's
+  `refs`, also marks that service's work stale; an ID that was removed and then re-added is escalated.
+- **Adjacent releases only:** re-pin compares `vS{N}` with `vS{N+1}` of the same service. To cross several
+  releases, import each one and compare step by step.
+- **re-pin = human approval** (the deterministic ID-diff script *proposes* with a `proposal_id`; the human approves
+  that id; apply recalculates and reopens only if the proposal is unchanged).
 
 ---
 
 ## 6. Solera-side contract (read) — summary
 
-- **import** = copy `vS` + its `based_on` vP slice into `solera/specs/{label}/` (immutable→immutable). Solera
-  checks `format_f_version` and that the `based_on` snapshot exists at `_project/{based_on}/` beside the service
-  bundle; it does not verify `git_sha`. `story.md` carries `source: specs/{label}` (points only inside its own folder).
+- **import** = copy `vS` + its `based_on` vP slice into `solera/specs/{label}/` (immutable→immutable), through a
+  temporary folder so a failed import leaves nothing. Solera validates both manifests before copying: the
+  `format_f_version`; `scope`; `release` and `based_on` as bare `vS{N}` / `vP{N}` names (the snapshot at
+  `_project/{based_on}/` beside the service bundle, whose `release` must equal `based_on`); required `elements`
+  with unique ids (a service's include the service itself) and required `refs`. It rejects symlinks and a label
+  that is not a single safe path name, and refuses a second import of the same release with different content.
+  It does not verify `git_sha` or recompute hashes. `story.md` carries `source: specs/{label}` (points only inside its own folder).
 - **link** = a work item's `realizes: feature/login`, the result commit `[realizes feature/login@vS2]`. Bidirectional
   tracing by ID matching, no import.
 - **reverse direction (feedback·retrospective)** = `feedback/{id}.md` (`about: feature/login@vS2`) · `RETROSPECTIVE.md`
