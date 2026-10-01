@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import importlib
+import sys
 from collections.abc import Callable
 from pathlib import Path
 
@@ -40,8 +42,36 @@ def test_tool_catalog_is_pinned() -> None:
         "set_work_item_goal",
         "set_work_item_realizes",
         "workspace_status",
+        "work_items_by_slugs",
         "write_feedback",
         "write_retrospective",
+    }
+
+
+def test_mcp_import_does_not_require_starlette(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delitem(sys.modules, "solera.mcp_server")
+    monkeypatch.setitem(sys.modules, "starlette", None)
+
+    imported = importlib.import_module("solera.mcp_server")
+
+    assert imported.__name__ == "solera.mcp_server"
+
+
+def test_work_items_by_slugs_returns_all_requested_keys(tmp_path: Path) -> None:
+    root = str(tmp_path)
+    first = mcp_server.plan_work(root, "First")
+    second = mcp_server.plan_work(root, "Second")
+    mcp_server.set_work_item_realizes(root, first["id"], ["feature/login"])
+    mcp_server.set_work_item_realizes(root, second["id"], ["feature/login", "entity/account"])
+
+    assert mcp_server.work_items_by_slugs(
+        root, ["feature/login", "feature/missing", "entity/account"]
+    ) == {
+        "by_slug": {
+            "feature/login": [first["id"], second["id"]],
+            "feature/missing": [],
+            "entity/account": [second["id"]],
+        }
     }
 
 

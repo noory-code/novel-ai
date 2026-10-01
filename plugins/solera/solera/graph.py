@@ -18,6 +18,14 @@ def load_items(ws: Workspace) -> dict[str, WorkItem]:
     return {item_id: ws.load_item(item_id) for item_id in ws.list_items()}
 
 
+def items_by_slugs(items: dict[str, WorkItem], slugs: list[str]) -> dict[str, list[str]]:
+    """Index item ids by each requested slug, including slugs with no matches."""
+    by_slug: dict[str, list[str]] = {slug: [] for slug in slugs}
+    for slug in by_slug:
+        by_slug[slug] = [item_id for item_id, item in items.items() if slug in item.realizes]
+    return by_slug
+
+
 def parents(items: dict[str, WorkItem]) -> dict[str, str]:
     """Return each declared child id's parent id."""
     return {child_id: parent_id for parent_id, item in items.items() for child_id in item.children}

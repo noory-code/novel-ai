@@ -8,13 +8,11 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
-
-from fastmcp import FastMCP
+from typing import TYPE_CHECKING, Any
 
 from .audit import audit_workspace
 from .formats import Feedback, Retrospective
-from .graph import completion, load_items
+from .graph import completion, items_by_slugs, load_items
 from .intake import import_release, load_imported_release
 from .planning import (
     add_after,
@@ -29,23 +27,23 @@ from .repin import apply_repin, propose_repin
 from .supervisor import complete, instruction, ready_leaves, start_next
 from .workspace import Workspace
 
-mcp = FastMCP(
-    "solera",
-    instructions=(
-        "Solera stores an executable work tree under .noory/solera. Plan or add "
-        "items, ask for exactly one next leaf, and complete that leaf only after "
-        "the implementation is ready for its deterministic gate. Re-pin is a "
-        "two-step operation: inspect and approve the proposal first, then apply "
-        "that exact proposal ID."
-    ),
+if TYPE_CHECKING:
+    from fastmcp import FastMCP
+
+_MCP_INSTRUCTIONS = (
+    "Solera stores an executable work tree under .noory/solera. Plan or add "
+    "items, ask for exactly one next leaf, and complete that leaf only after "
+    "the implementation is ready for its deterministic gate. Re-pin is a "
+    "two-step operation: inspect and approve the proposal first, then apply "
+    "that exact proposal ID."
 )
+_mcp: FastMCP | None = None
 
 
 def _workspace(project_root: str) -> Workspace:
     return Workspace(Path(project_root).expanduser().resolve() / ".noory" / "solera")
 
 
-@mcp.tool()
 def plan_work(
     project_root: str,
     goal: str,
@@ -57,7 +55,6 @@ def plan_work(
     return item.model_dump()
 
 
-@mcp.tool()
 def add_work_item(
     project_root: str,
     parent: str,
@@ -80,7 +77,6 @@ def add_work_item(
     return item.model_dump()
 
 
-@mcp.tool()
 def set_work_item_after(project_root: str, item: str, after: list[str]) -> dict[str, Any]:
     """Replace an item's order links (ids that must be done before it starts).
 
@@ -89,13 +85,11 @@ def set_work_item_after(project_root: str, item: str, after: list[str]) -> dict[
     return set_after(_workspace(project_root), item, after).model_dump()
 
 
-@mcp.tool()
 def set_work_item_goal(project_root: str, item: str, goal: str) -> dict[str, Any]:
     """Replace an item's goal. Unknown items and blank goals are rejected."""
     return set_goal(_workspace(project_root), item, goal).model_dump()
 
 
-@mcp.tool()
 def set_work_item_realizes(project_root: str, item: str, realizes: list[str]) -> dict[str, Any]:
     """Replace an item's realizes slugs; empty clears them.
 
@@ -104,7 +98,6 @@ def set_work_item_realizes(project_root: str, item: str, realizes: list[str]) ->
     return set_realizes(_workspace(project_root), item, realizes).model_dump()
 
 
-@mcp.tool()
 def move_work_item(
     project_root: str,
     item: str,
@@ -119,7 +112,6 @@ def move_work_item(
     return move_item(_workspace(project_root), item, new_parent, index).model_dump()
 
 
-@mcp.tool()
 def add_work_item_after(project_root: str, item: str, predecessor: str) -> dict[str, Any]:
     """Add one order link; unknown ids and unsatisfiable links are rejected.
 
@@ -128,7 +120,6 @@ def add_work_item_after(project_root: str, item: str, predecessor: str) -> dict[
     return add_after(_workspace(project_root), item, predecessor).model_dump()
 
 
-@mcp.tool()
 def remove_work_item_after(project_root: str, item: str, predecessor: str) -> dict[str, Any]:
     """Remove one order link; an unknown item is rejected.
 
@@ -137,7 +128,6 @@ def remove_work_item_after(project_root: str, item: str, predecessor: str) -> di
     return remove_after(_workspace(project_root), item, predecessor).model_dump()
 
 
-@mcp.tool()
 def ready_work_items(project_root: str) -> dict[str, Any]:
     """List todo leaves that can start now and blocked leaves with their reasons.
 
@@ -157,7 +147,12 @@ def ready_work_items(project_root: str) -> dict[str, Any]:
     }
 
 
-@mcp.tool()
+def work_items_by_slugs(project_root: str, slugs: list[str]) -> dict[str, Any]:
+    """Return item ids realizing each requested design slug, including empty matches."""
+    items = load_items(_workspace(project_root))
+    return {"by_slug": items_by_slugs(items, slugs)}
+
+
 def next_work_item(project_root: str) -> dict[str, Any]:
     """Select or resume the next open leaf and return its complete execution instruction."""
     ws = _workspace(project_root)
@@ -170,7 +165,6 @@ def next_work_item(project_root: str) -> dict[str, Any]:
     }
 
 
-@mcp.tool()
 def complete_current(project_root: str, timeout_seconds: float = 120.0) -> dict[str, Any]:
     """Run the current leaf's stored gate; mark it done only when the gate passes."""
     root = Path(project_root).expanduser().resolve()
@@ -182,7 +176,6 @@ def complete_current(project_root: str, timeout_seconds: float = 120.0) -> dict[
     return asdict(result)
 
 
-@mcp.tool()
 def workspace_status(project_root: str) -> dict[str, Any]:
     """Return the active pointer, all work items, and every integrity problem."""
     ws = _workspace(project_root)
@@ -196,7 +189,6 @@ def workspace_status(project_root: str) -> dict[str, Any]:
     }
 
 
-@mcp.tool()
 def import_spec(project_root: str, source: str, label: str) -> dict[str, Any]:
     """Import one immutable format-F service release into ``specs/{label}``."""
     return import_release(
@@ -204,7 +196,6 @@ def import_spec(project_root: str, source: str, label: str) -> dict[str, Any]:
     )
 
 
-@mcp.tool()
 def propose_spec_repin(project_root: str, old_label: str, new_label: str) -> dict[str, Any]:
     """Return a proposal and its approval ID without changing work state."""
     ws = _workspace(project_root)
@@ -215,7 +206,6 @@ def propose_spec_repin(project_root: str, old_label: str, new_label: str) -> dic
     )
 
 
-@mcp.tool()
 def apply_spec_repin(
     project_root: str,
     old_label: str,
@@ -232,7 +222,6 @@ def apply_spec_repin(
     )
 
 
-@mcp.tool()
 def write_retrospective(
     project_root: str,
     item: str,
@@ -246,7 +235,6 @@ def write_retrospective(
     return note.model_dump()
 
 
-@mcp.tool()
 def write_feedback(
     project_root: str,
     feedback_id: str,
@@ -260,9 +248,51 @@ def write_feedback(
     return note.model_dump()
 
 
+def _get_mcp() -> FastMCP:
+    """Build the FastMCP adapter only when a host asks for it.
+
+    Keeping this import lazy means importing :mod:`solera.mcp_server` does not
+    initialize FastMCP's transport stack.
+    """
+    global _mcp
+    if _mcp is None:
+        from fastmcp import FastMCP
+
+        server = FastMCP("solera", instructions=_MCP_INSTRUCTIONS)
+        for tool in (
+            plan_work,
+            add_work_item,
+            set_work_item_after,
+            set_work_item_goal,
+            set_work_item_realizes,
+            move_work_item,
+            add_work_item_after,
+            remove_work_item_after,
+            ready_work_items,
+            work_items_by_slugs,
+            next_work_item,
+            complete_current,
+            workspace_status,
+            import_spec,
+            propose_spec_repin,
+            apply_spec_repin,
+            write_retrospective,
+            write_feedback,
+        ):
+            server.tool()(tool)
+        _mcp = server
+    return _mcp
+
+
+def __getattr__(name: str) -> FastMCP:
+    if name == "mcp":
+        return _get_mcp()
+    raise AttributeError(name)
+
+
 def main() -> None:
     """Run the host-neutral stdio MCP transport."""
-    mcp.run(transport="stdio")
+    _get_mcp().run(transport="stdio")
 
 
 if __name__ == "__main__":

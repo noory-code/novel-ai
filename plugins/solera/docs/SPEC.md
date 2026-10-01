@@ -3,6 +3,7 @@
 The operational spec of the slim core. SSOT for *behaviour* is the code under
 `solera/`; this document is the public map. The private design notes that preceded
 this specification are historical context, not a runtime or contributor dependency.
+The separate localhost engine surface is canonicalized in [HTTP.md](HTTP.md).
 
 ## Essence
 

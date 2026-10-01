@@ -1,5 +1,15 @@
 # Changelog
 
+## [8.4.0] — 2026-10-02
+
+### Added
+
+- Added the optional localhost HTTP and WebSocket engine on `127.0.0.1:5191`,
+  including token authentication, CORS, work-tree reads and edits, per-workspace
+  debounced filesystem broadcasts, and the public `docs/HTTP.md` contract.
+- Added slug-index lookup to the core and MCP surface so HTTP clients and agents
+  have the same read capability.
+
 ## [8.3.0] — 2026-10-02
 
 ### Added

@@ -75,6 +75,7 @@ solera --root "$PWD" feedback FB-001 "Blocked: the spec is ambiguous about auth.
   audit are plain code, not LLM steps, so the harness's mechanics are trustworthy.
 
 Artifact-home rules are in [`docs/ARTIFACT_HOMES.md`](docs/ARTIFACT_HOMES.md).
+The localhost HTTP and WebSocket API is specified in [`docs/HTTP.md`](docs/HTTP.md).
 
 ## Development
 
