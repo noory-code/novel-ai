@@ -54,7 +54,10 @@ the deep definition comes later in the home coach). Not created silently — alw
      foothold) = **selection → map (overview) → name → (last resort) semantic search**; being a canvas app, usually the
      *current selection/scope* is the foothold (in-app = rich selection / external agent = map + name). A **title/ID index**
      for name search is placed early (not vector). vector/RAG-search comes **later** behind the same seam (only when vague·
-     footholdless search or text outside the graph arises).
+     footholdless search or text outside the graph arises). Traversal only finds what is linked, so the
+     **connectedness invariant** (`D-2026-10-01-G`) holds: everything made outside the canvas (a work item, code, a
+     design file, a run's output) reaches a node of the published design through one or more links; a work item
+     that names no node can be captured but not started, and the coach then offers candidate nodes or a new node.
    - **Delivering (the envelope, how it's handed over):** the full current **Foundation** (Mission + Core value +
      Identity) + the active canvas (whole) + the selected node + the **entity registry** (name+one line, for strong
      dedup) + deep fetch if needed. **CAG first**

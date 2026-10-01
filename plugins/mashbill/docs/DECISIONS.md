@@ -39,6 +39,46 @@
 
 ## Log
 
+### D-2026-10-01-G — Connectedness invariant: everything made outside the canvas reaches a published node
+
+- **What:** (1) Everything that comes into being outside the canvas (a work
+  item, code, a design file, a run's output) must reach a node of the design
+  by following links. It need not attach to a node directly: one hop or more
+  is enough, for example node ← work item ← code or file. (2) A work item that
+  names no node it builds is not refused when it is created; the person is
+  asked which node it serves, because the idea can come before its place is
+  known. It cannot be started until it names one. (3) A refusal never ends
+  there: the coach shows candidate nodes, and when no node fits it offers to
+  draw that node on the canvas first. (4) There is no exception that hangs a
+  work item on the central project node. Work items form an initiative → epic
+  → story → action tree, one Mashbill feature is about one Solera initiative,
+  and work that looks absent from the design (choosing a stack, laying the
+  groundwork) sits inside that initiative and reaches a node through its
+  ancestors. (5) A work item attaches only to a node of a published design.
+  This closes the Open item of D-2026-06-20-P. Which side stores the link
+  between a node and its work items is not decided here.
+- **Why:** the AI finds context by following links (D-2026-06-20-P). Anything
+  that reaches no node is invisible to that search, and floating text is what
+  would eventually force a vector index. Blocking the start, not the capture,
+  keeps ideas cheap to write down while still making the gap visible, and the
+  moment it blocks becomes a chance to fill a hole in the design, which is
+  VISION's promise of tracing back up. Decided by the user on 2026-09-29 and
+  2026-09-30.
+- **Alternatives:** refuse at creation — rejected by the user: the place is
+  often unknown when the idea appears. Let unplaced work hang on the central
+  project node — rejected by the user on 2026-09-30: the work tree already
+  gives every task an initiative that maps to a feature. Attach to unpublished
+  nodes — rejected: an unpublished node can still change or disappear, while a
+  published node keeps its English slug.
+- **Approval:** Accepted by user, 2026-09-29 and 2026-09-30 (novel-workspace
+  W-00000318, W-00000320).
+- **Spec impact:** public `docs/concepts/ai-collaboration.md` §1, Finding.
+  Enforcement in code belongs to novel-workspace W-00000325; storage of the
+  node↔work-item link is the open question Q-00000027.
+- **Principles:** SSOT (the link has one owner, to be chosen in Q-00000027);
+  Fail Fast (refuse at start, not later); Honesty (no unplaced work that the
+  AI cannot find).
+
 ### D-2026-10-01-E — A blueprint publish is one all-or-nothing act, and publishing stays the person's act
 
 - **What:** (1) `POST /api/projects/{id}/publish` writes the `vP` bundle, bumps
@@ -2589,6 +2629,7 @@
 - **Why:** Session discussion 2026-06-20. `D-2026-06-17-L` settled what the AI *sees* and how it is *delivered*, but not how the layer *finds* the right slice as a user's project grows large. Graph-native retrieval keeps the layer **concept-independent** (it does not depend on which kinds/canvases exist), so it is safe to record now while the concept/structure rework runs in another session.
 - **Alternatives:** (a) vector DB / RAG from the start — rejected (YAGNI; data is already a graph, traversal covers the primary case; vector slots behind the seam later). (b) treat main-vs-secondary AI path as decisive for retrieval — rejected (both paths are the same `claude` binary on the same `.noory` data; what differs is who configures it). (c) adopt headroom for token savings — rejected (measured ~0.1% net for Novel).
 - **Open:** **Connectedness invariant** — every new artifact (work-item / design file / Solera / Evonest output) must enter the graph *with an edge to what it implements*; floating unlinked text is what would eventually force vector. Needs a pinned decision + confirmation against Solera/Evonest's actual data shape. Tracked in ROADMAP 5.11.
+  *Note (2026-10-01):* closed by D-2026-10-01-G.
 - **Approval:** Accepted by user, 2026-06-20.
 - **Spec impact:** Consolidated into `docs/concepts/ai-collaboration.md` §1.2 (adds the "찾기" paragraph beside the existing "전달" envelope). Refines Track 5.4 (graph-RAG-lite → deferred behind the seam) and ROADMAP 5.11. No code yet.
 

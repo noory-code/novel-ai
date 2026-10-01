@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.198.6] — 2026-10-01
+
+### Changed
+
+- `DECISIONS.md` D-2026-10-01-G pins the connectedness invariant (everything made outside the canvas reaches a published node through links; a work item without a node can be captured but not started) and closes the Open item of D-2026-06-20-P; `docs/concepts/ai-collaboration.md` §1 Finding points to it.
+
 ## [0.198.5] — 2026-10-01
 
 ### Changed
