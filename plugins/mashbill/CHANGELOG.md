@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.199.4] — 2026-10-02
+
+### Documentation
+
+- D-2026-10-02-C: the app calls the services-canvas `category` node 묶음 / Group instead of 플랫폼 / Platform; the stored kind stays `category`. D-2026-07-05-H notes the superseded display name.
+
 ## [0.199.3] — 2026-10-02
 
 ### Documentation

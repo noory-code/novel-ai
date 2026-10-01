@@ -39,6 +39,26 @@
 
 ## Log
 
+### D-2026-10-02-C — The services-canvas grouping node is called 묶음 / Group
+
+- **What:** the app shows the `category` kind as **묶음** (Korean) / **Group** (English) in every
+  label, hint and warning, replacing 플랫폼 / Platform. Copy that assumed a delivery surface is
+  rewritten to the grouping meaning: a group gathers two or more services that share a theme, and a
+  group with no services has no reason to exist. The stored kind stays `category`; no data, wire or
+  engine change.
+- **Why:** D-2026-08-18-B made this node a light, optional grouping used only when two or more
+  services share a theme, while the app still called it a platform ("the surface the product meets
+  people on"). The user explained on 2026-10-01 that 플랫폼 was first meant to hold surfaces such as
+  a back office, but a back office, a mobile app or a web app can each be a service, so the node is a
+  group, not a surface.
+- **Alternatives:** keep 플랫폼 and only state it in the spec — rejected by the user: the name and the
+  meaning would keep disagreeing.
+- **Approval:** Accepted by user, 2026-10-01 (novel-workspace Q-00000025, W-00000353).
+- **Spec impact:** public `docs/specs/kinds-fields.md` (`category` row) and
+  `docs/specs/canvas-behavior.md` §Services state the display name. Supersedes the display name of
+  D-2026-07-05-H.
+- **Principles:** SSOT (one meaning, one name); UX consistency (the label says what the node does).
+
 ### D-2026-10-02-B — The work-item graph is its own tab beside the design canvases
 
 - **What:** the app shows Solera's work-item graph in a tab of its own, next
@@ -1079,6 +1099,8 @@
 - **Why:** user directives 2026-07-05 심야 ("접점은 플랫폼으로 바꾸고
   서비스와 기능에 접점처럼 종류 표기되게").
 - **Approval:** Accepted by user (live directive, 2026-07-05).
+- **Superseded (display name):** the app now calls this kind 묶음 / Group —
+  D-2026-10-02-C. The kind-tag part of this entry still holds.
 
 
 ### D-2026-07-05-G — services-canvas kind colors read apart at a glance

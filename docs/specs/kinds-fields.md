@@ -29,7 +29,7 @@
 ### Services overview
 | kind | typed fields | notes |
 |---|---|---|
-| `category` | `theme` (one line) · `ref_actor_ids` (who takes part, optional) | optional grouping (low-friction/dumb), used only when two or more services share a useful theme or surface. minimal inspector. top of the soft participation narrowing (`D-2026-07-05-E`). |
+| `category` | `theme` (one line) · `ref_actor_ids` (who takes part, optional) | optional grouping (low-friction/dumb), used only when two or more services share a useful theme or surface. Shown in the app as **Group** (Korean 묶음); the stored kind stays `category` (`D-2026-10-02-C`). minimal inspector. top of the soft participation narrowing (`D-2026-07-05-E`). |
 | `service` | **5 fields**: why is it needed (typed) · what improves (typed) + **3 reference kinds** who participates (actor) · what can't be conceded (core_value) · in what manner (identity) | participant picker narrows to the category's participants (soft). references are id arrays on the service (`ref_actor_ids` · `ref_value_ids` · `ref_identity_ids`, `D-2026-06-20-F`). old 9 fields (what/scope/trigger/how/outcome/do/dont/target_side/body) deleted. |
 | `feature` | `proposed` (one line "what can be done") · `ref_actor_ids` (who does this) | lean inspector (name + action summary). participant picker narrows to the service's participants (soft). drill target. |
 

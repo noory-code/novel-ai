@@ -75,7 +75,7 @@
 
 ## Services (overview) — Planning
 
-- **Nodes:** `category` (optional grouping, low-friction/dumb) · `service` (5-field inspector) · `feature` (capability).
+- **Nodes:** `category` (optional grouping, low-friction/dumb) · `service` (5-field inspector) · `feature` (capability). `category` is shown in the app as **Group** (Korean 묶음); the stored kind stays `category` (`D-2026-10-02-C`).
   Hierarchy category → service → feature. Services are **optional** under a category (not forced). All three kinds
   show their kind tag on the node face and have their own colour — category violet, service sky, feature green
   (`D-2026-07-05-G`, `D-2026-07-05-H`).
