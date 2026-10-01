@@ -35,3 +35,24 @@ jobs:
           cache-dependency-glob: plugins/${{ matrix.package }}/uv.lock
       - run: uv sync --locked --all-groups
       - run: uv run pytest -q
+
+  # Solera's workspace lock has one code path per OS family (fcntl on POSIX,
+  # msvcrt on Windows). Run the lock and workspace tests where each path runs.
+  # The rest of the Solera suite uses POSIX gate commands such as `true`.
+  solera-workspace-lock:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: plugins/solera
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: plugins/solera/uv.lock
+      - run: uv sync --locked --all-groups
+      - run: uv run pytest -q tests/test_workspace_lock.py tests/test_workspace.py
