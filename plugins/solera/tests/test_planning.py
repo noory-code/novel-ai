@@ -65,4 +65,5 @@ def test_level_prefix_cannot_escape_items_directory(tmp_path: Path, level: str) 
     with pytest.raises(FormatError, match="name"):
         create_item(ws, level, "Must not be written")
 
-    assert not ws.root.exists()
+    assert ws.list_items() == []
+    assert ws.lock_path.is_file()

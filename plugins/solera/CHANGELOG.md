@@ -1,5 +1,14 @@
 # Changelog
 
+## [8.4.2] — 2026-10-02
+
+### Fixed
+
+- Serialized every public workspace mutation with a cross-process, re-entrant
+  lock so concurrent HTTP, MCP, and CLI operations cannot overwrite decisions
+  made from stale Solera state; lock acquisition now fails clearly after a
+  bounded wait, and lock-file churn is excluded from HTTP watcher broadcasts.
+
 ## [8.4.1] — 2026-10-02
 
 ### Fixed

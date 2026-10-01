@@ -5,6 +5,10 @@ class SoleraError(Exception):
     """Base class for all Solera errors."""
 
 
+class WorkspaceLockTimeoutError(SoleraError):
+    """The workspace's cross-process write lock could not be acquired in time."""
+
+
 class FormatError(SoleraError):
     """A workspace file did not match its required format.
 

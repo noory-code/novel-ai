@@ -22,7 +22,7 @@ from .errors import OrderError
 from .formats import Progress, Status, WorkItem
 from .gate import DEFAULT_TIMEOUT_SECONDS, GateResult, run_item_gate
 from .intake import has_imported_design
-from .workspace import Workspace
+from .workspace import Workspace, workspace_locked
 
 
 @dataclass(frozen=True)
@@ -149,6 +149,7 @@ def ready_leaves(ws: Workspace) -> tuple[list[str], list[BlockedLeaf]]:
     return ready, blocked
 
 
+@workspace_locked
 def set_item_status(ws: Workspace, item_id: str, status: Status) -> WorkItem:
     """Rewrite one item's status, preserving its other fields."""
     updated = ws.load_item(item_id).model_copy(update={"status": status})
@@ -156,6 +157,7 @@ def set_item_status(ws: Workspace, item_id: str, status: Status) -> WorkItem:
     return updated
 
 
+@workspace_locked
 def start_next(ws: Workspace) -> str | None:
     """Pick the next open leaf, mark it ``doing``, and point at it.
 
@@ -191,6 +193,7 @@ def _rollup(ws: Workspace, leaf_id: str) -> None:
         rollup_item_and_ancestors(ws, current)
 
 
+@workspace_locked
 def rollup_item_and_ancestors(ws: Workspace, item_id: str) -> None:
     """Mark a container and successive ancestors done when all children are done.
 
@@ -209,6 +212,7 @@ def rollup_item_and_ancestors(ws: Workspace, item_id: str) -> None:
             break
 
 
+@workspace_locked
 def invalidate_done_ancestors(ws: Workspace, item_id: str) -> None:
     """The inverse of :func:`_rollup`. Reopening a descendant breaks the rollup
     invariant (a container is ``done`` only when all its children are done), so
@@ -227,6 +231,7 @@ def invalidate_done_ancestors(ws: Workspace, item_id: str) -> None:
             break
 
 
+@workspace_locked
 def reopen_items(ws: Workspace, item_ids: list[str]) -> None:
     """Reopen items without leaving a done ancestor above an open descendant.
 
@@ -287,6 +292,7 @@ def reopen_items(ws: Workspace, item_ids: list[str]) -> None:
         ws.write_item(final[item_id])
 
 
+@workspace_locked
 def complete(
     ws: Workspace,
     item_id: str,

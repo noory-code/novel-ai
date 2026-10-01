@@ -18,6 +18,7 @@ from .errors import SoleraError
 from .formats import Feedback, Retrospective
 from .graph import completion, load_items
 from .intake import import_release, load_imported_release
+from .notes import record_feedback, record_retrospective
 from .planning import (
     add_after,
     create_item,
@@ -29,7 +30,7 @@ from .planning import (
 )
 from .repin import apply_repin, propose_repin
 from .supervisor import complete, instruction, ready_leaves, start_next
-from .workspace import Workspace
+from .workspace import Workspace, workspace_locked
 
 
 def _ws(root: Path) -> Workspace:
@@ -64,6 +65,7 @@ def _cmd_next(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     return 0
 
 
+@workspace_locked
 def _cmd_complete(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     prog = ws.load_progress()
     if prog.item is None:
@@ -187,12 +189,12 @@ def _cmd_repin(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
 
 
 def _cmd_retro(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
-    ws.write_retrospective(Retrospective(id=args.item, about=list(args.about), body=args.body))
+    record_retrospective(ws, Retrospective(id=args.item, about=list(args.about), body=args.body))
     return 0
 
 
 def _cmd_feedback(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
-    ws.write_feedback(Feedback(id=args.id, about=list(args.about), body=args.body))
+    record_feedback(ws, Feedback(id=args.id, about=list(args.about), body=args.body))
     return 0
 
 

@@ -88,8 +88,10 @@ class _Handler(FileSystemEventHandler):
             if not raw_path:
                 continue
             try:
-                Path(raw_path).relative_to(self._workspace_root)
+                relative = Path(raw_path).relative_to(self._workspace_root)
             except ValueError:
+                continue
+            if relative == Path(".lock"):
                 continue
             self._notify()
             return

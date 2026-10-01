@@ -18,6 +18,7 @@ def _ws(tmp_path: Path) -> Workspace:
 
 def test_paths_compose_from_root(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
+    assert ws.lock_path == ws.root / ".lock"
     assert ws.progress_path == ws.root / "progress.md"
     assert ws.items_dir == ws.root / "items"
     assert ws.item_path("ACT-001") == ws.root / "items" / "ACT-001.md"

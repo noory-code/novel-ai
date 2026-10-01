@@ -236,10 +236,12 @@ def test_set_work_item_after_propagates_cycle_error(tmp_path: Path) -> None:
         (mcp_server.plan_work, ("goal", "../outside")),
     ],
 )
-def test_tools_reject_path_like_names_before_writing(
+def test_tools_reject_path_like_names_without_workspace_data(
     tmp_path: Path, operation: Callable[..., object], arguments: tuple[str, str]
 ) -> None:
     with pytest.raises(FormatError, match="name"):
         operation(str(tmp_path), *arguments)
 
-    assert not (tmp_path / ".noory").exists()
+    workspace_root = tmp_path / ".noory" / "solera"
+    assert workspace_root.joinpath(".lock").is_file()
+    assert set(workspace_root.iterdir()) == {workspace_root / ".lock"}

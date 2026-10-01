@@ -12,10 +12,18 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 import tempfile
+import threading
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager
+from dataclasses import dataclass, field
+from functools import wraps
 from pathlib import Path
+from time import monotonic, sleep
+from typing import BinaryIO, Concatenate, ParamSpec, TypeVar, cast
 
-from .errors import FormatError
+from .errors import FormatError, WorkspaceLockTimeoutError
 from .formats import (
     Feedback,
     Progress,
@@ -32,6 +40,62 @@ from .formats import (
 )
 
 _PATH_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+DEFAULT_LOCK_TIMEOUT_SECONDS = 10.0
+_LOCK_POLL_SECONDS = 0.05
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
+
+if sys.platform == "win32":
+    import msvcrt
+
+    def _try_file_lock(handle: BinaryIO) -> bool:
+        handle.seek(0)
+        try:
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        except OSError:
+            return False
+        return True
+
+    def _release_file_lock(handle: BinaryIO) -> None:
+        handle.seek(0)
+        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+
+else:
+    import fcntl
+
+    def _try_file_lock(handle: BinaryIO) -> bool:
+        try:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return False
+        return True
+
+    def _release_file_lock(handle: BinaryIO) -> None:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+@dataclass
+class _LockState:
+    mutex: threading.RLock = field(default_factory=threading.RLock)
+    depth: int = 0
+    handle: BinaryIO | None = None
+
+
+_lock_states: dict[str, _LockState] = {}
+_lock_states_mutex = threading.Lock()
+
+
+def _lock_state(path: Path) -> _LockState:
+    key = os.path.normcase(str(path.resolve(strict=False)))
+    with _lock_states_mutex:
+        return _lock_states.setdefault(key, _LockState())
+
+
+def _timeout_error(path: Path, timeout: float) -> WorkspaceLockTimeoutError:
+    return WorkspaceLockTimeoutError(
+        f"timed out after {timeout:g} seconds acquiring workspace lock {path}"
+    )
 
 
 def _atomic_write_text(path: Path, text: str) -> None:
@@ -74,6 +138,10 @@ class Workspace:
         return self.root / "progress.md"
 
     @property
+    def lock_path(self) -> Path:
+        return self.root / ".lock"
+
+    @property
     def items_dir(self) -> Path:
         return self.root / "items"
 
@@ -102,6 +170,10 @@ class Workspace:
 
     def feedback_path(self, feedback_id: str) -> Path:
         return self.feedback_dir / f"{validate_path_name(feedback_id)}.md"
+
+    def lock(self, timeout: float = DEFAULT_LOCK_TIMEOUT_SECONDS) -> AbstractContextManager[None]:
+        """Acquire this workspace's re-entrant cross-process exclusive lock."""
+        return workspace_lock(self, timeout=timeout)
 
     # --- reads -------------------------------------------------------------
 
@@ -140,3 +212,63 @@ class Workspace:
 
     def write_feedback(self, feedback: Feedback) -> None:
         _atomic_write_text(self.feedback_path(feedback.id), dump_feedback(feedback))
+
+
+@contextmanager
+def workspace_lock(ws: Workspace, timeout: float = DEFAULT_LOCK_TIMEOUT_SECONDS) -> Iterator[None]:
+    """Serialize a workspace operation across processes and threads."""
+    if timeout < 0:
+        raise ValueError("workspace lock timeout must be non-negative")
+    deadline = monotonic() + timeout
+    state = _lock_state(ws.lock_path)
+    if not state.mutex.acquire(timeout=max(0.0, deadline - monotonic())):
+        raise _timeout_error(ws.lock_path, timeout)
+
+    try:
+        if state.depth:
+            state.depth += 1
+        else:
+            ws.root.mkdir(parents=True, exist_ok=True)
+            acquired_handle = ws.lock_path.open("a+b")
+            try:
+                if acquired_handle.seek(0, os.SEEK_END) == 0:
+                    acquired_handle.write(b"\0")
+                    acquired_handle.flush()
+                while not _try_file_lock(acquired_handle):
+                    remaining = deadline - monotonic()
+                    if remaining <= 0:
+                        raise _timeout_error(ws.lock_path, timeout)
+                    sleep(min(_LOCK_POLL_SECONDS, remaining))
+            except BaseException:
+                acquired_handle.close()
+                raise
+            state.handle = acquired_handle
+            state.depth = 1
+
+        try:
+            yield
+        finally:
+            state.depth -= 1
+            if state.depth == 0:
+                release_handle = state.handle
+                state.handle = None
+                assert release_handle is not None
+                try:
+                    _release_file_lock(release_handle)
+                finally:
+                    release_handle.close()
+    finally:
+        state.mutex.release()
+
+
+def workspace_locked(
+    operation: Callable[Concatenate[Workspace, _P], _R],
+) -> Callable[Concatenate[Workspace, _P], _R]:
+    """Run one public workspace mutation while holding its workspace lock."""
+
+    @wraps(operation)
+    def wrapped(ws: Workspace, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+        with ws.lock():
+            return operation(ws, *args, **kwargs)
+
+    return cast(Callable[Concatenate[Workspace, _P], _R], wrapped)

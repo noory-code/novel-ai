@@ -26,7 +26,7 @@ from typing import Any, Literal, Self, TypedDict, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from solera.workspace import Workspace
+from solera.workspace import Workspace, workspace_locked
 
 # Cross-repo contract guard (format-f.md §7): the format F version this reader
 # understands. Must move in lock-step with Novel's ``format_f.FORMAT_F_VERSION``.
@@ -292,6 +292,7 @@ def _reject_conflicting_import(
             )
 
 
+@workspace_locked
 def import_release(ws: Workspace, source_vs_dir: Path, *, label: str) -> dict[str, Any]:
     """Copy a frozen service release ``vS`` (and the ``vP`` slice it is based on)
     into ``specs/{label}/`` and return the ``vS`` manifest.

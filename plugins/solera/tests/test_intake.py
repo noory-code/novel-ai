@@ -101,7 +101,8 @@ def test_import_rejects_path_like_labels_without_writing(tmp_path: Path, label: 
     with pytest.raises(FormatError, match="name"):
         import_release(ws, vs_dir, label=label)
 
-    assert not ws.root.exists()
+    assert not ws.specs_dir.exists()
+    assert ws.lock_path.is_file()
 
 
 @pytest.mark.parametrize("based_on", ["../../private", "_project/vP1"])

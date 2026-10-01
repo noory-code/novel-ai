@@ -25,7 +25,7 @@ from typing import Any
 
 from solera.intake import ImportedRelease, diff_releases
 from solera.supervisor import reopen_items as reopen_work_items
-from solera.workspace import Workspace
+from solera.workspace import Workspace, workspace_locked
 
 
 def propose_repin(
@@ -178,6 +178,7 @@ def _proposal_id(
     return _canonical_json_digest(identity)
 
 
+@workspace_locked
 def apply_repin(
     ws: Workspace,
     old: ImportedRelease,
@@ -228,6 +229,7 @@ def _element_ids(elements: list[dict[str, Any]]) -> set[str]:
     return {element["id"] for element in elements}
 
 
+@workspace_locked
 def reopen_items(ws: Workspace, item_ids: list[str]) -> None:
     """Reopen approved items and invalidate their completed ancestors."""
     reopen_work_items(ws, item_ids)

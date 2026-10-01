@@ -12,6 +12,7 @@ from typing import Any, cast
 import pytest
 from anyio import WouldBlock
 from starlette.testclient import TestClient, WebSocketTestSession
+from watchdog.events import FileCreatedEvent
 from watchdog.observers.polling import PollingObserver
 
 from solera import watcher as watcher_module
@@ -78,6 +79,16 @@ def _collect_until(socket: WebSocketTestSession, deadline: float) -> list[dict[s
         if remaining <= 0:
             return messages
         _waiter.wait(min(_POLL_SECONDS, remaining))
+
+
+def test_watcher_ignores_workspace_lock_file(tmp_path: Path) -> None:
+    workspace_root = _workspace(tmp_path).root
+    notifications: list[None] = []
+    handler = watcher_module._Handler(workspace_root, lambda: notifications.append(None))
+
+    handler.on_any_event(FileCreatedEvent(str(workspace_root / ".lock")))
+
+    assert notifications == []
 
 
 @pytest.mark.parametrize("route", ["create", "patch", "move", "add_after", "delete_after"])

@@ -14,6 +14,7 @@ from .audit import audit_workspace
 from .formats import Feedback, Retrospective
 from .graph import completion, items_by_slugs, load_items
 from .intake import import_release, load_imported_release
+from .notes import record_feedback, record_retrospective
 from .planning import (
     add_after,
     create_item,
@@ -169,10 +170,11 @@ def complete_current(project_root: str, timeout_seconds: float = 120.0) -> dict[
     """Run the current leaf's stored gate; mark it done only when the gate passes."""
     root = Path(project_root).expanduser().resolve()
     ws = _workspace(project_root)
-    progress = ws.load_progress()
-    if progress.item is None:
-        raise ValueError("no Solera work item is currently active")
-    result = complete(ws, progress.item, cwd=root, timeout=timeout_seconds)
+    with ws.lock():
+        progress = ws.load_progress()
+        if progress.item is None:
+            raise ValueError("no Solera work item is currently active")
+        result = complete(ws, progress.item, cwd=root, timeout=timeout_seconds)
     return asdict(result)
 
 
@@ -231,7 +233,7 @@ def write_retrospective(
     """Write the retrospective attached to a completed work-item identifier."""
     ws = _workspace(project_root)
     note = Retrospective(id=item, body=body, about=about or [])
-    ws.write_retrospective(note)
+    record_retrospective(ws, note)
     return note.model_dump()
 
 
@@ -244,7 +246,7 @@ def write_feedback(
     """Write a blocked-work feedback note with an explicit stable identifier."""
     ws = _workspace(project_root)
     note = Feedback(id=feedback_id, body=body, about=about or [])
-    ws.write_feedback(note)
+    record_feedback(ws, note)
     return note.model_dump()
 
 

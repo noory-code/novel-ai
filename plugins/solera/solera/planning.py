@@ -14,7 +14,7 @@ from .errors import OrderError, PlanningError
 from .formats import WorkItem
 from .graph import load_items, order_problems
 from .supervisor import invalidate_done_ancestors, rollup_item_and_ancestors
-from .workspace import Workspace, validate_path_name
+from .workspace import Workspace, validate_path_name, workspace_locked
 
 _LEVEL_PREFIX = {
     "initiative": "INIT",
@@ -47,6 +47,7 @@ def _validate_realizes(realizes: list[str]) -> None:
         raise ValueError("realizes slugs must not contain duplicates")
 
 
+@workspace_locked
 def create_item(
     ws: Workspace,
     level: str,
@@ -89,6 +90,7 @@ def create_item(
     return item
 
 
+@workspace_locked
 def set_after(ws: Workspace, item_id: str, after: list[str]) -> WorkItem:
     """Replace one item's order links after validating the complete future graph."""
     item = ws.load_item(item_id)
@@ -102,6 +104,7 @@ def set_after(ws: Workspace, item_id: str, after: list[str]) -> WorkItem:
     return updated
 
 
+@workspace_locked
 def set_goal(ws: Workspace, item_id: str, goal: str) -> WorkItem:
     """Replace one item's goal, rejecting the same blank goals as creation."""
     item = ws.load_item(item_id)
@@ -110,6 +113,7 @@ def set_goal(ws: Workspace, item_id: str, goal: str) -> WorkItem:
     return updated
 
 
+@workspace_locked
 def set_realizes(ws: Workspace, item_id: str, realizes: list[str]) -> WorkItem:
     """Replace one item's complete realizes-slug list; an empty list clears it."""
     item = ws.load_item(item_id)
@@ -119,6 +123,7 @@ def set_realizes(ws: Workspace, item_id: str, realizes: list[str]) -> WorkItem:
     return updated
 
 
+@workspace_locked
 def add_after(ws: Workspace, item_id: str, predecessor: str) -> WorkItem:
     """Add one order link, or return the unchanged item when it already exists."""
     item = ws.load_item(item_id)
@@ -127,6 +132,7 @@ def add_after(ws: Workspace, item_id: str, predecessor: str) -> WorkItem:
     return set_after(ws, item_id, [*item.after, predecessor])
 
 
+@workspace_locked
 def remove_after(ws: Workspace, item_id: str, predecessor: str) -> WorkItem:
     """Remove one order link, or return the unchanged item when it is absent."""
     item = ws.load_item(item_id)
@@ -161,6 +167,7 @@ def _insert_child(children: list[str], item_id: str, index: int | None) -> list[
     return without_item
 
 
+@workspace_locked
 def move_item(
     ws: Workspace,
     item_id: str,

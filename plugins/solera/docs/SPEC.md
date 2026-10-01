@@ -200,8 +200,10 @@ roll up when all remaining children are done.
 1. **Standalone.** No Novel import or path reference (`tests/test_independence.py`).
 2. **The gate is not an LLM step.** A deterministic subprocess; the verdict is trustworthy.
 3. **State is the files.** Solera holds none of its own.
-4. **One active leaf.** A gate failure leaves the leaf `doing`; `next` resumes it.
-5. **Leaf xor container.** A WorkItem never has both a gate and children — only
+4. **Workspace mutations are serialized.** Each public read-modify-write operation holds
+   `.noory/solera/.lock` across its complete decision and write sequence.
+5. **One active leaf.** A gate failure leaves the leaf `doing`; `next` resumes it.
+6. **Leaf xor container.** A WorkItem never has both a gate and children — only
    leaves are executed, only containers roll up.
-6. **Order links gate start only.** `after` decides which `todo` leaf may start;
+7. **Order links gate start only.** `after` decides which `todo` leaf may start;
    it never changes the status of an item already started or done.
