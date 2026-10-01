@@ -149,6 +149,35 @@ def test_plan_slugs_excludes_mission_from_required_names() -> None:
     assert plan.new == {"mission-id": "mission"}
 
 
+def test_plan_slugs_accepts_stored_mission_id_for_mission() -> None:
+    from mashbill.format_f_slugs import plan_slugs
+
+    plan = plan_slugs(
+        {"mission-id": "mission"},
+        [_node("mission-id", "mission", "Our mission")],
+        None,
+    )
+
+    assert plan.slugs == {"mission-id": "mission"}
+    assert plan.new == {}
+
+
+def test_plan_slugs_rejects_mission_id_for_actor() -> None:
+    from mashbill.format_f_slugs import plan_slugs
+
+    with pytest.raises(ValueError) as caught:
+        plan_slugs(
+            {"actor-id": "mission"},
+            [_node("actor-id", "actor", "Actor")],
+            None,
+        )
+
+    assert str(caught.value) == (
+        "_slugs.json has an invalid id for actor-id: 'mission' "
+        "(only the mission node may use it)"
+    )
+
+
 def test_pending_slug_names_includes_automatic_ids_in_taken() -> None:
     from mashbill.format_f_slugs import pending_slug_names
 
@@ -239,6 +268,34 @@ def test_invalid_slug_store_stops_publish_before_planning_or_writes(
     assert str(caught.value) == (
         f"_slugs.json has an invalid id for {node_id}: '{value}' "
         "(expected kind/tail with lowercase letters, digits and single hyphens)"
+    )
+    assert not (plot_root / "published").exists()
+
+
+def test_invalid_stored_mission_id_stops_publish_before_writes(plot_root: Path) -> None:
+    from mashbill.format_f import publish_project_snapshot
+    from mashbill.format_f_slugs import slug_store_path
+    from mashbill.models import MissionNode
+
+    create_project(plot_root, "alpha", "Alpha")
+    foundation = read_canvas(plot_root, "alpha", "foundation")
+    write_canvas(
+        plot_root,
+        "alpha",
+        foundation.model_copy(
+            update={"nodes": [MissionNode(id="mission-id", label="Our mission")]}
+        ),
+    )
+    slug_store_path(plot_root, "alpha").write_text(
+        json.dumps({"mission-id": "actor/x"}), encoding="utf-8"
+    )
+
+    with pytest.raises(ValueError) as caught:
+        publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
+
+    assert str(caught.value) == (
+        "_slugs.json has an invalid id for mission-id: 'actor/x' "
+        "(the mission's id is always 'mission')"
     )
     assert not (plot_root / "published").exists()
 

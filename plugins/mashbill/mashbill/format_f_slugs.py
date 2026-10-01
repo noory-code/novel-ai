@@ -172,7 +172,8 @@ def _prepare(
     for node in nodes:
         if node.id in store or node.id in needed_ids:
             continue
-        slug = _dedupe(_automatic_candidate(node), taken)
+        candidate = _automatic_candidate(node)
+        slug = candidate if node.kind == "mission" else _dedupe(candidate, taken)
         slugs[node.id] = slug
         new[node.id] = slug
         taken.add(slug)
@@ -181,12 +182,30 @@ def _prepare(
     return slugs, new, needed, taken_ordered
 
 
+def _validate_mission_slugs(store: Mapping[str, str], nodes: Sequence[Any]) -> None:
+    for node in nodes:
+        existing = store.get(node.id)
+        if existing is None:
+            continue
+        if node.kind == "mission" and existing != "mission":
+            raise ValueError(
+                f"_slugs.json has an invalid id for {node.id}: '{existing}' "
+                "(the mission's id is always 'mission')"
+            )
+        if node.kind != "mission" and existing == "mission":
+            raise ValueError(
+                f"_slugs.json has an invalid id for {node.id}: 'mission' "
+                "(only the mission node may use it)"
+            )
+
+
 def plan_slugs(
     store: Mapping[str, str],
     nodes: Sequence[Any],
     provided: Mapping[str, str] | None,
 ) -> SlugPlan:
     """Plan every stable id without mutating the registry or filesystem."""
+    _validate_mission_slugs(store, nodes)
     slugs, new, needed, taken_ordered = _prepare(store, nodes)
     supplied = provided or {}
     needed_by_id = {node.id: node for node in needed}

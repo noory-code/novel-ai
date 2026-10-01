@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.199.2] — 2026-10-01
+
+### Fixed
+
+- The mission node always plans the id `mission` whatever `_slugs.json` holds; a stored mission id that is not `mission`, or `mission` stored for another node, fails before any publish write.
+
 ## [0.199.1] — 2026-10-01
 
 ### Fixed
