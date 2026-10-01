@@ -1,5 +1,19 @@
 # Changelog
 
+## [8.4.1] — 2026-10-02
+
+### Fixed
+
+- Closed the WebSocket notification verification gap by exercising filesystem
+  broadcasts with the production watcher path instead of direct test-only hub
+  notifications.
+
+### Tests
+
+- Added real-watcher coverage for all five HTTP write routes, direct core writes
+  from an outside process, workspace creation after subscription, and debouncing
+  a burst of atomic writes into one `work_changed` event.
+
 ## [8.4.0] — 2026-10-02
 
 ### Added
