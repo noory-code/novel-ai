@@ -28,9 +28,13 @@ from starlette.testclient import TestClient
 
 from mashbill.blueprint_publish import _bump_blueprint_version
 from mashbill.broadcast import BroadcastHub
-from mashbill.folder_io import _project_dir
+from mashbill.chat_provider import ChatProviderSelection, write_selection
+from mashbill.chat_session import ChatSessionRegistry
+from mashbill.folder_io import _project_dir, read_canvas, write_canvas
+from mashbill.format_f_slugs import write_slug_store
 from mashbill.git_store import init_workspace_repo, list_tags, tag_snapshot
 from mashbill.http_app import create_http_app
+from mashbill.models import ActorNode, ServiceNode
 from mashbill.project_io import create_project
 from mashbill.workspace import resolve_plot_root
 
@@ -485,3 +489,173 @@ def test_service_publish_requires_project_path(client: TestClient) -> None:
     resp = client.post("/api/projects/alpha/services/svc1/publish")
     assert resp.status_code == 400
     assert "project_path" in resp.json()["error"]
+
+
+class _ProposalProvider:
+    def __init__(self, reply: str) -> None:
+        self.reply = reply
+        self.calls: list[str] = []
+
+    async def complete_once(self, prompt: str, *, model: str | None = None) -> str:
+        self.calls.append(prompt)
+        return self.reply
+
+
+def _proposal_client(provider: _ProposalProvider) -> TestClient:
+    registry = ChatSessionRegistry(factory=lambda _root, _name: provider)  # type: ignore[arg-type]
+    return TestClient(
+        create_http_app(
+            hub=BroadcastHub(enable_watchers=False),
+            chat_registry_instance=registry,
+        )
+    )
+
+
+def test_slug_proposals_endpoint_returns_suggestions(workspace: Path) -> None:
+    plot_root = _make_project(workspace)
+    actors = read_canvas(plot_root, "alpha", "actors")
+    write_canvas(
+        plot_root,
+        "alpha",
+        actors.model_copy(
+            update={
+                "nodes": [
+                    ActorNode(id="fixed", label="관리자"),
+                    ActorNode(id="customer", label="Customer"),
+                    ActorNode(id="operator", label="운영자"),
+                ]
+            }
+        ),
+    )
+    write_slug_store(plot_root, "alpha", {"fixed": "actor/admin"})
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code", model="sonnet"))
+    provider = _ProposalProvider('{"operator":"operator"}')
+    client = _proposal_client(provider)
+
+    response = client.post(
+        f"/api/projects/alpha/publish/slug-proposals?project_path={workspace}",
+        json={"scope": "project", "suggest": True},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "needed": [
+            {
+                "node_id": "operator",
+                "kind": "actor",
+                "label": "운영자",
+                "proposed": "operator",
+                "deduped": False,
+            }
+        ],
+        "taken": ["actor/admin", "actor/customer"],
+        "ai_status": "ok",
+    }
+    assert len(provider.calls) == 1
+
+
+def test_slug_proposals_endpoint_rejects_bad_scope(client: TestClient, workspace: Path) -> None:
+    _make_project(workspace)
+
+    response = client.post(
+        f"/api/projects/alpha/publish/slug-proposals?project_path={workspace}",
+        json={"scope": "everything"},
+    )
+
+    assert response.status_code == 400
+
+
+def test_slug_proposals_endpoint_returns_404_for_missing_project(
+    client: TestClient, workspace: Path
+) -> None:
+    resolve_plot_root(str(workspace))
+
+    response = client.post(
+        f"/api/projects/ghost/publish/slug-proposals?project_path={workspace}",
+        json={"scope": "project"},
+    )
+
+    assert response.status_code == 404
+
+
+def test_service_slug_proposals_requires_project_snapshot(
+    client: TestClient, workspace: Path
+) -> None:
+    plot_root = _make_project(workspace)
+    services = read_canvas(plot_root, "alpha", "services")
+    write_canvas(
+        plot_root,
+        "alpha",
+        services.model_copy(update={"nodes": [ServiceNode(id="svc", label="결제")]}),
+    )
+
+    response = client.post(
+        f"/api/projects/alpha/publish/slug-proposals?project_path={workspace}",
+        json={"scope": "service", "service_id": "svc"},
+    )
+
+    assert response.status_code == 409
+
+
+def test_project_publish_maps_slug_errors(client: TestClient, workspace: Path) -> None:
+    plot_root = _make_project(workspace)
+    init_workspace_repo(workspace)
+    actors = read_canvas(plot_root, "alpha", "actors")
+    write_canvas(
+        plot_root,
+        "alpha",
+        actors.model_copy(update={"nodes": [ActorNode(id="operator", label="운영자")]}),
+    )
+
+    needed = client.post(
+        f"/api/projects/alpha/publish?project_path={workspace}",
+        json={"bump": "patch"},
+    )
+    invalid = client.post(
+        f"/api/projects/alpha/publish?project_path={workspace}",
+        json={"bump": "patch", "slugs": {"operator": "Operator"}},
+    )
+
+    assert needed.status_code == 409
+    assert needed.json()["needs_slugs"][0]["node_id"] == "operator"
+    assert invalid.status_code == 400
+    assert invalid.json()["invalid_slugs"][0]["reason"] == "format"
+
+
+def test_publish_rejects_non_string_slug_object(client: TestClient, workspace: Path) -> None:
+    _make_project(workspace)
+
+    response = client.post(
+        f"/api/projects/alpha/publish?project_path={workspace}",
+        json={"bump": "patch", "slugs": {"node": 3}},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["error"] == "'slugs' must be an object of node id to English id"
+
+
+def test_service_publish_accepts_empty_body_and_slug_body(workspace: Path) -> None:
+    from mashbill.format_f import publish_project_snapshot
+
+    plot_root = _make_project(workspace)
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
+    services = read_canvas(plot_root, "alpha", "services")
+    write_canvas(
+        plot_root,
+        "alpha",
+        services.model_copy(update={"nodes": [ServiceNode(id="svc", label="결제")]}),
+    )
+    client = TestClient(create_http_app(hub=BroadcastHub(enable_watchers=False)))
+
+    needed = client.post(
+        f"/api/projects/alpha/services/svc/publish?project_path={workspace}",
+    )
+    published = client.post(
+        f"/api/projects/alpha/services/svc/publish?project_path={workspace}",
+        json={"slugs": {"svc": "payments"}},
+    )
+
+    assert needed.status_code == 409
+    assert needed.json()["needs_slugs"][0]["node_id"] == "svc"
+    assert published.status_code == 201
+    assert published.json()["service"] == "service/payments"

@@ -23,6 +23,7 @@ from mashbill.folder_io import (
     read_canvas,
     read_project,
 )
+from mashbill.format_f import publish_service
 from mashbill.git_store import (
     list_tags,
 )
@@ -130,23 +131,29 @@ def publish_project_snapshot_tool(
     project_id: str,
     bump: Literal["major", "minor", "patch"],
     message: str | None = None,
+    slugs: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Bump the blueprint version, commit and tag the data folder, then leave
     a format F ``vP`` snapshot. Ask the person for the bump and obtain their
-    permission before calling this tool."""
+    permission before calling this tool. A node published for the first time whose name has letters outside ASCII (for example Korean) needs an English id: propose one per node, have the person confirm it, and pass them as slugs={node_id: id}. Without them the tool fails and lists those nodes."""  # noqa: E501
     plot_root = resolve_plot_root(project_path)
     workspace_root = workspace_root_from_plot_root(plot_root)
-    return publish_blueprint_for_person(plot_root, project_id, bump, message, workspace_root)
+    return publish_blueprint_for_person(
+        plot_root, project_id, bump, message, workspace_root, slugs=slugs
+    )
 
 
 @mcp.tool()
-def publish_service_tool(project_path: str, project_id: str, service_id: str) -> dict[str, Any]:
+def publish_service_tool(
+    project_path: str,
+    project_id: str,
+    service_id: str,
+    slugs: dict[str, str] | None = None,
+) -> dict[str, Any]:
     """Freeze one service into a format F ``vS`` release (refs the latest ``vP``;
-    bootstrap + refs-integrity gated). Returns the manifest. (D-2026-06-22-D.)"""
-    from mashbill.format_f import publish_service
-
+    bootstrap + refs-integrity gated). Returns the manifest. (D-2026-06-22-D.) A node published for the first time whose name has letters outside ASCII (for example Korean) needs an English id: propose one per node, have the person confirm it, and pass them as slugs={node_id: id}. Without them the tool fails and lists those nodes."""  # noqa: E501
     plot_root = resolve_plot_root(project_path)
-    return publish_service(plot_root, project_id, service_id)
+    return publish_service(plot_root, project_id, service_id, slugs=slugs)
 
 
 PERSON_ONLY_TOOLS = ("publish_project_snapshot_tool", "publish_service_tool")

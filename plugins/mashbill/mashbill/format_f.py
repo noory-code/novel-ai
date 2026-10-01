@@ -13,21 +13,25 @@ decoupled from the label — the connective tissue of the mashbill↔Solera pipe
 from __future__ import annotations
 
 import hashlib
-import re
 import shutil
 import subprocess
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
 from mashbill.folder_io import read_canvas, read_project
 from mashbill.format_f_flow import _render_feature_flow as _render_feature_flow
+from mashbill.format_f_slugs import (
+    plan_slugs,
+    read_slug_store,
+    read_slug_store_bytes,
+    restore_slug_store,
+    write_slug_store,
+)
 from mashbill.models import CanvasDoc
 from mashbill.storage import _project_dir, _read_json, _write_json
 
 FORMAT_F_VERSION = 1
-
-# Kinds published as a singleton (bare slug, no ``kind/`` prefix).
-_SINGLETON_KINDS = frozenset({"mission"})
 
 # The *primary* typed field per Foundation kind — the actual statement the
 # external agent reads (``body`` is secondary prose). Reading only ``body`` (the
@@ -43,47 +47,6 @@ _FOUNDATION_SECTION = {
     "core_value": "코어 밸류",
     "identity": "아이덴티티",
 }
-
-_SLUG_RE = re.compile(r"[^a-z0-9]+")
-
-
-def _slugify(text: str) -> str:
-    return _SLUG_RE.sub("-", text.lower()).strip("-") or "x"
-
-
-def _slug_store_path(plot_root: Path, project_id: str) -> Path:
-    return _project_dir(plot_root, project_id) / "_slugs.json"
-
-
-def mint_slug(plot_root: Path, project_id: str, node: Any) -> str:
-    """Return the stable slug for ``node``, minting it on first sight.
-
-    Keyed on ``node.id``: the slug is derived from the label *once* and then
-    frozen in ``_slugs.json``, so renaming the label never moves the slug
-    (explicit-slug invariant, P-4). Collisions within a project get a ``-N``
-    suffix.
-    """
-    store_path = _slug_store_path(plot_root, project_id)
-    store: dict[str, str] = _read_json(store_path) if store_path.exists() else {}
-    existing = store.get(node.id)
-    if existing is not None:
-        return existing
-
-    if node.kind in _SINGLETON_KINDS:
-        candidate = str(node.kind)
-    else:
-        candidate = f"{node.kind}/{_slugify(node.label or node.id)}"
-
-    taken = set(store.values())
-    slug = candidate
-    suffix = 2
-    while slug in taken:
-        slug = f"{candidate}-{suffix}"
-        suffix += 1
-
-    store[node.id] = slug
-    _write_json(store_path, store)
-    return slug
 
 
 def _hash(payload: str) -> str:
@@ -142,24 +105,43 @@ def remove_project_snapshot(plot_root: Path, project_id: str, release: str) -> N
         shutil.rmtree(release_dir)
 
 
+def project_snapshot_nodes(plot_root: Path, project_id: str) -> list[Any]:
+    """Return project-scope nodes in their format-F publication order."""
+    foundation = read_canvas(plot_root, project_id, "foundation")
+    actors = read_canvas(plot_root, project_id, "actors")
+    entities = read_canvas(plot_root, project_id, "entities")
+    return [
+        *(node for node in foundation.nodes if node.kind in _FOUNDATION_PRIMARY),
+        *(node for node in actors.nodes if node.kind == "actor"),
+        *(node for node in entities.nodes if node.kind == "entity"),
+    ]
+
+
 def publish_project_snapshot(
     plot_root: Path,
     project_id: str,
     *,
     blueprint_version: str,
+    slugs: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     """Freeze the project's **shared structure** (本質·Actors·Entities) into a
     ``published/_project/vP{N}/`` snapshot — the project-scope layer of the
     2-layer model (D-2026-06-21-AB). Returns the manifest.
     """
     read_project(plot_root, project_id)  # validate id (404s on mismatch)
+    nodes = project_snapshot_nodes(plot_root, project_id)
+    store = read_slug_store(plot_root, project_id)
+    slug_plan = plan_slugs(store, nodes, slugs)
+    previous_store = read_slug_store_bytes(plot_root, project_id)
     snap_dir = _project_dir(plot_root, project_id) / "published" / "_project"
     release = f"vP{_next_release(snap_dir, 'vP')}"
     release_dir = snap_dir / release
-    release_dir.mkdir(parents=True)
-    design = release_dir / "design"
 
     try:
+        if slug_plan.new:
+            write_slug_store(plot_root, project_id, {**store, **slug_plan.new})
+        release_dir.mkdir(parents=True)
+        design = release_dir / "design"
         design.mkdir()
         return _write_project_snapshot(
             plot_root,
@@ -167,9 +149,11 @@ def publish_project_snapshot(
             release,
             blueprint_version,
             design,
+            slug_plan.slugs,
         )
     except Exception:
         remove_project_snapshot(plot_root, project_id, release)
+        restore_slug_store(plot_root, project_id, previous_store)
         raise
 
 
@@ -179,6 +163,7 @@ def _write_project_snapshot(
     release: str,
     blueprint_version: str,
     design: Path,
+    slugs: Mapping[str, str],
 ) -> dict[str, Any]:
     elements: list[dict[str, Any]] = []
 
@@ -190,7 +175,7 @@ def _write_project_snapshot(
     for node in foundation.nodes:
         if node.kind not in _FOUNDATION_PRIMARY:
             continue
-        slug = mint_slug(plot_root, project_id, node)
+        slug = slugs[node.id]
         primary = str(getattr(node, _FOUNDATION_PRIMARY[node.kind], "") or "")
         body = str(getattr(node, "body", "") or "")
         elements.append(_manifest_element(slug, node, f"{node.kind}|{node.label}|{primary}|{body}"))
@@ -218,7 +203,7 @@ def _write_project_snapshot(
     for node in actors.nodes:
         if node.kind != "actor":
             continue
-        slug = mint_slug(plot_root, project_id, node)
+        slug = slugs[node.id]
         body = str(getattr(node, "body", "") or "")
         # side removed (US-303); only body for identity now
         elements.append(_manifest_element(slug, node, f"actor|{node.label}|{body}"))
@@ -245,7 +230,7 @@ def _write_project_snapshot(
     for node in entities.nodes:
         if node.kind != "entity":
             continue
-        slug = mint_slug(plot_root, project_id, node)
+        slug = slugs[node.id]
         summary = str(getattr(node, "summary", "") or "")
         elements.append(_manifest_element(slug, node, f"entity|{node.label}|{summary}"))
         ent_dir = design / "entities"
@@ -279,7 +264,27 @@ def _features_under_service(services: CanvasDoc, service_id: str) -> list[Any]:
     return [by_id[fid] for fid in children]
 
 
-def publish_service(plot_root: Path, project_id: str, service_id: str) -> dict[str, Any]:
+def plan_service_release(plot_root: Path, project_id: str, service_id: str) -> list[Any]:
+    """Validate the service release boundary and return its nodes in publish order."""
+    read_project(plot_root, project_id)  # validate id
+    pdir = _project_dir(plot_root, project_id)
+    if _latest_release(pdir / "published" / "_project", "vP") is None:
+        raise ValueError(
+            "no project snapshot (vP) — run publish_project_snapshot first (bootstrap)"
+        )
+    services = read_canvas(plot_root, project_id, "services")
+    svc = next((n for n in services.nodes if n.id == service_id and n.kind == "service"), None)
+    if svc is None:
+        raise FileNotFoundError(f"service not found: {service_id}")
+    return [svc, *_features_under_service(services, service_id)]
+
+
+def publish_service(
+    plot_root: Path,
+    project_id: str,
+    service_id: str,
+    slugs: Mapping[str, str] | None = None,
+) -> dict[str, Any]:
     """Freeze one **service** (5칸 + its features + each feature's UX flow) into
     a ``published/{service-slug}/vS{N}/`` release — the service-scope layer.
 
@@ -299,26 +304,18 @@ def publish_service(plot_root: Path, project_id: str, service_id: str) -> dict[s
     vP manifest labels, falling back to the current canvas label for manifests
     written before labels existed.
     """
-    read_project(plot_root, project_id)  # validate id
+    nodes = plan_service_release(plot_root, project_id, service_id)
+    svc, *features = nodes
     pdir = _project_dir(plot_root, project_id)
     snap_dir = pdir / "published" / "_project"
 
     vp = _latest_release(snap_dir, "vP")
-    if vp is None:
-        raise ValueError(
-            "no project snapshot (vP) — run publish_project_snapshot first (bootstrap)"
-        )
+    assert vp is not None  # plan_service_release validated the bootstrap boundary
     vp_elements = _read_json(snap_dir / vp / "manifest.json")["elements"]
     vp_ids = {e["id"] for e in vp_elements}
     vp_labels = {e["id"]: e["label"] for e in vp_elements if "label" in e}
 
-    services = read_canvas(plot_root, project_id, "services")
-    svc = next((n for n in services.nodes if n.id == service_id and n.kind == "service"), None)
-    if svc is None:
-        raise FileNotFoundError(f"service not found: {service_id}")
-
-    store_path = _slug_store_path(plot_root, project_id)
-    store: dict[str, str] = _read_json(store_path) if store_path.exists() else {}
+    store = read_slug_store(plot_root, project_id)
     canvas_labels = {
         node.id: node.label
         for canvas in (
@@ -350,7 +347,6 @@ def publish_service(plot_root: Path, project_id: str, service_id: str) -> dict[s
 
     # --- read phase (no writes) — gather the features + their flows so every
     # ref can be validated *before* anything lands on disk (validate-before-write).
-    features = _features_under_service(services, service_id)
     feature_plan: list[tuple[Any, str]] = []  # (feature node, rendered flow text)
     entity_node_ids: set[str] = set()
     for feat in features:
@@ -374,76 +370,88 @@ def publish_service(plot_root: Path, project_id: str, service_id: str) -> dict[s
         raise ValueError(f"refs do not resolve in {vp} (refs-integrity): {missing}")
 
     # --- write phase ---
-    svc_slug = mint_slug(plot_root, project_id, svc)
+    slug_plan = plan_slugs(store, nodes, slugs)
+    previous_store = read_slug_store_bytes(plot_root, project_id)
+    svc_slug = slug_plan.slugs[svc.id]
     out = pdir / "published" / svc_slug.split("/")[-1]
+    out_existed = out.exists()
     release = f"vS{_next_release(out, 'vS')}"
-    design = out / release / "design"
-    design.mkdir(parents=True, exist_ok=True)
+    release_dir = out / release
+    try:
+        if slug_plan.new:
+            write_slug_store(plot_root, project_id, {**store, **slug_plan.new})
+        design = release_dir / "design"
+        design.mkdir(parents=True)
 
-    svc_md = (
-        f"# {svc.label} (`{svc_slug}`)\n\n"
-        f"**왜 필요한가:** {svc.problem}\n\n"
-        f"**뭐가 좋아지나:** {svc.value_created}\n"
-    )
-    # Surface what the service stands on in its vP (refs by slug, resolvable
-    # there) so service.md reads standalone for the external agent.
-    # Each ref shows its frozen vP label next to the slug.
-    if actor_slugs or value_slugs or identity_slugs or entity_slugs:
-        svc_md += "\n## 이 서비스가 딛는 것 (vP 참조)\n\n"
-        if actor_slugs:
-            svc_md += f"- 참여 액터: {', '.join(_display_refs(actor_slugs))}\n"
-        if value_slugs:
-            svc_md += f"- 지키는 가치: {', '.join(_display_refs(value_slugs))}\n"
-        if identity_slugs:
-            svc_md += f"- 정체성 결: {', '.join(_display_refs(identity_slugs))}\n"
-        if entity_slugs:
-            svc_md += f"- 쓰는 데이터: {', '.join(_display_refs(entity_slugs))}\n"
-    (design / "service.md").write_text(svc_md, encoding="utf-8")
-
-    elements = [
-        _manifest_element(svc_slug, svc, f"service|{svc.label}|{svc.problem}|{svc.value_created}")
-    ]
-
-    if feature_plan:
-        (design / "features").mkdir(parents=True, exist_ok=True)
-    for feat, flow_text in feature_plan:
-        feat_slug = mint_slug(plot_root, project_id, feat)
-        proposed = str(getattr(feat, "proposed", "") or "")
-        (design / "features" / f"{feat_slug.split('/')[-1]}.md").write_text(
-            f"---\nid: {feat_slug}\nkind: feature\n---\n"
-            f"# {feat.label}\n\n"
-            f"**무엇을 할 수 있나:** {proposed}\n\n"
-            f"## UX 흐름 (action 고도)\n\n{flow_text}",
-            encoding="utf-8",
+        svc_md = (
+            f"# {svc.label} (`{svc_slug}`)\n\n"
+            f"**왜 필요한가:** {svc.problem}\n\n"
+            f"**뭐가 좋아지나:** {svc.value_created}\n"
         )
-        elements.append(
+        if actor_slugs or value_slugs or identity_slugs or entity_slugs:
+            svc_md += "\n## 이 서비스가 딛는 것 (vP 참조)\n\n"
+            if actor_slugs:
+                svc_md += f"- 참여 액터: {', '.join(_display_refs(actor_slugs))}\n"
+            if value_slugs:
+                svc_md += f"- 지키는 가치: {', '.join(_display_refs(value_slugs))}\n"
+            if identity_slugs:
+                svc_md += f"- 정체성 결: {', '.join(_display_refs(identity_slugs))}\n"
+            if entity_slugs:
+                svc_md += f"- 쓰는 데이터: {', '.join(_display_refs(entity_slugs))}\n"
+        (design / "service.md").write_text(svc_md, encoding="utf-8")
+
+        elements = [
             _manifest_element(
-                feat_slug, feat, f"feature|{feat.label}|{proposed}|{flow_text}", flow=True
+                svc_slug, svc, f"service|{svc.label}|{svc.problem}|{svc.value_created}"
             )
-        )
+        ]
+        if feature_plan:
+            (design / "features").mkdir()
+        for feat, flow_text in feature_plan:
+            feat_slug = slug_plan.slugs[feat.id]
+            proposed = str(getattr(feat, "proposed", "") or "")
+            (design / "features" / f"{feat_slug.split('/')[-1]}.md").write_text(
+                f"---\nid: {feat_slug}\nkind: feature\n---\n"
+                f"# {feat.label}\n\n"
+                f"**무엇을 할 수 있나:** {proposed}\n\n"
+                f"## UX 흐름 (action 고도)\n\n{flow_text}",
+                encoding="utf-8",
+            )
+            elements.append(
+                _manifest_element(
+                    feat_slug, feat, f"feature|{feat.label}|{proposed}|{flow_text}", flow=True
+                )
+            )
 
-    manifest: dict[str, Any] = {
-        "format_f_version": FORMAT_F_VERSION,
-        "scope": "service",
-        "service": svc_slug,
-        "release": release,
-        "based_on": vp,
-        "git_sha": _git_sha(plot_root),
-        "elements": elements,
-        "refs": {
-            # Every service stands on the project's single mission — the essence
-            # (VISION). Anchoring to it makes a mission change propagate to the
-            # services that realize it (refs = the propagation surface, §5). The
-            # foundation invariant guarantees a mission, so the guard only ever
-            # falls through for a malformed vP.
-            "anchors": {
-                **({"mission": "mission"} if "mission" in vp_ids else {}),
-                "core_values": value_slugs,
-                "identity": identity_slugs,
+        manifest: dict[str, Any] = {
+            "format_f_version": FORMAT_F_VERSION,
+            "scope": "service",
+            "service": svc_slug,
+            "release": release,
+            "based_on": vp,
+            "git_sha": _git_sha(plot_root),
+            "elements": elements,
+            "refs": {
+                # Every service stands on the project's single mission — the essence
+                # (VISION). Anchoring to it makes a mission change propagate to the
+                # services that realize it (refs = the propagation surface, §5). The
+                # foundation invariant guarantees a mission, so the guard only ever
+                # falls through for a malformed vP.
+                "anchors": {
+                    **({"mission": "mission"} if "mission" in vp_ids else {}),
+                    "core_values": value_slugs,
+                    "identity": identity_slugs,
+                },
+                "actors": actor_slugs,
+                "entities": entity_slugs,
             },
-            "actors": actor_slugs,
-            "entities": entity_slugs,
-        },
-    }
-    _write_json(out / release / "manifest.json", manifest)
-    return manifest
+        }
+        _write_json(release_dir / "manifest.json", manifest)
+        return manifest
+    except Exception:
+        if release_dir.is_dir():
+            shutil.rmtree(release_dir)
+        if not out_existed and out.is_dir():
+            shutil.rmtree(out)
+        restore_slug_store(plot_root, project_id, previous_store)
+        raise

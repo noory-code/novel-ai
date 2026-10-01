@@ -147,6 +147,33 @@ def test_publish_project_snapshot_returns_version_and_manifest(tmp_path: Path) -
     assert result["manifest"]["blueprint_version"] == "v0.1.1"
 
 
+def test_publish_project_snapshot_requires_and_accepts_english_ids(tmp_path: Path) -> None:
+    from mashbill.folder_io import read_canvas, write_canvas
+    from mashbill.models import ActorNode
+    from mashbill.workspace import resolve_plot_root
+
+    mcp_tools.create_project_tool(str(tmp_path), "alpha", "Alpha")
+    plot_root = resolve_plot_root(str(tmp_path))
+    actors = read_canvas(plot_root, "alpha", "actors")
+    write_canvas(
+        plot_root,
+        "alpha",
+        actors.model_copy(update={"nodes": [ActorNode(id="operator", label="운영자")]}),
+    )
+    init_workspace_repo(tmp_path)
+
+    with pytest.raises(ValueError, match="operator"):
+        mcp_tools.publish_project_snapshot_tool(str(tmp_path), "alpha", "patch")
+
+    result = mcp_tools.publish_project_snapshot_tool(
+        str(tmp_path),
+        "alpha",
+        "patch",
+        slugs={"operator": "operator"},
+    )
+    assert any(item["id"] == "actor/operator" for item in result["manifest"]["elements"])
+
+
 def test_publish_project_snapshot_reports_missing_git(tmp_path: Path) -> None:
     mcp_tools.create_project_tool(str(tmp_path), "alpha", "Alpha")
 

@@ -112,6 +112,39 @@ def test_publish_blueprint_rolls_back_version_and_snapshot_when_tagging_fails(
     assert read_project(plot_root, "alpha").blueprint_version == "v0.1.0"
 
 
+def test_publish_blueprint_restores_slug_store_when_tagging_fails(
+    project: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import mashbill.blueprint_publish as blueprint_publish
+    from mashbill.folder_io import read_canvas, write_canvas
+    from mashbill.format_f_slugs import slug_store_path
+    from mashbill.models import ActorNode
+
+    workspace, plot_root = project
+    init_workspace_repo(workspace)
+    actors = read_canvas(plot_root, "alpha", "actors")
+    write_canvas(
+        plot_root,
+        "alpha",
+        actors.model_copy(update={"nodes": [ActorNode(id="operator", label="운영자")]}),
+    )
+    monkeypatch.setattr(
+        blueprint_publish,
+        "tag_snapshot",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("tag failed")),
+    )
+
+    with pytest.raises(RuntimeError, match="tag failed"):
+        blueprint_publish.publish_blueprint(
+            plot_root,
+            "alpha",
+            "patch",
+            slugs={"operator": "operator"},
+        )
+
+    assert not slug_store_path(plot_root, "alpha").exists()
+
+
 def test_publish_blueprint_rejects_existing_target_tag_before_writing(
     project: tuple[Path, Path],
 ) -> None:

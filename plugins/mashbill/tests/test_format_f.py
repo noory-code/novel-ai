@@ -21,6 +21,12 @@ def plot_root(tmp_path: Path) -> Path:
     return resolve_plot_root(str(tmp_path))
 
 
+def _seed_slugs(plot_root: Path, slugs: dict[str, str]) -> None:
+    from mashbill.format_f_slugs import read_slug_store, write_slug_store
+
+    write_slug_store(plot_root, "alpha", {**read_slug_store(plot_root, "alpha"), **slugs})
+
+
 def _plant_baseline(plot_root: Path, project_id: str = "alpha") -> None:
     """Blank-canvas start (D-2026-07-04-P): canvases are created EMPTY, so
     plant the classic content the old seeds used to provide — publish tests
@@ -41,6 +47,13 @@ def _plant_baseline(plot_root: Path, project_id: str = "alpha") -> None:
                 ]
             }
         ),
+    )
+    _seed_slugs(
+        plot_root,
+        {
+            "operator": "actor/operator",
+            "user": "actor/user",
+        },
     )
     actors = read_canvas(plot_root, project_id, "actors")
     write_canvas(
@@ -382,6 +395,14 @@ def _prepare_named_reference_bundle(plot_root: Path) -> None:
         entities.model_copy(
             update={"nodes": [EntityNode(id="ent-session", label="세션", summary="a login")]}
         ),
+    )
+    _seed_slugs(
+        plot_root,
+        {
+            "core-value-1": "core_value/trust",
+            "identity": "identity/calm",
+            "ent-session": "entity/session",
+        },
     )
     _add_service_with_features(plot_root)
     detail = read_canvas(plot_root, "alpha", "feature", service_id="feat-login")
@@ -809,10 +830,10 @@ def test_published_manifests_and_service_refs_include_labels(plot_root: Path) ->
         "세션",
     }
     id_by_label = {element["label"]: element["id"] for element in vp["elements"]}
-    assert id_by_label["신뢰"].startswith("core_value/x")
-    assert id_by_label["차분함"].startswith("identity/x")
-    assert id_by_label["운영자"].startswith("actor/x")
-    assert id_by_label["세션"].startswith("entity/x")
+    assert id_by_label["신뢰"] == "core_value/trust"
+    assert id_by_label["차분함"] == "identity/calm"
+    assert id_by_label["운영자"] == "actor/operator"
+    assert id_by_label["세션"] == "entity/session"
 
     _rename_shared_reference_nodes(plot_root)
     published_vs = publish_service(plot_root, "alpha", "svc-auth")
@@ -1026,13 +1047,21 @@ def test_publish_reachable_via_mcp_surface(tmp_path: Path) -> None:
 def test_minted_slug_is_stable_across_label_change(plot_root: Path) -> None:
     """Explicit-slug invariant: once minted (keyed on node id), the slug does
     not move when the label changes — that is what makes it a stable contract."""
-    from mashbill.format_f import mint_slug
+    from mashbill.folder_io import write_canvas
+    from mashbill.format_f import publish_project_snapshot
 
     create_project(plot_root, "alpha", "Alpha")
     _plant_baseline(plot_root)
     foundation = read_canvas(plot_root, "alpha", "foundation")
     cv = next(n for n in foundation.nodes if n.kind == "core_value")
-    s1 = mint_slug(plot_root, "alpha", cv)
-    s2 = mint_slug(plot_root, "alpha", cv.model_copy(update={"label": "Totally Renamed"}))
+    first = publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
+    s1 = next(element["id"] for element in first["elements"] if element["kind"] == "core_value")
+    renamed = [
+        node.model_copy(update={"label": "Totally Renamed"}) if node.id == cv.id else node
+        for node in foundation.nodes
+    ]
+    write_canvas(plot_root, "alpha", foundation.model_copy(update={"nodes": renamed}))
+    second = publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.2")
+    s2 = next(element["id"] for element in second["elements"] if element["kind"] == "core_value")
     assert s1 == s2
     assert s1.startswith("core_value/")

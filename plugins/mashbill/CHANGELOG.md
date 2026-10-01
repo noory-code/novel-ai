@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.199.0] — 2026-10-01
+
+### Added
+
+- A node published for the first time whose name has letters outside ASCII now gets an English id that AI proposes and a person confirms (new `POST /api/projects/{id}/publish/slug-proposals`; publish requests and MCP publish tools take `slugs`); a publish no longer mints `x`, `x-2`, and a failed publish leaves `_slugs.json` unchanged (D-2026-10-01-F).
+
 ## [0.198.6] — 2026-10-01
 
 ### Changed

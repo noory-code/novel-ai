@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
 from mashbill.blueprint_content import blueprint_content_fingerprint
 from mashbill.folder_io import _project_dir, read_project, write_project
 from mashbill.format_f import publish_project_snapshot, remove_project_snapshot
+from mashbill.format_f_slugs import read_slug_store_bytes, restore_slug_store
 from mashbill.git_store import (
     TagAlreadyExistsError,
     blueprint_canvas_changed,
@@ -48,6 +50,7 @@ def publish_blueprint(
     project_id: str,
     bump: str,
     message: str | None = None,
+    slugs: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     """Publish one blueprint version as a format-F snapshot and git tag."""
     project = read_project(plot_root, project_id)
@@ -61,10 +64,12 @@ def publish_blueprint(
     if tag_exists(workspace_root, to_version):
         raise TagAlreadyExistsError(f"tag already exists: {to_version!r}")
 
+    previous_slug_store = read_slug_store_bytes(plot_root, project_id)
     manifest = publish_project_snapshot(
         plot_root,
         project_id,
         blueprint_version=to_version,
+        slugs=slugs,
     )
     release = str(manifest["release"])
     bumped = project.model_copy(update={"blueprint_version": to_version})
@@ -82,6 +87,10 @@ def publish_blueprint(
             exc.add_note(f"project rollback failed: {rollback_exc}")
         finally:
             remove_project_snapshot(plot_root, project_id, release)
+            try:
+                restore_slug_store(plot_root, project_id, previous_slug_store)
+            except Exception as rollback_exc:
+                exc.add_note(f"slug store rollback failed: {rollback_exc}")
         raise
 
     return {

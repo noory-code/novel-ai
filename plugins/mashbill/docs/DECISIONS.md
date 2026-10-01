@@ -79,6 +79,54 @@
   Fail Fast (refuse at start, not later); Honesty (no unplaced work that the
   AI cannot find).
 
+### D-2026-10-01-F — A node with a non-ASCII name gets an English slug that AI proposes and the person confirms
+
+- **What:** (1) A node published for the first time needs an English slug
+  when its name has a letter outside ASCII, or when its name slugs to nothing
+  (`needs_english_slug`). The mission keeps `mission`. Nodes with ASCII-only
+  names keep the existing rule, and a slug already in `_slugs.json` never
+  changes, including `x` and `x-2`. (2) The slug tail after `kind/` matches
+  `^[a-z0-9]+(?:-[a-z0-9]+)*$` and is at most 60 characters. An AI value that
+  breaks the rule is dropped, not rewritten. (3) `POST
+  /api/projects/{id}/publish/slug-proposals` lists the nodes that need a slug
+  and, with `suggest`, asks the workspace's chosen chat provider once through
+  `complete_once` (60 s). When no provider is chosen, the call fails, or it
+  times out, the slots stay empty; nothing falls back to `x`. A proposal that
+  collides gets `-N` and is shown as such. (4) Both publish requests and both
+  MCP publish tools take `slugs: {node_id: tail}`. A publish whose slugs are
+  invalid, taken, duplicated or not needed is refused (400 `invalid_slugs`),
+  and a publish missing a needed slug is refused (409 `needs_slugs`); both
+  checks run before anything is written. The MCP error lists the nodes.
+  (5) Slugs are planned in memory and `_slugs.json` is written once; a failed
+  `vP`, blueprint or `vS` publish restores it to its earlier bytes. A failed
+  `vS` publish also removes its bundle and the service folder it created.
+  (6) The app asks for the names after the publish confirmation and before
+  any git step, and skips the dialog when no node needs one.
+- **Why:** Korean names slugged to `x`, `x-2`, so the stable ids that Solera
+  tasks use to point at design nodes meant nothing to people or AI
+  (novel-workspace O-00000108). The user decided on 2026-09-30 that folder
+  names stay ASCII and that AI proposes an English name for a person to
+  confirm. Slugs were also written one node at a time, so a failed publish
+  left new slugs behind, which broke D-2026-10-01-E. `complete_once` returns
+  for this call only: D-2026-10-01-A removed it because the engine recorded
+  drafts nobody chose, while here the person starts the call by publishing and
+  confirms every value before it is written.
+- **Alternatives:** Korean folder names — rejected by the user. Transliterate
+  the sounds — not chosen: a transliteration does not carry the meaning.
+  Reuse the coach's drafts (D-2026-10-01-A) — not chosen: a draft is a lasting
+  canvas proposal, while the name check is a step inside one all-or-nothing
+  publish, and saving it as a draft would split the publish into two acts.
+  Rewrite an AI value into the rule — not chosen: the person confirms what
+  is shown, so a rewrite could hide a bad proposal.
+- **Approval:** the approach was decided by the user (2026-09-30); details
+  judged by Claude from that decision and the decisions above (2026-10-01;
+  novel-workspace W-00000327).
+- **Spec impact:** public `docs/specs/format-f.md` §1 invariant 3 and the
+  `elements[]` field rule; `docs/specs/storage-publish.md` §format F gates;
+  `skills/mashbill-publish-service`.
+- **Principles:** Fail Fast (refuse before any write); Honesty (no silent
+  `x`, no silent rewrite); SSOT (one `plan_slugs` for the app and MCP).
+
 ### D-2026-10-01-E — A blueprint publish is one all-or-nothing act, and publishing stays the person's act
 
 - **What:** (1) `POST /api/projects/{id}/publish` writes the `vP` bundle, bumps

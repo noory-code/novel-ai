@@ -15,10 +15,11 @@ def publish_blueprint_for_person(
     bump: Literal["major", "minor", "patch"],
     message: str | None,
     workspace_root: Path,
+    slugs: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Translate blueprint publication failures into MCP-facing values."""
     try:
-        return publish_blueprint(plot_root, project_id, bump, message=message)
+        return publish_blueprint(plot_root, project_id, bump, message=message, slugs=slugs)
     except GitNotInitializedError as exc:
         raise ValueError(
             f"git not initialized at workspace root {workspace_root}. "

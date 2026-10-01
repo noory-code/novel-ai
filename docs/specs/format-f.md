@@ -26,6 +26,12 @@ realization design, referencing `vP`). Solera imports `vS` + the `vP` slice it p
 3. **Stable ID = slug.** `service/auth` · `feature/login` · `entity/post` · `actor/user` ·
    `category/identity` · `mission` · `core_value/{slug}` · `identity/{slug}`. Renames are rare and
    handled explicitly then (= `removed` old + `added` new).
+   The part after `kind/` uses lowercase ASCII letters, digits and single hyphens only
+   (`^[a-z0-9]+(-[a-z0-9]+)*$`, at most 60 characters), because a service slug is also a directory name.
+   A node whose name has only ASCII letters takes its slug from its name. A node whose name has letters
+   outside ASCII (for example a Korean name) gets an English slug that an AI proposes and a person
+   confirms the first time it is published; a publish missing one is refused before anything is written.
+   Once written, a node's slug never changes, even when its name does.
 4. **refs integrity.** Every reference ID in `vS` must resolve inside its `based_on` snapshot `vP`.
    If it does not (dangling) → **reject the publish** (write-boundary gate).
 5. **Bootstrap.** A `vS` publish requires its `based_on` `vP` to exist. The first publish cuts a
@@ -113,10 +119,11 @@ realization design, referencing `vP`). Solera imports `vS` + the `vP` slice it p
   snapshot itself sits at `_project/vP{N}/`.
 - `category` (service, optional) — the parent category ID (omitted if none — a root service).
 - `elements[]` — the elements this release *owns*. `{id, label, kind, hash}` (+ a feature carries `flow: true`).
-  `label` is the node's name at publish time. The id is a slug frozen at first publish and can be
-  opaque (a non-ASCII label slugs to `x`, `x-2`, …), so readers match ids to names through `label`.
+  `label` is the node's name at publish time. The id is a slug frozen at first publish. It reads as
+  English even when the label does not, but a label can change after its id is frozen, so readers still
+  match ids to names through `label`. Ids frozen before English slugs existed (`x`, `x-2`, …) stay as they are.
   Wherever a rendered design file cites another element it writes the name followed by the id,
-  e.g. 본질 (`core_value/x`).
+  e.g. 본질 (`core_value/essence`).
   `hash` = the first 16 hex characters of the sha256 of that element's design payload (the ID-diff input).
 - `refs` (service only) — the shared-element IDs inside the `based_on` vP that this service *references* (not copied).
   `anchors.mission` **always** points to that project's single mission (`"mission"`) — the mission is

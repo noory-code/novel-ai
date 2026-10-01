@@ -69,7 +69,10 @@ gate stays on the publish call itself.
 git-consent prompt (`viewer` `useProject.ts` `publishBlueprint`). Only `vS` is triggered on its own. The MCP
 tool `publish_project_snapshot_tool` runs the same blueprint publish and requires a `bump`. Publishing is the
 person's act — the app's confirm dialog, or a host CLI's tool approval — so the in-app coach is not given
-`publish_project_snapshot_tool` or `publish_service_tool` (`D-2026-10-01-E`).
+`publish_project_snapshot_tool` or `publish_service_tool` (`D-2026-10-01-E`). When a node published for the
+first time needs an English slug (format F §1 invariant 3), the app first calls
+`POST /api/projects/{id}/publish/slug-proposals`, shows the AI proposals for the person to confirm or edit, and
+passes the result as `slugs` with the publish; both MCP publish tools take the same `slugs` (`D-2026-10-01-F`).
 
 - **git consent** applies to the acts that write git (the blueprint publish above, and tagging). Novel never
   auto `git init`: when the workspace root has no `.git` those endpoints answer `409 {needs_git_init: true}`
@@ -127,7 +130,7 @@ The mashbill↔Solera publish contract is a **2-layer frozen bundle ("format F")
 - **T6 (versioning) resolved:** 2 semantic axes (vP·vS) + git tag (the mechanism) + content-hash **ID-diff**
   (changed/removed/added, derived). **The per-node `version` number axis is retired** (format F does not use it).
   `blueprint_version` = the identity of vP.
-- **Gates:** bootstrap (reject a `vS` without a `vP`) + refs-integrity (reject a ref that does not resolve in `vP`).
+- **Gates:** bootstrap (reject a `vS` without a `vP`) + refs-integrity (reject a ref that does not resolve in `vP`) + English ids (reject a publish until every node published for the first time whose name has letters outside ASCII has a person-confirmed English id; nothing is written before this check).
 - **Implementation:** mashbill `mashbill/format_f.py` (write) + Solera `intake.py` (read, with a
   `format_f_version` contract guard). **format F is the only publish model** — per-node publish was retired in
   engine v0.108.0 (`D-2026-06-22-H`), so the two no longer coexist.

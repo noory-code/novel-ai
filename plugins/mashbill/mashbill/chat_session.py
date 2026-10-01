@@ -102,6 +102,14 @@ class ChatSessionRegistry:
             self._sessions[key] = provider
         return provider
 
+    def one_shot(
+        self,
+        workspace_root: Path,
+        provider_name: ProviderName,
+    ) -> ChatProvider:
+        """Build an isolated provider without adding it to the chat session cache."""
+        return self._factory(workspace_root.resolve(), provider_name)
+
     def reset(
         self,
         workspace_root: Path,
