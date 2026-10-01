@@ -162,6 +162,20 @@ def test_pending_slug_names_includes_automatic_ids_in_taken() -> None:
     assert taken == ["feature/history", "feature/login"]
 
 
+def test_read_slug_store_accepts_legacy_ids(tmp_path: Path) -> None:
+    from mashbill.format_f_slugs import read_slug_store, slug_store_path
+
+    expected = {
+        "a": "actor/x",
+        "b": "actor/x-2",
+        "c": "entity/tbd",
+        "d": "mission",
+    }
+    slug_store_path(tmp_path, "alpha").write_text(json.dumps(expected), encoding="utf-8")
+
+    assert read_slug_store(tmp_path, "alpha") == expected
+
+
 @pytest.fixture
 def plot_root(tmp_path: Path) -> Path:
     return resolve_plot_root(str(tmp_path))
@@ -187,6 +201,46 @@ def _add_service(
         "alpha",
         services.model_copy(update={"nodes": nodes, "edges": edges}),
     )
+
+
+@pytest.mark.parametrize(
+    ("stored", "node_id", "value"),
+    [
+        ({"svc": "service/.."}, "svc", "service/.."),
+        ({"svc": "service/Checkout"}, "svc", "service/Checkout"),
+        ({"svc": "service/"}, "svc", "service/"),
+        ({"svc": ".."}, "svc", ".."),
+        ({"svc": 7}, "svc", 7),
+        ({"": "actor/x"}, "", "actor/x"),
+        (["service/checkout"], "<root>", ["service/checkout"]),
+    ],
+)
+def test_invalid_slug_store_stops_publish_before_planning_or_writes(
+    plot_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    stored: object,
+    node_id: str,
+    value: object,
+) -> None:
+    import mashbill.format_f as format_f
+    from mashbill.format_f_slugs import slug_store_path
+
+    create_project(plot_root, "alpha", "Alpha")
+    slug_store_path(plot_root, "alpha").write_text(json.dumps(stored), encoding="utf-8")
+
+    def unexpected_plan(*args: object, **kwargs: object) -> None:
+        pytest.fail("plan_slugs must not run for an invalid slug store")
+
+    monkeypatch.setattr(format_f, "plan_slugs", unexpected_plan)
+
+    with pytest.raises(ValueError) as caught:
+        format_f.publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
+
+    assert str(caught.value) == (
+        f"_slugs.json has an invalid id for {node_id}: '{value}' "
+        "(expected kind/tail with lowercase letters, digits and single hyphens)"
+    )
+    assert not (plot_root / "published").exists()
 
 
 def test_publish_korean_feature_uses_confirmed_file_name(plot_root: Path) -> None:

@@ -15,6 +15,7 @@ SLUG_TAIL_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SLUG_TAIL_MAX = 60
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
+_SLUG_KIND_RE = re.compile(r"^[a-z_]+$")
 _SINGLETON_KINDS = frozenset({"mission"})
 
 
@@ -34,7 +35,37 @@ def read_slug_store(plot_root: Path, project_id: str) -> dict[str, str]:
     path = slug_store_path(plot_root, project_id)
     if not path.is_file():
         return {}
-    return _read_json(path)
+    raw: object = _read_json(path)
+    if not isinstance(raw, dict):
+        raise _invalid_stored_slug("<root>", raw)
+
+    store: dict[str, str] = {}
+    for node_id, value in raw.items():
+        if not isinstance(node_id, str) or not node_id:
+            raise _invalid_stored_slug(node_id, value)
+        if not isinstance(value, str) or not _is_valid_stored_slug(value):
+            raise _invalid_stored_slug(node_id, value)
+        store[node_id] = value
+    return store
+
+
+def _is_valid_stored_slug(value: str) -> bool:
+    if value == "mission":
+        return True
+    kind, separator, tail = value.partition("/")
+    return bool(
+        separator
+        and _SLUG_KIND_RE.fullmatch(kind)
+        and len(tail) <= SLUG_TAIL_MAX
+        and SLUG_TAIL_RE.fullmatch(tail)
+    )
+
+
+def _invalid_stored_slug(node_id: object, value: object) -> ValueError:
+    return ValueError(
+        f"_slugs.json has an invalid id for {node_id}: '{value}' "
+        "(expected kind/tail with lowercase letters, digits and single hyphens)"
+    )
 
 
 def read_slug_store_bytes(plot_root: Path, project_id: str) -> bytes | None:

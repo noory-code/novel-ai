@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.199.1] — 2026-10-01
+
+### Fixed
+
+- Reading `_slugs.json` now rejects a stored id that is not `mission` or `kind/tail` with lowercase letters, digits and single hyphens, so a tampered store cannot point a publish folder outside `published/`.
+
 ## [0.199.0] — 2026-10-01
 
 ### Added
