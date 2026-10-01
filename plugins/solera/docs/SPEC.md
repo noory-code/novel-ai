@@ -31,7 +31,7 @@ one-gate, and everything above is grouping and rollup.
 | Module | Role | Harness axis |
 |---|---|---|
 | `formats` / `workspace` | read/write/validate the `.noory/solera/` files (id in the path) | state |
-| `planning` | create WorkItems at any level, append children | S (plan) |
+| `planning` | create and edit WorkItems and their tree/order links | S (plan) |
 | `supervisor` | walk the tree to the next open leaf, branch on the gate, roll up | L (order) |
 | `graph` | order links (`after`), readiness, deadlock check, completion percent | L (order) |
 | `gate` | run one command with `shell=False`; exit 0 == pass | V (verify) |
@@ -140,6 +140,12 @@ nothing. A malformed file is rejected immediately (`FormatError`).
 solera --root <project> plan "goal" [--level story] [--after <id>]...   -> STORY-001  (a root)
                         add <parent> "goal" [--level action] [--gate "<cmd>"] [--after <id>]...  -> ACT-001
                         after <item> [<id> ...]   # replace the item's order links; no ids clears them
+                        goal <item> "goal"        # replace goal text
+                        realizes <item> [<slug> ...]  # replace realizes; no slugs clears them
+                        move <item> [--parent <id>] [--index <n>]
+                                    # omit --parent to make a root; omit --index for sibling-list end
+                        link <item> <predecessor>    # idempotently add one order link
+                        unlink <item> <predecessor>  # idempotently remove one order link
                         ready       # leaves that can start now, and blocked leaves with what they wait for
                         next        # next open leaf -> doing, print its instruction
                         complete    # run the active leaf's gate; pass -> done + rollup
@@ -175,6 +181,18 @@ the same `(service, vS)` or for the same `based_on` vP is rejected, while the
 same immutable manifests may be copied under another label.
 
 `--root` is the project directory; gates run there.
+
+### Moving work
+
+`move` reparents an item and optionally places it at a zero-based position among
+the destination parent's children; omitting `--index` puts it last. Roots have
+no stored order: traversal visits them in item-ID order, so a root move rejects
+`--index`. A move rejects unknown IDs, a negative or out-of-range index, moving
+under the item itself or one of its descendants, moving under a gated leaf, and
+any would-be tree that introduces an order-link problem. It writes nothing on
+these rejections. Moving open work into a done container reopens that container
+and its affected ancestors; removing the last open child lets the old branch
+roll up when all remaining children are done.
 
 ## Invariants
 

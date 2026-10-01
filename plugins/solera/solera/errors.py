@@ -17,6 +17,10 @@ class OrderError(SoleraError):
     """Work-item order links are invalid or leave every open leaf blocked."""
 
 
+class PlanningError(SoleraError):
+    """A requested WorkItem edit would violate the planning tree."""
+
+
 class GateError(SoleraError):
     """A gate could not be run at all (e.g. empty command, missing gate).
 

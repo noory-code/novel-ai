@@ -10,7 +10,7 @@ import pytest
 from fastmcp.exceptions import ValidationError as FastMCPValidationError
 
 from solera import mcp_server
-from solera.errors import FormatError, OrderError
+from solera.errors import FormatError, OrderError, PlanningError
 from solera.workspace import Workspace
 
 
@@ -26,18 +26,48 @@ def test_tool_catalog_is_pinned() -> None:
     tools = asyncio.run(mcp_server.mcp.list_tools())
     assert {tool.name for tool in tools} == {
         "add_work_item",
+        "add_work_item_after",
         "apply_spec_repin",
         "complete_current",
         "import_spec",
+        "move_work_item",
         "next_work_item",
         "plan_work",
         "propose_spec_repin",
         "ready_work_items",
+        "remove_work_item_after",
         "set_work_item_after",
+        "set_work_item_goal",
+        "set_work_item_realizes",
         "workspace_status",
         "write_feedback",
         "write_retrospective",
     }
+
+
+def test_edit_tools_delegate_to_core_and_return_items(tmp_path: Path) -> None:
+    root = str(tmp_path)
+    first = mcp_server.plan_work(root, "First")
+    second = mcp_server.plan_work(root, "Second", level="epic")
+    child = mcp_server.add_work_item(root, first["id"], "Child", gate="true")
+
+    assert mcp_server.set_work_item_goal(root, child["id"], "Updated")["goal"] == "Updated"
+    assert mcp_server.set_work_item_realizes(root, child["id"], ["feature/login"])["realizes"] == [
+        "feature/login"
+    ]
+    assert mcp_server.move_work_item(root, child["id"], second["id"], 0)["id"] == child["id"]
+    assert mcp_server.add_work_item_after(root, child["id"], first["id"])["after"] == [first["id"]]
+    assert mcp_server.remove_work_item_after(root, child["id"], first["id"])["after"] == []
+
+
+def test_edit_tools_propagate_rejections(tmp_path: Path) -> None:
+    root = str(tmp_path)
+    item = mcp_server.plan_work(root, "Keep")
+
+    with pytest.raises(ValueError, match="goal"):
+        mcp_server.set_work_item_goal(root, item["id"], "  ")
+    with pytest.raises(PlanningError, match="root order|index"):
+        mcp_server.move_work_item(root, item["id"], None, 0)
 
 
 def test_apply_spec_repin_requires_proposal_id(tmp_path: Path) -> None:

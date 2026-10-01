@@ -18,7 +18,15 @@ from .errors import SoleraError
 from .formats import Feedback, Retrospective
 from .graph import completion, load_items
 from .intake import import_release, load_imported_release
-from .planning import create_item, set_after
+from .planning import (
+    add_after,
+    create_item,
+    move_item,
+    remove_after,
+    set_after,
+    set_goal,
+    set_realizes,
+)
 from .repin import apply_repin, propose_repin
 from .supervisor import complete, instruction, ready_leaves, start_next
 from .workspace import Workspace
@@ -89,6 +97,31 @@ def _cmd_status(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
 
 def _cmd_after(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     print(set_after(ws, args.item, list(args.ids)).id)
+    return 0
+
+
+def _cmd_goal(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
+    print(set_goal(ws, args.item, args.goal).id)
+    return 0
+
+
+def _cmd_realizes(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
+    print(set_realizes(ws, args.item, list(args.slugs)).id)
+    return 0
+
+
+def _cmd_move(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
+    print(move_item(ws, args.item, args.parent, args.index).id)
+    return 0
+
+
+def _cmd_link(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
+    print(add_after(ws, args.item, args.predecessor).id)
+    return 0
+
+
+def _cmd_unlink(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
+    print(remove_after(ws, args.item, args.predecessor).id)
     return 0
 
 
@@ -195,6 +228,32 @@ def _build_parser() -> argparse.ArgumentParser:
     p_after.add_argument("ids", nargs="*")
     p_after.set_defaults(func=_cmd_after)
 
+    p_goal = sub.add_parser("goal", help="replace a WorkItem's goal")
+    p_goal.add_argument("item")
+    p_goal.add_argument("goal")
+    p_goal.set_defaults(func=_cmd_goal)
+
+    p_realizes = sub.add_parser("realizes", help="replace a WorkItem's realizes slugs")
+    p_realizes.add_argument("item")
+    p_realizes.add_argument("slugs", nargs="*")
+    p_realizes.set_defaults(func=_cmd_realizes)
+
+    p_move = sub.add_parser("move", help="reparent or reorder a WorkItem")
+    p_move.add_argument("item")
+    p_move.add_argument("--parent", help="new parent id; omit to make the item a root")
+    p_move.add_argument("--index", type=int, help="zero-based position among new siblings")
+    p_move.set_defaults(func=_cmd_move)
+
+    p_link = sub.add_parser("link", help="add one WorkItem order link")
+    p_link.add_argument("item")
+    p_link.add_argument("predecessor")
+    p_link.set_defaults(func=_cmd_link)
+
+    p_unlink = sub.add_parser("unlink", help="remove one WorkItem order link")
+    p_unlink.add_argument("item")
+    p_unlink.add_argument("predecessor")
+    p_unlink.set_defaults(func=_cmd_unlink)
+
     p_ready = sub.add_parser("ready", help="list ready and blocked todo leaves")
     p_ready.set_defaults(func=_cmd_ready)
 
@@ -251,7 +310,7 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(args.root)
     try:
         result: int = args.func(_ws(root), root, args)
-    except SoleraError as exc:
+    except (SoleraError, FileNotFoundError, ValueError) as exc:
         print(f"error: {exc}")
         return 1
     return result

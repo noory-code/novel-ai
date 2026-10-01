@@ -187,9 +187,22 @@ def _rollup(ws: Workspace, leaf_id: str) -> None:
     """Mark each ancestor done once all of its children are done."""
     parents = parent_map(ws)
     current = parents.get(leaf_id)
+    if current is not None:
+        rollup_item_and_ancestors(ws, current)
+
+
+def rollup_item_and_ancestors(ws: Workspace, item_id: str) -> None:
+    """Mark a container and successive ancestors done when all children are done.
+
+    Unlike :func:`_rollup`, this includes ``item_id`` itself. Tree edits use it
+    after removing an open child from a container; gate completion starts from
+    the completed leaf's parent through :func:`_rollup`.
+    """
+    parents = parent_map(ws)
+    current: str | None = item_id
     while current is not None:
         item = ws.load_item(current)
-        if all(ws.load_item(child).status == "done" for child in item.children):
+        if item.children and all(ws.load_item(child).status == "done" for child in item.children):
             set_item_status(ws, current, "done")
             current = parents.get(current)
         else:

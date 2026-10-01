@@ -1,5 +1,15 @@
 # Changelog
 
+## [8.3.0] — 2026-10-02
+
+### Added
+
+- Core, CLI, and MCP operations can replace a work item's goal or `realizes`
+  list, move it within the tree, and idempotently add or remove one `after`
+  link. Moves reject invalid destinations and would-be order problems before
+  writing, preserve cross-parent structure if a write fails, and update
+  container rollup status on both the old and new branches.
+
 ## [8.2.0] — 2026-10-02
 
 ### Added

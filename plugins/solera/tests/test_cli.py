@@ -91,6 +91,36 @@ def test_after_command_sets_and_clears_links(tmp_path: Path, capsys) -> None:  #
     assert "after:" not in ws.item_path("ACT-002").read_text()
 
 
+def test_edit_and_move_commands_delegate_to_core(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _run(tmp_path, "plan", "First")
+    _run(tmp_path, "plan", "Second", "--level", "epic")
+    _run(tmp_path, "add", "STORY-001", "Step", "--gate", "true")
+    capsys.readouterr()
+
+    assert _run(tmp_path, "goal", "ACT-001", "Updated step") == 0
+    assert _run(tmp_path, "realizes", "ACT-001", "feature/login", "entity/account") == 0
+    assert _run(tmp_path, "move", "ACT-001", "--parent", "EPIC-001", "--index", "0") == 0
+    assert _run(tmp_path, "link", "ACT-001", "STORY-001") == 0
+    assert _run(tmp_path, "unlink", "ACT-001", "STORY-001") == 0
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    item = ws.load_item("ACT-001")
+    assert item.goal == "Updated step"
+    assert item.realizes == ["feature/login", "entity/account"]
+    assert item.after == []
+    assert ws.load_item("STORY-001").children == []
+    assert ws.load_item("EPIC-001").children == ["ACT-001"]
+
+
+def test_edit_command_errors_are_printed_and_nonzero(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _run(tmp_path, "plan", "Keep")
+    capsys.readouterr()
+
+    assert _run(tmp_path, "goal", "STORY-001", "   ") == 1
+    output = capsys.readouterr().out
+    assert output.startswith("error:")
+    assert "goal" in output
+
+
 def test_ready_prints_ready_and_blocked(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
     _run(tmp_path, "plan", "Not split", "--level", "initiative")
     _run(tmp_path, "plan", "Story")

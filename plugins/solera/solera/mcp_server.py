@@ -16,7 +16,15 @@ from .audit import audit_workspace
 from .formats import Feedback, Retrospective
 from .graph import completion, load_items
 from .intake import import_release, load_imported_release
-from .planning import create_item, set_after
+from .planning import (
+    add_after,
+    create_item,
+    move_item,
+    remove_after,
+    set_after,
+    set_goal,
+    set_realizes,
+)
 from .repin import apply_repin, propose_repin
 from .supervisor import complete, instruction, ready_leaves, start_next
 from .workspace import Workspace
@@ -79,6 +87,54 @@ def set_work_item_after(project_root: str, item: str, after: list[str]) -> dict[
     An empty list clears them.
     """
     return set_after(_workspace(project_root), item, after).model_dump()
+
+
+@mcp.tool()
+def set_work_item_goal(project_root: str, item: str, goal: str) -> dict[str, Any]:
+    """Replace an item's goal. Unknown items and blank goals are rejected."""
+    return set_goal(_workspace(project_root), item, goal).model_dump()
+
+
+@mcp.tool()
+def set_work_item_realizes(project_root: str, item: str, realizes: list[str]) -> dict[str, Any]:
+    """Replace an item's realizes slugs; empty clears them.
+
+    Unknown items and blank or duplicate slugs are rejected.
+    """
+    return set_realizes(_workspace(project_root), item, realizes).model_dump()
+
+
+@mcp.tool()
+def move_work_item(
+    project_root: str,
+    item: str,
+    new_parent: str | None = None,
+    index: int | None = None,
+) -> dict[str, Any]:
+    """Reparent or reorder an item; ``None`` makes it a root.
+
+    Unknown ids, root indices, invalid indices, self/descendant destinations,
+    gated destination leaves, and moves that create order problems are rejected.
+    """
+    return move_item(_workspace(project_root), item, new_parent, index).model_dump()
+
+
+@mcp.tool()
+def add_work_item_after(project_root: str, item: str, predecessor: str) -> dict[str, Any]:
+    """Add one order link; unknown ids and unsatisfiable links are rejected.
+
+    Adding an existing link is an idempotent no-op.
+    """
+    return add_after(_workspace(project_root), item, predecessor).model_dump()
+
+
+@mcp.tool()
+def remove_work_item_after(project_root: str, item: str, predecessor: str) -> dict[str, Any]:
+    """Remove one order link; an unknown item is rejected.
+
+    Removing a link that is not present is an idempotent no-op.
+    """
+    return remove_after(_workspace(project_root), item, predecessor).model_dump()
 
 
 @mcp.tool()
