@@ -98,20 +98,14 @@ def test_set_after_rejects_three_item_unsplit_cycle(tmp_path: Path) -> None:
 
 def test_audit_reports_after_cycle_once(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    a = WorkItem(
-        id="A", level="action", status="todo", gate="true", goal="a", after=["B"]
-    )
-    b = WorkItem(
-        id="B", level="action", status="todo", gate="true", goal="b", after=["A"]
-    )
+    a = WorkItem(id="A", level="action", status="todo", gate="true", goal="a", after=["B"])
+    b = WorkItem(id="B", level="action", status="todo", gate="true", goal="b", after=["A"])
     ws.write_item(a)
     ws.write_item(b)
 
     problems = [problem for problem in audit_workspace(ws) if problem.kind == "after-cycle"]
 
-    assert [problem.detail for problem in problems] == [
-        "order links form a cycle: A -> B -> A"
-    ]
+    assert [problem.detail for problem in problems] == ["order links form a cycle: A -> B -> A"]
 
 
 def test_leaf_cannot_wait_for_its_ancestor(tmp_path: Path) -> None:

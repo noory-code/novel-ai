@@ -14,6 +14,14 @@ from solera.errors import FormatError, OrderError
 from solera.workspace import Workspace
 
 
+def _mark_imported_design(root: Path) -> None:
+    release = root / ".noory" / "solera" / "specs" / "auth"
+    (release / "service").mkdir(parents=True)
+    (release / "project").mkdir()
+    (release / "service" / "manifest.json").write_text("{}")
+    (release / "project" / "manifest.json").write_text("{}")
+
+
 def test_tool_catalog_is_pinned() -> None:
     tools = asyncio.run(mcp_server.mcp.list_tools())
     assert {tool.name for tool in tools} == {
@@ -71,9 +79,7 @@ def test_plan_next_and_notes_round_trip(tmp_path: Path) -> None:
 def test_plan_and_add_accept_after(tmp_path: Path) -> None:
     root = str(tmp_path)
     predecessor = mcp_server.plan_work(root, "First", level="initiative")
-    planned = mcp_server.plan_work(
-        root, "Second", level="story", after=[predecessor["id"]]
-    )
+    planned = mcp_server.plan_work(root, "Second", level="story", after=[predecessor["id"]])
     leaf = mcp_server.add_work_item(
         root,
         planned["id"],
@@ -120,8 +126,33 @@ def test_ready_work_items_returns_ready_and_blocked(tmp_path: Path) -> None:
 
     assert result == {
         "ready": [ready["id"]],
-        "blocked": [{"id": blocked["id"], "waiting_on": [predecessor["id"]]}],
+        "blocked": [
+            {
+                "id": blocked["id"],
+                "waiting_on": [predecessor["id"]],
+                "reasons": [f"{blocked['id']} waits for {predecessor['id']}"],
+            }
+        ],
     }
+
+
+def test_ready_and_next_tools_explain_missing_design_node(tmp_path: Path) -> None:
+    _mark_imported_design(tmp_path)
+    root = str(tmp_path)
+    parent = mcp_server.plan_work(root, "Story")
+    leaf = mcp_server.add_work_item(root, parent["id"], "Disconnected", gate="true")
+
+    result = mcp_server.ready_work_items(root)
+
+    assert result["ready"] == []
+    assert result["blocked"][0]["id"] == leaf["id"]
+    assert result["blocked"][0]["waiting_on"] == []
+    assert result["blocked"][0]["reasons"] == [
+        f"leaf {leaf['id']} and its ancestors realize no design slug; name the node "
+        "it serves with `realizes` (for example, `feature/login`)"
+    ]
+    with pytest.raises(OrderError, match="realize no design slug"):
+        mcp_server.next_work_item(root)
 
 
 def test_set_work_item_after_propagates_cycle_error(tmp_path: Path) -> None:

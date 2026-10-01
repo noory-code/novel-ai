@@ -173,10 +173,7 @@ def _proposal_id(
         },
         "stale": sorted(proposal["stale"]),
         "escalate": sorted(proposal["escalate"]),
-        "reasons": {
-            item_id: sorted(reasons[item_id])
-            for item_id in sorted(reasons)
-        },
+        "reasons": {item_id: sorted(reasons[item_id]) for item_id in sorted(reasons)},
     }
     return _canonical_json_digest(identity)
 

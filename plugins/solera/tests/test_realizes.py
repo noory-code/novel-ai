@@ -19,7 +19,11 @@ def test_realizes_roundtrips(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
     root = create_item(ws, "story", "Ship auth")
     leaf = create_item(
-        ws, "action", "Build login", gate="true", parent=root.id,
+        ws,
+        "action",
+        "Build login",
+        gate="true",
+        parent=root.id,
         realizes=["feature/login"],
     )
     assert ws.load_item(leaf.id).realizes == ["feature/login"]

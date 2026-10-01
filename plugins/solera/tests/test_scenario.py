@@ -59,8 +59,9 @@ def test_blocked_path_writes_feedback_and_holds(tmp_path: Path) -> None:
     ws.write_progress(Progress(item=None))
 
     story = create_item(ws, "story", "gets stuck")
-    leaf = create_item(ws, "action", "Create blocker.txt", gate=_file_gate("blocker.txt"),
-                       parent=story.id)
+    leaf = create_item(
+        ws, "action", "Create blocker.txt", gate=_file_gate("blocker.txt"), parent=story.id
+    )
 
     item_id = start_next(ws)
     assert item_id == leaf.id

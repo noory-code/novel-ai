@@ -235,6 +235,23 @@ def _manifest_content(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _is_imported_release_dir(path: Path) -> bool:
+    """Return whether ``path`` has both manifests written by a completed import."""
+    return (
+        path.is_dir()
+        and not path.name.startswith(".")
+        and (path / "service" / "manifest.json").is_file()
+        and (path / "project" / "manifest.json").is_file()
+    )
+
+
+def has_imported_design(ws: Workspace) -> bool:
+    """Return whether the workspace contains at least one completed format F import."""
+    return ws.specs_dir.is_dir() and any(
+        _is_imported_release_dir(path) for path in ws.specs_dir.iterdir()
+    )
+
+
 def _reject_conflicting_import(
     ws: Workspace,
     incoming: ImportedRelease,
@@ -248,11 +265,7 @@ def _reject_conflicting_import(
     incoming_service_content = _manifest_content(service_path)
     incoming_project_content = _manifest_content(project_path)
     for release_dir in sorted(ws.specs_dir.iterdir()):
-        if not release_dir.is_dir() or release_dir.name.startswith("."):
-            continue
-        if not (release_dir / "service" / "manifest.json").is_file():
-            continue
-        if not (release_dir / "project" / "manifest.json").is_file():
+        if not _is_imported_release_dir(release_dir):
             continue
         existing = _load_release_dir(
             release_dir, description=f"invalid imported release {release_dir.name!r}"

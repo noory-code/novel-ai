@@ -95,8 +95,9 @@ def _cmd_after(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
 def _cmd_ready(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     ready, blocked = ready_leaves(ws)
     print(f"ready: {', '.join(ready) if ready else '(none)'}")
-    for item_id, predecessors in blocked:
-        print(f"blocked: {item_id} waits for {', '.join(predecessors)}")
+    for leaf in blocked:
+        for reason in leaf.reasons:
+            print(f"blocked: {reason}")
     return 0
 
 

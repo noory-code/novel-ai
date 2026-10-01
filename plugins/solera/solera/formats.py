@@ -96,9 +96,7 @@ class WorkItem(BaseModel):
     @model_validator(mode="after")
     def _not_both_leaf_and_container(self) -> WorkItem:
         if self.gate and self.children:
-            raise ValueError(
-                "a WorkItem cannot be both a leaf (gate) and a container (children)"
-            )
+            raise ValueError("a WorkItem cannot be both a leaf (gate) and a container (children)")
         return self
 
     @model_validator(mode="after")

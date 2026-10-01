@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.199.5] — 2026-10-02
+
+### Documentation
+
+- D-2026-10-01-G notes how Solera 8.2.0 applies the connectedness rule: only in workspaces that imported a format F design.
+
 ## [0.199.4] — 2026-10-02
 
 ### Documentation

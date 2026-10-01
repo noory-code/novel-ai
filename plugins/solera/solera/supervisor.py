@@ -14,13 +14,37 @@ active leaf at a time).
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 
 from . import graph
 from .errors import OrderError
 from .formats import Progress, Status, WorkItem
 from .gate import DEFAULT_TIMEOUT_SECONDS, GateResult, run_item_gate
+from .intake import has_imported_design
 from .workspace import Workspace
+
+
+@dataclass(frozen=True)
+class BlockedLeaf:
+    """A todo leaf and every reason it cannot start."""
+
+    leaf_id: str
+    waiting_on: tuple[str, ...]
+    names_no_design_node: bool
+
+    @property
+    def reasons(self) -> tuple[str, ...]:
+        """Human-readable reasons suitable for CLI, MCP, and errors."""
+        reasons: list[str] = []
+        if self.waiting_on:
+            reasons.append(f"{self.leaf_id} waits for {', '.join(self.waiting_on)}")
+        if self.names_no_design_node:
+            reasons.append(
+                f"leaf {self.leaf_id} and its ancestors realize no design slug; "
+                "name the node it serves with `realizes` (for example, `feature/login`)"
+            )
+        return tuple(reasons)
 
 
 def parent_map(ws: Workspace) -> dict[str, str]:
@@ -76,34 +100,52 @@ def find_next_open(ws: Workspace) -> str | None:
     for leaf_id in leaves:
         if items[leaf_id].status == "doing":
             return leaf_id
-    blocked: list[tuple[str, list[str]]] = []
+    design_required = has_imported_design(ws)
+    blocked: list[BlockedLeaf] = []
     for leaf_id in leaves:
         if items[leaf_id].status != "todo":
             continue
-        if graph.can_start(items, leaf_id):
+        blocked_leaf = _blocked_leaf(items, leaf_id, design_required=design_required)
+        if blocked_leaf is None:
             return leaf_id
-        blocked.append((leaf_id, graph.waiting_on(items, leaf_id)))
+        blocked.append(blocked_leaf)
     if blocked:
-        details = "; ".join(
-            f"{leaf_id} waits for {', '.join(predecessors)}"
-            for leaf_id, predecessors in blocked
-        )
+        details = "; ".join(reason for leaf in blocked for reason in leaf.reasons)
         raise OrderError(f"no leaf can start: {details}")
     return None
 
 
-def ready_leaves(ws: Workspace) -> tuple[list[str], list[tuple[str, list[str]]]]:
+def _blocked_leaf(
+    items: dict[str, WorkItem],
+    leaf_id: str,
+    *,
+    design_required: bool,
+) -> BlockedLeaf | None:
+    waiting_on = tuple(graph.waiting_on(items, leaf_id))
+    names_no_design_node = design_required and not graph.reaches_design_node(items, leaf_id)
+    if not waiting_on and not names_no_design_node:
+        return None
+    return BlockedLeaf(
+        leaf_id=leaf_id,
+        waiting_on=waiting_on,
+        names_no_design_node=names_no_design_node,
+    )
+
+
+def ready_leaves(ws: Workspace) -> tuple[list[str], list[BlockedLeaf]]:
     """Return startable and blocked todo leaves in supervisor order."""
     items = graph.load_items(ws)
+    design_required = has_imported_design(ws)
     ready: list[str] = []
-    blocked: list[tuple[str, list[str]]] = []
+    blocked: list[BlockedLeaf] = []
     for leaf_id in _leaves_from_items(items):
         if items[leaf_id].status != "todo":
             continue
-        if graph.can_start(items, leaf_id):
+        blocked_leaf = _blocked_leaf(items, leaf_id, design_required=design_required)
+        if blocked_leaf is None:
             ready.append(leaf_id)
         else:
-            blocked.append((leaf_id, graph.waiting_on(items, leaf_id)))
+            blocked.append(blocked_leaf)
     return ready, blocked
 
 

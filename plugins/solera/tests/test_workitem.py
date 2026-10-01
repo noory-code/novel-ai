@@ -98,7 +98,7 @@ def test_parse_unplanned_item_is_neither() -> None:
 
 
 def test_level_is_a_free_label() -> None:
-    text = "---\nlevel: theme\nstatus: todo\ngate: \"\"\nchildren: []\n---\nBig theme.\n"
+    text = '---\nlevel: theme\nstatus: todo\ngate: ""\nchildren: []\n---\nBig theme.\n'
     assert parse_workitem(text, item_id="X").level == "theme"
 
 
@@ -106,14 +106,14 @@ def test_level_is_a_free_label() -> None:
     "text",
     [
         "no frontmatter\n",
-        "---\nstatus: todo\ngate: \"\"\nchildren: []\n---\nb\n",  # missing level
-        "---\nlevel: action\ngate: \"x\"\nchildren: []\n---\nb\n",  # missing status
-        "---\nlevel: action\nstatus: nope\ngate: \"x\"\nchildren: []\n---\nb\n",  # bad status
-        "---\nlevel: s\nstatus: todo\ngate: \"x\"\nchildren: [ACT-1]\n---\nb\n",  # both
-        "---\nlevel: s\nstatus: todo\ngate: \"\"\nchildren: \"ACT-1\"\n---\nb\n",  # not list
-        "---\nlevel: s\nstatus: todo\ngate: \"\"\nchildren: [1]\n---\nb\n",  # child not str
-        "---\nlevel: s\nstatus: todo\ngate: \"\"\nchildren: []\nextra: x\n---\nb\n",  # unknown
-        "---\nlevel: s\nstatus: todo\ngate: \"\"\nchildren: []\n---\n\n",  # empty goal
+        '---\nstatus: todo\ngate: ""\nchildren: []\n---\nb\n',  # missing level
+        '---\nlevel: action\ngate: "x"\nchildren: []\n---\nb\n',  # missing status
+        '---\nlevel: action\nstatus: nope\ngate: "x"\nchildren: []\n---\nb\n',  # bad status
+        '---\nlevel: s\nstatus: todo\ngate: "x"\nchildren: [ACT-1]\n---\nb\n',  # both
+        '---\nlevel: s\nstatus: todo\ngate: ""\nchildren: "ACT-1"\n---\nb\n',  # not list
+        '---\nlevel: s\nstatus: todo\ngate: ""\nchildren: [1]\n---\nb\n',  # child not str
+        '---\nlevel: s\nstatus: todo\ngate: ""\nchildren: []\nextra: x\n---\nb\n',  # unknown
+        '---\nlevel: s\nstatus: todo\ngate: ""\nchildren: []\n---\n\n',  # empty goal
     ],
 )
 def test_rejects_malformed(text: str) -> None:

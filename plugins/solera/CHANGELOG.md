@@ -1,5 +1,14 @@
 # Changelog
 
+## [8.2.0] — 2026-10-02
+
+### Added
+
+- In a workspace with an imported format F design, `next` and `ready` now block
+  a `todo` leaf unless it or an ancestor names a design slug with `realizes`.
+  Blocked output explains both unsatisfied order links and missing design
+  connectedness; standalone workspaces and already-started leaves are unchanged.
+
 ## [8.1.1] — 2026-10-01
 
 ### Fixed

@@ -24,6 +24,14 @@ def _run(root: Path, *args: str) -> int:
     return main(["--root", str(root), *args])
 
 
+def _mark_imported_design(root: Path) -> None:
+    release = root / ".noory" / "solera" / "specs" / "auth"
+    (release / "service").mkdir(parents=True)
+    (release / "project").mkdir()
+    (release / "service" / "manifest.json").write_text("{}")
+    (release / "project" / "manifest.json").write_text("{}")
+
+
 def _proposal_id(output: str) -> str:
     return next(
         line.removeprefix("proposal: ")
@@ -140,6 +148,25 @@ def test_next_reports_when_no_leaf_can_start(tmp_path: Path, capsys) -> None:  #
     output = capsys.readouterr().out
     assert output.startswith("error: no leaf can start")
     assert "INIT-001" in output
+
+
+def test_ready_and_next_explain_missing_design_node(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _mark_imported_design(tmp_path)
+    _run(tmp_path, "plan", "Story")
+    _run(tmp_path, "add", "STORY-001", "Disconnected", "--gate", "true")
+    capsys.readouterr()
+
+    assert _run(tmp_path, "ready") == 0
+    ready_output = capsys.readouterr().out
+    assert "ready: (none)" in ready_output
+    assert "leaf ACT-001 and its ancestors realize no design slug" in ready_output
+    assert "name the node it serves with `realizes`" in ready_output
+    assert "`feature/login`" in ready_output
+
+    assert _run(tmp_path, "next") == 1
+    next_output = capsys.readouterr().out
+    assert next_output.startswith("error: no leaf can start")
+    assert "leaf ACT-001 and its ancestors realize no design slug" in next_output
 
 
 def test_next_prints_instruction(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]

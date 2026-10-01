@@ -15,7 +15,14 @@ from solera.errors import OrderError
 from solera.formats import Progress
 from solera.graph import effective_after, load_items
 from solera.planning import create_item
-from solera.supervisor import complete, find_next_open, instruction, ready_leaves, start_next
+from solera.supervisor import (
+    BlockedLeaf,
+    complete,
+    find_next_open,
+    instruction,
+    ready_leaves,
+    start_next,
+)
 from solera.workspace import Workspace
 
 
@@ -106,9 +113,7 @@ def test_container_after_is_inherited_until_predecessor_rolls_up(tmp_path: Path)
 def test_doing_leaf_is_resumed_when_predecessor_reopens(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
     predecessor = create_item(ws, "action", "first", gate=_pass())
-    dependent = create_item(
-        ws, "action", "second", gate=_pass(), after=[predecessor.id]
-    )
+    dependent = create_item(ws, "action", "second", gate=_pass(), after=[predecessor.id])
     ws.write_item(predecessor.model_copy(update={"status": "todo"}))
     ws.write_item(dependent.model_copy(update={"status": "doing"}))
 
@@ -118,9 +123,7 @@ def test_doing_leaf_is_resumed_when_predecessor_reopens(tmp_path: Path) -> None:
 def test_start_next_blocked_preserves_state_and_pointer(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
     predecessor = create_item(ws, "story", "not split")
-    dependent = create_item(
-        ws, "action", "blocked", gate=_pass(), after=[predecessor.id]
-    )
+    dependent = create_item(ws, "action", "blocked", gate=_pass(), after=[predecessor.id])
     ws.write_progress(Progress(item=None))
     before_item = ws.item_path(dependent.id).read_text()
     before_pointer = ws.progress_path.read_text()
@@ -145,9 +148,7 @@ def test_ready_leaves_lists_ready_and_blocked_in_order(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
     first = create_item(ws, "action", "ready one", gate=_pass())
     predecessor = create_item(ws, "story", "not split")
-    blocked = create_item(
-        ws, "action", "blocked", gate=_pass(), after=[predecessor.id]
-    )
+    blocked = create_item(ws, "action", "blocked", gate=_pass(), after=[predecessor.id])
     second = create_item(ws, "action", "ready two", gate=_pass())
     doing = create_item(ws, "action", "active", gate=_pass())
     ws.write_item(doing.model_copy(update={"status": "doing"}))
@@ -155,7 +156,13 @@ def test_ready_leaves_lists_ready_and_blocked_in_order(tmp_path: Path) -> None:
     ready, waiting = ready_leaves(ws)
 
     assert ready == [first.id, second.id]
-    assert waiting == [(blocked.id, [predecessor.id])]
+    assert waiting == [
+        BlockedLeaf(
+            leaf_id=blocked.id,
+            waiting_on=(predecessor.id,),
+            names_no_design_node=False,
+        )
+    ]
     items = load_items(ws)
     assert second.id not in effective_after(items, first.id)
     assert first.id not in effective_after(items, second.id)

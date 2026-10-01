@@ -160,6 +160,13 @@
   Enforcement in code belongs to novel-workspace W-00000325; storage of the
   node↔work-item link is the open question Q-00000027 — answered by
   D-2026-10-02-A (the work item stores it; the app looks it up in reverse).
+- **Applied in Solera (2026-10-02, Solera 8.2.0, novel-workspace W-00000355):**
+  Solera refuses to start a `todo` leaf when neither it nor any ancestor has
+  `realizes`, and reports why. It applies the rule only in a workspace that
+  has imported at least one format F design, because Solera also runs
+  standalone without Novel and such a workspace has no node to reach. This
+  scope is Claude's reading of (1) and of Solera's standalone contract; the
+  user has not reviewed it yet.
 - **Principles:** SSOT (the link has one owner, to be chosen in Q-00000027);
   Fail Fast (refuse at start, not later); Honesty (no unplaced work that the
   AI cannot find).

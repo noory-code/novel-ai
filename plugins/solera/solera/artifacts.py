@@ -31,8 +31,25 @@ from .workspace import Workspace
 # Source-code suffixes that belong in the repository, not in artifacts staging.
 CODE_SUFFIXES = frozenset(
     {
-        ".py", ".pyi", ".ts", ".tsx", ".js", ".jsx", ".rs", ".go", ".java",
-        ".rb", ".c", ".h", ".cc", ".cpp", ".hpp", ".cs", ".kt", ".swift", ".php",
+        ".py",
+        ".pyi",
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".rs",
+        ".go",
+        ".java",
+        ".rb",
+        ".c",
+        ".h",
+        ".cc",
+        ".cpp",
+        ".hpp",
+        ".cs",
+        ".kt",
+        ".swift",
+        ".php",
     }
 )
 

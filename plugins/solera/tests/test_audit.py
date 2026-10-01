@@ -107,8 +107,7 @@ def test_flags_after_cycle(tmp_path: Path) -> None:
     problems = audit_workspace(ws)
 
     assert any(
-        p.kind == "after-cycle" and first.id in p.detail and second.id in p.detail
-        for p in problems
+        p.kind == "after-cycle" and first.id in p.detail and second.id in p.detail for p in problems
     )
 
 

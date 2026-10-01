@@ -84,6 +84,15 @@ exist and any link that could never be satisfied — a cycle of links, a leaf
 waiting on its own ancestor, or a container waiting on its own descendant. A
 file without `after` has no links, and the key is written only when non-empty.
 
+### Design connectedness
+
+When the workspace contains at least one imported format F design, a `todo`
+leaf can start only if it or any ancestor has a non-empty `realizes` list. The
+leaf thereby reaches a published design node (D-2026-10-01-G). `plan` and `add`
+may still create work without `realizes`; the person must name the node it
+serves before starting it. This rule does not apply to standalone workspaces
+with no imported design, and an already `doing` leaf is resumed unchanged.
+
 ## Leaf state machine
 
 ```mermaid

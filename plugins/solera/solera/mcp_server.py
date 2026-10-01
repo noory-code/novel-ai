@@ -74,25 +74,29 @@ def add_work_item(
 
 @mcp.tool()
 def set_work_item_after(project_root: str, item: str, after: list[str]) -> dict[str, Any]:
-    (
-        "Replace an item's order links (ids that must be done before it starts); "
-        "an empty list clears them."
-    )
+    """Replace an item's order links (ids that must be done before it starts).
+
+    An empty list clears them.
+    """
     return set_after(_workspace(project_root), item, after).model_dump()
 
 
 @mcp.tool()
 def ready_work_items(project_root: str) -> dict[str, Any]:
-    (
-        "List todo leaves that can start now (safe to work on together) and blocked "
-        "leaves with what each waits for. Read-only."
-    )
+    """List todo leaves that can start now and blocked leaves with their reasons.
+
+    Ready leaves are safe to work on together. This query is read-only.
+    """
     ready, blocked = ready_leaves(_workspace(project_root))
     return {
         "ready": ready,
         "blocked": [
-            {"id": item_id, "waiting_on": predecessors}
-            for item_id, predecessors in blocked
+            {
+                "id": leaf.leaf_id,
+                "waiting_on": list(leaf.waiting_on),
+                "reasons": list(leaf.reasons),
+            }
+            for leaf in blocked
         ],
     }
 
@@ -131,9 +135,7 @@ def workspace_status(project_root: str) -> dict[str, Any]:
     return {
         "current": pointer,
         "items": [item.model_dump() for item in items.values()],
-        "progress": {
-            item_id: asdict(value) for item_id, value in completion(items).items()
-        },
+        "progress": {item_id: asdict(value) for item_id, value in completion(items).items()},
         "problems": [asdict(problem) for problem in audit_workspace(ws)],
     }
 

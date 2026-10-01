@@ -20,11 +20,20 @@ def load_items(ws: Workspace) -> dict[str, WorkItem]:
 
 def parents(items: dict[str, WorkItem]) -> dict[str, str]:
     """Return each declared child id's parent id."""
-    return {
-        child_id: parent_id
-        for parent_id, item in items.items()
-        for child_id in item.children
-    }
+    return {child_id: parent_id for parent_id, item in items.items() for child_id in item.children}
+
+
+def reaches_design_node(items: dict[str, WorkItem], item_id: str) -> bool:
+    """Return whether an item or any ancestor names a format F design slug."""
+    parent_of = parents(items)
+    visited: set[str] = set()
+    current: str | None = item_id
+    while current is not None and current not in visited:
+        visited.add(current)
+        if items[current].realizes:
+            return True
+        current = parent_of.get(current)
+    return False
 
 
 def effective_after(items: dict[str, WorkItem], item_id: str) -> list[str]:
@@ -61,9 +70,7 @@ def can_start(items: dict[str, WorkItem], item_id: str) -> bool:
 
 def _order_edges(items: dict[str, WorkItem]) -> dict[_Node, list[_Node]]:
     edges: dict[_Node, list[_Node]] = {
-        (phase, item_id): []
-        for item_id in items
-        for phase in ("start", "done")
+        (phase, item_id): [] for item_id in items for phase in ("start", "done")
     }
     for item_id, item in items.items():
         for predecessor in item.after:
@@ -110,9 +117,7 @@ def _after_cycles(items: dict[str, WorkItem]) -> list[list[str]]:
             elif state.get(predecessor) == 1:
                 cycle = [*stack[positions[predecessor] :], predecessor]
                 body = cycle[:-1]
-                rotations = [
-                    tuple(body[index:] + body[:index]) for index in range(len(body))
-                ]
+                rotations = [tuple(body[index:] + body[:index]) for index in range(len(body))]
                 cycles.setdefault(min(rotations), cycle)
         stack.pop()
         positions.pop(item_id)
@@ -134,9 +139,7 @@ def order_problems(items: dict[str, WorkItem]) -> list[tuple[str, str]]:
     ]
     after_cycles = _after_cycles(items)
     for after_cycle in after_cycles:
-        problems.append(
-            ("after-cycle", f"order links form a cycle: {' -> '.join(after_cycle)}")
-        )
+        problems.append(("after-cycle", f"order links form a cycle: {' -> '.join(after_cycle)}"))
     after_cycle_ids = [set(after_cycle[:-1]) for after_cycle in after_cycles]
 
     edges = _order_edges(items)
@@ -168,9 +171,7 @@ def order_problems(items: dict[str, WorkItem]) -> list[tuple[str, str]]:
         if any(cycle_ids <= direct_ids for direct_ids in after_cycle_ids):
             continue
         route = " -> ".join(_node_label(node) for node in phase_cycle)
-        problems.append(
-            ("after-cycle", f"order links can never be satisfied: {route}")
-        )
+        problems.append(("after-cycle", f"order links can never be satisfied: {route}"))
     return problems
 
 
