@@ -22,7 +22,11 @@ from mashbill.endpoints_common import (
     _require_plot_root,
 )
 from mashbill.folder_io import _project_dir
-from mashbill.format_f_slugs import InvalidSlugNamesError, SlugNamesNeededError
+from mashbill.format_f_slugs import (
+    InvalidSlugNamesError,
+    SlugNamesNeededError,
+    read_slug_store,
+)
 from mashbill.git_store import (
     GitNotInitializedError,
     TagAlreadyExistsError,
@@ -154,6 +158,28 @@ async def project_publish_status_endpoint(request: Request) -> JSONResponse:
     except GitNotInitializedError:
         changed = True
     return JSONResponse({"current_version": project.blueprint_version, "changed": changed})
+
+
+async def project_slugs_endpoint(request: Request) -> JSONResponse:
+    """``GET /api/projects/{project_id}/slugs`` — read the format-F registry.
+
+    This is deliberately a read of the existing validated store: it never
+    plans, mints, or writes a slug. A project that has not published yet has an
+    empty map.
+    """
+    try:
+        plot_root = _require_plot_root(request)
+    except _ApiError as exc:
+        return exc.response
+    project_id = request.path_params["project_id"]
+    folder = _project_dir(plot_root, project_id)
+    if not (folder / "project.json").is_file():
+        return _error(f"project not found: {project_id}", status=404)
+    try:
+        slugs = read_slug_store(plot_root, project_id)
+    except ValueError as exc:
+        return _error(str(exc))
+    return JSONResponse({"slugs": slugs})
 
 
 # ---------------------------------------------------------------------------

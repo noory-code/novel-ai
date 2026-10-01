@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.200.0] — 2026-10-02
+
+### Added
+
+- `GET /api/projects/{project_id}/slugs` returns the existing validated format-F node-id-to-slug registry without minting or writing ids, for the app's reverse join to Solera work items (D-2026-10-02-A).
+
 ## [0.199.5] — 2026-10-02
 
 ### Documentation

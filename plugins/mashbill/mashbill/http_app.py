@@ -34,6 +34,7 @@ from mashbill.api_endpoints import (
     project_post_endpoint,
     project_publish_endpoint,
     project_publish_status_endpoint,
+    project_slugs_endpoint,
     projects_list_endpoint,
     slug_proposals_endpoint,
     tag_delete_endpoint,
@@ -247,6 +248,11 @@ def create_http_app(
             "/api/projects/{project_id}/publish/slug-proposals",
             slug_proposals_endpoint,
             methods=["POST"],
+        ),
+        Route(
+            "/api/projects/{project_id}/slugs",
+            project_slugs_endpoint,
+            methods=["GET"],
         ),
         # v0.24.14 (D-2026-05-21-C) — read-only snapshot at git tag.
         Route(

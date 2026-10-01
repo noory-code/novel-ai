@@ -182,6 +182,72 @@ def test_publish_404_when_project_missing(client: TestClient, workspace: Path) -
     assert "project not found: ghost" in resp.json()["error"]
 
 
+def test_slug_map_returns_stored_registry_without_writing(
+    client: TestClient, workspace: Path
+) -> None:
+    plot_root = _make_project(workspace)
+    write_slug_store(
+        plot_root,
+        "alpha",
+        {"node-2": "feature/checkout", "node-1": "mission"},
+    )
+    slug_file = _project_dir(plot_root, "alpha") / "_slugs.json"
+    before = slug_file.read_bytes()
+
+    resp = client.get(
+        f"/api/projects/alpha/slugs?project_path={workspace}",
+    )
+
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "slugs": {"node-2": "feature/checkout", "node-1": "mission"}
+    }
+    assert slug_file.read_bytes() == before
+
+
+def test_slug_map_returns_empty_without_minting_registry(
+    client: TestClient, workspace: Path
+) -> None:
+    plot_root = _make_project(workspace)
+    slug_file = _project_dir(plot_root, "alpha") / "_slugs.json"
+    assert not slug_file.exists()
+
+    resp = client.get(
+        f"/api/projects/alpha/slugs?project_path={workspace}",
+    )
+
+    assert resp.status_code == 200
+    assert resp.json() == {"slugs": {}}
+    assert not slug_file.exists()
+
+
+def test_slug_map_404_when_project_missing(client: TestClient, workspace: Path) -> None:
+    resolve_plot_root(str(workspace))
+
+    resp = client.get(
+        f"/api/projects/ghost/slugs?project_path={workspace}",
+    )
+
+    assert resp.status_code == 404
+    assert resp.json() == {"error": "project not found: ghost"}
+
+
+def test_slug_map_reuses_stored_registry_validation(
+    client: TestClient, workspace: Path
+) -> None:
+    plot_root = _make_project(workspace)
+    slug_file = _project_dir(plot_root, "alpha") / "_slugs.json"
+    slug_file.write_text(json.dumps({"node-1": "../escape"}), encoding="utf-8")
+
+    resp = client.get(
+        f"/api/projects/alpha/slugs?project_path={workspace}",
+    )
+
+    assert resp.status_code == 400
+    assert "_slugs.json has an invalid id" in resp.json()["error"]
+    assert json.loads(slug_file.read_text(encoding="utf-8")) == {"node-1": "../escape"}
+
+
 def test_publish_rejects_invalid_json(client: TestClient, workspace: Path) -> None:
     _make_project(workspace)
     resp = client.post(

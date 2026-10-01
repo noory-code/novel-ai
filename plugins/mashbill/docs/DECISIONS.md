@@ -95,7 +95,8 @@
   the format F slug, as a value. (3) The link between a node and its work
   items is stored once, on the work item (`realizes`, a slug). A node stores
   no work-item ids. To show a node's work, the app maps the node id to its
-  slug through the project's `_slugs.json` (served by Mashbill) and asks
+  slug through the project's `_slugs.json` (served read-only by Mashbill at
+  `GET /api/projects/{id}/slugs`) and asks
   Solera for the work items whose `realizes` is that slug — a reverse lookup.
   A node that has never been published has no slug and so shows no badge.
   (4) The badge on a design node shows how many work items realize it. It
