@@ -39,6 +39,70 @@
 
 ## Log
 
+### D-2026-10-02-B — The work-item graph is its own tab beside the design canvases
+
+- **What:** the app shows Solera's work-item graph in a tab of its own, next
+  to the four design canvas tabs, not drawn on top of a design canvas. The
+  design canvases keep only the per-node count badge of D-2026-10-02-A;
+  choosing a badge opens the work tab focused on the work items that realize
+  that node. The work tab owns its own layout and keys (MindNode-style
+  keyboard creation, auto layout, list beside graph, focus mode; P-00000005
+  in novel-workspace).
+- **Why:** work items hang on the slugs of a published, frozen design
+  (D-2026-10-01-G (5)), while a design canvas shows the live nodes, which can
+  change or disappear after a publish. Drawn on the live canvas, a work item
+  would sit on a node that may no longer be the one it was planned for. The
+  two surfaces also want different keys and different layouts: Tab/Return
+  create work items in the graph, and the design canvas has its own
+  creation gestures. One screen keeps one primary action.
+- **Alternatives:** overlay the work items on the design canvas — not chosen,
+  for the reasons above. Put the work graph in a side panel of the design
+  canvas — not chosen: the list-beside-graph view and focus mode need the
+  full width.
+- **Approval:** Pending — Claude's judgment while doing novel-workspace
+  W-00000320 on 2026-10-02; the user has not reviewed it yet.
+- **Spec impact:** none yet; the screen itself is novel-workspace W-00000323.
+- **Principles:** SoC (design surface and work surface do different jobs);
+  UX "one screen, one primary action".
+
+### D-2026-10-02-A — Solera runs as a second engine; the app asks both and joins them
+
+- **What:** (1) Solera gets an HTTP layer and runs as a second engine
+  process beside Mashbill, on `127.0.0.1:5191` (Mashbill stays on 5190). The
+  desktop app bundles it as a second sidecar binary named `solera`, next to
+  `mashbill`. (2) Mashbill never calls Solera and never reads Solera's files;
+  Solera never reads Mashbill's live canvases. The only thing the two share is
+  the format F slug, as a value. (3) The link between a node and its work
+  items is stored once, on the work item (`realizes`, a slug). A node stores
+  no work-item ids. To show a node's work, the app maps the node id to its
+  slug through the project's `_slugs.json` (served by Mashbill) and asks
+  Solera for the work items whose `realizes` is that slug — a reverse lookup.
+  A node that has never been published has no slug and so shows no badge.
+  (4) The badge on a design node shows how many work items realize it. It
+  shows no percent: completion percent belongs to work items only.
+- **Why:** the user asked on 2026-09-30 for a loose coupling between the two
+  modules: either engine must run and be tested without the other. If
+  Mashbill called Solera (a subprocess or CLI) it would depend on Solera at
+  run time, and if Mashbill wrote work items it would have to re-implement
+  Solera's rules (leaf/group rules, completion invalidation, order-link and
+  cycle checks), giving those rules two owners. Storing the link only on the
+  work item keeps one owner for it; a list of ids on the node would be a
+  second copy that drifts.
+- **Alternatives:** Mashbill calls Solera as a subprocess — rejected by the
+  user on 2026-09-30. Mashbill serves `.noory/solera/{id}` read-only and the
+  node holds `work_item_ids` (P-00000005 direction, 2026-07-20) — replaced:
+  the user chose the reverse lookup on 2026-10-01 (novel-workspace
+  Q-00000027), reversing the 2026-07-20 rejection of reverse lookup, because
+  a node piling up ids is noise and a second copy of the link.
+- **Approval:** Accepted by user, 2026-09-30 (loose coupling) and 2026-10-01
+  (reverse lookup) (novel-workspace W-00000320, Q-00000027).
+- **Spec impact:** public `docs/ARCHITECTURE.md` §Composition. This closes the
+  open item of D-2026-10-01-G ("which side stores the link between a node and
+  its work items"). The Solera HTTP layer and the second sidecar are
+  novel-workspace W-00000322.
+- **Principles:** SSOT (one owner for the link and for Solera's rules); loose
+  coupling / DIP (the app composes, the engines do not know each other).
+
 ### D-2026-10-01-G — Connectedness invariant: everything made outside the canvas reaches a published node
 
 - **What:** (1) Everything that comes into being outside the canvas (a work
@@ -74,7 +138,8 @@
   W-00000318, W-00000320).
 - **Spec impact:** public `docs/concepts/ai-collaboration.md` §1, Finding.
   Enforcement in code belongs to novel-workspace W-00000325; storage of the
-  node↔work-item link is the open question Q-00000027.
+  node↔work-item link is the open question Q-00000027 — answered by
+  D-2026-10-02-A (the work item stores it; the app looks it up in reverse).
 - **Principles:** SSOT (the link has one owner, to be chosen in Q-00000027);
   Fail Fast (refuse at start, not later); Honesty (no unplaced work that the
   AI cannot find).

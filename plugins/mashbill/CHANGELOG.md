@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.199.3] — 2026-10-02
+
+### Documentation
+
+- D-2026-10-02-A: Solera runs as a second engine on 127.0.0.1:5191; the app asks Mashbill and Solera separately and finds a node's work items by reverse lookup on its slug. D-2026-10-02-B (pending review): the work-item graph is its own tab. `docs/ARCHITECTURE.md` §Composition replaces the "undesigned" line.
+
 ## [0.199.2] — 2026-10-01
 
 ### Fixed

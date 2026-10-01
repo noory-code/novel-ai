@@ -71,10 +71,22 @@ Novel app (proprietary, paid) — MCP host + visual canvas + composition shell
      user / AI (the external agent coordinates with the app via .noory/ + an optional bridge)
 ```
 
-## Composition Vision (multi-plugin — later)
+## Composition (multi-engine)
 
-- The app hosts several engines (mashbill + solera + …) → one paid product. **The unified canvas/data
-  UX = undesigned** (design it then). Because the engines are MCP, plugging them in is itself open — no decision needed now.
+- The app hosts several engines (mashbill + solera + …) → one paid product. Each engine is its own
+  process with its own HTTP port on `127.0.0.1` (Mashbill 5190, Solera 5191) and its own sidecar binary.
+- **The engines do not know each other.** Mashbill never calls Solera or reads its files; Solera never
+  reads Mashbill's live canvases. The only value they share is the format F slug. The app is the one
+  place that composes them: it asks each engine separately and joins the answers on screen.
+- **A work item attaches to a published node only, and the link lives on the work item** (`realizes`, a
+  slug). A node stores no work-item ids. To badge a design node, the app maps the node id to its slug
+  through Mashbill's `_slugs.json` and asks Solera for the work items that realize that slug. The badge
+  shows a count; completion percent belongs to work items only.
+- **The work-item graph is its own tab beside the design canvases**, not an overlay on them: work items
+  hang on a frozen published design, while the canvases show live nodes.
+
+Decision source = [`mashbill/docs/DECISIONS.md`](../plugins/mashbill/docs/DECISIONS.md) `D-2026-10-01-G`,
+`D-2026-10-02-A`, `D-2026-10-02-B` (the tab placement is pending the user's review).
 
 ## Migration Status
 
