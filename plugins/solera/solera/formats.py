@@ -66,8 +66,9 @@ class WorkItem(BaseModel):
 
     ``level`` is a free label (conventionally initiative/epic/story/action). The
     executable invariant: a **leaf** carries a ``gate`` and no children; a
-    **container** carries children and no gate. An item may have neither yet (a
-    container awaiting decomposition) but never both.
+    **container** carries children and no gate. An item may have neither — a
+    container awaiting decomposition, or an item a person confirms by checking it
+    (D-2026-10-02-D) — but never both.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)

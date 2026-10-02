@@ -167,6 +167,12 @@ class CheckBlockedError(CheckError):
     code = "check_blocked"
 
 
+class CheckConflictError(CheckError):
+    """The item changed while its gate ran outside the workspace lock; nothing was written."""
+
+    code = "check_conflict"
+
+
 class UncheckGatedError(CheckError):
     """A gate's verdict is not undone by hand; reopen gated work with repin."""
 

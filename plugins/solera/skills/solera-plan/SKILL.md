@@ -55,8 +55,13 @@ building starts.
   needs its decision.
 - **A leaf is one context.** If a chunk needs more than one clean agent context,
   make it a container and split it into smaller leaves.
-- **Every leaf has a gate; containers never do.** The gate is deterministic and
-  shell-independent — prefer `pytest …`, `python -c "…"`, a linter, a build.
+- **Every leaf an agent builds has a gate; containers never do.** The gate is
+  deterministic and shell-independent — prefer `pytest …`, `python -c "…"`, a
+  linter, a build.
+- **Work only a person can confirm has no gate.** Choosing a design, signing a
+  contract or approving copy is an item with no gate and no children; a person
+  finishes it by checking it in the app, and no agent can (D-2026-10-02-D). Do
+  not invent a gate for it and do not split it to make it gated.
 - The gate checks the *outcome*, not the steps ("tests pass", not "ran pytest").
   Anyone re-running it later must get the same verdict.
 - Some leaves are *decisions*, not builds (e.g. "choose the stack"). Their gate

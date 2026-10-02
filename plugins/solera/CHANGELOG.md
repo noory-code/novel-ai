@@ -1,5 +1,20 @@
 # Changelog
 
+## [8.6.1] — 2026-10-03
+
+### Fixed
+
+- A person's check runs the gate outside the workspace lock, so agent and app
+  writes no longer time out while a long gate runs. If the item's status, gate
+  or children changed meanwhile, nothing is written and the check answers
+  `check_conflict`.
+
+### Documentation
+
+- The solera-plan and solera-run skills say that work only a person can confirm
+  has no gate and is checked in the app, and that an agent never adds a gate to
+  such an item to finish it.
+
 ## [8.6.0] — 2026-10-03
 
 ### Added

@@ -61,6 +61,7 @@ route below except health; WebSocket failures still use close code 1008 and an E
 | `invalid_format` | 400 | Stored Solera workspace data is malformed. | Any project route that reads the malformed data |
 | `check_container` | 400 | The item has children; a container is done only when all its children are done. | check, uncheck |
 | `check_blocked` | 400 | The item waits on order links or, in a workspace with an imported design, reaches no design node, so it cannot be checked yet. | check |
+| `check_conflict` | 400 | The item's status, gate or children changed while its gate ran; nothing was written. | check |
 | `uncheck_gated` | 400 | The item has a gate; a gate's verdict is not undone by hand (reopen gated work with `repin`). | uncheck |
 | `invalid` | 400 | Fallback for a rejection that has no more specific public code. | Any project route |
 
@@ -100,12 +101,18 @@ MCP tool does, and `next` never hands such an item to an agent.
    `after` is `done`, and in a workspace with an imported design it or an ancestor has `realizes`.
    Otherwise → 400 `check_blocked`.
 4. No gate → `done`, and ancestors whose children are all done roll up to `done`. `gate` is `null`.
-5. Gate → the gate runs in the project folder. Pass → `done` + rollup, and the `progress.md` pointer
-   is cleared when it named this item. Fail or timeout → status unchanged (a `doing` leaf stays
-   `doing`). A failing gate is a 200 answer with `gate.passed: false`.
+5. Gate → the gate runs in the project folder, outside the workspace lock, so other writes go on
+   while it runs. Afterwards, under the lock again: if the item's status, gate or children changed
+   meanwhile → 400 `check_conflict` and nothing is written. Pass → `done` + rollup, and the
+   `progress.md` pointer is cleared when it named this item. Fail or timeout → status unchanged (a
+   `doing` leaf stays `doing`). A failing gate is a 200 answer with `gate.passed: false`.
 
 `GateRun` = `{"passed": bool, "exit_code": int | null, "timed_out": bool, "output": str}`; `output`
 is the gate's stdout followed by its stderr, cut to the last 4000 characters.
+
+A check runs the gate as a subprocess of the engine. Like every write route, it is protected only by
+the per-run token (`SOLERA_AUTH_TOKEN`); with no token set (development), any local caller can
+trigger it.
 
 `DELETE /api/work/items/{id}/check`: unknown id → 404 `unknown_work_item`; children → 400
 `check_container`; a gate → 400 `uncheck_gated`; a `todo` item → 200 unchanged; a `done` item →

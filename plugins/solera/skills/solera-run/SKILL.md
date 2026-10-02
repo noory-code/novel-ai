@@ -23,12 +23,14 @@ work and runs each gate.
    Call Solera MCP `next_work_item` with the current workspace as
    `project_root`.
 
-   - Prints `(nothing open)` -> the tree is complete. Stop. Consider
-     **solera-retro**.
+   - Prints `(nothing open)` -> no gated leaf is left for an agent. Items
+     without a gate may still be open: a person finishes those by checking
+     them in the app (D-2026-10-02-D). Stop. Consider **solera-retro**.
    - Fails with `no leaf can start` -> the remaining leaves wait on items that
-     are not done (an item not yet decomposed, or a link to fix). Do not work
-     around it: call `ready_work_items` to see what each waits for, then write
-     a note with **solera-feedback** and stop.
+     are not done (an item a person still has to check, an item not yet split,
+     or a link to fix). Do not work around it: never add a gate to an item
+     without one so that you can finish it. Call `ready_work_items` to see what
+     each waits for, then write a note with **solera-feedback** and stop.
    - Otherwise prints the instruction: the leaf's id, its goal, and the gate.
 
 2. **Build it.** Do the work the goal describes, in the project. Do not run the

@@ -110,7 +110,7 @@ are. The `progress.md` pointer names the single active leaf; `next` moves it and
 clears it to `null` when nothing is open.
 
 Its completion percent is derived the same way: of the items under it that have
-no children (gated leaves and items not yet decomposed), the share that is
+no children (gated leaves and items without a gate), the share that is
 `done`, rounded down. It is 100 exactly when the container is `done`.
 `workspace_status` returns it per container as `progress: {id: {done, total,
 percent}}`; clients display it and do not recompute it.

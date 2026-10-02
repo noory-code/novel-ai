@@ -10,6 +10,8 @@ from __future__ import annotations
 import asyncio
 import shlex
 import sys
+import threading
+import time
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, cast
@@ -21,6 +23,8 @@ from solera import cli, mcp_server
 from solera.broadcast import BroadcastHub
 from solera.formats import Progress
 from solera.http_app import create_http_app
+from solera.planning import create_item
+from solera.supervisor import check_item
 from solera.workspace import Workspace
 
 
@@ -269,3 +273,43 @@ def test_agent_surfaces_offer_no_way_to_finish_an_item_without_a_gate() -> None:
     assert commands is not None
     assert not {"check", "uncheck"} & set(commands)
     assert not {name for name in tools if "check" in name}
+
+
+def test_a_running_gate_does_not_hold_the_workspace_lock(tmp_path: Path) -> None:
+    """A person's gate may run for minutes; the agent and the app must keep writing meanwhile."""
+    ws = _ws(tmp_path)
+    leaf = create_item(ws, "action", "slow", gate=_py("import time; time.sleep(1.0)"))
+    outcome: dict[str, Any] = {}
+    runner = threading.Thread(
+        target=lambda: outcome.setdefault("result", check_item(ws, leaf.id, cwd=tmp_path))
+    )
+
+    runner.start()
+    time.sleep(0.4)
+    with ws.lock(timeout=0.2):
+        pass
+    runner.join()
+
+    assert outcome["result"].item.status == "done"
+
+
+def test_an_item_changed_while_its_gate_ran_is_not_marked_done(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    leaf = create_item(ws, "action", "slow", gate=_py("import time; time.sleep(0.8)"))
+    errors: list[Exception] = []
+
+    def run() -> None:
+        try:
+            check_item(ws, leaf.id, cwd=tmp_path)
+        except Exception as exc:  # noqa: BLE001 - the test inspects the raised error
+            errors.append(exc)
+
+    runner = threading.Thread(target=run)
+    runner.start()
+    time.sleep(0.3)
+    with ws.lock(timeout=1.0):
+        ws.write_item(ws.load_item(leaf.id).model_copy(update={"gate": PASS}))
+    runner.join()
+
+    assert [getattr(error, "code", None) for error in errors] == ["check_conflict"]
+    assert ws.load_item(leaf.id).status == "todo"

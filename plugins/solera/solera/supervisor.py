@@ -20,6 +20,7 @@ from pathlib import Path
 from . import graph
 from .errors import (
     CheckBlockedError,
+    CheckConflictError,
     CheckContainerError,
     OrderError,
     UncheckGatedError,
@@ -353,7 +354,6 @@ class CheckResult:
     gate: GateResult | None
 
 
-@workspace_locked
 def check_item(
     ws: Workspace,
     item_id: str,
@@ -367,7 +367,39 @@ def check_item(
     becomes ``done`` only when the gate passes; a failure leaves its status as it
     was. Either way the item must be able to start by the rules ``next`` uses.
     Only the HTTP surface the app calls offers this; no agent surface does.
+
+    The gate runs outside the workspace lock, so the agent and the app keep
+    writing while it runs; if the item's status, gate or children changed
+    meanwhile, nothing is written and :class:`CheckConflictError` is raised.
     """
+    with ws.lock():
+        item = _checkable_item(ws, item_id)
+        if item.status == "done":
+            return CheckResult(item=item, gate=None)
+        if not item.is_leaf:
+            set_item_status(ws, item_id, "done")
+            _rollup(ws, item_id)
+            return CheckResult(item=ws.load_item(item_id), gate=None)
+    result = run_item_gate(item, cwd=cwd, timeout=timeout)
+    with ws.lock():
+        if item_id not in ws.list_items():
+            raise UnknownWorkItemError(f"unknown work item: {item_id}")
+        current = ws.load_item(item_id)
+        before = (item.status, item.gate, item.children)
+        if (current.status, current.gate, current.children) != before:
+            raise CheckConflictError(
+                f"{item_id} changed while its gate ran; nothing was written, check it again"
+            )
+        if result.passed:
+            set_item_status(ws, item_id, "done")
+            _rollup(ws, item_id)
+            if ws.progress_path.is_file() and ws.load_progress().item == item_id:
+                ws.write_progress(Progress(item=None))
+        return CheckResult(item=ws.load_item(item_id), gate=result)
+
+
+def _checkable_item(ws: Workspace, item_id: str) -> WorkItem:
+    """The item a check may act on; raises when no check can finish it now."""
     items = graph.load_items(ws)
     if item_id not in items:
         raise UnknownWorkItemError(f"unknown work item: {item_id}")
@@ -376,23 +408,11 @@ def check_item(
         raise CheckContainerError(
             f"{item_id} has children; a container is done only when all its children are done"
         )
-    if item.status == "done":
-        return CheckResult(item=item, gate=None)
     if item.status == "todo":
         blocked = _blocked_leaf(items, item_id, design_required=has_imported_design(ws))
         if blocked is not None:
             raise CheckBlockedError(f"cannot check {item_id}: {'; '.join(blocked.reasons)}")
-    if not item.is_leaf:
-        set_item_status(ws, item_id, "done")
-        _rollup(ws, item_id)
-        return CheckResult(item=ws.load_item(item_id), gate=None)
-    result = run_item_gate(item, cwd=cwd, timeout=timeout)
-    if result.passed:
-        set_item_status(ws, item_id, "done")
-        _rollup(ws, item_id)
-        if ws.progress_path.is_file() and ws.load_progress().item == item_id:
-            ws.write_progress(Progress(item=None))
-    return CheckResult(item=ws.load_item(item_id), gate=result)
+    return item
 
 
 @workspace_locked
