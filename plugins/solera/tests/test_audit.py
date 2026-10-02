@@ -111,6 +111,22 @@ def test_flags_after_cycle(tmp_path: Path) -> None:
     )
 
 
+def test_flags_legacy_container_waiting_on_ungated_descendant(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+    parent = create_item(ws, "story", "Parent")
+    child = create_item(ws, "action", "Not split", parent=parent.id)
+    ws.write_item(parent.model_copy(update={"children": [child.id], "after": [child.id]}))
+
+    problems = audit_workspace(ws)
+
+    assert any(
+        problem.kind == "order_waits_on_descendant"
+        and parent.id in problem.detail
+        and child.id in problem.detail
+        for problem in problems
+    )
+
+
 def test_malformed_after_target_is_not_also_missing(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
     leaf = create_item(ws, "action", "step", gate="true")

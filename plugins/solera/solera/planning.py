@@ -34,7 +34,7 @@ from .errors import (
     UnknownWorkItemError,
 )
 from .formats import WorkItem
-from .graph import has_direct_order_cycle, load_items, order_problems
+from .graph import load_items, order_problems
 from .supervisor import invalidate_done_ancestors, rollup_item_and_ancestors
 from .workspace import Workspace, validate_path_name, workspace_locked
 
@@ -93,7 +93,7 @@ def _validated_item(data: dict[str, object]) -> WorkItem:
         raise PlanningValueError(str(exc)) from exc
 
 
-def _raise_order_problems(items: dict[str, WorkItem], problems: list[tuple[str, str]]) -> None:
+def _raise_order_problems(problems: list[tuple[str, str]]) -> None:
     """Raise a coded rejection from structured graph problem kinds."""
     if not problems:
         return
@@ -102,16 +102,11 @@ def _raise_order_problems(items: dict[str, WorkItem], problems: list[tuple[str, 
     if "after-missing" in kinds:
         raise UnknownPredecessorError(message)
     if "after-cycle" in kinds:
-        if has_direct_order_cycle(items):
-            raise OrderCycleError(message)
-        for item_id, item in items.items():
-            descendants = _descendants(items, item_id)
-            for predecessor in item.after:
-                if predecessor in descendants:
-                    raise OrderWaitsOnDescendantError(message)
-                if predecessor in items and item_id in _descendants(items, predecessor):
-                    raise OrderWaitsOnAncestorError(message)
         raise OrderCycleError(message)
+    if "order_waits_on_descendant" in kinds:
+        raise OrderWaitsOnDescendantError(message)
+    if "order_waits_on_ancestor" in kinds:
+        raise OrderWaitsOnAncestorError(message)
     raise OrderError(message)
 
 
@@ -161,7 +156,7 @@ def create_item(
             raise PlanningValueError(str(exc)) from exc
         items[box.id] = updated_box
     problems = order_problems(items)
-    _raise_order_problems(items, problems)
+    _raise_order_problems(problems)
     ws.write_item(item)
     if updated_box is not None:
         ws.write_item(updated_box)
@@ -176,7 +171,7 @@ def set_after(ws: Workspace, item_id: str, after: list[str]) -> WorkItem:
     items = load_items(ws)
     items[item_id] = updated
     problems = order_problems(items)
-    _raise_order_problems(items, problems)
+    _raise_order_problems(problems)
     ws.write_item(updated)
     return updated
 
@@ -319,7 +314,7 @@ def move_item(
         structural_writes = [(destination_updated, destination_original), (source_updated, None)]
 
     problems = order_problems(items)
-    _raise_order_problems(items, problems)
+    _raise_order_problems(problems)
 
     first, first_original = structural_writes[0]
     if first is not None:

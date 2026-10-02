@@ -142,8 +142,52 @@ def has_direct_order_cycle(items: dict[str, WorkItem]) -> bool:
     return bool(_after_cycles(items))
 
 
+def _ancestor_sets(items: dict[str, WorkItem]) -> dict[str, set[str]]:
+    parent_of = parents(items)
+    result: dict[str, set[str]] = {}
+    for item_id in items:
+        ancestors: set[str] = set()
+        current = parent_of.get(item_id)
+        while current is not None and current != item_id and current not in ancestors:
+            ancestors.add(current)
+            current = parent_of.get(current)
+        result[item_id] = ancestors
+    return result
+
+
+def _tree_order_problems(
+    items: dict[str, WorkItem],
+) -> tuple[list[tuple[str, str]], set[tuple[str, str]]]:
+    """Return effective order links that point within an item's own tree chain."""
+    ancestors = _ancestor_sets(items)
+    problems: list[tuple[str, str]] = []
+    invalid_links: set[tuple[str, str]] = set()
+    for item_id in items:
+        for predecessor in effective_after(items, item_id):
+            if predecessor == item_id:
+                kind = "order_waits_on_descendant"
+                detail = f"order link can never be satisfied: {item_id} waits for itself"
+            elif predecessor in ancestors[item_id]:
+                kind = "order_waits_on_ancestor"
+                detail = (
+                    f"order link can never be satisfied: {item_id} waits for "
+                    f"its ancestor {predecessor}"
+                )
+            elif item_id in ancestors.get(predecessor, set()):
+                kind = "order_waits_on_descendant"
+                detail = (
+                    f"order link can never be satisfied: {item_id} waits for "
+                    f"its descendant {predecessor}"
+                )
+            else:
+                continue
+            problems.append((kind, detail))
+            invalid_links.add((item_id, predecessor))
+    return problems, invalid_links
+
+
 def order_problems(items: dict[str, WorkItem]) -> list[tuple[str, str]]:
-    """Return missing order targets and unsatisfiable cycles."""
+    """Return missing targets and every unsatisfiable order relationship."""
     problems = [
         ("after-missing", f"{item_id} waits for {predecessor} which does not exist")
         for item_id, item in items.items()
@@ -154,6 +198,9 @@ def order_problems(items: dict[str, WorkItem]) -> list[tuple[str, str]]:
     for after_cycle in after_cycles:
         problems.append(("after-cycle", f"order links form a cycle: {' -> '.join(after_cycle)}"))
     after_cycle_ids = [set(after_cycle[:-1]) for after_cycle in after_cycles]
+
+    tree_problems, invalid_tree_links = _tree_order_problems(items)
+    problems.extend(tree_problems)
 
     edges = _order_edges(items)
     state: dict[_Node, int] = {}
@@ -182,6 +229,11 @@ def order_problems(items: dict[str, WorkItem]) -> list[tuple[str, str]]:
     for phase_cycle in cycles.values():
         cycle_ids = {item_id for _phase, item_id in phase_cycle[:-1]}
         if any(cycle_ids <= direct_ids for direct_ids in after_cycle_ids):
+            continue
+        if any(
+            item_id in cycle_ids and predecessor in cycle_ids
+            for item_id, predecessor in invalid_tree_links
+        ):
             continue
         route = " -> ".join(_node_label(node) for node in phase_cycle)
         problems.append(("after-cycle", f"order links can never be satisfied: {route}"))

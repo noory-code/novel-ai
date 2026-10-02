@@ -169,6 +169,24 @@ def test_workspace_status_includes_container_progress(tmp_path: Path) -> None:
     }
 
 
+def test_workspace_status_reports_legacy_descendant_order_problem(tmp_path: Path) -> None:
+    root = str(tmp_path)
+    parent = mcp_server.plan_work(root, "Parent")
+    child = mcp_server.add_work_item(root, parent["id"], "Not split")
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    parent_item = ws.load_item(parent["id"])
+    ws.write_item(parent_item.model_copy(update={"after": [child["id"]]}))
+
+    status = mcp_server.workspace_status(root)
+
+    assert any(
+        problem["kind"] == "order_waits_on_descendant"
+        and parent["id"] in problem["detail"]
+        and child["id"] in problem["detail"]
+        for problem in status["problems"]
+    )
+
+
 def test_ready_work_items_returns_ready_and_blocked(tmp_path: Path) -> None:
     root = str(tmp_path)
     predecessor = mcp_server.plan_work(root, "Not split", level="initiative")

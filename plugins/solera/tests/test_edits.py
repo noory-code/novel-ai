@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from solera.errors import OrderError, PlanningError
+from solera.errors import OrderError, OrderWaitsOnDescendantError, PlanningError
 from solera.planning import (
     add_after,
     create_item,
@@ -173,6 +173,69 @@ def test_move_rejects_new_inherited_order_cycle_without_writing(tmp_path: Path) 
 
     assert ws.load_item(first.id).children == [waiting.id]
     assert first.id not in ws.load_item(second.id).children
+
+
+@pytest.mark.parametrize("gate", ["", "true"])
+def test_move_rejects_waiting_item_becoming_parent_of_predecessor(
+    tmp_path: Path, gate: str
+) -> None:
+    ws = _ws(tmp_path)
+    epic = create_item(ws, "epic", "Epic")
+    first = create_item(ws, "action", "First", parent=epic.id)
+    second = create_item(ws, "action", "Second", parent=epic.id)
+    create_item(ws, "action", "Unrelated third")
+    create_item(ws, "action", "Unrelated fourth")
+    waiting = create_item(ws, "action", "Waiting", parent=epic.id)
+    predecessor = create_item(ws, "action", "Predecessor", gate=gate, parent=epic.id)
+    add_after(ws, waiting.id, predecessor.id)
+    assert ws.load_item(epic.id).children == [
+        first.id,
+        second.id,
+        waiting.id,
+        predecessor.id,
+    ]
+    before_epic = ws.item_path(epic.id).read_text()
+    before_waiting = ws.item_path(waiting.id).read_text()
+
+    with pytest.raises(OrderWaitsOnDescendantError) as exc_info:
+        move_item(ws, predecessor.id, waiting.id, None)
+
+    assert exc_info.value.code == "order_waits_on_descendant"
+    assert ws.item_path(epic.id).read_text() == before_epic
+    assert ws.item_path(waiting.id).read_text() == before_waiting
+
+
+@pytest.mark.parametrize("gate", ["", "true"])
+def test_add_after_rejects_parent_waiting_on_child(tmp_path: Path, gate: str) -> None:
+    ws = _ws(tmp_path)
+    parent = create_item(ws, "story", "Parent")
+    child = create_item(ws, "action", "Child", gate=gate, parent=parent.id)
+    before = ws.item_path(parent.id).read_text()
+
+    with pytest.raises(OrderWaitsOnDescendantError) as exc_info:
+        add_after(ws, parent.id, child.id)
+
+    assert exc_info.value.code == "order_waits_on_descendant"
+    assert ws.item_path(parent.id).read_text() == before
+
+
+@pytest.mark.parametrize("gate", ["", "true"])
+def test_create_rejects_legacy_parent_waiting_on_would_be_sibling_chain(
+    tmp_path: Path, gate: str
+) -> None:
+    ws = _ws(tmp_path)
+    parent = create_item(ws, "story", "Parent")
+    sibling = create_item(ws, "action", "Sibling", gate=gate, parent=parent.id)
+    ws.write_item(parent.model_copy(update={"children": [sibling.id], "after": [sibling.id]}))
+    before_items = ws.list_items()
+    before_parent = ws.item_path(parent.id).read_text()
+
+    with pytest.raises(OrderWaitsOnDescendantError) as exc_info:
+        create_item(ws, "task", "New sibling", gate=gate, parent=parent.id)
+
+    assert exc_info.value.code == "order_waits_on_descendant"
+    assert ws.list_items() == before_items
+    assert ws.item_path(parent.id).read_text() == before_parent
 
 
 def test_move_rolls_status_down_at_destination_and_up_at_source(tmp_path: Path) -> None:

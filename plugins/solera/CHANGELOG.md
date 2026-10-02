@@ -1,5 +1,14 @@
 # Changelog
 
+## [8.5.1] — 2026-10-02
+
+### Fixed
+
+- Order validation now rejects and audits self, ancestor, and descendant waits
+  from inherited `after` links for every work item, including items without a
+  gate. Create, edit, and move operations return the specific stable order
+  problem code before writing.
+
 ## [8.5.0] — 2026-10-02
 
 ### Added

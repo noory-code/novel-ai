@@ -5,9 +5,13 @@ from pathlib import Path
 import pytest
 
 from solera.audit import audit_workspace
-from solera.errors import OrderError
+from solera.errors import (
+    OrderError,
+    OrderWaitsOnAncestorError,
+    OrderWaitsOnDescendantError,
+)
 from solera.formats import Progress, WorkItem
-from solera.graph import completion, load_items
+from solera.graph import completion, effective_after, load_items, order_problems
 from solera.planning import create_item, set_after
 from solera.supervisor import complete, start_next
 from solera.workspace import Workspace
@@ -108,36 +112,98 @@ def test_audit_reports_after_cycle_once(tmp_path: Path) -> None:
     assert [problem.detail for problem in problems] == ["order links form a cycle: A -> B -> A"]
 
 
-def test_leaf_cannot_wait_for_its_ancestor(tmp_path: Path) -> None:
+@pytest.mark.parametrize("gate", ["", "true"])
+def test_order_problems_reports_inherited_self_wait_regardless_of_gate(gate: str) -> None:
+    items = {
+        "PARENT": WorkItem(
+            id="PARENT",
+            level="story",
+            status="todo",
+            children=["CHILD"],
+            after=["CHILD"],
+            goal="parent",
+        ),
+        "CHILD": WorkItem(
+            id="CHILD",
+            level="action",
+            status="todo",
+            gate=gate,
+            goal="child",
+        ),
+    }
+
+    assert effective_after(items, "CHILD") == ["CHILD"]
+    assert {kind for kind, _detail in order_problems(items)} == {"order_waits_on_descendant"}
+
+
+def test_order_problems_reports_inherited_ancestor_wait() -> None:
+    items = {
+        "ROOT": WorkItem(
+            id="ROOT",
+            level="epic",
+            status="todo",
+            children=["PARENT"],
+            goal="root",
+        ),
+        "PARENT": WorkItem(
+            id="PARENT",
+            level="story",
+            status="todo",
+            children=["CHILD"],
+            after=["ROOT"],
+            goal="parent",
+        ),
+        "CHILD": WorkItem(id="CHILD", level="action", status="todo", goal="child"),
+    }
+
+    assert effective_after(items, "CHILD") == ["ROOT"]
+    assert any(
+        kind == "order_waits_on_ancestor" and "CHILD" in detail and "ROOT" in detail
+        for kind, detail in order_problems(items)
+    )
+
+
+@pytest.mark.parametrize("gate", ["", "true"])
+def test_item_cannot_wait_for_its_ancestor_regardless_of_gate(tmp_path: Path, gate: str) -> None:
     ws = _ws(tmp_path)
     story = create_item(ws, "story", "box")
-    leaf = create_item(ws, "action", "step", gate="true", parent=story.id)
+    child = create_item(ws, "action", "step", gate=gate, parent=story.id)
 
-    with pytest.raises(OrderError, match="never be satisfied"):
-        set_after(ws, leaf.id, [story.id])
+    with pytest.raises(OrderWaitsOnAncestorError, match="never be satisfied"):
+        set_after(ws, child.id, [story.id])
 
 
-def test_container_cannot_wait_for_its_descendant(tmp_path: Path) -> None:
+@pytest.mark.parametrize("gate", ["", "true"])
+def test_container_cannot_wait_for_its_descendant_regardless_of_gate(
+    tmp_path: Path, gate: str
+) -> None:
     ws = _ws(tmp_path)
     story = create_item(ws, "story", "box")
-    leaf = create_item(ws, "action", "step", gate="true", parent=story.id)
+    child = create_item(ws, "action", "step", gate=gate, parent=story.id)
 
-    with pytest.raises(OrderError, match="never be satisfied"):
-        set_after(ws, story.id, [leaf.id])
+    with pytest.raises(OrderWaitsOnDescendantError, match="never be satisfied"):
+        set_after(ws, story.id, [child.id])
 
 
-def test_adding_child_rejects_new_cycle_without_writing(tmp_path: Path) -> None:
+@pytest.mark.parametrize("gate", ["", "true"])
+def test_create_rejects_waiting_on_parent_without_writing(tmp_path: Path, gate: str) -> None:
     ws = _ws(tmp_path)
-    a = create_item(ws, "initiative", "ancestor")
-    b = create_item(ws, "story", "not split yet", parent=a.id, after=[a.id])
+    parent = create_item(ws, "initiative", "ancestor")
     before_items = ws.list_items()
-    before_parent = ws.item_path(b.id).read_text()
+    before_parent = ws.item_path(parent.id).read_text()
 
-    with pytest.raises(OrderError, match="never be satisfied"):
-        create_item(ws, "action", "gated leaf", gate="true", parent=b.id)
+    with pytest.raises(OrderWaitsOnAncestorError, match="never be satisfied"):
+        create_item(
+            ws,
+            "action",
+            "child",
+            gate=gate,
+            parent=parent.id,
+            after=[parent.id],
+        )
 
     assert ws.list_items() == before_items
-    assert ws.item_path(b.id).read_text() == before_parent
+    assert ws.item_path(parent.id).read_text() == before_parent
 
 
 def test_set_after_validates_duplicates(tmp_path: Path) -> None:
