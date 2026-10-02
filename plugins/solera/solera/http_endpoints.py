@@ -8,19 +8,23 @@ from pathlib import Path
 from typing import Any, TypeVar, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from starlette.concurrency import run_in_threadpool
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 from . import __version__
 from .broadcast import BroadcastHub
 from .errors import SoleraError, UnknownParentError, UnknownWorkItemError
+from .gate import GateResult
 from .graph import completion, items_by_slugs, load_items
 from .planning import add_after, create_item, move_item, remove_after, set_goal, set_realizes
-from .supervisor import ready_leaves
+from .supervisor import blocked_items, check_item, ready_leaves, uncheck_item
 from .workspace import Workspace
 
 _Model = TypeVar("_Model", bound=BaseModel)
 _Endpoint = Callable[[Request], Awaitable[Response]]
+# A check returns the last characters of the gate's output, enough to see why it failed.
+_GATE_OUTPUT_TAIL = 4000
 
 
 class _Body(BaseModel):
@@ -139,7 +143,8 @@ async def health_endpoint(_request: Request) -> Response:
 async def work_endpoint(request: Request) -> Response:
     ws = _workspace(request)
     items = load_items(ws)
-    ready, blocked = ready_leaves(ws)
+    ready, _agent_blocked = ready_leaves(ws)
+    blocked = blocked_items(ws)
     current = ws.load_progress().item if ws.progress_path.is_file() else None
     return JSONResponse(
         {
@@ -240,3 +245,40 @@ async def remove_after_endpoint(request: Request) -> Response:
     if item != before:
         await _hub(request).notify_write(ws.root)
     return JSONResponse(item.model_dump())
+
+
+def _gate_json(result: GateResult | None) -> dict[str, Any] | None:
+    if result is None:
+        return None
+    return {
+        "passed": result.passed,
+        "exit_code": result.exit_code,
+        "timed_out": result.timed_out,
+        "output": (result.stdout + result.stderr)[-_GATE_OUTPUT_TAIL:],
+    }
+
+
+@_errors
+async def check_item_endpoint(request: Request) -> Response:
+    project_path = _project_path(request.query_params.get("project_path"))
+    ws = _workspace(request)
+    item_id = request.path_params["id"]
+    _require_item(ws, item_id)
+    before = ws.load_item(item_id)
+    # A gate may run for minutes; keep it off the event loop.
+    result = await run_in_threadpool(check_item, ws, item_id, cwd=project_path)
+    if result.item != before:
+        await _hub(request).notify_write(ws.root)
+    return JSONResponse({"item": result.item.model_dump(), "gate": _gate_json(result.gate)})
+
+
+@_errors
+async def uncheck_item_endpoint(request: Request) -> Response:
+    ws = _workspace(request)
+    item_id = request.path_params["id"]
+    _require_item(ws, item_id)
+    before = ws.load_item(item_id)
+    item = uncheck_item(ws, item_id)
+    if item != before:
+        await _hub(request).notify_write(ws.root)
+    return JSONResponse({"item": item.model_dump()})

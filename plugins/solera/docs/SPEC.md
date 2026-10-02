@@ -21,8 +21,8 @@ not fixed). The executable invariant:
 - a **leaf** carries a `gate` and no children — the unit an agent finishes in one
   context, verified by one command;
 - a **container** carries children and no gate — it just rolls up their status;
-- an item may have **neither** yet (a container awaiting decomposition), but never
-  both.
+- an item may have **neither** — a container awaiting decomposition, or an item a
+  person confirms (picking a design, signing a contract) — but never both.
 
 Size is therefore an *altitude*, not a number: the leaf stays one-context +
 one-gate, and everything above is grouping and rollup.
@@ -114,6 +114,23 @@ no children (gated leaves and items not yet decomposed), the share that is
 `done`, rounded down. It is 100 exactly when the container is `done`.
 `workspace_status` returns it per container as `progress: {id: {done, total,
 percent}}`; clients display it and do not recompute it.
+
+### Items a person confirms
+
+An item with no gate and no children is never handed to an agent: `next` and
+`ready` deal only in gated leaves. A person finishes it by checking it through
+the HTTP surface ([HTTP.md](HTTP.md) §Checking an item; D-2026-10-02-D). The
+check obeys the start rules of `next` (order links, design connectedness), marks
+it `done`, and rolls up its ancestors; unchecking returns it to `todo` and
+reopens ancestors that were `done` only because of it. Checking a gated leaf
+there runs its gate and marks it `done` only on a pass.
+
+```mermaid
+stateDiagram-v2
+    [*] --> todo
+    todo --> done : a person checks it (start rules hold)
+    done --> todo : a person unchecks it
+```
 
 ## File layout
 
@@ -207,3 +224,5 @@ roll up when all remaining children are done.
    leaves are executed, only containers roll up.
 7. **Order links gate start only.** `after` decides which `todo` leaf may start;
    it never changes the status of an item already started or done.
+8. **Only a person finishes an item without a gate** — through the HTTP check; no agent
+   surface (CLI, MCP) can, and a person's check never overrides a gate's verdict.

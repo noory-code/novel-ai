@@ -18,7 +18,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import graph
-from .errors import OrderError
+from .errors import (
+    CheckBlockedError,
+    CheckContainerError,
+    OrderError,
+    UncheckGatedError,
+    UnknownWorkItemError,
+)
 from .formats import Progress, Status, WorkItem
 from .gate import DEFAULT_TIMEOUT_SECONDS, GateResult, run_item_gate
 from .intake import has_imported_design
@@ -69,6 +75,12 @@ def _leaves_in_order(ws: Workspace) -> list[str]:
 
 def _leaves_from_items(items: dict[str, WorkItem]) -> list[str]:
     """Leaf ids in depth-first order from an already loaded item mapping."""
+    return [item_id for item_id in _childless_from_items(items) if items[item_id].is_leaf]
+
+
+def _childless_from_items(items: dict[str, WorkItem]) -> list[str]:
+    """Ids of items without children — gated leaves and items without a gate — in
+    depth-first, declaration order across the forest."""
     leaves: list[str] = []
     seen: set[str] = set()
     child_ids = graph.parents(items)
@@ -81,7 +93,7 @@ def _leaves_from_items(items: dict[str, WorkItem]) -> list[str]:
         if item.is_container:
             for child_id in item.children:
                 visit(child_id)
-        elif item.is_leaf:
+        else:
             leaves.append(item_id)
 
     for root in (item_id for item_id in items if item_id not in child_ids):
@@ -147,6 +159,24 @@ def ready_leaves(ws: Workspace) -> tuple[list[str], list[BlockedLeaf]]:
         else:
             blocked.append(blocked_leaf)
     return ready, blocked
+
+
+def blocked_items(ws: Workspace) -> list[BlockedLeaf]:
+    """Every ``todo`` item without children that cannot start or be checked now.
+
+    Unlike :func:`ready_leaves`, which is the agent's list of gated leaves, this
+    also covers items without a gate, which a person finishes by checking them.
+    """
+    items = graph.load_items(ws)
+    design_required = has_imported_design(ws)
+    blocked: list[BlockedLeaf] = []
+    for item_id in _childless_from_items(items):
+        if items[item_id].status != "todo":
+            continue
+        blocked_item = _blocked_leaf(items, item_id, design_required=design_required)
+        if blocked_item is not None:
+            blocked.append(blocked_item)
+    return blocked
 
 
 @workspace_locked
@@ -313,3 +343,79 @@ def complete(
     set_item_status(ws, item_id, "done")
     _rollup(ws, item_id)
     return result
+
+
+@dataclass(frozen=True)
+class CheckResult:
+    """A person's check: the item afterwards, and the gate run when it has one."""
+
+    item: WorkItem
+    gate: GateResult | None
+
+
+@workspace_locked
+def check_item(
+    ws: Workspace,
+    item_id: str,
+    *,
+    cwd: Path,
+    timeout: float = DEFAULT_TIMEOUT_SECONDS,
+) -> CheckResult:
+    """Finish an item because a person checked it (D-2026-10-02-D).
+
+    An item without a gate becomes ``done``. A gated leaf runs its gate and
+    becomes ``done`` only when the gate passes; a failure leaves its status as it
+    was. Either way the item must be able to start by the rules ``next`` uses.
+    Only the HTTP surface the app calls offers this; no agent surface does.
+    """
+    items = graph.load_items(ws)
+    if item_id not in items:
+        raise UnknownWorkItemError(f"unknown work item: {item_id}")
+    item = items[item_id]
+    if item.is_container:
+        raise CheckContainerError(
+            f"{item_id} has children; a container is done only when all its children are done"
+        )
+    if item.status == "done":
+        return CheckResult(item=item, gate=None)
+    if item.status == "todo":
+        blocked = _blocked_leaf(items, item_id, design_required=has_imported_design(ws))
+        if blocked is not None:
+            raise CheckBlockedError(f"cannot check {item_id}: {'; '.join(blocked.reasons)}")
+    if not item.is_leaf:
+        set_item_status(ws, item_id, "done")
+        _rollup(ws, item_id)
+        return CheckResult(item=ws.load_item(item_id), gate=None)
+    result = run_item_gate(item, cwd=cwd, timeout=timeout)
+    if result.passed:
+        set_item_status(ws, item_id, "done")
+        _rollup(ws, item_id)
+        if ws.progress_path.is_file() and ws.load_progress().item == item_id:
+            ws.write_progress(Progress(item=None))
+    return CheckResult(item=ws.load_item(item_id), gate=result)
+
+
+@workspace_locked
+def uncheck_item(ws: Workspace, item_id: str) -> WorkItem:
+    """Undo a person's check: an item without a gate goes back to ``todo``.
+
+    A gate's verdict is not undone by hand, and a container follows its
+    children, so both are refused. Ancestors that were ``done`` only because of
+    this item reopen.
+    """
+    if item_id not in ws.list_items():
+        raise UnknownWorkItemError(f"unknown work item: {item_id}")
+    item = ws.load_item(item_id)
+    if item.is_container:
+        raise CheckContainerError(
+            f"{item_id} has children; a container is done only when all its children are done"
+        )
+    if item.is_leaf:
+        raise UncheckGatedError(
+            f"{item_id} was finished by its gate; a gate's verdict is not undone by hand "
+            "(use repin to reopen gated work)"
+        )
+    if item.status == "done":
+        set_item_status(ws, item_id, "todo")
+        invalidate_done_ancestors(ws, item_id)
+    return ws.load_item(item_id)

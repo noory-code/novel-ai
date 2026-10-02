@@ -59,6 +59,9 @@ route below except health; WebSocket failures still use close code 1008 and an E
 | `multiple_parents` | 400 | The source item already appears under more than one parent. | move |
 | `workspace_lock_timeout` | 400 | A write could not acquire the workspace lock before its timeout. | POST items, PATCH item, move, add after, remove after |
 | `invalid_format` | 400 | Stored Solera workspace data is malformed. | Any project route that reads the malformed data |
+| `check_container` | 400 | The item has children; a container is done only when all its children are done. | check, uncheck |
+| `check_blocked` | 400 | The item waits on order links or, in a workspace with an imported design, reaches no design node, so it cannot be checked yet. | check |
+| `uncheck_gated` | 400 | The item has a gate; a gate's verdict is not undone by hand (reopen gated work with `repin`). | uncheck |
 | `invalid` | 400 | Fallback for a rejection that has no more specific public code. | Any project route |
 
 ## Routes
@@ -73,10 +76,37 @@ route below except health; WebSocket failures still use close code 1008 and an E
 | `POST /api/work/items/{id}/move` | `{"parent": id \| null, "index": int \| null}` | `{"items": [Item...]}` — every item the move rewrote |
 | `POST /api/work/items/{id}/after` | `{"predecessor": id}` | Item (idempotent) |
 | `DELETE /api/work/items/{id}/after/{predecessor}` | — | Item (idempotent) |
+| `POST /api/work/items/{id}/check` | — | `{"item": Item, "gate": GateRun \| null}` — see "Checking an item" |
+| `DELETE /api/work/items/{id}/check` | — | `{"item": Item}` — see "Checking an item" |
 | `WS /ws?project_path=…&auth=…` | inbound ignored | pushes `{"event": "work_changed"}` (200 ms debounce) when anything under `.noory/solera/` changes (items, specs, progress) |
 
 `Completion` = `dataclasses.asdict(graph.completion(...)[id])`.
-Completing an item over HTTP is not offered yet.
+`blocked` lists every `todo` item without children that cannot start or be checked now — gated leaves
+and items without a gate. `ready` lists only gated leaves that can start now; it is the agent's list.
 `blocked[].reasons` is English diagnostic text for agents and logs. Human-facing clients must derive
 translated blocked text from `waiting_on` and `names_no_design_node` instead of displaying or matching
 `reasons`.
+
+## Checking an item
+
+Decision: D-2026-10-02-D. Only this HTTP surface finishes an item that has no gate; no CLI command or
+MCP tool does, and `next` never hands such an item to an agent.
+
+`POST /api/work/items/{id}/check`, in one workspace lock:
+
+1. Unknown id → 404 `unknown_work_item`. Item with children → 400 `check_container`.
+2. Already `done` → 200, unchanged, no gate run.
+3. A `todo` item must be able to start by the rules of `next`: every id in its own and its ancestors'
+   `after` is `done`, and in a workspace with an imported design it or an ancestor has `realizes`.
+   Otherwise → 400 `check_blocked`.
+4. No gate → `done`, and ancestors whose children are all done roll up to `done`. `gate` is `null`.
+5. Gate → the gate runs in the project folder. Pass → `done` + rollup, and the `progress.md` pointer
+   is cleared when it named this item. Fail or timeout → status unchanged (a `doing` leaf stays
+   `doing`). A failing gate is a 200 answer with `gate.passed: false`.
+
+`GateRun` = `{"passed": bool, "exit_code": int | null, "timed_out": bool, "output": str}`; `output`
+is the gate's stdout followed by its stderr, cut to the last 4000 characters.
+
+`DELETE /api/work/items/{id}/check`: unknown id → 404 `unknown_work_item`; children → 400
+`check_container`; a gate → 400 `uncheck_gated`; a `todo` item → 200 unchanged; a `done` item →
+`todo`, and every ancestor that was `done` only because of it goes back to `todo`.

@@ -17,11 +17,13 @@ from .http_endpoints import (
     HttpError,
     _project_path,
     add_after_endpoint,
+    check_item_endpoint,
     create_item_endpoint,
     health_endpoint,
     move_item_endpoint,
     patch_item_endpoint,
     remove_after_endpoint,
+    uncheck_item_endpoint,
     work_by_slugs_endpoint,
     work_endpoint,
 )
@@ -59,6 +61,8 @@ def create_http_app(hub: BroadcastHub | None = None) -> Starlette:
         Route("/api/work/items/{id}", patch_item_endpoint, methods=["PATCH"]),
         Route("/api/work/items/{id}/move", move_item_endpoint, methods=["POST"]),
         Route("/api/work/items/{id}/after", add_after_endpoint, methods=["POST"]),
+        Route("/api/work/items/{id}/check", check_item_endpoint, methods=["POST"]),
+        Route("/api/work/items/{id}/check", uncheck_item_endpoint, methods=["DELETE"]),
         Route(
             "/api/work/items/{id}/after/{predecessor}",
             remove_after_endpoint,

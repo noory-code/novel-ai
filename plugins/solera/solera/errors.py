@@ -149,3 +149,25 @@ class GateError(SoleraError):
     Distinct from a gate that *ran and failed*: that is reported as a
     :class:`~solera.gate.GateResult` with ``passed=False``, not raised.
     """
+
+
+class CheckError(SoleraError):
+    """A person's check (or uncheck) of a work item was refused (D-2026-10-02-D)."""
+
+
+class CheckContainerError(CheckError):
+    """A container is done only when all of its children are done; it cannot be checked."""
+
+    code = "check_container"
+
+
+class CheckBlockedError(CheckError):
+    """The item waits on order links or reaches no design node, so it cannot finish yet."""
+
+    code = "check_blocked"
+
+
+class UncheckGatedError(CheckError):
+    """A gate's verdict is not undone by hand; reopen gated work with repin."""
+
+    code = "uncheck_gated"

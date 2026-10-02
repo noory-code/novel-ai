@@ -1,5 +1,17 @@
 # Changelog
 
+## [8.6.0] — 2026-10-03
+
+### Added
+
+- A person finishes a work item that has no gate by checking it over HTTP
+  (`POST /api/work/items/{id}/check`) and reopens it with
+  `DELETE /api/work/items/{id}/check` (D-2026-10-02-D). Checking a gated leaf
+  runs its gate; only a pass marks it done, and a gate's verdict cannot be
+  unchecked. A check follows the start rules of `next`. No CLI command or MCP
+  tool finishes an item without a gate.
+- `GET /api/work` `blocked` also lists waiting items that have no gate.
+
 ## [8.5.1] — 2026-10-02
 
 ### Fixed
