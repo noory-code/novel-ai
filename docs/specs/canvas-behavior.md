@@ -185,5 +185,6 @@ choices made while building it on 2026-10-02 and still open to the user's review
   viewport; Esc leaves focus mode.
 - **Badge on design canvases:** a published design node that work items realize shows a count in its signal row
   ("일감 N" / "N work items"), never a percent. Clicking it opens the Work tab focused on those items. Unpublished
-  nodes show no badge.
+  nodes show no badge. *(Claude:)* "focused" means the first of those items is selected and focus mode lights the
+  branches of all of them, until the person selects another item; returning to the Work tab later does not refocus.
 - **Not in this version:** marking an item done from the app (waits on novel-workspace Q-00000029) and deleting items.
