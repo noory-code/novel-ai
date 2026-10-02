@@ -79,8 +79,8 @@
   for the reasons above. Put the work graph in a side panel of the design
   canvas — not chosen: the list-beside-graph view and focus mode need the
   full width.
-- **Approval:** Pending — Claude's judgment while doing novel-workspace
-  W-00000320 on 2026-10-02; the user has not reviewed it yet.
+- **Approval:** Accepted by user, 2026-10-02 — proposed as Claude's judgment
+  in novel-workspace W-00000320, then approved ("탭 배치는 그대로 진행하세요").
 - **Spec impact:** none yet; the screen itself is novel-workspace W-00000323.
 - **Principles:** SoC (design surface and work surface do different jobs);
   UX "one screen, one primary action".

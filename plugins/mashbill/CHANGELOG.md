@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.200.1] — 2026-10-02
+
+### Documentation
+
+- D-2026-10-02-B (the work-item graph is its own tab beside the design canvases) is accepted by the user.
+
 ## [0.200.0] — 2026-10-02
 
 ### Added

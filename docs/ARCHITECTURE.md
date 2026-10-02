@@ -86,7 +86,7 @@ Novel app (proprietary, paid) — MCP host + visual canvas + composition shell
   hang on a frozen published design, while the canvases show live nodes.
 
 Decision source = [`mashbill/docs/DECISIONS.md`](../plugins/mashbill/docs/DECISIONS.md) `D-2026-10-01-G`,
-`D-2026-10-02-A`, `D-2026-10-02-B` (the tab placement is pending the user's review).
+`D-2026-10-02-A`, `D-2026-10-02-B`.
 
 ## Migration Status
 
