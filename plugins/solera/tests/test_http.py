@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import Any, cast
 
@@ -12,6 +13,7 @@ from starlette.websockets import WebSocketDisconnect
 
 from solera import __version__
 from solera.broadcast import BroadcastHub
+from solera.errors import WorkspaceLockTimeoutError
 from solera.http_app import create_http_app
 from solera.workspace import Workspace
 
@@ -119,9 +121,45 @@ def test_work_returns_items_progress_readiness_and_pointer(
             "id": blocked["id"],
             "waiting_on": [predecessor["id"]],
             "reasons": [f"{blocked['id']} waits for {predecessor['id']}"],
+            "names_no_design_node": False,
         }
     ]
     assert body["current"] is None
+
+
+def test_work_reports_design_connectedness_for_each_blocked_leaf(
+    client: TestClient, tmp_path: Path
+) -> None:
+    ws = _ws(tmp_path)
+    release = ws.spec_dir("auth")
+    (release / "service").mkdir(parents=True)
+    (release / "project").mkdir()
+    (release / "service" / "manifest.json").write_text("{}")
+    (release / "project" / "manifest.json").write_text("{}")
+    predecessor = _create(client, tmp_path, goal="Predecessor", level="initiative")
+    disconnected = _create(client, tmp_path, goal="Disconnected", gate="true")
+    connected_parent = _create(
+        client,
+        tmp_path,
+        goal="Connected",
+        level="epic",
+        realizes=["feature/login"],
+    )
+    connected = _create(
+        client,
+        tmp_path,
+        parent=connected_parent["id"],
+        goal="Connected but waiting",
+        gate="true",
+        after=[predecessor["id"]],
+    )
+
+    response = client.get("/api/work", params=_query(tmp_path))
+
+    assert response.status_code == 200
+    blocked = {entry["id"]: entry for entry in response.json()["blocked"]}
+    assert blocked[disconnected["id"]]["names_no_design_node"] is True
+    assert blocked[connected["id"]]["names_no_design_node"] is False
 
 
 @pytest.mark.parametrize(
@@ -159,6 +197,7 @@ def test_every_project_route_rejects_relative_project_path(
 
     assert response.status_code == 400
     assert "project_path" in response.json()["error"]
+    assert response.json()["code"] == "project_path_not_absolute"
 
 
 def test_project_routes_reject_missing_project_path(client: TestClient) -> None:
@@ -166,6 +205,7 @@ def test_project_routes_reject_missing_project_path(client: TestClient) -> None:
 
     assert response.status_code == 400
     assert "project_path" in response.json()["error"]
+    assert response.json()["code"] == "project_path_required"
 
 
 def test_by_slugs_returns_every_requested_slug_and_mcp_order(
@@ -203,6 +243,7 @@ def test_by_slugs_rejects_invalid_json_shape(
 
     assert response.status_code == 400
     assert "error" in response.json()
+    assert response.json()["code"] == "invalid_request"
 
 
 def test_create_root_and_child_use_core_defaults(client: TestClient, tmp_path: Path) -> None:
@@ -231,8 +272,12 @@ def test_create_maps_validation_to_400_and_unknown_parent_to_404(
 
     assert invalid.status_code == 400
     assert "goal" in invalid.json()["error"]
+    assert invalid.json()["code"] == "blank_goal"
     assert missing.status_code == 404
-    assert missing.json() == {"error": "unknown work item: STORY-999"}
+    assert missing.json() == {
+        "error": "unknown work item: STORY-999",
+        "code": "unknown_parent",
+    }
 
 
 def test_patch_updates_goal_and_realizes(client: TestClient, tmp_path: Path) -> None:
@@ -261,8 +306,12 @@ def test_patch_rejects_empty_patch_and_maps_unknown_item(
 
     assert invalid.status_code == 400
     assert "at least one" in invalid.json()["error"]
+    assert invalid.json()["code"] == "invalid_request"
     assert missing.status_code == 404
-    assert missing.json() == {"error": "unknown work item: STORY-999"}
+    assert missing.json() == {
+        "error": "unknown work item: STORY-999",
+        "code": "unknown_work_item",
+    }
 
 
 def test_move_returns_every_rewritten_item(client: TestClient, tmp_path: Path) -> None:
@@ -306,9 +355,14 @@ def test_move_maps_rule_error_to_400_and_unknown_ids_to_404(
     )
 
     assert invalid.status_code == 400
+    assert invalid.json()["code"] == "root_index_not_supported"
     assert missing_item.status_code == 404
+    assert missing_item.json()["code"] == "unknown_work_item"
     assert missing_parent.status_code == 404
-    assert missing_parent.json() == {"error": "unknown work item: STORY-999"}
+    assert missing_parent.json() == {
+        "error": "unknown work item: STORY-999",
+        "code": "unknown_parent",
+    }
 
 
 def test_add_and_remove_after_are_idempotent_over_http(client: TestClient, tmp_path: Path) -> None:
@@ -348,8 +402,169 @@ def test_after_routes_map_order_error_to_400_and_unknown_item_to_404(
 
     assert invalid.status_code == 400
     assert "does not exist" in invalid.json()["error"]
+    assert invalid.json()["code"] == "unknown_predecessor"
     assert missing_add.status_code == 404
+    assert missing_add.json()["code"] == "unknown_work_item"
     assert missing_delete.status_code == 404
+    assert missing_delete.json()["code"] == "unknown_work_item"
+
+
+def test_create_rejection_codes_are_stable(client: TestClient, tmp_path: Path) -> None:
+    leaf = _create(client, tmp_path, goal="Leaf", gate="true")
+
+    cases = [
+        ({"parent": None, "goal": "Goal", "realizes": [" "]}, "invalid_realizes_slug"),
+        (
+            {
+                "parent": None,
+                "goal": "Goal",
+                "realizes": ["feature/login", "feature/login"],
+            },
+            "duplicate_realizes_slug",
+        ),
+        ({"parent": None, "goal": "Goal", "level": "../bad"}, "invalid_name"),
+        ({"parent": None, "goal": "Goal", "gate": "   "}, "invalid_gate"),
+        ({"parent": None, "goal": "Goal", "after": [""]}, "invalid_order_link"),
+        ({"parent": leaf["id"], "goal": "Child"}, "parent_is_leaf"),
+    ]
+
+    for body, code in cases:
+        response = client.post("/api/work/items", params=_query(tmp_path), json=body)
+        assert response.status_code == 400, response.text
+        assert response.json()["code"] == code
+
+
+def test_malformed_json_and_workspace_format_have_codes(client: TestClient, tmp_path: Path) -> None:
+    malformed_body = client.post(
+        "/api/work/by-slugs",
+        params=_query(tmp_path),
+        content="{",
+        headers={"content-type": "application/json"},
+    )
+    ws = _ws(tmp_path)
+    ws.items_dir.mkdir(parents=True)
+    ws.item_path("BROKEN").write_text("not frontmatter")
+    malformed_workspace = client.get("/api/work", params=_query(tmp_path))
+
+    assert malformed_body.status_code == 400
+    assert malformed_body.json()["code"] == "invalid_request"
+    assert malformed_workspace.status_code == 400
+    assert malformed_workspace.json()["code"] == "invalid_format"
+
+
+def test_order_link_problem_codes_are_stable(client: TestClient, tmp_path: Path) -> None:
+    first = _create(client, tmp_path, goal="First")
+    second = _create(client, tmp_path, goal="Second", level="epic")
+    first_path = f"/api/work/items/{first['id']}/after"
+    second_path = f"/api/work/items/{second['id']}/after"
+    assert (
+        client.post(
+            first_path,
+            params=_query(tmp_path),
+            json={"predecessor": second["id"]},
+        ).status_code
+        == 200
+    )
+
+    cycle = client.post(
+        second_path,
+        params=_query(tmp_path),
+        json={"predecessor": first["id"]},
+    )
+    parent = _create(client, tmp_path, goal="Parent", level="initiative")
+    child = _create(client, tmp_path, parent=parent["id"], goal="Child", gate="true")
+    ancestor = client.post(
+        f"/api/work/items/{child['id']}/after",
+        params=_query(tmp_path),
+        json={"predecessor": parent["id"]},
+    )
+    descendant = client.post(
+        f"/api/work/items/{parent['id']}/after",
+        params=_query(tmp_path),
+        json={"predecessor": child["id"]},
+    )
+
+    assert cycle.status_code == 400
+    assert cycle.json()["code"] == "order_cycle"
+    assert ancestor.status_code == 400
+    assert ancestor.json()["code"] == "order_waits_on_ancestor"
+    assert descendant.status_code == 400
+    assert descendant.json()["code"] == "order_waits_on_descendant"
+
+
+def test_move_rejection_codes_are_stable(client: TestClient, tmp_path: Path) -> None:
+    root = _create(client, tmp_path, goal="Root", level="initiative")
+    child = _create(client, tmp_path, parent=root["id"], goal="Child")
+    leaf = _create(client, tmp_path, parent=child["id"], goal="Leaf", gate="true")
+    sibling = _create(client, tmp_path, parent=root["id"], goal="Sibling", gate="true")
+    move_path = f"/api/work/items/{root['id']}/move"
+
+    cases = [
+        ({"parent": root["id"], "index": None}, "move_under_self"),
+        ({"parent": leaf["id"], "index": None}, "move_under_descendant"),
+    ]
+    for body, code in cases:
+        response = client.post(move_path, params=_query(tmp_path), json=body)
+        assert response.status_code == 400
+        assert response.json()["code"] == code
+
+    out_of_range = client.post(
+        f"/api/work/items/{sibling['id']}/move",
+        params=_query(tmp_path),
+        json={"parent": root["id"], "index": 99},
+    )
+    assert out_of_range.status_code == 400
+    assert out_of_range.json()["code"] == "index_out_of_range"
+
+    other_parent = _create(client, tmp_path, goal="Other", level="epic")
+    ws = _ws(tmp_path)
+    ws.write_item(ws.load_item(other_parent["id"]).model_copy(update={"children": [sibling["id"]]}))
+    multiple_parents = client.post(
+        f"/api/work/items/{sibling['id']}/move",
+        params=_query(tmp_path),
+        json={"parent": child["id"], "index": None},
+    )
+    assert multiple_parents.status_code == 400
+    assert multiple_parents.json()["code"] == "multiple_parents"
+
+
+def test_workspace_lock_timeout_has_code(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def time_out(_self: Workspace) -> AbstractContextManager[None]:
+        raise WorkspaceLockTimeoutError("timed out acquiring workspace lock")
+
+    monkeypatch.setattr(Workspace, "lock", time_out)
+
+    response = client.post(
+        "/api/work/items",
+        params=_query(tmp_path),
+        json={"parent": None, "goal": "Goal"},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "error": "timed out acquiring workspace lock",
+        "code": "workspace_lock_timeout",
+    }
+
+
+def test_uncategorized_value_error_uses_invalid_code(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def reject(*_args: object, **_kwargs: object) -> Any:
+        raise ValueError("uncategorized rejection")
+
+    monkeypatch.setattr("solera.http_endpoints.create_item", reject)
+
+    response = client.post(
+        "/api/work/items",
+        params=_query(tmp_path),
+        json={"parent": None, "goal": "Goal"},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"error": "uncategorized rejection", "code": "invalid"}
 
 
 def test_auth_is_dynamic_and_cors_is_present(
@@ -370,9 +585,9 @@ def test_auth_is_dynamic_and_cors_is_present(
     assert open_response.status_code == 200
     assert open_response.headers["access-control-allow-origin"] == "*"
     assert missing.status_code == 401
-    assert missing.json() == {"error": "auth token required"}
+    assert missing.json() == {"error": "auth token required", "code": "auth_required"}
     assert wrong.status_code == 401
-    assert wrong.json() == {"error": "invalid auth token"}
+    assert wrong.json() == {"error": "invalid auth token", "code": "invalid_auth_token"}
     assert allowed.status_code == 200
 
 

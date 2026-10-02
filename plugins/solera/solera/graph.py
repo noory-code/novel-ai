@@ -137,6 +137,11 @@ def _after_cycles(items: dict[str, WorkItem]) -> list[list[str]]:
     return list(cycles.values())
 
 
+def has_direct_order_cycle(items: dict[str, WorkItem]) -> bool:
+    """Return whether the explicit ``after`` links alone form a cycle."""
+    return bool(_after_cycles(items))
+
+
 def order_problems(items: dict[str, WorkItem]) -> list[tuple[str, str]]:
     """Return missing order targets and unsatisfiable cycles."""
     problems = [

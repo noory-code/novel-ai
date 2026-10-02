@@ -1,5 +1,15 @@
 # Changelog
 
+## [8.5.0] — 2026-10-02
+
+### Added
+
+- Added stable snake-case `code` values to every HTTP JSON 4xx response while
+  preserving the existing English `error` messages for agents and logs.
+- Exposed `names_no_design_node` on each `GET /api/work` blocked entry so
+  human-facing clients can translate both ordering and design-connectedness
+  reasons without parsing English text.
+
 ## [8.4.2] — 2026-10-02
 
 ### Fixed

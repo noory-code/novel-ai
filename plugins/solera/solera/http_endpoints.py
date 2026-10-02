@@ -13,7 +13,7 @@ from starlette.responses import JSONResponse, Response
 
 from . import __version__
 from .broadcast import BroadcastHub
-from .errors import SoleraError
+from .errors import SoleraError, UnknownParentError, UnknownWorkItemError
 from .graph import completion, items_by_slugs, load_items
 from .planning import add_after, create_item, move_item, remove_after, set_goal, set_realizes
 from .supervisor import ready_leaves
@@ -57,10 +57,11 @@ class AfterBody(_Body):
 class HttpError(Exception):
     """A request-level error with its public status and message."""
 
-    def __init__(self, status_code: int, message: str) -> None:
+    def __init__(self, status_code: int, message: str, code: str = "invalid") -> None:
         super().__init__(message)
         self.status_code = status_code
         self.message = message
+        self.code = code
 
 
 def _errors(endpoint: _Endpoint) -> _Endpoint:
@@ -68,9 +69,15 @@ def _errors(endpoint: _Endpoint) -> _Endpoint:
         try:
             return await endpoint(request)
         except HttpError as exc:
-            return JSONResponse({"error": exc.message}, status_code=exc.status_code)
-        except (SoleraError, ValueError) as exc:
-            return JSONResponse({"error": str(exc)}, status_code=400)
+            return JSONResponse(
+                {"error": exc.message, "code": exc.code}, status_code=exc.status_code
+            )
+        except (UnknownWorkItemError, UnknownParentError) as exc:
+            return JSONResponse({"error": str(exc), "code": exc.code}, status_code=404)
+        except SoleraError as exc:
+            return JSONResponse({"error": str(exc), "code": exc.code}, status_code=400)
+        except ValueError as exc:
+            return JSONResponse({"error": str(exc), "code": "invalid"}, status_code=400)
 
     return wrapped
 
@@ -80,15 +87,19 @@ async def _parse_body(request: Request, model: type[_Model]) -> _Model:
         value = await request.json()
         return model.model_validate(value)
     except (ValueError, ValidationError) as exc:
-        raise HttpError(400, str(exc)) from exc
+        raise HttpError(400, str(exc), "invalid_request") from exc
 
 
 def _project_path(raw: str | None) -> Path:
     if raw is None or not raw:
-        raise HttpError(400, "project_path query param required")
+        raise HttpError(400, "project_path query param required", "project_path_required")
     path = Path(raw)
     if not path.is_absolute():
-        raise HttpError(400, "project_path must be an absolute path")
+        raise HttpError(
+            400,
+            "project_path must be an absolute path",
+            "project_path_not_absolute",
+        )
     return path
 
 
@@ -101,9 +112,10 @@ def _hub(request: Request) -> BroadcastHub:
     return cast(BroadcastHub, request.app.state.hub)
 
 
-def _require_item(ws: Workspace, item_id: str) -> None:
+def _require_item(ws: Workspace, item_id: str, *, as_parent: bool = False) -> None:
     if item_id not in ws.list_items():
-        raise HttpError(404, f"unknown work item: {item_id}")
+        error_type = UnknownParentError if as_parent else UnknownWorkItemError
+        raise error_type(f"unknown work item: {item_id}")
 
 
 def _blocked_json(blocked: list[Any]) -> list[dict[str, Any]]:
@@ -112,6 +124,7 @@ def _blocked_json(blocked: list[Any]) -> list[dict[str, Any]]:
             "id": leaf.leaf_id,
             "waiting_on": list(leaf.waiting_on),
             "reasons": list(leaf.reasons),
+            "names_no_design_node": leaf.names_no_design_node,
         }
         for leaf in blocked
     ]
@@ -151,7 +164,7 @@ async def create_item_endpoint(request: Request) -> Response:
     ws = _workspace(request)
     body = await _parse_body(request, CreateItemBody)
     if body.parent is not None:
-        _require_item(ws, body.parent)
+        _require_item(ws, body.parent, as_parent=True)
     level = body.level if body.level is not None else ("story" if body.parent is None else "action")
     item = create_item(
         ws,
@@ -173,7 +186,11 @@ async def patch_item_endpoint(request: Request) -> Response:
     _require_item(ws, item_id)
     body = await _parse_body(request, PatchItemBody)
     if not body.model_fields_set:
-        raise HttpError(400, "at least one of goal or realizes is required")
+        raise HttpError(
+            400,
+            "at least one of goal or realizes is required",
+            "invalid_request",
+        )
     if "goal" in body.model_fields_set:
         set_goal(ws, item_id, body.goal)
     if "realizes" in body.model_fields_set:
@@ -190,7 +207,7 @@ async def move_item_endpoint(request: Request) -> Response:
     _require_item(ws, item_id)
     body = await _parse_body(request, MoveItemBody)
     if body.parent is not None:
-        _require_item(ws, body.parent)
+        _require_item(ws, body.parent, as_parent=True)
     before = load_items(ws)
     move_item(ws, item_id, body.parent, body.index)
     after = load_items(ws)

@@ -4,9 +4,13 @@
 class SoleraError(Exception):
     """Base class for all Solera errors."""
 
+    code = "invalid"
+
 
 class WorkspaceLockTimeoutError(SoleraError):
     """The workspace's cross-process write lock could not be acquired in time."""
+
+    code = "workspace_lock_timeout"
 
 
 class FormatError(SoleraError):
@@ -16,13 +20,127 @@ class FormatError(SoleraError):
     malformed WorkItem / progress file rather than guessing intent.
     """
 
+    code = "invalid_format"
+
+
+class InvalidNameError(FormatError):
+    """A caller supplied a name that is unsafe as one path component."""
+
+    code = "invalid_name"
+
 
 class OrderError(SoleraError):
     """Work-item order links are invalid or leave every open leaf blocked."""
 
 
+class UnknownPredecessorError(OrderError):
+    """An order link names a work item that does not exist."""
+
+    code = "unknown_predecessor"
+
+
+class OrderCycleError(OrderError):
+    """Order links form a dependency cycle."""
+
+    code = "order_cycle"
+
+
+class OrderWaitsOnAncestorError(OrderError):
+    """An item waits for an ancestor whose completion depends on that item."""
+
+    code = "order_waits_on_ancestor"
+
+
+class OrderWaitsOnDescendantError(OrderError):
+    """An item waits for a descendant that cannot start before the item."""
+
+    code = "order_waits_on_descendant"
+
+
 class PlanningError(SoleraError):
     """A requested WorkItem edit would violate the planning tree."""
+
+
+class UnknownWorkItemError(PlanningError):
+    """A requested work-item identifier does not exist."""
+
+    code = "unknown_work_item"
+
+
+class UnknownParentError(PlanningError):
+    """A requested parent identifier does not exist."""
+
+    code = "unknown_parent"
+
+
+class PlanningValueError(PlanningError, ValueError):
+    """Invalid planning input, also catchable as ValueError for compatibility."""
+
+
+class BlankGoalError(PlanningValueError):
+    """A work-item goal is empty or whitespace-only."""
+
+    code = "blank_goal"
+
+
+class InvalidRealizesSlugError(PlanningValueError):
+    """A realizes slug is empty or whitespace-only."""
+
+    code = "invalid_realizes_slug"
+
+
+class DuplicateRealizesSlugError(PlanningValueError):
+    """A realizes list contains a duplicate slug."""
+
+    code = "duplicate_realizes_slug"
+
+
+class InvalidGateError(PlanningValueError):
+    """A non-empty gate contains only whitespace."""
+
+    code = "invalid_gate"
+
+
+class InvalidOrderLinkError(PlanningValueError):
+    """An order-link list has an invalid value or duplicate."""
+
+    code = "invalid_order_link"
+
+
+class ParentIsLeafError(PlanningError):
+    """A child was assigned to an item that already has a gate."""
+
+    code = "parent_is_leaf"
+
+
+class RootIndexNotSupportedError(PlanningError):
+    """A root move supplied an index although roots have fixed ordering."""
+
+    code = "root_index_not_supported"
+
+
+class MoveUnderSelfError(PlanningError):
+    """An item was moved under itself."""
+
+    code = "move_under_self"
+
+
+class MoveUnderDescendantError(PlanningError):
+    """An item was moved under one of its descendants."""
+
+    code = "move_under_descendant"
+
+
+class ChildIndexOutOfRangeError(PlanningError):
+    """A move supplied an invalid destination child index."""
+
+    code = "index_out_of_range"
+
+
+class MultipleParentsError(PlanningError):
+    """A malformed tree gives one work item multiple parents."""
+
+    code = "multiple_parents"
 
 
 class GateError(SoleraError):

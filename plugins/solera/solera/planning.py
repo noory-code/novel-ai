@@ -10,9 +10,31 @@ from __future__ import annotations
 
 import re
 
-from .errors import OrderError, PlanningError
+from pydantic import ValidationError
+
+from .errors import (
+    BlankGoalError,
+    ChildIndexOutOfRangeError,
+    DuplicateRealizesSlugError,
+    InvalidGateError,
+    InvalidOrderLinkError,
+    InvalidRealizesSlugError,
+    MoveUnderDescendantError,
+    MoveUnderSelfError,
+    MultipleParentsError,
+    OrderCycleError,
+    OrderError,
+    OrderWaitsOnAncestorError,
+    OrderWaitsOnDescendantError,
+    ParentIsLeafError,
+    PlanningValueError,
+    RootIndexNotSupportedError,
+    UnknownParentError,
+    UnknownPredecessorError,
+    UnknownWorkItemError,
+)
 from .formats import WorkItem
-from .graph import load_items, order_problems
+from .graph import has_direct_order_cycle, load_items, order_problems
 from .supervisor import invalidate_done_ancestors, rollup_item_and_ancestors
 from .workspace import Workspace, validate_path_name, workspace_locked
 
@@ -42,9 +64,55 @@ def next_item_id(ws: Workspace, level: str) -> str:
 
 def _validate_realizes(realizes: list[str]) -> None:
     if any(not slug.strip() for slug in realizes):
-        raise ValueError("realizes slugs must not be empty or blank")
+        raise InvalidRealizesSlugError("realizes slugs must not be empty or blank")
     if len(set(realizes)) != len(realizes):
-        raise ValueError("realizes slugs must not contain duplicates")
+        raise DuplicateRealizesSlugError("realizes slugs must not contain duplicates")
+
+
+def _validated_item(data: dict[str, object]) -> WorkItem:
+    """Build a WorkItem while assigning input failures stable core codes."""
+    try:
+        return WorkItem.model_validate(data)
+    except ValidationError as exc:
+        goal = data.get("goal")
+        gate = data.get("gate")
+        after = data.get("after", [])
+        item_id = data.get("id")
+        if isinstance(goal, str) and not goal.strip():
+            raise BlankGoalError(str(exc)) from exc
+        if isinstance(gate, str) and gate and not gate.strip():
+            raise InvalidGateError(str(exc)) from exc
+        if isinstance(after, list):
+            string_after = [value for value in after if isinstance(value, str)]
+            if any(not value.strip() for value in string_after) or len(set(string_after)) != len(
+                string_after
+            ):
+                raise InvalidOrderLinkError(str(exc)) from exc
+            if item_id in string_after:
+                raise OrderCycleError(str(exc)) from exc
+        raise PlanningValueError(str(exc)) from exc
+
+
+def _raise_order_problems(items: dict[str, WorkItem], problems: list[tuple[str, str]]) -> None:
+    """Raise a coded rejection from structured graph problem kinds."""
+    if not problems:
+        return
+    message = "; ".join(detail for _kind, detail in problems)
+    kinds = {kind for kind, _detail in problems}
+    if "after-missing" in kinds:
+        raise UnknownPredecessorError(message)
+    if "after-cycle" in kinds:
+        if has_direct_order_cycle(items):
+            raise OrderCycleError(message)
+        for item_id, item in items.items():
+            descendants = _descendants(items, item_id)
+            for predecessor in item.after:
+                if predecessor in descendants:
+                    raise OrderWaitsOnDescendantError(message)
+                if predecessor in items and item_id in _descendants(items, predecessor):
+                    raise OrderWaitsOnAncestorError(message)
+        raise OrderCycleError(message)
+    raise OrderError(message)
 
 
 @workspace_locked
@@ -68,25 +136,35 @@ def create_item(
     box = ws.load_item(parent) if parent is not None else None
     realizes = realizes or []
     _validate_realizes(realizes)
-    item = WorkItem(
-        id=item_id,
-        level=level,
-        status="todo",
-        gate=gate,
-        goal=goal,
-        realizes=realizes,
-        after=after or [],
+    item = _validated_item(
+        {
+            "id": item_id,
+            "level": level,
+            "status": "todo",
+            "gate": gate,
+            "goal": goal,
+            "realizes": realizes,
+            "after": after or [],
+        }
     )
     items = load_items(ws)
     items[item.id] = item
+    updated_box: WorkItem | None = None
     if box is not None:
-        items[box.id] = box.model_copy(update={"children": [*box.children, item.id]})
+        try:
+            updated_box = WorkItem.model_validate(
+                {**box.model_dump(), "children": [*box.children, item.id]}
+            )
+        except ValidationError as exc:
+            if box.gate:
+                raise ParentIsLeafError(str(exc)) from exc
+            raise PlanningValueError(str(exc)) from exc
+        items[box.id] = updated_box
     problems = order_problems(items)
-    if problems:
-        raise OrderError("; ".join(detail for _kind, detail in problems))
+    _raise_order_problems(items, problems)
     ws.write_item(item)
-    if box is not None:
-        ws.write_item(box.model_copy(update={"children": [*box.children, item.id]}))
+    if updated_box is not None:
+        ws.write_item(updated_box)
     return item
 
 
@@ -94,12 +172,11 @@ def create_item(
 def set_after(ws: Workspace, item_id: str, after: list[str]) -> WorkItem:
     """Replace one item's order links after validating the complete future graph."""
     item = ws.load_item(item_id)
-    updated = WorkItem.model_validate({**item.model_dump(), "after": after})
+    updated = _validated_item({**item.model_dump(), "after": after})
     items = load_items(ws)
     items[item_id] = updated
     problems = order_problems(items)
-    if problems:
-        raise OrderError("; ".join(detail for _kind, detail in problems))
+    _raise_order_problems(items, problems)
     ws.write_item(updated)
     return updated
 
@@ -108,7 +185,7 @@ def set_after(ws: Workspace, item_id: str, after: list[str]) -> WorkItem:
 def set_goal(ws: Workspace, item_id: str, goal: str) -> WorkItem:
     """Replace one item's goal, rejecting the same blank goals as creation."""
     item = ws.load_item(item_id)
-    updated = WorkItem.model_validate({**item.model_dump(), "goal": goal})
+    updated = _validated_item({**item.model_dump(), "goal": goal})
     ws.write_item(updated)
     return updated
 
@@ -118,7 +195,7 @@ def set_realizes(ws: Workspace, item_id: str, realizes: list[str]) -> WorkItem:
     """Replace one item's complete realizes-slug list; an empty list clears it."""
     item = ws.load_item(item_id)
     _validate_realizes(realizes)
-    updated = WorkItem.model_validate({**item.model_dump(), "realizes": realizes})
+    updated = _validated_item({**item.model_dump(), "realizes": realizes})
     ws.write_item(updated)
     return updated
 
@@ -160,7 +237,7 @@ def _insert_child(children: list[str], item_id: str, index: int | None) -> list[
     without_item = [child_id for child_id in children if child_id != item_id]
     position = len(without_item) if index is None else index
     if position < 0 or position > len(without_item):
-        raise PlanningError(
+        raise ChildIndexOutOfRangeError(
             f"child index {position} is out of range; expected 0..{len(without_item)}"
         )
     without_item.insert(position, item_id)
@@ -181,22 +258,24 @@ def move_item(
     """
     items = load_items(ws)
     if item_id not in items:
-        raise PlanningError(f"unknown work item: {item_id}")
+        raise UnknownWorkItemError(f"unknown work item: {item_id}")
     if new_parent is not None and new_parent not in items:
-        raise PlanningError(f"unknown destination parent: {new_parent}")
+        raise UnknownParentError(f"unknown destination parent: {new_parent}")
     if new_parent is None and index is not None:
-        raise PlanningError("root order is fixed by item ID; index is not supported for roots")
+        raise RootIndexNotSupportedError(
+            "root order is fixed by item ID; index is not supported for roots"
+        )
     if new_parent == item_id:
-        raise PlanningError(f"cannot move {item_id} under itself")
+        raise MoveUnderSelfError(f"cannot move {item_id} under itself")
     if new_parent is not None and new_parent in _descendants(items, item_id):
-        raise PlanningError(f"cannot move {item_id} under its descendant {new_parent}")
+        raise MoveUnderDescendantError(f"cannot move {item_id} under its descendant {new_parent}")
     if new_parent is not None and items[new_parent].gate:
-        raise PlanningError(f"cannot move under gated leaf {new_parent}")
+        raise ParentIsLeafError(f"cannot move under gated leaf {new_parent}")
 
     source_parents = [parent_id for parent_id, item in items.items() if item_id in item.children]
     if len(source_parents) > 1:
         joined = ", ".join(source_parents)
-        raise PlanningError(f"cannot move {item_id}: item has multiple parents: {joined}")
+        raise MultipleParentsError(f"cannot move {item_id}: item has multiple parents: {joined}")
     source_parent = source_parents[0] if source_parents else None
 
     source_original = items[source_parent] if source_parent is not None else None
@@ -240,8 +319,7 @@ def move_item(
         structural_writes = [(destination_updated, destination_original), (source_updated, None)]
 
     problems = order_problems(items)
-    if problems:
-        raise OrderError("; ".join(detail for _kind, detail in problems))
+    _raise_order_problems(items, problems)
 
     first, first_original = structural_writes[0]
     if first is not None:

@@ -23,7 +23,7 @@ from pathlib import Path
 from time import monotonic, sleep
 from typing import BinaryIO, Concatenate, ParamSpec, TypeVar, cast
 
-from .errors import FormatError, WorkspaceLockTimeoutError
+from .errors import InvalidNameError, WorkspaceLockTimeoutError
 from .formats import (
     Feedback,
     Progress,
@@ -118,7 +118,7 @@ def _atomic_write_text(path: Path, text: str) -> None:
 def validate_path_name(name: str) -> str:
     """Return a safe single path component or reject it before path composition."""
     if not _PATH_NAME_RE.fullmatch(name) or name == "..":
-        raise FormatError(
+        raise InvalidNameError(
             f"invalid path name {name!r}: expected a single component matching "
             "^[A-Za-z0-9][A-Za-z0-9._-]*$"
         )
