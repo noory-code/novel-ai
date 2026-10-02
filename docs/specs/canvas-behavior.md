@@ -140,3 +140,47 @@ canvas tab (`{feature/service name}` label). Not a modal.
   concept map visually; it does not implement the deeper service-target connectedness invariant. Being AI-maintained,
   the AI can also propose·draw entity↔entity rough relationship edges; those relationship edges remain independently
   editable·deletable.
+
+## Work tab — Execution (Solera work-item graph)
+
+Decisions: placement `D-2026-10-02-B`, data path `D-2026-10-02-A`, connectedness `D-2026-10-01-G`. Items marked
+*(user)* were set by the user on 2026-09-29/30 (novel-workspace P-00000005); items marked *(Claude)* are Claude's
+choices made while building it on 2026-10-02 and still open to the user's review.
+
+- **Placement:** a tab of its own after the four design tabs, labelled 일감 / Work. It is not drawn on a design
+  canvas *(user)*.
+- **Source:** the Solera engine is the only owner of work items. The app reads and writes them only through that engine
+  and redraws when the engine reports `work_changed`. If the engine cannot be reached, the tab says so and offers a
+  retry; the design tabs keep working.
+- **What is drawn:** the work-item tree, plus the published design nodes that work items realize (nodes that have a
+  slug, labelled as on their design canvas). Unpublished nodes are not drawn: work attaches only to published nodes.
+- **Edges:** two kinds that differ in shape, never in colour alone. *Membership* — parent work item → child, and work
+  item → the design node it realizes — is a solid line without an arrowhead. *Order* — "this must be done before that",
+  predecessor → successor — is a dashed line with an arrowhead *(Claude: the exact styles)*.
+- **Work item face:** goal text; for an item with children, the completion percent the engine computed *(user)*;
+  status (todo · doing · done); when it cannot start, the engine's reasons as text (waiting for another item, or names no
+  design node). An item with neither a check command nor children is shown as "not split yet": it cannot be started or
+  finished until it is split or given a check. Design nodes show no percent *(user)*.
+- **Layout:** automatic top-down tree. Positions are not saved in this version *(Claude; the screen-data split,
+  novel-workspace W-00000317, is still open)*.
+- **Keyboard on the graph** *(user: MindNode style)*: with a work item selected, Tab creates a child and Return
+  creates a sibling right after it; the new item opens for typing its goal. Double-click edits a goal; Return commits,
+  Esc cancels and removes a new item left empty *(Claude: the editing keys)*. A child under an item that has a check
+  command is refused with a message that says why (such an item is a leaf). At the root level Return creates a new root,
+  and roots keep the engine's order (by id) *(Claude)*.
+- **Choosing the node a new item serves:** when a new root has no design node, the app asks which published node it
+  serves and offers the nodes drawn on the tab. The person may skip; the item is still created, but it cannot start
+  until it or an ancestor names a node (`D-2026-10-01-G`).
+- **Order links:** drag from one work item to another to add "this before that"; select an order edge and press
+  Delete or Backspace to remove it. A link the engine rejects (for example, a cycle) is not drawn and the engine's
+  reason is shown.
+- **List beside the graph** *(user)*: a toggle shows the same tree as an indented list next to the graph, sharing the
+  selection. In the list, Tab indents an item under the item above it, Shift+Tab outdents it, Return adds a sibling, and
+  dragging moves an item to another parent or position; every change is a move in the engine and the graph follows.
+  Roots cannot be reordered, because the engine orders roots by id *(Claude)*.
+- **Folding and focus** *(user)*: any item with children can be folded; a folded item shows only its percent. Focus
+  mode keeps the selected branch and dims everything else.
+- **Badge on design canvases:** a published design node that work items realize shows a count in its signal row
+  ("일감 N" / "N work items"), never a percent. Clicking it opens the Work tab focused on those items. Unpublished
+  nodes show no badge.
+- **Not in this version:** marking an item done from the app (waits on novel-workspace Q-00000029) and deleting items.
