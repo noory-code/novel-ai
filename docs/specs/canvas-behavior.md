@@ -180,7 +180,9 @@ choices made while building it on 2026-10-02 and still open to the user's review
   dragging moves an item to another parent or position; every change is a move in the engine and the graph follows.
   Roots cannot be reordered, because the engine orders roots by id *(Claude)*.
 - **Folding and focus** *(user)*: any item with children can be folded; a folded item shows only its percent. Focus
-  mode keeps the selected branch and dims everything else.
+  mode keeps the selected branch and dims everything else. *(Claude:)* fold with the item's toggle or `[` / `]` on the
+  selected item, in the graph or the list; the fold state lasts for the session and is not saved; folding keeps the
+  viewport; Esc leaves focus mode.
 - **Badge on design canvases:** a published design node that work items realize shows a count in its signal row
   ("일감 N" / "N work items"), never a percent. Clicking it opens the Work tab focused on those items. Unpublished
   nodes show no badge.
