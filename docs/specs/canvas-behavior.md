@@ -159,8 +159,8 @@ choices made while building it on 2026-10-02 and still open to the user's review
   predecessor → successor — is a dashed line with an arrowhead *(Claude: the exact styles)*.
 - **Work item face:** goal text; for an item with children, the completion percent the engine computed *(user)*;
   status (todo · doing · done); when it cannot start, the engine's reasons as text (waiting for another item, or names no
-  design node). An item with neither a check command nor children is shown as "not split yet": it cannot be started or
-  finished until it is split or given a check. Design nodes show no percent *(user)*.
+  design node). Every item without children has a checkbox (see "Checking items off"). Design nodes show no percent
+  *(user)*.
 - **Layout:** automatic top-down tree. Positions are not saved in this version *(Claude; the screen-data split,
   novel-workspace W-00000317, is still open)*.
 - **Keyboard on the graph** *(user: MindNode style)*: with a work item selected, Tab creates a child and Return
@@ -188,4 +188,11 @@ choices made while building it on 2026-10-02 and still open to the user's review
   nodes show no badge. *(Claude:)* "focused" means the first of those items is selected and focus mode lights the
   branches of all of them, until the person selects another item; returning to the Work tab later does not refocus.
   The badge floats outside the node's measured size, so a change in Solera never rewrites the design file.
-- **Not in this version:** marking an item done from the app (waits on novel-workspace Q-00000029) and deleting items.
+- **Checking items off** *(user; D-2026-10-02-D)*: every item without children has a checkbox, on the graph node and in
+  the list. On an item without a check command, the checkbox finishes it, and pressing it again reopens it. On an item
+  with a check command, the checkbox runs that command: a pass checks it, and a failure leaves it unchecked and shows
+  the command's output on request; a passed check cannot be undone by hand. An item that waits for other work or names
+  no design node cannot be checked, and its checkbox says why. Containers have no checkbox; their percent comes from
+  the engine and rises as their items are checked. *(Claude:)* Space checks the selected item in the graph or the list,
+  and a check command shows "running the check" while it runs.
+- **Not in this version:** deleting items.
