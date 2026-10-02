@@ -39,6 +39,42 @@
 
 ## Log
 
+### D-2026-10-02-D — A person finishes a work item that has no gate; a gate still decides its own leaf
+
+- **What:** (1) A Solera work item with no gate and no children is finished by a person checking
+  it in the app. The check marks it `done` and rolls up its ancestors; unchecking returns it to
+  `todo` and reopens any ancestor that was `done` only because of it. (2) Only the engine's HTTP
+  surface, which the app calls with its per-run token, offers this check. The agent surfaces (CLI,
+  MCP) offer no way to finish an item without a gate, and `next` never hands such an item to an
+  agent, so an agent cannot finish it. (3) A check follows the same start rules as `next`: it is
+  refused while the item waits on order links or reaches no design node (D-2026-10-01-G). (4) A
+  leaf with a gate is still finished only by its gate passing. In the app, checking such a leaf
+  runs its gate; a pass marks it `done`, a failure leaves its status unchanged and shows the
+  failure. A gated leaf cannot be unchecked. (5) Choosing how an item is verified is choosing
+  whether to give it a gate: an item a person will confirm (picking a design, signing a contract)
+  is created without one.
+- **Why:** the work graph lets a person check items off and watch the completion percent rise,
+  but Solera finished items only through a gate, so work that no command can verify could never
+  be finished. Solera's invariant that a gate verdict is trustworthy (`plugins/solera/docs/SPEC.md`
+  Invariants 2) stays whole: a person never overrides a gate. An item without a gate was already
+  never handed to an agent and already counted in its container's completion percent, so the
+  check needs no new field.
+- **Alternatives:** every item finishes only through a command, and a person who wants to check an
+  item writes a command that always passes — rejected: it makes people write fake gates. A
+  person's check overrides any gate — rejected: a `done` mark could then contradict a failing gate.
+  A separate "verified by a person" field — not chosen: an item with neither a gate nor children
+  already means exactly this, and a second field could disagree with it.
+- **Approval:** Accepted by user, 2026-10-02 ("사람이 체크하면 완료로 봐도 됩니다", novel-workspace
+  Q-00000029). That a check of a gated leaf runs its gate rather than overriding it is Claude's
+  judgment from the gate invariant.
+- **Spec impact:** `plugins/solera/docs/SPEC.md` (leaf state machine, invariants) and
+  `plugins/solera/docs/HTTP.md` (check and uncheck routes) change with the engine code, and
+  `docs/specs/canvas-behavior.md` §Work drops "marking an item done" from what this version leaves
+  out once the app ships the checkbox.
+- **Principles:** SSOT (a gate's verdict has one owner; "has no gate" alone means "a person
+  confirms"); Honesty (a `done` mark never contradicts a gate); VISION "AI proposes, a person
+  confirms".
+
 ### D-2026-10-02-C — The services-canvas grouping node is called 묶음 / Group
 
 - **What:** the app shows the `category` kind as **묶음** (Korean) / **Group** (English) in every

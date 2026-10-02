@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.200.2] — 2026-10-02
+
+### Documentation
+
+- D-2026-10-02-D: a person finishes a Solera work item that has no gate by checking it in the app;
+  a gated leaf is still finished only by its gate passing.
+
 ## [0.200.1] — 2026-10-02
 
 ### Documentation
