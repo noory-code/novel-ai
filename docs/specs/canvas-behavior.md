@@ -197,6 +197,10 @@ choices made while building it on 2026-10-02 and still open to the user's review
   no design node cannot be checked, and its checkbox says why. Containers have no checkbox; their percent comes from
   the engine and rises as their items are checked. *(Claude:)* Space checks the selected item in the graph or the list,
   and a check command shows "running the check" while it runs.
+  *Decided, not yet built (user, `D-2026-10-04-B` (1)):* the completion percent on items with children and on folded
+  items is replaced by "accepted / currently known lowest items" (for example "9/10 accepted"), with the reason shown
+  when the denominator changes. *(`D-2026-10-04-B` (2)–(6)):* finished items leave the progress view but stay reachable
+  from their design node; a new publish re-checks only related in-progress items.
   *Decided, not yet built (user, `D-2026-10-04-A` (1)–(2)):* work items have no fixed level names. An item whose result
   was promised to the person is not finished when all its children are; it waits until the person tries the result and
   accepts it, and that acceptance can be reopened. The person confirms pass conditions in plain words, not check code.

@@ -39,6 +39,46 @@
 
 ## Log
 
+### D-2026-10-04-B — Work over time: no fixed cycle, done items leave the progress view but stay on record, folded branches show an accepted fraction
+
+- **What:** (1) A folded work item shows "accepted / currently known lowest items" (for example
+  "9/10 accepted") instead of a completion percent. Only the lowest items are counted, so nothing
+  is counted twice. When the denominator changes, the reason is shown beside it ("2 newly found",
+  "split into two"). The number is never a measure of the result's completeness, a priority, or a
+  person's or an AI's performance. (2) There is no fixed work period (no sprint). A published
+  version is not a unit of work; it is the design a work item is judged against. When a new design
+  is published, only in-progress items related to the changed nodes are re-checked: unchanged ones
+  continue; changed results or pass conditions stop the affected branch until the person keeps the
+  old basis, adopts the new one, or cancels. A work item's basis version is never rewritten. (3) A
+  finished item leaves the progress view but is not deleted; its reasons and who accepted it stay
+  reachable from the design node it served. (4) Shipping a version is a work item that several
+  promised results wait on; after it ships, each result is tried in the real installed app and
+  accepted on its own. (5) If an accepted result turns out never to have met its pass conditions,
+  that acceptance is reopened with the reason recorded. If it worked when accepted and broke later
+  (a rollback, another change), the past acceptance stays and a new work item is made. (6) Looking
+  back happens when the person returns (a summary of what finished since they last looked,
+  separating gate-finished items from person-accepted ones), when a new design is published (the
+  impact on in-progress items), and when a promised result is accepted (the items and evidence
+  under it), not on a fixed weekday.
+- **Why:** a percent over child counts reads as the result's completeness, which it is not, yet the
+  person wanted to see progress rise as items are checked; a fraction with its denominator named
+  keeps that without the false claim. Kanban, Scrum and Shape Up all separate the work cadence from
+  releases, and Linear, Jira, GitHub Projects and Trello all clear finished items from the board
+  while keeping them on record. With AIs finishing many items, a summary on return fits better than
+  a weekly ritual.
+- **Alternatives:** keep the completion percent — rejected by the user. A "realization bundle"
+  object grouping items toward one result — rejected: the promised-result work item already is
+  that group. A publish as the unit of work — rejected: a small wording change can be published in
+  the middle of unrelated work. Delete items on release — rejected: the design keeps the result,
+  not why it was made or who accepted it.
+- **Approval:** (1) Accepted by user, 2026-10-04. (2)–(6) came out of a discussion with the in-app
+  coach and were reported to the user the same day (novel-workspace W-00000376); the public design
+  is the self-design project's "설계 실현" service.
+- **Spec impact:** `docs/specs/canvas-behavior.md` §Work (folding, item face, checking off).
+  Solera reports the fraction in a later engine change.
+- **Principles:** Honesty (a number says only what it counts); SSOT (a promised result is the one
+  grouping object); VISION "AI proposes, a person confirms".
+
 ### D-2026-10-04-A — Work items: free depth, a person accepts the results promised to them, design-node badges count by state
 
 - **What:** (1) Work items have no fixed level names. The initiative → epic → story → action

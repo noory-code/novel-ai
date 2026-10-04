@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.200.4] — 2026-10-04
+
+### Documentation
+
+- D-2026-10-04-B: folded work items show an accepted fraction instead of a percent; no fixed work
+  period; finished items leave the progress view but stay on record; a new publish re-checks only
+  related in-progress items.
+
 ## [0.200.3] — 2026-10-04
 
 ### Documentation
