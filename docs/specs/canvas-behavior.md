@@ -188,6 +188,8 @@ choices made while building it on 2026-10-02 and still open to the user's review
   nodes show no badge. *(Claude:)* "focused" means the first of those items is selected and focus mode lights the
   branches of all of them, until the person selects another item; returning to the Work tab later does not refocus.
   The badge floats outside the node's measured size, so a change in Solera never rewrites the design file.
+  *Decided, not yet built (user, `D-2026-10-04-A` (3)):* the badge shows a count per state instead of one total, and
+  the count of results waiting for the person's judgment is always shown.
 - **Checking items off** *(user; D-2026-10-02-D)*: every item without children has a checkbox, on the graph node and in
   the list. On an item without a check command, the checkbox finishes it, and pressing it again reopens it. On an item
   with a check command, the checkbox runs that command: a pass checks it, and a failure leaves it unchecked and shows
@@ -195,4 +197,7 @@ choices made while building it on 2026-10-02 and still open to the user's review
   no design node cannot be checked, and its checkbox says why. Containers have no checkbox; their percent comes from
   the engine and rises as their items are checked. *(Claude:)* Space checks the selected item in the graph or the list,
   and a check command shows "running the check" while it runs.
+  *Decided, not yet built (user, `D-2026-10-04-A` (1)–(2)):* work items have no fixed level names. An item whose result
+  was promised to the person is not finished when all its children are; it waits until the person tries the result and
+  accepts it, and that acceptance can be reopened. The person confirms pass conditions in plain words, not check code.
 - **Not in this version:** deleting items.

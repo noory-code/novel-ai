@@ -39,7 +39,53 @@
 
 ## Log
 
+### D-2026-10-04-A — Work items: free depth, a person accepts the results promised to them, design-node badges count by state
+
+- **What:** (1) Work items have no fixed level names. The initiative → epic → story → action
+  tree and "one feature is about one initiative" of D-2026-10-01-G (4) are dropped; a work item
+  is split as deep as its results need. A child is part of its parent's result; work that only has
+  to happen first is a waiting link, not a child. The rest of D-2026-10-01-G stands: every work
+  item reaches a published node through its ancestors or through the work it enables, there is
+  still no exception that hangs a work item on the central project node, and a work item attaches
+  only to a published node, never to a draft (D-2026-10-01-G (5)). A research item points at the
+  published nodes it concerns and says which promise or problem of each node it looks into; it
+  need not name the node that will change. (2) Each work item records who accepts its result and
+  how. A small item whose whole result a gate can judge is still finished by its gate passing, as
+  in D-2026-10-02-D. An item whose result was promised to the person (for example "a user can
+  actually pay") is not finished when all its children are: it waits for judgment until the
+  person tries the result and accepts it. The person confirms the pass conditions in plain words
+  (for example "pressing pay twice charges once"), not the check code. A gate's pass stays on
+  record; the person's acceptance can be reopened later. (3) The count badge on a design node
+  (D-2026-10-02-A (4)) shows counts per state instead of one total, and the count of results
+  waiting for the person's judgment is always shown. Work items are still not drawn on the design
+  canvas (D-2026-10-02-B). (4) Whether a piece of work belongs to Novel is asked as "when this is
+  done, what changes in the product or in how it is delivered?" Work that keeps the organization
+  running (pay, hiring, office, tax filing) is not a Novel work item.
+- **Why:** an AI-made result that passes its automated check is often not one a person would
+  accept (METR, 2026-03: about half of the agent PRs that passed their tests would not be merged
+  by maintainers), so passing children cannot stand for the result the person was promised. A
+  founder may not read code, so what they confirm has to be the condition in words. Fixed level
+  names left empty levels on small features and too few on large ones, and "action" already means
+  a user action on the feature canvas. One total on a badge says how much work exists, not where
+  to look.
+- **Alternatives:** every item needs a person's acceptance — rejected: with an AI finishing many
+  items a day, the person becomes the bottleneck. Keep the four level names — rejected by the user.
+  Let research items attach to a draft — rejected by the user: a draft is not confirmed, so no work
+  can hang on it. Decide the scope as "reaches the design by any chain of links" — rejected: a long
+  enough chain admits payroll.
+- **Approval:** Accepted by user, 2026-10-04, after a discussion with the in-app coach
+  (novel-workspace W-00000372). The public design of these behaviors is the self-design project's
+  "설계 실현" service and its "일감", "후보", "되돌아온 지적" entities.
+- **Spec impact:** `docs/specs/canvas-behavior.md` §Work and `docs/concepts/ai-collaboration.md`
+  §1. Solera's states and HTTP surface change in a later engine change.
+- **Principles:** SSOT (a promised result is one work item, not a second grouping object);
+  Honesty (a gate pass is evidence, not the person's acceptance); VISION "AI proposes, a person
+  confirms".
+
 ### D-2026-10-02-D — A person finishes a work item that has no gate; a gate still decides its own leaf
+
+> Amended by D-2026-10-04-A (2): an item whose result was promised to the person is not finished
+> by its children or its gate alone; it waits until the person accepts the result.
 
 - **What:** (1) A Solera work item with no gate and no children is finished by a person checking
   it in the app. The check marks it `done` and rolls up its ancestors; unchecking returns it to
@@ -97,6 +143,9 @@
 
 ### D-2026-10-02-B — The work-item graph is its own tab beside the design canvases
 
+> Amended by D-2026-10-04-A (3): the design-node badge shows counts per state, and the count of
+> results waiting for the person's judgment is always shown. The separate work tab stands.
+
 - **What:** the app shows Solera's work-item graph in a tab of its own, next
   to the four design canvas tabs, not drawn on top of a design canvas. The
   design canvases keep only the per-node count badge of D-2026-10-02-A;
@@ -122,6 +171,9 @@
   UX "one screen, one primary action".
 
 ### D-2026-10-02-A — Solera runs as a second engine; the app asks both and joins them
+
+> Item (4) amended by D-2026-10-04-A (3): the badge shows counts per state instead of one total.
+> It still shows no percent.
 
 - **What:** (1) Solera gets an HTTP layer and runs as a second engine
   process beside Mashbill, on `127.0.0.1:5191` (Mashbill stays on 5190). The
@@ -161,6 +213,10 @@
   coupling / DIP (the app composes, the engines do not know each other).
 
 ### D-2026-10-01-G — Connectedness invariant: everything made outside the canvas reaches a published node
+
+> Item (4) amended by D-2026-10-04-A (1): the fixed initiative → epic → story → action levels and
+> "one feature is about one initiative" are dropped; depth is free. The rest of (4) — no exception
+> on the central project node, reaching a node through ancestors — stands, and so does (5).
 
 - **What:** (1) Everything that comes into being outside the canvas (a work
   item, code, a design file, a run's output) must reach a node of the design

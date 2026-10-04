@@ -81,12 +81,12 @@ Novel app (proprietary, paid) — MCP host + visual canvas + composition shell
 - **A work item attaches to a published node only, and the link lives on the work item** (`realizes`, a
   slug). A node stores no work-item ids. To badge a design node, the app maps the node id to its slug
   through Mashbill's `_slugs.json` and asks Solera for the work items that realize that slug. The badge
-  shows a count; completion percent belongs to work items only.
+  shows counts per state, never a percent; completion percent belongs to work items only.
 - **The work-item graph is its own tab beside the design canvases**, not an overlay on them: work items
   hang on a frozen published design, while the canvases show live nodes.
 
 Decision source = [`mashbill/docs/DECISIONS.md`](../plugins/mashbill/docs/DECISIONS.md) `D-2026-10-01-G`,
-`D-2026-10-02-A`, `D-2026-10-02-B`.
+`D-2026-10-02-A`, `D-2026-10-02-B`, `D-2026-10-04-A`.
 
 ## Migration Status
 

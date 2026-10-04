@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.200.3] — 2026-10-04
+
+### Documentation
+
+- D-2026-10-04-A: work items have no fixed level names; an item whose result was promised to the
+  person waits for that person's acceptance; design-node badges count work items by state.
+
 ## [0.200.2] — 2026-10-02
 
 ### Documentation
