@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import multiprocessing
+import re
 from pathlib import Path
 from time import sleep
 from typing import Any
@@ -98,7 +99,7 @@ def test_workspace_lock_times_out_when_another_process_holds_it(tmp_path: Path) 
     assert ready.wait(5)
 
     try:
-        with pytest.raises(WorkspaceLockTimeoutError, match=str(ws.root / ".lock")):
+        with pytest.raises(WorkspaceLockTimeoutError, match=re.escape(str(ws.root / ".lock"))):
             with ws.lock(timeout=0.1):
                 pytest.fail("lock unexpectedly acquired")
     finally:

@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.6.2] — 2026-10-04
+
+### Fixed
+
+- The lock-timeout test escapes the lock path before using it as a pattern, so it passes on Windows.
+
 ## [8.6.1] — 2026-10-03
 
 ### Fixed
