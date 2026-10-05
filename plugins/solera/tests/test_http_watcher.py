@@ -102,18 +102,19 @@ def test_real_watcher_broadcasts_each_http_write_route(
     predecessor = None
     new_parent = None
     if route == "patch":
-        item = create_item(ws, "story", "Before")
+        item = create_item(ws, "story", "Before", accept="children")
     elif route == "move":
-        old_parent = create_item(ws, "story", "Old parent")
-        new_parent = create_item(ws, "epic", "New parent")
+        old_parent = create_item(ws, "story", "Old parent", accept="children")
+        new_parent = create_item(ws, "epic", "New parent", accept="children")
         item = create_item(ws, "action", "Move me", gate="true", parent=old_parent.id)
     elif route in {"add_after", "delete_after"}:
-        predecessor = create_item(ws, "story", "First")
+        predecessor = create_item(ws, "story", "First", accept="children")
         item = create_item(
             ws,
             "story",
             "Second",
             after=[predecessor.id] if route == "delete_after" else None,
+            accept="children",
         )
 
     with watched_client.websocket_connect(f"/ws?project_path={tmp_path}") as socket:
@@ -122,7 +123,7 @@ def test_real_watcher_broadcasts_each_http_write_route(
             response = watched_client.post(
                 "/api/work/items",
                 params=_query(tmp_path),
-                json={"parent": None, "goal": "Created"},
+                json={"parent": None, "goal": "Created", "accept": "children"},
             )
             assert response.status_code == 201
         elif route == "patch":
@@ -164,7 +165,7 @@ def test_real_watcher_broadcasts_direct_core_write(
     watched_client: TestClient, tmp_path: Path
 ) -> None:
     ws = _workspace(tmp_path)
-    item = create_item(ws, "story", "Before")
+    item = create_item(ws, "story", "Before", accept="children")
 
     with watched_client.websocket_connect(f"/ws?project_path={tmp_path}") as socket:
         deadline = monotonic() + _MAX_WAIT_SECONDS
@@ -177,7 +178,7 @@ def test_real_watcher_debounces_a_burst_of_writes(
     watched_client: TestClient, tmp_path: Path
 ) -> None:
     ws = _workspace(tmp_path)
-    item = create_item(ws, "story", "Before")
+    item = create_item(ws, "story", "Before", accept="children")
 
     with watched_client.websocket_connect(f"/ws?project_path={tmp_path}") as socket:
         final_deadline = monotonic() + _MAX_WAIT_SECONDS

@@ -82,23 +82,34 @@ def _find_cycles(parsed: dict[str, WorkItem], parent_of: dict[str, str]) -> list
 def _audit_rollups(parsed: dict[str, WorkItem]) -> list[Problem]:
     out: list[Problem] = []
     for item_id, item in parsed.items():
-        if not item.children or any(child_id not in parsed for child_id in item.children):
+        if (
+            not item.children
+            or item.status == "cancelled"
+            or any(child_id not in parsed for child_id in item.children)
+        ):
             continue
-        open_children = [
-            child_id for child_id in item.children if parsed[child_id].status != "done"
-        ]
-        if item.status == "done" and open_children:
+        open_children = [child_id for child_id in item.children if not parsed[child_id].is_finished]
+        if item.accept == "person" and item.status == "done":
+            continue
+        if item.status in {"done", "review"} and open_children:
             out.append(
                 Problem(
                     "rollup-broken",
-                    f"{item_id} is done but has non-done children: {', '.join(open_children)}",
+                    f"{item_id} is {item.status} but has unfinished children: "
+                    f"{', '.join(open_children)}",
                 )
             )
-        elif item.status != "done" and not open_children:
+        elif (
+            item.status not in {"done", "review", "rework"}
+            and not open_children
+            and any(parsed[child_id].status == "done" for child_id in item.children)
+        ):
+            expected = "done" if item.accept == "children" else "review"
             out.append(
                 Problem(
                     "rollup-pending",
-                    f"{item_id} has children that are all done but its status is {item.status}",
+                    f"{item_id} has finished children but its status is {item.status}; "
+                    f"expected {expected}",
                 )
             )
     return out

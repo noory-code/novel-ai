@@ -15,18 +15,26 @@ active leaf at a time).
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 
 from . import graph
 from .errors import (
+    BlankReasonError,
+    CancelFinishedError,
     CheckBlockedError,
+    CheckCancelledError,
     CheckConflictError,
     CheckContainerError,
+    NotInReviewError,
+    NotPersonError,
     OrderError,
+    ReopenNotDoneError,
+    ReopenNotPersonError,
     UncheckGatedError,
     UnknownWorkItemError,
 )
-from .formats import Progress, Status, WorkItem
+from .formats import Judgment, JudgmentAction, Progress, Status, WorkItem
 from .gate import DEFAULT_TIMEOUT_SECONDS, GateResult, run_item_gate
 from .intake import has_imported_design
 from .workspace import Workspace, workspace_locked
@@ -91,6 +99,8 @@ def _childless_from_items(items: dict[str, WorkItem]) -> list[str]:
             return
         seen.add(item_id)
         item = items[item_id]
+        if item.status == "cancelled":
+            return
         if item.is_container:
             for child_id in item.children:
                 visit(child_id)
@@ -116,7 +126,7 @@ def find_next_open(ws: Workspace) -> str | None:
     design_required = has_imported_design(ws)
     blocked: list[BlockedLeaf] = []
     for leaf_id in leaves:
-        if items[leaf_id].status != "todo":
+        if not items[leaf_id].is_startable:
             continue
         blocked_leaf = _blocked_leaf(items, leaf_id, design_required=design_required)
         if blocked_leaf is None:
@@ -152,7 +162,7 @@ def ready_leaves(ws: Workspace) -> tuple[list[str], list[BlockedLeaf]]:
     ready: list[str] = []
     blocked: list[BlockedLeaf] = []
     for leaf_id in _leaves_from_items(items):
-        if items[leaf_id].status != "todo":
+        if not items[leaf_id].is_startable:
             continue
         blocked_leaf = _blocked_leaf(items, leaf_id, design_required=design_required)
         if blocked_leaf is None:
@@ -172,7 +182,7 @@ def blocked_items(ws: Workspace) -> list[BlockedLeaf]:
     design_required = has_imported_design(ws)
     blocked: list[BlockedLeaf] = []
     for item_id in _childless_from_items(items):
-        if items[item_id].status != "todo":
+        if not items[item_id].is_startable:
             continue
         blocked_item = _blocked_leaf(items, item_id, design_required=design_required)
         if blocked_item is not None:
@@ -181,9 +191,22 @@ def blocked_items(ws: Workspace) -> list[BlockedLeaf]:
 
 
 @workspace_locked
-def set_item_status(ws: Workspace, item_id: str, status: Status) -> WorkItem:
+def set_item_status(
+    ws: Workspace,
+    item_id: str,
+    status: Status,
+    *,
+    person: bool = False,
+) -> WorkItem:
     """Rewrite one item's status, preserving its other fields."""
-    updated = ws.load_item(item_id).model_copy(update={"status": status})
+    from .planning import assert_items_not_frozen, assert_person_edit_allowed
+
+    item = ws.load_item(item_id)
+    items = graph.load_items(ws)
+    assert_person_edit_allowed(items, [item.id], person=person)
+    if status != "cancelled":
+        assert_items_not_frozen(items, [item.id])
+    updated = item.model_copy(update={"status": status})
     ws.write_item(updated)
     return updated
 
@@ -221,11 +244,16 @@ def _rollup(ws: Workspace, leaf_id: str) -> None:
     parents = parent_map(ws)
     current = parents.get(leaf_id)
     if current is not None:
-        rollup_item_and_ancestors(ws, current)
+        rollup_item_and_ancestors(ws, current, child_finished=True)
 
 
 @workspace_locked
-def rollup_item_and_ancestors(ws: Workspace, item_id: str) -> None:
+def rollup_item_and_ancestors(
+    ws: Workspace,
+    item_id: str,
+    *,
+    child_finished: bool = False,
+) -> None:
     """Mark a container and successive ancestors done when all children are done.
 
     Unlike :func:`_rollup`, this includes ``item_id`` itself. Tree edits use it
@@ -236,15 +264,34 @@ def rollup_item_and_ancestors(ws: Workspace, item_id: str) -> None:
     current: str | None = item_id
     while current is not None:
         item = ws.load_item(current)
-        if item.children and all(ws.load_item(child).status == "done" for child in item.children):
-            set_item_status(ws, current, "done")
-            current = parents.get(current)
-        else:
+        if item.status == "cancelled":
             break
+        if item.accept == "person" and item.status == "done":
+            current = parents.get(current)
+            child_finished = False
+            continue
+        children = [ws.load_item(child) for child in item.children]
+        if not children or not all(child.is_finished for child in children):
+            break
+        if not any(child.status == "done" for child in children):
+            break
+        if item.status == "rework" and not child_finished:
+            break
+        target: Status = "done" if item.accept == "children" else "review"
+        changed = item.status != target
+        if changed:
+            set_item_status(ws, current, target)
+        current = parents.get(current)
+        child_finished = changed and target == "done"
 
 
 @workspace_locked
-def invalidate_done_ancestors(ws: Workspace, item_id: str) -> None:
+def invalidate_done_ancestors(
+    ws: Workspace,
+    item_id: str,
+    *,
+    person: bool = False,
+) -> None:
     """The inverse of :func:`_rollup`. Reopening a descendant breaks the rollup
     invariant (a container is ``done`` only when all its children are done), so
     walk up and reset any ancestor that is ``done`` but now has a non-done child.
@@ -253,8 +300,14 @@ def invalidate_done_ancestors(ws: Workspace, item_id: str) -> None:
     current = parents.get(item_id)
     while current is not None:
         item = ws.load_item(current)
-        if item.status == "done" and not all(
-            ws.load_item(child).status == "done" for child in item.children
+        if (
+            item.status == "cancelled"
+            or (item.accept == "person" and item.status == "done")
+            or (item.is_protected and not person)
+        ):
+            break
+        if item.status in {"done", "review"} and not all(
+            ws.load_item(child).is_finished for child in item.children
         ):
             set_item_status(ws, current, "todo")
             current = parents.get(current)
@@ -309,14 +362,21 @@ def reopen_items(ws: Workspace, item_ids: list[str]) -> None:
             if child_id not in items:
                 ws.load_item(child_id)
 
+    from .planning import assert_items_not_frozen, assert_person_edit_allowed
+
+    assert_person_edit_allowed(items, [*targets, *ancestors])
+    assert_items_not_frozen(items, [*targets, *ancestors])
+
     final: dict[str, WorkItem] = {}
     for item_id in targets:
         item = items[item_id]
+        if item.status == "cancelled":
+            continue
         if item.status != "todo":
             final[item_id] = item.model_copy(update={"status": "todo"})
     for item_id in ancestors:
         item = items[item_id]
-        if item.status == "done":
+        if item.status in {"done", "review"}:
             final[item_id] = item.model_copy(update={"status": "todo"})
 
     for item_id in sorted(final, key=lambda candidate: (depths[candidate], candidate)):
@@ -337,13 +397,143 @@ def complete(
     rolls up to ``done`` too. Fail: the leaf stays ``doing`` and the result is
     returned so the caller stops and escalates to a human.
     """
+    pointer = ws.load_progress().item if ws.progress_path.is_file() else None
+    if pointer != item_id:
+        return _skipped_completion(
+            item_id,
+            f"cannot complete {item_id}: the progress pointer names {pointer!r}",
+        )
     item = ws.load_item(item_id)
+    if item.status != "doing":
+        return _skipped_completion(
+            item_id,
+            f"cannot complete {item_id}: its status is {item.status}, not doing",
+        )
+    if not item.gate:
+        return _skipped_completion(item_id, f"cannot complete {item_id}: it has no gate")
+    items = graph.load_items(ws)
+    parent_of = graph.parents(items)
+    current = parent_of.get(item_id)
+    while current is not None:
+        if items[current].status == "cancelled":
+            return _skipped_completion(
+                item_id,
+                f"cannot complete {item_id}: ancestor {current} is cancelled",
+            )
+        current = parent_of.get(current)
     result = run_item_gate(item, cwd=cwd, timeout=timeout)
     if not result.passed:
         return result
-    set_item_status(ws, item_id, "done")
+    target: Status = "done" if item.accept == "gate" else "review"
+    ws.write_item(item.model_copy(update={"status": target, "gate_passed": True}))
     _rollup(ws, item_id)
     return result
+
+
+def _skipped_completion(item_id: str, reason: str) -> GateResult:
+    return GateResult(
+        command=f"complete {item_id}",
+        passed=False,
+        exit_code=None,
+        stdout="",
+        stderr=reason,
+        timed_out=False,
+    )
+
+
+def _judged(item: WorkItem, action: JudgmentAction, reason: str) -> WorkItem:
+    judgment = Judgment(
+        action=action,
+        reason=reason,
+        at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+    )
+    return item.model_copy(update={"judgments": [*item.judgments, judgment]})
+
+
+def _required_reason(reason: str) -> str:
+    if not reason.strip():
+        raise BlankReasonError("reason must not be blank")
+    return reason
+
+
+def _require_no_cancelled_ancestor(ws: Workspace, item_id: str) -> None:
+    items = graph.load_items(ws)
+    parent = graph.parents(items).get(item_id)
+    if parent is None:
+        return
+    cancelled = graph.cancelled_ancestor(items, parent)
+    if cancelled is not None:
+        raise CheckCancelledError(f"{item_id} is frozen under cancelled item {cancelled}")
+
+
+@workspace_locked
+def accept_item(ws: Workspace, item_id: str) -> WorkItem:
+    """Record a person's acceptance of a result in review."""
+    item = ws.load_item(item_id)
+    _require_no_cancelled_ancestor(ws, item_id)
+    if item.accept != "person":
+        raise NotPersonError(f"{item_id} is accepted by {item.accept}, not a person")
+    if item.status != "review":
+        raise NotInReviewError(f"{item_id} is {item.status}, not in review")
+    ws.write_item(_judged(item, "accept", "").model_copy(update={"status": "done"}))
+    _rollup(ws, item_id)
+    return ws.load_item(item_id)
+
+
+@workspace_locked
+def reject_item(ws: Workspace, item_id: str, reason: str) -> WorkItem:
+    """Send a person's result in review back for rework with a reason."""
+    reason = _required_reason(reason)
+    item = ws.load_item(item_id)
+    _require_no_cancelled_ancestor(ws, item_id)
+    if item.accept != "person":
+        raise NotPersonError(f"{item_id} is accepted by {item.accept}, not a person")
+    if item.status != "review":
+        raise NotInReviewError(f"{item_id} is {item.status}, not in review")
+    ws.write_item(_judged(item, "reject", reason).model_copy(update={"status": "rework"}))
+    return ws.load_item(item_id)
+
+
+@workspace_locked
+def reopen_item(ws: Workspace, item_id: str, reason: str) -> WorkItem:
+    """Reopen a person-accepted result that never met its pass conditions."""
+    reason = _required_reason(reason)
+    item = ws.load_item(item_id)
+    _require_no_cancelled_ancestor(ws, item_id)
+    if item.accept != "person":
+        raise ReopenNotPersonError(f"{item_id} is accepted by {item.accept}, not a person")
+    if item.status != "done":
+        raise ReopenNotDoneError(f"{item_id} is {item.status}, not done")
+    ws.write_item(_judged(item, "reopen", reason).model_copy(update={"status": "rework"}))
+    invalidate_done_ancestors(ws, item_id, person=True)
+    return ws.load_item(item_id)
+
+
+@workspace_locked
+def cancel_item(ws: Workspace, item_id: str, reason: str) -> WorkItem:
+    """Cancel unfinished work, freeze its subtree, and clear an active pointer below it."""
+    reason = _required_reason(reason)
+    item = ws.load_item(item_id)
+    if item.is_finished:
+        raise CancelFinishedError(f"{item_id} is already {item.status}")
+    _require_no_cancelled_ancestor(ws, item_id)
+    ws.write_item(_judged(item, "cancel", reason).model_copy(update={"status": "cancelled"}))
+    items = graph.load_items(ws)
+    frozen = {item_id}
+    pending = list(items[item_id].children)
+    while pending:
+        descendant_id = pending.pop()
+        if descendant_id in frozen or descendant_id not in items:
+            continue
+        frozen.add(descendant_id)
+        pending.extend(items[descendant_id].children)
+    if ws.progress_path.is_file() and ws.load_progress().item in frozen:
+        ws.write_progress(Progress(item=None))
+    parents = graph.parents(items)
+    parent = parents.get(item_id)
+    if parent is not None:
+        rollup_item_and_ancestors(ws, parent, child_finished=True)
+    return ws.load_item(item_id)
 
 
 @dataclass(frozen=True)
@@ -377,7 +567,7 @@ def check_item(
         if item.status == "done":
             return CheckResult(item=item, gate=None)
         if not item.is_leaf:
-            set_item_status(ws, item_id, "done")
+            ws.write_item(_judged(item, "check", "").model_copy(update={"status": "done"}))
             _rollup(ws, item_id)
             return CheckResult(item=ws.load_item(item_id), gate=None)
     result = run_item_gate(item, cwd=cwd, timeout=timeout)
@@ -391,10 +581,15 @@ def check_item(
                 f"{item_id} changed while its gate ran; nothing was written, check it again"
             )
         if result.passed:
-            set_item_status(ws, item_id, "done")
+            current = _judged(current, "check", "").model_copy(
+                update={"status": "done", "gate_passed": True}
+            )
+            ws.write_item(current)
             _rollup(ws, item_id)
             if ws.progress_path.is_file() and ws.load_progress().item == item_id:
                 ws.write_progress(Progress(item=None))
+        else:
+            ws.write_item(_judged(current, "check", ""))
         return CheckResult(item=ws.load_item(item_id), gate=result)
 
 
@@ -404,14 +599,19 @@ def _checkable_item(ws: Workspace, item_id: str) -> WorkItem:
     if item_id not in items:
         raise UnknownWorkItemError(f"unknown work item: {item_id}")
     item = items[item_id]
-    if item.is_container:
+    cancelled = graph.cancelled_ancestor(items, item_id)
+    if cancelled is not None:
+        raise CheckCancelledError(f"{item_id} is frozen under cancelled item {cancelled}")
+    if item.is_container or item.accept == "children":
         raise CheckContainerError(
             f"{item_id} has children; a container is done only when all its children are done"
         )
-    if item.status == "todo":
+    if item.is_startable:
         blocked = _blocked_leaf(items, item_id, design_required=has_imported_design(ws))
         if blocked is not None:
             raise CheckBlockedError(f"cannot check {item_id}: {'; '.join(blocked.reasons)}")
+    elif item.status == "review":
+        raise CheckBlockedError(f"cannot check {item_id}: it is in review and needs acceptance")
     return item
 
 
@@ -426,7 +626,11 @@ def uncheck_item(ws: Workspace, item_id: str) -> WorkItem:
     if item_id not in ws.list_items():
         raise UnknownWorkItemError(f"unknown work item: {item_id}")
     item = ws.load_item(item_id)
-    if item.is_container:
+    items = graph.load_items(ws)
+    cancelled = graph.cancelled_ancestor(items, item_id)
+    if cancelled is not None:
+        raise CheckCancelledError(f"{item_id} is frozen under cancelled item {cancelled}")
+    if item.is_container or item.accept == "children":
         raise CheckContainerError(
             f"{item_id} has children; a container is done only when all its children are done"
         )
@@ -435,7 +639,11 @@ def uncheck_item(ws: Workspace, item_id: str) -> WorkItem:
             f"{item_id} was finished by its gate; a gate's verdict is not undone by hand "
             "(use repin to reopen gated work)"
         )
+    if item.status == "todo":
+        return item
     if item.status == "done":
-        set_item_status(ws, item_id, "todo")
-        invalidate_done_ancestors(ws, item_id)
+        item = item.model_copy(update={"status": "todo"})
+    item = _judged(item, "uncheck", "")
+    ws.write_item(item)
+    invalidate_done_ancestors(ws, item_id, person=True)
     return ws.load_item(item_id)

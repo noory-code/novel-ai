@@ -44,7 +44,7 @@ def _hold_workspace_lock(root: str, ready: Any, release: Any) -> None:
 
 def test_two_processes_do_not_lose_children(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
-    parent = create_item(ws, "story", "parent")
+    parent = create_item(ws, "story", "parent", accept="children")
     child_count = 5
     context = multiprocessing.get_context("spawn")
     barrier = context.Barrier(3)

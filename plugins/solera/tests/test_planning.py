@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from solera.errors import FormatError
+from solera.errors import AcceptRequiredError, FormatError
 from solera.planning import create_item, next_item_id
 from solera.workspace import Workspace
 
@@ -27,7 +27,7 @@ def test_next_item_id_falls_back_for_custom_level(tmp_path: Path) -> None:
 
 def test_create_root_item_is_compliant(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    item = create_item(ws, "story", "Ship the thing.")
+    item = create_item(ws, "story", "Ship the thing.", accept="children")
     assert item.id == "STORY-001"
     assert item.status == "todo"
     assert item.children == []
@@ -41,9 +41,18 @@ def test_create_leaf_with_gate(tmp_path: Path) -> None:
     assert leaf.gate == "test -f out.txt"
 
 
+def test_create_item_requires_accept_without_a_gate(tmp_path: Path) -> None:
+    ws = _ws(tmp_path)
+
+    with pytest.raises(AcceptRequiredError):
+        create_item(ws, "story", "Ambiguous")
+
+    assert ws.list_items() == []
+
+
 def test_create_child_appends_to_parent(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "box")
+    story = create_item(ws, "story", "box", accept="children")
     a1 = create_item(ws, "action", "one", gate="true", parent=story.id)
     a2 = create_item(ws, "action", "two", gate="true", parent=story.id)
     assert ws.load_item(story.id).children == [a1.id, a2.id]
@@ -52,8 +61,8 @@ def test_create_child_appends_to_parent(tmp_path: Path) -> None:
 
 def test_ids_increment_per_level(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    create_item(ws, "story", "a")
-    create_item(ws, "story", "b")
+    create_item(ws, "story", "a", accept="children")
+    create_item(ws, "story", "b", accept="children")
     assert next_item_id(ws, "story") == "STORY-003"
     assert next_item_id(ws, "action") == "ACT-001"  # independent per level
 
@@ -63,7 +72,7 @@ def test_level_prefix_cannot_escape_items_directory(tmp_path: Path, level: str) 
     ws = _ws(tmp_path)
 
     with pytest.raises(FormatError, match="name"):
-        create_item(ws, level, "Must not be written")
+        create_item(ws, level, "Must not be written", accept="children")
 
     assert ws.list_items() == []
     assert ws.lock_path.is_file()

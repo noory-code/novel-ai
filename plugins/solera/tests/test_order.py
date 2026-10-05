@@ -23,7 +23,7 @@ def _ws(tmp_path: Path) -> Workspace:
 
 def test_create_rejects_missing_after_without_writing(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    parent = create_item(ws, "story", "box")
+    parent = create_item(ws, "story", "box", accept="children")
     before_items = ws.list_items()
     before_parent = ws.item_path(parent.id).read_text()
 
@@ -43,9 +43,9 @@ def test_create_rejects_missing_after_without_writing(tmp_path: Path) -> None:
 
 def test_after_may_reference_leaf_under_another_parent(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    first = create_item(ws, "story", "first")
+    first = create_item(ws, "story", "first", accept="children")
     predecessor = create_item(ws, "action", "one", gate="true", parent=first.id)
-    second = create_item(ws, "story", "second")
+    second = create_item(ws, "story", "second", accept="children")
 
     dependent = create_item(
         ws,
@@ -74,8 +74,8 @@ def test_set_after_rejects_cycle_without_writing(tmp_path: Path) -> None:
 
 def test_set_after_rejects_unsplit_cycle_without_writing(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    a = create_item(ws, "story", "a")
-    b = create_item(ws, "story", "b")
+    a = create_item(ws, "story", "a", accept="children")
+    b = create_item(ws, "story", "b", accept="children")
     set_after(ws, a.id, [b.id])
     before = ws.item_path(b.id).read_text()
 
@@ -87,9 +87,9 @@ def test_set_after_rejects_unsplit_cycle_without_writing(tmp_path: Path) -> None
 
 def test_set_after_rejects_three_item_unsplit_cycle(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    a = create_item(ws, "story", "a")
-    b = create_item(ws, "story", "b")
-    c = create_item(ws, "story", "c")
+    a = create_item(ws, "story", "a", accept="children")
+    b = create_item(ws, "story", "b", accept="children")
+    c = create_item(ws, "story", "c", accept="children")
     set_after(ws, a.id, [b.id])
     set_after(ws, b.id, [c.id])
     before = ws.item_path(c.id).read_text()
@@ -166,8 +166,10 @@ def test_order_problems_reports_inherited_ancestor_wait() -> None:
 @pytest.mark.parametrize("gate", ["", "true"])
 def test_item_cannot_wait_for_its_ancestor_regardless_of_gate(tmp_path: Path, gate: str) -> None:
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "box")
-    child = create_item(ws, "action", "step", gate=gate, parent=story.id)
+    story = create_item(ws, "story", "box", accept="children")
+    child = create_item(
+        ws, "action", "step", gate=gate, parent=story.id, accept="gate" if gate else "children"
+    )
 
     with pytest.raises(OrderWaitsOnAncestorError, match="never be satisfied"):
         set_after(ws, child.id, [story.id])
@@ -178,8 +180,10 @@ def test_container_cannot_wait_for_its_descendant_regardless_of_gate(
     tmp_path: Path, gate: str
 ) -> None:
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "box")
-    child = create_item(ws, "action", "step", gate=gate, parent=story.id)
+    story = create_item(ws, "story", "box", accept="children")
+    child = create_item(
+        ws, "action", "step", gate=gate, parent=story.id, accept="gate" if gate else "children"
+    )
 
     with pytest.raises(OrderWaitsOnDescendantError, match="never be satisfied"):
         set_after(ws, story.id, [child.id])
@@ -188,7 +192,7 @@ def test_container_cannot_wait_for_its_descendant_regardless_of_gate(
 @pytest.mark.parametrize("gate", ["", "true"])
 def test_create_rejects_waiting_on_parent_without_writing(tmp_path: Path, gate: str) -> None:
     ws = _ws(tmp_path)
-    parent = create_item(ws, "initiative", "ancestor")
+    parent = create_item(ws, "initiative", "ancestor", accept="children")
     before_items = ws.list_items()
     before_parent = ws.item_path(parent.id).read_text()
 
@@ -200,6 +204,7 @@ def test_create_rejects_waiting_on_parent_without_writing(tmp_path: Path, gate: 
             gate=gate,
             parent=parent.id,
             after=[parent.id],
+            accept="gate" if gate else "children",
         )
 
     assert ws.list_items() == before_items
@@ -229,7 +234,7 @@ def test_set_after_empty_removes_key_from_file(tmp_path: Path) -> None:
 
 def test_completion_counts_done_leaf_descendants(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "box")
+    story = create_item(ws, "story", "box", accept="children")
     first = create_item(ws, "action", "one", gate="true", parent=story.id)
     create_item(ws, "action", "two", gate="true", parent=story.id)
     ws.write_item(first.model_copy(update={"status": "done"}))
@@ -241,7 +246,7 @@ def test_completion_counts_done_leaf_descendants(tmp_path: Path) -> None:
 
 def test_completion_percentage_rounds_down(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "box")
+    story = create_item(ws, "story", "box", accept="children")
     first = create_item(ws, "action", "one", gate="true", parent=story.id)
     create_item(ws, "action", "two", gate="true", parent=story.id)
     create_item(ws, "action", "three", gate="true", parent=story.id)
@@ -254,8 +259,8 @@ def test_completion_percentage_rounds_down(tmp_path: Path) -> None:
 
 def test_completion_counts_leaves_at_all_depths(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    initiative = create_item(ws, "initiative", "top")
-    story = create_item(ws, "story", "nested", parent=initiative.id)
+    initiative = create_item(ws, "initiative", "top", accept="children")
+    story = create_item(ws, "story", "nested", parent=initiative.id, accept="children")
     first = create_item(ws, "action", "one", gate="true", parent=story.id)
     create_item(ws, "action", "two", gate="true", parent=story.id)
     create_item(ws, "action", "top leaf", gate="true", parent=initiative.id)
@@ -269,9 +274,9 @@ def test_completion_counts_leaves_at_all_depths(tmp_path: Path) -> None:
 
 def test_completion_counts_unsplit_child_as_leaf(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "box")
+    story = create_item(ws, "story", "box", accept="children")
     leaf = create_item(ws, "action", "done", gate="true", parent=story.id)
-    create_item(ws, "action", "not split", parent=story.id)
+    create_item(ws, "action", "not split", parent=story.id, accept="children")
     ws.write_item(leaf.model_copy(update={"status": "done"}))
 
     result = completion(load_items(ws))[story.id]
@@ -282,9 +287,9 @@ def test_completion_counts_unsplit_child_as_leaf(tmp_path: Path) -> None:
 
 def test_completion_100_matches_rollup_during_full_loop(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    initiative = create_item(ws, "initiative", "top")
-    first = create_item(ws, "story", "first", parent=initiative.id)
-    second = create_item(ws, "story", "second", parent=initiative.id)
+    initiative = create_item(ws, "initiative", "top", accept="children")
+    first = create_item(ws, "story", "first", parent=initiative.id, accept="children")
+    second = create_item(ws, "story", "second", parent=initiative.id, accept="children")
     create_item(ws, "action", "one", gate="true", parent=first.id)
     create_item(ws, "action", "two", gate="true", parent=first.id)
     create_item(ws, "action", "three", gate="true", parent=second.id)

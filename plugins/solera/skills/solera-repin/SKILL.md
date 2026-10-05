@@ -70,3 +70,5 @@ design.
   reintroduced. Escalation takes precedence over stale.
 - Other newly added service elements are work candidates, but re-pin does not
   create items. Plan them with `add_work_item(realizes=[...])` after review.
+
+`accept` is required when creating an item without a gate: `children` rolls up finished children, `person` waits for that person's judgment, and agents never judge a person's result.

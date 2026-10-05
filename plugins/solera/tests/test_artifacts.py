@@ -24,7 +24,7 @@ from solera.workspace import Workspace
 
 def _ws(tmp_path: Path) -> Workspace:
     ws = Workspace(tmp_path / ".noory" / "solera")
-    create_item(ws, "story", "the box")  # STORY-001
+    create_item(ws, "story", "the box", accept="children")  # STORY-001
     return ws
 
 

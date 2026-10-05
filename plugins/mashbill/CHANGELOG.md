@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.200.5] — 2026-10-05
+
+### Documentation
+
+- D-2026-10-04-B (7): a work item may record its progress phase (exploring or executing) with a
+  one-line note; it changes no status and the design-node badge counts it.
+
 ## [0.200.4] — 2026-10-04
 
 ### Documentation

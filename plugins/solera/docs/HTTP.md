@@ -24,7 +24,13 @@ engine; Mashbill never calls it; the app asks both engines and joins the answers
   Solera validation/order errors are 400; unknown item and parent ids are 404. Never 500 for a rule
   violation. `error` is English diagnostic text for agents and logs. Human-facing clients must select
   translated text by `code` instead of displaying or matching `error`.
-- Item JSON = `WorkItem.model_dump()` (`id, level, status, gate, children, realizes, after, goal`).
+- Item JSON = `WorkItem.model_dump()` (`id, level, status, gate, children, realizes, after, goal,
+  accept, phase, phase_note, judgments, gate_passed`). `judgments` is the append-only list of
+  `{"action", "reason", "at"}` a person's judgments left on the item. `status` is one of `todo`, `doing`,
+  `review`, `rework`, `done`, `cancelled`; `accept` is `gate`, `children` or `person`; `phase` is
+  `""`, `exploring` or `executing` ([SPEC.md](SPEC.md) §Who accepts a result). Clients must accept
+  every listed status; a client that rejects an unknown status breaks as soon as a person judges a
+  result.
 
 ### Error codes
 
@@ -59,10 +65,22 @@ route below except health; WebSocket failures still use close code 1008 and an E
 | `multiple_parents` | 400 | The source item already appears under more than one parent. | move |
 | `workspace_lock_timeout` | 400 | A write could not acquire the workspace lock before its timeout. | POST items, PATCH item, move, add after, remove after |
 | `invalid_format` | 400 | Stored Solera workspace data is malformed. | Any project route that reads the malformed data |
-| `check_container` | 400 | The item has children; a container is done only when all its children are done. | check, uncheck |
+| `check_container` | 400 | The item has children or `accept: children`; such an item is finished by its children, not by a check. | check, uncheck |
 | `check_blocked` | 400 | The item waits on order links or, in a workspace with an imported design, reaches no design node, so it cannot be checked yet. | check |
 | `check_conflict` | 400 | The item's status, gate or children changed while its gate ran; nothing was written. | check |
 | `uncheck_gated` | 400 | The item has a gate; a gate's verdict is not undone by hand (reopen gated work with `repin`). | uncheck |
+| `invalid_accept` | 400 | `accept` does not fit the item: `gate` without a gate, or `children` with a gate. | POST items, PATCH item |
+| `accept_required` | 400 | An item without a gate was created without `accept` (`children` or `person`). | POST items |
+| `accept_locked` | 400 | `accept` was changed on an item that is not `todo`, `doing` or `rework`. | PATCH item |
+| `item_protected` | 400 | An edit or move touches an `accept: person` item that is `review` or `done`; the person must reject or reopen it first. | PATCH item, POST items, move |
+| `check_cancelled` | 400 | The item is `cancelled` or lies under a cancelled item (a frozen subtree); nothing on it can change. | check, uncheck, PATCH item, POST items, move, accept, reject, reopen |
+| `not_person` | 400 | Accept or reject was asked for an item whose `accept` is not `person`. | accept, reject |
+| `invalid_phase` | 400 | `phase` is not `""`, `exploring` or `executing`. | PATCH item |
+| `blank_reason` | 400 | A reject, reopen or cancel came without a non-blank `reason`. | reject, reopen, cancel |
+| `not_in_review` | 400 | Accept or reject was asked for an item that is not in `review`. | accept, reject |
+| `reopen_not_person` | 400 | Reopen was asked for an item whose `accept` is not `person` (a gate verdict is reopened only by `repin`). | reopen |
+| `reopen_not_done` | 400 | Reopen was asked for an item that is not `done`. | reopen |
+| `cancel_finished` | 400 | Cancel was asked for an item that is already `done` or `cancelled`. | cancel |
 | `invalid` | 400 | Fallback for a rejection that has no more specific public code. | Any project route |
 
 ## Routes
@@ -72,8 +90,12 @@ route below except health; WebSocket failures still use close code 1008 and an E
 | `GET /api/health` | — | `{"ok": true, "engine": "solera", "version": "<solera.__version__>"}` (no auth) |
 | `GET /api/work` | — | `{"items": [Item...], "progress": {id: Completion}, "ready": [id...], "blocked": [{"id", "waiting_on": [id...], "reasons": [str...], "names_no_design_node": bool}], "current": id \| null}` |
 | `POST /api/work/by-slugs` | `{"slugs": [str...]}` | `{"by_slug": {slug: [id...]}}` — every requested slug is a key (empty list when none); an item matches when its own `realizes` contains the slug |
-| `POST /api/work/items` | `{"parent": id \| null, "goal": str, "level"?: str, "gate"?: str, "realizes"?: [str], "after"?: [id]}` | `201` Item. `parent: null` = new root (same as `plan`); otherwise same as `add` |
-| `PATCH /api/work/items/{id}` | `{"goal"?: str, "realizes"?: [str]}` (at least one key) | Item |
+| `POST /api/work/items` | `{"parent": id \| null, "goal": str, "level"?: str, "gate"?: str, "realizes"?: [str], "after"?: [id], "accept"?: str}` (`accept` required when there is no `gate`) | `201` Item. `parent: null` = new root (same as `plan`); otherwise same as `add` |
+| `PATCH /api/work/items/{id}` | `{"goal"?: str, "realizes"?: [str], "accept"?: str, "phase"?: str, "phase_note"?: str}` (at least one key) | Item. `accept` may change only while the item is `todo`, `doing` or `rework` (else `accept_locked`); it never finishes a leaf, and on a container the ordinary rollup then applies. A protected item rejects goal/realizes edits (`item_protected`) |
+| `POST /api/work/items/{id}/accept` | — | `{"item": Item}` — see "Judging a result" |
+| `POST /api/work/items/{id}/reject` | `{"reason": str}` | `{"item": Item}` |
+| `POST /api/work/items/{id}/reopen` | `{"reason": str}` | `{"item": Item}` |
+| `POST /api/work/items/{id}/cancel` | `{"reason": str}` | `{"item": Item}` |
 | `POST /api/work/items/{id}/move` | `{"parent": id \| null, "index": int \| null}` | `{"items": [Item...]}` — every item the move rewrote |
 | `POST /api/work/items/{id}/after` | `{"predecessor": id}` | Item (idempotent) |
 | `DELETE /api/work/items/{id}/after/{predecessor}` | — | Item (idempotent) |
@@ -97,9 +119,11 @@ MCP tool does, and `next` never hands such an item to an agent.
 
 1. Unknown id → 404 `unknown_work_item`. Item with children → 400 `check_container`.
 2. Already `done` → 200, unchanged, no gate run.
-3. A `todo` item must be able to start by the rules of `next`: every id in its own and its ancestors'
-   `after` is `done`, and in a workspace with an imported design it or an ancestor has `realizes`.
-   Otherwise → 400 `check_blocked`.
+3. A `cancelled` item → 400 `check_cancelled`. An item with `accept: children` → 400
+   `check_container`. A startable item (`todo` or `rework`) must be able to start by the rules of
+   `next`: every id in its own and its ancestors' `after` is `done`, and in a workspace with an imported
+   design it or an ancestor has `realizes`. Otherwise → 400 `check_blocked`. A `review` item is finished
+   by `accept`, not by check: checking it → 400 `check_blocked`, with an English message that names `accept`.
 4. No gate → `done`, and ancestors whose children are all done roll up to `done`. `gate` is `null`.
 5. Gate → the gate runs in the project folder, outside the workspace lock, so other writes go on
    while it runs. Afterwards, under the lock again: if the item's status, gate or children changed
@@ -117,3 +141,28 @@ trigger it.
 `DELETE /api/work/items/{id}/check`: unknown id → 404 `unknown_work_item`; children → 400
 `check_container`; a gate → 400 `uncheck_gated`; a `todo` item → 200 unchanged; a `done` item →
 `todo`, and every ancestor that was `done` only because of it goes back to `todo`.
+
+## Judging a result
+
+Decisions: D-2026-10-04-A, D-2026-10-04-B. Only this HTTP surface judges a result; no CLI command or
+MCP tool does ([SPEC.md](SPEC.md) §Who accepts a result). Each route runs in one workspace lock and
+answers `{"item": Item}` with the judged item; every ancestor whose derived status changed is rewritten
+in the same call.
+
+Every judgment appends `{"action", "reason", "at"}` to the item's `judgments`.
+
+- `POST .../accept`: unknown id → 404 `unknown_work_item`; `accept` not `person` → 400 `not_person`;
+  status not `review` → 400 `not_in_review`. Otherwise `done`, and ancestors roll up.
+- `POST .../reject` `{"reason"}`: blank reason → 400 `blank_reason`; `accept` not `person` → 400
+  `not_person`; status not `review` → 400 `not_in_review`. Otherwise `rework`. A container in `rework`
+  returns to `review` only when one of its children finishes after the rejection.
+- `POST .../reopen` `{"reason"}`: blank reason → 400 `blank_reason`; `accept` not `person` → 400
+  `reopen_not_person`; status not `done` → 400 `reopen_not_done`. Otherwise `rework`, and every ancestor
+  that was `done` or `review` only because of it goes back to `todo` (a protected `done` ancestor stays).
+  Use it when the accepted result never met its pass conditions; when it met them and broke later, keep
+  the acceptance and create a new item instead.
+- `POST .../cancel` `{"reason"}`: blank reason → 400 `blank_reason`; status `done` or `cancelled` →
+  400 `cancel_finished`. Otherwise `cancelled`; the `progress.md` pointer is cleared when it names the
+  item or anything under it; ancestors re-derive (a container whose other children are all finished may
+  roll up). The cancelled subtree is frozen. Work waiting on the cancelled item through `after` stays
+  blocked until the link is changed.

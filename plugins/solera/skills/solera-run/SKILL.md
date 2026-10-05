@@ -57,3 +57,5 @@ around.
 Call `workspace_status` to read the current pointer, items, completion percent
 per container, and every integrity problem without changing state. Call
 `ready_work_items` to see which leaves can start now and which are blocked.
+
+`accept` is required when creating an item without a gate: `children` rolls up finished children, `person` waits for that person's judgment, and agents never judge a person's result.

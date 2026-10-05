@@ -31,6 +31,22 @@ def parents(items: dict[str, WorkItem]) -> dict[str, str]:
     return {child_id: parent_id for parent_id, item in items.items() for child_id in item.children}
 
 
+def cancelled_ancestor(items: dict[str, WorkItem], item_id: str) -> str | None:
+    """Return the item or nearest ancestor that freezes this branch by cancellation."""
+    parent_of = parents(items)
+    visited: set[str] = set()
+    current: str | None = item_id
+    while current is not None and current not in visited:
+        visited.add(current)
+        item = items.get(current)
+        if item is None:
+            return None
+        if item.status == "cancelled":
+            return current
+        current = parent_of.get(current)
+    return None
+
+
 def reaches_design_node(items: dict[str, WorkItem], item_id: str) -> bool:
     """Return whether an item or any ancestor names a format F design slug."""
     parent_of = parents(items)
@@ -251,7 +267,7 @@ def completion(items: dict[str, WorkItem]) -> dict[str, Completion]:
     """Calculate leaf-descendant completion for every item with children."""
     result: dict[str, Completion] = {}
     for item_id, item in items.items():
-        if not item.children:
+        if not item.children or item.status == "cancelled":
             continue
         visited = {item_id}
         leaves: list[WorkItem] = []
@@ -261,6 +277,8 @@ def completion(items: dict[str, WorkItem]) -> dict[str, Completion]:
                 return
             visited.add(descendant_id)
             descendant = items[descendant_id]
+            if descendant.status == "cancelled":
+                return
             if not descendant.children:
                 leaves.append(descendant)
                 return

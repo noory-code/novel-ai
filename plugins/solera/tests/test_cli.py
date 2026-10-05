@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from solera.cli import main
+from solera.formats import WorkItem
 from solera.workspace import Workspace
 
 
@@ -21,7 +22,12 @@ def _file_gate(name: str) -> str:
 
 
 def _run(root: Path, *args: str) -> int:
-    return main(["--root", str(root), *args])
+    command = list(args)
+    if command and command[0] == "plan" and "--accept" not in command:
+        command.extend(["--accept", "children"])
+    if command and command[0] == "add" and "--gate" not in command and "--accept" not in command:
+        command.extend(["--accept", "children"])
+    return main(["--root", str(root), *command])
 
 
 def _mark_imported_design(root: Path) -> None:
@@ -41,7 +47,7 @@ def _proposal_id(output: str) -> str:
 
 
 def test_plan_and_add_emit_ids(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
-    assert _run(tmp_path, "plan", "Build a thing.") == 0
+    assert _run(tmp_path, "plan", "Build a thing.", "--accept", "children") == 0
     assert capsys.readouterr().out.strip() == "STORY-001"
     assert _run(tmp_path, "add", "STORY-001", "Step one", "--gate", "true") == 0
     assert capsys.readouterr().out.strip() == "ACT-001"
@@ -145,7 +151,7 @@ def test_ready_prints_ready_and_blocked(tmp_path: Path, capsys) -> None:  # type
 
 
 def test_status_prints_progress_after_pointer(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
-    _run(tmp_path, "plan", "Story")
+    _run(tmp_path, "plan", "Story", "--accept", "children")
     _run(tmp_path, "add", "STORY-001", "One", "--gate", "true")
     _run(tmp_path, "add", "STORY-001", "Two", "--gate", "true")
     ws = Workspace(tmp_path / ".noory" / "solera")
@@ -155,8 +161,53 @@ def test_status_prints_progress_after_pointer(tmp_path: Path, capsys) -> None:  
     assert _run(tmp_path, "status") == 0
     assert capsys.readouterr().out.splitlines() == [
         "pointer: (none)",
-        "progress: STORY-001 1/2 50%",
+        "progress: STORY-001 1/2 accepted",
     ]
+
+
+def test_phase_command_sets_and_clears_phase(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    _run(tmp_path, "plan", "Explore", "--accept", "children")
+    capsys.readouterr()
+
+    assert _run(tmp_path, "phase", "STORY-001", "exploring", "Unknown API") == 0
+    item = Workspace(tmp_path / ".noory" / "solera").load_item("STORY-001")
+    assert (item.phase, item.phase_note) == ("exploring", "Unknown API")
+
+    assert _run(tmp_path, "phase", "STORY-001", "none") == 0
+    item = Workspace(tmp_path / ".noory" / "solera").load_item("STORY-001")
+    assert (item.phase, item.phase_note) == ("", "")
+
+
+def test_plan_requires_accept_without_gate(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    assert main(["--root", str(tmp_path), "plan", "Ambiguous"]) == 1
+    assert "--accept" in capsys.readouterr().out
+
+
+def test_cli_cannot_edit_or_move_a_protected_item(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    ws.write_item(
+        WorkItem(
+            id="RESULT-001",
+            level="result",
+            status="review",
+            goal="Protected",
+            accept="person",
+        )
+    )
+    ws.write_item(
+        WorkItem(
+            id="BOX-001",
+            level="box",
+            status="todo",
+            goal="Box",
+            accept="children",
+        )
+    )
+
+    assert _run(tmp_path, "goal", "RESULT-001", "Changed") == 1
+    assert "protected" in capsys.readouterr().out
+    assert _run(tmp_path, "move", "RESULT-001", "--parent", "BOX-001") == 1
+    assert "protected" in capsys.readouterr().out
 
 
 def test_next_reports_when_no_leaf_can_start(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]

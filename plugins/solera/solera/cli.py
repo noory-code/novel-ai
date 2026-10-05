@@ -12,10 +12,11 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from typing import cast
 
 from .audit import audit_workspace
-from .errors import SoleraError
-from .formats import Feedback, Retrospective
+from .errors import AcceptRequiredError, SoleraError
+from .formats import Feedback, Phase, Retrospective
 from .graph import completion, load_items
 from .intake import import_release, load_imported_release
 from .notes import record_feedback, record_retrospective
@@ -26,6 +27,7 @@ from .planning import (
     remove_after,
     set_after,
     set_goal,
+    set_phase,
     set_realizes,
 )
 from .repin import apply_repin, propose_repin
@@ -38,11 +40,19 @@ def _ws(root: Path) -> Workspace:
 
 
 def _cmd_plan(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
-    print(create_item(ws, args.level, args.goal, after=args.after).id)
+    if args.accept is None:
+        raise AcceptRequiredError(
+            "--accept is required when an item has no gate; choose children or person"
+        )
+    print(create_item(ws, args.level, args.goal, after=args.after, accept=args.accept).id)
     return 0
 
 
 def _cmd_add(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
+    if not args.gate and args.accept is None:
+        raise AcceptRequiredError(
+            "--accept is required when an item has no gate; choose children or person"
+        )
     item = create_item(
         ws,
         args.level,
@@ -51,6 +61,7 @@ def _cmd_add(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
         parent=args.parent,
         realizes=args.realizes,
         after=args.after,
+        accept=args.accept,
     )
     print(item.id)
     return 0
@@ -89,8 +100,7 @@ def _cmd_status(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     else:
         print("pointer: (none)")
     for item_id, value in completion(load_items(ws)).items():
-        percent = f"{value.percent}%" if value.percent is not None else "-"
-        print(f"progress: {item_id} {value.done}/{value.total} {percent}")
+        print(f"progress: {item_id} {value.done}/{value.total} accepted")
     problems = audit_workspace(ws)
     for problem in problems:
         print(f"problem[{problem.kind}]: {problem.detail}")
@@ -109,6 +119,13 @@ def _cmd_goal(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
 
 def _cmd_realizes(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     print(set_realizes(ws, args.item, list(args.slugs)).id)
+    return 0
+
+
+def _cmd_phase(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
+    phase = "" if args.phase == "none" else args.phase
+    note = "" if not phase else args.note
+    print(set_phase(ws, args.item, cast(Phase, phase), note).id)
     return 0
 
 
@@ -209,6 +226,14 @@ def _build_parser() -> argparse.ArgumentParser:
     p_plan.add_argument("goal")
     p_plan.add_argument("--level", default="story", help="initiative/epic/story/action")
     p_plan.add_argument("--after", action="append", default=[], help="required predecessor id")
+    p_plan.add_argument(
+        "--accept",
+        choices=("children", "person"),
+        help=(
+            "required without a gate; children rolls up finished children, person waits for "
+            "a person's judgment, and agents never judge a person's result"
+        ),
+    )
     p_plan.set_defaults(func=_cmd_plan)
 
     p_add = sub.add_parser("add", help="add a child WorkItem under a parent")
@@ -216,6 +241,14 @@ def _build_parser() -> argparse.ArgumentParser:
     p_add.add_argument("goal")
     p_add.add_argument("--level", default="action", help="initiative/epic/story/action")
     p_add.add_argument("--gate", default="", help="command that verifies a leaf")
+    p_add.add_argument(
+        "--accept",
+        choices=("gate", "children", "person"),
+        help=(
+            "required without --gate; children rolls up finished children, person waits for "
+            "a person's judgment, and agents never judge a person's result"
+        ),
+    )
     p_add.add_argument(
         "--realizes",
         action="append",
@@ -239,6 +272,14 @@ def _build_parser() -> argparse.ArgumentParser:
     p_realizes.add_argument("item")
     p_realizes.add_argument("slugs", nargs="*")
     p_realizes.set_defaults(func=_cmd_realizes)
+
+    p_phase = sub.add_parser(
+        "phase", help="record a WorkItem's progress phase without changing its status"
+    )
+    p_phase.add_argument("item")
+    p_phase.add_argument("phase", choices=("exploring", "executing", "none"))
+    p_phase.add_argument("note", nargs="?", default="")
+    p_phase.set_defaults(func=_cmd_phase)
 
     p_move = sub.add_parser("move", help="reparent or reorder a WorkItem")
     p_move.add_argument("item")

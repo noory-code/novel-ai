@@ -59,7 +59,11 @@
   back happens when the person returns (a summary of what finished since they last looked,
   separating gate-finished items from person-accepted ones), when a new design is published (the
   impact on in-progress items), and when a promised result is accepted (the items and evidence
-  under it), not on a fixed weekday.
+  under it), not on a fixed weekday. (7) An item may record its progress phase — exploring (what to do is
+  not yet known) or executing (the work is known and being done) — with a one-line note of what is
+  still unknown or what important work remains. An agent may set it with evidence; a person's phase
+  is optional and is asked for only when an active item has not moved for a while. It changes no
+  status; badges count it (D-2026-10-04-A (3)).
 - **Why:** a percent over child counts reads as the result's completeness, which it is not, yet the
   person wanted to see progress rise as items are checked; a fraction with its denominator named
   keeps that without the false claim. Kanban, Scrum and Shape Up all separate the work cadence from

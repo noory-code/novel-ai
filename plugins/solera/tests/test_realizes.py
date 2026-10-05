@@ -18,7 +18,7 @@ def _ws(tmp_path: Path) -> Workspace:
 
 def test_realizes_roundtrips(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    root = create_item(ws, "story", "Ship auth")
+    root = create_item(ws, "story", "Ship auth", accept="children")
     leaf = create_item(
         ws,
         "action",

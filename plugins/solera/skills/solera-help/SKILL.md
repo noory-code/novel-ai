@@ -67,3 +67,5 @@ Pass the current workspace as `project_root` to every tool.
 - Re-pin is approval-bound: show the proposal and its ID to the human, then pass
   that exact ID to `apply_spec_repin`. If the proposal changed, apply writes
   nothing; request and review a new proposal.
+
+`accept` is required when creating an item without a gate: `children` rolls up finished children, `person` waits for that person's judgment, and agents never judge a person's result.

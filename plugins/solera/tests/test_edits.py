@@ -22,7 +22,7 @@ def _ws(tmp_path: Path) -> Workspace:
 
 def test_set_goal_replaces_goal(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    item = create_item(ws, "story", "Old goal")
+    item = create_item(ws, "story", "Old goal", accept="children")
 
     updated = set_goal(ws, item.id, "New goal\nwith detail")
 
@@ -32,7 +32,7 @@ def test_set_goal_replaces_goal(tmp_path: Path) -> None:
 
 def test_set_goal_rejects_blank_without_writing(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    item = create_item(ws, "story", "Keep this")
+    item = create_item(ws, "story", "Keep this", accept="children")
 
     with pytest.raises(ValueError, match="goal"):
         set_goal(ws, item.id, "   \n")
@@ -42,7 +42,7 @@ def test_set_goal_rejects_blank_without_writing(tmp_path: Path) -> None:
 
 def test_set_realizes_replaces_and_clears_slugs(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    item = create_item(ws, "story", "Goal", realizes=["feature/old"])
+    item = create_item(ws, "story", "Goal", realizes=["feature/old"], accept="children")
 
     updated = set_realizes(ws, item.id, ["feature/login", "entity/account"])
     assert updated.realizes == ["feature/login", "entity/account"]
@@ -55,7 +55,7 @@ def test_set_realizes_rejects_blank_or_duplicate_without_writing(
     tmp_path: Path, slugs: list[str]
 ) -> None:
     ws = _ws(tmp_path)
-    item = create_item(ws, "story", "Goal", realizes=["feature/keep"])
+    item = create_item(ws, "story", "Goal", realizes=["feature/keep"], accept="children")
 
     with pytest.raises(ValueError, match="realizes"):
         set_realizes(ws, item.id, slugs)
@@ -65,15 +65,15 @@ def test_set_realizes_rejects_blank_or_duplicate_without_writing(
 
 def test_realizes_does_not_invent_a_slug_grammar(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    item = create_item(ws, "story", "Goal")
+    item = create_item(ws, "story", "Goal", accept="children")
 
     assert set_realizes(ws, item.id, ["Any nonblank slug!"]).realizes == ["Any nonblank slug!"]
 
 
 def test_move_reparents_and_reorders_among_destination_siblings(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    old_parent = create_item(ws, "story", "Old")
-    new_parent = create_item(ws, "epic", "New")
+    old_parent = create_item(ws, "story", "Old", accept="children")
+    new_parent = create_item(ws, "epic", "New", accept="children")
     moved = create_item(ws, "action", "Moved", gate="true", parent=old_parent.id)
     first = create_item(ws, "task", "First", gate="true", parent=new_parent.id)
     second = create_item(ws, "task", "Second", gate="true", parent=new_parent.id)
@@ -87,7 +87,7 @@ def test_move_reparents_and_reorders_among_destination_siblings(tmp_path: Path) 
 
 def test_move_reorders_within_one_parent_and_none_means_end(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    parent = create_item(ws, "story", "Parent")
+    parent = create_item(ws, "story", "Parent", accept="children")
     first = create_item(ws, "action", "First", gate="true", parent=parent.id)
     second = create_item(ws, "task", "Second", gate="true", parent=parent.id)
     third = create_item(ws, "step", "Third", gate="true", parent=parent.id)
@@ -101,7 +101,7 @@ def test_move_reorders_within_one_parent_and_none_means_end(tmp_path: Path) -> N
 
 def test_move_to_root_succeeds_but_root_index_is_rejected(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    parent = create_item(ws, "story", "Parent")
+    parent = create_item(ws, "story", "Parent", accept="children")
     child = create_item(ws, "action", "Child", gate="true", parent=parent.id)
 
     move_item(ws, child.id, None, None)
@@ -114,7 +114,7 @@ def test_move_to_root_succeeds_but_root_index_is_rejected(tmp_path: Path) -> Non
 @pytest.mark.parametrize("index", [-1, 2])
 def test_move_rejects_invalid_sibling_index(tmp_path: Path, index: int) -> None:
     ws = _ws(tmp_path)
-    parent = create_item(ws, "story", "Parent")
+    parent = create_item(ws, "story", "Parent", accept="children")
     child = create_item(ws, "action", "Child", gate="true", parent=parent.id)
 
     with pytest.raises(PlanningError, match="index.*range"):
@@ -126,8 +126,8 @@ def test_move_rejects_invalid_sibling_index(tmp_path: Path, index: int) -> None:
 @pytest.mark.parametrize("destination", ["self", "descendant"])
 def test_move_rejects_self_or_descendant_without_writing(tmp_path: Path, destination: str) -> None:
     ws = _ws(tmp_path)
-    root = create_item(ws, "initiative", "Root")
-    child = create_item(ws, "story", "Child", parent=root.id)
+    root = create_item(ws, "initiative", "Root", accept="children")
+    child = create_item(ws, "story", "Child", parent=root.id, accept="children")
     grandchild = create_item(ws, "action", "Leaf", gate="true", parent=child.id)
     new_parent = root.id if destination == "self" else grandchild.id
 
@@ -140,7 +140,7 @@ def test_move_rejects_self_or_descendant_without_writing(tmp_path: Path, destina
 
 def test_move_rejects_gated_destination_without_writing(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    source = create_item(ws, "story", "Source")
+    source = create_item(ws, "story", "Source", accept="children")
     moved = create_item(ws, "action", "Moved", gate="true", parent=source.id)
     gated = create_item(ws, "task", "Gated", gate="true")
 
@@ -162,8 +162,8 @@ def test_move_rejects_unknown_ids(tmp_path: Path, item_id: str, parent_id: str |
 
 def test_move_rejects_new_inherited_order_cycle_without_writing(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    first = create_item(ws, "story", "First")
-    second = create_item(ws, "epic", "Second")
+    first = create_item(ws, "story", "First", accept="children")
+    second = create_item(ws, "epic", "Second", accept="children")
     waiting = create_item(ws, "action", "Wait", gate="true", parent=first.id)
     create_item(ws, "task", "Other", gate="true", parent=second.id)
     add_after(ws, waiting.id, second.id)
@@ -180,13 +180,20 @@ def test_move_rejects_waiting_item_becoming_parent_of_predecessor(
     tmp_path: Path, gate: str
 ) -> None:
     ws = _ws(tmp_path)
-    epic = create_item(ws, "epic", "Epic")
-    first = create_item(ws, "action", "First", parent=epic.id)
-    second = create_item(ws, "action", "Second", parent=epic.id)
-    create_item(ws, "action", "Unrelated third")
-    create_item(ws, "action", "Unrelated fourth")
-    waiting = create_item(ws, "action", "Waiting", parent=epic.id)
-    predecessor = create_item(ws, "action", "Predecessor", gate=gate, parent=epic.id)
+    epic = create_item(ws, "epic", "Epic", accept="children")
+    first = create_item(ws, "action", "First", parent=epic.id, accept="children")
+    second = create_item(ws, "action", "Second", parent=epic.id, accept="children")
+    create_item(ws, "action", "Unrelated third", accept="children")
+    create_item(ws, "action", "Unrelated fourth", accept="children")
+    waiting = create_item(ws, "action", "Waiting", parent=epic.id, accept="children")
+    predecessor = create_item(
+        ws,
+        "action",
+        "Predecessor",
+        gate=gate,
+        parent=epic.id,
+        accept="gate" if gate else "children",
+    )
     add_after(ws, waiting.id, predecessor.id)
     assert ws.load_item(epic.id).children == [
         first.id,
@@ -208,8 +215,10 @@ def test_move_rejects_waiting_item_becoming_parent_of_predecessor(
 @pytest.mark.parametrize("gate", ["", "true"])
 def test_add_after_rejects_parent_waiting_on_child(tmp_path: Path, gate: str) -> None:
     ws = _ws(tmp_path)
-    parent = create_item(ws, "story", "Parent")
-    child = create_item(ws, "action", "Child", gate=gate, parent=parent.id)
+    parent = create_item(ws, "story", "Parent", accept="children")
+    child = create_item(
+        ws, "action", "Child", gate=gate, parent=parent.id, accept="gate" if gate else "children"
+    )
     before = ws.item_path(parent.id).read_text()
 
     with pytest.raises(OrderWaitsOnDescendantError) as exc_info:
@@ -224,14 +233,23 @@ def test_create_rejects_legacy_parent_waiting_on_would_be_sibling_chain(
     tmp_path: Path, gate: str
 ) -> None:
     ws = _ws(tmp_path)
-    parent = create_item(ws, "story", "Parent")
-    sibling = create_item(ws, "action", "Sibling", gate=gate, parent=parent.id)
+    parent = create_item(ws, "story", "Parent", accept="children")
+    sibling = create_item(
+        ws, "action", "Sibling", gate=gate, parent=parent.id, accept="gate" if gate else "children"
+    )
     ws.write_item(parent.model_copy(update={"children": [sibling.id], "after": [sibling.id]}))
     before_items = ws.list_items()
     before_parent = ws.item_path(parent.id).read_text()
 
     with pytest.raises(OrderWaitsOnDescendantError) as exc_info:
-        create_item(ws, "task", "New sibling", gate=gate, parent=parent.id)
+        create_item(
+            ws,
+            "task",
+            "New sibling",
+            gate=gate,
+            parent=parent.id,
+            accept="gate" if gate else "children",
+        )
 
     assert exc_info.value.code == "order_waits_on_descendant"
     assert ws.list_items() == before_items
@@ -240,10 +258,10 @@ def test_create_rejects_legacy_parent_waiting_on_would_be_sibling_chain(
 
 def test_move_rolls_status_down_at_destination_and_up_at_source(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    source = create_item(ws, "story", "Source")
+    source = create_item(ws, "story", "Source", accept="children")
     done_sibling = create_item(ws, "action", "Done", gate="true", parent=source.id)
     moved = create_item(ws, "task", "Open", gate="true", parent=source.id)
-    destination = create_item(ws, "epic", "Destination")
+    destination = create_item(ws, "epic", "Destination", accept="children")
     destination_child = create_item(ws, "step", "Already done", gate="true", parent=destination.id)
     for item_id in (done_sibling.id, destination_child.id, destination.id):
         ws.write_item(ws.load_item(item_id).model_copy(update={"status": "done"}))
@@ -257,9 +275,9 @@ def test_move_rolls_status_down_at_destination_and_up_at_source(tmp_path: Path) 
 
 def test_move_done_child_rolls_up_destination(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    source = create_item(ws, "story", "Source")
+    source = create_item(ws, "story", "Source", accept="children")
     moved = create_item(ws, "action", "Moved", gate="true", parent=source.id)
-    destination = create_item(ws, "epic", "Destination")
+    destination = create_item(ws, "epic", "Destination", accept="children")
     sibling = create_item(ws, "task", "Done", gate="true", parent=destination.id)
     for item_id in (moved.id, sibling.id):
         ws.write_item(ws.load_item(item_id).model_copy(update={"status": "done"}))
@@ -271,8 +289,8 @@ def test_move_done_child_rolls_up_destination(tmp_path: Path) -> None:
 
 def test_move_restores_destination_if_source_write_fails(tmp_path: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     ws = _ws(tmp_path)
-    source = create_item(ws, "story", "Source")
-    destination = create_item(ws, "epic", "Destination")
+    source = create_item(ws, "story", "Source", accept="children")
+    destination = create_item(ws, "epic", "Destination", accept="children")
     moved = create_item(ws, "action", "Moved", gate="true", parent=source.id)
     original_write = ws.write_item
     failed = False

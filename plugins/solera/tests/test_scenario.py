@@ -27,8 +27,8 @@ def test_full_standalone_scenario(tmp_path: Path) -> None:
     ws.write_progress(Progress(item=None))
 
     # plan: an initiative -> story -> two gated action leaves
-    init = create_item(ws, "initiative", "Produce two greeting files.")
-    story = create_item(ws, "story", "the greetings", parent=init.id)
+    init = create_item(ws, "initiative", "Produce two greeting files.", accept="children")
+    story = create_item(ws, "story", "the greetings", parent=init.id, accept="children")
     create_item(ws, "action", "Create a.txt", gate=_file_gate("a.txt"), parent=story.id)
     create_item(ws, "action", "Create b.txt", gate=_file_gate("b.txt"), parent=story.id)
 
@@ -58,7 +58,7 @@ def test_blocked_path_writes_feedback_and_holds(tmp_path: Path) -> None:
     ws = Workspace(project / ".noory" / "solera")
     ws.write_progress(Progress(item=None))
 
-    story = create_item(ws, "story", "gets stuck")
+    story = create_item(ws, "story", "gets stuck", accept="children")
     leaf = create_item(
         ws, "action", "Create blocker.txt", gate=_file_gate("blocker.txt"), parent=story.id
     )

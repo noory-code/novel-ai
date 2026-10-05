@@ -53,6 +53,7 @@ FAIL = _py("import sys; print('three tests failed'); sys.exit(1)")
 def _create(client: TestClient, root: Path, **body: Any) -> dict[str, Any]:
     body.setdefault("parent", None)
     body.setdefault("goal", "Goal")
+    body.setdefault("accept", "gate" if body.get("gate") else "person")
     response = client.post("/api/work/items", params=_query(root), json=body)
     assert response.status_code == 201, response.text
     return cast(dict[str, Any], response.json())
@@ -81,7 +82,7 @@ def _mark_imported_design(root: Path) -> None:
 def test_checking_an_item_without_a_gate_finishes_it_and_rolls_up(
     client: TestClient, tmp_path: Path
 ) -> None:
-    story = _create(client, tmp_path, goal="Pick a design")
+    story = _create(client, tmp_path, goal="Pick a design", accept="children")
     only = _create(client, tmp_path, parent=story["id"], goal="Choose the logo")
 
     response = _check(client, tmp_path, only["id"])
@@ -105,7 +106,7 @@ def test_checking_a_done_item_again_changes_nothing(client: TestClient, tmp_path
 
 
 def test_a_container_cannot_be_checked(client: TestClient, tmp_path: Path) -> None:
-    story = _create(client, tmp_path)
+    story = _create(client, tmp_path, accept="children")
     _create(client, tmp_path, parent=story["id"])
 
     response = _check(client, tmp_path, story["id"])
@@ -166,7 +167,7 @@ def test_waiting_items_without_a_gate_are_listed_as_blocked(
 def test_unchecking_reopens_the_item_and_its_rolled_up_parent(
     client: TestClient, tmp_path: Path
 ) -> None:
-    story = _create(client, tmp_path)
+    story = _create(client, tmp_path, accept="children")
     child = _create(client, tmp_path, parent=story["id"])
     _check(client, tmp_path, child["id"])
 
@@ -179,7 +180,7 @@ def test_unchecking_reopens_the_item_and_its_rolled_up_parent(
 
 
 def test_checking_a_gated_leaf_runs_its_gate(client: TestClient, tmp_path: Path) -> None:
-    story = _create(client, tmp_path)
+    story = _create(client, tmp_path, accept="children")
     leaf = _create(client, tmp_path, parent=story["id"], gate=PASS)
 
     response = _check(client, tmp_path, leaf["id"])
@@ -271,8 +272,13 @@ def test_agent_surfaces_offer_no_way_to_finish_an_item_without_a_gate() -> None:
     tools = {tool.name for tool in asyncio.run(mcp_server.mcp.list_tools())}
 
     assert commands is not None
-    assert not {"check", "uncheck"} & set(commands)
-    assert not {name for name in tools if "check" in name}
+    person_actions = {"accept", "reject", "reopen", "cancel", "check", "uncheck"}
+    assert not person_actions & set(commands)
+    assert not {
+        name
+        for name in tools
+        if any(action in name for action in person_actions) or "accept" in name
+    }
 
 
 def test_a_running_gate_does_not_hold_the_workspace_lock(tmp_path: Path) -> None:

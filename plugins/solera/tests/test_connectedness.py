@@ -26,13 +26,15 @@ def _mark_imported_design(ws: Workspace) -> None:
 
 def test_reaches_design_node_through_self_or_ancestor(tmp_path: Path) -> None:
     ws = _workspace(tmp_path)
-    disconnected_parent = create_item(ws, "story", "Disconnected")
+    disconnected_parent = create_item(ws, "story", "Disconnected", accept="children")
     disconnected = create_item(
         ws, "action", "Disconnected leaf", gate="true", parent=disconnected_parent.id
     )
-    connected_parent = create_item(ws, "story", "Connected", realizes=["feature/login"])
+    connected_parent = create_item(
+        ws, "story", "Connected", realizes=["feature/login"], accept="children"
+    )
     inherited = create_item(ws, "action", "Inherited leaf", gate="true", parent=connected_parent.id)
-    direct_parent = create_item(ws, "story", "Direct")
+    direct_parent = create_item(ws, "story", "Direct", accept="children")
     direct = create_item(
         ws,
         "action",
@@ -52,13 +54,15 @@ def test_reaches_design_node_through_self_or_ancestor(tmp_path: Path) -> None:
 def test_imported_design_blocks_only_disconnected_todo_leaves(tmp_path: Path) -> None:
     ws = _workspace(tmp_path)
     _mark_imported_design(ws)
-    disconnected_parent = create_item(ws, "story", "Disconnected")
+    disconnected_parent = create_item(ws, "story", "Disconnected", accept="children")
     disconnected = create_item(
         ws, "action", "Disconnected leaf", gate="true", parent=disconnected_parent.id
     )
-    connected_parent = create_item(ws, "story", "Connected", realizes=["feature/login"])
+    connected_parent = create_item(
+        ws, "story", "Connected", realizes=["feature/login"], accept="children"
+    )
     inherited = create_item(ws, "action", "Inherited leaf", gate="true", parent=connected_parent.id)
-    direct_parent = create_item(ws, "story", "Direct")
+    direct_parent = create_item(ws, "story", "Direct", accept="children")
     direct = create_item(
         ws,
         "action",
@@ -114,7 +118,7 @@ def test_doing_disconnected_leaf_is_resumed_with_imported_design(tmp_path: Path)
 def test_leaf_can_be_blocked_by_order_and_missing_design_node(tmp_path: Path) -> None:
     ws = _workspace(tmp_path)
     _mark_imported_design(ws)
-    predecessor = create_item(ws, "story", "Not done")
+    predecessor = create_item(ws, "story", "Not done", accept="children")
     leaf = create_item(ws, "action", "Blocked twice", gate="true", after=[predecessor.id])
 
     assert ready_leaves(ws) == (

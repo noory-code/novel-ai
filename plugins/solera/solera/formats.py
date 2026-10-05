@@ -26,7 +26,13 @@ from pydantic import (
 
 from .errors import FormatError
 
-Status = Literal["todo", "doing", "done"]
+Status = Literal["todo", "doing", "review", "rework", "done", "cancelled"]
+Accept = Literal["gate", "children", "person"]
+Phase = Literal["", "exploring", "executing"]
+JudgmentAction = Literal["accept", "reject", "reopen", "cancel", "check", "uncheck"]
+
+STARTABLE_STATUSES = frozenset({"todo", "rework"})
+FINISHED_STATUSES = frozenset({"done", "cancelled"})
 
 _M = TypeVar("_M", bound=BaseModel)
 
@@ -61,6 +67,16 @@ def _require_goal(value: str) -> str:
     return value
 
 
+class Judgment(BaseModel):
+    """One append-only person judgment on a work item."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    action: JudgmentAction
+    reason: str
+    at: str
+
+
 class WorkItem(BaseModel):
     """One rung of the altitude ladder — initiative, epic, story, or action.
 
@@ -85,8 +101,27 @@ class WorkItem(BaseModel):
     # Work-item ids that must be done before this item can start.
     after: list[str] = Field(default_factory=list)
     goal: str
+    accept: Accept = "person"
+    phase: Phase = ""
+    phase_note: str = ""
+    judgments: list[Judgment] = Field(default_factory=list)
+    gate_passed: bool = False
 
     _check_goal = field_validator("goal")(_require_goal)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _legacy_defaults(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        data = dict(value)
+        gate = data.get("gate", "")
+        children = data.get("children", [])
+        if "accept" not in data:
+            data["accept"] = "gate" if gate else "children" if children else "person"
+        if "gate_passed" not in data:
+            data["gate_passed"] = bool(gate and data.get("status") == "done")
+        return data
 
     @model_validator(mode="after")
     def _gate_not_blank(self) -> WorkItem:
@@ -98,6 +133,14 @@ class WorkItem(BaseModel):
     def _not_both_leaf_and_container(self) -> WorkItem:
         if self.gate and self.children:
             raise ValueError("a WorkItem cannot be both a leaf (gate) and a container (children)")
+        return self
+
+    @model_validator(mode="after")
+    def _valid_accept_for_shape(self) -> WorkItem:
+        if self.accept == "gate" and not self.gate:
+            raise ValueError("accept gate requires a gate")
+        if self.accept == "children" and self.gate:
+            raise ValueError("accept children forbids a gate")
         return self
 
     @model_validator(mode="after")
@@ -117,6 +160,18 @@ class WorkItem(BaseModel):
     @property
     def is_container(self) -> bool:
         return bool(self.children)
+
+    @property
+    def is_startable(self) -> bool:
+        return self.status in STARTABLE_STATUSES
+
+    @property
+    def is_finished(self) -> bool:
+        return self.status in FINISHED_STATUSES
+
+    @property
+    def is_protected(self) -> bool:
+        return self.accept == "person" and self.status in {"review", "done"}
 
 
 class Progress(BaseModel):
@@ -170,7 +225,7 @@ def parse_workitem(text: str, *, item_id: str) -> WorkItem:
 
 def dump_workitem(item: WorkItem) -> str:
     """Serialize a WorkItem back to file text. Inverse of :func:`parse_workitem`."""
-    fields = {
+    fields: dict[str, Any] = {
         "level": item.level,
         "status": item.status,
         "gate": item.gate,
@@ -179,6 +234,18 @@ def dump_workitem(item: WorkItem) -> str:
     }
     if item.after:
         fields["after"] = list(item.after)
+    legacy_accept: Accept = "gate" if item.gate else "children" if item.children else "person"
+    if item.accept != legacy_accept:
+        fields["accept"] = item.accept
+    if item.phase:
+        fields["phase"] = item.phase
+    if item.phase_note:
+        fields["phase_note"] = item.phase_note
+    if item.judgments:
+        fields["judgments"] = [judgment.model_dump() for judgment in item.judgments]
+    legacy_gate_passed = bool(item.gate and item.status == "done")
+    if item.gate_passed != legacy_gate_passed:
+        fields["gate_passed"] = item.gate_passed
     fm = _frontmatter(fields)
     return f"---\n{fm}\n---\n{item.goal}\n"
 

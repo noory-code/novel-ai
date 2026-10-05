@@ -11,7 +11,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from .audit import audit_workspace
-from .formats import Feedback, Retrospective
+from .errors import AcceptRequiredError
+from .formats import Accept, Feedback, Phase, Retrospective
 from .graph import completion, items_by_slugs, load_items
 from .intake import import_release, load_imported_release
 from .notes import record_feedback, record_retrospective
@@ -22,6 +23,7 @@ from .planning import (
     remove_after,
     set_after,
     set_goal,
+    set_phase,
     set_realizes,
 )
 from .repin import apply_repin, propose_repin
@@ -36,7 +38,9 @@ _MCP_INSTRUCTIONS = (
     "items, ask for exactly one next leaf, and complete that leaf only after "
     "the implementation is ready for its deterministic gate. Re-pin is a "
     "two-step operation: inspect and approve the proposal first, then apply "
-    "that exact proposal ID."
+    "that exact proposal ID. --accept is required without a gate; children rolls "
+    "up finished children, person waits for the person's judgment, and agents never "
+    "judge a person's result."
 )
 _mcp: FastMCP | None = None
 
@@ -50,9 +54,18 @@ def plan_work(
     goal: str,
     level: str = "story",
     after: list[str] | None = None,
+    accept: Accept | None = None,
 ) -> dict[str, Any]:
-    """Create a root work container. Add gated child leaves before asking for next work."""
-    item = create_item(_workspace(project_root), level, goal, after=after)
+    """Create a root work container. Add gated child leaves before asking for next work.
+
+    ``accept`` is required without a gate; ``children`` rolls up finished children,
+    while ``person`` waits for that person's judgment. Agents never judge a person's result.
+    """
+    if accept is None:
+        raise AcceptRequiredError(
+            "accept is required when an item has no gate; choose children or person"
+        )
+    item = create_item(_workspace(project_root), level, goal, after=after, accept=accept)
     return item.model_dump()
 
 
@@ -64,8 +77,17 @@ def add_work_item(
     gate: str = "",
     realizes: list[str] | None = None,
     after: list[str] | None = None,
+    accept: Accept | None = None,
 ) -> dict[str, Any]:
-    """Add a child to ``parent``. Pass a deterministic command in ``gate`` for a leaf."""
+    """Add a child to ``parent``. Pass a deterministic command in ``gate`` for a leaf.
+
+    ``accept`` is required without a gate; ``children`` rolls up finished children,
+    while ``person`` waits for that person's judgment. Agents never judge a person's result.
+    """
+    if not gate and accept is None:
+        raise AcceptRequiredError(
+            "accept is required when an item has no gate; choose children or person"
+        )
     item = create_item(
         _workspace(project_root),
         level,
@@ -74,6 +96,7 @@ def add_work_item(
         gate=gate,
         realizes=realizes,
         after=after,
+        accept=accept,
     )
     return item.model_dump()
 
@@ -97,6 +120,16 @@ def set_work_item_realizes(project_root: str, item: str, realizes: list[str]) ->
     Unknown items and blank or duplicate slugs are rejected.
     """
     return set_realizes(_workspace(project_root), item, realizes).model_dump()
+
+
+def set_work_item_phase(
+    project_root: str,
+    item: str,
+    phase: Phase,
+    phase_note: str = "",
+) -> dict[str, Any]:
+    """Record an item's progress phase and note without changing its status."""
+    return set_phase(_workspace(project_root), item, phase, phase_note).model_dump()
 
 
 def move_work_item(
@@ -266,6 +299,7 @@ def _get_mcp() -> FastMCP:
             add_work_item,
             set_work_item_after,
             set_work_item_goal,
+            set_work_item_phase,
             set_work_item_realizes,
             move_work_item,
             add_work_item_after,

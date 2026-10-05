@@ -21,7 +21,7 @@ def _hello_gate() -> str:
 
 def _seed(project: Path) -> tuple[Workspace, str]:
     ws = Workspace(project / ".noory" / "solera")
-    story = create_item(ws, "story", "Leave a greeting.")
+    story = create_item(ws, "story", "Leave a greeting.", accept="children")
     leaf = create_item(ws, "action", "Create hello.txt", gate=_hello_gate(), parent=story.id)
     ws.write_progress(Progress(item=None))
     return ws, leaf.id

@@ -14,7 +14,7 @@ def _ws(tmp_path: Path) -> Workspace:
 
 def test_clean_tree_has_no_problems(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "box")
+    story = create_item(ws, "story", "box", accept="children")
     create_item(ws, "action", "step", gate="true", parent=story.id)
     ws.write_progress(Progress(item=None))
     assert audit_workspace(ws) == []
@@ -22,7 +22,7 @@ def test_clean_tree_has_no_problems(tmp_path: Path) -> None:
 
 def test_flags_referenced_child_with_no_file(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "box")
+    story = create_item(ws, "story", "box", accept="children")
     create_item(ws, "action", "step", gate="true", parent=story.id)
     ws.item_path("ACT-001").unlink()  # remove file, keep the reference
     problems = audit_workspace(ws)
@@ -32,8 +32,8 @@ def test_flags_referenced_child_with_no_file(tmp_path: Path) -> None:
 def test_flags_multi_parent(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
     leaf = create_item(ws, "action", "shared", gate="true")  # ACT-001
-    s1 = create_item(ws, "story", "one")  # STORY-001
-    s2 = create_item(ws, "story", "two")  # STORY-002
+    s1 = create_item(ws, "story", "one", accept="children")  # STORY-001
+    s2 = create_item(ws, "story", "two", accept="children")  # STORY-002
     ws.write_item(ws.load_item(s1.id).model_copy(update={"children": [leaf.id]}))
     ws.write_item(ws.load_item(s2.id).model_copy(update={"children": [leaf.id]}))
     assert any(p.kind == "multi-parent" for p in audit_workspace(ws))
@@ -50,7 +50,7 @@ def test_flags_cycle(tmp_path: Path) -> None:
 
 def test_flags_dangling_pointer(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    create_item(ws, "story", "box")
+    create_item(ws, "story", "box", accept="children")
     ws.write_progress(Progress(item="ACT-404"))
     assert any("ACT-404" in p.detail for p in audit_workspace(ws))
 
@@ -64,7 +64,7 @@ def test_flags_malformed_item(tmp_path: Path) -> None:
 
 def test_flags_done_container_with_open_child(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "box")
+    story = create_item(ws, "story", "box", accept="children")
     create_item(ws, "action", "step", gate="true", parent=story.id)
     ws.write_item(ws.load_item(story.id).model_copy(update={"status": "done"}))
 
@@ -75,7 +75,7 @@ def test_flags_done_container_with_open_child(tmp_path: Path) -> None:
 
 def test_flags_open_container_with_all_children_done(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "box")
+    story = create_item(ws, "story", "box", accept="children")
     leaf = create_item(ws, "action", "step", gate="true", parent=story.id)
     ws.write_item(ws.load_item(leaf.id).model_copy(update={"status": "done"}))
 
@@ -113,8 +113,8 @@ def test_flags_after_cycle(tmp_path: Path) -> None:
 
 def test_flags_legacy_container_waiting_on_ungated_descendant(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    parent = create_item(ws, "story", "Parent")
-    child = create_item(ws, "action", "Not split", parent=parent.id)
+    parent = create_item(ws, "story", "Parent", accept="children")
+    child = create_item(ws, "action", "Not split", parent=parent.id, accept="children")
     ws.write_item(parent.model_copy(update={"children": [child.id], "after": [child.id]}))
 
     problems = audit_workspace(ws)

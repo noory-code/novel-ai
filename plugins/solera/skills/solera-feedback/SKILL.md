@@ -40,3 +40,5 @@ blocked — do not work around the gate.
 - The specific blocker, not a vague "this is hard".
 - The decision or input you need from the human to proceed.
 - What you already tried, so the human does not repeat it.
+
+`accept` is required when creating an item without a gate: `children` rolls up finished children, `person` waits for that person's judgment, and agents never judge a person's result.

@@ -23,6 +23,7 @@ import json
 import re
 from typing import Any
 
+from solera.graph import cancelled_ancestor, load_items, parents
 from solera.intake import ImportedRelease, diff_releases
 from solera.supervisor import reopen_items as reopen_work_items
 from solera.workspace import Workspace, workspace_locked
@@ -78,8 +79,21 @@ def propose_repin(
     stale: list[str] = []
     escalate: list[str] = []
     reasons: dict[str, list[str]] = {}
-    for item_id in ws.list_items():
-        realizes = set(ws.load_item(item_id).realizes)
+    items = load_items(ws)
+    parent_of = parents(items)
+
+    def protected_ancestor(item_id: str) -> str | None:
+        current: str | None = item_id
+        visited: set[str] = set()
+        while current is not None and current not in visited:
+            visited.add(current)
+            if items[current].is_protected:
+                return current
+            current = parent_of.get(current)
+        return None
+
+    for item_id, item in items.items():
+        realizes = set(item.realizes)
         if not realizes:
             continue
         escalation_reasons = [
@@ -96,11 +110,6 @@ def propose_repin(
                 for element_id in sorted(realizes & service_added)
             ),
         ]
-        if escalation_reasons:
-            escalate.append(item_id)
-            reasons[item_id] = escalation_reasons
-            continue
-
         stale_reasons = [
             *(
                 f"realizes changed service element {element_id}"
@@ -126,6 +135,16 @@ def propose_repin(
                 )
             if refs_changed:
                 stale_reasons.append(f"service work {affected_ids} is affected by changed refs")
+        protected = protected_ancestor(item_id)
+        if protected is not None and (escalation_reasons or stale_reasons):
+            escalation_reasons.append(f"item is protected by person-accepted result {protected}")
+        frozen_by = cancelled_ancestor(items, item_id)
+        if frozen_by is not None and (escalation_reasons or stale_reasons):
+            escalation_reasons.append(f"item is frozen under cancelled item {frozen_by}")
+        if escalation_reasons:
+            escalate.append(item_id)
+            reasons[item_id] = escalation_reasons
+            continue
         if stale_reasons:
             stale.append(item_id)
             reasons[item_id] = stale_reasons

@@ -40,3 +40,5 @@ This writes `retros/STORY-001.md` (it attaches to any item id).
 - A gate that passed but should have checked more.
 
 Keep it concrete. This is a sensor reading, not a summary of what happened.
+
+`accept` is required when creating an item without a gate: `children` rolls up finished children, `person` waits for that person's judgment, and agents never judge a person's result.

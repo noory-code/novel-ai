@@ -47,6 +47,7 @@ def _create(
     gate: str | None = None,
     realizes: list[str] | None = None,
     after: list[str] | None = None,
+    accept: str | None = None,
 ) -> dict[str, Any]:
     body: dict[str, Any] = {"parent": parent, "goal": goal}
     for key, value in {
@@ -54,6 +55,7 @@ def _create(
         "gate": gate,
         "realizes": realizes,
         "after": after,
+        "accept": accept if accept is not None else ("gate" if gate else "children"),
     }.items():
         if value is not None:
             body[key] = value
@@ -262,12 +264,12 @@ def test_create_maps_validation_to_400_and_unknown_parent_to_404(
     invalid = client.post(
         "/api/work/items",
         params=_query(tmp_path),
-        json={"parent": None, "goal": "   "},
+        json={"parent": None, "goal": "   ", "accept": "children"},
     )
     missing = client.post(
         "/api/work/items",
         params=_query(tmp_path),
-        json={"parent": "STORY-999", "goal": "Child"},
+        json={"parent": "STORY-999", "goal": "Child", "accept": "children"},
     )
 
     assert invalid.status_code == 400
@@ -413,19 +415,29 @@ def test_create_rejection_codes_are_stable(client: TestClient, tmp_path: Path) -
     leaf = _create(client, tmp_path, goal="Leaf", gate="true")
 
     cases = [
-        ({"parent": None, "goal": "Goal", "realizes": [" "]}, "invalid_realizes_slug"),
+        (
+            {"parent": None, "goal": "Goal", "realizes": [" "], "accept": "children"},
+            "invalid_realizes_slug",
+        ),
         (
             {
                 "parent": None,
                 "goal": "Goal",
                 "realizes": ["feature/login", "feature/login"],
+                "accept": "children",
             },
             "duplicate_realizes_slug",
         ),
-        ({"parent": None, "goal": "Goal", "level": "../bad"}, "invalid_name"),
-        ({"parent": None, "goal": "Goal", "gate": "   "}, "invalid_gate"),
-        ({"parent": None, "goal": "Goal", "after": [""]}, "invalid_order_link"),
-        ({"parent": leaf["id"], "goal": "Child"}, "parent_is_leaf"),
+        (
+            {"parent": None, "goal": "Goal", "level": "../bad", "accept": "children"},
+            "invalid_name",
+        ),
+        ({"parent": None, "goal": "Goal", "gate": "   ", "accept": "gate"}, "invalid_gate"),
+        (
+            {"parent": None, "goal": "Goal", "after": [""], "accept": "children"},
+            "invalid_order_link",
+        ),
+        ({"parent": leaf["id"], "goal": "Child", "accept": "children"}, "parent_is_leaf"),
     ]
 
     for body, code in cases:
@@ -539,7 +551,7 @@ def test_workspace_lock_timeout_has_code(
     response = client.post(
         "/api/work/items",
         params=_query(tmp_path),
-        json={"parent": None, "goal": "Goal"},
+        json={"parent": None, "goal": "Goal", "accept": "children"},
     )
 
     assert response.status_code == 400
@@ -560,7 +572,7 @@ def test_uncategorized_value_error_uses_invalid_code(
     response = client.post(
         "/api/work/items",
         params=_query(tmp_path),
-        json={"parent": None, "goal": "Goal"},
+        json={"parent": None, "goal": "Goal", "accept": "children"},
     )
 
     assert response.status_code == 400

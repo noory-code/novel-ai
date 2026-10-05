@@ -1,5 +1,27 @@
 # Changelog
 
+## [8.7.0] — 2026-10-05
+
+### Added
+
+- Work items now record who accepts their result (`gate`, `children`, or
+  `person`), progress phase and note, append-only person judgments, and whether
+  their gate has ever passed. Legacy work files keep their prior behavior and
+  byte-stable serialization.
+- Added person-only HTTP accept, reject, reopen, cancel, check, and uncheck
+  transitions with stable error codes and UTC judgment records.
+- Added `review`, `rework`, and `cancelled` states, person-protected results,
+  cancellation-frozen subtrees, and accepted-count container status output.
+- Added CLI `phase`, MCP `set_work_item_phase`, and HTTP phase editing.
+
+### Changed
+
+- Agent completion stops person-accepted results at review, rollup follows each
+  container's acceptance mode, rework waits for later child completion, and
+  re-pin escalates protected branches instead of reopening them.
+- CLI, MCP, and HTTP creation require an explicit acceptance mode whenever an
+  item has no gate.
+
 ## [8.6.2] — 2026-10-04
 
 ### Fixed

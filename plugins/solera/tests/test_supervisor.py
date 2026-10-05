@@ -41,7 +41,7 @@ def _file_gate(name: str) -> str:
 def _seed_story(tmp_path: Path) -> tuple[Workspace, str, str, str]:
     """A story container with two action leaves."""
     ws = Workspace(tmp_path / ".noory" / "solera")
-    story = create_item(ws, "story", "the box")
+    story = create_item(ws, "story", "the box", accept="children")
     a1 = create_item(ws, "action", "step one", gate=_pass(), parent=story.id)
     a2 = create_item(ws, "action", "step two", gate=_pass(), parent=story.id)
     ws.write_progress(Progress(item=None))
@@ -77,16 +77,16 @@ def test_find_next_open_resumes_doing_before_todo(tmp_path: Path) -> None:
 
 def test_find_next_open_dives_through_deep_tree(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
-    init = create_item(ws, "initiative", "stand up auth")
-    epic = create_item(ws, "epic", "foundation", parent=init.id)
-    story = create_item(ws, "story", "wire it", parent=epic.id)
+    init = create_item(ws, "initiative", "stand up auth", accept="children")
+    epic = create_item(ws, "epic", "foundation", parent=init.id, accept="children")
+    story = create_item(ws, "story", "wire it", parent=epic.id, accept="children")
     leaf = create_item(ws, "action", "do it", gate=_pass(), parent=story.id)
     assert find_next_open(ws) == leaf.id
 
 
 def test_find_next_open_skips_blocked_leaf(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
-    predecessor = create_item(ws, "story", "not split")
+    predecessor = create_item(ws, "story", "not split", accept="children")
     create_item(ws, "action", "blocked", gate=_pass(), after=[predecessor.id])
     ready = create_item(ws, "action", "ready", gate=_pass())
 
@@ -95,16 +95,17 @@ def test_find_next_open_skips_blocked_leaf(tmp_path: Path) -> None:
 
 def test_container_after_is_inherited_until_predecessor_rolls_up(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
-    first = create_item(ws, "story", "first")
+    first = create_item(ws, "story", "first", accept="children")
     first_a = create_item(ws, "action", "one", gate=_pass(), parent=first.id)
     first_b = create_item(ws, "action", "two", gate=_pass(), parent=first.id)
-    second = create_item(ws, "story", "second", after=[first.id])
+    second = create_item(ws, "story", "second", after=[first.id], accept="children")
     second_leaf = create_item(ws, "action", "later", gate=_pass(), parent=second.id)
     ws.write_progress(Progress(item=None))
 
     assert start_next(ws) == first_a.id
     assert complete(ws, first_a.id, cwd=tmp_path).passed is True
     assert find_next_open(ws) == first_b.id
+    assert start_next(ws) == first_b.id
     assert complete(ws, first_b.id, cwd=tmp_path).passed is True
     assert ws.load_item(first.id).status == "done"
     assert find_next_open(ws) == second_leaf.id
@@ -122,7 +123,7 @@ def test_doing_leaf_is_resumed_when_predecessor_reopens(tmp_path: Path) -> None:
 
 def test_start_next_blocked_preserves_state_and_pointer(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
-    predecessor = create_item(ws, "story", "not split")
+    predecessor = create_item(ws, "story", "not split", accept="children")
     dependent = create_item(ws, "action", "blocked", gate=_pass(), after=[predecessor.id])
     ws.write_progress(Progress(item=None))
     before_item = ws.item_path(dependent.id).read_text()
@@ -147,7 +148,7 @@ def test_missing_after_target_is_reported_as_blocked(tmp_path: Path) -> None:
 def test_ready_leaves_lists_ready_and_blocked_in_order(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
     first = create_item(ws, "action", "ready one", gate=_pass())
-    predecessor = create_item(ws, "story", "not split")
+    predecessor = create_item(ws, "story", "not split", accept="children")
     blocked = create_item(ws, "action", "blocked", gate=_pass(), after=[predecessor.id])
     second = create_item(ws, "action", "ready two", gate=_pass())
     doing = create_item(ws, "action", "active", gate=_pass())
@@ -203,7 +204,7 @@ def test_complete_pass_marks_done(tmp_path: Path) -> None:
 
 def test_complete_fail_leaves_doing_and_next_resumes(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
-    story = create_item(ws, "story", "box")
+    story = create_item(ws, "story", "box", accept="children")
     a1 = create_item(ws, "action", "make file", gate=_file_gate("missing.txt"), parent=story.id)
     a2 = create_item(ws, "action", "next", gate=_pass(), parent=story.id)
     ws.write_progress(Progress(item=None))
@@ -226,9 +227,9 @@ def test_complete_rolls_up_container_when_all_children_done(tmp_path: Path) -> N
 
 def test_rollup_propagates_up_multiple_levels(tmp_path: Path) -> None:
     ws = Workspace(tmp_path / ".noory" / "solera")
-    init = create_item(ws, "initiative", "stand up auth")
-    epic = create_item(ws, "epic", "foundation", parent=init.id)
-    story = create_item(ws, "story", "wire it", parent=epic.id)
+    init = create_item(ws, "initiative", "stand up auth", accept="children")
+    epic = create_item(ws, "epic", "foundation", parent=init.id, accept="children")
+    story = create_item(ws, "story", "wire it", parent=epic.id, accept="children")
     leaf = create_item(ws, "action", "do it", gate=_pass(), parent=story.id)
     ws.write_progress(Progress(item=None))
     start_next(ws)

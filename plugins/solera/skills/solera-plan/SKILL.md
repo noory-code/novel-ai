@@ -69,3 +69,5 @@ building starts.
   **solera-decide**.
 
 When the plan is ready, hand off to **solera-run**.
+
+`accept` is required when creating an item without a gate: `children` rolls up finished children, `person` waits for that person's judgment, and agents never judge a person's result.

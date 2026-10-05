@@ -107,6 +107,36 @@ class InvalidOrderLinkError(PlanningValueError):
     code = "invalid_order_link"
 
 
+class InvalidAcceptError(PlanningValueError):
+    """An acceptance mode does not fit the work item's shape."""
+
+    code = "invalid_accept"
+
+
+class AcceptRequiredError(PlanningValueError):
+    """A new item without a gate omitted its acceptance mode."""
+
+    code = "accept_required"
+
+
+class AcceptLockedError(PlanningValueError):
+    """An acceptance mode was changed after the editable statuses."""
+
+    code = "accept_locked"
+
+
+class InvalidPhaseError(PlanningValueError):
+    """A progress phase was outside the supported values."""
+
+    code = "invalid_phase"
+
+
+class ItemProtectedError(PlanningError):
+    """An agent tried to rewrite a result awaiting or holding person acceptance."""
+
+    code = "item_protected"
+
+
 class ParentIsLeafError(PlanningError):
     """A child was assigned to an item that already has a gate."""
 
@@ -177,3 +207,49 @@ class UncheckGatedError(CheckError):
     """A gate's verdict is not undone by hand; reopen gated work with repin."""
 
     code = "uncheck_gated"
+
+
+class CheckCancelledError(CheckError):
+    """A cancelled item is final and cannot be checked or unchecked."""
+
+    code = "check_cancelled"
+
+
+class JudgmentError(SoleraError):
+    """A person-only judgment was refused by the work-item state machine."""
+
+
+class NotPersonError(JudgmentError):
+    """Accept or reject addressed an item not accepted by a person."""
+
+    code = "not_person"
+
+
+class BlankReasonError(JudgmentError):
+    """A judgment that requires a reason received a blank one."""
+
+    code = "blank_reason"
+
+
+class NotInReviewError(JudgmentError):
+    """Accept or reject addressed an item outside review."""
+
+    code = "not_in_review"
+
+
+class ReopenNotPersonError(JudgmentError):
+    """Reopen addressed an item not accepted by a person."""
+
+    code = "reopen_not_person"
+
+
+class ReopenNotDoneError(JudgmentError):
+    """Reopen addressed an item that is not done."""
+
+    code = "reopen_not_done"
+
+
+class CancelFinishedError(JudgmentError):
+    """Cancel addressed an item already done or cancelled."""
+
+    code = "cancel_finished"

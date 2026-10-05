@@ -9,6 +9,7 @@ container at once.
 """
 
 import pytest
+from pydantic import ValidationError
 
 from solera.errors import FormatError
 from solera.formats import WorkItem, dump_workitem, parse_workitem
@@ -69,6 +70,97 @@ realizes: []
 ---
 Ship auth.
 """
+
+
+@pytest.mark.parametrize(
+    ("status", "gate", "children", "accept", "gate_passed"),
+    [
+        ("todo", "pytest -q", [], "gate", False),
+        ("doing", "pytest -q", [], "gate", False),
+        ("done", "pytest -q", [], "gate", True),
+        ("todo", "", ["ACT-001"], "children", False),
+        ("done", "", ["ACT-001"], "children", False),
+        ("todo", "", [], "person", False),
+        ("done", "", [], "person", False),
+        ("doing", "", ["ACT-001"], "children", False),
+    ],
+)
+def test_every_legacy_shape_and_status_keeps_its_bytes(
+    status: str,
+    gate: str,
+    children: list[str],
+    accept: str,
+    gate_passed: bool,
+) -> None:
+    gate_yaml = f"gate: {gate}" if gate else "gate: ''"
+    children_yaml = "children: []" if not children else "children:\n- ACT-001"
+    text = (
+        f"---\nlevel: work\nstatus: {status}\n{gate_yaml}\n{children_yaml}\n"
+        "realizes: []\n---\nLegacy goal.\n"
+    )
+
+    item = parse_workitem(text, item_id="WORK-001")
+
+    assert item.accept == accept
+    assert item.phase == ""
+    assert item.phase_note == ""
+    assert item.judgments == []
+    assert item.gate_passed is gate_passed
+    assert dump_workitem(item) == text
+
+
+@pytest.mark.parametrize("status", ["review", "rework", "cancelled"])
+def test_new_statuses_round_trip(status: str) -> None:
+    item = WorkItem(
+        id="ACT-001",
+        level="action",
+        status=status,
+        gate="",
+        children=[],
+        goal="Judge it.",
+        accept="person",
+    )
+
+    assert parse_workitem(dump_workitem(item), item_id=item.id) == item
+
+
+def test_accept_shape_validation() -> None:
+    fields = {
+        "id": "ACT-001",
+        "level": "action",
+        "status": "todo",
+        "children": [],
+        "goal": "Do it.",
+    }
+
+    with pytest.raises(ValidationError, match="accept.*gate"):
+        WorkItem(**fields, gate="", accept="gate")
+    with pytest.raises(ValidationError, match="accept.*children"):
+        WorkItem(**fields, gate="true", accept="children")
+
+
+def test_new_fields_are_written_only_when_they_are_meaningful() -> None:
+    item = WorkItem(
+        id="ACT-001",
+        level="action",
+        status="review",
+        gate="true",
+        children=[],
+        goal="Judge it.",
+        accept="person",
+        phase="executing",
+        phase_note="One edge case remains.",
+        judgments=[{"action": "reject", "reason": "Try again", "at": "2026-10-05T00:00:00Z"}],
+        gate_passed=True,
+    )
+
+    dumped = dump_workitem(item)
+
+    assert "accept: person" in dumped
+    assert "phase: executing" in dumped
+    assert "phase_note: One edge case remains." in dumped
+    assert "judgments:" in dumped
+    assert "gate_passed: true" in dumped
 
 
 def test_parse_leaf() -> None:

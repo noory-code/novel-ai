@@ -59,3 +59,5 @@ time. `proof` must be installed / on PATH.)
 - The decision lives in **proof**, not in Solera — append-only, and it governs
   every downstream item (anyone can `proof in-force` to see what stands).
 - To change a decision later, record a new one that supersedes it; never edit.
+
+`accept` is required when creating an item without a gate: `children` rolls up finished children, `person` waits for that person's judgment, and agents never judge a person's result.

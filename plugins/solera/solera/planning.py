@@ -13,12 +13,18 @@ import re
 from pydantic import ValidationError
 
 from .errors import (
+    AcceptLockedError,
+    AcceptRequiredError,
     BlankGoalError,
+    CheckCancelledError,
     ChildIndexOutOfRangeError,
     DuplicateRealizesSlugError,
+    InvalidAcceptError,
     InvalidGateError,
     InvalidOrderLinkError,
+    InvalidPhaseError,
     InvalidRealizesSlugError,
+    ItemProtectedError,
     MoveUnderDescendantError,
     MoveUnderSelfError,
     MultipleParentsError,
@@ -33,9 +39,8 @@ from .errors import (
     UnknownPredecessorError,
     UnknownWorkItemError,
 )
-from .formats import WorkItem
-from .graph import load_items, order_problems
-from .supervisor import invalidate_done_ancestors, rollup_item_and_ancestors
+from .formats import Accept, Phase, WorkItem
+from .graph import cancelled_ancestor, load_items, order_problems
 from .workspace import Workspace, validate_path_name, workspace_locked
 
 _LEVEL_PREFIX = {
@@ -76,12 +81,22 @@ def _validated_item(data: dict[str, object]) -> WorkItem:
     except ValidationError as exc:
         goal = data.get("goal")
         gate = data.get("gate")
+        accept = data.get("accept")
+        phase = data.get("phase")
         after = data.get("after", [])
         item_id = data.get("id")
         if isinstance(goal, str) and not goal.strip():
             raise BlankGoalError(str(exc)) from exc
         if isinstance(gate, str) and gate and not gate.strip():
             raise InvalidGateError(str(exc)) from exc
+        if (
+            accept not in {"gate", "children", "person"}
+            or (accept == "gate" and not gate)
+            or (accept == "children" and bool(gate))
+        ):
+            raise InvalidAcceptError(str(exc)) from exc
+        if phase not in {None, "", "exploring", "executing"}:
+            raise InvalidPhaseError(str(exc)) from exc
         if isinstance(after, list):
             string_after = [value for value in after if isinstance(value, str)]
             if any(not value.strip() for value in string_after) or len(set(string_after)) != len(
@@ -91,6 +106,31 @@ def _validated_item(data: dict[str, object]) -> WorkItem:
             if item_id in string_after:
                 raise OrderCycleError(str(exc)) from exc
         raise PlanningValueError(str(exc)) from exc
+
+
+def assert_person_edit_allowed(
+    items: dict[str, WorkItem],
+    item_ids: list[str],
+    *,
+    person: bool = False,
+) -> None:
+    """Refuse agent mutations that touch a protected person's result."""
+    if person:
+        return
+    for item_id in item_ids:
+        item = items.get(item_id)
+        if item is not None and item.is_protected:
+            raise ItemProtectedError(
+                f"{item_id} is protected while it awaits or holds a person's acceptance"
+            )
+
+
+def assert_items_not_frozen(items: dict[str, WorkItem], item_ids: list[str]) -> None:
+    """Refuse mutations to cancelled items and every item below them."""
+    for item_id in item_ids:
+        cancelled = cancelled_ancestor(items, item_id)
+        if cancelled is not None:
+            raise CheckCancelledError(f"{item_id} is frozen under cancelled item {cancelled}")
 
 
 def _raise_order_problems(problems: list[tuple[str, str]]) -> None:
@@ -120,6 +160,7 @@ def create_item(
     parent: str | None = None,
     realizes: list[str] | None = None,
     after: list[str] | None = None,
+    accept: Accept | None = None,
 ) -> WorkItem:
     """Create a WorkItem (optionally a gated leaf, optionally under a parent).
 
@@ -127,8 +168,18 @@ def create_item(
     and grows children as later items are added under it. ``realizes`` links the
     item to the format F slug(s) it builds (by value — no Novel import).
     """
+    if accept is None:
+        if not gate:
+            raise AcceptRequiredError(
+                "accept is required when an item has no gate; choose children or person"
+            )
+        accept = "gate"
     item_id = next_item_id(ws, level)
     box = ws.load_item(parent) if parent is not None else None
+    items = load_items(ws)
+    if box is not None:
+        assert_person_edit_allowed({box.id: box}, [box.id])
+        assert_items_not_frozen(items, [box.id])
     realizes = realizes or []
     _validate_realizes(realizes)
     item = _validated_item(
@@ -140,9 +191,9 @@ def create_item(
             "goal": goal,
             "realizes": realizes,
             "after": after or [],
+            "accept": accept,
         }
     )
-    items = load_items(ws)
     items[item.id] = item
     updated_box: WorkItem | None = None
     if box is not None:
@@ -167,8 +218,9 @@ def create_item(
 def set_after(ws: Workspace, item_id: str, after: list[str]) -> WorkItem:
     """Replace one item's order links after validating the complete future graph."""
     item = ws.load_item(item_id)
-    updated = _validated_item({**item.model_dump(), "after": after})
     items = load_items(ws)
+    assert_items_not_frozen(items, [item_id])
+    updated = _validated_item({**item.model_dump(), "after": after})
     items[item_id] = updated
     problems = order_problems(items)
     _raise_order_problems(problems)
@@ -180,6 +232,9 @@ def set_after(ws: Workspace, item_id: str, after: list[str]) -> WorkItem:
 def set_goal(ws: Workspace, item_id: str, goal: str) -> WorkItem:
     """Replace one item's goal, rejecting the same blank goals as creation."""
     item = ws.load_item(item_id)
+    items = load_items(ws)
+    assert_person_edit_allowed(items, [item.id])
+    assert_items_not_frozen(items, [item.id])
     updated = _validated_item({**item.model_dump(), "goal": goal})
     ws.write_item(updated)
     return updated
@@ -189,10 +244,49 @@ def set_goal(ws: Workspace, item_id: str, goal: str) -> WorkItem:
 def set_realizes(ws: Workspace, item_id: str, realizes: list[str]) -> WorkItem:
     """Replace one item's complete realizes-slug list; an empty list clears it."""
     item = ws.load_item(item_id)
+    items = load_items(ws)
+    assert_person_edit_allowed(items, [item.id])
+    assert_items_not_frozen(items, [item.id])
     _validate_realizes(realizes)
     updated = _validated_item({**item.model_dump(), "realizes": realizes})
     ws.write_item(updated)
     return updated
+
+
+@workspace_locked
+def set_phase(ws: Workspace, item_id: str, phase: Phase, phase_note: str = "") -> WorkItem:
+    """Record an item's optional progress phase without changing its status."""
+    item = ws.load_item(item_id)
+    items = load_items(ws)
+    assert_person_edit_allowed(items, [item.id])
+    assert_items_not_frozen(items, [item.id])
+    updated = _validated_item({**item.model_dump(), "phase": phase, "phase_note": phase_note})
+    ws.write_item(updated)
+    return updated
+
+
+@workspace_locked
+def set_accept(
+    ws: Workspace,
+    item_id: str,
+    accept: Accept,
+    *,
+    person: bool = False,
+) -> WorkItem:
+    """Change who accepts an item through the explicit person-authorized path."""
+    item = ws.load_item(item_id)
+    if not person:
+        raise ItemProtectedError("only the HTTP person path may change accept")
+    if item.status not in {"todo", "doing", "rework"}:
+        raise AcceptLockedError(f"cannot change accept for {item_id} while it is {item.status}")
+    assert_items_not_frozen(load_items(ws), [item_id])
+    updated = _validated_item({**item.model_dump(), "accept": accept})
+    ws.write_item(updated)
+    if updated.children:
+        from .supervisor import rollup_item_and_ancestors
+
+        rollup_item_and_ancestors(ws, item_id)
+    return ws.load_item(item_id)
 
 
 @workspace_locked
@@ -273,6 +367,14 @@ def move_item(
         raise MultipleParentsError(f"cannot move {item_id}: item has multiple parents: {joined}")
     source_parent = source_parents[0] if source_parents else None
 
+    touched = [item_id]
+    if source_parent is not None:
+        touched.append(source_parent)
+    if new_parent is not None:
+        touched.append(new_parent)
+    assert_person_edit_allowed(items, touched)
+    assert_items_not_frozen(items, touched)
+
     source_original = items[source_parent] if source_parent is not None else None
     destination_original = items[new_parent] if new_parent is not None else None
     structural_writes: list[tuple[WorkItem | None, WorkItem | None]]
@@ -328,6 +430,8 @@ def move_item(
             if first is not None and first_original is not None:
                 ws.write_item(first_original)
             raise
+
+    from .supervisor import invalidate_done_ancestors, rollup_item_and_ancestors
 
     invalidate_done_ancestors(ws, item_id)
     if source_parent is not None and source_parent != new_parent:

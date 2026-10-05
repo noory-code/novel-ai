@@ -85,3 +85,5 @@ The leaf's `realizes` links trace back to the design in `specs/<label>/`.
 - When Novel publishes an updated vS, import every release in sequence and use
   **solera-repin** on adjacent releases. Re-pin accounts for service elements,
   the referenced project snapshot, and refs changes.
+
+`accept` is required when creating an item without a gate: `children` rolls up finished children, `person` waits for that person's judgment, and agents never judge a person's result.

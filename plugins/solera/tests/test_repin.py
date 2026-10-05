@@ -297,6 +297,99 @@ def test_reintroduced_service_element_escalates_realizing_work(tmp_path: Path) -
     assert prop["stale"] == []
 
 
+def test_protected_items_and_their_descendants_escalate_instead_of_becoming_stale(
+    tmp_path: Path,
+) -> None:
+    ws = _ws(tmp_path)
+    parent = WorkItem(
+        id="RESULT-001",
+        level="result",
+        status="done",
+        children=["WORK-001"],
+        realizes=["feature/login"],
+        goal="Accepted result",
+        accept="person",
+    )
+    child = WorkItem(
+        id="WORK-001",
+        level="work",
+        status="done",
+        gate="true",
+        realizes=["feature/login"],
+        goal="Evidence",
+        accept="gate",
+    )
+    ws.write_item(parent)
+    ws.write_item(child)
+    old = _release(
+        "vS1",
+        service_elements=[
+            {"id": "service/auth", "hash": "service"},
+            {"id": "feature/login", "hash": "old"},
+        ],
+    )
+    new = _release(
+        "vS2",
+        service_elements=[
+            {"id": "service/auth", "hash": "service"},
+            {"id": "feature/login", "hash": "new"},
+        ],
+    )
+
+    proposal = propose_repin(ws, old, new)
+
+    assert proposal["stale"] == []
+    assert proposal["escalate"] == ["RESULT-001", "WORK-001"]
+    assert "protected" in " ".join(proposal["reasons"]["WORK-001"])
+
+
+def test_items_below_a_cancelled_container_escalate_instead_of_becoming_stale(
+    tmp_path: Path,
+) -> None:
+    ws = _ws(tmp_path)
+    ws.write_item(
+        WorkItem(
+            id="CANCELLED-001",
+            level="result",
+            status="cancelled",
+            children=["WORK-001"],
+            goal="Cancelled result",
+            accept="children",
+        )
+    )
+    ws.write_item(
+        WorkItem(
+            id="WORK-001",
+            level="work",
+            status="done",
+            gate="true",
+            realizes=["feature/login"],
+            goal="Frozen evidence",
+            accept="gate",
+        )
+    )
+    old = _release(
+        "vS1",
+        service_elements=[
+            {"id": "service/auth", "hash": "service"},
+            {"id": "feature/login", "hash": "old"},
+        ],
+    )
+    new = _release(
+        "vS2",
+        service_elements=[
+            {"id": "service/auth", "hash": "service"},
+            {"id": "feature/login", "hash": "new"},
+        ],
+    )
+
+    proposal = propose_repin(ws, old, new)
+
+    assert proposal["stale"] == []
+    assert proposal["escalate"] == ["WORK-001"]
+    assert "cancelled" in " ".join(proposal["reasons"]["WORK-001"])
+
+
 def test_reopen_items_sets_done_back_to_todo(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
     leaf = create_item(ws, "action", "A", gate="true", realizes=["feature/login"])
@@ -310,7 +403,7 @@ def test_reopen_invalidates_done_ancestors(tmp_path: Path) -> None:
     from solera.supervisor import complete, start_next
 
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "S")
+    story = create_item(ws, "story", "S", accept="children")
     leaf = create_item(ws, "action", "A", gate="true", realizes=["feature/login"], parent=story.id)
     start_next(ws)
     assert complete(ws, leaf.id, cwd=tmp_path).passed is True
@@ -323,7 +416,7 @@ def test_reopen_invalidates_done_ancestors(tmp_path: Path) -> None:
 
 def test_reopen_validates_every_target_before_writing(tmp_path: Path) -> None:
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "S")
+    story = create_item(ws, "story", "S", accept="children")
     leaf = create_item(ws, "action", "A", gate="true", parent=story.id)
     ws.write_item(ws.load_item(leaf.id).model_copy(update={"status": "done"}))
     ws.write_item(ws.load_item(story.id).model_copy(update={"status": "done"}))
@@ -339,7 +432,7 @@ def test_reopen_writes_ancestors_before_leaf_and_recovers(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     ws = _ws(tmp_path)
-    story = create_item(ws, "story", "S")
+    story = create_item(ws, "story", "S", accept="children")
     leaf = create_item(ws, "action", "A", gate="true", parent=story.id)
     ws.write_item(ws.load_item(leaf.id).model_copy(update={"status": "done"}))
     ws.write_item(ws.load_item(story.id).model_copy(update={"status": "done"}))

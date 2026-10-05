@@ -14,11 +14,30 @@ from starlette.responses import JSONResponse, Response
 
 from . import __version__
 from .broadcast import BroadcastHub
-from .errors import SoleraError, UnknownParentError, UnknownWorkItemError
+from .errors import AcceptRequiredError, SoleraError, UnknownParentError, UnknownWorkItemError
+from .formats import Accept, Phase
 from .gate import GateResult
 from .graph import completion, items_by_slugs, load_items
-from .planning import add_after, create_item, move_item, remove_after, set_goal, set_realizes
-from .supervisor import blocked_items, check_item, ready_leaves, uncheck_item
+from .planning import (
+    add_after,
+    create_item,
+    move_item,
+    remove_after,
+    set_accept,
+    set_goal,
+    set_phase,
+    set_realizes,
+)
+from .supervisor import (
+    accept_item,
+    blocked_items,
+    cancel_item,
+    check_item,
+    ready_leaves,
+    reject_item,
+    reopen_item,
+    uncheck_item,
+)
 from .workspace import Workspace
 
 _Model = TypeVar("_Model", bound=BaseModel)
@@ -42,11 +61,15 @@ class CreateItemBody(_Body):
     gate: str = ""
     realizes: list[str] = Field(default_factory=list)
     after: list[str] = Field(default_factory=list)
+    accept: str | None = None
 
 
 class PatchItemBody(_Body):
     goal: str = ""
     realizes: list[str] = Field(default_factory=list)
+    accept: str | None = None
+    phase: str | None = None
+    phase_note: str = ""
 
 
 class MoveItemBody(_Body):
@@ -56,6 +79,10 @@ class MoveItemBody(_Body):
 
 class AfterBody(_Body):
     predecessor: str
+
+
+class ReasonBody(_Body):
+    reason: str
 
 
 class HttpError(Exception):
@@ -170,6 +197,10 @@ async def create_item_endpoint(request: Request) -> Response:
     body = await _parse_body(request, CreateItemBody)
     if body.parent is not None:
         _require_item(ws, body.parent, as_parent=True)
+    if not body.gate and body.accept is None:
+        raise AcceptRequiredError(
+            "accept is required when an item has no gate; choose children or person"
+        )
     level = body.level if body.level is not None else ("story" if body.parent is None else "action")
     item = create_item(
         ws,
@@ -179,6 +210,7 @@ async def create_item_endpoint(request: Request) -> Response:
         parent=body.parent,
         realizes=body.realizes,
         after=body.after,
+        accept=cast(Accept | None, body.accept),
     )
     await _hub(request).notify_write(ws.root)
     return JSONResponse(item.model_dump(), status_code=201)
@@ -193,13 +225,23 @@ async def patch_item_endpoint(request: Request) -> Response:
     if not body.model_fields_set:
         raise HttpError(
             400,
-            "at least one of goal or realizes is required",
+            "at least one of goal, realizes, accept, phase, or phase_note is required",
             "invalid_request",
         )
-    if "goal" in body.model_fields_set:
-        set_goal(ws, item_id, body.goal)
-    if "realizes" in body.model_fields_set:
-        set_realizes(ws, item_id, body.realizes)
+    with ws.lock():
+        if "accept" in body.model_fields_set:
+            if body.accept is None:
+                raise HttpError(400, "accept must be a string", "invalid_request")
+            set_accept(ws, item_id, cast(Accept, body.accept), person=True)
+        if "goal" in body.model_fields_set:
+            set_goal(ws, item_id, body.goal)
+        if "realizes" in body.model_fields_set:
+            set_realizes(ws, item_id, body.realizes)
+        if "phase" in body.model_fields_set or "phase_note" in body.model_fields_set:
+            current = ws.load_item(item_id)
+            phase = current.phase if body.phase is None else cast(Phase, body.phase)
+            note = body.phase_note if "phase_note" in body.model_fields_set else current.phase_note
+            set_phase(ws, item_id, phase, note)
     item = ws.load_item(item_id)
     await _hub(request).notify_write(ws.root)
     return JSONResponse(item.model_dump())
@@ -282,3 +324,43 @@ async def uncheck_item_endpoint(request: Request) -> Response:
     if item != before:
         await _hub(request).notify_write(ws.root)
     return JSONResponse({"item": item.model_dump()})
+
+
+async def _judgment_response(request: Request, action: str) -> Response:
+    ws = _workspace(request)
+    item_id = request.path_params["id"]
+    _require_item(ws, item_id)
+    before = ws.load_item(item_id)
+    if action == "accept":
+        item = accept_item(ws, item_id)
+    else:
+        body = await _parse_body(request, ReasonBody)
+        if action == "reject":
+            item = reject_item(ws, item_id, body.reason)
+        elif action == "reopen":
+            item = reopen_item(ws, item_id, body.reason)
+        else:
+            item = cancel_item(ws, item_id, body.reason)
+    if item != before:
+        await _hub(request).notify_write(ws.root)
+    return JSONResponse({"item": item.model_dump()})
+
+
+@_errors
+async def accept_item_endpoint(request: Request) -> Response:
+    return await _judgment_response(request, "accept")
+
+
+@_errors
+async def reject_item_endpoint(request: Request) -> Response:
+    return await _judgment_response(request, "reject")
+
+
+@_errors
+async def reopen_item_endpoint(request: Request) -> Response:
+    return await _judgment_response(request, "reopen")
+
+
+@_errors
+async def cancel_item_endpoint(request: Request) -> Response:
+    return await _judgment_response(request, "cancel")

@@ -13,6 +13,7 @@ from fastmcp.exceptions import ValidationError as FastMCPValidationError
 
 from solera import mcp_server
 from solera.errors import FormatError, OrderError, PlanningError
+from solera.formats import WorkItem
 from solera.workspace import Workspace
 
 
@@ -40,6 +41,7 @@ def test_tool_catalog_is_pinned() -> None:
         "remove_work_item_after",
         "set_work_item_after",
         "set_work_item_goal",
+        "set_work_item_phase",
         "set_work_item_realizes",
         "workspace_status",
         "work_items_by_slugs",
@@ -59,8 +61,8 @@ def test_mcp_import_does_not_require_starlette(monkeypatch: pytest.MonkeyPatch) 
 
 def test_work_items_by_slugs_returns_all_requested_keys(tmp_path: Path) -> None:
     root = str(tmp_path)
-    first = mcp_server.plan_work(root, "First")
-    second = mcp_server.plan_work(root, "Second")
+    first = mcp_server.plan_work(root, "First", accept="children")
+    second = mcp_server.plan_work(root, "Second", accept="children")
     mcp_server.set_work_item_realizes(root, first["id"], ["feature/login"])
     mcp_server.set_work_item_realizes(root, second["id"], ["feature/login", "entity/account"])
 
@@ -75,10 +77,51 @@ def test_work_items_by_slugs_returns_all_requested_keys(tmp_path: Path) -> None:
     }
 
 
+def test_set_work_item_phase_records_phase_without_changing_status(tmp_path: Path) -> None:
+    root = str(tmp_path)
+    item = mcp_server.plan_work(root, "Explore", accept="children")
+
+    updated = mcp_server.set_work_item_phase(root, item["id"], "exploring", "Unknown API")
+
+    assert updated["phase"] == "exploring"
+    assert updated["phase_note"] == "Unknown API"
+    assert updated["status"] == "todo"
+
+
+def test_mcp_creation_requires_accept_without_a_gate(tmp_path: Path) -> None:
+    with pytest.raises(PlanningError) as caught:
+        mcp_server.plan_work(str(tmp_path), "Ambiguous")
+
+    assert caught.value.code == "accept_required"
+
+
+def test_mcp_cannot_edit_or_move_a_protected_item(tmp_path: Path) -> None:
+    root = str(tmp_path)
+    ws = Workspace(tmp_path / ".noory" / "solera")
+    ws.write_item(
+        WorkItem(
+            id="RESULT-001",
+            level="result",
+            status="done",
+            goal="Protected",
+            accept="person",
+        )
+    )
+    box = mcp_server.plan_work(root, "Box", accept="children")
+
+    with pytest.raises(PlanningError) as edit:
+        mcp_server.set_work_item_goal(root, "RESULT-001", "Changed")
+    with pytest.raises(PlanningError) as move:
+        mcp_server.move_work_item(root, "RESULT-001", box["id"])
+
+    assert edit.value.code == "item_protected"
+    assert move.value.code == "item_protected"
+
+
 def test_edit_tools_delegate_to_core_and_return_items(tmp_path: Path) -> None:
     root = str(tmp_path)
-    first = mcp_server.plan_work(root, "First")
-    second = mcp_server.plan_work(root, "Second", level="epic")
+    first = mcp_server.plan_work(root, "First", accept="children")
+    second = mcp_server.plan_work(root, "Second", level="epic", accept="children")
     child = mcp_server.add_work_item(root, first["id"], "Child", gate="true")
 
     assert mcp_server.set_work_item_goal(root, child["id"], "Updated")["goal"] == "Updated"
@@ -92,7 +135,7 @@ def test_edit_tools_delegate_to_core_and_return_items(tmp_path: Path) -> None:
 
 def test_edit_tools_propagate_rejections(tmp_path: Path) -> None:
     root = str(tmp_path)
-    item = mcp_server.plan_work(root, "Keep")
+    item = mcp_server.plan_work(root, "Keep", accept="children")
 
     with pytest.raises(ValueError, match="goal"):
         mcp_server.set_work_item_goal(root, item["id"], "  ")
@@ -116,7 +159,7 @@ def test_apply_spec_repin_requires_proposal_id(tmp_path: Path) -> None:
 
 def test_plan_next_and_notes_round_trip(tmp_path: Path) -> None:
     root = str(tmp_path)
-    planned = mcp_server.plan_work(root, "Ship the feature")
+    planned = mcp_server.plan_work(root, "Ship the feature", accept="children")
     leaf = mcp_server.add_work_item(
         root,
         planned["id"],
@@ -138,8 +181,14 @@ def test_plan_next_and_notes_round_trip(tmp_path: Path) -> None:
 
 def test_plan_and_add_accept_after(tmp_path: Path) -> None:
     root = str(tmp_path)
-    predecessor = mcp_server.plan_work(root, "First", level="initiative")
-    planned = mcp_server.plan_work(root, "Second", level="story", after=[predecessor["id"]])
+    predecessor = mcp_server.plan_work(root, "First", level="initiative", accept="children")
+    planned = mcp_server.plan_work(
+        root,
+        "Second",
+        level="story",
+        after=[predecessor["id"]],
+        accept="children",
+    )
     leaf = mcp_server.add_work_item(
         root,
         planned["id"],
@@ -154,7 +203,7 @@ def test_plan_and_add_accept_after(tmp_path: Path) -> None:
 
 def test_workspace_status_includes_container_progress(tmp_path: Path) -> None:
     root = str(tmp_path)
-    story = mcp_server.plan_work(root, "Story")
+    story = mcp_server.plan_work(root, "Story", accept="children")
     first = mcp_server.add_work_item(root, story["id"], "One", gate="true")
     mcp_server.add_work_item(root, story["id"], "Two", gate="true")
     ws = Workspace(tmp_path / ".noory" / "solera")
@@ -171,8 +220,8 @@ def test_workspace_status_includes_container_progress(tmp_path: Path) -> None:
 
 def test_workspace_status_reports_legacy_descendant_order_problem(tmp_path: Path) -> None:
     root = str(tmp_path)
-    parent = mcp_server.plan_work(root, "Parent")
-    child = mcp_server.add_work_item(root, parent["id"], "Not split")
+    parent = mcp_server.plan_work(root, "Parent", accept="children")
+    child = mcp_server.add_work_item(root, parent["id"], "Not split", accept="children")
     ws = Workspace(tmp_path / ".noory" / "solera")
     parent_item = ws.load_item(parent["id"])
     ws.write_item(parent_item.model_copy(update={"after": [child["id"]]}))
@@ -189,8 +238,8 @@ def test_workspace_status_reports_legacy_descendant_order_problem(tmp_path: Path
 
 def test_ready_work_items_returns_ready_and_blocked(tmp_path: Path) -> None:
     root = str(tmp_path)
-    predecessor = mcp_server.plan_work(root, "Not split", level="initiative")
-    parent = mcp_server.plan_work(root, "Story")
+    predecessor = mcp_server.plan_work(root, "Not split", level="initiative", accept="children")
+    parent = mcp_server.plan_work(root, "Story", accept="children")
     blocked = mcp_server.add_work_item(
         root,
         parent["id"],
@@ -217,7 +266,7 @@ def test_ready_work_items_returns_ready_and_blocked(tmp_path: Path) -> None:
 def test_ready_and_next_tools_explain_missing_design_node(tmp_path: Path) -> None:
     _mark_imported_design(tmp_path)
     root = str(tmp_path)
-    parent = mcp_server.plan_work(root, "Story")
+    parent = mcp_server.plan_work(root, "Story", accept="children")
     leaf = mcp_server.add_work_item(root, parent["id"], "Disconnected", gate="true")
 
     result = mcp_server.ready_work_items(root)
@@ -235,8 +284,8 @@ def test_ready_and_next_tools_explain_missing_design_node(tmp_path: Path) -> Non
 
 def test_set_work_item_after_propagates_cycle_error(tmp_path: Path) -> None:
     root = str(tmp_path)
-    first_parent = mcp_server.plan_work(root, "First")
-    second_parent = mcp_server.plan_work(root, "Second")
+    first_parent = mcp_server.plan_work(root, "First", accept="children")
+    second_parent = mcp_server.plan_work(root, "Second", accept="children")
     first = mcp_server.add_work_item(root, first_parent["id"], "One", gate="true")
     second = mcp_server.add_work_item(root, second_parent["id"], "Two", gate="true")
     mcp_server.set_work_item_after(root, first["id"], [second["id"]])
@@ -258,7 +307,10 @@ def test_tools_reject_path_like_names_without_workspace_data(
     tmp_path: Path, operation: Callable[..., object], arguments: tuple[str, str]
 ) -> None:
     with pytest.raises(FormatError, match="name"):
-        operation(str(tmp_path), *arguments)
+        if operation in {mcp_server.add_work_item, mcp_server.plan_work}:
+            operation(str(tmp_path), *arguments, accept="children")
+        else:
+            operation(str(tmp_path), *arguments)
 
     workspace_root = tmp_path / ".noory" / "solera"
     assert workspace_root.joinpath(".lock").is_file()
