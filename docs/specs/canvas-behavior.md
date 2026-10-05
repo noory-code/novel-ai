@@ -179,27 +179,35 @@ choices made while building it on 2026-10-02 and still open to the user's review
   selection. In the list, Tab indents an item under the item above it, Shift+Tab outdents it, Return adds a sibling, and
   dragging moves an item to another parent or position; every change is a move in the engine and the graph follows.
   Roots cannot be reordered, because the engine orders roots by id *(Claude)*.
-- **Folding and focus** *(user)*: any item with children can be folded; a folded item shows only its percent. Focus
+- **Folding and focus** *(user)*: any item with children can be folded; a folded item shows only its accepted fraction. Focus
   mode keeps the selected branch and dims everything else. *(Claude:)* fold with the item's toggle or `[` / `]` on the
   selected item, in the graph or the list; the fold state lasts for the session and is not saved; folding keeps the
   viewport; Esc leaves focus mode.
-- **Badge on design canvases:** a published design node that work items realize shows a count on the bottom-right corner of its frame
-  ("일감 N" / "N work items"), never a percent. Clicking it opens the Work tab focused on those items. Unpublished
-  nodes show no badge. *(Claude:)* "focused" means the first of those items is selected and focus mode lights the
-  branches of all of them, until the person selects another item; returning to the Work tab later does not refocus.
-  The badge floats outside the node's measured size, so a change in Solera never rewrites the design file.
-  *Decided, not yet built (user, `D-2026-10-04-A` (3)):* the badge shows a count per state instead of one total, and
-  the count of results waiting for the person's judgment is always shown.
+- **Badge on design canvases** *(user, `D-2026-10-04-A` (3))*: a published design node that work items realize shows
+  counts per state on the bottom-right corner of its frame, never one total and never a percent: uphill ("오르막 N",
+  what to do is not yet known), downhill ("내리막 N", the work is known and being done), and awaiting judgment
+  ("판단 N"). Only non-zero states appear. Awaiting judgment is always shown; uphill and downhill appear only while the
+  design canvas's work-progress toggle is on. Clicking the badge opens the Work tab focused on those items. Unpublished
+  nodes show no badge. *(Claude:)* an unfinished item (`todo`, `doing`, `rework`) counts as downhill when its phase is
+  executing and as uphill otherwise, since an empty phase means nobody has recorded that the work is known; finished
+  and cancelled items are not counted. The toggle is off by default and lasts for the session; while it is off, a node
+  with work and nothing awaiting judgment shows a plain "일감" / "work" marker so it still opens its work. "focused"
+  means the first of those items is selected and focus mode lights the branches of all of them, until the person
+  selects another item; returning to the Work tab later does not refocus. The badge floats outside the node's measured
+  size, so a change in Solera never rewrites the design file.
 - **Checking items off** *(user; D-2026-10-02-D)*: every item without children has a checkbox, on the graph node and in
   the list. On an item without a check command, the checkbox finishes it, and pressing it again reopens it. On an item
   with a check command, the checkbox runs that command: a pass checks it, and a failure leaves it unchecked and shows
   the command's output on request; a passed check cannot be undone by hand. An item that waits for other work or names
-  no design node cannot be checked, and its checkbox says why. Containers have no checkbox; their percent comes from
-  the engine and rises as their items are checked. *(Claude:)* Space checks the selected item in the graph or the list,
-  and a check command shows "running the check" while it runs.
-  *Decided, not yet built (user, `D-2026-10-04-B` (1)):* the completion percent on items with children and on folded
-  items is replaced by "accepted / currently known lowest items" (for example "9/10 accepted"), with the reason shown
-  when the denominator changes. *(`D-2026-10-04-B` (2)–(6)):* finished items leave the progress view but stay reachable
+  no design node cannot be checked, and its checkbox says why. Containers have no checkbox. *(Claude:)* Space checks
+  the selected item in the graph or the list, and a check command shows "running the check" while it runs.
+- **Accepted fraction** *(user, `D-2026-10-04-B` (1))*: an item with children, and a folded item, shows "accepted /
+  currently known lowest items" ("받아들임 9/10"), never a percent. The numbers come from the engine; lowest items
+  exclude cancelled ones. When the denominator changes, the reason appears beside it: "새로 N" (new lowest items),
+  "N 빠짐" (lowest items left), or "나뉨" (a lowest item was split). *(Claude:)* the reason is computed in the app
+  from the lowest items it last saw during the session and stays until the next change; when a split and other
+  changes happen together, "나뉨" is shown.
+  *Decided, not yet built (`D-2026-10-04-B` (2)–(6)):* finished items leave the progress view but stay reachable
   from their design node; a new publish re-checks only related in-progress items.
   *Decided, not yet built (user, `D-2026-10-04-A` (1)–(2)):* work items have no fixed level names. An item whose result
   was promised to the person is not finished when all its children are; it waits until the person tries the result and
