@@ -17,6 +17,7 @@ from typing import Any, Literal
 from fastmcp import FastMCP
 
 from mashbill.chat_selection import build_turn_preamble
+from mashbill.design_check import set_design_check as set_design_check
 from mashbill.folder_io import (
     create_project,
     list_feature_details,
@@ -24,9 +25,7 @@ from mashbill.folder_io import (
     read_project,
 )
 from mashbill.format_f import publish_service
-from mashbill.git_store import (
-    list_tags,
-)
+from mashbill.git_store import list_tags
 from mashbill.mcp_canvas_write_tools import (
     create_edge_with_draft,
     create_node_with_draft,
@@ -76,6 +75,7 @@ for _tool in (
     record_draft,
     update_draft,
     resolve_draft,
+    set_design_check,
     tag_project,
     list_project_tags,
     delete_project_tag,

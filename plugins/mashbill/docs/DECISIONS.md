@@ -94,8 +94,8 @@
 - **Approval:** (1)–(5) came out of a discussion with the in-app coach (novel-workspace W-00000379,
   2026-10-05) and were reported to the user; (6) accepted by the user, 2026-10-05 ("둘다 해요").
 - **Spec impact:** `docs/concepts/design-principles.md` §Services and §Feature, and
-  `docs/concepts/ai-collaboration.md` §2.3–§2.4 and the design-check rule. (6) is decided, not yet
-  built.
+  `docs/concepts/ai-collaboration.md` §2.3–§2.4 and §2.6; (6) also `docs/specs/canvas-behavior.md`
+  §Services (design-check state).
 - **Principles:** Honesty (unchecked is never reported as fine); MECE (gaps and overlaps are checked
   by fixed tables, not by recall); VISION "the person and the AI never lose sight of the whole".
 

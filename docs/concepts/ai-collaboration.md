@@ -177,8 +177,11 @@ The coach runs fixed checks (design-principles §Services, §Feature) and raises
   shown now and how many remain.
 - **Never call an unchecked item fine.** A change upstream turns the related later checks back to "needs re-check". Do not say
   the design is ready to publish while any check is unchecked or needs re-check.
-- **On the canvas** *(decided, not yet built)*: each service and feature shows its check state — unchecked, checking, checked,
-  needs re-check — and a drawn flow and its failure check are shown separately.
+- **On the canvas:** each service shows its feature-split check and each feature its failure check — unchecked, checking,
+  checked, needs re-check — beside the node; a drawn flow and its failure check are shown separately. The coach records a check
+  with `set_design_check` (checking when it starts, checked with the problems found and remaining when it ends, never checked for
+  a check it did not run). The engine turns a checking or checked state back to needs re-check when the service, its feature
+  set, or the feature's flow changes. Publishing shows how many checks are not finished; it does not block.
 
 ## 3. Registry integrity — strict from the start (not YAGNI, `D-2026-06-19-D`)
 Entities + reference masters (actor/core_value/identity) = the **domain SSOT**, so trusting the playbook alone is

@@ -771,6 +771,11 @@ def test_system_prompt_stays_under_saturation_budget() -> None:
         assert words <= 1795, f"{scope}: {words} words > 1795 budget"
 
 
+def test_canvas_prompt_tells_coach_to_record_design_checks() -> None:
+    for scope in ("foundation", "actors", "services", "entities", "feature:x"):
+        assert "Record each check with set_design_check." in build_system_prompt(scope)
+
+
 def test_every_canvas_steers_the_next_question_direction() -> None:
     """W-00000249: the coach asked one thing at a time but nothing told it WHICH
     WAY to turn next, so a stalled thread got the same question again. The

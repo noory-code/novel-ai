@@ -30,6 +30,9 @@ import typing
 from pathlib import Path
 from typing import Any, Literal
 
+from pydantic import BaseModel
+
+from mashbill.models_actors import DesignCheck
 from mashbill.models_kinds import BaseNodeFields
 from mashbill.schema_export import _ALL_KIND_CLASSES
 
@@ -100,6 +103,8 @@ def _py_to_ts(ann: Any) -> str:
         return "number"
     if ann is Any or ann is object:
         return "unknown"
+    if isinstance(ann, type) and issubclass(ann, BaseModel):
+        return ann.__name__
 
     raise TypeError(f"ts_codegen: unmapped annotation {ann!r}")
 
@@ -129,6 +134,14 @@ def _base_interface() -> str:
     return "\n".join(lines)
 
 
+def _value_object_interface(cls: type[BaseModel]) -> str:
+    lines = [f"export interface {cls.__name__} {{"]
+    for name, field in cls.model_fields.items():
+        lines.append(_field_line(name, field.annotation))
+    lines.append("}")
+    return "\n".join(lines)
+
+
 def _kind_interface(kind: str) -> str:
     cls = _ALL_KIND_CLASSES[kind]
     iface = "".join(part.capitalize() for part in kind.split("_")) + "Json"
@@ -154,6 +167,8 @@ def generate_wire_ts() -> str:
         "// Wire shape only — the per-kind domain *class* (fromJson/toJson) is hand-written.",
         "",
         'import type { Shape } from "../types";',
+        "",
+        _value_object_interface(DesignCheck),
         "",
         _base_interface(),
     ]

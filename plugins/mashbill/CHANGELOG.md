@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.202.0] — 2026-10-05
+
+### Added
+
+- Service and feature nodes carry a coach design-check record; `set_design_check` records check
+  progress and counts, while changes to service composition or feature flows return completed or
+  in-progress checks to `recheck` through the shared canvas write boundary (D-2026-10-05-A (6)).
+
 ## [0.201.0] — 2026-10-05
 
 ### Changed

@@ -220,6 +220,7 @@ def write_canvas(plot_root: Path, project_id: str, canvas: CanvasDoc) -> CanvasD
     # every clean node to dirty. Read the existing on-disk canvas and
     # carry any non-None baseline forward for nodes whose incoming
     # baseline is ``None``.
+    existing: CanvasDoc | None = None
     existing_baselines: dict[str, dict[str, Any]] = {}
     if path.is_file():
         try:
@@ -242,12 +243,16 @@ def write_canvas(plot_root: Path, project_id: str, canvas: CanvasDoc) -> CanvasD
     # remains bare; feature detail remains anchorless; no read path fabricates
     # user-visible state. Existing anchor or parent edges make this idempotent.
     canvas = _attach_orphan_anchor_spokes(canvas)
+    from mashbill.design_check import prepare_rechecks, write_related
+
+    canvas, related_rechecks = prepare_rechecks(plot_root, project_id, existing, canvas)
     raw = canvas.model_dump(by_alias=True)
     # v0.17 Phase 1 (D-2026-05-16-A) — JSON is the sole SSOT for
     # Foundation typed-text fields. The v0.13 ``_split_foundation_typed_
     # text_to_md`` write-side helper is gone; Pydantic now serialises
     # every field (typed + body) into the JSON output directly.
     _write_json(path, raw)
+    write_related(related_rechecks)
     try:
         meta = read_project(plot_root, project_id)
     except FileNotFoundError:

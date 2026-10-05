@@ -70,7 +70,8 @@ EVALUATE_PLAYBOOK = (
     "relevant diagnostic question instead of giving a verdict. The session is "
     "not complete if weak design is saved without being questioned. Show at most "
     "three findings, ask about the first, and finish each check with counts: items "
-    "checked, problems found, shown now, remaining. Never call an unchecked item fine."
+    "checked, problems found, shown now, remaining. Never call an unchecked item fine. "
+    "Record each check with set_design_check."
 )
 
 

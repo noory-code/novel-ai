@@ -31,6 +31,7 @@ _CORE_TOOLS = {
     "get_canvas",
     "update_canvas",
     "update_node",
+    "set_design_check",
     "create_node",
     "search_project_nodes",
     "tag_project",
@@ -43,6 +44,14 @@ _CORE_TOOLS = {
     "update_draft",
     "resolve_draft",
 }
+
+
+async def test_set_design_check_tool_description_guards_check_truth() -> None:
+    tools = {tool.name: tool for tool in await mcp_tools.mcp.list_tools()}
+    description = (tools["set_design_check"].description or "").lower()
+    assert "checking" in description and "starts" in description
+    assert "checked" in description and "finishes" in description
+    assert "never" in description and "did not run" in description
 
 
 async def test_registry_exposes_every_core_tool() -> None:

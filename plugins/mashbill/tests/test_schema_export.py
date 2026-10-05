@@ -94,6 +94,18 @@ def test_non_foundation_json_schema_includes_typed_fields(tmp_path: Path) -> Non
     for gone in ("target_side", "what", "scope", "do", "dont"):
         assert gone not in service_props, f"service.json must NOT expose retired {gone!r}"
 
+    feature_schema = json.loads((schema_dir / "feature.json").read_text(encoding="utf-8"))
+    for schema in (service_schema, feature_schema):
+        assert "design_check" in schema["properties"]
+        check = schema["$defs"]["DesignCheck"]
+        assert check["properties"]["state"]["enum"] == [
+            "unchecked",
+            "checking",
+            "checked",
+            "recheck",
+        ]
+        assert check["required"] == ["state", "updated_at"]
+
     # metric / content retired 2026-06-20 (D-2026-06-20-H) — no schema files.
     assert not (schema_dir / "metric.json").exists()
     assert not (schema_dir / "content.json").exists()

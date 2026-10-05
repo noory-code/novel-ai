@@ -29,6 +29,17 @@ from mashbill.chat_context import (
 from mashbill.chat_providers.claude_code import ClaudeCodeProvider
 from mashbill.chat_providers.codex import CodexProvider
 
+
+def test_feature_principles_tell_coach_when_and_how_to_record_checks() -> None:
+    from mashbill.coaching_principles import get_principles
+
+    principles = get_principles("features")
+    assert "점검을 시작하면 확인 중" in principles
+    assert "찾은 수·남은 수와 함께 확인함" in principles
+    assert "set_design_check" in principles
+    assert "안 한 점검을 확인함으로 적지 않는다" in principles
+
+
 # --- per-canvas coaching playbooks (Phase 3, sourced from ----------------
 # --- docs/concepts/ai-collaboration.md §2) -------------------------------
 

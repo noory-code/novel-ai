@@ -11,9 +11,20 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from mashbill.models_kinds import BaseNodeFields
+
+DesignCheckState = Literal["unchecked", "checking", "checked", "recheck"]
+
+
+class DesignCheck(BaseModel):
+    """One coach-run design check recorded beside its design subject."""
+
+    state: DesignCheckState
+    found: int | None = Field(default=None, ge=0)
+    remaining: int | None = Field(default=None, ge=0)
+    updated_at: str
 
 
 class ActorNode(BaseNodeFields):
@@ -70,6 +81,7 @@ class ServiceNode(BaseNodeFields):
     ref_actor_ids: list[str] = Field(default_factory=list)
     ref_value_ids: list[str] = Field(default_factory=list)
     ref_identity_ids: list[str] = Field(default_factory=list)
+    design_check: DesignCheck | None = None
 
 
 class FeatureNode(BaseNodeFields):
@@ -87,6 +99,7 @@ class FeatureNode(BaseNodeFields):
     # D-2026-07-05-E — participation chain: WHO acts in this feature, picked
     # from (narrowed to, coached/UI-soft) its service's participants.
     ref_actor_ids: list[str] = Field(default_factory=list)
+    design_check: DesignCheck | None = None
 
 
 class CategoryNode(BaseNodeFields):

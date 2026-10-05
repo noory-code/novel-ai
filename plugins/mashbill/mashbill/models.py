@@ -43,6 +43,12 @@ from mashbill.models_actors import (
     CategoryNode as CategoryNode,
 )
 from mashbill.models_actors import (
+    DesignCheck as DesignCheck,
+)
+from mashbill.models_actors import (
+    DesignCheckState as DesignCheckState,
+)
+from mashbill.models_actors import (
     FeatureNode as FeatureNode,
 )
 from mashbill.models_actors import (

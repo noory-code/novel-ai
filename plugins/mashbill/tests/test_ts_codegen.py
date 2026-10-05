@@ -35,3 +35,10 @@ def test_generator_emits_base_and_every_kind_interface() -> None:
             f"{name} missing from wire.gen.ts — a kind without codegen support. "
             "Run: MASHBILL_VIEWER_ROOT=<app>/viewer uv run python -m mashbill.ts_codegen"
         )
+
+
+def test_generator_emits_design_check_value_object() -> None:
+    out = generate_wire_ts()
+    assert "interface DesignCheck" in out
+    assert 'state: "unchecked" | "checking" | "checked" | "recheck";' in out
+    assert "design_check: DesignCheck | null;" in out

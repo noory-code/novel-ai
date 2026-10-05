@@ -137,6 +137,7 @@
     "feature": [
       "collapsed",
       "color",
+      "design_check",
       "details_path",
       "height",
       "icon",
@@ -259,6 +260,7 @@
     "service": [
       "collapsed",
       "color",
+      "design_check",
       "details_path",
       "height",
       "icon",

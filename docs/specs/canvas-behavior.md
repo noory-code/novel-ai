@@ -92,6 +92,14 @@
   (what can't be conceded?) (core_value chips, multiple) ⑤ `"어떤 결로 다가가나?"` (in what manner does it approach?) (identity
   chips, multiple). The title is itself the interview question. References = pick from Foundation/Actors
   (if absent, create new, [`../concepts/ai-collaboration.md`](../concepts/ai-collaboration.md) §0.2). The old 9 fields are deleted.
+- **Design-check state** *(user, `D-2026-10-05-A` (6))*: each service shows its feature-split check ("기능 나눔") and each
+  feature its failure check ("실패 점검") as unchecked, checking, checked or needs re-check, in text, beside the node; when a
+  checked or re-check state has problems remaining, the count follows ("남은 문제 2"). The person does not edit it: the
+  coach records it, and the engine turns checking or checked back to needs re-check when the service's content or feature set
+  changes (service) or the feature's content or flow changes (the feature and its service). The feature canvas shows the
+  feature's failure-check state above the canvas. The publish confirmation shows how many checks are not finished ("점검이
+  끝나지 않은 곳 N곳 — 기능 나눔 a, 실패 점검 b") and does not block publishing. *(Claude:)* the marker floats outside the node's
+  measured size at the top right, so the work badge keeps the bottom right; a missing state reads as unchecked.
 - **Layout:** `tree`. **Later expansion:** Services overview full behavior spec (model pinned only).
 
 ## Feature canvas — Execution (formerly Service-Detail)
