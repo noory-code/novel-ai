@@ -4,6 +4,15 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.203.0] — 2026-10-06
+
+### Changed
+
+- The Services coach registers each service's confirmed feature candidates before deep checks,
+  then checks gaps and overlaps across the set; failure cases move to feature flows. Design-check
+  counts appear once when a whole check ends, not as a reply footer (D-2026-10-05-A;
+  W-00000379 round b experiment).
+
 ## [0.202.0] — 2026-10-05
 
 ### Added

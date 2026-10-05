@@ -38,6 +38,8 @@ def test_feature_principles_tell_coach_when_and_how_to_record_checks() -> None:
     assert "찾은 수·남은 수와 함께 확인함" in principles
     assert "set_design_check" in principles
     assert "안 한 점검을 확인함으로 적지 않는다" in principles
+    assert "서비스 캔버스에서는 기능 후보를 먼저 넓게 나열" in principles
+    assert "각 기능의 흐름 캔버스에서 실패 경우까지 깊이 점검" in principles
 
 
 # --- per-canvas coaching playbooks (Phase 3, sourced from ----------------

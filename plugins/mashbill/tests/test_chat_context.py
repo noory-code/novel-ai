@@ -140,6 +140,17 @@ def test_services_framing_proposes_features_after_service_confirmation() -> None
     assert "propose features early" not in f
 
 
+def test_services_framing_registers_breadth_before_feature_depth() -> None:
+    framing = build_framing_preamble("services").lower()
+    registration = "register the service's confirmed feature candidates broadly"
+    depth = "before examining one in depth"
+    assert registration in framing
+    assert depth in framing
+    assert framing.index(registration) < framing.index(depth)
+    assert "ask failure cases on each feature's flow canvas, not here" in framing
+    assert "compare gaps and overlaps once all of that service's features are registered" in framing
+
+
 def test_services_framing_surfaces_entities_as_byproduct() -> None:
     """Benchmark finding (2026-07-02, 8-service batch): entities were 0/8 — the
     surface-the-entity instruction lived only in the entities-scope framing,
@@ -445,6 +456,9 @@ def test_every_canvas_limits_and_counts_design_check_findings() -> None:
             "shown now",
             "remaining",
             "never call an unchecked item fine",
+            "once, only when a whole check ends",
+            "a service's feature set, a flow, or a pre-publish check",
+            "no per-reply count footer",
         ):
             assert rule in prompt, (scope, rule)
 

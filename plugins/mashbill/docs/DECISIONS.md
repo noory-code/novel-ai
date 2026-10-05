@@ -67,11 +67,13 @@
   permission or record, is a separate feature (a failed payment is a branch of buying; a refund is
   a separate feature). Something that interrupts many features (an expired sign-in) is one shared
   recovery feature plus a return branch in each feature it interrupts. (5) Timing and reporting:
-  services first, then each feature as it is drawn (only that feature's problems), then all features
-  of a service against each other once the service is done (overlaps, hidden features, unowned
-  purposes, entities handled differently), then everything before publishing. The coach shows at
-  most three findings at a time and asks about the first; when it finishes a check it says how many
-  items it checked, how many problems it found, how many it is showing and how many remain. It never
+  services first; on the Services canvas each service's feature candidates are registered broadly
+  before any one is examined in depth; then each feature as its flow is drawn on its feature canvas
+  (only that feature's problems, including failure cases); then all features of a service against
+  each other once they are registered (overlaps, hidden features, unowned purposes, entities handled
+  differently); then everything before publishing. The coach shows at most three findings at a time
+  and asks about the first; when a whole check ends it says once how many items it checked, how many
+  problems it found, how many it is showing and how many remain, not as a line on every reply. It never
   calls an unchecked item fine. A change upstream turns the related later checks back to "needs
   re-check"; it does not say a design is ready to publish while any check is unchecked or needs
   re-check. (6) The canvas shows each check's state beside its service or feature — unchecked,
@@ -92,7 +94,10 @@
   stops being a map a person can scan. Show all findings at once — rejected: a solo founder skips
   them. Check silently and report only findings — rejected: unchecked reads as fine.
 - **Approval:** (1)–(5) came out of a discussion with the in-app coach (novel-workspace W-00000379,
-  2026-10-05) and were reported to the user; (6) accepted by the user, 2026-10-05 ("둘다 해요").
+  2026-10-05) and were reported to the user; (6) accepted by the user, 2026-10-05 ("둘다 해요"). The
+  breadth-first and once-per-check wording in (5) followed a simulated comparison (W-00000379, 2026-10-06:
+  examining features one by one on the Services canvas cut registered features from 13.5 to 8.4 per
+  session) and was reported to the user, who chose to re-measure ("가로 가봅시다").
 - **Spec impact:** `docs/concepts/design-principles.md` §Services and §Feature, and
   `docs/concepts/ai-collaboration.md` §2.3–§2.4 and §2.6; (6) also `docs/specs/canvas-behavior.md`
   §Services (design-check state).

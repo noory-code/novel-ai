@@ -505,7 +505,7 @@ def test_design_principles_cover_feature_gaps_size_and_failures() -> None:
         "환불은 따로 된 기능",
         "로그인 만료",
         "공통 복구 기능 하나",
-        "서비스 하나의 기능을 다 그린 뒤",
+        "서비스 하나의 기능을 다 등록한 뒤",
         "아무 기능도 맡지 않은 목적",
         "같은 엔티티를 다르게 다룸",
     ):
