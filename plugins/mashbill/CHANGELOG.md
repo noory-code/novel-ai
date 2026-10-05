@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.201.0] — 2026-10-05
+
+### Changed
+
+- The coach checks services and features for gaps, overlaps, size, and failure cases, limits each
+  review to three findings, and reports checked and remaining counts (D-2026-10-05-A).
+
 ## [0.200.5] — 2026-10-05
 
 ### Documentation

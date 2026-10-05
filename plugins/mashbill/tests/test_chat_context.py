@@ -433,6 +433,41 @@ def test_evaluate_playbook_promotes_judging_to_mainline() -> None:
     assert EVALUATE_PLAYBOOK not in build_system_prompt("project")
 
 
+def test_every_canvas_limits_and_counts_design_check_findings() -> None:
+    """D-2026-10-05-A: checked and unchecked work must remain distinguishable."""
+    for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
+        prompt = build_system_prompt(scope).lower()
+        for rule in (
+            "at most three findings",
+            "ask about the first",
+            "items checked",
+            "problems found",
+            "shown now",
+            "remaining",
+            "never call an unchecked item fine",
+        ):
+            assert rule in prompt, (scope, rule)
+
+
+def test_feature_scope_checks_four_failure_directions() -> None:
+    """D-2026-10-05-A: risky and partial steps get explicit failure branches."""
+    prompt = build_system_prompt("feature:x").lower()
+    for rule in (
+        "ask an ai or another person",
+        "change content",
+        "publish or delete",
+        "permission or money",
+        "finish only partly",
+        "cannot",
+        "must not",
+        "will not",
+        "already changed",
+        "recovers it alone with the same result",
+        "a completed flow with no branch is unfinished",
+    ):
+        assert rule in prompt, rule
+
+
 def test_write_playbook_names_the_anchor_as_foundation_parent() -> None:
     """B-14 (D-2026-07-03-T): coach-registered foundation pillars floated —
     partly the tool bug (create_edge rejected the synthetic anchor), partly

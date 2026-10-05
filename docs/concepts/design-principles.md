@@ -102,6 +102,9 @@ fit." Weak — "Deliver a good experience" (no behavior) · "Friendly" (no actio
 - **Group only when grouping helps**: A category is optional. Use it only when
   several services share a useful theme or surface; do not wrap one service to
   complete a pattern.
+- **Every promised outcome has exactly one owner** (`D-2026-10-05-A` (2)): List
+  the mission's outcomes and give each to one service. Discriminate: "Which
+  outcome does no service own, and which do two services both own?"
 
 **Specimen of a wrong decomposition**: "search→cart→checkout→picking→delivery" as 5 services — all of it is
 the internal process of one shopping outcome. The steps belong as features or
@@ -117,6 +120,25 @@ The two results need separate services even if the same person uses both.
   implementation. Discriminate: "Is the subject of this sentence a person?"
 - **Does the happy path run all the way through?**: Before branches·exceptions, start-to-end must be walkable
   in one line.
+- **Nothing missing, nothing doubled** (`D-2026-10-05-A` (3)): For each entity, which feature creates, views,
+  changes and closes it, and why does the person do that? Discriminate: "Which of these has no feature, and
+  which has two?" Two candidates with the same person, purpose, result and rule are one feature. Not every
+  entity needs all four (a published version is made anew, never edited).
+- **Is it the size of a feature?**: A candidate is its own feature only when the person starts it on its own,
+  finishing it changes the service's outcome in a way that matters, it has its own normal and failure or
+  cancel decisions, and hiding it would misstate what the service offers. Otherwise it is a step or a branch
+  (renaming a project is a step of managing projects). Risk is not size: a risky step gets its failure,
+  confirm and recovery drawn in full, not its own feature.
+- **Are the failure cases drawn?** (`D-2026-10-05-A` (4)): At each step that asks an AI or another person,
+  changes content, publishes or deletes, needs permission or money, or can finish only partly, ask: cannot,
+  must not, will not, already changed. Leave a failure out of the flow only when the system recovers it by
+  itself with the same result and without changing cost, permission, data or the person's choice.
+  Discriminate: "If this does not give the expected result, can the system make the same result by itself,
+  or does the person have to choose what to do?"
+- **Branch or separate feature?**: A failure handled before the original goal is done, after which the
+  person returns, is a branch. A new goal after the original goal is done is a separate feature (a failed
+  payment is a branch of buying; a refund is its own feature). Something that interrupts many features is one
+  shared recovery feature plus a return branch in each.
 - **Promotion signal**: When one feature starts to own a distinct human outcome,
   it is a service candidate.
 

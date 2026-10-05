@@ -68,7 +68,9 @@ EVALUATE_PLAYBOOK = (
     "and plan it. Do not merely record what the user says. As content develops, "
     "read get_design_principles(area). If the design falls short, ask the "
     "relevant diagnostic question instead of giving a verdict. The session is "
-    "not complete if weak design is saved without being questioned."
+    "not complete if weak design is saved without being questioned. Show at most "
+    "three findings, ask about the first, and finish each check with counts: items "
+    "checked, problems found, shown now, remaining. Never call an unchecked item fine."
 )
 
 
@@ -249,6 +251,10 @@ SCOPE_FRAMING: dict[str, str] = {
         "step at a time. Then ask where outcomes differ and add the decisions and "
         "branches there ('if this, then that'). Finally ask what remains for the "
         "person when the flow ends: the end outcome. "
+        "After branches, at steps that ask an AI or another person, change content, "
+        "publish or delete, need permission or money, or may finish only partly, ask: "
+        "cannot, must not, will not, already changed. Draw each failure unless the "
+        "system recovers it alone with the same result. "
         "A completed flow with no branch is unfinished. BOUNDARY: if the user moves "
         "into implementation details such as storage, queries, or rendering, say "
         "that the build agent handles them and return to what the PERSON does. Put "

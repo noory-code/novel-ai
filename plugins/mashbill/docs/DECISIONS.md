@@ -39,6 +39,66 @@
 
 ## Log
 
+### D-2026-10-05-A — The coach checks features for gaps, overlaps and failure cases at fixed points, and says what it checked
+
+- **What:** (1) The coach runs fixed checks instead of free questioning, and raises only what a check
+  finds. (2) Services: list every outcome the mission promises and give each to one service; report an
+  outcome no service owns, an outcome two services share, and a candidate that names a method rather
+  than an outcome. Settle all services before detailing the first. (3) Features: for each service,
+  ask what the person does before and after, what must always follow, and which entities it touches;
+  match each entity's create / view / change / close to the features that do it, together with why
+  the person does it, so storage or lookup features are not invented; merge candidates with the
+  same person, purpose, result and rule. A candidate is its own feature only when all four hold: the
+  person starts it on its own, finishing it changes the service's outcome in a way that matters, it
+  has its own normal and failure or cancel decisions, and hiding it would misstate what the service
+  offers. Otherwise it is a step or branch of another feature (renaming a project is a step of
+  "managing projects"). Being risky does not make a feature separate; it means its failure, confirm
+  and recovery are drawn in full. (4) Feature flows: draw the normal path end to end first. Then, at
+  each step that asks an AI or another person, changes content, publishes or deletes, needs
+  permission or money, or can finish only partly, ask four things: cannot (what is needed is
+  missing), must not (safety, a rule or an unconfirmed state blocks it), will not (the person
+  refuses, cancels or stops), already changed (a duplicate, a stale basis, or a change made
+  elsewhere). A failure stays out of the flow only if the system recovers it by itself within a
+  set number of tries with the same result and without changing cost, permission, data or the
+  person's choice; otherwise, or when unknown, it is drawn, together with what the person sees and
+  can choose when automatic recovery finally fails. A failure handled before the original goal is
+  done, after which the person returns to it, is a branch of the same feature; a new goal that
+  arises after the original goal is done, or that starts on its own with its own result,
+  permission or record, is a separate feature (a failed payment is a branch of buying; a refund is
+  a separate feature). Something that interrupts many features (an expired sign-in) is one shared
+  recovery feature plus a return branch in each feature it interrupts. (5) Timing and reporting:
+  services first, then each feature as it is drawn (only that feature's problems), then all features
+  of a service against each other once the service is done (overlaps, hidden features, unowned
+  purposes, entities handled differently), then everything before publishing. The coach shows at
+  most three findings at a time and asks about the first; when it finishes a check it says how many
+  items it checked, how many problems it found, how many it is showing and how many remain. It never
+  calls an unchecked item fine. A change upstream turns the related later checks back to "needs
+  re-check"; it does not say a design is ready to publish while any check is unchecked or needs
+  re-check. (6) The canvas shows each check's state beside its service or feature — unchecked,
+  checking, checked, needs re-check — so "not looked at" is never read as "fine". A drawn flow and
+  its failure check are shown separately.
+- **Why:** an AI that builds from a design builds what is written and does not add what is missing
+  (novel-workspace W-00000377: three models reached the ceiling on a small design in both forms), so
+  a missing feature or failure case reaches the product silently, and people trust the drawn map as
+  the whole. Missing requirements are the most often reported requirements problem (NaPiRE,
+  arXiv:1611.10288), and an LLM left alone omitted exception cases in most generated requirement
+  sets (RequireCEG, arXiv:2507.14969), while telling an LLM the common mistake types improved its
+  follow-up questions (Singhal, Breaux and Shen, RE 2025). Branch-versus-feature and size tests
+  follow Cockburn's goal levels and extension rules.
+- **Alternatives:** keep free questioning — rejected: evidence above. Treat transient technical
+  errors as implementation-only — rejected in the discussion: the model-capacity failure in the
+  in-app coach looked transient but required the person to pick another model. Split every create /
+  rename / delete into its own feature — rejected: the services canvas fills with small features and
+  stops being a map a person can scan. Show all findings at once — rejected: a solo founder skips
+  them. Check silently and report only findings — rejected: unchecked reads as fine.
+- **Approval:** (1)–(5) came out of a discussion with the in-app coach (novel-workspace W-00000379,
+  2026-10-05) and were reported to the user; (6) accepted by the user, 2026-10-05 ("둘다 해요").
+- **Spec impact:** `docs/concepts/design-principles.md` §Services and §Feature, and
+  `docs/concepts/ai-collaboration.md` §2.3–§2.4 and the design-check rule. (6) is decided, not yet
+  built.
+- **Principles:** Honesty (unchecked is never reported as fine); MECE (gaps and overlaps are checked
+  by fixed tables, not by recall); VISION "the person and the AI never lose sight of the whole".
+
 ### D-2026-10-04-B — Work over time: no fixed cycle, done items leave the progress view but stay on record, folded branches show an accepted fraction
 
 - **What:** (1) A folded work item shows "accepted / currently known lowest items" (for example

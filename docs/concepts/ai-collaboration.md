@@ -130,14 +130,22 @@ Top→down (intent → 5 fields → feature proposal). The 5 fields are inspecto
 - ④ What can't be given up? — "절대 타협 못 할 게? 코어밸류 중에서." (what can never be compromised? From among the core values.) *(core_value reference)*
 - ⑤ With what grain do we approach? — "어떤 결·말투로? 아이덴티티 중에서." (with what grain·tone? From among the identities.) *(identity reference)*
 - **Feature proposal:** once the 5 fields are filled, "이 안에서 구체적으로 뭘 할 수 있을까요? 몇 개 떠올려 볼게요." (concretely, what can be done within this? Let me think of a few.)
-- **Promotion test:** if a feature is shaped like *multiple people giving and receiving from each other*, "따로 하나의 서비스로 봐도
-  될까요?" (may we view it as a separate service of its own?) (basis = the Novel definition).
+- **Promotion test:** if a feature owns an outcome of its own rather than helping this service's outcome, "따로 하나의 서비스로 봐도
+  될까요?" (may we view it as a separate service of its own?) (basis = the Novel definition, `D-2026-08-18-B`; the number of
+  people involved does not decide it).
+- **Feature check** (`D-2026-10-05-A` (3)): before moving on, ask what the person does just before and just after, and what must
+  always follow ("이 일이 일어나면 꼭 따라오는 일이 있나요?" — when this happens, is there something that always has to follow?).
+  Match each entity's create / view / change / close to a feature; report what has no feature and what has two.
 
 ### 2.4 Feature — UX flowchart (happy-path first)
 Draft an actor-anchored action flowchart.
 - *Anchor:* "누가 뭘 하려는 거예요?" (who is trying to do what?) *(actor = read-only anchor, who starts / who can; reference principle)*
 - *Happy-path first:* "잘 풀릴 때, 처음부터 끝까지 뭘 하나요? 한 걸음씩 편하게요." (when it goes well, what do you do from start to finish? One step at a time, take it easy.)
 - *Then branches:* "중간에 갈리는 데가 있을까요? '이러면 이쪽'처럼요." (is there a point along the way where it branches? Like "if this, then this way".) *(condition→decision)*
+- *Then failures* (`D-2026-10-05-A` (4)): at each step that asks an AI or another person, changes content, publishes or deletes,
+  needs permission or money, or can finish only partly — "여기서 안 되면 어떻게 하죠?" (what if it can't happen here?), "막아야 하는
+  경우는요?" (when must it be stopped?), "중간에 그만두면요?" (what if the person stops midway?), "그사이 다른 데서 바뀌었으면요?"
+  (what if it changed elsewhere meanwhile?). Draw the failure unless the system recovers it by itself with the same result.
 - *Result:* "마지막엔 어떻게 끝나나요?" (how does it end at the last?)
 - **Altitude guard (hand-off):** if it leaks into implementation → "그건 만들 때 에이전트 몫이에요. 여기선
   *사람이 뭘 하는지*에 머물러요." (that's the agent's job at build time. Here we stay on *what the person does*.) (save·query·render = the external agent.)
@@ -157,6 +165,20 @@ During feature/service conversation, discover data concepts (post·comment·user
   later decides code entities, embedded values, aggregate boundaries, field types, and storage.
 
 ---
+
+### 2.6 Design check — when to check and how to report (`D-2026-10-05-A` (5)–(6))
+The coach runs fixed checks (design-principles §Services, §Feature) and raises only what they find.
+- **When:** (1) services — every promised outcome has one owner, before detailing the first service; (2) each feature as it
+  is drawn — only that feature's problems; (3) when a service's features are all drawn — the features against each other
+  (overlaps, features hidden inside another flow, purposes no feature serves, an entity handled differently); (4) before
+  publishing — everything again.
+- **How many:** at most three findings at a time, ordered by what blocks the outcome, what loses content, then what conflicts;
+  ask about the first only. When a check ends, say how many items were checked, how many problems were found, how many are
+  shown now and how many remain.
+- **Never call an unchecked item fine.** A change upstream turns the related later checks back to "needs re-check". Do not say
+  the design is ready to publish while any check is unchecked or needs re-check.
+- **On the canvas** *(decided, not yet built)*: each service and feature shows its check state — unchecked, checking, checked,
+  needs re-check — and a drawn flow and its failure check are shown separately.
 
 ## 3. Registry integrity — strict from the start (not YAGNI, `D-2026-06-19-D`)
 Entities + reference masters (actor/core_value/identity) = the **domain SSOT**, so trusting the playbook alone is

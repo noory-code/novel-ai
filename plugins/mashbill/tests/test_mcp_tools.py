@@ -441,6 +441,8 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     services = get_principles("services")
     assert "사람이 이루려는 결과 하나" in services
     assert "액터를 새로 만들지 않는다" in services
+    assert "어느 서비스도 맡지 않은 것" in services
+    assert "두 서비스가 함께 맡은 것" in services
     values = get_principles("values")
     assert "대화에서 가치 후보" in values
     assert "이름은 한 단어" in values
@@ -466,6 +468,39 @@ def test_design_principles_serve_discriminators_per_area() -> None:
 
     with pytest.raises(ValueError):
         get_principles("nope")
+
+
+def test_design_principles_cover_feature_gaps_size_and_failures() -> None:
+    """D-2026-10-05-A: the coach checks feature completeness and failure paths."""
+    from mashbill.coaching_principles import get_principles
+
+    features = " ".join(get_principles("features").split())
+    for rule in (
+        "누가 만들고·보고·고치고·닫는지",
+        "사람이 왜 하는지",
+        "짝이 없는 것과 둘인 것",
+        "같은 사람·목적·결과·규칙",
+        "모든 엔티티에 넷이 다 필요하지는 않다",
+        "발행본은 고치지 않고 새로 만든다",
+        "혼자 시작한다",
+        "서비스 결과가 의미 있게 달라진다",
+        "정상·실패·취소 판단이 따로 있다",
+        "감추면 제공 범위를 오해한다",
+        "프로젝트 이름 바꾸기는 프로젝트 관리하기의 단계",
+        "위험하다고 따로 빼지 않는다",
+        "AI·다른 사람에게 요청",
+        "할 수 없다·하면 안 된다·하지 않겠다·이미 달라졌다",
+        "비용·권한·데이터·사용자 선택이 안 바뀔 때만",
+        "기대한 결과가 안 나오면 시스템이 혼자 같은 결과를 만들 수 있나",
+        "결제 실패는 갈래",
+        "환불은 따로 된 기능",
+        "로그인 만료",
+        "공통 복구 기능 하나",
+        "서비스 하나의 기능을 다 그린 뒤",
+        "아무 기능도 맡지 않은 목적",
+        "같은 엔티티를 다르게 다룸",
+    ):
+        assert rule in features, rule
 
 
 def test_identity_principles_match_agreed_definition() -> None:
