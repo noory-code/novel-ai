@@ -7,12 +7,14 @@ now covers only the new project-based shape.
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 from typing import Any, cast
 
 import pytest
 from starlette.testclient import TestClient
 
+from mashbill import project_io
 from mashbill.broadcast import BroadcastHub
 from mashbill.folder_io import _project_dir
 from mashbill.http_app import create_http_app
@@ -176,11 +178,21 @@ def test_project_rename_requires_name(app_client: tuple[TestClient, str]) -> Non
     assert resp.status_code == 400
 
 
-def test_project_delete(app_client: tuple[TestClient, str]) -> None:
+def test_project_delete(
+    app_client: tuple[TestClient, str], monkeypatch: pytest.MonkeyPatch
+) -> None:
     client, project_path = app_client
     _create(client, project_path, "alpha", "Alpha")
+    trashed: list[Path] = []
+
+    def fake_trash(path: Path) -> None:
+        trashed.append(path)
+        shutil.rmtree(path)
+
+    monkeypatch.setattr(project_io, "send2trash", fake_trash)
     resp = client.delete("/api/projects/alpha", params={"project_path": project_path})
     assert resp.status_code == 200
+    assert trashed == [resolve_plot_root(project_path, create=False)]
     resp = client.get("/api/projects/alpha", params={"project_path": project_path})
     assert resp.status_code == 404
 

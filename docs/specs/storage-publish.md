@@ -22,6 +22,7 @@
   The guard sits on the *write* path only; `enumerate_projects`/`discover_projects` (read) still see N — existing
   multi-root and sibling-directory recursive discovery are unaffected.
 - A legacy `.plot/` root is lazily migrated on first open (`.noory/novel` takes priority).
+- Deleting a project moves `.noory/novel` (or the nested project folder) to the computer's trash and never erases it. A failed move leaves the project untouched and reports `trash_failed`.
 
 ## Storage principle — JSON is the SSOT
 

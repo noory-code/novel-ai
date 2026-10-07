@@ -6,9 +6,10 @@ everything, so import sites and tests are unchanged.
 
 from __future__ import annotations
 
-import shutil
 from datetime import UTC, date, datetime
 from pathlib import Path
+
+from send2trash import send2trash  # type: ignore[import-untyped]
 
 from mashbill.canvas_io import list_feature_details, read_canvas, write_canvas  # noqa: F401
 from mashbill.models import CanvasDoc, CanvasKind, ProjectDoc
@@ -54,6 +55,10 @@ def rename_project(plot_root: Path, project_id: str, new_name: str) -> ProjectDo
 
 
 _PRIMARY_CANVASES: tuple[CanvasKind, ...] = ("foundation", "actors", "services", "entities")
+
+
+class ProjectTrashError(Exception):
+    """The operating system could not move a project to the trash."""
 
 
 def _blank_canvas(canvas_kind: CanvasKind) -> CanvasDoc:
@@ -134,14 +139,12 @@ def create_project(
 
 def delete_project(plot_root: Path, project_id: str) -> None:
     folder = _ensure_project(plot_root, project_id)
-    if folder == plot_root:
-        # S2 flat layout: the project IS the root's contents. Wipe them but
-        # keep the ``.noory/novel`` dir itself, so the dir picker shows it as an
-        # empty "create here" slot rather than a vanished workspace.
-        for child in plot_root.iterdir():
-            if child.is_dir():
-                shutil.rmtree(child)
-            else:
-                child.unlink()
-    else:
-        shutil.rmtree(folder)
+    if folder == plot_root and not (
+        (plot_root.parent.name == ".noory" and plot_root.name in {"novel", "plot"})
+        or plot_root.name == ".plot"
+    ):
+        raise ValueError(f"not a project data root: {plot_root}")
+    try:
+        send2trash(folder)
+    except Exception as exc:
+        raise ProjectTrashError(str(exc)) from exc

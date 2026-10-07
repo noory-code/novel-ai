@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.205.0] — 2026-10-07
+
+### Changed
+
+- Deleting a project moves its data directory to the computer's trash. A failed move leaves the project untouched and returns `trash_failed` so the app can offer retry or cancel
+  (D-2026-10-07-A; W-00000387).
+
 ## [0.204.0] — 2026-10-07
 
 ### Fixed

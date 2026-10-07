@@ -15,11 +15,13 @@ resolves ``{project_path}/.noory/plot`` itself.
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
 from starlette.testclient import TestClient
 
+from mashbill import project_io
 from mashbill.broadcast import BroadcastHub
 from mashbill.http_app import create_http_app
 from mashbill.project_io import create_project
@@ -323,19 +325,62 @@ def test_anchor_patch_requires_project_path(client: TestClient) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_project_delete_removes_project(client: TestClient, workspace: Path) -> None:
-    create_project(resolve_plot_root(str(workspace)), "alpha", "Alpha")
+def test_project_delete_removes_project(
+    client: TestClient, workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+    trashed: list[Path] = []
+
+    def fake_trash(path: Path) -> None:
+        trashed.append(path)
+        shutil.rmtree(path)
+
+    monkeypatch.setattr(project_io, "send2trash", fake_trash)
     resp = client.delete(f"/api/projects/alpha?project_path={workspace}")
     assert resp.status_code == 200
     assert resp.json() == {"ok": True}
-    # Gone from the list afterwards.
+    assert trashed == [plot_root]
+    assert not plot_root.exists()
     listing = client.get(f"/api/projects?project_path={workspace}")
     assert listing.json()["projects"] == []
+    assert not plot_root.exists()
+    created = client.post(
+        f"/api/projects?project_path={workspace}", json={"id": "beta", "name": "Beta"}
+    )
+    assert created.status_code == 201
+    assert (plot_root / "project.json").is_file()
 
 
-def test_project_delete_missing_is_404(client: TestClient, workspace: Path) -> None:
+def test_project_delete_trash_failure_returns_reason_and_preserves_files(
+    client: TestClient, workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plot_root = resolve_plot_root(str(workspace))
+    create_project(plot_root, "alpha", "Alpha")
+    marker = plot_root / "keep.txt"
+    marker.write_text("keep", encoding="utf-8")
+
+    def fail_trash(path: Path) -> None:
+        assert path == plot_root
+        raise OSError("Trash is unavailable")
+
+    monkeypatch.setattr(project_io, "send2trash", fail_trash)
+    resp = client.delete(f"/api/projects/alpha?project_path={workspace}")
+    assert resp.status_code == 500
+    assert resp.json() == {"error": "Trash is unavailable", "code": "trash_failed"}
+    assert marker.read_text(encoding="utf-8") == "keep"
+    assert (plot_root / "project.json").is_file()
+
+
+def test_project_delete_missing_is_404(
+    client: TestClient, workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    trashed: list[Path] = []
+    monkeypatch.setattr(project_io, "send2trash", trashed.append)
     resp = client.delete(f"/api/projects/ghost?project_path={workspace}")
     assert resp.status_code == 404
+    assert trashed == []
+    assert not (workspace / ".noory").exists()
 
 
 def test_project_delete_requires_project_path(client: TestClient) -> None:

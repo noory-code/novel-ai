@@ -39,6 +39,26 @@
 
 ## Log
 
+### D-2026-10-07-A — Deleting a project moves it to the computer's trash
+
+- **What:** deleting a project in the app moves the project's data folder to the computer's trash
+  instead of erasing it. In the flat layout that is the whole `.noory/novel` directory, which is not
+  recreated, so putting it back from the trash restores it in place; in the nested layout it is the
+  project folder. If the move fails, nothing is deleted: the project stays as it was, the engine
+  answers `500 {code: "trash_failed"}`, and the app shows the reason with "try again" and "cancel".
+  There is no in-app list of deleted projects; the person restores a project by taking the folder
+  out of the trash and opening the workspace again.
+- **Why:** deleting erased everything at once (the reason agents lost the delete tool in
+  D-2026-09-30-A), and the person had no way back. The computer's trash is a recovery path people
+  already know and adds no new feature to Novel.
+- **Alternatives:** an in-app trash with a list of deleted projects and a restore action — not
+  chosen: it adds a feature that keeps and manages deleted projects, for the same result.
+- **Approval:** Pending — decided by Claude while fixing Novel's own design with the coach
+  (novel-workspace W-00000384, feature "프로젝트 관리하기"), reported to the user on 2026-10-07;
+  implemented in W-00000387.
+- **Spec impact:** `novel-ai/docs/specs/storage-publish.md` §Storage layout. D-2026-09-30-A still
+  holds: agents cannot delete a project.
+
 ### D-2026-10-05-A — The coach checks features for gaps, overlaps and failure cases at fixed points, and says what it checked
 
 - **What:** (1) The coach runs fixed checks instead of free questioning, and raises only what a check

@@ -32,6 +32,7 @@ from mashbill.folder_io import (
 from mashbill.git_store import init_workspace_repo, list_tags
 from mashbill.migrate import migrate_v01_to_v02
 from mashbill.models import DirTreeResponse, DiscoveredProject, WorkspaceDiscoveryResponse
+from mashbill.project_io import ProjectTrashError
 from mashbill.workspace import (
     build_dir_tree,
     create_workspace_dir,
@@ -205,7 +206,7 @@ async def project_anchor_patch_endpoint(request: Request) -> JSONResponse:
 
 async def project_delete_endpoint(request: Request) -> Response:
     try:
-        plot_root = _require_plot_root(request)
+        plot_root = _require_plot_root(request, create=False)
     except _ApiError as exc:
         return exc.response
     project_id = request.path_params["project_id"]
@@ -213,6 +214,8 @@ async def project_delete_endpoint(request: Request) -> Response:
         delete_project(plot_root, project_id)
     except FileNotFoundError as exc:
         return _error(str(exc), status=404)
+    except ProjectTrashError as exc:
+        return JSONResponse({"error": str(exc), "code": "trash_failed"}, status_code=500)
     return JSONResponse({"ok": True})
 
 

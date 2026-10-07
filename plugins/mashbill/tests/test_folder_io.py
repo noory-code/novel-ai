@@ -16,10 +16,12 @@ Layout
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import pytest
 
+from mashbill import project_io
 from mashbill.folder_io import (
     create_project,
     delete_project,
@@ -35,6 +37,7 @@ from mashbill.models import (
     CanvasDoc,
     FeatureNode,
 )
+from mashbill.project_io import ProjectTrashError
 from mashbill.workspace import resolve_plot_root
 
 
@@ -278,19 +281,84 @@ def test_detail_canvas_path_uses_service_id(plot_root: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_delete_project_removes_folder(plot_root: Path) -> None:
+def test_delete_project_removes_folder(plot_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     create_project(plot_root, "alpha", "Alpha")
+    trashed: list[Path] = []
+
+    def fake_trash(path: Path) -> None:
+        trashed.append(path)
+        shutil.rmtree(path)
+
+    monkeypatch.setattr(project_io, "send2trash", fake_trash)
     delete_project(plot_root, "alpha")
-    # S2 flat layout: the .noory/plot root survives (empty "create here"
-    # slot), but the project's files are gone.
+    assert trashed == [plot_root]
+    assert not plot_root.exists()
+    assert plot_root.parent.is_dir()
+    assert plot_root.parent.parent.is_dir()
+    assert create_project(plot_root, "beta", "Beta").id == "beta"
+    assert (plot_root / "project.json").is_file()
+
+
+def test_delete_nested_project_trashes_only_its_folder(
+    plot_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    nested = plot_root / "alpha"
+    nested.mkdir(parents=True)
+    (nested / "project.json").write_text('{"id":"alpha"}', encoding="utf-8")
+    (nested / "note.txt").write_text("keep", encoding="utf-8")
+    trashed: list[Path] = []
+
+    def fake_trash(path: Path) -> None:
+        trashed.append(path)
+        shutil.rmtree(path)
+
+    monkeypatch.setattr(project_io, "send2trash", fake_trash)
+    delete_project(plot_root, "alpha")
+    assert trashed == [nested]
+    assert not nested.exists()
     assert plot_root.is_dir()
-    assert not (plot_root / "project.json").exists()
-    assert not (plot_root / "foundation").exists()
 
 
-def test_delete_missing_project_raises(plot_root: Path) -> None:
+def test_delete_project_trash_failure_preserves_every_file(
+    plot_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    create_project(plot_root, "alpha", "Alpha")
+    marker = plot_root / "keep.txt"
+    marker.write_text("keep", encoding="utf-8")
+
+    def fail_trash(path: Path) -> None:
+        assert path == plot_root
+        raise OSError("Trash is unavailable")
+
+    monkeypatch.setattr(project_io, "send2trash", fail_trash)
+    with pytest.raises(ProjectTrashError, match="Trash is unavailable"):
+        delete_project(plot_root, "alpha")
+    assert marker.read_text(encoding="utf-8") == "keep"
+    assert (plot_root / "project.json").is_file()
+    assert (plot_root / "foundation" / "canvas.json").is_file()
+
+
+@pytest.mark.parametrize("unsafe_root", ["workspace", ".noory"])
+def test_delete_project_never_trashes_workspace_or_noory(
+    plot_root: Path, monkeypatch: pytest.MonkeyPatch, unsafe_root: str
+) -> None:
+    create_project(plot_root, "alpha", "Alpha")
+    root = plot_root.parent.parent if unsafe_root == "workspace" else plot_root.parent
+    shutil.copyfile(plot_root / "project.json", root / "project.json")
+    trashed: list[Path] = []
+    monkeypatch.setattr(project_io, "send2trash", trashed.append)
+    with pytest.raises(ValueError, match="project data root"):
+        delete_project(root, "alpha")
+    assert trashed == []
+    assert (root / "project.json").is_file()
+
+
+def test_delete_missing_project_raises(plot_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    trashed: list[Path] = []
+    monkeypatch.setattr(project_io, "send2trash", trashed.append)
     with pytest.raises(FileNotFoundError):
         delete_project(plot_root, "never-existed")
+    assert trashed == []
 
 
 # ---------------------------------------------------------------------------
