@@ -155,6 +155,7 @@ async def _persist_assistant(
     text: str,
     error: str | None,
     conversation_id: str | None,
+    error_code: str | None = None,
 ) -> None:
     try:
         append_assistant_to_conversation(
@@ -166,6 +167,7 @@ async def _persist_assistant(
             text,
             conversation_id,
             error=error,
+            error_code=error_code,
         )
     except Exception:  # noqa: BLE001 — persistence must not break chat
         _log.exception("chat persist (assistant) failed for %s", plot_root)
@@ -208,6 +210,7 @@ async def stream_chat_turn(
                     event.text,
                     event.error_message,
                     conversation_id,
+                    event.error_code,
                 )
     except Exception as exc:  # noqa: BLE001 — boundary catch
         _log.exception("chat turn crashed for %s", plot_root)

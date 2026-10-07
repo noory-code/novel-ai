@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.204.0] — 2026-10-07
+
+### Fixed
+
+- Codex coach failures now surface the JSON error instead of the CLI's stdin notice,
+  classify model capacity errors, and retain the reason in saved conversations
+  (O-00000118; W-00000386).
+
 ## [0.203.1] — 2026-10-07
 
 ### Fixed

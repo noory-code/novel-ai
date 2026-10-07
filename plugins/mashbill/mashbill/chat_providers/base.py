@@ -13,6 +13,7 @@ import json
 import os
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Awaitable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, Protocol
 from uuid import uuid4
@@ -99,9 +100,18 @@ class ChatStreamEvent(BaseModel):
     turn_id: str
     text: str = ""
     error_message: str | None = None
+    error_code: Literal["model_capacity", "provider_error"] | None = None
     scope: str = DEFAULT_CHAT_SCOPE
     # Set only on ``meta`` events — the model id the CLI reported (D-2026-06-21-Z).
     model: str | None = None
+
+
+@dataclass(frozen=True)
+class _ParsedCliError:
+    """Internal CLI diagnostic; only a failed turn is terminal at exit."""
+
+    message: str | None
+    turn_failed: bool
 
 
 class _SubprocessFactory(Protocol):
@@ -188,10 +198,10 @@ class _SubprocessChatProvider(ChatProvider):
         captured from earlier output) to switch between "start a new
         session" and "resume the previous one".
       * ``_parse_line(turn_id, line, accumulator)`` — turn one stdout line
-        into a ``ChatStreamEvent`` (``delta`` only — ``turn_start`` /
-        ``turn_complete`` / ``error`` are emitted by this base). Subclasses
-        may mutate ``self._session_id`` when they spot the CLI's
-        session-id event (codex ``thread.started``, gemini ``init``, …).
+        into a ``ChatStreamEvent`` or an internal CLI diagnostic. ``delta``
+        and ``meta`` stream immediately; diagnostics are held until process
+        exit. Subclasses may mutate ``self._session_id`` when they spot the
+        CLI's session-id event.
     """
 
     def __init__(
@@ -296,7 +306,7 @@ class _SubprocessChatProvider(ChatProvider):
     @abstractmethod
     def _parse_line(
         self, turn_id: str, line: bytes, accumulator: list[str]
-    ) -> ChatStreamEvent | None: ...
+    ) -> ChatStreamEvent | _ParsedCliError | None: ...
 
     def _spawn_env(self) -> dict[str, str] | None:
         """Environment for the CLI subprocess: the engine's env MINUS its own
@@ -342,13 +352,25 @@ class _SubprocessChatProvider(ChatProvider):
 
         yield ChatStreamEvent(type="turn_start", turn_id=turn_id)
         accumulator: list[str] = []
+        provider_error: _ParsedCliError | None = None
+        turn_failed = False
         try:
             try:
                 if proc.stdout is not None:
                     async for line in proc.stdout:
                         event = self._parse_line(turn_id, line, accumulator)
                         if event is not None:
-                            yield event
+                            if isinstance(event, _ParsedCliError) or event.type == "error":
+                                diagnostic = (
+                                    event
+                                    if isinstance(event, _ParsedCliError)
+                                    else _ParsedCliError(event.error_message, turn_failed=False)
+                                )
+                                turn_failed |= diagnostic.turn_failed
+                                if provider_error is None or diagnostic.message:
+                                    provider_error = diagnostic
+                            else:
+                                yield event
             except Exception as exc:  # noqa: BLE001 — convert CLI stream failures to wire errors
                 yield ChatStreamEvent(
                     type="error",
@@ -357,15 +379,31 @@ class _SubprocessChatProvider(ChatProvider):
                 )
                 return
             rc = await proc.wait()
-            if rc != 0:
+            if rc != 0 or turn_failed:
                 stderr_text = ""
-                if proc.stderr is not None:
-                    raw = await proc.stderr.read()
-                    stderr_text = raw.decode("utf-8", errors="replace").strip()
+                if provider_error is None or not provider_error.message:
+                    if proc.stderr is not None:
+                        raw = await proc.stderr.read()
+                        stderr_text = raw.decode("utf-8", errors="replace").strip()
+                message = (
+                    (provider_error.message if provider_error is not None else None)
+                    or stderr_text
+                    or (
+                        f"{self._cli_path} exited {rc}"
+                        if rc != 0
+                        else f"{self._cli_path} turn failed"
+                    )
+                )
+                code: Literal["model_capacity", "provider_error"] | None = None
+                if provider_error is not None and provider_error.message:
+                    code = (
+                        "model_capacity" if "at capacity" in message.lower() else "provider_error"
+                    )
                 yield ChatStreamEvent(
                     type="error",
                     turn_id=turn_id,
-                    error_message=stderr_text or f"{self._cli_path} exited {rc}",
+                    error_message=message,
+                    error_code=code,
                 )
             else:
                 yield ChatStreamEvent(

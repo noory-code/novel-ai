@@ -221,9 +221,7 @@ async def test_stream_chat_turn_persists_boundary_error_with_started_turn_id(
     )
 
     payloads = [
-        payload
-        for _, event_name, payload in hub.events
-        if event_name == "chat_stream_event"
+        payload for _, event_name, payload in hub.events if event_name == "chat_stream_event"
     ]
     assert payloads[-1] is not None
     assert payloads[-1]["type"] == "error"
@@ -270,6 +268,40 @@ async def test_stream_chat_turn_persists_provider_error_event(tmp_path: Path) ->
     assert doc.messages[-1].role == "assistant"
     assert doc.messages[-1].text == ""
     assert doc.messages[-1].error == "claude failed to read stdout"
+
+
+async def test_codex_capacity_error_persists_message_and_code(tmp_path: Path) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    append_user(plot_root, "alpha", "foundation", "codex", "user_1", "hello")
+    hub = _FakeHub()
+    message = "Selected model is at capacity. Please try a different model."
+    provider = _CannedProvider(
+        [
+            ChatStreamEvent(type="turn_start", turn_id="codex-turn"),
+            ChatStreamEvent(
+                type="error",
+                turn_id="codex-turn",
+                error_message=message,
+                error_code="model_capacity",
+            ),
+        ]
+    )
+    await stream_chat_turn(
+        provider,
+        hub,
+        plot_root,
+        "hello",
+        scope="foundation",
+        project_id="alpha",
+        provider_name="codex",
+    )
+    doc = read_conversation(plot_root, "alpha", "foundation")
+    assert doc.messages[-1].error == message
+    assert doc.messages[-1].error_code == "model_capacity"
+    payload = hub.events[-1][2]
+    assert payload is not None
+    assert payload["error_code"] == "model_capacity"
 
 
 async def test_stream_chat_turn_releases_scope_when_cancelled(tmp_path: Path) -> None:

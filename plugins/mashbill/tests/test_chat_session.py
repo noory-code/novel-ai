@@ -732,6 +732,122 @@ def _isolate_event_loop() -> Any:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize(
+    ("frames", "rc", "expected_message", "expected_code"),
+    [
+        (
+            [
+                {"type": "error", "message": "Selected model is AT CAPACITY. Try again."},
+                {
+                    "type": "turn.failed",
+                    "error": {
+                        "message": "Selected model is at capacity. Please try a different model."
+                    },
+                },
+            ],
+            1,
+            "Selected model is at capacity. Please try a different model.",
+            "model_capacity",
+        ),
+        (
+            [{"type": "turn.failed", "error": {"message": "Invalid model name"}}],
+            1,
+            "Invalid model name",
+            "provider_error",
+        ),
+        (
+            [{"type": "error", "message": "Selected model is AT CAPACITY."}],
+            1,
+            "Selected model is AT CAPACITY.",
+            "model_capacity",
+        ),
+        ([], 1, "Reading additional input from stdin...", None),
+        (
+            [
+                {"type": "error", "message": "Temporary stream error"},
+                {"type": "turn.failed", "error": {"message": "Selected model is at capacity."}},
+            ],
+            0,
+            "Selected model is at capacity.",
+            "model_capacity",
+        ),
+        (
+            [
+                {"type": "turn.failed", "error": {"message": "Initial failure"}},
+                {"type": "error", "message": "Final provider detail"},
+                {"type": "error", "message": ""},
+            ],
+            0,
+            "Final provider detail",
+            "provider_error",
+        ),
+        (
+            [{"type": "turn.failed", "error": {"message": ""}}],
+            0,
+            "Reading additional input from stdin...",
+            None,
+        ),
+    ],
+)
+async def test_codex_json_failure_beats_stderr_and_fails_even_with_rc_zero(
+    tmp_path: Path,
+    frames: list[dict[str, Any]],
+    rc: int,
+    expected_message: str,
+    expected_code: str | None,
+) -> None:
+    process = _FakeProcess(
+        stdout_lines=[json.dumps(frame).encode() + b"\n" for frame in frames],
+        returncode=rc,
+        stderr=b"Reading additional input from stdin...",
+    )
+    provider = CodexProvider(tmp_path, subprocess_factory=_build_fake_factory(process))
+    events = await _drain(provider, "hello")
+    assert [event.type for event in events] == ["turn_start", "error"]
+    assert events[-1].error_message == expected_message
+    assert events[-1].error_code == expected_code
+
+
+async def test_codex_error_notice_then_completed_turn_keeps_reply(tmp_path: Path) -> None:
+    frames = [
+        {"type": "error", "message": "Reconnecting stream"},
+        {"type": "item.completed", "item": {"type": "agent_message", "text": "Hello"}},
+        {"type": "turn.completed"},
+    ]
+    process = _FakeProcess(
+        stdout_lines=[json.dumps(frame).encode() + b"\n" for frame in frames],
+        returncode=0,
+    )
+    provider = CodexProvider(tmp_path, subprocess_factory=_build_fake_factory(process))
+
+    events = await _drain(provider, "hello")
+
+    assert [event.type for event in events] == ["turn_start", "delta", "turn_complete"]
+    assert events[-1].text == "Hello"
+
+
+async def test_codex_failure_without_json_or_stderr_uses_exit_status(tmp_path: Path) -> None:
+    process = _FakeProcess(stdout_lines=[], returncode=2)
+    provider = CodexProvider(tmp_path, subprocess_factory=_build_fake_factory(process))
+    events = await _drain(provider, "hello")
+    assert events[-1].error_message == "codex exited 2"
+    assert events[-1].error_code is None
+
+
+async def test_codex_turn_failed_without_message_uses_turn_fallback(tmp_path: Path) -> None:
+    process = _FakeProcess(
+        stdout_lines=[b'{"type":"turn.failed","error":{}}\n'],
+        returncode=0,
+    )
+    provider = CodexProvider(tmp_path, subprocess_factory=_build_fake_factory(process))
+
+    events = await _drain(provider, "hello")
+
+    assert [event.type for event in events] == ["turn_start", "error"]
+    assert events[-1].error_message == "codex turn failed"
+    assert events[-1].error_code is None
+
+
 async def test_codex_stream_yields_agent_message_text_and_captures_thread_id(
     tmp_path: Path,
 ) -> None:

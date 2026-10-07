@@ -32,6 +32,7 @@ class ChatMessageRecord(BaseModel):
     text: str
     ts: str
     error: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    error_code: str | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 class ChatConversationDoc(BaseModel):
@@ -146,6 +147,7 @@ def append_assistant(
     text: str,
     *,
     error: str | None = None,
+    error_code: str | None = None,
 ) -> None:
     """Append the assistant turn to an existing conversation. A no-op when the
     file is absent — an assistant reply with no preceding user message is not a
@@ -160,7 +162,9 @@ def append_assistant(
     doc.provider = provider
     doc.updated = now
     doc.messages.append(
-        ChatMessageRecord(id=msg_id, role="assistant", text=text, ts=now, error=error)
+        ChatMessageRecord(
+            id=msg_id, role="assistant", text=text, ts=now, error=error, error_code=error_code
+        )
     )
     _write_json(path, doc.model_dump())
 
@@ -204,6 +208,7 @@ def append_assistant_to_conversation(
     conversation_id: str | None,
     *,
     error: str | None = None,
+    error_code: str | None = None,
 ) -> None:
     """Append to the file owning ``conversation_id``, including ended files.
 
@@ -219,7 +224,14 @@ def append_assistant_to_conversation(
     )
     if path is None:
         append_assistant(
-            plot_root, project_id, scope, provider, msg_id, text, error=error
+            plot_root,
+            project_id,
+            scope,
+            provider,
+            msg_id,
+            text,
+            error=error,
+            error_code=error_code,
         )
         return
     doc = ChatConversationDoc.model_validate(_read_json(path))
@@ -227,7 +239,9 @@ def append_assistant_to_conversation(
     doc.provider = provider
     doc.updated = now
     doc.messages.append(
-        ChatMessageRecord(id=msg_id, role="assistant", text=text, ts=now, error=error)
+        ChatMessageRecord(
+            id=msg_id, role="assistant", text=text, ts=now, error=error, error_code=error_code
+        )
     )
     _write_json(path, doc.model_dump())
 

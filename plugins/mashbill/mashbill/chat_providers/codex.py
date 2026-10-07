@@ -1,7 +1,8 @@
 """Codex CLI driver (``codex exec --json``).
 
 Codex emits JSONL events with ``thread.started`` / ``turn.started`` /
-``item.completed`` / ``turn.completed``. The first event of the first
+``item.completed`` / ``turn.completed`` / ``turn.failed`` / ``error``.
+The first event of the first
 turn carries ``thread_id`` — we capture it so later turns can
 ``codex exec resume <id>``. ``--skip-git-repo-check`` keeps Codex from
 refusing to run when the user opened Novel on a folder that isn't a git
@@ -19,6 +20,7 @@ from pathlib import Path
 from mashbill.chat_providers.base import (
     ChatStreamEvent,
     _decode_jsonl,
+    _ParsedCliError,
     _SubprocessChatProvider,
     _SubprocessFactory,
 )
@@ -136,11 +138,18 @@ class CodexProvider(_SubprocessChatProvider):
 
     def _parse_line(
         self, turn_id: str, line: bytes, accumulator: list[str]
-    ) -> ChatStreamEvent | None:
+    ) -> ChatStreamEvent | _ParsedCliError | None:
         obj = _decode_jsonl(line)
         if obj is None:
             return None
         event_type = obj.get("type")
+        if event_type in ("error", "turn.failed"):
+            detail = obj.get("error") if event_type == "turn.failed" else obj
+            message = detail.get("message") if isinstance(detail, dict) else None
+            return _ParsedCliError(
+                message=message if isinstance(message, str) and message.strip() else None,
+                turn_failed=event_type == "turn.failed",
+            )
         if event_type == "thread.started":
             tid = obj.get("thread_id")
             if isinstance(tid, str) and tid:
