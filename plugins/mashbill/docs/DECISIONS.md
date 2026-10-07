@@ -39,6 +39,33 @@
 
 ## Log
 
+### D-2026-10-08-A — An active work item that has not moved for 7 days counts as "needs a check"
+
+- **What:** (1) An active work item (`doing` or `rework`) whose status, progress phase, phase note
+  and judgments have not changed for 7 days counts as "확인 필요" (needs a check) on its design
+  node's badge, next to uphill, downhill and judgment (D-2026-10-04-A (3)). The count says only
+  that nothing changed; it does not say the item is late. (2) The person is then asked what stage
+  the item is in: exploring, executing, waiting or blocked. Exploring and executing set the
+  progress phase (D-2026-10-04-B (7)); waiting and blocked are written as the phase note, with what
+  it waits on or what blocks it. Any answer, including "still the same stage", counts as a move and
+  the 7 days start again. (3) The same 7 days apply to items held by a person and by an AI: work
+  items record no holder. An item delegated to an AI that stops is handled by the feature "맡긴 일
+  다시 판단하기". (4) When progress cannot be read at all, the design shows "진행을 알 수 없음"
+  (progress unknown), never "확인 필요", and does not count it. (5) An item written before Solera
+  recorded when it last moved has no such time and is not counted until it moves once.
+- **Why:** D-2026-10-04-B (7) asks a person's phase only when an active item has not moved for a
+  while, and W-00000372 left the number of days open. A week covers a person's normal pause
+  (a weekend plus a few days) without hiding work left for longer. Using one word for two meanings
+  ("확인 필요" for both a stalled item and unreadable progress) made the badge ambiguous.
+- **Alternatives:** a shorter limit for AI-held items — not possible without a holder field, and
+  stopped delegated work already has its own feature. Counting legacy items from the file's
+  modification time — rejected: that time changes with unrelated edits and would claim a move that
+  did not happen.
+- **Approval:** Pending — debated with the in-app coach on the self-design feature "설계 캔버스에서
+  진행 보기" (novel-workspace W-00000382, 2026-10-08), to be confirmed by the user.
+- **Spec impact:** Solera work item `moved_at`; `docs/specs/canvas-behavior.md` §Work badges.
+- **Principles:** Honesty (a count says only that nothing changed; unknown is not counted).
+
 ### D-2026-10-07-A — Deleting a project moves it to the computer's trash
 
 - **What:** deleting a project in the app moves the project's data folder to the computer's trash

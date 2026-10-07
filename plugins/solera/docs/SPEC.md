@@ -251,6 +251,8 @@ command or the MCP `set_work_item_phase` tool; a person through `PATCH`. Setting
 them changes no status and is allowed on every item except a protected or
 `cancelled` one.
 
+`moved_at` records the ISO-8601 UTC time when an item's status, phase, phase note, or judgments last changed; older files omit it until a movement and load it as `""`. A repeated phase answer through HTTP also moves the item. The HTTP work view sets `needs_check` when an active (`doing` or `rework`) item with a movement time has not moved for at least 7 days; cancelled branches and items without a movement time do not need a check.
+
 ### Person-only actions
 
 Through the HTTP surface only ([HTTP.md](HTTP.md) §Judging a result): `accept`

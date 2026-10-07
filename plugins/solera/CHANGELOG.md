@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.8.0] — 2026-10-08
+
+### Added
+
+- Work items record the UTC time of their last status, phase, phase note, or judgment movement.
+- The HTTP work view marks active items that have not moved for 7 days as needing a check; a repeated phase answer restarts the clock.
+
 ## [8.7.0] — 2026-10-05
 
 ### Added

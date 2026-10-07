@@ -203,6 +203,7 @@ choices made while building it on 2026-10-02 and still open to the user's review
   means the first of those items is selected and focus mode lights the branches of all of them, until the person
   selects another item; returning to the Work tab later does not refocus. The badge floats outside the node's measured
   size, so a change in Solera never rewrites the design file.
+  "확인 필요 N" / "Needs check N" counts active work items with no movement for at least 7 days and is always shown when nonzero, independent of the work-progress toggle (`D-2026-10-08-A`). The Work tab asks the person which stage each such item is in.
 - **Checking items off** *(user; D-2026-10-02-D)*: every item without children has a checkbox, on the graph node and in
   the list. On an item without a check command, the checkbox finishes it, and pressing it again reopens it. On an item
   with a check command, the checkbox runs that command: a pass checks it, and a failure leaves it unchecked and shows

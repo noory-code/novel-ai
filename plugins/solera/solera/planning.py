@@ -254,15 +254,17 @@ def set_realizes(ws: Workspace, item_id: str, realizes: list[str]) -> WorkItem:
 
 
 @workspace_locked
-def set_phase(ws: Workspace, item_id: str, phase: Phase, phase_note: str = "") -> WorkItem:
+def set_phase(
+    ws: Workspace, item_id: str, phase: Phase, phase_note: str = "", *, force_move: bool = False
+) -> WorkItem:
     """Record an item's optional progress phase without changing its status."""
     item = ws.load_item(item_id)
     items = load_items(ws)
     assert_person_edit_allowed(items, [item.id])
     assert_items_not_frozen(items, [item.id])
     updated = _validated_item({**item.model_dump(), "phase": phase, "phase_note": phase_note})
-    ws.write_item(updated)
-    return updated
+    ws.write_item(updated, force_move=force_move)
+    return ws.load_item(item_id)
 
 
 @workspace_locked

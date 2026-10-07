@@ -104,6 +104,7 @@ class WorkItem(BaseModel):
     accept: Accept = "person"
     phase: Phase = ""
     phase_note: str = ""
+    moved_at: str = ""
     judgments: list[Judgment] = Field(default_factory=list)
     gate_passed: bool = False
 
@@ -241,6 +242,8 @@ def dump_workitem(item: WorkItem) -> str:
         fields["phase"] = item.phase
     if item.phase_note:
         fields["phase_note"] = item.phase_note
+    if item.moved_at:
+        fields["moved_at"] = item.moved_at
     if item.judgments:
         fields["judgments"] = [judgment.model_dump() for judgment in item.judgments]
     legacy_gate_passed = bool(item.gate and item.status == "done")

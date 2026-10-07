@@ -14,6 +14,17 @@ from pydantic import ValidationError
 from solera.errors import FormatError
 from solera.formats import WorkItem, dump_workitem, parse_workitem
 
+
+def test_legacy_item_without_moved_at_round_trips_unchanged() -> None:
+    text = (
+        "---\nlevel: story\nstatus: doing\ngate: ''\n"
+        "children: []\nrealizes: []\n---\nLegacy work.\n"
+    )
+    item = parse_workitem(text, item_id="WORK-001")
+    assert item.moved_at == ""
+    assert dump_workitem(item) == text
+
+
 LEAF = """\
 ---
 level: action

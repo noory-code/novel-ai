@@ -32,6 +32,8 @@ engine; Mashbill never calls it; the app asks both engines and joins the answers
   every listed status; a client that rejects an unknown status breaks as soon as a person judges a
   result.
 
+`moved_at` is the item's last movement time in ISO-8601 UTC, or `""` for a legacy item that has not moved since tracking began. The `GET /api/work` item view also includes `needs_check`: true only for a `doing` or `rework` item with `moved_at` at least 7 days old and no cancelled ancestor; all other items report false. Repeating the same `phase` or `phase_note` through `PATCH` records a new movement.
+
 ### Error codes
 
 `POST items` means `POST /api/work/items`. `PATCH item`, `move`, `add after`, and `remove after`

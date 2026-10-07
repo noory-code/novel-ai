@@ -18,6 +18,7 @@ import threading
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from functools import wraps
 from pathlib import Path
 from time import monotonic, sleep
@@ -44,6 +45,10 @@ DEFAULT_LOCK_TIMEOUT_SECONDS = 10.0
 _LOCK_POLL_SECONDS = 0.05
 _P = ParamSpec("_P")
 _R = TypeVar("_R")
+
+
+def utc_now() -> datetime:
+    return datetime.now(UTC)
 
 
 if sys.platform == "win32":
@@ -128,8 +133,9 @@ def validate_path_name(name: str) -> str:
 class Workspace:
     """A ``.noory/solera/`` directory addressed through composed paths."""
 
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, clock: Callable[[], datetime] | None = None) -> None:
         self.root = Path(root)
+        self.clock = clock or utc_now
 
     # --- paths -------------------------------------------------------------
 
@@ -204,8 +210,19 @@ class Workspace:
     def write_progress(self, progress: Progress) -> None:
         _atomic_write_text(self.progress_path, dump_progress(progress))
 
-    def write_item(self, item: WorkItem) -> None:
-        _atomic_write_text(self.item_path(item.id), dump_workitem(item))
+    def write_item(self, item: WorkItem, *, force_move: bool = False) -> None:
+        path = self.item_path(item.id)
+        if path.is_file():
+            old = self.load_item(item.id)
+            moved = force_move or any(
+                getattr(old, field) != getattr(item, field)
+                for field in ("status", "phase", "phase_note", "judgments")
+            )
+            if moved:
+                item = item.model_copy(
+                    update={"moved_at": self.clock().astimezone(UTC).isoformat()}
+                )
+        _atomic_write_text(path, dump_workitem(item))
 
     def write_retrospective(self, retro: Retrospective) -> None:
         _atomic_write_text(self.retrospective_path(retro.id), dump_retrospective(retro))

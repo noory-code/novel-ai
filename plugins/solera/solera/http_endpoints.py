@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, TypeVar, cast
 
@@ -15,9 +16,9 @@ from starlette.responses import JSONResponse, Response
 from . import __version__
 from .broadcast import BroadcastHub
 from .errors import AcceptRequiredError, SoleraError, UnknownParentError, UnknownWorkItemError
-from .formats import Accept, Phase
+from .formats import Accept, Phase, WorkItem
 from .gate import GateResult
-from .graph import completion, items_by_slugs, load_items
+from .graph import cancelled_ancestor, completion, items_by_slugs, load_items
 from .planning import (
     add_after,
     create_item,
@@ -44,6 +45,23 @@ _Model = TypeVar("_Model", bound=BaseModel)
 _Endpoint = Callable[[Request], Awaitable[Response]]
 # A check returns the last characters of the gate's output, enough to see why it failed.
 _GATE_OUTPUT_TAIL = 4000
+STALE_AFTER_DAYS = 7
+
+
+def utc_now() -> datetime:
+    return datetime.now(UTC)
+
+
+def _work_item_view(item: WorkItem, items: dict[str, WorkItem], now: datetime) -> dict[str, Any]:
+    needs_check = False
+    if (
+        item.status in {"doing", "rework"}
+        and item.moved_at
+        and cancelled_ancestor(items, item.id) is None
+    ):
+        moved_at = datetime.fromisoformat(item.moved_at.replace("Z", "+00:00"))
+        needs_check = now - moved_at >= timedelta(days=STALE_AFTER_DAYS)
+    return {**item.model_dump(), "needs_check": needs_check}
 
 
 class _Body(BaseModel):
@@ -173,9 +191,10 @@ async def work_endpoint(request: Request) -> Response:
     ready, _agent_blocked = ready_leaves(ws)
     blocked = blocked_items(ws)
     current = ws.load_progress().item if ws.progress_path.is_file() else None
+    now = utc_now()
     return JSONResponse(
         {
-            "items": [item.model_dump() for item in items.values()],
+            "items": [_work_item_view(item, items, now) for item in items.values()],
             "progress": {item_id: asdict(value) for item_id, value in completion(items).items()},
             "ready": ready,
             "blocked": _blocked_json(blocked),
@@ -241,7 +260,7 @@ async def patch_item_endpoint(request: Request) -> Response:
             current = ws.load_item(item_id)
             phase = current.phase if body.phase is None else cast(Phase, body.phase)
             note = body.phase_note if "phase_note" in body.model_fields_set else current.phase_note
-            set_phase(ws, item_id, phase, note)
+            set_phase(ws, item_id, phase, note, force_move=True)
     item = ws.load_item(item_id)
     await _hub(request).notify_write(ws.root)
     return JSONResponse(item.model_dump())

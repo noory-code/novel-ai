@@ -223,11 +223,12 @@ def test_check_already_done_is_unchanged(client: TestClient, tmp_path: Path) -> 
     item = _create(client, tmp_path, accept="person")
     ws = _ws(tmp_path)
     ws.write_item(ws.load_item(item["id"]).model_copy(update={"status": "done"}))
+    before_check = ws.load_item(item["id"]).model_dump()
 
     response = client.post(f"/api/work/items/{item['id']}/check", params=_query(tmp_path))
 
     assert response.status_code == 200
-    assert response.json()["item"] == item | {"status": "done"}
+    assert response.json()["item"] == before_check
 
 
 def test_uncheck_already_todo_is_unchanged(client: TestClient, tmp_path: Path) -> None:

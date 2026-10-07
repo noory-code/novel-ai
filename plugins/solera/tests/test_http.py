@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import AbstractContextManager
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, cast
 
@@ -35,6 +36,125 @@ def _query(root: Path) -> dict[str, str]:
 
 def _ws(root: Path) -> Workspace:
     return Workspace(root / ".noory" / "solera")
+
+
+def test_movement_stamps_only_status_phase_note_and_judgments(tmp_path: Path) -> None:
+    from solera.formats import Judgment, WorkItem
+
+    now = datetime(2026, 10, 8, tzinfo=UTC)
+    ws = Workspace(tmp_path, clock=lambda: now)
+    item = WorkItem(id="W-1", level="story", status="todo", goal="Start")
+    ws.write_item(item)
+    assert ws.load_item("W-1").moved_at == ""
+    for patch in (
+        {"goal": "Changed"},
+        {"realizes": ["feature/a"]},
+        {"accept": "children"},
+        {"children": ["W-2"]},
+        {"after": ["W-3"]},
+    ):
+        ws.write_item(ws.load_item("W-1").model_copy(update=patch))
+        assert ws.load_item("W-1").moved_at == ""
+    movement_patches: list[dict[str, Any]] = [
+        {"status": "doing"},
+        {"phase": "exploring"},
+        {"phase_note": "Waiting"},
+        {"judgments": [Judgment(action="check", reason="", at=now.isoformat())]},
+    ]
+    for patch in movement_patches:
+        ws.write_item(ws.load_item("W-1").model_copy(update=patch))
+        assert ws.load_item("W-1").moved_at == now.isoformat()
+
+
+def test_work_view_marks_only_active_items_stale_at_seven_days(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from solera.formats import WorkItem
+
+    now = datetime(2026, 10, 8, tzinfo=UTC)
+    monkeypatch.setattr("solera.http_endpoints.utc_now", lambda: now)
+    ws = _ws(tmp_path)
+    for status, age, expected in (
+        ("doing", 7, True),
+        ("rework", 8, True),
+        ("doing", 6, False),
+        ("todo", 8, False),
+        ("review", 8, False),
+        ("done", 8, False),
+        ("cancelled", 8, False),
+        ("doing", None, False),
+    ):
+        item_id = f"W-{status}-{age}"
+        moved_at = (now - timedelta(days=age)).isoformat() if age is not None else ""
+        ws.write_item(
+            WorkItem(id=item_id, level="story", status=status, goal="Work", moved_at=moved_at)
+        )
+    ws.write_item(
+        WorkItem(
+            id="W-cancelled-parent",
+            level="story",
+            status="cancelled",
+            goal="Stopped",
+            children=["W-frozen"],
+            accept="children",
+        )
+    )
+    ws.write_item(
+        WorkItem(
+            id="W-frozen",
+            level="action",
+            status="doing",
+            goal="Frozen",
+            moved_at=(now - timedelta(days=8)).isoformat(),
+        )
+    )
+    response = client.get("/api/work", params=_query(tmp_path))
+    assert response.status_code == 200
+    items = {item["id"]: item for item in response.json()["items"]}
+    assert items["W-frozen"]["needs_check"] is False
+    for status, age, expected in (
+        ("doing", 7, True),
+        ("rework", 8, True),
+        ("doing", 6, False),
+        ("todo", 8, False),
+        ("review", 8, False),
+        ("done", 8, False),
+        ("cancelled", 8, False),
+        ("doing", None, False),
+    ):
+        item = items[f"W-{status}-{age}"]
+        assert item["needs_check"] is expected
+        assert item["moved_at"] == (
+            (now - timedelta(days=age)).isoformat() if age is not None else ""
+        )
+
+
+def test_repeating_same_phase_answer_restarts_movement_clock(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from solera.formats import WorkItem
+
+    now = datetime(2026, 10, 8, tzinfo=UTC)
+    monkeypatch.setattr("solera.workspace.utc_now", lambda: now)
+    ws = _ws(tmp_path)
+    ws.write_item(
+        WorkItem(
+            id="W-1",
+            level="story",
+            status="doing",
+            goal="Work",
+            phase="exploring",
+            phase_note="Still exploring",
+            moved_at=(now - timedelta(days=8)).isoformat(),
+        )
+    )
+    response = client.patch(
+        "/api/work/items/W-1",
+        params=_query(tmp_path),
+        json={"phase": "exploring", "phase_note": "Still exploring"},
+    )
+    assert response.status_code == 200
+    assert response.json()["moved_at"] == now.isoformat()
 
 
 def _create(
