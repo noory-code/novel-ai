@@ -13,22 +13,24 @@ FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
 FIXTURE_BASIC = os.path.join(FIXTURES, "transcript-basic.jsonl")
 FIXTURE_EMPTY = os.path.join(FIXTURES, "transcript-empty.jsonl")
 
-VALID_LLM_RESPONSE = json.dumps([
-    {
-        "content": "Use ESM modules with strict mode",
-        "type": "preference",
-        "scope": "global",
-        "tags": ["typescript"],
-        "confidence": 0.9,
-    },
-    {
-        "content": "Prefer named exports over default exports for better tree-shaking",
-        "type": "decision",
-        "scope": "project",
-        "tags": ["typescript", "exports"],
-        "confidence": 0.85,
-    },
-])
+VALID_LLM_RESPONSE = json.dumps(
+    [
+        {
+            "content": "Use ESM modules with strict mode",
+            "type": "preference",
+            "scope": "global",
+            "tags": ["typescript"],
+            "confidence": 0.9,
+        },
+        {
+            "content": "Prefer named exports over default exports for better tree-shaking",
+            "type": "decision",
+            "scope": "project",
+            "tags": ["typescript", "exports"],
+            "confidence": 0.85,
+        },
+    ]
+)
 
 
 class TestExtractKnowledge:

@@ -6,6 +6,7 @@ import json
 import sqlite3
 import uuid
 from datetime import UTC, datetime
+from typing import TypedDict
 
 from distill.store.scope import resolve_db_path
 from distill.store.sqlite_utils import connect_wal
@@ -26,13 +27,15 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS knowledge (
   id TEXT PRIMARY KEY,
   content TEXT NOT NULL,
-  type TEXT NOT NULL CHECK(type IN ('pattern','preference','decision','mistake','workaround','conflict')),
+  type TEXT NOT NULL CHECK(type IN\
+ ('pattern','preference','decision','mistake','workaround','conflict')),
   scope TEXT NOT NULL CHECK(scope IN ('global','project','workspace')),
   visibility TEXT CHECK(visibility IN ('global','workspace','project','private')),
   project TEXT,
   tags TEXT NOT NULL DEFAULT '[]',
   session_id TEXT NOT NULL,
-  trigger TEXT NOT NULL CHECK("trigger" IN ('pre_compact','session_end','manual','ingest')),
+  trigger TEXT NOT NULL CHECK("trigger" IN\
+ ('pre_compact','session_end','manual','ingest')),
   source_timestamp TEXT NOT NULL,
   confidence REAL NOT NULL DEFAULT 0.5,
   access_count INTEGER NOT NULL DEFAULT 0,
@@ -53,7 +56,8 @@ CREATE TABLE IF NOT EXISTS distill_meta (
 CREATE TABLE IF NOT EXISTS lifecycle_events (
   id TEXT PRIMARY KEY,
   chunk_id TEXT NOT NULL,
-  event_type TEXT NOT NULL CHECK(event_type IN ('created','promoted','demoted','crystallized','deleted')),
+  event_type TEXT NOT NULL CHECK(event_type IN\
+ ('created','promoted','demoted','crystallized','deleted')),
   from_scope TEXT CHECK(from_scope IN ('global','project','workspace')),
   to_scope TEXT CHECK(to_scope IN ('global','project','workspace')),
   timestamp TEXT NOT NULL,
@@ -65,7 +69,8 @@ CREATE INDEX IF NOT EXISTS idx_lifecycle_chunk ON lifecycle_events(chunk_id);
 CREATE TABLE IF NOT EXISTS chunk_relations (
   from_id TEXT NOT NULL,
   to_id TEXT NOT NULL,
-  relation_type TEXT NOT NULL CHECK(relation_type IN ('refines','contradicts','depends_on','supersedes')),
+  relation_type TEXT NOT NULL CHECK(relation_type IN\
+ ('refines','contradicts','depends_on','supersedes')),
   confidence REAL NOT NULL DEFAULT 0.8,
   created_at TEXT NOT NULL,
   PRIMARY KEY (from_id, to_id, relation_type)
@@ -77,14 +82,36 @@ CREATE INDEX IF NOT EXISTS idx_relations_to ON chunk_relations(to_id);
 
 _MIGRATIONS = [
     "ALTER TABLE knowledge ADD COLUMN last_accessed_at TEXT",
-    "ALTER TABLE knowledge ADD COLUMN visibility TEXT CHECK(visibility IN ('global','workspace','project','private'))",
+    (
+        "ALTER TABLE knowledge ADD COLUMN visibility TEXT "
+        "CHECK(visibility IN ('global','workspace','project','private'))"
+    ),
     "CREATE INDEX IF NOT EXISTS idx_knowledge_visibility ON knowledge(visibility)",
-    "CREATE TABLE IF NOT EXISTS lifecycle_events (id TEXT PRIMARY KEY, chunk_id TEXT NOT NULL, event_type TEXT NOT NULL CHECK(event_type IN ('created','promoted','demoted','crystallized','deleted')), from_scope TEXT CHECK(from_scope IN ('global','project','workspace')), to_scope TEXT CHECK(to_scope IN ('global','project','workspace')), timestamp TEXT NOT NULL, note TEXT)",
+    (
+        "CREATE TABLE IF NOT EXISTS lifecycle_events (id TEXT PRIMARY KEY, "
+        "chunk_id TEXT NOT NULL, event_type TEXT NOT NULL "
+        "CHECK(event_type IN ('created','promoted','demoted','crystallized','deleted')), "
+        "from_scope TEXT CHECK(from_scope IN ('global','project','workspace')), "
+        "to_scope TEXT CHECK(to_scope IN ('global','project','workspace')), "
+        "timestamp TEXT NOT NULL, note TEXT)"
+    ),
     "CREATE INDEX IF NOT EXISTS idx_lifecycle_chunk ON lifecycle_events(chunk_id)",
-    "CREATE TABLE IF NOT EXISTS chunk_relations (from_id TEXT NOT NULL, to_id TEXT NOT NULL, relation_type TEXT NOT NULL CHECK(relation_type IN ('refines','contradicts','depends_on','supersedes')), confidence REAL NOT NULL DEFAULT 0.8, created_at TEXT NOT NULL, PRIMARY KEY (from_id, to_id, relation_type))",
+    (
+        "CREATE TABLE IF NOT EXISTS chunk_relations (from_id TEXT NOT NULL, "
+        "to_id TEXT NOT NULL, relation_type TEXT NOT NULL "
+        "CHECK(relation_type IN ('refines','contradicts','depends_on','supersedes')), "
+        "confidence REAL NOT NULL DEFAULT 0.8, created_at TEXT NOT NULL, "
+        "PRIMARY KEY (from_id, to_id, relation_type))"
+    ),
     "CREATE INDEX IF NOT EXISTS idx_relations_from ON chunk_relations(from_id)",
     "CREATE INDEX IF NOT EXISTS idx_relations_to ON chunk_relations(to_id)",
 ]
+
+
+class KnowledgeStats(TypedDict):
+    total: int
+    byType: dict[str, int]
+    byScope: dict[str, int]
 
 
 def _row_to_chunk(row: sqlite3.Row) -> KnowledgeChunk:
@@ -228,7 +255,10 @@ class MetadataStore:
         """Increment access count and update last_accessed_at."""
         now = datetime.now(UTC).isoformat()
         self._conn.execute(
-            "UPDATE knowledge SET access_count = access_count + 1, updated_at = ?, last_accessed_at = ? WHERE id = ?",
+            (
+                "UPDATE knowledge SET access_count = access_count + 1, "
+                "updated_at = ?, last_accessed_at = ? WHERE id = ?"
+            ),
             (now, now, id),
         )
         self._conn.commit()
@@ -277,14 +307,12 @@ class MetadataStore:
         self._conn.commit()
         return cur.rowcount > 0
 
-    def stats(self) -> dict:
+    def stats(self) -> KnowledgeStats:
         """Get aggregate statistics."""
         total = self._conn.execute("SELECT COUNT(*) as cnt FROM knowledge").fetchone()["cnt"]
 
         by_type: dict[str, int] = {}
-        for row in self._conn.execute(
-            "SELECT type, COUNT(*) as cnt FROM knowledge GROUP BY type"
-        ):
+        for row in self._conn.execute("SELECT type, COUNT(*) as cnt FROM knowledge GROUP BY type"):
             by_type[row["type"]] = row["cnt"]
 
         by_scope: dict[str, int] = {}
@@ -306,13 +334,12 @@ class MetadataStore:
             "SELECT COUNT(*) as cnt FROM knowledge WHERE created_at > ?",
             (timestamp,),
         ).fetchone()
-        return row["cnt"]
+        count: int = row["cnt"]
+        return count
 
     def get_meta(self, key: str) -> str | None:
         """Get a distill_meta value."""
-        row = self._conn.execute(
-            "SELECT value FROM distill_meta WHERE key = ?", (key,)
-        ).fetchone()
+        row = self._conn.execute("SELECT value FROM distill_meta WHERE key = ?", (key,)).fetchone()
         return row["value"] if row else None
 
     def set_meta(self, key: str, value: str) -> None:

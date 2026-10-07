@@ -3,7 +3,7 @@ name: distill-profile
 user-invocable: true
 description: View knowledge statistics and hook status.
 metadata:
-  version: "1.9.1"
+  version: "1.10.0"
   category: stats
   type: unit
   style: tool

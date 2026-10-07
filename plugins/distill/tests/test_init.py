@@ -43,6 +43,7 @@ class TestEnsureConfig:
     def test_global_scope_writes_to_home(self, tmp_path: Path, monkeypatch):
         monkeypatch.setenv("HOME", str(tmp_path))
         import pathlib
+
         monkeypatch.setattr(pathlib.Path, "home", lambda: tmp_path)
 
         created, config_path = _ensure_config(str(tmp_path), "global")
@@ -53,12 +54,14 @@ class TestEnsureConfig:
 class TestFormatScanSummary:
     def test_returns_no_items_message_when_empty(self, tmp_path: Path, monkeypatch):
         import pathlib
+
         monkeypatch.setattr(pathlib.Path, "home", lambda: tmp_path / "fake_home")
         summary = _format_scan_summary(str(tmp_path))
         assert "no rules" in summary.lower()
 
     def test_counts_rules(self, tmp_path: Path, monkeypatch):
         import pathlib
+
         monkeypatch.setattr(pathlib.Path, "home", lambda: tmp_path / "fake_home")
         rules_dir = tmp_path / ".claude" / "rules"
         rules_dir.mkdir(parents=True)
@@ -70,6 +73,7 @@ class TestFormatScanSummary:
 
     def test_counts_skills(self, tmp_path: Path, monkeypatch):
         import pathlib
+
         monkeypatch.setattr(pathlib.Path, "home", lambda: tmp_path / "fake_home")
         skills_dir = tmp_path / ".claude" / "skills" / "my-skill"
         skills_dir.mkdir(parents=True)
@@ -101,6 +105,7 @@ class TestInitTool:
     @pytest.mark.asyncio
     async def test_scans_environment(self, tmp_path: Path, monkeypatch):
         import pathlib
+
         monkeypatch.setattr(pathlib.Path, "home", lambda: tmp_path / "fake_home")
         rules_dir = tmp_path / ".claude" / "rules"
         rules_dir.mkdir(parents=True)
@@ -123,9 +128,13 @@ class TestInitTool:
 
         config_path = tmp_path / ".noory" / "distill" / "config.json"
         config_path.parent.mkdir(parents=True, exist_ok=True)
-        config_path.write_text(json.dumps({
-            "sources": {"dirs": [str(docs_dir)]},
-        }))
+        config_path.write_text(
+            json.dumps(
+                {
+                    "sources": {"dirs": [str(docs_dir)]},
+                }
+            )
+        )
 
         result = await init(scope="project", _project_root=str(tmp_path))
 
@@ -146,9 +155,13 @@ class TestInitTool:
 
         config_path = tmp_path / ".noory" / "distill" / "config.json"
         config_path.parent.mkdir(parents=True, exist_ok=True)
-        config_path.write_text(json.dumps({
-            "sources": {"dirs": [str(docs_dir)]},
-        }))
+        config_path.write_text(
+            json.dumps(
+                {
+                    "sources": {"dirs": [str(docs_dir)]},
+                }
+            )
+        )
 
         result = await init(scope="project", _project_root=str(tmp_path))
 
@@ -166,7 +179,7 @@ class TestMonorepoScopeSelection:
         monkeypatch.setattr("distill.tools.init.detect_project_root", lambda **_: str(project))
         monkeypatch.setattr("distill.tools.init.detect_workspace_root", lambda **_: str(workspace))
 
-        result = await init(_project_root=str(project))
+        await init(_project_root=str(project))
 
         # config should be created in workspace
         assert (workspace / ".noory" / "distill" / "config.json").exists()
@@ -178,7 +191,7 @@ class TestMonorepoScopeSelection:
         monkeypatch.setattr("distill.tools.init.detect_project_root", lambda **_: str(tmp_path))
         monkeypatch.setattr("distill.tools.init.detect_workspace_root", lambda **_: str(tmp_path))
 
-        result = await init(_project_root=str(tmp_path))
+        await init(_project_root=str(tmp_path))
 
         assert (tmp_path / ".noory" / "distill" / "config.json").exists()
 
@@ -193,8 +206,6 @@ class TestMonorepoScopeSelection:
         monkeypatch.setattr("distill.tools.init.detect_workspace_root", lambda **_: str(workspace))
 
         # Explicitly request project scope
-        result = await init(scope="project", _project_root=str(project))
+        await init(scope="project", _project_root=str(project))
 
         assert (project / ".noory" / "distill" / "config.json").exists()
-
-

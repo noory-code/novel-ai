@@ -62,9 +62,7 @@ class TestLoadConfig:
         (global_dir / "config.json").write_text(
             json.dumps({"extraction_model": "global-model", "auto_crystallize_threshold": 5})
         )
-        monkeypatch.setattr(
-            "distill.config.Path.home", lambda: global_dir.parent
-        )
+        monkeypatch.setattr("distill.config.Path.home", lambda: global_dir.parent)
 
         workspace_dir = tmp_path / "workspace"
         (workspace_dir / ".distill").mkdir(parents=True)
@@ -119,12 +117,7 @@ class TestSourcesConfig:
         project_dir = tmp_path / "proj"
         (project_dir / ".distill").mkdir(parents=True)
         (project_dir / ".distill" / "config.json").write_text(
-            json.dumps({
-                "sources": {
-                    "rules": False,
-                    "dirs": ["docs/", "wiki/"]
-                }
-            })
+            json.dumps({"sources": {"rules": False, "dirs": ["docs/", "wiki/"]}})
         )
         config = load_config(str(project_dir))
         assert config.sources.rules is False
@@ -148,12 +141,14 @@ class TestOutputsConfig:
         project_dir = tmp_path / "proj2"
         (project_dir / ".distill").mkdir(parents=True)
         (project_dir / ".distill" / "config.json").write_text(
-            json.dumps({
-                "outputs": {
-                    "rules": {"budget_max_files": 10, "split_threshold_tokens": 800},
-                    "agents": {"enabled": True, "min_skills_to_merge": 5}
+            json.dumps(
+                {
+                    "outputs": {
+                        "rules": {"budget_max_files": 10, "split_threshold_tokens": 800},
+                        "agents": {"enabled": True, "min_skills_to_merge": 5},
+                    }
                 }
-            })
+            )
         )
         config = load_config(str(project_dir))
         assert config.outputs.rules.budget_max_files == 10

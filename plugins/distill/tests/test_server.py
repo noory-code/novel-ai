@@ -11,6 +11,12 @@ def test_mcp_tool_catalog_is_pinned() -> None:
     tools = asyncio.run(mcp.get_tools())
     assert set(tools) == {
         "digest",
+        "criteria_check",
+        "criteria_current",
+        "criteria_history",
+        "criteria_record",
+        "criteria_revise",
+        "criteria_revoke",
         "ingest",
         "init",
         "learn",

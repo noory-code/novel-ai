@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any, cast
 
 from distill.extractor.extractor import parse_extraction_response
 from distill.store.metadata import MetadataStore
@@ -22,7 +23,7 @@ _VALID_TRIGGERS = {"pre_compact", "session_end", "manual", "ingest"}
 
 
 async def store(
-    chunks: list[dict],
+    chunks: list[dict[str, Any]],
     session_id: str,
     trigger: str = "manual",
     scope: KnowledgeScope | None = None,
@@ -48,15 +49,11 @@ async def store(
         workspace_root = None
 
     # Validate trigger
-    effective_trigger: ExtractionTrigger = (
-        trigger if trigger in _VALID_TRIGGERS else "manual"
-    )  # type: ignore[assignment]
+    effective_trigger = cast(ExtractionTrigger, trigger) if trigger in _VALID_TRIGGERS else "manual"
 
     # Validate chunks using existing parser
     valid_items = parse_extraction_response(
-        "[" + ", ".join(
-            __import__("json").dumps(c) for c in chunks if isinstance(c, dict)
-        ) + "]"
+        "[" + ", ".join(__import__("json").dumps(c) for c in chunks if isinstance(c, dict)) + "]"
     )
 
     if not valid_items:
@@ -76,9 +73,7 @@ async def store(
     conflict_warnings: list[str] = []
 
     for item in valid_items:
-        effective_scope: KnowledgeScope = scope or item.get(
-            "scope", "project"
-        )  # type: ignore[assignment]
+        effective_scope: KnowledgeScope = scope or item.get("scope", "project")
         ws_root = workspace_root if effective_scope == "workspace" else None
 
         chunk_input = KnowledgeInput(
@@ -100,17 +95,14 @@ async def store(
                 vector.index(inserted.id, inserted.content, inserted.tags)
 
                 if chunk_input.type == "conflict":
-                    conflict_warnings.append(
-                        f"  ⚠ CONFLICT: {chunk_input.content[:100]}"
-                    )
+                    conflict_warnings.append(f"  ⚠ CONFLICT: {chunk_input.content[:100]}")
 
                 saved += 1
         except Exception:
             pass
 
     summary = "\n".join(
-        f"- [{item['type']}] {item['content'][:80]}"
-        f"{'...' if len(item['content']) > 80 else ''}"
+        f"- [{item['type']}] {item['content'][:80]}{'...' if len(item['content']) > 80 else ''}"
         for item in valid_items
     )
 

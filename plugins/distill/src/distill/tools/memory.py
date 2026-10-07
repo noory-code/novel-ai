@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, datetime
-from typing import Literal
+from typing import Any, Literal
 
 from distill.config import load_config
 from distill.extractor.crystallize import crystallize
@@ -34,7 +34,7 @@ def _next_scope(current: str, direction: str) -> str | None:
 
 async def memory(
     action: MemoryAction,
-    ctx=None,
+    ctx: Any = None,
     id: str | None = None,
     caller_cwd: str | None = None,
 ) -> str:
@@ -57,7 +57,7 @@ async def memory(
 
 
 async def _handle_crystallize(
-    ctx, project_root: str | None, workspace_root: str | None
+    ctx: Any, project_root: str | None, workspace_root: str | None
 ) -> str:
     """Collect all knowledge and crystallize into rules."""
     try:
@@ -102,10 +102,7 @@ async def _handle_crystallize(
             lines.append("")
             lines.append("⚠ User rule conflicts:")
             for c in report.user_conflicts:
-                lines.append(
-                    f"  - {c.user_rule_file}: {c.conflicting_content} "
-                    f"→ {c.suggestion}"
-                )
+                lines.append(f"  - {c.user_rule_file}: {c.conflicting_content} → {c.suggestion}")
         lines.append(f"Total rules: {report.total_rules}")
 
         return "\n".join(lines)
@@ -123,8 +120,8 @@ def _handle_delete(id: str, project_root: str | None, workspace_root: str | None
         ws_root = workspace_root if scope == "workspace" else None
         try:
             with (
-                MetadataStore(scope, project_root, ws_root) as meta,  # type: ignore[arg-type]
-                VectorStore(scope, project_root, ws_root) as vector,  # type: ignore[arg-type]
+                MetadataStore(scope, project_root, ws_root) as meta,
+                VectorStore(scope, project_root, ws_root) as vector,
             ):
                 if meta.delete(id):
                     vector.remove(id)
@@ -169,16 +166,10 @@ def _handle_promote_demote(
     to_scope = _next_scope(found_scope, action)
     if not to_scope:
         boundary = "global" if action == "promote" else "project"
-        return (
-            f"Cannot {action}: entry is already at {found_scope} scope "
-            f"(boundary: {boundary})."
-        )
+        return f"Cannot {action}: entry is already at {found_scope} scope (boundary: {boundary})."
 
     if to_scope == "workspace" and not workspace_root:
-        return (
-            f"Cannot {action} to workspace scope: "
-            "no workspace (git) root detected."
-        )
+        return f"Cannot {action} to workspace scope: no workspace (git) root detected."
     if to_scope == "project" and not project_root:
         return f"Cannot {action} to project scope: no project root detected."
 
@@ -187,18 +178,10 @@ def _handle_promote_demote(
 
     try:
         with (
-            MetadataStore(
-                found_scope, project_root, from_ws_root
-            ) as from_meta,  # type: ignore[arg-type]
-            VectorStore(
-                found_scope, project_root, from_ws_root
-            ) as from_vector,  # type: ignore[arg-type]
-            MetadataStore(
-                to_scope, project_root, to_ws_root
-            ) as to_meta,  # type: ignore[arg-type]
-            VectorStore(
-                to_scope, project_root, to_ws_root
-            ) as to_vector,  # type: ignore[arg-type]
+            MetadataStore(found_scope, project_root, from_ws_root) as from_meta,  # type: ignore[arg-type]
+            VectorStore(found_scope, project_root, from_ws_root) as from_vector,  # type: ignore[arg-type]
+            MetadataStore(to_scope, project_root, to_ws_root) as to_meta,  # type: ignore[arg-type]
+            VectorStore(to_scope, project_root, to_ws_root) as to_vector,  # type: ignore[arg-type]
         ):
             from_meta.move(chunk, to_meta)
             to_vector.index(chunk.id, chunk.content, chunk.tags)

@@ -94,6 +94,7 @@ class TestMove:
         src = MetadataStore("project", str(tmp_path))
         dst_path = str(tmp_path) + "_dst"
         import os
+
         os.makedirs(dst_path, exist_ok=True)
         dst = MetadataStore("project", dst_path)
 
@@ -117,6 +118,7 @@ class TestMove:
         src = MetadataStore("project", str(tmp_path))
         dst_path = str(tmp_path) + "_dst2"
         import os
+
         os.makedirs(dst_path, exist_ok=True)
         dst = MetadataStore("project", dst_path)
 
@@ -195,6 +197,7 @@ class TestMeta:
 class TestVisibility:
     def test_insert_with_visibility(self, store: MetadataStore) -> None:
         from tests.helpers.factories import make_knowledge_input
+
         inp = make_knowledge_input(content="visible chunk")
         inp.visibility = "project"
         chunk = store.insert(inp)

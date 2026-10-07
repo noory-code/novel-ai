@@ -35,6 +35,7 @@ def local_data_root(root: Path, *, create: bool = True) -> Path:
         new_root.mkdir(parents=True, exist_ok=True)
     return new_root
 
+
 # Markers that indicate a package/app root (nearest wins for project scope)
 PROJECT_MARKERS = ["pyproject.toml", "pubspec.yaml", "package.json", "CLAUDE.md"]
 

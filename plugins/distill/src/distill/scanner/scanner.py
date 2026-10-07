@@ -6,14 +6,14 @@ import logging
 import math
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
-
 from distill.scanner.types import (
     EnvironmentInventory,
     EnvironmentItem,
     EnvironmentItemOrigin,
     EnvironmentSummary,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def scan_environment(project_root: str | None = None) -> EnvironmentInventory:

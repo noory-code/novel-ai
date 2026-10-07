@@ -53,11 +53,13 @@ class TestClaudePPath:
 
         monkeypatch.setattr("distill.hooks.distill_hook.subprocess.run", mock_run)
 
-        stdin = json.dumps({
-            "session_id": "sess-abc-123",
-            "transcript_path": str(transcript),
-            "hook_event_name": "PreCompact",
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-abc-123",
+                "transcript_path": str(transcript),
+                "hook_event_name": "PreCompact",
+            }
+        )
         stdout, stderr, code = main(stdin)
 
         assert code == 0
@@ -72,9 +74,7 @@ class TestClaudePPath:
         transcript = tmp_path / "abc.jsonl"
         transcript.write_text("")
 
-        mock_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="done", stderr=""
-        )
+        mock_result = subprocess.CompletedProcess(args=[], returncode=0, stdout="done", stderr="")
         calls = []
 
         def mock_run(cmd, **kwargs):
@@ -83,11 +83,13 @@ class TestClaudePPath:
 
         monkeypatch.setattr("distill.hooks.distill_hook.subprocess.run", mock_run)
 
-        stdin = json.dumps({
-            "session_id": "sess-xyz",
-            "transcript_path": str(transcript),
-            "hook_event_name": "SessionEnd",
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-xyz",
+                "transcript_path": str(transcript),
+                "hook_event_name": "SessionEnd",
+            }
+        )
         main(stdin)
 
         prompt = calls[0][2]  # claude -p <prompt>
@@ -98,9 +100,7 @@ class TestClaudePPath:
         transcript = tmp_path / "t.jsonl"
         transcript.write_text("")
 
-        mock_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="done", stderr=""
-        )
+        mock_result = subprocess.CompletedProcess(args=[], returncode=0, stdout="done", stderr="")
         calls = []
 
         def mock_run(cmd, **kwargs):
@@ -109,10 +109,12 @@ class TestClaudePPath:
 
         monkeypatch.setattr("distill.hooks.distill_hook.subprocess.run", mock_run)
 
-        stdin = json.dumps({
-            "session_id": "s1",
-            "transcript_path": str(transcript),
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "s1",
+                "transcript_path": str(transcript),
+            }
+        )
         main(stdin)
 
         cmd = calls[0]
@@ -124,9 +126,7 @@ class TestClaudePPath:
         transcript = tmp_path / "t.jsonl"
         transcript.write_text("")
 
-        mock_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="done", stderr=""
-        )
+        mock_result = subprocess.CompletedProcess(args=[], returncode=0, stdout="done", stderr="")
         calls = []
 
         def mock_run(cmd, **kwargs):
@@ -135,10 +135,12 @@ class TestClaudePPath:
 
         monkeypatch.setattr("distill.hooks.distill_hook.subprocess.run", mock_run)
 
-        stdin = json.dumps({
-            "session_id": "s1",
-            "transcript_path": str(transcript),
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "s1",
+                "transcript_path": str(transcript),
+            }
+        )
         main(stdin)
 
         cmd = calls[0]
@@ -160,11 +162,13 @@ class TestClaudePPath:
             lambda *a, **kw: mock_result,
         )
 
-        stdin = json.dumps({
-            "session_id": "sess-001",
-            "transcript_path": str(transcript),
-            "hook_event_name": "SessionEnd",
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-001",
+                "transcript_path": str(transcript),
+                "hook_event_name": "SessionEnd",
+            }
+        )
         _, stderr, code = main(stdin)
 
         assert code == 0  # hook always exits 0
@@ -179,10 +183,12 @@ class TestClaudePPath:
 
         monkeypatch.setattr("distill.hooks.distill_hook.subprocess.run", mock_run_timeout)
 
-        stdin = json.dumps({
-            "session_id": "sess-001",
-            "transcript_path": str(transcript),
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-001",
+                "transcript_path": str(transcript),
+            }
+        )
         _, stderr, code = main(stdin)
 
         assert code == 0
@@ -216,19 +222,19 @@ class TestErrorHandling:
         transcript = tmp_path / "t.jsonl"
         transcript.write_text("")
 
-        mock_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="done", stderr=""
-        )
+        mock_result = subprocess.CompletedProcess(args=[], returncode=0, stdout="done", stderr="")
         monkeypatch.setattr(
             "distill.hooks.distill_hook.subprocess.run",
             lambda *a, **kw: mock_result,
         )
 
-        stdin = json.dumps({
-            "session_id": "sess-001",
-            "transcript_path": str(transcript),
-            "hook_event_name": "SessionEnd",
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-001",
+                "transcript_path": str(transcript),
+                "hook_event_name": "SessionEnd",
+            }
+        )
         _, stderr, code = main(stdin)
         assert code == 0
         assert "distill-hook:" in stderr
@@ -239,10 +245,12 @@ class TestSecurityValidation:
 
     def test_rejects_shell_injection_in_transcript_path(self, tmp_path):
         """Verify that shell injection attempts in transcript_path are rejected."""
-        stdin = json.dumps({
-            "session_id": "sess-001",
-            "transcript_path": "'; rm -rf / #",
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-001",
+                "transcript_path": "'; rm -rf / #",
+            }
+        )
         _, stderr, code = main(stdin)
 
         # A ValueError should be raised, causing the hook to fail
@@ -254,18 +262,18 @@ class TestSecurityValidation:
         transcript = tmp_path / "test.jsonl"
         transcript.write_text("")
 
-        mock_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="done", stderr=""
-        )
+        mock_result = subprocess.CompletedProcess(args=[], returncode=0, stdout="done", stderr="")
         monkeypatch.setattr(
             "distill.hooks.distill_hook.subprocess.run",
             lambda *a, **kw: mock_result,
         )
 
-        stdin = json.dumps({
-            "session_id": "sess; rm -rf /",
-            "transcript_path": str(transcript),
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess; rm -rf /",
+                "transcript_path": str(transcript),
+            }
+        )
         _, stderr, code = main(stdin)
 
         assert code == 0
@@ -274,18 +282,18 @@ class TestSecurityValidation:
 
     def test_rejects_nonexistent_transcript_path(self, monkeypatch):
         """Verify that a nonexistent transcript_path is rejected."""
-        mock_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="done", stderr=""
-        )
+        mock_result = subprocess.CompletedProcess(args=[], returncode=0, stdout="done", stderr="")
         monkeypatch.setattr(
             "distill.hooks.distill_hook.subprocess.run",
             lambda *a, **kw: mock_result,
         )
 
-        stdin = json.dumps({
-            "session_id": "sess-001",
-            "transcript_path": "/nonexistent/path/to/transcript.jsonl",
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-001",
+                "transcript_path": "/nonexistent/path/to/transcript.jsonl",
+            }
+        )
         _, stderr, code = main(stdin)
 
         assert code == 0
@@ -294,18 +302,18 @@ class TestSecurityValidation:
 
     def test_rejects_directory_as_transcript_path(self, tmp_path, monkeypatch):
         """Verify that passing a directory as transcript_path is rejected."""
-        mock_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="done", stderr=""
-        )
+        mock_result = subprocess.CompletedProcess(args=[], returncode=0, stdout="done", stderr="")
         monkeypatch.setattr(
             "distill.hooks.distill_hook.subprocess.run",
             lambda *a, **kw: mock_result,
         )
 
-        stdin = json.dumps({
-            "session_id": "sess-001",
-            "transcript_path": str(tmp_path),
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-001",
+                "transcript_path": str(tmp_path),
+            }
+        )
         _, stderr, code = main(stdin)
 
         assert code == 0
@@ -317,19 +325,19 @@ class TestSecurityValidation:
         transcript = tmp_path / "test.jsonl"
         transcript.write_text("")
 
-        mock_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="done", stderr=""
-        )
+        mock_result = subprocess.CompletedProcess(args=[], returncode=0, stdout="done", stderr="")
         monkeypatch.setattr(
             "distill.hooks.distill_hook.subprocess.run",
             lambda *a, **kw: mock_result,
         )
 
-        stdin = json.dumps({
-            "session_id": "sess-001",
-            "transcript_path": str(transcript),
-            "cwd": "/nonexistent/directory",
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-001",
+                "transcript_path": str(transcript),
+                "cwd": "/nonexistent/directory",
+            }
+        )
         _, stderr, code = main(stdin)
 
         assert code == 0
@@ -357,10 +365,12 @@ class TestSecurityValidation:
 
         monkeypatch.setattr("distill.hooks.distill_hook.subprocess.run", mock_run_timeout)
 
-        stdin = json.dumps({
-            "session_id": "sess-001",
-            "transcript_path": str(transcript),
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-001",
+                "transcript_path": str(transcript),
+            }
+        )
         _, stderr, code = main(stdin)
 
         assert code == 0
@@ -383,15 +393,18 @@ class TestSecurityValidation:
             lambda *a, **kw: mock_result,
         )
 
-        stdin = json.dumps({
-            "session_id": "test-session-123",
-            "transcript_path": str(transcript),
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "test-session-123",
+                "transcript_path": str(transcript),
+            }
+        )
         _, stderr, code = main(stdin)
 
         assert code == 0
         assert "claude -p failed" in stderr
         import tempfile
+
         expected_log = str(Path(tempfile.gettempdir()) / "distill-hook-test-session-123.log")
         assert expected_log in stderr
 
@@ -407,9 +420,7 @@ class TestSecurityValidation:
         transcript = tmp_path / "test.jsonl"
         transcript.write_text("")
 
-        mock_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="done", stderr=""
-        )
+        mock_result = subprocess.CompletedProcess(args=[], returncode=0, stdout="done", stderr="")
         calls = []
 
         def mock_run(cmd, **kwargs):
@@ -427,10 +438,12 @@ class TestSecurityValidation:
 
         for session_id in valid_ids:
             calls.clear()
-            stdin = json.dumps({
-                "session_id": session_id,
-                "transcript_path": str(transcript),
-            })
+            stdin = json.dumps(
+                {
+                    "session_id": session_id,
+                    "transcript_path": str(transcript),
+                }
+            )
             _, stderr, code = main(stdin)
 
             assert code == 0
@@ -495,11 +508,13 @@ class TestHookLock:
             lambda: None,
         )
 
-        stdin = json.dumps({
-            "session_id": "sess-001",
-            "transcript_path": str(transcript),
-            "hook_event_name": "SessionEnd",
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-001",
+                "transcript_path": str(transcript),
+                "hook_event_name": "SessionEnd",
+            }
+        )
         _, stderr, code = main(stdin)
 
         assert code == 0
@@ -511,9 +526,7 @@ class TestHookLock:
         transcript = tmp_path / "t.jsonl"
         transcript.write_text("")
 
-        mock_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="done", stderr=""
-        )
+        mock_result = subprocess.CompletedProcess(args=[], returncode=0, stdout="done", stderr="")
         calls = []
 
         def mock_run(cmd, **kwargs):
@@ -523,11 +536,13 @@ class TestHookLock:
         monkeypatch.setattr("distill.hooks.distill_hook.subprocess.run", mock_run)
         # auto-mock already provides a successful lock
 
-        stdin = json.dumps({
-            "session_id": "sess-001",
-            "transcript_path": str(transcript),
-            "hook_event_name": "PreCompact",
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-001",
+                "transcript_path": str(transcript),
+                "hook_event_name": "PreCompact",
+            }
+        )
         _, stderr, code = main(stdin)
 
         assert code == 0
@@ -541,9 +556,7 @@ class TestHookStatusFile:
     def test_status_file_written_on_success(self, monkeypatch, tmp_path):
         transcript = tmp_path / "t.jsonl"
         transcript.write_text("")
-        mock_result = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="done", stderr=""
-        )
+        mock_result = subprocess.CompletedProcess(args=[], returncode=0, stdout="done", stderr="")
         monkeypatch.setattr(
             "distill.hooks.distill_hook.subprocess.run",
             lambda *a, **kw: mock_result,
@@ -558,18 +571,16 @@ class TestHookStatusFile:
         def mock_write_finished(session_id, event, result, duration, error=None):
             status_calls.append(("finished", session_id, event, result, error))
 
-        monkeypatch.setattr(
-            "distill.hooks.distill_hook.write_status_started", mock_write_started
-        )
-        monkeypatch.setattr(
-            "distill.hooks.distill_hook.write_status_finished", mock_write_finished
-        )
+        monkeypatch.setattr("distill.hooks.distill_hook.write_status_started", mock_write_started)
+        monkeypatch.setattr("distill.hooks.distill_hook.write_status_finished", mock_write_finished)
 
-        stdin = json.dumps({
-            "session_id": "sess-001",
-            "transcript_path": str(transcript),
-            "hook_event_name": "SessionEnd",
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-001",
+                "transcript_path": str(transcript),
+                "hook_event_name": "SessionEnd",
+            }
+        )
         main(stdin)
 
         assert len(status_calls) == 2
@@ -582,9 +593,7 @@ class TestHookStatusFile:
         transcript = tmp_path / "t.jsonl"
         transcript.write_text("")
 
-        mock_result = subprocess.CompletedProcess(
-            args=[], returncode=1, stdout="", stderr="fail"
-        )
+        mock_result = subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="fail")
         monkeypatch.setattr(
             "distill.hooks.distill_hook.subprocess.run",
             lambda *a, **kw: mock_result,
@@ -598,18 +607,16 @@ class TestHookStatusFile:
         def mock_write_finished(session_id, event, result, duration, error=None):
             status_calls.append(("finished", result, error))
 
-        monkeypatch.setattr(
-            "distill.hooks.distill_hook.write_status_started", mock_write_started
-        )
-        monkeypatch.setattr(
-            "distill.hooks.distill_hook.write_status_finished", mock_write_finished
-        )
+        monkeypatch.setattr("distill.hooks.distill_hook.write_status_started", mock_write_started)
+        monkeypatch.setattr("distill.hooks.distill_hook.write_status_finished", mock_write_finished)
 
-        stdin = json.dumps({
-            "session_id": "sess-001",
-            "transcript_path": str(transcript),
-            "hook_event_name": "SessionEnd",
-        })
+        stdin = json.dumps(
+            {
+                "session_id": "sess-001",
+                "transcript_path": str(transcript),
+                "hook_event_name": "SessionEnd",
+            }
+        )
         main(stdin)
 
         assert len(status_calls) == 2

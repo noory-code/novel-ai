@@ -4,6 +4,24 @@ from typing import Any, Literal
 
 from fastmcp import Context, FastMCP
 
+from distill.tools.criteria import (
+    criteria_check as _criteria_check,
+)
+from distill.tools.criteria import (
+    criteria_current as _criteria_current,
+)
+from distill.tools.criteria import (
+    criteria_history as _criteria_history,
+)
+from distill.tools.criteria import (
+    criteria_record as _criteria_record,
+)
+from distill.tools.criteria import (
+    criteria_revise as _criteria_revise,
+)
+from distill.tools.criteria import (
+    criteria_revoke as _criteria_revoke,
+)
 from distill.tools.digest import digest as _digest
 from distill.tools.ingest import ingest as _ingest
 from distill.tools.init import init as _init
@@ -29,6 +47,7 @@ mcp = FastMCP(
             "- ingest(path): Extract from text files through Claude MCP Sampling.",
             "- store(chunks, session_id): Save model-extracted chunks directly.",
             "- init(): Create config and scan the local environment.",
+            "- criteria_*(): Record, revise, revoke, check, and inspect project criteria.",
             "",
             "Run init once, then recall relevant knowledge before starting work.",
         ]
@@ -163,3 +182,43 @@ async def init(
     Run once when setting up Distill. Then call ingest(path) for each configured dir.
     """
     return await _init(scope=scope, caller_cwd=caller_cwd)
+
+
+@mcp.tool()
+async def criteria_record(payload: dict[str, Any], idempotency_key: str) -> dict[str, Any]:
+    """Record one user-stated or explicitly unconfirmed project criterion."""
+    return _criteria_record(payload, idempotency_key)
+
+
+@mcp.tool()
+async def criteria_revise(
+    criterion_id: str, payload: dict[str, Any], idempotency_key: str
+) -> dict[str, Any]:
+    """Create a new immutable version of a project criterion."""
+    return _criteria_revise(criterion_id, payload, idempotency_key)
+
+
+@mcp.tool()
+async def criteria_revoke(
+    criterion_id: str, payload: dict[str, Any], idempotency_key: str
+) -> dict[str, Any]:
+    """Revoke a project criterion without deleting its history."""
+    return _criteria_revoke(criterion_id, payload, idempotency_key)
+
+
+@mcp.tool()
+async def criteria_current(project: str) -> dict[str, Any]:
+    """Return confirmed current criteria for an explicit project key."""
+    return _criteria_current(project)
+
+
+@mcp.tool()
+async def criteria_check(project: str, refs: list[str]) -> dict[str, Any]:
+    """Check criterion references immediately before relying on them."""
+    return _criteria_check(project, refs)
+
+
+@mcp.tool()
+async def criteria_history(criterion_id: str) -> dict[str, Any]:
+    """Return all versions, sources, reasons, and lifecycle events for a criterion."""
+    return _criteria_history(criterion_id)

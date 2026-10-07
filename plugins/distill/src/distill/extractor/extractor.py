@@ -46,7 +46,7 @@ async def extract_knowledge(
         # For multilingual content (Korean/Chinese/Japanese),
         # actual token consumption may be 2-3x higher.
         # If context window errors occur, reduce max_transcript_chars.
-        formatted = formatted[:config.max_transcript_chars]
+        formatted = formatted[: config.max_transcript_chars]
         last_newline = formatted.rfind("\n")
         if last_newline > 0:
             formatted = formatted[:last_newline]
@@ -85,7 +85,7 @@ async def call_llm(
     model: str,
     project_name: str | None = None,
     existing_rules: str | None = None,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """LLM call via MCP Sampling."""
     text = await _call_llm(
         messages=[
@@ -108,7 +108,7 @@ async def call_llm(
     return parse_extraction_response(text)
 
 
-def parse_extraction_response(text: str) -> list[dict]:
+def parse_extraction_response(text: str) -> list[dict[str, Any]]:
     """Parse and validate JSON extraction response from LLM."""
     json_match = re.search(r"\[[\s\S]*\]", text)
     if not json_match:

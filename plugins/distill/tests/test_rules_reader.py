@@ -29,7 +29,9 @@ class TestReadExistingDistillRules:
     def test_reads_distill_md_files(self, reader_dir: str) -> None:
         project_dir = os.path.join(reader_dir, "project-with-rules")
         rules_dir = os.path.join(project_dir, ".claude", "rules")
-        _write(os.path.join(rules_dir, "distill-typescript.md"), "# typescript\n- Use strict mode\n")
+        _write(
+            os.path.join(rules_dir, "distill-typescript.md"), "# typescript\n- Use strict mode\n"
+        )
         _write(os.path.join(rules_dir, "distill-testing.md"), "# testing\n- Write tests first\n")
 
         result = read_existing_distill_rules(project_dir)

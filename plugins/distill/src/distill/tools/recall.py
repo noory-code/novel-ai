@@ -9,7 +9,7 @@ from distill.store.types import (
     KnowledgeType,
     KnowledgeVisibility,
 )
-from distill.tools.helpers import for_each_scope
+from distill.tools.helpers import ScopeCallbackContext, for_each_scope
 
 # Ranking weights
 _W_SEARCH = 0.50
@@ -18,16 +18,10 @@ _W_ACCESS = 0.15
 _ACCESS_CAP = 10  # access_count beyond this gets no additional boost
 
 
-def _relevance_score(
-    search_score: float, confidence: float, access_count: int
-) -> float:
+def _relevance_score(search_score: float, confidence: float, access_count: int) -> float:
     """Compute combined relevance from search score, confidence, and usage."""
     access_bonus = min(access_count / _ACCESS_CAP, 1.0)
-    return (
-        _W_SEARCH * search_score
-        + _W_CONFIDENCE * confidence
-        + _W_ACCESS * access_bonus
-    )
+    return _W_SEARCH * search_score + _W_CONFIDENCE * confidence + _W_ACCESS * access_bonus
 
 
 async def recall(
@@ -47,7 +41,7 @@ async def recall(
         workspace_root = None
     results: list[tuple[KnowledgeChunk, float]] = []  # (chunk, relevance)
 
-    async def _search(ctx):
+    async def _search(ctx: ScopeCallbackContext) -> None:
         if not ctx.vector:
             return
         hits = ctx.vector.hybrid_search(query, max_results)
@@ -64,9 +58,7 @@ async def recall(
                 if effective_visibility != visibility:
                     continue
             ctx.meta.touch(hit.id)
-            relevance = _relevance_score(
-                hit.score, chunk.confidence, chunk.access_count
-            )
+            relevance = _relevance_score(hit.score, chunk.confidence, chunk.access_count)
             results.append((chunk, relevance))
 
     await for_each_scope(
@@ -93,7 +85,5 @@ async def recall(
             f"   tags: {', '.join(chunk.tags)}"
         )
 
-    formatted = "\n\n".join(
-        _format_chunk(i, chunk, rel) for i, (chunk, rel) in enumerate(limited)
-    )
+    formatted = "\n\n".join(_format_chunk(i, chunk, rel) for i, (chunk, rel) in enumerate(limited))
     return formatted

@@ -52,7 +52,7 @@ def _validate_inputs(
         raise ValueError(f"transcript_path is not a file: {resolved_transcript}")
 
     # Validate session_id (only alphanumerics, hyphens, and underscores allowed)
-    if not re.match(r'^[a-zA-Z0-9_-]+$', session_id):
+    if not re.match(r"^[a-zA-Z0-9_-]+$", session_id):
         raise ValueError(
             f"Invalid session_id format: {session_id!r}. "
             "Only alphanumerics, hyphens, and underscores are allowed."
@@ -90,15 +90,17 @@ def _run_claude_p(
     scripts_dir = "Scripts" if sys.platform == "win32" else "bin"
     python_name = "python.exe" if sys.platform == "win32" else "python"
     venv_python = str(Path(distill_repo) / ".venv" / scripts_dir / python_name)
-    mcp_config = json.dumps({
-        "mcpServers": {
-            "distill": {
-                "type": "stdio",
-                "command": venv_python,
-                "args": ["-m", "distill"],
+    mcp_config = json.dumps(
+        {
+            "mcpServers": {
+                "distill": {
+                    "type": "stdio",
+                    "command": venv_python,
+                    "args": ["-m", "distill"],
+                }
             }
         }
-    })
+    )
 
     prompt = (
         f'Read the transcript at "{resolved_transcript}". '
@@ -108,11 +110,17 @@ def _run_claude_p(
     )
 
     cmd = [
-        "claude", "-p", prompt,
-        "--model", model,
-        "--allowedTools", "mcp__distill__store,Read",
-        "--mcp-config", mcp_config,
-        "--output-format", "text",
+        "claude",
+        "-p",
+        prompt,
+        "--model",
+        model,
+        "--allowedTools",
+        "mcp__distill__store,Read",
+        "--mcp-config",
+        mcp_config,
+        "--output-format",
+        "text",
     ]
 
     try:
@@ -137,15 +145,11 @@ def _run_claude_p(
         log_path = Path(tempfile.gettempdir()) / f"distill-hook-{validated_session_id}.log"
         try:
             log_path.write_text(result.stderr, encoding="utf-8")
-            raise RuntimeError(
-                f"claude -p failed (exit {result.returncode}). "
-                f"Full log: {log_path}"
-            )
+            raise RuntimeError(f"claude -p failed (exit {result.returncode}). Full log: {log_path}")
         except OSError:
             # Fall back to inline message if log file write fails
             raise RuntimeError(
-                f"claude -p failed (exit {result.returncode}): "
-                f"{result.stderr or '(no stderr)'}"
+                f"claude -p failed (exit {result.returncode}): {result.stderr or '(no stderr)'}"
             )
 
     return result.stdout.strip() or "done"
@@ -196,6 +200,7 @@ def main(stdin_data: str | None = None) -> tuple[str, str, int]:
 
     # Load config to get model name
     from distill.config import load_config
+
     config = load_config(cwd)
 
     start_time = time.monotonic()

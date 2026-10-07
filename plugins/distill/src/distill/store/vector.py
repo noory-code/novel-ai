@@ -9,9 +9,13 @@ from __future__ import annotations
 import re
 import sqlite3
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import numpy as np
-import sqlite_vec
+import sqlite_vec  # type: ignore[import-untyped]
+
+if TYPE_CHECKING:
+    from fastembed import TextEmbedding
 
 from distill.store.scope import resolve_db_path
 from distill.store.sqlite_utils import connect_wal
@@ -36,10 +40,10 @@ CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_vec USING vec0(
 """
 
 # Shared embedder (lazy singleton)
-_embedder = None
+_embedder: TextEmbedding | None = None
 
 
-def _get_embedder():
+def _get_embedder() -> TextEmbedding:
     global _embedder
     if _embedder is None:
         from fastembed import TextEmbedding
@@ -205,9 +209,7 @@ class VectorStore:
             for row in rows
         ]
 
-    def hybrid_search(
-        self, query: str, limit: int = 5
-    ) -> list[SearchResult]:
+    def hybrid_search(self, query: str, limit: int = 5) -> list[SearchResult]:
         """Hybrid search combining vector KNN and FTS5 keyword matching.
 
         Uses Reciprocal Rank Fusion (RRF) to merge results from both
@@ -233,9 +235,7 @@ class VectorStore:
                 content_map[r.id] = r
 
         # Sort by fused score descending
-        ranked_ids = sorted(
-            scores, key=lambda id: scores[id], reverse=True
-        )[:limit]
+        ranked_ids = sorted(scores, key=lambda id: scores[id], reverse=True)[:limit]
 
         return [
             SearchResult(

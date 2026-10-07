@@ -4,6 +4,20 @@ All notable changes are documented here, organized by development phase.
 
 ---
 
+## [1.10.0] - 2026-10-06
+
+### Added
+
+- Added sourced, project-scoped decision criteria with explicit confirmation,
+  immutable versions, revocation, history, and idempotent writes.
+- Added matching CLI and MCP operations for recording, revising, revoking,
+  checking, and inspecting criteria without loading the embedding model.
+
+### Changed
+
+- Repaired existing typing, lint, and formatting failures without changing the
+  public knowledge storage and recall behavior.
+
 ## [1.9.1] - 2026-07-11
 
 ### Fixed

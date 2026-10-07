@@ -27,7 +27,7 @@ def _try_lock(fh: IO[str]) -> bool:
         try:
             msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
             return True
-        except (OSError, IOError):
+        except OSError:
             return False
     else:
         import fcntl

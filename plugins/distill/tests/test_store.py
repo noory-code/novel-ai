@@ -28,7 +28,9 @@ class TestStoreValidation:
 
     @pytest.mark.asyncio
     async def test_non_dict_chunks_ignored(self, tmp_path):
-        result = await store(chunks=["not a dict", 42], session_id="s1", _project_root=str(tmp_path))
+        result = await store(
+            chunks=["not a dict", 42], session_id="s1", _project_root=str(tmp_path)
+        )
         assert "No valid knowledge chunks" in result
 
 

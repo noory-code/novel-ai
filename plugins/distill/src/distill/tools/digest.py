@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from distill.store.scope import detect_project_root, detect_workspace_root
-from distill.tools.helpers import for_each_scope
+from distill.tools.helpers import ScopeCallbackContext, for_each_scope
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ async def digest(caller_cwd: str | None = None) -> str:
         workspace_root = None
     report: list[str] = []
 
-    def _analyze(ctx):
+    def _analyze(ctx: ScopeCallbackContext) -> None:
         try:
             all_entries = ctx.meta.search(scope=ctx.scope, limit=1000)
 
@@ -42,7 +42,8 @@ async def digest(caller_cwd: str | None = None) -> str:
                 for j in range(i + 1, len(all_entries)):
                     if _simple_similarity(all_entries[i].content, all_entries[j].content) > 0.7:
                         duplicates.append(
-                            f'  - "{all_entries[i].content[:50]}..." ≈ "{all_entries[j].content[:50]}..."'
+                            f'  - "{all_entries[i].content[:50]}..."'
+                            f' ≈ "{all_entries[j].content[:50]}..."'
                         )
 
             # Find low-confidence, never-accessed entries
@@ -52,8 +53,7 @@ async def digest(caller_cwd: str | None = None) -> str:
 
             if duplicates:
                 report.append(
-                    f"\nPotential duplicates ({len(duplicates)}):\n"
-                    + "\n".join(duplicates[:5])
+                    f"\nPotential duplicates ({len(duplicates)}):\n" + "\n".join(duplicates[:5])
                 )
             else:
                 report.append("\nNo duplicates detected.")

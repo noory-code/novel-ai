@@ -54,7 +54,9 @@ class TestRulesScanning:
     def test_reads_user_rules(self, scan_dir: str) -> None:
         project_dir = os.path.join(scan_dir, "project-user-rules")
         rules_dir = os.path.join(project_dir, ".claude", "rules")
-        _write(os.path.join(rules_dir, "contribution.md"), "# Contribution\n- Use conventional commits")
+        _write(
+            os.path.join(rules_dir, "contribution.md"), "# Contribution\n- Use conventional commits"
+        )
 
         result = scan_environment(project_dir)
         match = next((r for r in result.rules if r.name == "contribution.md"), None)
