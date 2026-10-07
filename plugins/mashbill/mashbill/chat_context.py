@@ -258,6 +258,8 @@ SCOPE_FRAMING: dict[str, str] = {
         "publish or delete, need permission or money, or may finish only partly, ask: "
         "cannot, must not, will not, already changed. Draw each failure unless the "
         "system recovers it alone with the same result. "
+  "A failure handled before the goal is done, after which the person returns, is a branch; a new "
+  "goal after it (a refund after buying) is a separate feature: suggest it on the Services canvas. "
         "A completed flow with no branch is unfinished. BOUNDARY: if the user moves "
         "into implementation details such as storage, queries, or rendering, say "
         "that the build agent handles them and return to what the PERSON does. Put "

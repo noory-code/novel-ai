@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.203.1] — 2026-10-07
+
+### Fixed
+
+- The Feature coach keeps failures resolved before the original goal finishes in that flow,
+  and suggests later goals such as refunds as separate features on the Services canvas
+  (D-2026-10-05-A (4); W-00000379).
+
 ## [0.203.0] — 2026-10-06
 
 ### Changed

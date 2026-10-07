@@ -482,6 +482,18 @@ def test_feature_scope_checks_four_failure_directions() -> None:
         assert rule in prompt, rule
 
 
+def test_feature_scope_routes_post_completion_goals_to_services() -> None:
+    """D-2026-10-05-A (4): recovery stays in the flow; a later goal becomes a feature."""
+    framing = build_framing_preamble("feature:x").lower()
+    assert "before the goal is done" in framing
+    assert "after which the person returns" in framing
+    assert "is a branch" in framing
+    assert "a new goal after it" in framing
+    assert "a refund after buying" in framing
+    assert "is a separate feature" in framing
+    assert "suggest it on the services canvas" in framing
+
+
 def test_write_playbook_names_the_anchor_as_foundation_parent() -> None:
     """B-14 (D-2026-07-03-T): coach-registered foundation pillars floated —
     partly the tool bug (create_edge rejected the synthetic anchor), partly
