@@ -36,9 +36,7 @@ BANNED_ROOTS = {
 
 
 def _modules() -> list[Path]:
-    return sorted(
-        p for p in PKG.rglob("*.py") if "__pycache__" not in p.parts
-    )
+    return sorted(p for p in PKG.rglob("*.py") if "__pycache__" not in p.parts)
 
 
 def _import_roots(path: Path) -> set[str]:

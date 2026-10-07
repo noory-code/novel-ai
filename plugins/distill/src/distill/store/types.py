@@ -6,9 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-KnowledgeType = Literal[
-    "pattern", "preference", "decision", "mistake", "workaround", "conflict"
-]
+KnowledgeType = Literal["pattern", "preference", "decision", "mistake", "workaround", "conflict"]
 
 KnowledgeScope = Literal["global", "project", "workspace"]
 

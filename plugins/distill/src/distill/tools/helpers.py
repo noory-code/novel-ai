@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import cast
 
 from distill.store.metadata import MetadataStore
 from distill.store.scope import detect_project_root, detect_workspace_root
@@ -62,7 +63,7 @@ class ScopeCallbackContext:
 async def for_each_scope(
     scope_param: KnowledgeScope | None,
     project_root: str | None,
-    callback: Callable[[ScopeCallbackContext], None],
+    callback: Callable[[ScopeCallbackContext], None | Awaitable[None]],
     include_vector: bool = False,
     workspace_root: str | None = None,
 ) -> None:
@@ -84,12 +85,12 @@ async def for_each_scope(
                         ctx = ScopeCallbackContext(scope=scope, meta=meta, vector=vector)
                         result = callback(ctx)
                         if hasattr(result, "__await__"):
-                            await result  # type: ignore[union-attr]
+                            await cast(Awaitable[None], result)
                 else:
                     ctx = ScopeCallbackContext(scope=scope, meta=meta, vector=None)
                     result = callback(ctx)
                     if hasattr(result, "__await__"):
-                        await result  # type: ignore[union-attr]
+                        await cast(Awaitable[None], result)
         except Exception:
             logger.debug("Skipping item due to error", exc_info=True)
 

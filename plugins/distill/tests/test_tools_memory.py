@@ -25,13 +25,15 @@ def memory_env(tmp_path, monkeypatch):
     meta = MetadataStore("global")
     vector = VectorStore("global")
 
-    chunk = meta.insert(make_knowledge_input(
-        content="Test knowledge for memory operations",
-        type="pattern",
-        scope="global",
-        tags=["test"],
-        confidence=0.8,
-    ))
+    chunk = meta.insert(
+        make_knowledge_input(
+            content="Test knowledge for memory operations",
+            type="pattern",
+            scope="global",
+            tags=["test"],
+            confidence=0.8,
+        )
+    )
     vector.index(chunk.id, chunk.content, chunk.tags)
 
     return {"meta": meta, "vector": vector, "chunk_id": chunk.id, "tmp_path": tmp_path}
@@ -63,15 +65,17 @@ class TestCrystallize:
             lambda _: type("C", (), {"crystallize_model": "test-model"})(),
         )
 
-        crystallize_response = json.dumps([
-            {
-                "topic": "test-patterns",
-                "action": "create",
-                "delivery": "rule",
-                "rules": ["Test rule"],
-                "source_ids": [memory_env["chunk_id"]],
-            }
-        ])
+        crystallize_response = json.dumps(
+            [
+                {
+                    "topic": "test-patterns",
+                    "action": "create",
+                    "delivery": "rule",
+                    "rules": ["Test rule"],
+                    "source_ids": [memory_env["chunk_id"]],
+                }
+            ]
+        )
         ctx = MockContext(response=crystallize_response)
 
         # Mock the rules directory
@@ -111,16 +115,22 @@ class TestPromoteDemote:
         global_store = tmp_path / ".distill" / "knowledge"
         global_store.mkdir(parents=True)
         monkeypatch.setattr("distill.store.scope.GLOBAL_DIR", global_store)
-        monkeypatch.setattr("distill.tools.memory.detect_project_root", lambda **_: str(project_dir))
-        monkeypatch.setattr("distill.tools.memory.detect_workspace_root", lambda **_: str(workspace_dir))
+        monkeypatch.setattr(
+            "distill.tools.memory.detect_project_root", lambda **_: str(project_dir)
+        )
+        monkeypatch.setattr(
+            "distill.tools.memory.detect_workspace_root", lambda **_: str(workspace_dir)
+        )
 
         meta = MetadataStore("project", str(project_dir))
         vector = VectorStore("project", str(project_dir))
-        chunk = meta.insert(make_knowledge_input(
-            content="Promote me to workspace",
-            scope="project",
-            tags=["test"],
-        ))
+        chunk = meta.insert(
+            make_knowledge_input(
+                content="Promote me to workspace",
+                scope="project",
+                tags=["test"],
+            )
+        )
         vector.index(chunk.id, chunk.content, chunk.tags)
         meta.close()
         vector.close()
@@ -141,15 +151,19 @@ class TestPromoteDemote:
         global_store.mkdir(parents=True)
         monkeypatch.setattr("distill.store.scope.GLOBAL_DIR", global_store)
         monkeypatch.setattr("distill.tools.memory.detect_project_root", lambda **_: None)
-        monkeypatch.setattr("distill.tools.memory.detect_workspace_root", lambda **_: str(workspace_dir))
+        monkeypatch.setattr(
+            "distill.tools.memory.detect_workspace_root", lambda **_: str(workspace_dir)
+        )
 
         meta = MetadataStore("workspace", workspace_root=str(workspace_dir))
         vector = VectorStore("workspace", workspace_root=str(workspace_dir))
-        chunk = meta.insert(make_knowledge_input(
-            content="Promote me to global",
-            scope="workspace",
-            tags=["test"],
-        ))
+        chunk = meta.insert(
+            make_knowledge_input(
+                content="Promote me to global",
+                scope="workspace",
+                tags=["test"],
+            )
+        )
         vector.index(chunk.id, chunk.content, chunk.tags)
         meta.close()
         vector.close()
@@ -168,15 +182,19 @@ class TestPromoteDemote:
         global_store.mkdir(parents=True)
         monkeypatch.setattr("distill.store.scope.GLOBAL_DIR", global_store)
         monkeypatch.setattr("distill.tools.memory.detect_project_root", lambda **_: None)
-        monkeypatch.setattr("distill.tools.memory.detect_workspace_root", lambda **_: str(workspace_dir))
+        monkeypatch.setattr(
+            "distill.tools.memory.detect_workspace_root", lambda **_: str(workspace_dir)
+        )
 
         meta = MetadataStore("global")
         vector = VectorStore("global")
-        chunk = meta.insert(make_knowledge_input(
-            content="Demote me to workspace",
-            scope="global",
-            tags=["test"],
-        ))
+        chunk = meta.insert(
+            make_knowledge_input(
+                content="Demote me to workspace",
+                scope="global",
+                tags=["test"],
+            )
+        )
         vector.index(chunk.id, chunk.content, chunk.tags)
         meta.close()
         vector.close()
@@ -194,16 +212,20 @@ class TestPromoteDemote:
         global_store = tmp_path / ".distill" / "knowledge"
         global_store.mkdir(parents=True)
         monkeypatch.setattr("distill.store.scope.GLOBAL_DIR", global_store)
-        monkeypatch.setattr("distill.tools.memory.detect_project_root", lambda **_: str(project_dir))
+        monkeypatch.setattr(
+            "distill.tools.memory.detect_project_root", lambda **_: str(project_dir)
+        )
         monkeypatch.setattr("distill.tools.memory.detect_workspace_root", lambda **_: None)
 
         meta = MetadataStore("project", str(project_dir))
         vector = VectorStore("project", str(project_dir))
-        chunk = meta.insert(make_knowledge_input(
-            content="Already at project boundary",
-            scope="project",
-            tags=["test"],
-        ))
+        chunk = meta.insert(
+            make_knowledge_input(
+                content="Already at project boundary",
+                scope="project",
+                tags=["test"],
+            )
+        )
         vector.index(chunk.id, chunk.content, chunk.tags)
         meta.close()
         vector.close()
@@ -230,16 +252,22 @@ class TestPromoteDemote:
         global_store = tmp_path / ".distill" / "knowledge"
         global_store.mkdir(parents=True)
         monkeypatch.setattr("distill.store.scope.GLOBAL_DIR", global_store)
-        monkeypatch.setattr("distill.tools.memory.detect_project_root", lambda **_: str(project_dir))
-        monkeypatch.setattr("distill.tools.memory.detect_workspace_root", lambda **_: str(workspace_dir))
+        monkeypatch.setattr(
+            "distill.tools.memory.detect_project_root", lambda **_: str(project_dir)
+        )
+        monkeypatch.setattr(
+            "distill.tools.memory.detect_workspace_root", lambda **_: str(workspace_dir)
+        )
 
         meta = MetadataStore("project", str(project_dir))
         vector = VectorStore("project", str(project_dir))
-        chunk = meta.insert(make_knowledge_input(
-            content="lifecycle event test",
-            scope="project",
-            tags=["test"],
-        ))
+        chunk = meta.insert(
+            make_knowledge_input(
+                content="lifecycle event test",
+                scope="project",
+                tags=["test"],
+            )
+        )
         vector.index(chunk.id, chunk.content, chunk.tags)
         meta.close()
         vector.close()
@@ -262,7 +290,9 @@ class TestPromoteDemote:
         global_store = tmp_path / ".distill" / "knowledge"
         global_store.mkdir(parents=True)
         monkeypatch.setattr("distill.store.scope.GLOBAL_DIR", global_store)
-        monkeypatch.setattr("distill.tools.memory.detect_project_root", lambda **_: str(project_dir))
+        monkeypatch.setattr(
+            "distill.tools.memory.detect_project_root", lambda **_: str(project_dir)
+        )
         monkeypatch.setattr("distill.tools.memory.detect_workspace_root", lambda **_: None)
 
         result = await memory(action="promote", id="nonexistent")

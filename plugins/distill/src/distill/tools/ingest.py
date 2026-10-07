@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from distill.config import load_config
+from distill.config import DistillConfig, load_config
 from distill.extractor.llm_client import call_llm
 from distill.extractor.prompts import EXTRACTION_SYSTEM_PROMPT, build_extraction_prompt
 from distill.extractor.rules_reader import read_all_rules
@@ -42,7 +42,7 @@ async def _extract_from_text(
     content: str,
     source_path: str,
     project_root: str | None,
-    config,
+    config: DistillConfig,
 ) -> list[KnowledgeInput]:
     """Run LLM extraction on raw text content (not a .jsonl transcript)."""
     existing_rules = read_all_rules(project_root)
@@ -60,6 +60,7 @@ async def _extract_from_text(
         ctx=ctx,
     )
     import re
+
     json_match = re.search(r"\[[\s\S]*\]", text)
     if not json_match:
         return []
@@ -69,9 +70,7 @@ async def _extract_from_text(
     except json.JSONDecodeError as exc:
         failed_text = json_match.group() if json_match else "<none>"
         logger.warning(
-            "JSON parse failed at line %d — input[:200]: %r",
-            exc.lineno,
-            failed_text[:200]
+            "JSON parse failed at line %d — input[:200]: %r", exc.lineno, failed_text[:200]
         )
         return []
 

@@ -3,7 +3,7 @@ name: distill-ingest
 user-invocable: true
 description: Extract knowledge from markdown/text files or directories.
 metadata:
-  version: "1.9.1"
+  version: "1.10.0"
   category: extraction
   type: unit
   style: tool

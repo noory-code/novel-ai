@@ -9,15 +9,17 @@ from distill.extractor.prompts import EXTRACTION_SYSTEM_PROMPT
 from distill.extractor.sampling_error import SamplingNotSupportedError, wrap_sampling_error
 from tests.helpers.mock_server import MockContext
 
-VALID_RESPONSE = json.dumps([
-    {
-        "content": "Use ESM modules",
-        "type": "preference",
-        "scope": "global",
-        "tags": ["typescript"],
-        "confidence": 0.9,
-    },
-])
+VALID_RESPONSE = json.dumps(
+    [
+        {
+            "content": "Use ESM modules",
+            "type": "preference",
+            "scope": "global",
+            "tags": ["typescript"],
+            "confidence": 0.9,
+        },
+    ]
+)
 
 
 class TestCallLlm:
@@ -43,9 +45,7 @@ class TestCallLlm:
         ctx = MockContext(response=VALID_RESPONSE)
         await call_llm(ctx, "transcript", "claude-haiku-4-5-20251001")
 
-        assert ctx.calls[0].model_preferences["hints"] == [
-            {"name": "claude-haiku-4-5-20251001"}
-        ]
+        assert ctx.calls[0].model_preferences["hints"] == [{"name": "claude-haiku-4-5-20251001"}]
 
     @pytest.mark.asyncio
     async def test_sets_cost_and_speed_priority(self) -> None:
@@ -152,7 +152,8 @@ class TestWrapSamplingError:
 class TestParseExtractionResponse:
     def test_parses_valid_json_array(self) -> None:
         text = """Here are the extracted items:
-[{"content":"Use ESM modules","type":"preference","scope":"global","tags":["typescript"],"confidence":0.9}]"""
+[{"content":"Use ESM\
+ modules","type":"preference","scope":"global","tags":["typescript"],"confidence":0.9}]"""
         result = parse_extraction_response(text)
         assert len(result) == 1
         assert result[0]["content"] == "Use ESM modules"
@@ -203,7 +204,10 @@ class TestParseExtractionResponse:
         assert parse_extraction_response(text) == []
 
     def test_filters_non_array_tags(self) -> None:
-        text = '[{"content":"x","type":"pattern","scope":"global","tags":"not-array","confidence":0.5}]'
+        text = (
+            '[{"content":"x","type":"pattern","scope":"global","tags":"no'
+            't-array","confidence":0.5}]'
+        )
         assert parse_extraction_response(text) == []
 
     def test_returns_empty_when_no_json_found(self) -> None:

@@ -21,18 +21,26 @@ def profile_env(tmp_path, monkeypatch):
     # Mock scanner to avoid filesystem issues
     monkeypatch.setattr(
         "distill.tools.profile.scan_environment",
-        lambda _: type("Inv", (), {
-            "summary": type("S", (), {
-                "total_rules": 2,
-                "distill_rules": 1,
-                "user_rules": 1,
-                "estimated_tokens": 500,
-                "total_skills": 0,
-                "distill_skills": 0,
-                "user_skills": 0,
-                "total_agents": 0,
-            })(),
-        })(),
+        lambda _: type(
+            "Inv",
+            (),
+            {
+                "summary": type(
+                    "S",
+                    (),
+                    {
+                        "total_rules": 2,
+                        "distill_rules": 1,
+                        "user_rules": 1,
+                        "estimated_tokens": 500,
+                        "total_skills": 0,
+                        "distill_skills": 0,
+                        "user_skills": 0,
+                        "total_agents": 0,
+                    },
+                )(),
+            },
+        )(),
     )
     monkeypatch.setattr(
         "distill.tools.profile.load_config",
@@ -41,14 +49,10 @@ def profile_env(tmp_path, monkeypatch):
 
     meta = MetadataStore("global")
     meta.insert(
-        make_knowledge_input(
-            content="Pattern A", type="pattern", scope="global", confidence=0.9
-        )
+        make_knowledge_input(content="Pattern A", type="pattern", scope="global", confidence=0.9)
     )
     meta.insert(
-        make_knowledge_input(
-            content="Decision B", type="decision", scope="global", confidence=0.8
-        )
+        make_knowledge_input(content="Decision B", type="decision", scope="global", confidence=0.8)
     )
     meta.insert(
         make_knowledge_input(
@@ -93,13 +97,26 @@ class TestProfile:
         monkeypatch.setattr("distill.tools.profile.detect_project_root", lambda **_: None)
         monkeypatch.setattr(
             "distill.tools.profile.scan_environment",
-            lambda _: type("Inv", (), {
-                "summary": type("S", (), {
-                    "total_rules": 0, "distill_rules": 0, "user_rules": 0,
-                    "estimated_tokens": 0, "total_skills": 0, "distill_skills": 0,
-                    "user_skills": 0, "total_agents": 0,
-                })(),
-            })(),
+            lambda _: type(
+                "Inv",
+                (),
+                {
+                    "summary": type(
+                        "S",
+                        (),
+                        {
+                            "total_rules": 0,
+                            "distill_rules": 0,
+                            "user_rules": 0,
+                            "estimated_tokens": 0,
+                            "total_skills": 0,
+                            "distill_skills": 0,
+                            "user_skills": 0,
+                            "total_agents": 0,
+                        },
+                    )(),
+                },
+            )(),
         )
         monkeypatch.setattr(
             "distill.tools.profile.load_config",
@@ -117,13 +134,17 @@ class TestProfile:
     @pytest.mark.asyncio
     async def test_shows_hook_status_finished(self, profile_env, tmp_path, monkeypatch):
         status_path = tmp_path / "hook-status.json"
-        status_path.write_text(json.dumps({
-            "last_run": "2026-03-17T10:00:00Z",
-            "session_id": "sess-abc",
-            "event": "SessionEnd",
-            "result": "success",
-            "duration_s": 12.5,
-        }))
+        status_path.write_text(
+            json.dumps(
+                {
+                    "last_run": "2026-03-17T10:00:00Z",
+                    "session_id": "sess-abc",
+                    "event": "SessionEnd",
+                    "result": "success",
+                    "duration_s": 12.5,
+                }
+            )
+        )
         monkeypatch.setattr("distill.tools.profile.STATUS_PATH", status_path)
 
         result = await profile()
@@ -135,12 +156,16 @@ class TestProfile:
     @pytest.mark.asyncio
     async def test_shows_hook_status_running(self, profile_env, tmp_path, monkeypatch):
         status_path = tmp_path / "hook-status.json"
-        status_path.write_text(json.dumps({
-            "pid": 12345,
-            "started_at": "2026-03-17T10:00:00Z",
-            "session_id": "sess-abc",
-            "event": "PreCompact",
-        }))
+        status_path.write_text(
+            json.dumps(
+                {
+                    "pid": 12345,
+                    "started_at": "2026-03-17T10:00:00Z",
+                    "session_id": "sess-abc",
+                    "event": "PreCompact",
+                }
+            )
+        )
         monkeypatch.setattr("distill.tools.profile.STATUS_PATH", status_path)
 
         result = await profile()
@@ -151,14 +176,18 @@ class TestProfile:
     @pytest.mark.asyncio
     async def test_shows_hook_error(self, profile_env, tmp_path, monkeypatch):
         status_path = tmp_path / "hook-status.json"
-        status_path.write_text(json.dumps({
-            "last_run": "2026-03-17T10:00:00Z",
-            "session_id": "sess-abc",
-            "event": "SessionEnd",
-            "result": "error",
-            "duration_s": 120.0,
-            "error": "Hook timed out after 120s",
-        }))
+        status_path.write_text(
+            json.dumps(
+                {
+                    "last_run": "2026-03-17T10:00:00Z",
+                    "session_id": "sess-abc",
+                    "event": "SessionEnd",
+                    "result": "error",
+                    "duration_s": 120.0,
+                    "error": "Hook timed out after 120s",
+                }
+            )
+        )
         monkeypatch.setattr("distill.tools.profile.STATUS_PATH", status_path)
 
         result = await profile()

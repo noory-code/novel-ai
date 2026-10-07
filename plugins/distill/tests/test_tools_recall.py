@@ -80,8 +80,16 @@ class TestRecall:
     async def test_respects_limit(self, populated_store):
         result = await recall("sqlite", limit=1)
         # At most 1 result
-        lines = [l for l in result.split("\n\n") if l.strip().startswith("1.") or l.strip().startswith("2.")]
-        assert len([l for l in result.split("\n\n") if l.strip() and l.strip()[0].isdigit()]) <= 1
+        assert (
+            len(
+                [
+                    line
+                    for line in result.split("\n\n")
+                    if line.strip() and line.strip()[0].isdigit()
+                ]
+            )
+            <= 1
+        )
 
     @pytest.mark.asyncio
     async def test_empty_store_returns_no_match(self, tmp_path, monkeypatch):

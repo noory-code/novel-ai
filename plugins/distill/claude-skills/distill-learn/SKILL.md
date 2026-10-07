@@ -3,7 +3,7 @@ name: distill-learn
 user-invocable: true
 description: Extract knowledge from a conversation transcript.
 metadata:
-  version: "1.9.1"
+  version: "1.10.0"
   category: extraction
   type: unit
   style: tool

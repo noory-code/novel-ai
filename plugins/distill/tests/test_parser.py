@@ -42,13 +42,17 @@ class TestParseTranscript:
         turns = parse_transcript(os.path.join(FIXTURES, "transcript-empty.jsonl"))
         assert len(turns) == 0
 
-    def test_partial_recovery_skips_only_corrupt_line(self, tmp_path: pytest.TempPathFactory) -> None:
+    def test_partial_recovery_skips_only_corrupt_line(
+        self, tmp_path: pytest.TempPathFactory
+    ) -> None:
         """Partial JSONL recovery: only the corrupt line is skipped, valid lines are recovered."""
         jsonl_path = tmp_path / "partial.jsonl"
         jsonl_path.write_text(
-            '{"type":"user","message":{"role":"user","content":[{"type":"text","text":"First valid"}]},"timestamp":"2024-01-01T00:00:00Z"}\n'
-            '{malformed json line\n'
-            '{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Second valid"}]},"timestamp":"2024-01-01T00:01:00Z"}\n',
+            '{"type":"user","message":{"role":"user","content":'
+            '[{"type":"text","text":"First valid"}]},"timestamp":"2024-01-01T00:00:00Z"}\n'
+            "{malformed json line\n"
+            '{"type":"assistant","message":{"role":"assistant","content":'
+            '[{"type":"text","text":"Second valid"}]},"timestamp":"2024-01-01T00:01:00Z"}\n',
             encoding="utf-8",
         )
         turns = parse_transcript(str(jsonl_path))
@@ -63,10 +67,12 @@ class TestFormatTranscript:
     def test_formats_turns_with_role_headers(self) -> None:
         from distill.extractor.parser import ConversationTurn
 
-        formatted = format_transcript([
-            ConversationTurn(role="user", text="Hello"),
-            ConversationTurn(role="assistant", text="Hi there"),
-        ])
+        formatted = format_transcript(
+            [
+                ConversationTurn(role="user", text="Hello"),
+                ConversationTurn(role="assistant", text="Hi there"),
+            ]
+        )
         assert "[USER]" in formatted
         assert "[ASSISTANT]" in formatted
         assert "Hello" in formatted

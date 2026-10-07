@@ -19,18 +19,30 @@ def digest_env(tmp_path, monkeypatch):
 
     meta = MetadataStore("global")
 
-    meta.insert(make_knowledge_input(
-        content="Use TypeScript strict mode for better type safety in projects",
-        type="pattern", scope="global", confidence=0.9,
-    ))
-    meta.insert(make_knowledge_input(
-        content="Use TypeScript strict mode for better type safety in all projects",
-        type="preference", scope="global", confidence=0.85,
-    ))
-    meta.insert(make_knowledge_input(
-        content="Completely different topic about database indexes",
-        type="decision", scope="global", confidence=0.3,
-    ))
+    meta.insert(
+        make_knowledge_input(
+            content="Use TypeScript strict mode for better type safety in projects",
+            type="pattern",
+            scope="global",
+            confidence=0.9,
+        )
+    )
+    meta.insert(
+        make_knowledge_input(
+            content="Use TypeScript strict mode for better type safety in all projects",
+            type="preference",
+            scope="global",
+            confidence=0.85,
+        )
+    )
+    meta.insert(
+        make_knowledge_input(
+            content="Completely different topic about database indexes",
+            type="decision",
+            scope="global",
+            confidence=0.3,
+        )
+    )
 
     yield meta
     meta.close()
@@ -90,8 +102,12 @@ class TestDigest:
         monkeypatch.setattr("distill.tools.digest.detect_project_root", lambda **_: None)
 
         meta = MetadataStore("global")
-        meta.insert(make_knowledge_input(content="Topic A about cats", scope="global", confidence=0.9))
-        meta.insert(make_knowledge_input(content="Topic B about databases", scope="global", confidence=0.9))
+        meta.insert(
+            make_knowledge_input(content="Topic A about cats", scope="global", confidence=0.9)
+        )
+        meta.insert(
+            make_knowledge_input(content="Topic B about databases", scope="global", confidence=0.9)
+        )
 
         result = await digest()
         assert "No duplicates detected" in result

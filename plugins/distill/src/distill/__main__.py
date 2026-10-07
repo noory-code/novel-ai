@@ -7,6 +7,7 @@ Usage:
   python -m distill recall <query> [--limit=<n>]  → Search stored knowledge
   python -m distill learn <transcript> <session_id> → Extract from transcript
   python -m distill crystallize [--scope=<scope>] → Generate rules/skills
+  python -m distill criteria <action>              → Manage project criteria
 """
 
 from __future__ import annotations
@@ -32,6 +33,7 @@ def _die(msg: str) -> None:
 
 async def _cmd_init(args: list[str]) -> None:
     from distill.tools.init import init
+
     scope = _parse_flag(args, "scope")
     result = await init(scope=scope)  # type: ignore[arg-type]
     print(result)
@@ -43,6 +45,7 @@ async def _cmd_ingest(args: list[str]) -> None:
     path = args[0]
     scope = _parse_flag(args[1:], "scope")
     from distill.tools.ingest import ingest
+
     result = await ingest(path=path, ctx=None, scope=scope)  # type: ignore[arg-type]
     print(result)
 
@@ -57,6 +60,7 @@ async def _cmd_recall(args: list[str]) -> None:
     except (ValueError, TypeError):
         limit = 5
     from distill.tools.recall import recall
+
     result = await recall(query=query, limit=limit)
     print(result)
 
@@ -68,6 +72,7 @@ async def _cmd_learn(args: list[str]) -> None:
     transcript_path, session_id = positional[0], positional[1]
     scope = _parse_flag(args, "scope")
     from distill.tools.learn import learn
+
     result = await learn(
         transcript_path=transcript_path,
         session_id=session_id,
@@ -79,6 +84,7 @@ async def _cmd_learn(args: list[str]) -> None:
 
 async def _cmd_crystallize(args: list[str]) -> None:
     from distill.tools.memory import memory
+
     result = await memory(action="crystallize", ctx=None)
     print(result)
 
@@ -89,10 +95,16 @@ def main() -> None:
     if not argv or argv[0].startswith("-"):
         # No subcommand → run MCP server
         from distill.server import mcp
+
         mcp.run(transport="stdio")
         return
 
     cmd, rest = argv[0], argv[1:]
+
+    if cmd == "criteria":
+        from distill.criteria_cli import run_criteria_cli
+
+        raise SystemExit(run_criteria_cli(rest))
 
     commands = {
         "init": _cmd_init,

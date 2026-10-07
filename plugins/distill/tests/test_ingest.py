@@ -116,9 +116,7 @@ class TestIngestTool:
         ctx = _make_ctx()
 
         # First ingest
-        result1 = await ingest(
-            path=str(doc), ctx=ctx, scope="project", _project_root=str(tmp_path)
-        )
+        result1 = await ingest(path=str(doc), ctx=ctx, scope="project", _project_root=str(tmp_path))
         assert "1 files processed" in result1
 
         # Second ingest (same mtime) — should skip
@@ -141,13 +139,17 @@ class TestIngestTool:
         (tmp_path / ".distill" / "knowledge").mkdir(parents=True)
         doc = tmp_path / "doc.md"
         doc.write_text("Use Python type hints")
-        ctx = _make_ctx([{
-            "content": "Use Python type hints for better code",
-            "type": "pattern",
-            "scope": "project",
-            "tags": ["python"],
-            "confidence": 0.8,
-        }])
+        ctx = _make_ctx(
+            [
+                {
+                    "content": "Use Python type hints for better code",
+                    "type": "pattern",
+                    "scope": "project",
+                    "tags": ["python"],
+                    "confidence": 0.8,
+                }
+            ]
+        )
 
         await ingest(path=str(doc), ctx=ctx, scope="project", _project_root=str(tmp_path))
 

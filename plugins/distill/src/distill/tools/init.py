@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 from distill.config import DistillConfig, load_config
 from distill.scanner.scanner import scan_environment
@@ -11,7 +12,7 @@ from distill.store.types import KnowledgeScope
 
 
 def _ensure_config(
-    project_root: str, scope: KnowledgeScope, workspace_root: str | None = None
+    project_root: str | None, scope: KnowledgeScope, workspace_root: str | None = None
 ) -> tuple[bool, Path]:
     """Create config.json with defaults if it doesn't exist. Returns (created, path)."""
     import json
@@ -21,7 +22,7 @@ def _ensure_config(
     elif scope == "workspace" and workspace_root:
         config_path = local_data_root(Path(workspace_root)) / "config.json"
     else:
-        config_path = local_data_root(Path(project_root)) / "config.json"
+        config_path = local_data_root(Path(cast(str, project_root))) / "config.json"
 
     if config_path.exists():
         return False, config_path
@@ -35,7 +36,7 @@ def _ensure_config(
     return True, config_path
 
 
-def _format_scan_summary(project_root: str) -> str:
+def _format_scan_summary(project_root: str | None) -> str:
     """Scan .claude/ and return a human-readable summary line."""
     env = scan_environment(project_root)
     s = env.summary
@@ -108,8 +109,7 @@ async def init(
             "to extract knowledge from conversations,"
         )
         lines.append(
-            "or add directories to sources.dirs in config.json "
-            "and run ingest(path) to ingest docs."
+            "or add directories to sources.dirs in config.json and run ingest(path) to ingest docs."
         )
 
     return "\n".join(lines)

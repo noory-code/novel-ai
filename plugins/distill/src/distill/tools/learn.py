@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
 from distill.config import load_config
 from distill.extractor.crystallize import crystallize
@@ -17,7 +18,7 @@ from distill.tools.helpers import for_each_scope
 async def learn(
     transcript_path: str,
     session_id: str,
-    ctx,
+    ctx: Any,
     scope: KnowledgeScope | None = None,
     caller_cwd: str | None = None,
 ) -> str:
@@ -46,9 +47,7 @@ async def learn(
     # Group chunks by scope
     chunks_by_scope: dict[str, list[KnowledgeInput]] = {}
     for chunk in chunks:
-        root_for_key = (
-            workspace_root if chunk.scope == "workspace" else project_root
-        )
+        root_for_key = workspace_root if chunk.scope == "workspace" else project_root
         scope_key = f"{chunk.scope}:{root_for_key}"
         if scope_key not in chunks_by_scope:
             chunks_by_scope[scope_key] = []
@@ -80,9 +79,7 @@ async def learn(
                 # Check conflict type
                 for chunk in scope_chunks:
                     if chunk.type == "conflict":
-                        conflict_warnings.append(
-                            f"  ⚠ CONFLICT: {chunk.content[:100]}"
-                        )
+                        conflict_warnings.append(f"  ⚠ CONFLICT: {chunk.content[:100]}")
                     saved += 1
         except Exception:
             pass
@@ -105,8 +102,7 @@ async def learn(
         try:
             with MetadataStore("global") as global_meta:
                 last_crystallize = (
-                    global_meta.get_meta("last_crystallize")
-                    or "1970-01-01T00:00:00.000Z"
+                    global_meta.get_meta("last_crystallize") or "1970-01-01T00:00:00.000Z"
                 )
                 new_count = global_meta.count_since(last_crystallize)
 
@@ -114,7 +110,9 @@ async def learn(
                 # Collect all chunks for crystallize
                 all_chunks: list[KnowledgeChunk] = []
                 await for_each_scope(
-                    None, project_root, lambda c: all_chunks.extend(c.meta.get_all()),
+                    None,
+                    project_root,
+                    lambda c: all_chunks.extend(c.meta.get_all()),
                     workspace_root=workspace_root,
                 )
 
@@ -145,13 +143,10 @@ async def learn(
                 )
                 if report.user_conflicts:
                     conflict_lines = [
-                        f"  - {c.user_rule_file}: {c.conflicting_content} "
-                        f"→ {c.suggestion}"
+                        f"  - {c.user_rule_file}: {c.conflicting_content} → {c.suggestion}"
                         for c in report.user_conflicts
                     ]
-                    auto_msg += (
-                        "\n\n⚠ User rule conflicts:\n" + "\n".join(conflict_lines)
-                    )
+                    auto_msg += "\n\n⚠ User rule conflicts:\n" + "\n".join(conflict_lines)
         except Exception as err:
             auto_msg = f"\n\n⚠ Auto-crystallize failed: {err}"
 

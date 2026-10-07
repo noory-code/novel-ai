@@ -18,13 +18,17 @@ from tests.helpers.mock_server import MockContext
 
 class TestParseCrystallizeResponse:
     def test_parses_valid_create_action(self) -> None:
-        text = json.dumps([{
-            "topic": "typescript-style",
-            "action": "create",
-            "delivery": "rule",
-            "rules": ["Use strict mode", "Prefer named exports"],
-            "source_ids": ["id1", "id2"],
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "typescript-style",
+                    "action": "create",
+                    "delivery": "rule",
+                    "rules": ["Use strict mode", "Prefer named exports"],
+                    "source_ids": ["id1", "id2"],
+                }
+            ]
+        )
         result, _ = parse_crystallize_response(text)
         assert len(result) == 1
         assert result[0].topic == "typescript-style"
@@ -35,37 +39,70 @@ class TestParseCrystallizeResponse:
 
     def test_parses_all_valid_actions(self) -> None:
         for action in ("create", "update", "remove", "downgrade"):
-            text = json.dumps([{
-                "topic": "t", "action": action, "delivery": "rule",
-                "rules": ["r"], "source_ids": ["s"],
-            }])
+            text = json.dumps(
+                [
+                    {
+                        "topic": "t",
+                        "action": action,
+                        "delivery": "rule",
+                        "rules": ["r"],
+                        "source_ids": ["s"],
+                    }
+                ]
+            )
             result, _ = parse_crystallize_response(text)
             assert len(result) == 1, f'action "{action}" should be accepted'
 
     def test_parses_update_with_existing_file(self) -> None:
-        text = json.dumps([{
-            "topic": "error-handling",
-            "action": "update",
-            "delivery": "rule",
-            "rules": ["Updated rule"],
-            "source_ids": ["id3"],
-            "existing_file": "distill-error-handling.md",
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "error-handling",
+                    "action": "update",
+                    "delivery": "rule",
+                    "rules": ["Updated rule"],
+                    "source_ids": ["id3"],
+                    "existing_file": "distill-error-handling.md",
+                }
+            ]
+        )
         result, _ = parse_crystallize_response(text)
         assert len(result) == 1
         assert result[0].existing_file == "distill-error-handling.md"
 
     def test_parses_multiple_results(self) -> None:
-        text = json.dumps([
-            {"topic": "a", "action": "create", "delivery": "rule", "rules": ["r1"], "source_ids": ["s1"]},
-            {"topic": "b", "action": "update", "delivery": "rule", "rules": ["r2"], "source_ids": ["s2"]},
-            {"topic": "c", "action": "remove", "delivery": "rule", "rules": [], "source_ids": ["s3"]},
-        ])
+        text = json.dumps(
+            [
+                {
+                    "topic": "a",
+                    "action": "create",
+                    "delivery": "rule",
+                    "rules": ["r1"],
+                    "source_ids": ["s1"],
+                },
+                {
+                    "topic": "b",
+                    "action": "update",
+                    "delivery": "rule",
+                    "rules": ["r2"],
+                    "source_ids": ["s2"],
+                },
+                {
+                    "topic": "c",
+                    "action": "remove",
+                    "delivery": "rule",
+                    "rules": [],
+                    "source_ids": ["s3"],
+                },
+            ]
+        )
         result, _ = parse_crystallize_response(text)
         assert len(result) == 3
 
     def test_filters_invalid_action(self) -> None:
-        text = '[{"topic":"t","action":"invalid","delivery":"rule","rules":["r"],"source_ids":["s"]}]'
+        text = (
+            '[{"topic":"t","action":"invalid","delivery":"rule","rules":["r"],"source_ids":["s"]}]'
+        )
         assert parse_crystallize_response(text) == ([], [])
 
     def test_filters_missing_topic(self) -> None:
@@ -73,11 +110,17 @@ class TestParseCrystallizeResponse:
         assert parse_crystallize_response(text) == ([], [])
 
     def test_filters_non_array_rules(self) -> None:
-        text = '[{"topic":"t","action":"create","delivery":"rule","rules":"not-array","source_ids":["s"]}]'
+        text = (
+            '[{"topic":"t","action":"create","delivery":"rule","rules":"n'
+            'ot-array","source_ids":["s"]}]'
+        )
         assert parse_crystallize_response(text) == ([], [])
 
     def test_filters_non_array_source_ids(self) -> None:
-        text = '[{"topic":"t","action":"create","delivery":"rule","rules":["r"],"source_ids":"not-array"}]'
+        text = (
+            '[{"topic":"t","action":"create","delivery":"rule","rules":["'
+            'r"],"source_ids":"not-array"}]'
+        )
         assert parse_crystallize_response(text) == ([], [])
 
     def test_returns_empty_when_no_json(self) -> None:
@@ -88,7 +131,7 @@ class TestParseCrystallizeResponse:
 
     def test_handles_json_embedded_in_text(self) -> None:
         text = (
-            'Here are the results:\n\n'
+            "Here are the results:\n\n"
             '[{"topic":"embedded","action":"create","delivery":"rule",'
             '"rules":["found it"],"source_ids":["e1"]}]\n\n'
             "That's all."
@@ -98,43 +141,55 @@ class TestParseCrystallizeResponse:
         assert result[0].topic == "embedded"
 
     def test_parses_downgrade_action(self) -> None:
-        text = json.dumps([{
-            "topic": "low-confidence",
-            "action": "downgrade",
-            "delivery": "store",
-            "rules": ["Old rule"],
-            "source_ids": ["id1"],
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "low-confidence",
+                    "action": "downgrade",
+                    "delivery": "store",
+                    "rules": ["Old rule"],
+                    "source_ids": ["id1"],
+                }
+            ]
+        )
         result, _ = parse_crystallize_response(text)
         assert len(result) == 1
         assert result[0].action == "downgrade"
 
     def test_parses_delivery_rule(self) -> None:
-        text = json.dumps([{
-            "topic": "high-confidence",
-            "action": "create",
-            "delivery": "rule",
-            "rules": ["Always use this"],
-            "source_ids": ["id1"],
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "high-confidence",
+                    "action": "create",
+                    "delivery": "rule",
+                    "rules": ["Always use this"],
+                    "source_ids": ["id1"],
+                }
+            ]
+        )
         result, _ = parse_crystallize_response(text)
         assert len(result) == 1
         assert result[0].delivery == "rule"
 
     def test_parses_delivery_skill_with_metadata(self) -> None:
-        text = json.dumps([{
-            "topic": "deploy-workflow",
-            "action": "create",
-            "delivery": "skill",
-            "rules": ["Deployment procedure"],
-            "source_ids": ["id1"],
-            "skill_metadata": {
-                "description": "Deploy app to production",
-                "when_to_use": "When deploying",
-                "procedure": ["Step 1", "Step 2"],
-                "examples": ["deploy api"],
-            },
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "deploy-workflow",
+                    "action": "create",
+                    "delivery": "skill",
+                    "rules": ["Deployment procedure"],
+                    "source_ids": ["id1"],
+                    "skill_metadata": {
+                        "description": "Deploy app to production",
+                        "when_to_use": "When deploying",
+                        "procedure": ["Step 1", "Step 2"],
+                        "examples": ["deploy api"],
+                    },
+                }
+            ]
+        )
         result, _ = parse_crystallize_response(text)
         assert len(result) == 1
         assert result[0].delivery == "skill"
@@ -145,67 +200,105 @@ class TestParseCrystallizeResponse:
         assert result[0].skill_metadata.examples == ["deploy api"]
 
     def test_parses_delivery_store(self) -> None:
-        text = json.dumps([{
-            "topic": "niche-case",
-            "action": "create",
-            "delivery": "store",
-            "rules": ["Rarely used"],
-            "source_ids": ["id1"],
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "niche-case",
+                    "action": "create",
+                    "delivery": "store",
+                    "rules": ["Rarely used"],
+                    "source_ids": ["id1"],
+                }
+            ]
+        )
         result, _ = parse_crystallize_response(text)
         assert len(result) == 1
         assert result[0].delivery == "store"
 
     def test_filters_invalid_delivery(self) -> None:
-        text = json.dumps([{
-            "topic": "test", "action": "create", "delivery": "invalid",
-            "rules": ["rule"], "source_ids": ["id1"],
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "test",
+                    "action": "create",
+                    "delivery": "invalid",
+                    "rules": ["rule"],
+                    "source_ids": ["id1"],
+                }
+            ]
+        )
         assert parse_crystallize_response(text) == ([], [])
 
     def test_filters_skill_without_metadata(self) -> None:
-        text = json.dumps([{
-            "topic": "test", "action": "create", "delivery": "skill",
-            "rules": ["rule"], "source_ids": ["id1"],
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "test",
+                    "action": "create",
+                    "delivery": "skill",
+                    "rules": ["rule"],
+                    "source_ids": ["id1"],
+                }
+            ]
+        )
         assert parse_crystallize_response(text) == ([], [])
 
     def test_filters_skill_with_incomplete_metadata(self) -> None:
-        text = json.dumps([{
-            "topic": "test", "action": "create", "delivery": "skill",
-            "rules": ["rule"], "source_ids": ["id1"],
-            "skill_metadata": {"description": "Missing procedure and when_to_use"},
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "test",
+                    "action": "create",
+                    "delivery": "skill",
+                    "rules": ["rule"],
+                    "source_ids": ["id1"],
+                    "skill_metadata": {"description": "Missing procedure and when_to_use"},
+                }
+            ]
+        )
         assert parse_crystallize_response(text) == ([], [])
 
     def test_accepts_skill_without_examples(self) -> None:
-        text = json.dumps([{
-            "topic": "test", "action": "create", "delivery": "skill",
-            "rules": ["rule"], "source_ids": ["id1"],
-            "skill_metadata": {
-                "description": "Test skill",
-                "when_to_use": "When testing",
-                "procedure": ["Do this"],
-            },
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "test",
+                    "action": "create",
+                    "delivery": "skill",
+                    "rules": ["rule"],
+                    "source_ids": ["id1"],
+                    "skill_metadata": {
+                        "description": "Test skill",
+                        "when_to_use": "When testing",
+                        "procedure": ["Do this"],
+                    },
+                }
+            ]
+        )
         result, _ = parse_crystallize_response(text)
         assert len(result) == 1
         assert result[0].skill_metadata is not None
         assert result[0].skill_metadata.examples is None
 
     def test_parses_user_conflicts(self) -> None:
-        text = json.dumps([{
-            "topic": "style",
-            "action": "create",
-            "delivery": "rule",
-            "rules": ["Use tabs"],
-            "source_ids": ["id1"],
-            "user_conflicts": [{
-                "user_rule_file": "contribution.md",
-                "conflicting_content": "Use spaces for indentation",
-                "suggestion": "Consider aligning tab vs space preference",
-            }],
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "style",
+                    "action": "create",
+                    "delivery": "rule",
+                    "rules": ["Use tabs"],
+                    "source_ids": ["id1"],
+                    "user_conflicts": [
+                        {
+                            "user_rule_file": "contribution.md",
+                            "conflicting_content": "Use spaces for indentation",
+                            "suggestion": "Consider aligning tab vs space preference",
+                        }
+                    ],
+                }
+            ]
+        )
         result, _ = parse_crystallize_response(text)
         assert len(result) == 1
         assert result[0].user_conflicts is not None
@@ -214,25 +307,43 @@ class TestParseCrystallizeResponse:
         assert result[0].user_conflicts[0].conflicting_content == "Use spaces for indentation"
 
     def test_returns_none_user_conflicts_when_absent(self) -> None:
-        text = json.dumps([{
-            "topic": "style", "action": "create", "delivery": "rule",
-            "rules": ["Use tabs"], "source_ids": ["id1"],
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "style",
+                    "action": "create",
+                    "delivery": "rule",
+                    "rules": ["Use tabs"],
+                    "source_ids": ["id1"],
+                }
+            ]
+        )
         result, _ = parse_crystallize_response(text)
         assert len(result) == 1
         assert result[0].user_conflicts is None
 
     def test_filters_invalid_user_conflicts(self) -> None:
-        text = json.dumps([{
-            "topic": "style", "action": "create", "delivery": "rule",
-            "rules": ["Use tabs"], "source_ids": ["id1"],
-            "user_conflicts": [
-                {"user_rule_file": "valid.md", "conflicting_content": "content", "suggestion": "fix it"},
-                {"user_rule_file": "missing-fields"},
-                "not-an-object",
-                None,
-            ],
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "style",
+                    "action": "create",
+                    "delivery": "rule",
+                    "rules": ["Use tabs"],
+                    "source_ids": ["id1"],
+                    "user_conflicts": [
+                        {
+                            "user_rule_file": "valid.md",
+                            "conflicting_content": "content",
+                            "suggestion": "fix it",
+                        },
+                        {"user_rule_file": "missing-fields"},
+                        "not-an-object",
+                        None,
+                    ],
+                }
+            ]
+        )
         result, _ = parse_crystallize_response(text)
         assert len(result) == 1
         assert result[0].user_conflicts is not None
@@ -240,27 +351,38 @@ class TestParseCrystallizeResponse:
         assert result[0].user_conflicts[0].user_rule_file == "valid.md"
 
     def test_parses_multiple_user_conflicts(self) -> None:
-        text = json.dumps([{
-            "topic": "style", "action": "create", "delivery": "rule",
-            "rules": ["Use tabs"], "source_ids": ["id1"],
-            "user_conflicts": [
-                {"user_rule_file": "a.md", "conflicting_content": "c1", "suggestion": "s1"},
-                {"user_rule_file": "b.md", "conflicting_content": "c2", "suggestion": "s2"},
-            ],
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "style",
+                    "action": "create",
+                    "delivery": "rule",
+                    "rules": ["Use tabs"],
+                    "source_ids": ["id1"],
+                    "user_conflicts": [
+                        {"user_rule_file": "a.md", "conflicting_content": "c1", "suggestion": "s1"},
+                        {"user_rule_file": "b.md", "conflicting_content": "c2", "suggestion": "s2"},
+                    ],
+                }
+            ]
+        )
         result, _ = parse_crystallize_response(text)
         assert result[0].user_conflicts is not None
         assert len(result[0].user_conflicts) == 2
 
 
 class TestCrystallize:
-    CREATE_RESPONSE = json.dumps([{
-        "topic": "typescript-style",
-        "action": "create",
-        "delivery": "rule",
-        "rules": ["Use strict mode", "Prefer named exports"],
-        "source_ids": ["id1", "id2"],
-    }])
+    CREATE_RESPONSE = json.dumps(
+        [
+            {
+                "topic": "typescript-style",
+                "action": "create",
+                "delivery": "rule",
+                "rules": ["Use strict mode", "Prefer named exports"],
+                "source_ids": ["id1", "id2"],
+            }
+        ]
+    )
 
     @pytest.mark.asyncio
     async def test_returns_empty_report_for_empty_chunks(self) -> None:
@@ -276,7 +398,9 @@ class TestCrystallize:
             ctx = MockContext(response=self.CREATE_RESPONSE)
             chunks = [make_knowledge_chunk(id="c1", content="Test rule")]
 
-            await crystallize(ctx=ctx, chunks=chunks, model="claude-sonnet-4-5-20250929", project_root=tmp)
+            await crystallize(
+                ctx=ctx, chunks=chunks, model="claude-sonnet-4-5-20250929", project_root=tmp
+            )
 
             assert len(ctx.calls) == 1
             assert ctx.calls[0].system_prompt == CRYSTALLIZE_SYSTEM_PROMPT
@@ -314,11 +438,18 @@ class TestCrystallize:
             with open(os.path.join(rules_dir, "distill-style.md"), "w") as f:
                 f.write("# style\n- Old rule")
 
-            update_response = json.dumps([{
-                "topic": "style", "action": "update", "delivery": "rule",
-                "rules": ["Updated rule"], "source_ids": ["u1"],
-                "existing_file": "distill-style.md",
-            }])
+            update_response = json.dumps(
+                [
+                    {
+                        "topic": "style",
+                        "action": "update",
+                        "delivery": "rule",
+                        "rules": ["Updated rule"],
+                        "source_ids": ["u1"],
+                        "existing_file": "distill-style.md",
+                    }
+                ]
+            )
 
             ctx = MockContext(response=update_response)
             chunks = [make_knowledge_chunk(id="u1")]
@@ -341,11 +472,18 @@ class TestCrystallize:
                 f.write("# obsolete\n- Old rule")
             assert os.path.exists(file_path)
 
-            remove_response = json.dumps([{
-                "topic": "obsolete", "action": "remove", "delivery": "rule",
-                "rules": [], "source_ids": ["r1"],
-                "existing_file": "distill-obsolete.md",
-            }])
+            remove_response = json.dumps(
+                [
+                    {
+                        "topic": "obsolete",
+                        "action": "remove",
+                        "delivery": "rule",
+                        "rules": [],
+                        "source_ids": ["r1"],
+                        "existing_file": "distill-obsolete.md",
+                    }
+                ]
+            )
 
             ctx = MockContext(response=remove_response)
             chunks = [make_knowledge_chunk(id="r1")]
@@ -365,14 +503,40 @@ class TestCrystallize:
             with open(os.path.join(rules_dir, "distill-dead.md"), "w") as f:
                 f.write("# dead\n- Rule")
 
-            mixed_response = json.dumps([
-                {"topic": "new-topic", "action": "create", "delivery": "rule", "rules": ["New rule"], "source_ids": ["n1"]},
-                {"topic": "old", "action": "update", "delivery": "rule", "rules": ["Better rule"], "source_ids": ["o1"], "existing_file": "distill-old.md"},
-                {"topic": "dead", "action": "remove", "delivery": "rule", "rules": [], "source_ids": ["d1"], "existing_file": "distill-dead.md"},
-            ])
+            mixed_response = json.dumps(
+                [
+                    {
+                        "topic": "new-topic",
+                        "action": "create",
+                        "delivery": "rule",
+                        "rules": ["New rule"],
+                        "source_ids": ["n1"],
+                    },
+                    {
+                        "topic": "old",
+                        "action": "update",
+                        "delivery": "rule",
+                        "rules": ["Better rule"],
+                        "source_ids": ["o1"],
+                        "existing_file": "distill-old.md",
+                    },
+                    {
+                        "topic": "dead",
+                        "action": "remove",
+                        "delivery": "rule",
+                        "rules": [],
+                        "source_ids": ["d1"],
+                        "existing_file": "distill-dead.md",
+                    },
+                ]
+            )
 
             ctx = MockContext(response=mixed_response)
-            chunks = [make_knowledge_chunk(id="n1"), make_knowledge_chunk(id="o1"), make_knowledge_chunk(id="d1")]
+            chunks = [
+                make_knowledge_chunk(id="n1"),
+                make_knowledge_chunk(id="o1"),
+                make_knowledge_chunk(id="d1"),
+            ]
 
             report = await crystallize(ctx=ctx, chunks=chunks, model="test-model", project_root=tmp)
 
@@ -385,10 +549,24 @@ class TestCrystallize:
     async def test_handles_multiple_creates(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             os.makedirs(os.path.join(tmp, ".claude", "rules"), exist_ok=True)
-            mixed_response = json.dumps([
-                {"topic": "a", "action": "create", "delivery": "rule", "rules": ["r1", "r2"], "source_ids": ["s1"]},
-                {"topic": "b", "action": "create", "delivery": "rule", "rules": ["r3"], "source_ids": ["s2"]},
-            ])
+            mixed_response = json.dumps(
+                [
+                    {
+                        "topic": "a",
+                        "action": "create",
+                        "delivery": "rule",
+                        "rules": ["r1", "r2"],
+                        "source_ids": ["s1"],
+                    },
+                    {
+                        "topic": "b",
+                        "action": "create",
+                        "delivery": "rule",
+                        "rules": ["r3"],
+                        "source_ids": ["s2"],
+                    },
+                ]
+            )
 
             ctx = MockContext(response=mixed_response)
             chunks = [make_knowledge_chunk()]
@@ -457,18 +635,24 @@ class TestCrystallize:
     async def test_collects_user_conflicts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             os.makedirs(os.path.join(tmp, ".claude", "rules"), exist_ok=True)
-            response = json.dumps([{
-                "topic": "indent-style",
-                "action": "create",
-                "delivery": "rule",
-                "rules": ["Use tabs for indentation"],
-                "source_ids": ["c1"],
-                "user_conflicts": [{
-                    "user_rule_file": "contribution.md",
-                    "conflicting_content": "Use 2-space indentation",
-                    "suggestion": "Align indentation preference",
-                }],
-            }])
+            response = json.dumps(
+                [
+                    {
+                        "topic": "indent-style",
+                        "action": "create",
+                        "delivery": "rule",
+                        "rules": ["Use tabs for indentation"],
+                        "source_ids": ["c1"],
+                        "user_conflicts": [
+                            {
+                                "user_rule_file": "contribution.md",
+                                "conflicting_content": "Use 2-space indentation",
+                                "suggestion": "Align indentation preference",
+                            }
+                        ],
+                    }
+                ]
+            )
 
             ctx = MockContext(response=response)
             chunks = [make_knowledge_chunk(id="c1")]
@@ -532,18 +716,26 @@ class TestCrystallize:
 class TestParseCrystallizeResponseAgent:
     """Tests for agent delivery parsing."""
 
-    AGENT_RESPONSE = json.dumps([{
-        "topic": "deploy-workflow",
-        "action": "create",
-        "delivery": "agent",
-        "rules": [],
-        "source_ids": ["s1", "s2"],
-        "agent_metadata": {
-            "description": "Orchestrates the full deploy workflow",
-            "skills": ["distill-pre-deploy-checks", "distill-deploy-to-prod", "distill-post-verify"],
-            "tools": ["Bash", "Read"],
-        }
-    }])
+    AGENT_RESPONSE = json.dumps(
+        [
+            {
+                "topic": "deploy-workflow",
+                "action": "create",
+                "delivery": "agent",
+                "rules": [],
+                "source_ids": ["s1", "s2"],
+                "agent_metadata": {
+                    "description": "Orchestrates the full deploy workflow",
+                    "skills": [
+                        "distill-pre-deploy-checks",
+                        "distill-deploy-to-prod",
+                        "distill-post-verify",
+                    ],
+                    "tools": ["Bash", "Read"],
+                },
+            }
+        ]
+    )
 
     def test_parses_agent_delivery(self) -> None:
         results, _ = parse_crystallize_response(self.AGENT_RESPONSE)
@@ -560,38 +752,50 @@ class TestParseCrystallizeResponseAgent:
         assert r.agent_metadata.tools == ["Bash", "Read"]
 
     def test_filters_agent_without_agent_metadata(self) -> None:
-        text = json.dumps([{
-            "topic": "workflow",
-            "action": "create",
-            "delivery": "agent",
-            "rules": [],
-            "source_ids": ["s1"],
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "workflow",
+                    "action": "create",
+                    "delivery": "agent",
+                    "rules": [],
+                    "source_ids": ["s1"],
+                }
+            ]
+        )
         assert parse_crystallize_response(text) == ([], [])
 
     def test_filters_agent_with_incomplete_metadata(self) -> None:
-        text = json.dumps([{
-            "topic": "workflow",
-            "action": "create",
-            "delivery": "agent",
-            "rules": [],
-            "source_ids": ["s1"],
-            "agent_metadata": {"description": "missing skills field"},
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "workflow",
+                    "action": "create",
+                    "delivery": "agent",
+                    "rules": [],
+                    "source_ids": ["s1"],
+                    "agent_metadata": {"description": "missing skills field"},
+                }
+            ]
+        )
         assert parse_crystallize_response(text) == ([], [])
 
     def test_agent_tools_defaults_when_omitted(self) -> None:
-        text = json.dumps([{
-            "topic": "workflow",
-            "action": "create",
-            "delivery": "agent",
-            "rules": [],
-            "source_ids": ["s1"],
-            "agent_metadata": {
-                "description": "Test",
-                "skills": ["distill-skill-a"],
-            },
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "workflow",
+                    "action": "create",
+                    "delivery": "agent",
+                    "rules": [],
+                    "source_ids": ["s1"],
+                    "agent_metadata": {
+                        "description": "Test",
+                        "skills": ["distill-skill-a"],
+                    },
+                }
+            ]
+        )
         results, _ = parse_crystallize_response(text)
         assert len(results) == 1
         assert results[0].agent_metadata.tools == ["Bash", "Read", "Write"]
@@ -599,21 +803,27 @@ class TestParseCrystallizeResponseAgent:
 
 class TestParseRelations:
     def test_parses_relations_from_object_format(self) -> None:
-        text = json.dumps({
-            "results": [{
-                "topic": "style",
-                "action": "create",
-                "delivery": "rule",
-                "rules": ["Use tabs"],
-                "source_ids": ["id1"],
-            }],
-            "relations": [{
-                "from_id": "chunk-a",
-                "to_id": "chunk-b",
-                "relation_type": "refines",
-                "confidence": 0.85,
-            }],
-        })
+        text = json.dumps(
+            {
+                "results": [
+                    {
+                        "topic": "style",
+                        "action": "create",
+                        "delivery": "rule",
+                        "rules": ["Use tabs"],
+                        "source_ids": ["id1"],
+                    }
+                ],
+                "relations": [
+                    {
+                        "from_id": "chunk-a",
+                        "to_id": "chunk-b",
+                        "relation_type": "refines",
+                        "confidence": 0.85,
+                    }
+                ],
+            }
+        )
         results, relations = parse_crystallize_response(text)
         assert len(results) == 1
         assert len(relations) == 1
@@ -623,41 +833,59 @@ class TestParseRelations:
         assert relations[0].confidence == 0.85
 
     def test_plain_array_format_returns_empty_relations(self) -> None:
-        text = json.dumps([{
-            "topic": "style",
-            "action": "create",
-            "delivery": "rule",
-            "rules": ["r"],
-            "source_ids": ["s"],
-        }])
+        text = json.dumps(
+            [
+                {
+                    "topic": "style",
+                    "action": "create",
+                    "delivery": "rule",
+                    "rules": ["r"],
+                    "source_ids": ["s"],
+                }
+            ]
+        )
         results, relations = parse_crystallize_response(text)
         assert len(results) == 1
         assert relations == []
 
     def test_filters_invalid_relation_types(self) -> None:
-        text = json.dumps({
-            "results": [{
-                "topic": "t",
-                "action": "create",
-                "delivery": "rule",
-                "rules": ["r"],
-                "source_ids": ["s"],
-            }],
-            "relations": [
-                {"from_id": "a", "to_id": "b", "relation_type": "refines"},
-                {"from_id": "c", "to_id": "d", "relation_type": "invalid_type"},
-            ],
-        })
+        text = json.dumps(
+            {
+                "results": [
+                    {
+                        "topic": "t",
+                        "action": "create",
+                        "delivery": "rule",
+                        "rules": ["r"],
+                        "source_ids": ["s"],
+                    }
+                ],
+                "relations": [
+                    {"from_id": "a", "to_id": "b", "relation_type": "refines"},
+                    {"from_id": "c", "to_id": "d", "relation_type": "invalid_type"},
+                ],
+            }
+        )
         _, relations = parse_crystallize_response(text)
         assert len(relations) == 1
         assert relations[0].relation_type == "refines"
 
     def test_all_valid_relation_types(self) -> None:
         for rel_type in ("refines", "contradicts", "depends_on", "supersedes"):
-            text = json.dumps({
-                "results": [{"topic": "t", "action": "create", "delivery": "rule", "rules": ["r"], "source_ids": ["s"]}],
-                "relations": [{"from_id": "a", "to_id": "b", "relation_type": rel_type}],
-            })
+            text = json.dumps(
+                {
+                    "results": [
+                        {
+                            "topic": "t",
+                            "action": "create",
+                            "delivery": "rule",
+                            "rules": ["r"],
+                            "source_ids": ["s"],
+                        }
+                    ],
+                    "relations": [{"from_id": "a", "to_id": "b", "relation_type": rel_type}],
+                }
+            )
             _, relations = parse_crystallize_response(text)
             assert len(relations) == 1, f"relation type '{rel_type}' should be valid"
 
@@ -665,18 +893,22 @@ class TestParseRelations:
 class TestCrystallizeAgentOutput:
     """Tests for agent file writing via crystallize pipeline."""
 
-    AGENT_RESPONSE = json.dumps([{
-        "topic": "deploy-workflow",
-        "action": "create",
-        "delivery": "agent",
-        "rules": [],
-        "source_ids": ["s1"],
-        "agent_metadata": {
-            "description": "Full deploy workflow",
-            "skills": ["distill-deploy-to-prod"],
-            "tools": ["Bash"],
-        },
-    }])
+    AGENT_RESPONSE = json.dumps(
+        [
+            {
+                "topic": "deploy-workflow",
+                "action": "create",
+                "delivery": "agent",
+                "rules": [],
+                "source_ids": ["s1"],
+                "agent_metadata": {
+                    "description": "Full deploy workflow",
+                    "skills": ["distill-deploy-to-prod"],
+                    "tools": ["Bash"],
+                },
+            }
+        ]
+    )
 
     @pytest.mark.asyncio
     async def test_does_not_create_agent_when_disabled(self) -> None:

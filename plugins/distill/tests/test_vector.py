@@ -62,7 +62,9 @@ class TestFtsSearch:
 
 class TestVectorSearch:
     def test_indexes_and_searches_via_similarity(self, vec_store: VectorStore) -> None:
-        vec_store.index("v1", "TypeScript strict mode is recommended for all projects", ["typescript"])
+        vec_store.index(
+            "v1", "TypeScript strict mode is recommended for all projects", ["typescript"]
+        )
         vec_store.index("v2", "Python virtual environments are useful for isolation", ["python"])
 
         results = vec_store.search("TypeScript strict mode")
@@ -96,7 +98,9 @@ class TestVectorSearch:
         assert len(results) <= 2
 
     def test_search_returns_tags_as_array(self, vec_store: VectorStore) -> None:
-        vec_store.index("v-tags", "Tags test content for array verification", ["typescript", "config"])
+        vec_store.index(
+            "v-tags", "Tags test content for array verification", ["typescript", "config"]
+        )
         results = vec_store.search("Tags test array")
         assert len(results) > 0
         assert isinstance(results[0].tags, list)
@@ -121,7 +125,11 @@ class TestConcurrentAccess:
             def write_to_store(store_id: int) -> None:
                 try:
                     store = VectorStore("project", tmp)
-                    store.index(f"concurrent-{store_id}", f"Concurrent write test content {store_id}", ["test"])
+                    store.index(
+                        f"concurrent-{store_id}",
+                        f"Concurrent write test content {store_id}",
+                        ["test"],
+                    )
                     store.close()
                 except Exception as e:
                     errors.append(e)

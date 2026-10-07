@@ -178,16 +178,14 @@ async def crystallize(
     if not target_rules_dir:
         raise RuntimeError("No rules directory available")
 
-    target_skills_dir = (
-        _resolve_skills_dir("project", project_root)
-        or _resolve_skills_dir("global")
+    target_skills_dir = _resolve_skills_dir("project", project_root) or _resolve_skills_dir(
+        "global"
     )
     if not target_skills_dir:
         raise RuntimeError("No skills directory available")
 
-    target_agents_dir = (
-        _resolve_agents_dir("project", project_root)
-        or _resolve_agents_dir("global")
+    target_agents_dir = _resolve_agents_dir("project", project_root) or _resolve_agents_dir(
+        "global"
     )
     if not target_agents_dir:
         raise RuntimeError("No agents directory available")
@@ -220,7 +218,7 @@ async def crystallize(
                     continue
                 ws_root = workspace_root if scope == "workspace" else None
                 try:
-                    with MetadataStore(scope, project_root, ws_root) as meta:  # type: ignore[arg-type]
+                    with MetadataStore(scope, project_root, ws_root) as meta:
                         meta.add_relation(
                             rel.from_id,
                             rel.to_id,
@@ -251,7 +249,7 @@ def parse_crystallize_response(
         parsed_raw = json.loads(json_match.group(0))
 
         # Support both {"results": [...], "relations": [...]} and plain [...] format
-        relations_raw: list = []
+        relations_raw: list[Any] = []
         if isinstance(parsed_raw, dict):
             parsed = parsed_raw.get("results", [])
             relations_raw = parsed_raw.get("relations", [])
@@ -453,9 +451,7 @@ def _write_skill_file(
             f'- "{ex}"' for ex in metadata.examples
         )
 
-    procedure_text = "\n".join(
-        f"{i + 1}. {step}" for i, step in enumerate(metadata.procedure)
-    )
+    procedure_text = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(metadata.procedure))
 
     content = (
         f"---\ndisable-model-invocation: true\n---\n\n"
@@ -512,6 +508,7 @@ def _apply_delivery_actions(
 ) -> CrystallizeReport:
     """Apply delivery actions — write files based on delivery mechanism."""
     from distill.config import OutputsConfig
+
     if outputs_config is None:
         outputs_config = OutputsConfig()
 
