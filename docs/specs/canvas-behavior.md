@@ -217,7 +217,18 @@ choices made while building it on 2026-10-02 and still open to the user's review
   changes happen together, "나뉨" is shown.
   *Decided, not yet built (`D-2026-10-04-B` (2)–(6)):* finished items leave the progress view but stay reachable
   from their design node; a new publish re-checks only related in-progress items.
-  *Decided, not yet built (user, `D-2026-10-04-A` (1)–(2)):* work items have no fixed level names. An item whose result
-  was promised to the person is not finished when all its children are; it waits until the person tries the result and
-  accepts it, and that acceptance can be reopened. The person confirms pass conditions in plain words, not check code.
+  *(user, `D-2026-10-04-A` (1)–(2)):* work items have no fixed level names. An item whose result was promised to the
+  person is not finished when all its children are; it waits for judgment until the person tries the result and accepts
+  it, and that acceptance can be reopened. *Decided, not yet built:* the person confirms pass conditions in plain words,
+  not check code.
+- **Judgment inbox** *(user, `D-2026-10-04-A` (2), `D-2026-10-04-B` (5))*: while any result promised to the person awaits
+  judgment, the Work tab shows "판단 대기 N" / "N awaiting judgment"; it opens an inbox of those results and of results
+  already accepted. Selecting one shows its goal, the design nodes it realizes, its children and their state, and its past
+  judgments (action, reason, time), with the actions its state allows: awaiting judgment → accept, send back, cancel;
+  accepted → reopen; otherwise → cancel. Send back and cancel require a reason. Reopen asks when the problem started:
+  if the result never met its conditions, the acceptance is reopened; if it worked and broke later, the acceptance stays
+  and a new item is made under the same parent for the same design nodes, awaiting the person's acceptance. Clicking a
+  design-node badge whose items await judgment opens the inbox. *(Claude:)* with nothing awaiting judgment the count
+  button is hidden and a "일감 상세" / "Work details" button keeps accepted results reachable; the inbox lists the newest
+  items first (items carry no time they entered judgment).
 - **Not in this version:** deleting items.
