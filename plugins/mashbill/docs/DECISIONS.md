@@ -46,8 +46,9 @@
   recreated, so putting it back from the trash restores it in place; in the nested layout it is the
   project folder. If the move fails, nothing is deleted: the project stays as it was, the engine
   answers `500 {code: "trash_failed"}`, and the app shows the reason with "try again" and "cancel".
-  There is no in-app list of deleted projects; the person restores a project by taking the folder
-  out of the trash and opening the workspace again.
+  There is no in-app list of deleted projects; the person restores a project with the Trash's "Put
+  Back" (which returns the folder to `<workspace>/.noory/novel`) and opening the workspace again.
+  The delete confirmation names that action.
 - **Why:** deleting erased everything at once (the reason agents lost the delete tool in
   D-2026-09-30-A), and the person had no way back. The computer's trash is a recovery path people
   already know and adds no new feature to Novel.
