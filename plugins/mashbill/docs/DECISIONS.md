@@ -61,8 +61,8 @@
   stopped delegated work already has its own feature. Counting legacy items from the file's
   modification time — rejected: that time changes with unrelated edits and would claim a move that
   did not happen.
-- **Approval:** Pending — debated with the in-app coach on the self-design feature "설계 캔버스에서
-  진행 보기" (novel-workspace W-00000382, 2026-10-08), to be confirmed by the user.
+- **Approval:** Accepted — user, 2026-10-08 ("네"), after a debate with the in-app coach on the
+  self-design feature "설계 캔버스에서 진행 보기" (novel-workspace W-00000382).
 - **Spec impact:** Solera work item `moved_at`; `docs/specs/canvas-behavior.md` §Work badges.
 - **Principles:** Honesty (a count says only that nothing changed; unknown is not counted).
 
@@ -81,9 +81,9 @@
   already know and adds no new feature to Novel.
 - **Alternatives:** an in-app trash with a list of deleted projects and a restore action — not
   chosen: it adds a feature that keeps and manages deleted projects, for the same result.
-- **Approval:** Pending — decided by Claude while fixing Novel's own design with the coach
-  (novel-workspace W-00000384, feature "프로젝트 관리하기"), reported to the user on 2026-10-07;
-  implemented in W-00000387.
+- **Approval:** Accepted — user, 2026-10-08 ("네"). Decided by Claude while fixing Novel's own
+  design with the coach (novel-workspace W-00000384, feature "프로젝트 관리하기"); implemented in
+  W-00000387.
 - **Spec impact:** `novel-ai/docs/specs/storage-publish.md` §Storage layout. D-2026-09-30-A still
   holds: agents cannot delete a project.
 
