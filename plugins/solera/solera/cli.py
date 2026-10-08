@@ -32,7 +32,7 @@ from .planning import (
 )
 from .repin import apply_repin, propose_repin
 from .supervisor import complete, instruction, ready_leaves, start_next
-from .workspace import Workspace, workspace_locked
+from .workspace import Workspace
 
 
 def _ws(root: Path) -> Workspace:
@@ -76,13 +76,16 @@ def _cmd_next(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
     return 0
 
 
-@workspace_locked
 def _cmd_complete(ws: Workspace, root: Path, args: argparse.Namespace) -> int:
-    prog = ws.load_progress()
-    if prog.item is None:
-        print("nothing in progress; run 'next' first")
-        return 1
+    with ws.lock():
+        prog = ws.load_progress()
+        if prog.item is None:
+            print("nothing in progress; run 'next' first")
+            return 1
     result = complete(ws, prog.item, cwd=root)
+    if result.conflict:
+        print(f"CONFLICT {prog.item}: {result.stderr}")
+        return 1
     if result.passed:
         print(f"PASS {prog.item}")
         return 0

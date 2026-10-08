@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.8.1] — 2026-10-08
+
+### Fixed
+
+- Agent completion releases the workspace lock while its gate runs. Concurrent edits return a distinct conflict result without writing a gate verdict; the agent calls `next` to continue.
+
 ## [8.8.0] — 2026-10-08
 
 ### Added

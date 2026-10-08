@@ -14,7 +14,7 @@ active leaf at a time).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -383,7 +383,6 @@ def reopen_items(ws: Workspace, item_ids: list[str]) -> None:
         ws.write_item(final[item_id])
 
 
-@workspace_locked
 def complete(
     ws: Workspace,
     item_id: str,
@@ -397,37 +396,64 @@ def complete(
     rolls up to ``done`` too. Fail: the leaf stays ``doing`` and the result is
     returned so the caller stops and escalates to a human.
     """
-    pointer = ws.load_progress().item if ws.progress_path.is_file() else None
-    if pointer != item_id:
-        return _skipped_completion(
-            item_id,
-            f"cannot complete {item_id}: the progress pointer names {pointer!r}",
-        )
-    item = ws.load_item(item_id)
-    if item.status != "doing":
-        return _skipped_completion(
-            item_id,
-            f"cannot complete {item_id}: its status is {item.status}, not doing",
-        )
-    if not item.gate:
-        return _skipped_completion(item_id, f"cannot complete {item_id}: it has no gate")
-    items = graph.load_items(ws)
-    parent_of = graph.parents(items)
-    current = parent_of.get(item_id)
-    while current is not None:
-        if items[current].status == "cancelled":
+    with ws.lock():
+        pointer = ws.load_progress().item if ws.progress_path.is_file() else None
+        if pointer != item_id:
             return _skipped_completion(
                 item_id,
-                f"cannot complete {item_id}: ancestor {current} is cancelled",
+                f"cannot complete {item_id}: the progress pointer names {pointer!r}",
             )
-        current = parent_of.get(current)
+        item = ws.load_item(item_id)
+        if item.status != "doing":
+            return _skipped_completion(
+                item_id,
+                f"cannot complete {item_id}: its status is {item.status}, not doing",
+            )
+        if not item.gate:
+            return _skipped_completion(item_id, f"cannot complete {item_id}: it has no gate")
+        items = graph.load_items(ws)
+        parent_of = graph.parents(items)
+        current = parent_of.get(item_id)
+        while current is not None:
+            if items[current].status == "cancelled":
+                return _skipped_completion(
+                    item_id,
+                    f"cannot complete {item_id}: ancestor {current} is cancelled",
+                )
+            current = parent_of.get(current)
     result = run_item_gate(item, cwd=cwd, timeout=timeout)
-    if not result.passed:
+    with ws.lock():
+        pointer = ws.load_progress().item if ws.progress_path.is_file() else None
+        current_items = graph.load_items(ws)
+        current_item = current_items.get(item_id)
+        before = (item.status, item.gate, item.children, item.accept)
+        after = (
+            (current_item.status, current_item.gate, current_item.children, current_item.accept)
+            if current_item is not None
+            else None
+        )
+        if (
+            pointer != item_id
+            or after != before
+            or graph.parents(current_items).get(item_id) != parent_of.get(item_id)
+            or graph.cancelled_ancestor(current_items, item_id) is not None
+        ):
+            return replace(
+                result,
+                passed=False,
+                stderr=(
+                    f"{item_id} changed while its gate ran; nothing was written. "
+                    "Call next and continue."
+                ),
+                conflict=True,
+            )
+        if not result.passed:
+            return result
+        assert current_item is not None
+        target: Status = "done" if current_item.accept == "gate" else "review"
+        ws.write_item(current_item.model_copy(update={"status": target, "gate_passed": True}))
+        _rollup(ws, item_id)
         return result
-    target: Status = "done" if item.accept == "gate" else "review"
-    ws.write_item(item.model_copy(update={"status": target, "gate_passed": True}))
-    _rollup(ws, item_id)
-    return result
 
 
 def _skipped_completion(item_id: str, reason: str) -> GateResult:

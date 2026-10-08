@@ -44,6 +44,8 @@ work and runs each gate.
    - `PASS` -> the leaf is `done` and its ancestors roll up. Go back to step 1.
    - `FAIL` -> the leaf stays `doing`. Read the printed gate output, fix the
      work, and re-run `complete`. `next` will resume the same leaf, not skip it.
+   - `CONFLICT` -> the leaf changed while its gate ran; nothing was written.
+     Call `next` and continue. Do not escalate this as a gate failure.
 
 ## When to stop and escalate
 

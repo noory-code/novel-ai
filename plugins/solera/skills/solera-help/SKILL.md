@@ -56,6 +56,8 @@ Pass the current workspace as `project_root` to every tool.
 | `write_retrospective` | Record what the design lacked after work. |
 | `write_feedback` | Record a blocker for a human while work is blocked. |
 
+`complete_current` also returns `conflict: true` when the item or progress pointer changes during its gate; nothing is written. Call `next_work_item` and continue.
+
 ## Rules
 
 - One leaf = one chunk you can finish in a single context, with a gate that

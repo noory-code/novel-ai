@@ -207,7 +207,7 @@ def complete_current(project_root: str, timeout_seconds: float = 120.0) -> dict[
         progress = ws.load_progress()
         if progress.item is None:
             raise ValueError("no Solera work item is currently active")
-        result = complete(ws, progress.item, cwd=root, timeout=timeout_seconds)
+    result = complete(ws, progress.item, cwd=root, timeout=timeout_seconds)
     return asdict(result)
 
 

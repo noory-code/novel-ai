@@ -47,6 +47,7 @@ class GateResult:
     stdout: str
     stderr: str
     timed_out: bool
+    conflict: bool = False
 
 
 def run_gate(
