@@ -108,7 +108,7 @@ def resolve_draft(
         project_id=project_id,
         canvas=draft.canvas_kind,
         service_id=draft.service_id,
-        node_ids=node_ids or draft.target_node_ids,
+        node_ids=node_ids or draft.target_node_ids or draft.resolved_node_ids,
         draft_id=draft_id,
     )
     return _draft_result(draft)
