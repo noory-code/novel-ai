@@ -144,6 +144,23 @@ def test_other_writes_record_once_per_call(tmp_path: Path, monkeypatch: pytest.M
     assert lines[5]["draft_id"] == draft_id
 
 
+def test_rejected_draft_logs_target_node_ids(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    log = tmp_path / "tools.jsonl"
+    monkeypatch.setenv("MASHBILL_TOOL_LOG", str(log))
+    project_path = str(tmp_path)
+    mcp_tools.create_project_tool(project_path, "p1", "P1")
+    node_id = mcp_tools.create_node(project_path, "p1", "foundation", "mission")["node"]["id"]
+    draft_id = record_draft(
+        project_path, "p1", "foundation", "Proposal", "Reason", target_node_ids=[node_id]
+    )["draft_id"]
+
+    resolve_draft(project_path, "p1", draft_id, "rejected")
+
+    assert _lines(log)[-1]["node_ids"] == [node_id]
+
+
 def test_publication_tools_log_once(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     log = tmp_path / "tools.jsonl"
     monkeypatch.setenv("MASHBILL_TOOL_LOG", str(log))

@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.205.2] — 2026-10-08
+
+### Fixed
+
+- Resolving a draft logs its target node ids when the caller omits node ids (W-00000392).
+
 ## [0.205.1] — 2026-10-08
 
 ### Fixed
