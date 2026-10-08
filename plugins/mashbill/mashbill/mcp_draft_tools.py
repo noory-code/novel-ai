@@ -15,6 +15,7 @@ from mashbill.draft_write_split import WriteFragment, split_write_by_draft
 from mashbill.field_policy import writable_node_fields
 from mashbill.models_canvas import CanvasDoc, CanvasKind
 from mashbill.models_draft import DraftCanvasKind, DraftDoc, ResolvedDraftStatus
+from mashbill.tool_log import record_tool_call
 from mashbill.workspace import resolve_plot_root
 
 _CanvasFragmentValue = tuple[str, str, str | None]
@@ -52,6 +53,14 @@ def record_draft(
         proposed_kind,
         service_id,
     )
+    record_tool_call(
+        "record_draft",
+        project_id=project_id,
+        canvas=canvas_kind,
+        service_id=service_id,
+        node_ids=target_node_ids or [],
+        draft_id=draft.id,
+    )
     return _draft_result(draft)
 
 
@@ -68,7 +77,16 @@ def update_draft(
     unchanged; record a new draft if the person wants to revisit one.
     """
     plot_root = resolve_plot_root(project_path)
-    return _draft_result(persist_update(plot_root, project_id, draft_id, proposed_text, rationale))
+    draft = persist_update(plot_root, project_id, draft_id, proposed_text, rationale)
+    record_tool_call(
+        "update_draft",
+        project_id=project_id,
+        canvas=draft.canvas_kind,
+        service_id=draft.service_id,
+        node_ids=draft.target_node_ids,
+        draft_id=draft_id,
+    )
+    return _draft_result(draft)
 
 
 def resolve_draft(
@@ -84,7 +102,16 @@ def resolve_draft(
     proposal. A later resolution is allowed and refreshes ``updated``.
     """
     plot_root = resolve_plot_root(project_path)
-    return _draft_result(persist_resolution(plot_root, project_id, draft_id, status, node_ids))
+    draft = persist_resolution(plot_root, project_id, draft_id, status, node_ids)
+    record_tool_call(
+        "resolve_draft",
+        project_id=project_id,
+        canvas=draft.canvas_kind,
+        service_id=draft.service_id,
+        node_ids=node_ids or [],
+        draft_id=draft_id,
+    )
+    return _draft_result(draft)
 
 
 def ensure_draft(plot_root: Path, project_id: str, draft_id: str) -> None:
@@ -183,9 +210,7 @@ def finish_node_write_draft(
         WriteFragment(
             name,
             node_ids=tuple(touched_node_ids),
-            written_texts=(value,)
-            if isinstance((value := node.get(name)), str) and value
-            else (),
+            written_texts=(value,) if isinstance((value := node.get(name)), str) and value else (),
             matching_node_ids=(node_id,),
             added_node=before_node is None,
         )

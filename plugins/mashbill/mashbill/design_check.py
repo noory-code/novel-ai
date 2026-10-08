@@ -231,6 +231,7 @@ def set_design_check(
     check the coach did not run.
     """
     from mashbill.canvas_io import read_canvas, write_canvas
+    from mashbill.tool_log import record_tool_call
     from mashbill.workspace import resolve_plot_root
 
     plot_root = resolve_plot_root(project_path)
@@ -277,6 +278,7 @@ def set_design_check(
                     detail.model_copy(update={"nodes": detail_nodes}).model_dump(by_alias=True)
                 ),
             )
+    record_tool_call("set_design_check", project_id=project_id, canvas="services", node_id=node_id)
     return {"node": saved_node.model_dump(by_alias=True)}
 
 
