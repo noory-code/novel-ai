@@ -56,7 +56,11 @@
   conditions and its ancestors' goals to `POST /api/projects/{id}/work-proposals/nodes`; Mashbill asks the chosen
   provider once (`complete_once`, 60 s) and returns up to three published nodes with a reason each, refusing slugs that
   are not published. The person picks one and the app sets the item's `realizes`. When none fits, "설계에 먼저 그리기"
-  opens the Services tab; drawing the node is left to the person and the coach there.
+  opens the Services tab; drawing the node is left to the person and the coach there. (6) *(user, 2026-10-09,
+  novel-workspace W-00000406)* In the app the rule holds even before any service is published: when the app has no
+  imported release for the project — none is published, or importing failed — it does not send a check for an item
+  that neither it nor an ancestor links to a node, and says why ("publish a service first" when none is published).
+  Solera on its own keeps the scope of D-2026-10-01-G "Applied in Solera".
 - **Why:** the user decided that a work item that names no node cannot start (D-2026-10-01-G (2)) and that work
   attaches through the format F contract of publishing and importing (W-00000320 decision 1 ⓐ, novel-ai CLAUDE.md
   "Solera imports published artifacts by value"). The app had no import path, so the start rule — which Solera applies
@@ -67,7 +71,9 @@
   decision names. Apply the rule in every Solera workspace — not chosen: Solera also runs on its own without Novel
   (D-2026-10-01-G "Applied in Solera"). Import when the Work tab opens — not chosen: viewing would write. Draw the
   missing node automatically — not chosen: the design is the person's (VISION: AI proposes, the person confirms).
-- **Approval:** Pending — Claude's design under the user's decisions above, open to the user's review; in particular
+- **Approval:** (6) decided by the user, 2026-10-09 (novel-workspace W-00000325: "ⓑ로 진행해주세요" — block such checks
+  in the app before any publish too). The rest pending — Claude's design under the user's decisions above, open to the
+  user's review; in particular
   (5) — "AI로 노드 찾기" stands in for "the coach shows candidate nodes" (D-2026-10-01-G (3)) as a one-shot proposal,
   and "설계에 먼저 그리기" only opens the Services tab.
 - **Spec impact:** Solera `docs/HTTP.md` (`POST /api/work/imports`); public `docs/specs/canvas-behavior.md` §Work
@@ -494,7 +500,8 @@
   standalone without Novel and such a workspace has no node to reach. This
   scope is Claude's reading of (1) and of Solera's standalone contract; the
   user has not reviewed it yet. The app gained an import path so the rule
-  applies in app workspaces too: D-2026-10-09-B.
+  applies in app workspaces too, and the user decided that in the app it
+  holds even before any service is published: D-2026-10-09-B (6).
 - **Principles:** SSOT (the link has one owner, to be chosen in Q-00000027);
   Fail Fast (refuse at start, not later); Honesty (no unplaced work that the
   AI cannot find).

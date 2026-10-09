@@ -270,11 +270,11 @@ choices made while building it on 2026-10-02 and still open to the user's review
     (`POST /api/work/imports`). Before any write on the Work tab (create, plan, check), it asks Mashbill for the latest
     release of every published service (`GET /api/projects/{id}/published-releases` → `{"releases": [{"service":
     slug, "release": "vS<N>", "source": path}]}`) and imports any not imported yet. Opening the tab writes nothing. An
-    import failure is shown with its reason and does not block reading or creating. While an import has failed and
-    no release is imported, the app does not send a check for an item that neither it nor an ancestor links to a
-    published node — the engine could not enforce the rule — and says why; other checks proceed. When no service is
-    published, nothing is imported and checks proceed as in Solera on its own: the workspace is not linked to a design
-    (D-2026-10-01-G "Applied in Solera").
+    import failure is shown with its reason and does not block reading or creating. While the app has no imported
+    release for the project — no service is published, or importing failed — it does not send a check for an item
+    that neither it nor an ancestor links to a published node, because the engine applies the rule only with an
+    imported design. It says why: "publish a service first" when none is published, the import failure otherwise.
+    The item then offers the same choices as a blocked item. Other checks proceed (`D-2026-10-09-B` (6)).
   - *Blocked items.* With a design imported, an item without children that neither it nor an ancestor links to a
     published node cannot be checked; its checkbox says so, and the item offers "노드 고르기" / "Choose a node" (the
     published-node chooser used for a new root) and "AI로 노드 찾기" / "Find a node with AI". The latter sends
