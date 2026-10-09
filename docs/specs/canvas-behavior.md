@@ -271,7 +271,9 @@ choices made while building it on 2026-10-02 and still open to the user's review
     slug, "release": "vS<N>", "source": path}]}`) and imports any not imported yet. Opening the tab writes nothing. An
     import failure is shown with its reason and does not block reading or creating. While an import has failed and
     no release is imported, the app does not send a check for an item that neither it nor an ancestor links to a
-    published node — the engine could not enforce the rule — and says why; other checks proceed.
+    published node — the engine could not enforce the rule — and says why; other checks proceed. When no service is
+    published, nothing is imported and checks proceed as in Solera on its own: the workspace is not linked to a design
+    (D-2026-10-01-G "Applied in Solera").
   - *Blocked items.* With a design imported, an item without children that neither it nor an ancestor links to a
     published node cannot be checked; its checkbox says so, and the item offers "노드 고르기" / "Choose a node" (the
     published-node chooser used for a new root) and "AI로 노드 찾기" / "Find a node with AI". The latter sends
