@@ -205,8 +205,10 @@ choices made while building it on 2026-10-02 and still open to the user's review
     or more. When the target does not fit at that zoom, the view shows the item being split (or the first proposed
     item) at the start of the visible area. The visible area is the graph minus the part a panel covers.
   - Focusing a box for typing never scrolls the tab sideways; the graph pans to the box instead.
-  - Fitting the whole graph (opening the tab, or the item set changing) still may zoom down to the design canvases'
-    minimum, as before.
+  - An item the person has just created on the tab (from the keyboard, by confirming a proposal, or by writing a root
+    by hand) is selected and the view moves to it as above; that change does not refit the whole graph. Fitting the
+    whole graph (opening the tab, or the item set changing for any other reason, such as an agent writing) still may
+    zoom down to the design canvases' minimum, as before.
 - **Badge on design canvases** *(user, `D-2026-10-04-A` (3))*: a published design node that work items realize shows
   counts per state on the bottom-right corner of its frame, never one total and never a percent: uphill ("오르막 N",
   what to do is not yet known), downhill ("내리막 N", the work is known and being done), and awaiting judgment
