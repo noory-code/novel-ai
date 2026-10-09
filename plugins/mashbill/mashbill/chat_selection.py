@@ -24,6 +24,7 @@ from typing import Any
 
 from mashbill.canvas_io import read_canvas
 from mashbill.chat_context import SELECTION_DETAIL_CAP, build_context_preamble
+from mashbill.chat_services_map import render_services_map_lines
 from mashbill.draft_store import list_drafts
 from mashbill.field_policy import writable_node_fields
 from mashbill.models_canvas import CanvasDoc, CanvasKind
@@ -309,6 +310,7 @@ def render_canvas_map(plot_root: Path, scope: str, selection: Any) -> str:
     feature on the canvas. Returns ``""`` for the cross-canvas ``project`` scope
     and every unresolvable-canvas case, so the caller can fall back to the cheap
     wire-label header.
+    On the services canvas, features appear under their parent services.
     """
     if scope == "project":
         return ""
@@ -325,12 +327,22 @@ def render_canvas_map(plot_root: Path, scope: str, selection: Any) -> str:
         node.id: _count_feature_flow_nodes(plot_root, project_id, node) for node in feature_nodes
     }
     lines = [f"[Canvas: {scope}] {len(canvas.nodes)} node(s):"]
-    for node in canvas.nodes[:CANVAS_MAP_CAP]:
-        mark = " [selected]" if node.id in selected_ids else ""
-        flow = _render_feature_flow_state(plot_root, project_id, node, flow_counts.get(node.id))
-        lines.append(f'- {node.kind} "{node.label}" ({node.id}){flow}{mark}')
-    if len(canvas.nodes) > CANVAS_MAP_CAP:
-        lines.append(f"…and {len(canvas.nodes) - CANVAS_MAP_CAP} more")
+    if canvas.canvas_kind == "services":
+
+        def render_line(node: Any, nested: bool) -> str:
+            mark = " [selected]" if node.id in selected_ids else ""
+            flow = _render_feature_flow_state(plot_root, project_id, node, flow_counts.get(node.id))
+            prefix = "  -" if nested else "-"
+            return f'{prefix} {node.kind} "{node.label}" ({node.id}){flow}{mark}'
+
+        lines.extend(render_services_map_lines(canvas, CANVAS_MAP_CAP, render_line))
+    else:
+        for node in canvas.nodes[:CANVAS_MAP_CAP]:
+            mark = " [selected]" if node.id in selected_ids else ""
+            flow = _render_feature_flow_state(plot_root, project_id, node, flow_counts.get(node.id))
+            lines.append(f'- {node.kind} "{node.label}" ({node.id}){flow}{mark}')
+        if len(canvas.nodes) > CANVAS_MAP_CAP:
+            lines.append(f"…and {len(canvas.nodes) - CANVAS_MAP_CAP} more")
     if feature_nodes:
         undrawn = [node for node in feature_nodes if not any(flow_counts[node.id])]
         drawn_count = len(feature_nodes) - len(undrawn)

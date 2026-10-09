@@ -29,6 +29,7 @@ from mashbill.folder_io import create_project, write_canvas
 from mashbill.models import (
     ActorNode,
     CanvasDoc,
+    CategoryNode,
     CoreValueNode,
     DecisionNode,
     EntityNode,
@@ -36,6 +37,7 @@ from mashbill.models import (
     IdentityNode,
     MissionNode,
     ServiceNode,
+    SketchEdge,
     SketchNode,
     StepNode,
 )
@@ -247,6 +249,190 @@ def _services_canvas_with_two_features() -> CanvasDoc:
             FeatureNode(id="f_drawn", label="Write a post"),
             FeatureNode(id="f_empty", label="Delete a post"),
         ],
+    )
+
+
+def _write_services_map_canvas(
+    plot_root: Path, nodes: list[SketchNode], edges: list[SketchEdge]
+) -> None:
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(canvas_id="services", canvas_kind="services", nodes=nodes, edges=edges),
+    )
+
+
+def test_services_map_groups_features_and_keeps_flow_summary(tmp_path: Path) -> None:
+    plot_root = _setup(tmp_path)
+    _write_services_map_canvas(
+        plot_root,
+        [
+            ServiceNode(id="svc1", label="Publishing"),
+            FeatureNode(id="f1", label="Write a post"),
+            ServiceNode(id="svc2", label="Billing"),
+            FeatureNode(id="f2", label="Share"),
+            FeatureNode(id="f3", label="Export"),
+        ],
+        [
+            SketchEdge(id="e1", source="svc1", target="f1"),
+            SketchEdge(id="e2", source="svc1", target="f2"),
+            SketchEdge(id="e3", source="svc2", target="f2"),
+        ],
+    )
+    write_canvas(plot_root, "alpha", _feature_canvas_with_steps("f1", "Write a post", 3))
+
+    assert render_canvas_map(plot_root, "services", []) == "\n".join(
+        [
+            "[Canvas: services] 5 node(s):",
+            '- service "Publishing" (svc1)',
+            '  - feature "Write a post" (f1) [단계 3개]',
+            '  - feature "Share" (f2) [아직 안 그렸다]',
+            '- service "Billing" (svc2)',
+            '  - feature "Share" (f2) [아직 안 그렸다]',
+            "서비스 없음:",
+            '- feature "Export" (f3) [아직 안 그렸다]',
+            '기능 3개 가운데 흐름이 그려진 것 1개. 아직 안 그린 기능: "Share", "Export"',
+        ]
+    )
+
+
+def test_services_map_repeats_shared_feature_and_selected_mark(tmp_path: Path) -> None:
+    plot_root = _setup(tmp_path)
+    _write_services_map_canvas(
+        plot_root,
+        [
+            ServiceNode(id="svc1", label="Publishing"),
+            ServiceNode(id="svc2", label="Billing"),
+            FeatureNode(id="f1", label="Share"),
+        ],
+        [
+            SketchEdge(id="e1", source="svc1", target="f1"),
+            SketchEdge(id="e2", source="svc2", target="f1"),
+        ],
+    )
+    out = render_canvas_map(plot_root, "services", [{"id": "f1"}])
+    assert out.count('  - feature "Share" (f1) [아직 안 그렸다] [selected]') == 2
+    assert "서비스 없음:" not in out
+
+
+def test_services_map_category_edge_does_not_parent_feature(tmp_path: Path) -> None:
+    plot_root = _setup(tmp_path)
+    _write_services_map_canvas(
+        plot_root,
+        [CategoryNode(id="cat1", label="Content"), FeatureNode(id="f1", label="Export")],
+        [SketchEdge(id="e1", source="cat1", target="f1")],
+    )
+    out = render_canvas_map(plot_root, "services", [])
+    assert out.splitlines()[1:4] == [
+        '- category "Content" (cat1)',
+        "서비스 없음:",
+        '- feature "Export" (f1) [아직 안 그렸다]',
+    ]
+
+
+def test_services_map_anchor_spokes_do_not_parent_feature(tmp_path: Path) -> None:
+    plot_root = _setup(tmp_path)
+    _write_services_map_canvas(
+        plot_root,
+        [ServiceNode(id="svc1", label="Publishing"), FeatureNode(id="f1", label="Export")],
+        [],
+    )
+    from mashbill.folder_io import read_canvas
+    from mashbill.models_foundation import PROJECT_ANCHOR_ID
+
+    saved = read_canvas(plot_root, "alpha", "services")
+    assert any(edge.source == PROJECT_ANCHOR_ID and edge.target == "svc1" for edge in saved.edges)
+    out = render_canvas_map(plot_root, "services", [])
+    assert out.splitlines()[1:4] == [
+        '- service "Publishing" (svc1)',
+        "서비스 없음:",
+        '- feature "Export" (f1) [아직 안 그렸다]',
+    ]
+
+
+def test_services_map_cap_counts_grouped_lines_and_distinct_unseen_nodes(tmp_path: Path) -> None:
+    plot_root = _setup(tmp_path)
+    features = [FeatureNode(id=f"f{i:02}", label=f"Feature {i:02}") for i in range(CANVAS_MAP_CAP)]
+    _write_services_map_canvas(
+        plot_root,
+        [
+            ServiceNode(id="svc1", label="Publishing"),
+            *features,
+            FeatureNode(id="orphan", label="Export"),
+        ],
+        [
+            SketchEdge(id=f"e{i:02}", source="svc1", target=feature.id)
+            for i, feature in enumerate(features)
+        ],
+    )
+    out = render_canvas_map(plot_root, "services", [])
+    lines = out.splitlines()
+    assert sum(line.startswith(("- ", "  - ")) for line in lines) == CANVAS_MAP_CAP
+    assert lines[CANVAS_MAP_CAP] == '  - feature "Feature 58" (f58) [아직 안 그렸다]'
+    assert "서비스 없음:" not in lines
+    assert "…and 2 more" in lines
+
+
+def test_services_map_repeated_feature_uses_cap_without_inflating_omitted_count(
+    tmp_path: Path,
+) -> None:
+    plot_root = _setup(tmp_path)
+    features = [FeatureNode(id=f"f{i:02}", label=f"Feature {i:02}") for i in range(57)]
+    _write_services_map_canvas(
+        plot_root,
+        [
+            ServiceNode(id="svc1", label="Publishing"),
+            ServiceNode(id="svc2", label="Billing"),
+            *features,
+            FeatureNode(id="orphan", label="Export"),
+        ],
+        [
+            *(
+                SketchEdge(id=f"e{i:02}", source="svc1", target=feature.id)
+                for i, feature in enumerate(features)
+            ),
+            SketchEdge(id="shared", source="svc2", target="f00"),
+        ],
+    )
+    lines = render_canvas_map(plot_root, "services", []).splitlines()
+    assert sum(line.startswith(("- ", "  - ")) for line in lines) == CANVAS_MAP_CAP
+    assert lines[CANVAS_MAP_CAP] == '  - feature "Feature 00" (f00) [아직 안 그렸다]'
+    assert "서비스 없음:" not in lines
+    assert lines[-2] == "…and 1 more"
+
+
+def test_service_scope_uses_same_grouped_services_map(tmp_path: Path) -> None:
+    plot_root = _setup(tmp_path)
+    _write_services_map_canvas(
+        plot_root,
+        [ServiceNode(id="svc1", label="Publishing"), FeatureNode(id="f1", label="Write")],
+        [SketchEdge(id="e1", source="svc1", target="f1")],
+    )
+    services = render_canvas_map(plot_root, "services", [])
+    service = render_canvas_map(plot_root, "service:svc1", [])
+    assert '  - feature "Write" (f1) [아직 안 그렸다]' in services
+    assert service == services.replace("[Canvas: services]", "[Canvas: service:svc1]", 1)
+
+
+def test_other_canvas_maps_keep_exact_output(tmp_path: Path) -> None:
+    plot_root = _setup(tmp_path)
+    write_canvas(plot_root, "alpha", _two_value_canvas())
+    write_canvas(plot_root, "alpha", _actors_canvas())
+    write_canvas(plot_root, "alpha", _entities_canvas())
+    assert render_canvas_map(plot_root, "foundation", []) == "\n".join(
+        [
+            "[Canvas: foundation] 4 node(s):",
+            '- mission "Our mission" (m1)',
+            '- identity "Identity" (i1)',
+            '- core_value "Clarity" (v1)',
+            '- core_value "Trust" (v2)',
+        ]
+    )
+    assert render_canvas_map(plot_root, "actors", []) == "\n".join(
+        ["[Canvas: actors] 2 node(s):", '- actor "Operator" (a1)', '- actor "Reader" (a2)']
+    )
+    assert render_canvas_map(plot_root, "entities", []) == "\n".join(
+        ["[Canvas: entities] 1 node(s):", '- entity "Post" (e1)']
     )
 
 

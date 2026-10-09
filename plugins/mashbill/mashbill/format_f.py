@@ -29,6 +29,7 @@ from mashbill.format_f_slugs import (
     write_slug_store,
 )
 from mashbill.models import CanvasDoc
+from mashbill.service_features import service_feature_ids
 from mashbill.storage import _project_dir, _read_json, _write_json
 
 FORMAT_F_VERSION = 1
@@ -256,11 +257,8 @@ def _features_under_service(services: CanvasDoc, service_id: str) -> list[Any]:
     """Feature nodes nested under ``service_id`` — the targets of a directed
     edge from the service (the same parent→child mechanism the canvas uses,
     D-2026-06-17-D). Deterministic order (by node id) for stable manifests."""
-    feature_ids = {n.id for n in services.nodes if n.kind == "feature"}
     by_id = {n.id: n for n in services.nodes}
-    children = sorted(
-        {e.target for e in services.edges if e.source == service_id and e.target in feature_ids}
-    )
+    children = sorted(service_feature_ids(services).get(service_id, []))
     return [by_id[fid] for fid in children]
 
 

@@ -60,7 +60,8 @@ the deep definition comes later in the home coach). Not created silently — alw
      that names no node can be captured but not started, and the coach then offers candidate nodes or a new node.
    - **Delivering (the envelope, how it's handed over):** the full current **Foundation** (Mission + Core value +
      Identity) + the active canvas (whole) + the selected node + the **entity registry** (name+one line, for strong
-     dedup) + deep fetch if needed. **CAG first**
+     dedup) + deep fetch if needed. On the Services canvas the map lists each feature under the service it belongs to
+     (a directed service → feature edge), so the coach sees which feature is whose. **CAG first**
      (the stable skeleton = the prompt-cache prefix, only the dynamic part as suffix) → if too big, **RAG**. The user's
      project is *any size* and the external agent is *any model*, so CAG can't be assumed → runtime selection behind a
      **context-provider abstract seam**. The playbook depends only on the abstraction.

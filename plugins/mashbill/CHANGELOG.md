@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.205.4] — 2026-10-09
+
+### Fixed
+
+- The coach's services canvas map lists each feature under the service it belongs to (a directed service → feature edge), and features with no service under `서비스 없음:` (W-00000393).
+
 ## [0.205.3] — 2026-10-08
 
 ### Fixed
