@@ -498,8 +498,11 @@
   `realizes`, and reports why. It applies the rule only in a workspace that
   has imported at least one format F design, because Solera also runs
   standalone without Novel and such a workspace has no node to reach. This
-  scope is Claude's reading of (1) and of Solera's standalone contract; the
-  user has not reviewed it yet. The app gained an import path so the rule
+  scope began as Claude's reading of (1) and of Solera's standalone contract;
+  the user accepted it for the engine on 2026-10-09 (novel-workspace
+  W-00000325: "ⓐ로 하고" — Solera keeps handing out a leaf that reaches no
+  node while the workspace has no imported design, even in an app project
+  before its first publish). The app gained an import path so the rule
   applies in app workspaces too, and the user decided that in the app it
   holds even before any service is published: D-2026-10-09-B (6).
 - **Principles:** SSOT (the link has one owner, to be chosen in Q-00000027);
