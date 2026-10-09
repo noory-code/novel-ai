@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.10.0] — 2026-10-09
+
+### Added
+
+- Add `POST /api/work/imports` to import published service releases by value, replay the same release without writing, and reject invalid or conflicting bundles (D-2026-10-09-B, W-00000402).
+
 ## [8.9.1] — 2026-10-09
 
 ### Documentation

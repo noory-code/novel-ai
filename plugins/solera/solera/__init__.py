@@ -6,4 +6,4 @@ executes. It does not run the agent loop itself and it works standalone, with or
 without Novel.
 """
 
-__version__ = "8.9.1"
+__version__ = "8.10.0"

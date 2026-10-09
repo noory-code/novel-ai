@@ -132,6 +132,10 @@ class ImportedRelease(TypedDict):
     project: dict[str, Any]
 
 
+class ImportConflictError(ValueError):
+    """An imported release identity already has different manifest content."""
+
+
 def _load_manifest(path: Path, model: type[_ManifestT]) -> _ManifestT:
     return model.model_validate_json(path.read_text(encoding="utf-8"))
 
@@ -172,6 +176,30 @@ def _reject_symlinks(root: Path) -> None:
     for path in root.rglob("*"):
         if path.is_symlink():
             raise ValueError(f"format F bundle contains a symlink: {path}")
+
+
+def read_published_release(source_vs_dir: Path) -> tuple[ImportedRelease, Path]:
+    """Validate a published vS bundle and return its manifests and based_on directory."""
+    _reject_symlinks(source_vs_dir)
+    manifest = _load_manifest(source_vs_dir / "manifest.json", _ServiceManifest)
+    project_root_path = source_vs_dir.parent.parent / "_project"
+    if project_root_path.is_symlink():
+        raise ValueError(f"format F bundle contains a symlink: {project_root_path}")
+    project_root = project_root_path.resolve()
+    vp_dir = project_root / manifest.based_on
+    _reject_symlinks(vp_dir)
+    resolved_vp_dir = vp_dir.resolve()
+    try:
+        resolved_vp_dir.relative_to(project_root)
+    except ValueError as exc:
+        raise ValueError(
+            f"based_on snapshot escapes the _project directory: {manifest.based_on!r}"
+        ) from exc
+    if not (vp_dir / "manifest.json").is_file():
+        raise FileNotFoundError(f"based_on snapshot not found: {vp_dir}")
+
+    project_manifest = _load_manifest(vp_dir / "manifest.json", _ProjectManifest)
+    return _release_data(manifest, project_manifest), vp_dir
 
 
 def _element_hashes(elements: list[dict[str, Any]]) -> dict[str, Any]:
@@ -278,7 +306,7 @@ def _reject_conflicting_import(
             and existing_service["release"] == incoming_service["release"]
             and _manifest_content(existing_service_path) != incoming_service_content
         ):
-            raise ValueError(
+            raise ImportConflictError(
                 f"{incoming_service['service']} {incoming_service['release']} already exists "
                 f"under label {release_dir.name!r} with a different manifest"
             )
@@ -286,7 +314,7 @@ def _reject_conflicting_import(
             existing_service["based_on"] == incoming_service["based_on"]
             and _manifest_content(existing_project_path) != incoming_project_content
         ):
-            raise ValueError(
+            raise ImportConflictError(
                 f"project release {incoming_service['based_on']} already exists under label "
                 f"{release_dir.name!r} with a different manifest"
             )
@@ -311,26 +339,7 @@ def import_release(ws: Workspace, source_vs_dir: Path, *, label: str) -> dict[st
     if dest.exists():
         raise FileExistsError(f"spec already imported: {dest}")
 
-    _reject_symlinks(source_vs_dir)
-    manifest = _load_manifest(source_vs_dir / "manifest.json", _ServiceManifest)
-    project_root_path = source_vs_dir.parent.parent / "_project"
-    if project_root_path.is_symlink():
-        raise ValueError(f"format F bundle contains a symlink: {project_root_path}")
-    project_root = project_root_path.resolve()
-    vp_dir = project_root / manifest.based_on
-    _reject_symlinks(vp_dir)
-    resolved_vp_dir = vp_dir.resolve()
-    try:
-        resolved_vp_dir.relative_to(project_root)
-    except ValueError as exc:
-        raise ValueError(
-            f"based_on snapshot escapes the _project directory: {manifest.based_on!r}"
-        ) from exc
-    if not (vp_dir / "manifest.json").is_file():
-        raise FileNotFoundError(f"based_on snapshot not found: {vp_dir}")
-
-    project_manifest = _load_manifest(vp_dir / "manifest.json", _ProjectManifest)
-    incoming = _release_data(manifest, project_manifest)
+    incoming, vp_dir = read_published_release(source_vs_dir)
     _reject_conflicting_import(
         ws,
         incoming,

@@ -32,6 +32,7 @@ from .http_endpoints import (
     work_by_slugs_endpoint,
     work_endpoint,
 )
+from .http_imports import import_release_endpoint
 
 
 def create_http_app(hub: BroadcastHub | None = None) -> Starlette:
@@ -63,6 +64,7 @@ def create_http_app(hub: BroadcastHub | None = None) -> Starlette:
         Route("/api/work", work_endpoint, methods=["GET"]),
         Route("/api/work/by-slugs", work_by_slugs_endpoint, methods=["POST"]),
         Route("/api/work/items", create_item_endpoint, methods=["POST"]),
+        Route("/api/work/imports", import_release_endpoint, methods=["POST"]),
         Route("/api/work/plans", create_plan_endpoint, methods=["POST"]),
         Route("/api/work/items/{id}", patch_item_endpoint, methods=["PATCH"]),
         Route("/api/work/items/{id}/accept", accept_item_endpoint, methods=["POST"]),
