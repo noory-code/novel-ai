@@ -98,6 +98,11 @@ class WorkItem(BaseModel):
     # connection is by *value* (no import) — the ID-diff on re-publish reopens
     # the items whose realizes-slug changed. Absent in older files → [].
     realizes: list[str] = Field(default_factory=list)
+    conditions: list[str] = Field(default_factory=list)
+    pass_examples: list[str] = Field(default_factory=list)
+    fail_examples: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    basis: list[str] = Field(default_factory=list)
     # Work-item ids that must be done before this item can start.
     after: list[str] = Field(default_factory=list)
     goal: str
@@ -109,6 +114,14 @@ class WorkItem(BaseModel):
     gate_passed: bool = False
 
     _check_goal = field_validator("goal")(_require_goal)
+
+    @field_validator("conditions", "pass_examples", "fail_examples", "risks", "basis")
+    @classmethod
+    def _trim_plain_words(cls, values: list[str]) -> list[str]:
+        trimmed = [value.strip() for value in values]
+        if any(not value for value in trimmed):
+            raise ValueError("plain-word fields must not contain blank strings")
+        return trimmed
 
     @model_validator(mode="before")
     @classmethod
@@ -235,6 +248,10 @@ def dump_workitem(item: WorkItem) -> str:
     }
     if item.after:
         fields["after"] = list(item.after)
+    for name in ("conditions", "pass_examples", "fail_examples", "risks", "basis"):
+        values = getattr(item, name)
+        if values:
+            fields[name] = list(values)
     legacy_accept: Accept = "gate" if item.gate else "children" if item.children else "person"
     if item.accept != legacy_accept:
         fields["accept"] = item.accept

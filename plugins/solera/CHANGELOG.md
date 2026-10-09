@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.9.0] — 2026-10-09
+
+### Added
+
+- Implement five plain-word fields and atomic, replay-safe `POST /api/work/plans` (D-2026-10-09-A, W-00000397).
+
 ## [8.8.2] — 2026-10-09
 
 ### Documentation

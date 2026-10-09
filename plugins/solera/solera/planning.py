@@ -9,6 +9,7 @@ the format and validates the complete future order graph before writing it.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 
 from pydantic import ValidationError
 
@@ -23,6 +24,7 @@ from .errors import (
     InvalidGateError,
     InvalidOrderLinkError,
     InvalidPhaseError,
+    InvalidPlanError,
     InvalidRealizesSlugError,
     ItemProtectedError,
     MoveUnderDescendantError,
@@ -57,10 +59,14 @@ def _prefix(level: str) -> str:
 
 def next_item_id(ws: Workspace, level: str) -> str:
     """The next free ``{PREFIX}-NNN`` id for ``level`` in the workspace."""
+    return _next_item_id_from_ids(ws.list_items(), level)
+
+
+def _next_item_id_from_ids(ids: list[str], level: str) -> str:
     prefix = validate_path_name(_prefix(level))
     pattern = re.compile(rf"^{re.escape(prefix)}-(\d+)$")
     highest = 0
-    for item_id in ws.list_items():
+    for item_id in ids:
         match = pattern.match(item_id)
         if match:
             highest = max(highest, int(match.group(1)))
@@ -72,6 +78,12 @@ def _validate_realizes(realizes: list[str]) -> None:
         raise InvalidRealizesSlugError("realizes slugs must not be empty or blank")
     if len(set(realizes)) != len(realizes):
         raise DuplicateRealizesSlugError("realizes slugs must not contain duplicates")
+
+
+def _validate_plain_words(fields: Mapping[str, list[str]]) -> None:
+    for name, values in fields.items():
+        if any(not value.strip() for value in values):
+            raise InvalidPlanError(f"{name} must not contain blank strings")
 
 
 def _validated_item(data: dict[str, object]) -> WorkItem:
@@ -212,6 +224,19 @@ def create_item(
     if updated_box is not None:
         ws.write_item(updated_box)
     return item
+
+
+@workspace_locked
+def set_plain_words(ws: Workspace, item_id: str, fields: Mapping[str, list[str]]) -> WorkItem:
+    """Set person-confirmed fields after applying the ordinary edit guards."""
+    item = ws.load_item(item_id)
+    items = load_items(ws)
+    assert_person_edit_allowed(items, [item_id])
+    assert_items_not_frozen(items, [item_id])
+    _validate_plain_words(fields)
+    updated = _validated_item({**item.model_dump(), **fields})
+    ws.write_item(updated)
+    return updated
 
 
 @workspace_locked

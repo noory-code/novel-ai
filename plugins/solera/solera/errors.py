@@ -61,6 +61,18 @@ class PlanningError(SoleraError):
     """A requested WorkItem edit would violate the planning tree."""
 
 
+class InvalidPlanError(PlanningError):
+    """A planned tree has an invalid key, shape, or plain-word value."""
+
+    code = "invalid_plan"
+
+
+class RequestIdConflictError(PlanningError):
+    """A request id was already used with a different canonical body."""
+
+    code = "request_id_conflict"
+
+
 class UnknownWorkItemError(PlanningError):
     """A requested work-item identifier does not exist."""
 

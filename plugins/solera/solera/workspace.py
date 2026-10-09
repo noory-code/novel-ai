@@ -103,8 +103,11 @@ def _timeout_error(path: Path, timeout: float) -> WorkspaceLockTimeoutError:
     )
 
 
-def _atomic_write_text(path: Path, text: str) -> None:
-    """Write text beside its destination, then atomically replace the file."""
+def _atomic_write_text(path: Path, text: str | bytes) -> None:
+    """Write text beside its destination, then atomically replace the file.
+
+    Bytes preserve the exact contents of a file during rollback.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(
         dir=path.parent,
@@ -114,7 +117,10 @@ def _atomic_write_text(path: Path, text: str) -> None:
     os.close(descriptor)
     temporary_path = Path(temporary_name)
     try:
-        temporary_path.write_text(text)
+        if isinstance(text, bytes):
+            temporary_path.write_bytes(text)
+        else:
+            temporary_path.write_text(text)
         os.replace(temporary_path, path)
     finally:
         temporary_path.unlink(missing_ok=True)

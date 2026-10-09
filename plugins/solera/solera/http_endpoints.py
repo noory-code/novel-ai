@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import asdict
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, TypeVar, cast
+from typing import Any, Literal, TypeVar, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from starlette.concurrency import run_in_threadpool
@@ -15,10 +15,17 @@ from starlette.responses import JSONResponse, Response
 
 from . import __version__
 from .broadcast import BroadcastHub
-from .errors import AcceptRequiredError, SoleraError, UnknownParentError, UnknownWorkItemError
+from .errors import (
+    AcceptRequiredError,
+    RequestIdConflictError,
+    SoleraError,
+    UnknownParentError,
+    UnknownWorkItemError,
+)
 from .formats import Accept, Phase, WorkItem
 from .gate import GateResult
 from .graph import cancelled_ancestor, completion, items_by_slugs, load_items
+from .plan_batch import create_plan
 from .planning import (
     add_after,
     create_item,
@@ -27,6 +34,7 @@ from .planning import (
     set_accept,
     set_goal,
     set_phase,
+    set_plain_words,
     set_realizes,
 )
 from .supervisor import (
@@ -88,6 +96,31 @@ class PatchItemBody(_Body):
     accept: str | None = None
     phase: str | None = None
     phase_note: str = ""
+    conditions: list[str] = Field(default_factory=list)
+    pass_examples: list[str] = Field(default_factory=list)
+    fail_examples: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+
+
+class PlanNode(_Body):
+    key: str
+    goal: str
+    accept: Literal["person", "children"]
+    realizes: list[str] = Field(default_factory=list)
+    conditions: list[str] = Field(default_factory=list)
+    pass_examples: list[str] = Field(default_factory=list)
+    fail_examples: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    basis: list[str] = Field(default_factory=list)
+    after_keys: list[str] = Field(default_factory=list)
+    after: list[str] = Field(default_factory=list)
+    children: list[PlanNode] = Field(default_factory=list)
+
+
+class PlanBody(_Body):
+    request_id: str
+    parent: str | None
+    items: list[PlanNode]
 
 
 class MoveItemBody(_Body):
@@ -123,6 +156,8 @@ def _errors(endpoint: _Endpoint) -> _Endpoint:
             )
         except (UnknownWorkItemError, UnknownParentError) as exc:
             return JSONResponse({"error": str(exc), "code": exc.code}, status_code=404)
+        except RequestIdConflictError as exc:
+            return JSONResponse({"error": str(exc), "code": exc.code}, status_code=409)
         except SoleraError as exc:
             return JSONResponse({"error": str(exc), "code": exc.code}, status_code=400)
         except ValueError as exc:
@@ -236,6 +271,22 @@ async def create_item_endpoint(request: Request) -> Response:
 
 
 @_errors
+async def create_plan_endpoint(request: Request) -> Response:
+    ws = _workspace(request)
+    await _parse_body(request, PlanBody)
+    body = await request.json()
+    if not body["request_id"].strip():
+        raise HttpError(400, "request_id must not be blank", "invalid_request")
+    created_now, created, items = create_plan(ws, body)
+    if created_now:
+        await _hub(request).notify_write(ws.root)
+    return JSONResponse(
+        {"created": created, "items": [item.model_dump() for item in items]},
+        status_code=201 if created_now else 200,
+    )
+
+
+@_errors
 async def patch_item_endpoint(request: Request) -> Response:
     ws = _workspace(request)
     item_id = request.path_params["id"]
@@ -248,6 +299,13 @@ async def patch_item_endpoint(request: Request) -> Response:
             "invalid_request",
         )
     with ws.lock():
+        plain_words = {
+            name: getattr(body, name)
+            for name in ("conditions", "pass_examples", "fail_examples", "risks")
+            if name in body.model_fields_set
+        }
+        if plain_words:
+            set_plain_words(ws, item_id, plain_words)
         if "accept" in body.model_fields_set:
             if body.accept is None:
                 raise HttpError(400, "accept must be a string", "invalid_request")
