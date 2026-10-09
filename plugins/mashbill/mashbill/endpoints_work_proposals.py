@@ -15,9 +15,12 @@ from mashbill.mcp_registration import ProviderName
 from mashbill.storage import _ensure_project
 from mashbill.work_proposals import (
     UnknownSlugError,
+    latest_service_releases,
+    propose_nodes,
     propose_work_item,
     propose_work_split,
     published_basis,
+    published_service_nodes,
     validate_split_request,
 )
 from mashbill.workspace import workspace_root_from_plot_root
@@ -96,6 +99,50 @@ def _project_data(request: Request) -> tuple[Any, Any] | JSONResponse:
     except FileNotFoundError:
         return _error(f"project not found: {project_id}", status=404)
     return plot_root, project_dir
+
+
+async def published_releases_endpoint(request: Request) -> JSONResponse:
+    project = _project_data(request)
+    if isinstance(project, JSONResponse):
+        return project
+    _, project_dir = project
+    releases = [
+        {"service": service, "release": manifest["release"], "source": str(folder.resolve())}
+        for service, folder, manifest in latest_service_releases(project_dir)
+    ]
+    return JSONResponse({"releases": releases})
+
+
+async def work_proposal_nodes_endpoint(request: Request) -> JSONResponse:
+    project = _project_data(request)
+    if isinstance(project, JSONResponse):
+        return project
+    plot_root, project_dir = project
+    try:
+        body: Any = await request.json()
+    except (json.JSONDecodeError, UnicodeError):
+        return _error("invalid JSON body")
+    if not isinstance(body, dict):
+        return _error("invalid JSON body")
+    goal = body.get("goal")
+    conditions = body.get("conditions", [])
+    ancestors = body.get("ancestors", [])
+    if not isinstance(goal, str) or not goal.strip():
+        return _error("'goal' must be a non-blank string")
+    for name, value in (("conditions", conditions), ("ancestors", ancestors)):
+        if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+            return _error(f"'{name}' must be a list of strings")
+    selected = _selected_provider(plot_root)
+    if isinstance(selected, JSONResponse):
+        return selected
+    provider_name, model = selected
+    try:
+        nodes = published_service_nodes(latest_service_releases(project_dir))
+        provider = _provider(request, plot_root, provider_name)
+        candidates = await propose_nodes(goal, conditions, ancestors, nodes, provider, model)
+    except Exception as exc:
+        return _proposal_error(exc)
+    return JSONResponse({"candidates": candidates})
 
 
 async def work_proposal_basis_endpoint(request: Request) -> JSONResponse:

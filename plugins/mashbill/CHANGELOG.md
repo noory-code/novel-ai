@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.208.0] — 2026-10-09
+
+### Added
+
+- List the latest valid published service releases and propose up to three published design nodes for a blocked work item without writing project data (D-2026-10-09-B, W-00000403).
+
 ## [0.207.1] — 2026-10-09
 
 ### Documentation

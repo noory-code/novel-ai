@@ -117,10 +117,16 @@ from mashbill.endpoints_tags import (
     tags_list_endpoint as tags_list_endpoint,
 )
 from mashbill.endpoints_work_proposals import (
+    published_releases_endpoint as published_releases_endpoint,
+)
+from mashbill.endpoints_work_proposals import (
     work_proposal_basis_endpoint as work_proposal_basis_endpoint,
 )
 from mashbill.endpoints_work_proposals import (
     work_proposal_item_endpoint as work_proposal_item_endpoint,
+)
+from mashbill.endpoints_work_proposals import (
+    work_proposal_nodes_endpoint as work_proposal_nodes_endpoint,
 )
 from mashbill.endpoints_work_proposals import (
     work_proposal_split_endpoint as work_proposal_split_endpoint,

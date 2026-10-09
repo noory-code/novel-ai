@@ -36,12 +36,14 @@ from mashbill.api_endpoints import (
     project_publish_status_endpoint,
     project_slugs_endpoint,
     projects_list_endpoint,
+    published_releases_endpoint,
     slug_proposals_endpoint,
     tag_delete_endpoint,
     tag_post_endpoint,
     tags_list_endpoint,
     work_proposal_basis_endpoint,
     work_proposal_item_endpoint,
+    work_proposal_nodes_endpoint,
     work_proposal_split_endpoint,
     workspace_discover_endpoint,
     workspace_git_init_endpoint,
@@ -253,6 +255,11 @@ def create_http_app(
             methods=["POST"],
         ),
         Route(
+            "/api/projects/{project_id}/published-releases",
+            published_releases_endpoint,
+            methods=["GET"],
+        ),
+        Route(
             "/api/projects/{project_id}/work-proposals/item",
             work_proposal_item_endpoint,
             methods=["POST"],
@@ -260,6 +267,11 @@ def create_http_app(
         Route(
             "/api/projects/{project_id}/work-proposals/split",
             work_proposal_split_endpoint,
+            methods=["POST"],
+        ),
+        Route(
+            "/api/projects/{project_id}/work-proposals/nodes",
+            work_proposal_nodes_endpoint,
             methods=["POST"],
         ),
         Route(

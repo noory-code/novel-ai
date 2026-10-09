@@ -12,6 +12,16 @@ from mashbill.ai_reply import first_json_object
 
 WORK_PROPOSAL_TIMEOUT_SECONDS = 120.0
 SPLIT_PROPOSAL_TIMEOUT_SECONDS = 180.0
+NODE_PROPOSAL_TIMEOUT_SECONDS = 60.0
+MAX_NODE_PROMPT_ITEMS = 200
+
+NODE_PROPOSAL_PROMPT = (
+    "Find published design nodes that could realize this blocked work item. "
+    "Choose only slugs from the published nodes below. Return only JSON with "
+    '{"candidates": [{"slug": "...", "reason": "..."}]}. '
+    "Suggest at most three nodes, each with a short reason in the person's language. "
+    "Use plain words and do not invent nodes.\n\n"
+)
 
 _PROMPT = (
     "Propose ONE work item from the published design and the person's desired outcome. "
@@ -89,6 +99,112 @@ def _release_dirs(published: Path) -> list[tuple[int, Path, dict[str, Any]]]:
             ):
                 releases.append((int(match.group(1)), release_dir, manifest))
     return releases
+
+
+def latest_service_releases(project_dir: Path) -> list[tuple[str, Path, dict[str, Any]]]:
+    """Return each service's latest valid published vS release in slug order."""
+    latest: dict[str, tuple[int, Path, dict[str, Any]]] = {}
+    for number, folder, manifest in _release_dirs(project_dir / "published"):
+        service = folder.parent.name
+        if service == "_project" or manifest.get("service") != f"service/{service}":
+            continue
+        prior = latest.get(service)
+        if prior is None or number > prior[0]:
+            latest[service] = (number, folder, manifest)
+    return [(service, latest[service][1], latest[service][2]) for service in sorted(latest)]
+
+
+def _design_line(slug: str, folder: Path) -> str:
+    try:
+        paths = _design_paths(slug, folder)
+        content = paths[-1].read_text(encoding="utf-8")
+    except (ValueError, OSError, UnicodeError):
+        return ""
+    in_frontmatter = False
+    heading = ""
+    for line in content.splitlines():
+        clean = line.strip()
+        if clean == "---":
+            in_frontmatter = not in_frontmatter
+            continue
+        if in_frontmatter or not clean:
+            continue
+        if clean.startswith("#"):
+            if not heading:
+                heading = clean[:160]
+            continue
+        return clean[:160]
+    return heading
+
+
+def published_service_nodes(
+    releases: list[tuple[str, Path, dict[str, Any]]],
+) -> dict[str, tuple[str, str]]:
+    """Collect slug, label, and a short design line from latest service releases."""
+    nodes: dict[str, tuple[str, str]] = {}
+    for _, folder, manifest in releases:
+        for element in manifest["elements"]:
+            if not isinstance(element, dict):
+                continue
+            slug, label = element.get("id"), element.get("label")
+            if isinstance(slug, str) and slug.strip() and isinstance(label, str):
+                nodes[slug] = (label, _design_line(slug, folder))
+    return nodes
+
+
+def build_node_prompt(
+    goal: str, conditions: list[str], ancestors: list[str], nodes: dict[str, tuple[str, str]]
+) -> str:
+    listed = [
+        {"slug": slug, "label": label, "design": line}
+        for slug, (label, line) in list(nodes.items())[:MAX_NODE_PROMPT_ITEMS]
+    ]
+    item = {"goal": goal, "conditions": conditions, "ancestors": ancestors}
+    return (
+        NODE_PROPOSAL_PROMPT
+        + "Blocked item:\n"
+        + json.dumps(item, ensure_ascii=False)
+        + "\nPublished nodes:\n"
+        + json.dumps(listed, ensure_ascii=False)
+    )
+
+
+async def propose_nodes(
+    goal: str,
+    conditions: list[str],
+    ancestors: list[str],
+    nodes: dict[str, tuple[str, str]],
+    provider: Any,
+    model: str | None,
+) -> list[dict[str, str]]:
+    prompt = build_node_prompt(goal, conditions, ancestors, nodes)
+    raw = await asyncio.wait_for(
+        provider.complete_once(prompt, model=model), timeout=NODE_PROPOSAL_TIMEOUT_SECONDS
+    )
+    reply = first_json_object(raw) if isinstance(raw, str) else None
+    if not isinstance(reply, dict) or not isinstance(reply.get("candidates"), list):
+        raise ValueError("reply must contain candidates")
+    candidates: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for candidate in reply["candidates"]:
+        if not isinstance(candidate, dict):
+            continue
+        slug, reason = candidate.get("slug"), candidate.get("reason")
+        if (
+            not isinstance(slug, str)
+            or slug not in nodes
+            or slug in seen
+            or not isinstance(reason, str)
+            or not reason.strip()
+        ):
+            continue
+        candidates.append({"slug": slug, "label": nodes[slug][0], "reason": reason})
+        seen.add(slug)
+        if len(candidates) == 3:
+            break
+    if not candidates:
+        raise ValueError("reply contains no published node candidates")
+    return candidates
 
 
 def published_basis(project_dir: Path, slugs: list[str]) -> list[tuple[str, Path, dict[str, Any]]]:
