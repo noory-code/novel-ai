@@ -213,6 +213,9 @@ compares `refs` separately.
 
 ## 6. Solera-side contract (read) — summary
 
+Who imports: an agent through the MCP `import_spec` tool, or the Novel app through Solera's HTTP
+`POST /api/work/imports` right after a service publish and before Work-tab writes (D-2026-10-09-B).
+
 - **import** = copy `vS` + its `based_on` vP slice into `solera/specs/{label}/` (immutable→immutable), through a
   temporary folder so a failed import leaves nothing. Solera validates both manifests before copying: the
   `format_f_version`; `scope`; `release` and `based_on` as bare `vS{N}` / `vP{N}` names (the snapshot at

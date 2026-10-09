@@ -85,6 +85,9 @@ route below except health; WebSocket failures still use close code 1008 and an E
 | `cancel_finished` | 400 | Cancel was asked for an item that is already `done` or `cancelled`. | cancel |
 | `invalid_plan` | 400 | A planned tree is malformed: a blank or duplicate `key`, an `after_keys` entry that names no key in the request, or a blank string in `conditions`, `pass_examples`, `fail_examples`, `risks` or `basis`. | POST plans, PATCH item (blank strings) |
 | `request_id_conflict` | 409 | A `request_id` that was already planned arrives with a different body. Nothing is written. | POST plans |
+| `import_source_outside` | 400 | The import `source` does not resolve to a directory inside the request's project root. | POST imports |
+| `invalid_release` | 400 | The import `source` is not a valid published service release (missing or malformed manifest, missing `based_on` snapshot, a symlink). | POST imports |
+| `import_conflict` | 409 | A different bundle was already imported under the same label, or the same release identity has different content. Nothing is written. | POST imports |
 | `invalid` | 400 | Fallback for a rejection that has no more specific public code. | Any project route |
 
 ## Routes
@@ -95,6 +98,7 @@ route below except health; WebSocket failures still use close code 1008 and an E
 | `GET /api/work` | — | `{"items": [Item...], "progress": {id: Completion}, "ready": [id...], "blocked": [{"id", "waiting_on": [id...], "reasons": [str...], "names_no_design_node": bool}], "current": id \| null}` |
 | `POST /api/work/by-slugs` | `{"slugs": [str...]}` | `{"by_slug": {slug: [id...]}}` — every requested slug is a key (empty list when none); an item matches when its own `realizes` contains the slug |
 | `POST /api/work/items` | `{"parent": id \| null, "goal": str, "level"?: str, "gate"?: str, "realizes"?: [str], "after"?: [id], "accept"?: str}` (`accept` required when there is no `gate`) | `201` Item. `parent: null` = new root (same as `plan`); otherwise same as `add` |
+| `POST /api/work/imports` | `{"source": str}` — see "Importing a release" | `201` `{"label": str, "release": str, "imported": true}`; the same release already imported under that label returns `200` with `"imported": false` |
 | `POST /api/work/plans` | `{"request_id": str, "parent": id \| null, "items": [PlanNode...]}` — see "Planning a tree" | `201` `{"created": {key: id}, "items": [Item...]}`; a repeated `request_id` with the same body returns `200` with the recorded `created` and the current items |
 | `PATCH /api/work/items/{id}` | `{"goal"?: str, "realizes"?: [str], "accept"?: str, "phase"?: str, "phase_note"?: str, "conditions"?: [str], "pass_examples"?: [str], "fail_examples"?: [str], "risks"?: [str]}` (at least one key) | Item. `accept` may change only while the item is `todo`, `doing` or `rework` (else `accept_locked`); it never finishes a leaf, and on a container the ordinary rollup then applies. A protected item rejects goal/realizes edits (`item_protected`) |
 | `POST /api/work/items/{id}/accept` | — | `{"item": Item}` — see "Judging a result" |
@@ -114,6 +118,18 @@ and items without a gate. `ready` lists only gated leaves that can start now; it
 `blocked[].reasons` is English diagnostic text for agents and logs. Human-facing clients must derive
 translated blocked text from `waiting_on` and `names_no_design_node` instead of displaying or matching
 `reasons`.
+
+## Importing a release
+
+`POST /api/work/imports` imports one published format F service release, the same way the MCP `import_spec` tool
+does ([SPEC.md](SPEC.md), format-f §6), so the app can link a workspace to its design (D-2026-10-09-B). `source` is the
+path of a published `vS{N}` folder (`…/published/{service-slug}/vS{N}`); it must resolve to a directory inside the
+request's `project_path`, else `import_source_outside`. The label is `{service-slug}-vS{N}`, taken from the folder
+names. If that label already holds the same release (equal manifests), nothing is written and the response is `200`
+with `"imported": false`; any other content under the label, or a release identity imported elsewhere with different
+content, is `import_conflict` (409). A malformed bundle is `invalid_release`. The write takes the workspace lock and
+emits `work_changed` once when something was imported. Once any release is imported, the design-connectedness rule
+applies to the workspace ([SPEC.md](SPEC.md) §Design connectedness).
 
 ## Planning a tree
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.9.1] — 2026-10-09
+
+### Documentation
+
+- Specifies `POST /api/work/imports`, which imports a published service release over HTTP so the Novel app links its workspace to the design (D-2026-10-09-B). Not built yet.
+
 ## [8.9.0] — 2026-10-09
 
 ### Added

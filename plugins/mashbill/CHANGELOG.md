@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.207.1] — 2026-10-09
+
+### Documentation
+
+- Records D-2026-10-09-B: the app imports published releases into Solera and offers AI candidate nodes for a blocked work item. Not built yet.
+
 ## [0.207.0] — 2026-10-09
 
 ### Added

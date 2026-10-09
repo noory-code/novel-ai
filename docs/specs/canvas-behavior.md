@@ -263,4 +263,20 @@ choices made while building it on 2026-10-02 and still open to the user's review
     discard. It then sends one `POST /api/work/plans` to Solera with a `request_id` made once per proposal. If the
     result is unknown (no response), it shows "확인 필요" / "Needs check" and sends the same request again, which
     creates nothing twice.
+- **Linking work to the design** *(user, `D-2026-10-01-G` (2)–(3) and W-00000320 decision 1 ⓐ; the mechanics Claude,
+  `D-2026-10-09-B`)*:
+  - *Importing.* Right after a service publish is confirmed, the app imports that release into Solera
+    (`POST /api/work/imports`). Before any write on the Work tab (create, plan, check), it asks Mashbill for the latest
+    release of every published service (`GET /api/projects/{id}/published-releases` → `{"releases": [{"service":
+    slug, "release": "vS<N>", "source": path}]}`) and imports any not imported yet. Opening the tab writes nothing. An
+    import failure is shown with its reason and does not block reading.
+  - *Blocked items.* With a design imported, an item without children that neither it nor an ancestor links to a
+    published node cannot be checked; its checkbox says so, and the item offers "노드 고르기" / "Choose a node" (the
+    published-node chooser used for a new root) and "AI로 노드 찾기" / "Find a node with AI". The latter sends
+    `POST /api/projects/{id}/work-proposals/nodes` with `{"goal", "conditions", "ancestors": [goal...]}`; Mashbill
+    asks the chosen provider once (`complete_once`, 60 s) with the published nodes it knows and returns
+    `{"candidates": [{"slug", "label", "reason"}]}` (at most three; a slug that is not published is dropped as invalid,
+    and a reply with none valid is `proposal_failed`). Errors as in "AI proposals → Failure". Picking a candidate sets
+    the item's `realizes` (PATCH). *(Claude)* When no candidate fits, "설계에 먼저 그리기" / "Draw it in the design
+    first" opens the Services tab; drawing the node is left to the person and the coach there.
 - **Not in this version:** deleting items.
