@@ -7,7 +7,7 @@ metadata:
   category: planning
   type: unit
   style: procedure
-  triggers: [solera plan, plan the work, break down the goal, decompose into actions]
+  triggers: [solera plan, plan the work, break down the goal, split into work items]
   uses: []
 ---
 
