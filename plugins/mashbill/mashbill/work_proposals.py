@@ -11,6 +11,7 @@ from typing import Any
 from mashbill.ai_reply import first_json_object
 
 WORK_PROPOSAL_TIMEOUT_SECONDS = 120.0
+SPLIT_PROPOSAL_TIMEOUT_SECONDS = 180.0
 
 _PROMPT = (
     "Propose ONE work item from the published design and the person's desired outcome. "
@@ -22,6 +23,19 @@ _PROMPT = (
     "Each child is a PlanNode. after_keys name keys in this reply. "
     "Never include a check command or a gate key anywhere. "
     "Do not include realizes or basis; Mashbill supplies those.\n\n"
+)
+
+_SPLIT_PROMPT = (
+    "Split the confirmed big work item into child RESULTS. Each child is part of the big "
+    "result that a person or its children finish. Return only a JSON object with "
+    '{"items": [PlanNode...]}, with at least one item. Each PlanNode needs key, goal, '
+    "accept (person or children), conditions, pass_examples, fail_examples, and risks. "
+    "Use children only for parts of the big result; work that only has to finish first "
+    "goes in after_keys, not as a child. Several results may wait for one release item, "
+    "and a finished release item does not finish them. after_keys must name keys in this reply. "
+    "Never repeat a goal already in existing_children. Use plain words in the person's "
+    "language, never a check command, and never a gate key anywhere. Do not include "
+    "realizes or basis on children; they reach the design through the parent.\n\n"
 )
 
 _SERVICE_RELEASE = re.compile(r"vS([1-9][0-9]*)\Z")
@@ -122,11 +136,33 @@ def build_work_prompt(
     slugs: list[str], outcome: str, basis: list[tuple[str, Path, dict[str, Any]]]
 ) -> str:
     sections = [f"Person's desired outcome:\n{outcome}\n"]
+    sections.extend(_published_design_sections(slugs, basis))
+    return _PROMPT + "\n".join(sections)
+
+
+def _published_design_sections(
+    slugs: list[str], basis: list[tuple[str, Path, dict[str, Any]]]
+) -> list[str]:
+    sections: list[str] = []
     for slug, (pin, folder, _) in zip(slugs, basis, strict=True):
         for path in _design_paths(slug, folder):
             content = path.read_text(encoding="utf-8")
             sections.append(f"Published design for {pin}, {path.relative_to(folder)}:\n{content}\n")
-    return _PROMPT + "\n".join(sections)
+    return sections
+
+
+def build_split_prompt(
+    item: dict[str, Any],
+    existing_children: list[str],
+    basis: list[tuple[str, Path, dict[str, Any]]],
+) -> str:
+    sections = [
+        "Confirmed parent item:\n" + json.dumps(item, ensure_ascii=False) + "\n",
+        "existing_children:\n" + json.dumps(existing_children, ensure_ascii=False) + "\n",
+    ]
+    slugs = [pin.rsplit("@", 1)[0] for pin, _, _ in basis]
+    sections.extend(_published_design_sections(slugs, basis))
+    return _SPLIT_PROMPT + "\n".join(sections)
 
 
 def _has_gate(value: Any) -> bool:
@@ -194,6 +230,59 @@ def validate_plan_node(node: Any, *, known_keys: set[str] | None = None) -> dict
     return node
 
 
+def validate_split_request(body: Any) -> tuple[dict[str, Any], list[str]]:
+    if not isinstance(body, dict) or not isinstance(body.get("item"), dict):
+        raise ValueError("'item' must be an object")
+    item = body["item"]
+    if not isinstance(item.get("goal"), str) or not item["goal"].strip():
+        raise ValueError("'item.goal' must be a non-blank string")
+    for field in ("conditions", "pass_examples", "fail_examples", "risks", "realizes", "basis"):
+        _string_list(item, field)
+    existing = body.get("existing_children", [])
+    if not isinstance(existing, list) or any(not isinstance(goal, str) for goal in existing):
+        raise ValueError("'existing_children' must be a list of strings")
+    return item, existing
+
+
+def validate_split_proposal(reply: Any, existing_children: list[str]) -> dict[str, Any]:
+    if not isinstance(reply, dict) or set(reply) != {"items"}:
+        raise ValueError("proposal must be an object with items")
+    items = reply["items"]
+    if not isinstance(items, list) or not items:
+        raise ValueError("items must be a non-empty list")
+    if _has_gate(reply):
+        raise ValueError("gate is forbidden")
+
+    nodes: list[dict[str, Any]] = []
+
+    def collect(node: Any) -> None:
+        if not isinstance(node, dict):
+            raise ValueError("proposal must contain PlanNodes")
+        nodes.append(node)
+        children = node.get("children", [])
+        if isinstance(children, list):
+            for child in children:
+                collect(child)
+
+    for item in items:
+        collect(item)
+    keys = [node.get("key") for node in nodes]
+    if any(not isinstance(key, str) for key in keys):
+        raise ValueError("key must be a non-blank string")
+    if len(keys) != len(set(keys)):
+        raise ValueError("key must be unique across the proposal")
+    known_keys = {key for key in keys if isinstance(key, str)}
+    for item in items:
+        validate_plan_node(item, known_keys=known_keys)
+    prior_goals = {goal.strip() for goal in existing_children}
+    for node in nodes:
+        if node["goal"].strip() in prior_goals:
+            raise ValueError("goal repeats an existing child")
+        node.pop("realizes", None)
+        node.pop("basis", None)
+    return reply
+
+
 async def propose_work_item(
     slugs: list[str],
     outcome: str,
@@ -213,3 +302,20 @@ async def propose_work_item(
     node["realizes"] = slugs
     node["basis"] = [pin for pin, _, _ in basis]
     return validate_plan_node(node)
+
+
+async def propose_work_split(
+    item: dict[str, Any],
+    existing_children: list[str],
+    basis: list[tuple[str, Path, dict[str, Any]]],
+    provider: Any,
+    model: str | None,
+) -> dict[str, Any]:
+    prompt = build_split_prompt(item, existing_children, basis)
+    raw = await asyncio.wait_for(
+        provider.complete_once(prompt, model=model), timeout=SPLIT_PROPOSAL_TIMEOUT_SECONDS
+    )
+    reply = first_json_object(raw) if isinstance(raw, str) else None
+    if reply is None:
+        raise ValueError("reply is not valid JSON")
+    return validate_split_proposal(reply, existing_children)

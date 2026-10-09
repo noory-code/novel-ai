@@ -107,7 +107,7 @@ def test_flat_project_rejects_wrong_id_before_provider(setup: tuple[Path, Path],
     write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
     provider = FakeProvider('{"key":"root","goal":"result","accept":"person"}')
     c = client(provider)
-    body = {"slugs": ["mission"]}
+    body: dict[str, Any] = {"slugs": ["mission"]}
     if name == "item":
         body["outcome"] = "result"
 
@@ -354,5 +354,226 @@ def test_work_proposal_routes_are_registered() -> None:
         for route in app.routes
         if hasattr(route, "methods")
     }
-    for name in ("item", "basis"):
+    for name in ("item", "basis", "split"):
         assert (f"/api/projects/{{project_id}}/work-proposals/{name}", ("POST",)) in paths
+
+
+def split_body() -> dict[str, Any]:
+    return {
+        "item": {
+            "goal": "주문자가 음식을 주문한다",
+            "conditions": ["메뉴를 고르고 주문을 확정할 수 있다"],
+            "pass_examples": ["메뉴 열 개 중 하나를 주문한다"],
+            "fail_examples": ["품절 메뉴를 주문하려고 한다"],
+            "risks": ["같은 주문이 두 번 들어간다"],
+            "realizes": ["feature/order-food", "feature/unknown"],
+            "basis": ["feature/order-food@vS1"],
+        },
+        "existing_children": ["이미 보이는 결과"],
+    }
+
+
+def split_reply() -> dict[str, Any]:
+    return {
+        "items": [
+            {"key": "k2", "goal": "메뉴 목록을 보인다", "accept": "person"},
+            {
+                "key": "k3",
+                "goal": "주문을 확정한다",
+                "accept": "person",
+                "after_keys": ["k2"],
+                "realizes": ["wrong"],
+                "basis": ["wrong@vS9"],
+            },
+        ]
+    }
+
+
+def test_split_uses_design_and_is_read_only(setup: tuple[Path, Path]) -> None:
+    workspace, plot_root = setup
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code", model="sonnet"))
+    before = tree(plot_root)
+    provider = FakeProvider(json.dumps(split_reply()))
+
+    response = client(provider).post(url(workspace, "split"), json=split_body())
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "proposal": {
+            "items": [
+                {"key": "k2", "goal": "메뉴 목록을 보인다", "accept": "person"},
+                {
+                    "key": "k3",
+                    "goal": "주문을 확정한다",
+                    "accept": "person",
+                    "after_keys": ["k2"],
+                },
+            ]
+        }
+    }
+    assert len(provider.calls) == 1
+    prompt, model = provider.calls[0]
+    assert model == "sonnet"
+    for value in (
+        "주문자가 음식을 주문한다",
+        "이미 보이는 결과",
+        "new feature text",
+        "new service text",
+        "after_keys",
+    ):
+        assert value in prompt
+    assert "old feature text" not in prompt
+    assert tree(plot_root) == before
+
+
+def test_split_works_without_published_realizes_and_reads_fence(setup: tuple[Path, Path]) -> None:
+    workspace, plot_root = setup
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
+    before = tree(plot_root)
+    provider = FakeProvider("```json\n" + json.dumps(split_reply()) + "\n```")
+    body = split_body()
+    body["item"]["realizes"] = ["feature/unknown"]
+
+    response = client(provider).post(url(workspace, "split"), json=body)
+
+    assert response.status_code == 200
+    assert "new feature text" not in provider.calls[0][0]
+    assert tree(plot_root) == before
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        {"items": []},
+        {"items": [{"key": "k2", "goal": "first", "accept": "person", "gate": "pytest"}]},
+        {
+            "items": [
+                {"key": "k2", "goal": "first", "accept": "person"},
+                {"key": "k2", "goal": "second", "accept": "person"},
+            ]
+        },
+        {
+            "items": [
+                {
+                    "key": "parent",
+                    "goal": "whole",
+                    "accept": "children",
+                    "children": [
+                        {"key": "k2", "goal": "part", "accept": "person", "gate": "pytest"}
+                    ],
+                }
+            ]
+        },
+        {
+            "items": [
+                {
+                    "key": "parent",
+                    "goal": "whole",
+                    "accept": "children",
+                    "children": [{"key": "k2", "goal": "part", "accept": "person"}],
+                },
+                {"key": "k2", "goal": "other", "accept": "person"},
+            ]
+        },
+        {"items": [{"key": "k2", "goal": "first", "accept": "person", "after_keys": ["missing"]}]},
+        {"items": [{"key": "k2", "goal": " 이미 보이는 결과 ", "accept": "person"}]},
+    ],
+)
+def test_split_bad_reply_is_502_and_read_only(
+    setup: tuple[Path, Path], reply: dict[str, Any]
+) -> None:
+    workspace, plot_root = setup
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
+    before = tree(plot_root)
+    provider = FakeProvider(json.dumps(reply))
+
+    response = client(provider).post(url(workspace, "split"), json=split_body())
+
+    assert response.status_code == 502
+    assert response.json()["code"] == "proposal_failed"
+    assert response.json()["reason"]
+    assert len(provider.calls) == 1
+    assert tree(plot_root) == before
+
+
+def test_split_no_provider(setup: tuple[Path, Path]) -> None:
+    workspace, plot_root = setup
+    before = tree(plot_root)
+    response = client().post(url(workspace, "split"), json=split_body())
+    assert response.status_code == 409
+    assert response.json()["code"] == "no_chat_provider"
+    assert tree(plot_root) == before
+
+
+def test_split_wait_for_timeout_is_502(
+    setup: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from mashbill import work_proposals
+
+    workspace, plot_root = setup
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
+    before = tree(plot_root)
+    monkeypatch.setattr(work_proposals, "SPLIT_PROPOSAL_TIMEOUT_SECONDS", 0.001)
+
+    class SlowProvider(FakeProvider):
+        async def complete_once(self, prompt: str, *, model: str | None = None) -> str:
+            self.calls.append((prompt, model))
+            await asyncio.sleep(0.1)
+            return self.reply
+
+    provider = SlowProvider(json.dumps(split_reply()))
+    response = client(provider).post(url(workspace, "split"), json=split_body())
+    assert response.status_code == 502
+    assert response.json()["reason"] == "timed out"
+    assert len(provider.calls) == 1
+    assert tree(plot_root) == before
+
+
+def test_split_provider_timeout_and_wrong_project(setup: tuple[Path, Path]) -> None:
+    workspace, plot_root = setup
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
+    before = tree(plot_root)
+    provider = FakeProvider(error=TimeoutError("slow"))
+    c = client(provider)
+    response = c.post(url(workspace, "split"), json=split_body())
+    assert response.status_code == 502
+    assert response.json()["reason"] == "timed out"
+    wrong_url = url(workspace, "split").replace("/projects/alpha/", "/projects/wrong/")
+    response = c.post(wrong_url, json=split_body())
+    assert response.status_code == 404
+    assert response.json() == {"error": "project not found: wrong"}
+    assert len(provider.calls) == 1
+    assert tree(plot_root) == before
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {},
+        {"item": {"goal": " "}},
+        {"item": {"goal": "ok", "conditions": [" "]}},
+        {"item": {"goal": "ok", "basis": "bad"}},
+        {"item": {"goal": "ok"}, "existing_children": [1]},
+    ],
+)
+def test_split_bad_request_is_400(setup: tuple[Path, Path], body: dict[str, Any]) -> None:
+    workspace, plot_root = setup
+    before = tree(plot_root)
+    response = client().post(url(workspace, "split"), json=body)
+    assert response.status_code == 400
+    assert tree(plot_root) == before
+
+
+def test_http_plan_example_children_pin_split_validator() -> None:
+    from mashbill.work_proposals import validate_split_proposal
+
+    path = Path(__file__).resolve().parents[2] / "solera" / "docs" / "HTTP.md"
+    doc = path.read_text(encoding="utf-8")
+    section = doc.split("## Planning a tree", 1)[1]
+    example = json.loads(re.search(r"```json\s*(.*?)```", section, re.DOTALL).group(1))  # type: ignore[union-attr]
+    children = example["items"][0]["children"]
+    assert validate_split_proposal({"items": children}, []) == {"items": children}
+    with pytest.raises(ValueError):
+        validate_split_proposal({"items": [{**children[0], "gate": "pytest"}, children[1]]}, [])
+    with pytest.raises(ValueError):
+        validate_split_proposal({"items": children}, [" 메뉴 목록을 보인다 "])

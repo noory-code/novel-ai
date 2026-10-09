@@ -122,3 +122,6 @@ from mashbill.endpoints_work_proposals import (
 from mashbill.endpoints_work_proposals import (
     work_proposal_item_endpoint as work_proposal_item_endpoint,
 )
+from mashbill.endpoints_work_proposals import (
+    work_proposal_split_endpoint as work_proposal_split_endpoint,
+)

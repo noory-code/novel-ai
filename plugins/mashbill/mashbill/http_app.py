@@ -42,6 +42,7 @@ from mashbill.api_endpoints import (
     tags_list_endpoint,
     work_proposal_basis_endpoint,
     work_proposal_item_endpoint,
+    work_proposal_split_endpoint,
     workspace_discover_endpoint,
     workspace_git_init_endpoint,
 )
@@ -254,6 +255,11 @@ def create_http_app(
         Route(
             "/api/projects/{project_id}/work-proposals/item",
             work_proposal_item_endpoint,
+            methods=["POST"],
+        ),
+        Route(
+            "/api/projects/{project_id}/work-proposals/split",
+            work_proposal_split_endpoint,
             methods=["POST"],
         ),
         Route(

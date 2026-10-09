@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.207.0] — 2026-10-09
+
+### Added
+
+- Propose a read-only split of a confirmed work item into child results and waiting links (D-2026-10-09-A, W-00000400).
+
 ## [0.206.1] — 2026-10-09
 
 ### Fixed
