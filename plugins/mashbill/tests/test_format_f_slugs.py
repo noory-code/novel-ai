@@ -173,8 +173,7 @@ def test_plan_slugs_rejects_mission_id_for_actor() -> None:
         )
 
     assert str(caught.value) == (
-        "_slugs.json has an invalid id for actor-id: 'mission' "
-        "(only the mission node may use it)"
+        "_slugs.json has an invalid id for actor-id: 'mission' (only the mission node may use it)"
     )
 
 
@@ -219,7 +218,7 @@ def _add_service(
     from mashbill.models import FeatureNode, ServiceNode, SketchEdge
 
     service = ServiceNode(id="svc", label=service_label)
-    nodes = [service]
+    nodes: list[ServiceNode | FeatureNode] = [service]
     edges = []
     if feature_label is not None:
         nodes.append(FeatureNode(id="feature", label=feature_label))
@@ -431,7 +430,9 @@ def test_service_write_failure_removes_release_folder_and_restores_store(
     create_project(plot_root, "alpha", "Alpha")
     _add_service(plot_root, service_label="결제")
     format_f.publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
-    real_write_json = format_f._write_json
+    from mashbill.storage import _write_json
+
+    real_write_json = _write_json
 
     def fail_manifest(path: Path, payload: dict[str, object]) -> None:
         if path.name == "manifest.json" and "vS" in str(path):

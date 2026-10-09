@@ -16,6 +16,7 @@ from mashbill.draft_store import list_drafts, read_draft
 from mashbill.endpoints_chat import stream_chat_turn
 from mashbill.folder_io import create_node as create_canvas_node
 from mashbill.folder_io import read_canvas
+from mashbill.mcp_draft_tools import record_draft, resolve_draft, update_draft
 from mashbill.project_io import create_project
 from mashbill.workspace import resolve_plot_root
 
@@ -33,7 +34,7 @@ def _record(
     canvas_kind: str = "foundation",
     target_node_ids: list[str] | None = None,
 ) -> str:
-    result = mcp_tools.record_draft(
+    result = record_draft(
         str(tmp_path),
         "alpha",
         canvas_kind,  # type: ignore[arg-type]
@@ -146,12 +147,8 @@ def test_update_draft_accumulates_oldest_first_revisions(tmp_path: Path) -> None
     draft_id = _record(tmp_path, "First wording")
     original = read_draft(plot_root, "alpha", draft_id)
 
-    first = mcp_tools.update_draft(
-        str(tmp_path), "alpha", draft_id, "Second wording", "First refinement."
-    )
-    second = mcp_tools.update_draft(
-        str(tmp_path), "alpha", draft_id, "Final wording", "Second refinement."
-    )
+    first = update_draft(str(tmp_path), "alpha", draft_id, "Second wording", "First refinement.")
+    second = update_draft(str(tmp_path), "alpha", draft_id, "Final wording", "Second refinement.")
 
     assert first["proposed_text"] == "Second wording"
     assert second["proposed_text"] == "Final wording"
@@ -175,10 +172,10 @@ def test_update_draft_accumulates_oldest_first_revisions(tmp_path: Path) -> None
 def test_update_draft_rejects_closed_draft(tmp_path: Path, status: str) -> None:
     plot_root = _project(tmp_path)
     draft_id = _record(tmp_path, "Kept wording")
-    mcp_tools.resolve_draft(str(tmp_path), "alpha", draft_id, status)  # type: ignore[arg-type]
+    resolve_draft(str(tmp_path), "alpha", draft_id, status)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError, match="new draft"):
-        mcp_tools.update_draft(str(tmp_path), "alpha", draft_id, "Changed", "Changed reason")
+        update_draft(str(tmp_path), "alpha", draft_id, "Changed", "Changed reason")
 
     assert read_draft(plot_root, "alpha", draft_id).proposed_text == "Kept wording"
 
@@ -187,7 +184,7 @@ def test_update_project_draft_uses_the_same_revision_rule(tmp_path: Path) -> Non
     plot_root = _project(tmp_path)
     draft_id = _record(tmp_path, "Project name: North Star", canvas_kind="project")
 
-    updated = mcp_tools.update_draft(
+    updated = update_draft(
         str(tmp_path), "alpha", draft_id, "Project name: Compass", "Clearer name."
     )
 

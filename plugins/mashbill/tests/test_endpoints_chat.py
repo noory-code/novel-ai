@@ -224,6 +224,7 @@ async def test_stream_chat_turn_persists_boundary_error_with_started_turn_id(
         payload for _, event_name, payload in hub.events if event_name == "chat_stream_event"
     ]
     assert payloads[-1] is not None
+    assert payloads[0] is not None
     assert payloads[-1]["type"] == "error"
     assert payloads[-1]["turn_id"] == payloads[0]["turn_id"] == "turn-crashed"
     doc = read_conversation(plot_root, "alpha", "foundation")
@@ -974,7 +975,7 @@ def test_chat_reset_archives_current_and_next_turn_has_no_old_context(workspace:
         providers.append(provider)
         return provider
 
-    registry = ChatSessionRegistry(factory=factory)  # type: ignore[arg-type]
+    registry = ChatSessionRegistry(factory=factory)
     client = TestClient(
         create_http_app(
             hub=BroadcastHub(enable_watchers=False),
@@ -1405,7 +1406,7 @@ def test_conversation_reopen_swaps_files_resets_session_and_refeeds_history(
         providers.append(provider)
         return provider
 
-    registry = ChatSessionRegistry(factory=factory)  # type: ignore[arg-type]
+    registry = ChatSessionRegistry(factory=factory)
     client = TestClient(
         create_http_app(
             hub=BroadcastHub(enable_watchers=False),

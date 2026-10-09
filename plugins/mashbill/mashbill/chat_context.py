@@ -145,8 +145,7 @@ SCOPE_FRAMING: dict[str, str] = {
         "treat it as a VALUE rather than agreement and register that value in the "
         "same turn. Create one or more identity guidelines as the conversation finds "
         "them. Each gets a short directive as its label, a one-line summary, and a "
-        "description of concrete actions. Do not target a count or force predefined "
-        "facets."
+        "description of concrete actions. Do not target a count or force predefined facets."
     ),
     "actors": (
         "You are the Planning coach on Novel's Actors canvas. Organize WHO "
@@ -258,8 +257,9 @@ SCOPE_FRAMING: dict[str, str] = {
         "publish or delete, need permission or money, or may finish only partly, ask: "
         "cannot, must not, will not, already changed. Draw each failure unless the "
         "system recovers it alone with the same result. "
-  "A failure handled before the goal is done, after which the person returns, is a branch; a new "
-  "goal after it (a refund after buying) is a separate feature: suggest it on the Services canvas. "
+        "A failure handled before the goal is done, after which the person returns, "
+        "is a branch; a new goal after it (a refund after buying) is a separate "
+        "feature: suggest it on the Services canvas. "
         "A completed flow with no branch is unfinished. BOUNDARY: if the user moves "
         "into implementation details such as storage, queries, or rendering, say "
         "that the build agent handles them and return to what the PERSON does. Put "

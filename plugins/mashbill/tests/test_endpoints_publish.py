@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +30,7 @@ from starlette.testclient import TestClient
 from mashbill.blueprint_publish import _bump_blueprint_version
 from mashbill.broadcast import BroadcastHub
 from mashbill.chat_provider import ChatProviderSelection, write_selection
-from mashbill.chat_session import ChatSessionRegistry
+from mashbill.chat_session import ChatProvider, ChatSessionRegistry, ChatStreamEvent
 from mashbill.folder_io import _project_dir, read_canvas, write_canvas
 from mashbill.format_f_slugs import write_slug_store
 from mashbill.git_store import init_workspace_repo, list_tags, tag_snapshot
@@ -580,7 +581,7 @@ def test_service_publish_requires_project_path(client: TestClient) -> None:
     assert "project_path" in resp.json()["error"]
 
 
-class _ProposalProvider:
+class _ProposalProvider(ChatProvider):
     def __init__(self, reply: str) -> None:
         self.reply = reply
         self.calls: list[str] = []
@@ -589,9 +590,12 @@ class _ProposalProvider:
         self.calls.append(prompt)
         return self.reply
 
+    def stream_turn(self, user_message: str) -> AsyncIterator[ChatStreamEvent]:
+        raise NotImplementedError
+
 
 def _proposal_client(provider: _ProposalProvider) -> TestClient:
-    registry = ChatSessionRegistry(factory=lambda _root, _name: provider)  # type: ignore[arg-type]
+    registry = ChatSessionRegistry(factory=lambda _root, _name: provider)
     return TestClient(
         create_http_app(
             hub=BroadcastHub(enable_watchers=False),

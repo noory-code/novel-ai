@@ -23,6 +23,7 @@ from mashbill.draft_store import list_drafts, read_draft
 from mashbill.folder_io import create_node as create_canvas_node
 from mashbill.folder_io import read_canvas, sync_details_with_overview, write_canvas
 from mashbill.http_app import create_http_app
+from mashbill.mcp_draft_tools import record_draft, resolve_draft
 from mashbill.mcp_write_rollback import with_draft_or_rollback
 from mashbill.models_draft import DraftDoc
 from mashbill.project_io import create_project
@@ -46,7 +47,7 @@ def _record(
     proposed_kind: str | None = None,
     service_id: str | None = None,
 ) -> dict[str, object]:
-    return mcp_tools.record_draft(
+    return record_draft(
         project_path,
         "alpha",
         canvas_kind,  # type: ignore[arg-type]
@@ -164,12 +165,12 @@ def test_resolve_draft_changes_status_without_deleting_rejected_draft(tmp_path: 
     plot_root, _ = _project(tmp_path)
     draft_id = str(_record(str(tmp_path))["draft_id"])
 
-    resolved = mcp_tools.resolve_draft(str(tmp_path), "alpha", draft_id, "confirmed", ["mission_1"])
+    resolved = resolve_draft(str(tmp_path), "alpha", draft_id, "confirmed", ["mission_1"])
     assert resolved["status"] == "confirmed"
     assert resolved["resolved_node_ids"] == ["mission_1"]
     confirmed_updated = str(resolved["updated"])
 
-    rejected = mcp_tools.resolve_draft(str(tmp_path), "alpha", draft_id, "rejected")
+    rejected = resolve_draft(str(tmp_path), "alpha", draft_id, "rejected")
     assert rejected["status"] == "rejected"
     assert str(rejected["updated"]) >= confirmed_updated
     assert read_draft(plot_root, "alpha", draft_id).status == "rejected"
@@ -180,7 +181,7 @@ def test_resolve_draft_changes_status_without_deleting_rejected_draft(tmp_path: 
 def test_resolve_missing_draft_is_an_error(tmp_path: Path) -> None:
     _project(tmp_path)
     with pytest.raises(FileNotFoundError, match="draft"):
-        mcp_tools.resolve_draft(str(tmp_path), "alpha", "draft_missing", "rejected")
+        resolve_draft(str(tmp_path), "alpha", "draft_missing", "rejected")
 
 
 def test_update_node_with_draft_id_confirms_and_links_node(tmp_path: Path) -> None:
@@ -649,7 +650,7 @@ def test_update_canvas_rolls_back_when_draft_confirmation_fails(
     changed = before.model_dump(by_alias=True)
     changed["nodes"][0]["label"] = "Changed"
     sync_calls = 0
-    real_sync = mcp_canvas_write_tools.sync_details_with_overview
+    real_sync = sync_details_with_overview
 
     def track_sync(sync_plot_root: Path, sync_project_id: str) -> dict[str, list[str]]:
         nonlocal sync_calls
@@ -679,7 +680,7 @@ def test_update_canvas_rolls_back_when_detail_sync_fails(
     write_canvas(plot_root, "alpha", before)
     sync_error = OSError("detail sync unavailable")
     sync_calls = 0
-    real_sync = mcp_canvas_write_tools.sync_details_with_overview
+    real_sync = sync_details_with_overview
 
     def fail_once(sync_plot_root: Path, sync_project_id: str) -> dict[str, list[str]]:
         nonlocal sync_calls
@@ -742,7 +743,7 @@ def test_create_node_rolls_back_when_draft_confirmation_fails(
         )["draft_id"]
     )
     sync_calls = 0
-    real_sync = mcp_canvas_write_tools.sync_details_with_overview
+    real_sync = sync_details_with_overview
 
     def track_sync(sync_plot_root: Path, sync_project_id: str) -> dict[str, list[str]]:
         nonlocal sync_calls
@@ -1128,7 +1129,7 @@ def test_rejected_draft_does_not_match_write(tmp_path: Path) -> None:
     ]
     node_id = str(node["id"])
     draft_id = str(_record(str(tmp_path), target_node_ids=[node_id])["draft_id"])
-    mcp_tools.resolve_draft(str(tmp_path), "alpha", draft_id, "rejected")
+    resolve_draft(str(tmp_path), "alpha", draft_id, "rejected")
 
     result = mcp_tools.update_node(
         str(tmp_path),
@@ -1871,7 +1872,7 @@ def test_chat_scope_environment_wins_and_explicit_fills_when_environment_missing
     plot_root, _ = _project(tmp_path)
     monkeypatch.setenv("MASHBILL_CHAT_SCOPE", "foundation")
 
-    environment_over_explicit = mcp_tools.record_draft(
+    environment_over_explicit = record_draft(
         str(tmp_path),
         "alpha",
         "actors",
@@ -1879,7 +1880,7 @@ def test_chat_scope_environment_wins_and_explicit_fills_when_environment_missing
         "The conversation established the need.",
         chat_scope="actors",
     )
-    environment_over_empty = mcp_tools.record_draft(
+    environment_over_empty = record_draft(
         str(tmp_path),
         "alpha",
         "actors",
@@ -1887,7 +1888,7 @@ def test_chat_scope_environment_wins_and_explicit_fills_when_environment_missing
         "The conversation established the need.",
     )
     monkeypatch.delenv("MASHBILL_CHAT_SCOPE")
-    explicit_without_environment = mcp_tools.record_draft(
+    explicit_without_environment = record_draft(
         str(tmp_path),
         "alpha",
         "actors",
@@ -2032,7 +2033,7 @@ def test_mcp_rename_project_keeps_rejected_draft_without_new_draft(
             proposed_kind=None,
         )["draft_id"]
     )
-    mcp_tools.resolve_draft(str(tmp_path), "alpha", draft_id, "rejected")
+    resolve_draft(str(tmp_path), "alpha", draft_id, "rejected")
 
     renamed = mcp_tools.rename_project(str(tmp_path), "alpha", "새이름", draft_id=draft_id)
 
@@ -2236,9 +2237,7 @@ def test_drafts_http_list_sorts_and_filters(
         proposed_kind="step",
         service_id="feature_1",
     )
-    mcp_tools.resolve_draft(
-        str(tmp_path), "alpha", str(first["draft_id"]), "confirmed", ["mission_1"]
-    )
+    resolve_draft(str(tmp_path), "alpha", str(first["draft_id"]), "confirmed", ["mission_1"])
 
     client = TestClient(create_http_app(hub=BroadcastHub(enable_watchers=False)))
     url = "/api/projects/alpha/drafts"

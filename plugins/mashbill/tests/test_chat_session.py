@@ -20,7 +20,7 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 from pathlib import Path
 from typing import Any, cast
 
@@ -110,12 +110,15 @@ def test_parse_stream_line_drops_tool_use_message() -> None:
 # ---------------------------------------------------------------------------
 
 
-class _FakeProvider:
+class _FakeProvider(ChatProvider):
     """Stand-in for ClaudeCodeProvider — counts how often it was constructed."""
 
     def __init__(self, workspace_root: Path, provider_name: str = "claude-code") -> None:
         self.workspace_root = workspace_root
         self.provider_name = provider_name
+
+    def stream_turn(self, user_message: str) -> AsyncIterator[ChatStreamEvent]:
+        raise NotImplementedError
 
 
 def test_registry_returns_same_provider_for_same_workspace_and_name(
@@ -153,6 +156,8 @@ def test_registry_one_shot_does_not_cache_provider(tmp_path: Path) -> None:
     second = registry.one_shot(ws, "claude-code")
 
     assert first is not second
+    assert isinstance(first, _FakeProvider)
+    assert isinstance(second, _FakeProvider)
     assert created == [first, second]
     assert registry.session_count() == 0
 

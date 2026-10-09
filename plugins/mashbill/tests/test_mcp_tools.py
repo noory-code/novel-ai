@@ -19,6 +19,8 @@ from fastmcp import FastMCP
 
 from mashbill import mcp_tools
 from mashbill.git_store import init_workspace_repo, tag_snapshot
+from mashbill.mcp_context_tools import get_canvas_framing, get_design_principles
+from mashbill.mcp_git_tools import delete_project_tag, list_project_tags, tag_project
 
 # Core verbs the agent (and the in-app coach) rely on. Removing/renaming any of
 # these is a breaking change to the tool contract — this set makes it loud.
@@ -68,15 +70,15 @@ def test_get_canvas_framing_returns_the_scope_system_prompt() -> None:
     from mashbill.chat_context import build_system_prompt
 
     for scope in ("foundation", "actors", "services"):
-        assert mcp_tools.get_canvas_framing(scope) == build_system_prompt(scope)
+        assert get_canvas_framing(scope) == build_system_prompt(scope)
     # A per-service thread resolves to the services framing (DRY), not empty.
-    assert mcp_tools.get_canvas_framing("service:abc123") == build_system_prompt("service:abc123")
+    assert get_canvas_framing("service:abc123") == build_system_prompt("service:abc123")
     # A framed scope is a strict superset of the universal cross-canvas
     # ``project`` scope — proving the composed prompt carries the playbooks
     # (incl. the WRITE gate: "no silent auto-generation", VISION AICollaboration)
     # the headless coach needs to be first-class.
-    guard_only = mcp_tools.get_canvas_framing("project")
-    framed = mcp_tools.get_canvas_framing("foundation")
+    guard_only = get_canvas_framing("project")
+    framed = get_canvas_framing("foundation")
     assert guard_only in framed and len(framed) > len(guard_only)
 
 
@@ -296,15 +298,15 @@ def test_tag_lifecycle_against_real_git(tmp_path: Path) -> None:
     mcp_tools.create_project_tool(ws, "p1", "P1")
     init_workspace_repo(Path(ws))  # the first tag needs an initialized repo
 
-    tagged = mcp_tools.tag_project(ws, "p1", "session-start", message="kickoff")
+    tagged = tag_project(ws, "p1", "session-start", message="kickoff")
     assert tagged["name"] == "session-start"
 
-    names = {t["name"] for t in mcp_tools.list_project_tags(ws, "p1")}
+    names = {t["name"] for t in list_project_tags(ws, "p1")}
     assert "session-start" in names
 
-    msg = mcp_tools.delete_project_tag(ws, "p1", "session-start")
+    msg = delete_project_tag(ws, "p1", "session-start")
     assert "session-start" in msg
-    assert "session-start" not in {t["name"] for t in mcp_tools.list_project_tags(ws, "p1")}
+    assert "session-start" not in {t["name"] for t in list_project_tags(ws, "p1")}
 
 
 def test_tag_project_rejects_reserved_version_name_without_git_side_effects(
@@ -315,9 +317,9 @@ def test_tag_project_rejects_reserved_version_name_without_git_side_effects(
     init_workspace_repo(Path(ws))
 
     with pytest.raises(ValueError, match="reserved"):
-        mcp_tools.tag_project(ws, "p1", "v0.1.0")
+        tag_project(ws, "p1", "v0.1.0")
 
-    assert mcp_tools.list_project_tags(ws, "p1") == []
+    assert list_project_tags(ws, "p1") == []
     head = subprocess.run(
         ["git", "rev-parse", "--verify", "HEAD"],
         cwd=ws,
@@ -333,7 +335,7 @@ def test_tag_project_accepts_session_name(tmp_path: Path) -> None:
     mcp_tools.create_project_tool(ws, "p1", "P1")
     init_workspace_repo(Path(ws))
 
-    tagged = mcp_tools.tag_project(ws, "p1", "session-2026-09-29")
+    tagged = tag_project(ws, "p1", "session-2026-09-29")
 
     assert tagged["name"] == "session-2026-09-29"
 
@@ -345,14 +347,14 @@ def test_delete_project_tag_preserves_published_version_and_removes_session_tag(
     mcp_tools.create_project_tool(ws, "p1", "P1")
     init_workspace_repo(Path(ws))
     tag_snapshot(Path(ws), "v0.1.1")
-    mcp_tools.tag_project(ws, "p1", "session-2026-09-28")
+    tag_project(ws, "p1", "session-2026-09-28")
 
     with pytest.raises(ValueError, match="published version"):
-        mcp_tools.delete_project_tag(ws, "p1", "v0.1.1")
+        delete_project_tag(ws, "p1", "v0.1.1")
 
-    assert "v0.1.1" in {t["name"] for t in mcp_tools.list_project_tags(ws, "p1")}
-    mcp_tools.delete_project_tag(ws, "p1", "session-2026-09-28")
-    assert "session-2026-09-28" not in {t["name"] for t in mcp_tools.list_project_tags(ws, "p1")}
+    assert "v0.1.1" in {t["name"] for t in list_project_tags(ws, "p1")}
+    delete_project_tag(ws, "p1", "session-2026-09-28")
+    assert "session-2026-09-28" not in {t["name"] for t in list_project_tags(ws, "p1")}
 
 
 def test_tag_project_without_git_raises_actionable_error(tmp_path: Path) -> None:
@@ -360,7 +362,7 @@ def test_tag_project_without_git_raises_actionable_error(tmp_path: Path) -> None
     mcp_tools.create_project_tool(ws, "p1", "P1")
     # No git init → the tool must raise a guiding ValueError, not crash opaquely.
     with pytest.raises(ValueError, match="git not initialized"):
-        mcp_tools.tag_project(ws, "p1", "x")
+        tag_project(ws, "p1", "x")
 
 
 def test_design_principles_call_is_recorded_when_a_log_path_is_set(
@@ -372,12 +374,10 @@ def test_design_principles_call_is_recorded_when_a_log_path_is_set(
     read it" (O-00000043). The sim points this at the run directory."""
     import json as _json
 
-    from mashbill import mcp_tools as tools
-
     log = tmp_path / "tool-calls.jsonl"
     monkeypatch.setenv("MASHBILL_TOOL_LOG", str(log))
-    tools.get_design_principles(area="values")
-    tools.get_design_principles(area="services")
+    get_design_principles(area="values")
+    get_design_principles(area="services")
 
     lines = [_json.loads(x) for x in log.read_text("utf-8").splitlines() if x.strip()]
     assert [x["area"] for x in lines] == ["values", "services"]
@@ -390,11 +390,9 @@ def test_design_principles_works_and_writes_nothing_without_a_log_path(
 ) -> None:
     """Recording is opt-in. Outside a sim run nobody sets the variable, and the
     tool must answer exactly as before rather than fail or write somewhere."""
-    from mashbill import mcp_tools as tools
-
     monkeypatch.delenv("MASHBILL_TOOL_LOG", raising=False)
     monkeypatch.chdir(tmp_path)
-    assert "확인하는 기준" in tools.get_design_principles(area="values")
+    assert "확인하는 기준" in get_design_principles(area="values")
     assert list(tmp_path.iterdir()) == []
 
 
@@ -403,10 +401,8 @@ def test_design_principles_survives_an_unwritable_log_path(
 ) -> None:
     """The coach's turn must not die because a log path went bad — recording is
     for us, the answer is for the founder."""
-    from mashbill import mcp_tools as tools
-
     monkeypatch.setenv("MASHBILL_TOOL_LOG", str(tmp_path / "no" / "such" / "dir.jsonl"))
-    assert "확인하는 기준" in tools.get_design_principles(area="values")
+    assert "확인하는 기준" in get_design_principles(area="values")
 
 
 def test_design_principles_serve_discriminators_per_area() -> None:
@@ -446,7 +442,7 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     entities = get_principles("entities")
     assert entities and "엔티티" in entities
     assert "구현 모델" in entities and "일대일" in entities
-    assert mcp_tools.get_design_principles(area="entities") == entities
+    assert get_design_principles(area="entities") == entities
     services = get_principles("services")
     assert "사람이 이루려는 결과 하나" in services
     assert "액터를 새로 만들지 않는다" in services
