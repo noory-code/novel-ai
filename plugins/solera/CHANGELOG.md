@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.10.2] — 2026-10-10
+
+### Tests
+
+- Verify that importing a service release preserves its parent category in the copied and loaded manifests.
+- Align the runtime version string with the package and plugin versions.
+
 ## [8.10.1] — 2026-10-10
 
 ### Changed

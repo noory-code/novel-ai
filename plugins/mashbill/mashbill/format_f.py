@@ -19,6 +19,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from mashbill.edge_semantics import fold_endpoints
 from mashbill.folder_io import read_canvas, read_project
 from mashbill.format_f_flow import _render_feature_flow as _render_feature_flow
 from mashbill.format_f_slugs import (
@@ -274,7 +275,17 @@ def plan_service_release(plot_root: Path, project_id: str, service_id: str) -> l
     svc = next((n for n in services.nodes if n.id == service_id and n.kind == "service"), None)
     if svc is None:
         raise FileNotFoundError(f"service not found: {service_id}")
-    return [svc, *_features_under_service(services, service_id)]
+    categories = {node.id: node for node in services.nodes if node.kind == "category"}
+    parents = [
+        categories[parent_id]
+        for edge in services.edges
+        if (endpoints := fold_endpoints(edge, "services")) is not None
+        for parent_id, child_id in [endpoints]
+        if child_id == service_id and parent_id in categories
+    ]
+    if len(parents) > 1:
+        raise ValueError(f"service has more than one parent category: {service_id}")
+    return [svc, *parents, *_features_under_service(services, service_id)]
 
 
 def publish_service(
@@ -303,7 +314,9 @@ def publish_service(
     written before labels existed.
     """
     nodes = plan_service_release(plot_root, project_id, service_id)
-    svc, *features = nodes
+    svc = nodes[0]
+    category = next((node for node in nodes if node.kind == "category"), None)
+    features = [node for node in nodes if node.kind == "feature"]
     pdir = _project_dir(plot_root, project_id)
     snap_dir = pdir / "published" / "_project"
 
@@ -425,6 +438,7 @@ def publish_service(
             "format_f_version": FORMAT_F_VERSION,
             "scope": "service",
             "service": svc_slug,
+            **({"category": slug_plan.slugs[category.id]} if category is not None else {}),
             "release": release,
             "based_on": vp,
             "git_sha": _git_sha(plot_root),

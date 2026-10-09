@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.209.0] — 2026-10-10
+
+### Added
+
+- Service releases persist the parent category's stable id in `category`; root service manifests keep their previous shape.
+- Category ids use the existing slug registry and person-confirmed English naming flow.
+
 ## [0.208.2] — 2026-10-10
 
 ### Changed

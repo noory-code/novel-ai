@@ -1024,6 +1024,134 @@ def test_manifest_contract_shape_is_pinned(plot_root: Path) -> None:
     assert set(vs["refs"]) >= {"anchors", "actors", "entities"}
 
 
+def test_service_category_round_trips_and_root_omits_key(plot_root: Path) -> None:
+    from mashbill.folder_io import write_canvas
+    from mashbill.format_f import publish_project_snapshot, publish_service
+    from mashbill.format_f_slugs import read_slug_store
+    from mashbill.models import CategoryNode, ServiceNode, SketchEdge
+
+    create_project(plot_root, "alpha", "Alpha")
+    services = read_canvas(plot_root, "alpha", "services")
+    write_canvas(
+        plot_root,
+        "alpha",
+        services.model_copy(
+            update={
+                "nodes": [
+                    CategoryNode(id="group", label="Identity"),
+                    ServiceNode(id="member", label="Auth"),
+                    ServiceNode(id="root", label="Search"),
+                ],
+                "edges": [SketchEdge(id="membership", source="group", target="member")],
+            }
+        ),
+    )
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
+
+    grouped = publish_service(plot_root, "alpha", "member")
+    root = publish_service(plot_root, "alpha", "root")
+
+    assert grouped["category"] == "category/identity"
+    assert read_slug_store(plot_root, "alpha")["group"] == "category/identity"
+    assert (
+        json.loads((plot_root / "published" / "auth" / "vS1" / "manifest.json").read_text())
+        == grouped
+    )
+    assert "category" not in root
+    assert "category" not in json.loads(
+        (plot_root / "published" / "search" / "vS1" / "manifest.json").read_text()
+    )
+
+
+def test_korean_category_uses_confirmed_slug_and_keeps_it_after_rename(plot_root: Path) -> None:
+    from mashbill.folder_io import write_canvas
+    from mashbill.format_f import publish_project_snapshot, publish_service
+    from mashbill.format_f_slugs import SlugNamesNeededError, read_slug_store
+    from mashbill.models import CategoryNode, ServiceNode, SketchEdge
+
+    create_project(plot_root, "alpha", "Alpha")
+    services = read_canvas(plot_root, "alpha", "services")
+    write_canvas(
+        plot_root,
+        "alpha",
+        services.model_copy(
+            update={
+                "nodes": [
+                    CategoryNode(id="group", label="정체성"),
+                    ServiceNode(id="member", label="Auth"),
+                ],
+                "edges": [SketchEdge(id="membership", source="group", target="member")],
+            }
+        ),
+    )
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
+
+    with pytest.raises(SlugNamesNeededError) as caught:
+        publish_service(plot_root, "alpha", "member")
+    assert caught.value.nodes == [{"node_id": "group", "kind": "category", "label": "정체성"}]
+    assert "group" not in read_slug_store(plot_root, "alpha")
+    assert not (plot_root / "published" / "auth").exists()
+
+    first = publish_service(plot_root, "alpha", "member", slugs={"group": "identity"})
+    assert first["category"] == "category/identity"
+    assert read_slug_store(plot_root, "alpha")["group"] == "category/identity"
+
+    renamed = read_canvas(plot_root, "alpha", "services")
+    write_canvas(
+        plot_root,
+        "alpha",
+        renamed.model_copy(
+            update={
+                "nodes": [
+                    node.model_copy(update={"label": "새 이름"}) if node.id == "group" else node
+                    for node in renamed.nodes
+                ]
+            }
+        ),
+    )
+    second = publish_service(plot_root, "alpha", "member")
+    assert second["category"] == "category/identity"
+    assert read_slug_store(plot_root, "alpha")["group"] == "category/identity"
+
+
+def test_root_service_manifest_bytes_match_previous_shape(plot_root: Path) -> None:
+    import hashlib
+
+    from mashbill.folder_io import write_canvas
+    from mashbill.format_f import publish_project_snapshot, publish_service
+    from mashbill.models import ServiceNode
+
+    create_project(plot_root, "alpha", "Alpha")
+    services = read_canvas(plot_root, "alpha", "services")
+    write_canvas(
+        plot_root,
+        "alpha",
+        services.model_copy(update={"nodes": [ServiceNode(id="root", label="Auth")]}),
+    )
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
+    manifest = publish_service(plot_root, "alpha", "root")
+    expected = {
+        "format_f_version": 1,
+        "scope": "service",
+        "service": "service/auth",
+        "release": "vS1",
+        "based_on": "vP1",
+        "git_sha": manifest["git_sha"],
+        "elements": [
+            {
+                "id": "service/auth",
+                "label": "Auth",
+                "kind": "service",
+                "hash": hashlib.sha256(b"service|Auth||").hexdigest()[:16],
+            }
+        ],
+        "refs": {"anchors": {"core_values": [], "identity": []}, "actors": [], "entities": []},
+    }
+    assert (plot_root / "published" / "auth" / "vS1" / "manifest.json").read_bytes() == (
+        json.dumps(expected, indent=2, ensure_ascii=False).encode()
+    )
+
+
 def test_publish_reachable_via_mcp_surface(tmp_path: Path) -> None:
     """format F is reachable on the MCP surface — the primary integration path
     per VISION ('주경로 = 사용자 에이전트가 MCP로 붙음'). The tools take a

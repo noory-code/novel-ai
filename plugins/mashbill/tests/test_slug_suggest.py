@@ -189,6 +189,49 @@ async def test_slug_proposals_skips_when_no_names_are_needed(plot_root: Path) ->
     assert provider.calls == []
 
 
+async def test_service_slug_proposal_includes_korean_parent_category(plot_root: Path) -> None:
+    from mashbill.format_f import publish_project_snapshot
+    from mashbill.models import CategoryNode, ServiceNode, SketchEdge
+    from mashbill.slug_suggest import slug_proposals
+
+    canvas = read_canvas(plot_root, "alpha", "services")
+    write_canvas(
+        plot_root,
+        "alpha",
+        canvas.model_copy(
+            update={
+                "nodes": [
+                    CategoryNode(id="group", label="정체성"),
+                    ServiceNode(id="member", label="Auth"),
+                ],
+                "edges": [SketchEdge(id="membership", source="group", target="member")],
+            }
+        ),
+    )
+    publish_project_snapshot(plot_root, "alpha", blueprint_version="v0.1.1")
+    provider = FakeProvider('{"group":"identity"}')
+
+    result = await slug_proposals(
+        plot_root,
+        "alpha",
+        "service",
+        "member",
+        suggest=True,
+        provider=provider,
+        model=None,
+    )
+
+    assert result["needed"] == [
+        {
+            "node_id": "group",
+            "kind": "category",
+            "label": "정체성",
+            "proposed": "identity",
+            "deduped": False,
+        }
+    ]
+
+
 @pytest.mark.parametrize("provider", [FakeProvider(error=RuntimeError("boom")), SlowProvider()])
 async def test_slug_proposals_failure_returns_nulls(
     plot_root: Path,
