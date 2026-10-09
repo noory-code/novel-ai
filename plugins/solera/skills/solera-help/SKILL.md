@@ -15,18 +15,21 @@ metadata:
 
 Solera is a slim **harness**. It does not build anything itself — you (the agent)
 do the building. Solera plans the work into a tree, hands you one leaf at a time,
-and runs a deterministic **gate** to verify each leaf before moving on.
+and runs a deterministic **gate** for each agent-built result before moving on.
 
 It works standalone, with or without Novel, over plain files under
 `.noory/solera/` in the project directory.
 
 ## The tree
 
-Work is one tree of **WorkItems** at any altitude — `initiative` / `epic` /
-`story` / `action` (`level` is just a label). A **leaf** has a gate and no
-children (the chunk you actually build, finishable in one context). A
-**container** has children and no gate (it only rolls up their status). Size is
-an altitude: the leaf stays one-context + one-gate, everything above is grouping.
+Work is one tree of **WorkItems**, split as deep as its results need. `level` is
+a free label with no fixed names. A child is part of its parent's result; work
+that only has to happen first is an `after` waiting link, not a child. A leaf
+fits in one agent context when an agent builds it. Every item records how its
+result is accepted: `gate` means a deterministic check command judges an
+agent-built result; `children` rolls up the children's results; `person` waits
+for a person to try and accept a promised result or make a choice only they can
+make. Do not invent a gate for a `person` item or split it to make it gated.
 
 ## The loop
 
@@ -60,8 +63,8 @@ Pass the current workspace as `project_root` to every tool.
 
 ## Rules
 
-- One leaf = one chunk you can finish in a single context, with a gate that
-  proves it is done. Bigger work is a container of smaller items.
+- An agent-built leaf is one chunk you can finish in a single context. Split
+  larger results into children; link only real prerequisites with `after`.
 - Never edit files under `.noory/solera/` by hand — use the commands, which keep
   the format valid.
 - A gate that fails leaves the leaf stuck on purpose. Fix the work and re-run

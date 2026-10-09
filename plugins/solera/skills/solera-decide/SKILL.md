@@ -1,7 +1,7 @@
 ---
 name: solera-decide
 user-invocable: true
-description: Run a decision-type leaf — surface options, escalate to a human, and gate on the choice being recorded in proof.
+description: Surface options for a decision item and wait for the person to choose and accept its result.
 metadata:
   version: "7.8.0"
   category: planning
@@ -17,7 +17,7 @@ Some leaves are not *build* work but *decide* work — choosing a tech stack, an
 architecture, a convention. The choice is the **human's** to make ("use this!");
 your job is to lay out the options. The decision is recorded in
 [proof](https://github.com/noory-code/novel-ai/tree/main/plugins/proof), an append-only
-decision log, and the leaf gates on that record existing.
+decision log. The person accepts the decision item in Solera.
 
 ## When to use
 
@@ -27,20 +27,16 @@ value-laden, it constrains downstream work, or the user owns it.
 ## Plan the decision leaf
 
 Pick a short **topic slug** for the decision (e.g. `auth-stack`). Create a leaf
-whose gate checks that a decision about that topic is in force:
+whose result only a person can accept:
 
 Call `add_work_item` with the parent id, the decision goal, and
-`gate="proof:auth-stack"`. The built-in `proof:` gate reads Proof's plain-file
-contract and does not depend on a globally installed `proof` executable.
-
-(The gate references the *topic*, not the leaf's own id, so it can be set at plan
-time. `proof` must be installed / on PATH.)
+`accept="person"`, without a gate. Do not split the choice to make it gated.
 
 ## Run it
 
-1. `next` hands you the decision leaf. **Do not decide.** Do a spike: research the
-   options and lay out, for the human, the **alternatives, trade-offs, and a
-   recommendation**. Stage your findings under the leaf's `artifacts/` if useful.
+1. Research the options and lay out, for the human, the **alternatives,
+   trade-offs, and a recommendation**. Stage your findings under the leaf's
+   `artifacts/` if useful. `next` does not hand a person item to an agent.
 
 2. **Escalate to the human** with the options. If you are blocked from even
    presenting options, use **solera-feedback**.
@@ -49,8 +45,8 @@ time. `proof` must be installed / on PATH.)
    with `status="accepted"`, `about=["auth-stack"]`, and a body containing
    Context, Decision, Alternatives, and Consequences.
 
-4. `complete` — the gate (`proof check --about auth-stack`) now passes, the leaf
-   is `done`, and its ancestors roll up.
+4. The person checks and accepts the item in the app. Its ancestors then roll up
+   according to their own `accept` modes. An agent never judges this result.
 
 ## Rules
 

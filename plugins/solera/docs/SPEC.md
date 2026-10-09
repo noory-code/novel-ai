@@ -8,27 +8,26 @@ The separate localhost engine surface is canonicalized in [HTTP.md](HTTP.md).
 ## Essence
 
 Solera does not build anything. It **plans** work into a tree, **hands** the
-agent one leaf at a time, and **verifies** each leaf with a deterministic gate.
+agent one agent-built leaf at a time, and **verifies** those results with a
+deterministic gate.
 The building is done by an external agent (Claude Code / Codex). Solera is the
 harness around it and runs standalone, with or without Novel.
 
 ## The WorkItem tree
 
 Work is one tree of **WorkItems**, split as deep as its results need. `level` is
-a free label with no fixed taxonomy (D-2026-10-04-A drops the fixed
-initiative → epic → story → action ladder). A child is part of its parent's
-result; work that only has to happen first is an order link (`after`), not a
-child. The executable invariant:
+a free label with no fixed names (D-2026-10-04-A). A child is part of its
+parent's result; work that only has to happen first is an order link (`after`),
+not a child. An agent-built leaf fits in one context. Every item records how
+its result is accepted in `accept` (§Who accepts a result):
 
-- a **leaf** carries a `gate` and no children — the unit an agent finishes in one
-  context, verified by one command;
-- a **container** carries children and no gate;
-- an item may have **neither** — a container awaiting decomposition, or an item a
-  person finishes (picking a design, signing a contract) — but never both.
+- `gate`: a deterministic check command judges a result an agent builds;
+- `children`: the item is done when its children are;
+- `person`: a person tries and accepts a promised result, or makes a choice only
+  they can make. Do not invent a gate for this item or split it to make it gated.
 
-Which of these an item is, and who finishes it, is recorded in `accept`
-(§Who accepts a result), so an item with neither a gate nor children is never
-ambiguous.
+A WorkItem never has both a gate and children. An item with neither may await
+decomposition or a person's judgment; `accept` makes its meaning explicit.
 
 ## Components
 
@@ -315,22 +314,23 @@ flowchart TD
     R --> R2["retros/{id}.md"]
     R --> FB["feedback/{id}.md"]
     R --> AR["artifacts/{id}/"]
-    I --> I1["INIT-001.md  (level: initiative, children: [EPIC-001])"]
-    I --> I2["EPIC-001.md  (level: epic, children: [STORY-001])"]
-    I --> I3["STORY-001.md (level: story, children: [ACT-001, ACT-002])"]
-    I --> I4["ACT-001.md   (level: action, gate: …)"]
+    I --> I1["WORK-001.md  (accept: children, children: [WORK-002, WORK-003])"]
+    I --> I2["WORK-002.md  (accept: gate, gate: …)"]
+    I --> I3["WORK-003.md  (accept: person)"]
 ```
 
 Each item is YAML frontmatter (machine) + body (goal). **Identity is the file
 name**, not a frontmatter field (SSOT, no drift). Storage is flat; the tree is
 reconstructed from each item's `children` list, so depth and re-parenting cost
-nothing. A malformed file is rejected immediately (`FormatError`).
+nothing. The `WORK-` prefix here comes from the free `level` label and carries
+no meaning. A malformed file is rejected immediately (`FormatError`).
 
 ## CLI
 
 ```text
-solera --root <project> plan "goal" [--level story] [--accept children|person] [--after <id>]...   -> STORY-001  (a root)
-                        add <parent> "goal" [--level action] [--gate "<cmd>"] [--accept gate|children|person] [--after <id>]...  -> ACT-001
+solera --root "$PWD" plan "Ship the feature" --level work --accept children  # -> WORK-001
+solera --root "$PWD" add WORK-001 "Add the endpoint" --level work --gate "pytest -q tests/test_api.py"  # -> WORK-002
+solera --root "$PWD" add WORK-001 "Try the feature" --level work --accept person  # -> WORK-003
                                     # --accept is required when there is no --gate (§Who accepts a result)
                         phase <item> exploring|executing|none ["note"]  # record the progress phase; changes no status
                         after <item> [<id> ...]   # replace the item's order links; no ids clears them

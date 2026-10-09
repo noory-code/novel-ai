@@ -54,20 +54,27 @@ implementation must realise.
 
 ### 4. Plan with realizes links
 
-Create a planning root for this engagement, then add leaves that realize format
-F elements:
+Create a planning root for this engagement with `accept="children"`, or
+`accept="person"` if its result is promised to the person. Split it as deep as
+its results need. A child is part of its parent's result; work that only has to
+happen first is an `after` waiting link. `level` is a free label with no fixed
+names. Add items that realize format F elements:
 
-Call `plan_work` to create the release container. Call `add_work_item` for each
-leaf, passing the deterministic gate and the published `feature/<slug>` or
-`entity/<slug>` identifiers in `realizes`.
+Call `plan_work` with the chosen `accept`. Call `add_work_item` for each child,
+choosing acceptance per item: `gate` with a deterministic check command for a
+result an agent builds, `children` for rollup, or `person` for a result the
+person tries and accepts or a choice only they can make. Pass the published
+`feature/<slug>` or `entity/<slug>` identifiers in `realizes`. Do not invent a
+gate for a `person` item or split it to make it gated.
 
 `--realizes` is repeatable — use it multiple times on one item when the leaf
 spans more than one format F element.
 
 ### 5. Execute
 
-Hand off to **solera-run**. The `next` command prints each leaf's goal and gate.
-The leaf's `realizes` links trace back to the design in `specs/<label>/`.
+Hand off to **solera-run**. The `next` command prints each agent-built leaf's
+goal and gate. Its `realizes` links trace back to the design in
+`specs/<label>/`.
 
 ## Rules
 

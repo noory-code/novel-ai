@@ -1,6 +1,6 @@
 {
   "name": "solera",
-  "version": "8.10.0",
+  "version": "8.10.1",
   "description": "Deterministic work planning, ordering, gates, and retrospectives for AI-led execution.",
   "author": {
     "name": "noory-code",
@@ -27,7 +27,7 @@
   "interface": {
     "displayName": "Solera",
     "shortDescription": "Plan work and enforce deterministic gates",
-    "longDescription": "Solera plans work into a tree, offers one executable leaf at a time, runs its deterministic gate, and records retrospectives and feedback under .noory/solera.",
+    "longDescription": "Solera splits work as deep as its results need, records gate, children, or person acceptance per item, offers agent-built leaves for execution, and records retrospectives and feedback under .noory/solera.",
     "developerName": "noory-code",
     "category": "Developer Tools",
     "capabilities": ["Interactive", "Write"],

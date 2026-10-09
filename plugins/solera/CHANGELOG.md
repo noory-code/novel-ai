@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.10.1] — 2026-10-10
+
+### Changed
+
+- Planning skills and docs follow free-depth items and per-item acceptance (D-2026-10-04-A).
+
 ## [8.10.0] — 2026-10-09
 
 ### Added

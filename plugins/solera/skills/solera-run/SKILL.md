@@ -1,7 +1,7 @@
 ---
 name: solera-run
 user-invocable: true
-description: Execute a planned Solera WorkItem tree one leaf at a time, verifying each through its gate.
+description: Execute agent-built Solera leaves one at a time and run their gates.
 metadata:
   version: "7.8.0"
   category: execution
@@ -41,7 +41,9 @@ work and runs each gate.
    Show the stored gate command to the user before its first execution in the
    project, then call `complete_current`.
 
-   - `PASS` -> the leaf is `done` and its ancestors roll up. Go back to step 1.
+   - `PASS` -> a `gate` item is `done` and its ancestors roll up; a gated
+     `person` item waits in `review` for the person's acceptance. Go back to
+     step 1.
    - `FAIL` -> the leaf stays `doing`. Read the printed gate output, fix the
      work, and re-run `complete`. `next` will resume the same leaf, not skip it.
    - `CONFLICT` -> the leaf changed while its gate ran; nothing was written.

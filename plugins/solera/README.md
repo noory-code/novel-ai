@@ -2,10 +2,11 @@
 
 **A slim harness for AI-driven work.**
 
-Solera plans work into a **tree of WorkItems**, runs deterministic **gates** on
-the leaves, and orders the steps an external AI agent executes. It **supervises
-rather than builds**: the agent (Claude Code, Codex) does the work; Solera plans
-it, hands it over one leaf at a time, and verifies each before moving on.
+Solera plans work into a **tree of WorkItems**, runs deterministic **gates** for
+agent-built results, and orders the steps an external AI agent executes. It
+**supervises rather than builds**: the agent (Claude Code, Codex) does the work;
+Solera plans it, hands over one agent-built leaf at a time, and records how each
+item's result is accepted.
 
 It works **standalone** over a plain-file `.noory/solera/` workspace, with or
 without [Novel](https://github.com/noory-code/novel-ai/tree/main/plugins/mashbill).
@@ -21,11 +22,15 @@ flowchart LR
   Gate -->|fail| Stop[stop, escalate to a human]
 ```
 
-- **WorkItem** — any rung of the tree: `initiative` / `epic` / `story` /
-  `action` (`level` is a free label, so depth and taxonomy are not fixed).
-- **Leaf** — a WorkItem with a **gate** and no children: one chunk an agent
-  finishes in a single context. **Container** — a WorkItem with children and no
-  gate: it rolls up their status. Size is an *altitude*, not a number.
+- **WorkItem** — split as deep as its results need. `level` is a free label with
+  no fixed names; its ID prefix carries no meaning. A child is part of its
+  parent's result. Work that only has to happen first is an `--after` waiting
+  link, not a child.
+- **Acceptance** — every item records who accepts its result: `gate` runs a
+  deterministic check for a result an agent builds; `children` rolls up the
+  children's results; `person` waits for a person to try a promised result or
+  make a choice only they can make. Do not invent a gate for a `person` item or
+  split it to make it gated. An agent-built leaf fits in one context.
 - **Gate** — deterministic verification (a test, a build, a content check). Not
   an LLM step — the harness must be able to trust the verdict.
 - **Retrospective / Feedback** — neutral, ID-tagged notes a human folds back into
@@ -52,14 +57,14 @@ The skills drive a small CLI. Run it from the project directory; `.noory/solera/
 lives under it and gates run there:
 
 ```bash
-solera --root "$PWD" plan "Ship the feature." --level story
-solera --root "$PWD" add STORY-001 "Add the endpoint" --gate "pytest -q tests/test_api.py"
+solera --root "$PWD" plan "Ship the feature." --level work --accept person
+solera --root "$PWD" add WORK-001 "Add the endpoint" --level work --gate "pytest -q tests/test_api.py"
 solera --root "$PWD" next        # mark the next leaf doing, print its instruction
 #   ... agent does the work ...
 solera --root "$PWD" complete    # run the gate; pass -> done + rollup, fail -> stop
 solera --root "$PWD" ready       # leaves that can start now, and blocked ones
 solera --root "$PWD" status      # pointer + completion percent + tree-integrity audit
-solera --root "$PWD" retro STORY-001 "The plan under-sized the migration step."
+solera --root "$PWD" retro WORK-001 "The plan under-sized the migration step."
 solera --root "$PWD" feedback FB-001 "Blocked: the spec is ambiguous about auth."
 ```
 

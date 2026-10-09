@@ -1,7 +1,7 @@
 ---
 name: solera-plan
 user-invocable: true
-description: Turn a goal into a Solera WorkItem tree decomposed down to small, individually gated leaves.
+description: Split a goal into Solera WorkItems as deep as their results need, choosing acceptance for each item.
 metadata:
   version: "7.8.0"
   category: planning
@@ -13,9 +13,9 @@ metadata:
 
 # solera-plan
 
-Turn a goal into a tree of WorkItems and decompose it down to gated leaves. The
-split is your judgement; the files are written by the CLI so they always stay
-valid.
+Turn a goal into a tree of WorkItems, split as deep as its results need. Choose
+how each result is accepted. The files are written by the CLI so they always
+stay valid.
 
 ## When to use
 
@@ -24,23 +24,28 @@ building starts.
 
 ## Procedure
 
-1. Create a root. Pick its `--level` by how big the goal is — `initiative` for a
-   large effort, `story` for a single feature (the default):
+1. Create a root. `level` is a free label with no fixed names; choose a label
+   that describes the item, without treating it as a depth or size:
 
    Call Solera MCP `plan_work` with `project_root` set to the current workspace,
-   the exact `goal`, and `level="initiative"`.
+   the exact `goal`, `level="work"`, and `accept="children"` when the root will
+   roll up its children. For a result promised to the person, use
+   `accept="person"` instead.
 
-   It prints the id (e.g. `INIT-001`).
+   It returns the id (e.g. `WORK-001`); the prefix comes from the free `level`
+   label and carries no meaning.
 
-2. Decompose downward by adding children under a parent. Containers (no gate)
-   group; leaves (with a gate) are the work:
+2. Add a child only when its result is part of its parent's result. Work that
+   only has to happen first is an `after` waiting link, not a child:
 
-   Call `add_work_item` once per child. Pass `gate=""` for a grouping
-   container. Pass the exact deterministic verification command in `gate` for
-   a leaf.
+   Call `add_work_item` once per child, with `level="work"`. Choose `accept` per
+   item: `gate` for a result an agent builds and a deterministic command judges
+   (pass that command in `gate`); `children` for a result that rolls up its
+   children (pass `accept="children"` without a gate); `person` for a result a
+   person tries and accepts (pass `accept="person"` without a gate).
 
    Each call returns the new id. When one item must finish before another
-   starts, pass the earlier ids in `after` (for example `after=["ACT-001"]`).
+   starts, pass the earlier ids in `after` (for example `after=["WORK-002"]`).
    A link may point at any item, across parents; a link on a container holds
    back everything under it. Items with no link between them may run in any
    order, so link only real prerequisites — do not chain every leaf. To add or
@@ -55,18 +60,18 @@ building starts.
   needs its decision.
 - **A leaf is one context.** If a chunk needs more than one clean agent context,
   make it a container and split it into smaller leaves.
-- **Every leaf an agent builds has a gate; containers never do.** The gate is
+- **A gate judges a result an agent builds.** The gate is
   deterministic and shell-independent — prefer `pytest …`, `python -c "…"`, a
   linter, a build.
-- **Work only a person can confirm has no gate.** Choosing a design, signing a
-  contract or approving copy is an item with no gate and no children; a person
-  finishes it by checking it in the app, and no agent can (D-2026-10-02-D). Do
-  not invent a gate for it and do not split it to make it gated.
+- **A person accepts results promised to them and choices only they can make.**
+  Choosing a design, signing a contract, approving copy, or trying a promised
+  result uses `accept="person"`. A person finishes it by checking it in the
+  app, and no agent can (D-2026-10-02-D). Do not invent a gate for it or split
+  it to make it gated.
 - The gate checks the *outcome*, not the steps ("tests pass", not "ran pytest").
   Anyone re-running it later must get the same verdict.
-- Some leaves are *decisions*, not builds (e.g. "choose the stack"). Their gate
-  is "a decision is recorded in proof"; the human makes the call. See
-  **solera-decide**.
+- Some leaves are *decisions*, not builds (e.g. "choose the stack"). The person
+  makes and accepts the choice; see **solera-decide**.
 
 When the plan is ready, hand off to **solera-run**.
 
