@@ -176,7 +176,8 @@ choices made while building it on 2026-10-02 and still open to the user's review
   Esc cancels and removes a new item left empty *(Claude: the editing keys)*. A child under an item that has a check
   command is refused with a message that says why (such an item is a leaf). At the root level Return creates a new root,
   and roots keep the engine's order (by id) *(Claude)*.
-- **Choosing the node a new item serves:** when a new root has no design node, the app asks which published node it
+- **Choosing the node a new item serves:** when a new item reaches no design node — neither it nor an ancestor names
+  one, so a new root always and a new child only under such an ancestor — the app asks which published node it
   serves and offers every published node (every node that has a slug), not only those
   already drawn on the tab. The person may skip; the item is still created, but it cannot start
   until it or an ancestor names a node (`D-2026-10-01-G`).
