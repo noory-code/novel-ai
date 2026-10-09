@@ -59,6 +59,33 @@ def _make_project(workspace: Path, project_id: str = "alpha") -> Path:
     return plot_root
 
 
+@pytest.mark.parametrize(
+    ("method", "suffix", "body"),
+    [
+        ("POST", "/publish", {"bump": "patch"}),
+        ("GET", "/publish/status", None),
+        ("GET", "/slugs", None),
+        ("POST", "/publish/slug-proposals", {"scope": "project", "suggest": False}),
+    ],
+)
+def test_publish_routes_reject_wrong_project_id_without_changes(
+    client: TestClient, workspace: Path, method: str, suffix: str, body: dict[str, Any] | None
+) -> None:
+    plot_root = _make_project(workspace)
+    init_workspace_repo(workspace)
+    before = {p.relative_to(plot_root): p.read_bytes() for p in plot_root.rglob("*") if p.is_file()}
+    tags_before = list_tags(workspace)
+    response = client.request(
+        method, f"/api/projects/wrong{suffix}?project_path={workspace}", json=body
+    )
+    assert response.status_code == 404
+    assert response.json() == {"error": "project not found: wrong"}
+    assert {
+        p.relative_to(plot_root): p.read_bytes() for p in plot_root.rglob("*") if p.is_file()
+    } == before
+    assert list_tags(workspace) == tags_before
+
+
 def _foundation_canvas(plot_root: Path) -> Path:
     return _project_dir(plot_root, "alpha") / "foundation" / "canvas.json"
 
@@ -199,9 +226,7 @@ def test_slug_map_returns_stored_registry_without_writing(
     )
 
     assert resp.status_code == 200
-    assert resp.json() == {
-        "slugs": {"node-2": "feature/checkout", "node-1": "mission"}
-    }
+    assert resp.json() == {"slugs": {"node-2": "feature/checkout", "node-1": "mission"}}
     assert slug_file.read_bytes() == before
 
 
@@ -232,9 +257,7 @@ def test_slug_map_404_when_project_missing(client: TestClient, workspace: Path) 
     assert resp.json() == {"error": "project not found: ghost"}
 
 
-def test_slug_map_reuses_stored_registry_validation(
-    client: TestClient, workspace: Path
-) -> None:
+def test_slug_map_reuses_stored_registry_validation(client: TestClient, workspace: Path) -> None:
     plot_root = _make_project(workspace)
     slug_file = _project_dir(plot_root, "alpha") / "_slugs.json"
     slug_file.write_text(json.dumps({"node-1": "../escape"}), encoding="utf-8")

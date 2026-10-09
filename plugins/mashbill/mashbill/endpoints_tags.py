@@ -14,8 +14,7 @@ from typing import Any, cast
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from mashbill.endpoints_common import _ApiError, _error, _require_plot_root
-from mashbill.folder_io import _project_dir
+from mashbill.endpoints_common import _ApiError, _error, _project_dir_or_404, _require_plot_root
 from mashbill.git_store import (
     GitNotInitializedError,
     PublishedVersionTagError,
@@ -45,9 +44,9 @@ async def tags_list_endpoint(request: Request) -> JSONResponse:
     except _ApiError as exc:
         return exc.response
     project_id = request.path_params["project_id"]
-    folder = _project_dir(plot_root, project_id)
-    if not (folder / "project.json").is_file():
-        return _error(f"project not found: {project_id}", status=404)
+    folder = _project_dir_or_404(plot_root, project_id)
+    if isinstance(folder, JSONResponse):
+        return folder
     return JSONResponse({"tags": list_tags(workspace_root_from_plot_root(plot_root))})
 
 
@@ -57,9 +56,9 @@ async def tag_post_endpoint(request: Request) -> JSONResponse:
     except _ApiError as exc:
         return exc.response
     project_id = request.path_params["project_id"]
-    folder = _project_dir(plot_root, project_id)
-    if not (folder / "project.json").is_file():
-        return _error(f"project not found: {project_id}", status=404)
+    folder = _project_dir_or_404(plot_root, project_id)
+    if isinstance(folder, JSONResponse):
+        return folder
     try:
         body: dict[str, Any] = await request.json()
     except json.JSONDecodeError:
@@ -72,9 +71,7 @@ async def tag_post_endpoint(request: Request) -> JSONResponse:
     try:
         result = tag_session(workspace_root, name, message=message)
     except ReservedVersionTagError as exc:
-        return JSONResponse(
-            {"error": str(exc), "reserved_version_name": True}, status_code=409
-        )
+        return JSONResponse({"error": str(exc), "reserved_version_name": True}, status_code=409)
     except GitNotInitializedError:
         return _git_not_initialized_response(workspace_root)
     except TagAlreadyExistsError as exc:
@@ -89,15 +86,13 @@ async def tag_delete_endpoint(request: Request) -> JSONResponse:
         return exc.response
     project_id = request.path_params["project_id"]
     name = request.path_params["tag_name"]
-    folder = _project_dir(plot_root, project_id)
-    if not (folder / "project.json").is_file():
-        return _error(f"project not found: {project_id}", status=404)
+    folder = _project_dir_or_404(plot_root, project_id)
+    if isinstance(folder, JSONResponse):
+        return folder
     try:
         delete_tag(workspace_root_from_plot_root(plot_root), name)
     except PublishedVersionTagError as exc:
-        return JSONResponse(
-            {"error": str(exc), "published_version": True}, status_code=409
-        )
+        return JSONResponse({"error": str(exc), "published_version": True}, status_code=409)
     except KeyError as exc:
         return _error(f"tag not found: {exc.args[0]}", status=404)
     return JSONResponse({"ok": True})
@@ -135,9 +130,9 @@ async def project_at_tag_endpoint(request: Request) -> JSONResponse:
         return exc.response
     project_id = request.path_params["project_id"]
     tag = request.path_params["tag"]
-    folder = _project_dir(plot_root, project_id)
-    if not (folder / "project.json").is_file():
-        return _error(f"project not found: {project_id}", status=404)
+    folder = _project_dir_or_404(plot_root, project_id)
+    if isinstance(folder, JSONResponse):
+        return folder
 
     from mashbill.git_store import read_file_at_tag
 

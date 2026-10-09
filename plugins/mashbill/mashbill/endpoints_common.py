@@ -14,6 +14,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from mashbill.models import CanvasKind
+from mashbill.storage import _ensure_project
 from mashbill.workspace import resolve_plot_root
 
 _ALLOWED_CANVAS_KINDS: frozenset[str] = frozenset(
@@ -27,6 +28,13 @@ def _project_path(request: Request) -> str | None:
 
 def _error(msg: str, status: int = 400) -> JSONResponse:
     return JSONResponse({"error": msg}, status_code=status)
+
+
+def _project_dir_or_404(plot_root: Path, project_id: str) -> Path | JSONResponse:
+    try:
+        return _ensure_project(plot_root, project_id)
+    except FileNotFoundError:
+        return _error(f"project not found: {project_id}", status=404)
 
 
 class _ApiError(Exception):

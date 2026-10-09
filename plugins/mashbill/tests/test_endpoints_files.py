@@ -48,6 +48,37 @@ def make_project(workspace: Path) -> Path:
     return plot_root
 
 
+@pytest.mark.parametrize(
+    ("method", "url", "body"),
+    [
+        ("GET", "/api/files?path=details.md", None),
+        ("GET", "/api/files/raw?path=logo.png", None),
+        ("PUT", "/api/files?path=details.md", {"content": "changed"}),
+        ("POST", "/api/folders", {"project_id": "wrong", "path": "ideas"}),
+    ],
+)
+def test_file_routes_reject_wrong_project_id_without_changes(
+    client: TestClient, workspace: Path, method: str, url: str, body: dict[str, str] | None
+) -> None:
+    plot_root = make_project(workspace)
+    (plot_root / "details.md").write_text("original", encoding="utf-8")
+    (plot_root / "logo.png").write_bytes(b"image")
+    before = {p.relative_to(plot_root): p.read_bytes() for p in plot_root.rglob("*") if p.is_file()}
+    if method == "POST":
+        response = client.post(f"{url}?project_path={workspace}", json=body)
+    else:
+        response = client.request(
+            method,
+            f"{url}&project_path={workspace}&project_id=wrong",
+            json=body,
+        )
+    assert response.status_code == 404
+    assert response.json() == {"error": "project not found: wrong"}
+    assert {
+        p.relative_to(plot_root): p.read_bytes() for p in plot_root.rglob("*") if p.is_file()
+    } == before
+
+
 # ---------------------------------------------------------------------------
 # GET /api/files — read text file
 # ---------------------------------------------------------------------------

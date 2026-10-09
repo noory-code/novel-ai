@@ -15,7 +15,7 @@ from typing import Any
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, Response
 
-from mashbill.endpoints_common import _ApiError, _error, _require_plot_root
+from mashbill.endpoints_common import _ApiError, _error, _project_dir_or_404, _require_plot_root
 from mashbill.file_io import (
     ALLOWED_IMAGE_EXTENSIONS,
     ExtensionNotAllowedError,
@@ -28,7 +28,7 @@ from mashbill.file_io import (
 )
 
 
-def _project_scoped_root(plot_root: Path, project_id: str) -> Path:
+def _project_scoped_root(plot_root: Path, project_id: str) -> Path | JSONResponse:
     """Directory a project owns; File/folder API paths are relative to this
     scope so a request can't climb out of it.
 
@@ -37,9 +37,7 @@ def _project_scoped_root(plot_root: Path, project_id: str) -> Path:
     survives). Callers must confirm the project exists via
     ``project.json`` (``plot_root`` always ``is_dir``).
     """
-    from mashbill.folder_io import _project_dir
-
-    return _project_dir(plot_root, project_id)
+    return _project_dir_or_404(plot_root, project_id)
 
 
 async def file_get_endpoint(request: Request) -> JSONResponse:
@@ -54,8 +52,8 @@ async def file_get_endpoint(request: Request) -> JSONResponse:
     if not rel_path:
         return _error("'path' query param is required")
     project_root = _project_scoped_root(plot_root, project_id)
-    if not (project_root / "project.json").is_file():
-        return _error(f"project not found: {project_id}", status=404)
+    if isinstance(project_root, JSONResponse):
+        return project_root
     try:
         content = read_text_file(project_root, rel_path)
     except (UnsafePathError, ExtensionNotAllowedError) as exc:
@@ -86,8 +84,8 @@ async def file_raw_endpoint(request: Request) -> Response:
     if not rel_path:
         return _error("'path' query param is required")
     project_root = _project_scoped_root(plot_root, project_id)
-    if not (project_root / "project.json").is_file():
-        return _error(f"project not found: {project_id}", status=404)
+    if isinstance(project_root, JSONResponse):
+        return project_root
     try:
         target = resolve_safe_path(project_root, rel_path)
     except UnsafePathError as exc:
@@ -121,8 +119,8 @@ async def file_put_endpoint(request: Request) -> JSONResponse:
     if not isinstance(content, str):
         return _error("'content' must be a string")
     project_root = _project_scoped_root(plot_root, project_id)
-    if not (project_root / "project.json").is_file():
-        return _error(f"project not found: {project_id}", status=404)
+    if isinstance(project_root, JSONResponse):
+        return project_root
     try:
         write_text_file(project_root, rel_path, content)
     except (UnsafePathError, ExtensionNotAllowedError) as exc:
@@ -155,8 +153,8 @@ async def folder_post_endpoint(request: Request) -> JSONResponse:
     if not isinstance(desired, str) or not desired.strip():
         return _error("'path' is required and must be a non-empty string")
     project_root = _project_scoped_root(plot_root, project_id)
-    if not (project_root / "project.json").is_file():
-        return _error(f"project not found: {project_id}", status=404)
+    if isinstance(project_root, JSONResponse):
+        return project_root
     try:
         actual = uniquify_folder(project_root, desired)
         ensure_folder(project_root, actual)

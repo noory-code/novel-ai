@@ -19,9 +19,9 @@ from mashbill.chat_session import chat_registry
 from mashbill.endpoints_common import (
     _ApiError,
     _error,
+    _project_dir_or_404,
     _require_plot_root,
 )
-from mashbill.folder_io import _project_dir
 from mashbill.format_f_slugs import (
     InvalidSlugNamesError,
     SlugNamesNeededError,
@@ -86,9 +86,9 @@ async def project_publish_endpoint(request: Request) -> JSONResponse:
     except _ApiError as exc:
         return exc.response
     project_id = request.path_params["project_id"]
-    folder = _project_dir(plot_root, project_id)
-    if not (folder / "project.json").is_file():
-        return _error(f"project not found: {project_id}", status=404)
+    folder = _project_dir_or_404(plot_root, project_id)
+    if isinstance(folder, JSONResponse):
+        return folder
     try:
         body: Any = await request.json()
     except json.JSONDecodeError:
@@ -141,9 +141,9 @@ async def project_publish_status_endpoint(request: Request) -> JSONResponse:
     except _ApiError as exc:
         return exc.response
     project_id = request.path_params["project_id"]
-    folder = _project_dir(plot_root, project_id)
-    if not (folder / "project.json").is_file():
-        return _error(f"project not found: {project_id}", status=404)
+    folder = _project_dir_or_404(plot_root, project_id)
+    if isinstance(folder, JSONResponse):
+        return folder
 
     from mashbill.folder_io import read_project
 
@@ -172,9 +172,9 @@ async def project_slugs_endpoint(request: Request) -> JSONResponse:
     except _ApiError as exc:
         return exc.response
     project_id = request.path_params["project_id"]
-    folder = _project_dir(plot_root, project_id)
-    if not (folder / "project.json").is_file():
-        return _error(f"project not found: {project_id}", status=404)
+    folder = _project_dir_or_404(plot_root, project_id)
+    if isinstance(folder, JSONResponse):
+        return folder
     try:
         slugs = read_slug_store(plot_root, project_id)
     except ValueError as exc:
@@ -240,9 +240,9 @@ async def slug_proposals_endpoint(request: Request) -> JSONResponse:
     except _ApiError as exc:
         return exc.response
     project_id = request.path_params["project_id"]
-    folder = _project_dir(plot_root, project_id)
-    if not (folder / "project.json").is_file():
-        return _error(f"project not found: {project_id}", status=404)
+    folder = _project_dir_or_404(plot_root, project_id)
+    if isinstance(folder, JSONResponse):
+        return folder
     try:
         body: Any = await request.json()
     except json.JSONDecodeError:

@@ -53,6 +53,34 @@ def _make_project(workspace: Path, project_id: str = "alpha") -> Path:
     return plot_root
 
 
+@pytest.mark.parametrize(
+    ("method", "suffix", "body"),
+    [
+        ("GET", "/tags", None),
+        ("POST", "/tags", {"name": "new-session"}),
+        ("DELETE", "/tags/session", None),
+        ("GET", "/at-tag/session", None),
+    ],
+)
+def test_tag_routes_reject_wrong_project_id_without_changes(
+    client: TestClient, workspace: Path, method: str, suffix: str, body: dict[str, str] | None
+) -> None:
+    plot_root = _make_project(workspace)
+    init_workspace_repo(workspace)
+    tag_snapshot(workspace, "session")
+    before = {p.relative_to(plot_root): p.read_bytes() for p in plot_root.rglob("*") if p.is_file()}
+    tags_before = list_tags(workspace)
+    response = client.request(
+        method, f"/api/projects/wrong{suffix}?project_path={workspace}", json=body
+    )
+    assert response.status_code == 404
+    assert response.json() == {"error": "project not found: wrong"}
+    assert {
+        p.relative_to(plot_root): p.read_bytes() for p in plot_root.rglob("*") if p.is_file()
+    } == before
+    assert list_tags(workspace) == tags_before
+
+
 # ---------------------------------------------------------------------------
 # tags_list_endpoint — GET /api/projects/{id}/tags
 # ---------------------------------------------------------------------------
@@ -277,16 +305,12 @@ def test_tag_delete_removes_existing_tag(client: TestClient, workspace: Path) ->
     assert list_tags(workspace) == []  # disk side effect: tag removed
 
 
-def test_tag_delete_preserves_published_version_tag(
-    client: TestClient, workspace: Path
-) -> None:
+def test_tag_delete_preserves_published_version_tag(client: TestClient, workspace: Path) -> None:
     _make_project(workspace)
     init_workspace_repo(workspace)
     tag_snapshot(workspace, "v0.1.1")
 
-    resp = client.delete(
-        f"/api/projects/alpha/tags/v0.1.1?project_path={workspace}"
-    )
+    resp = client.delete(f"/api/projects/alpha/tags/v0.1.1?project_path={workspace}")
 
     assert resp.status_code == 409
     assert resp.json()["published_version"] is True
@@ -302,9 +326,7 @@ def test_tag_delete_removes_session_tag(client: TestClient, workspace: Path) -> 
     )
     assert created.status_code == 201
 
-    resp = client.delete(
-        f"/api/projects/alpha/tags/session-2026-09-28?project_path={workspace}"
-    )
+    resp = client.delete(f"/api/projects/alpha/tags/session-2026-09-28?project_path={workspace}")
 
     assert resp.status_code == 200
     assert list_tags(workspace) == []
