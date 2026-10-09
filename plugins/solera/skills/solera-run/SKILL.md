@@ -7,7 +7,7 @@ metadata:
   category: execution
   type: unit
   style: procedure
-  triggers: [solera run, run the plan, do the next action, execute the story]
+  triggers: [solera run, run the plan, do the next work item, execute the plan]
   uses: [solera-feedback]
 ---
 

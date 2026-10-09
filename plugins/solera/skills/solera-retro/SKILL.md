@@ -7,7 +7,7 @@ metadata:
   category: feedback
   type: unit
   style: procedure
-  triggers: [solera retro, retrospective, what did we learn, post-mortem the story]
+  triggers: [solera retro, retrospective, what did we learn, post-mortem the work]
   uses: []
 ---
 
@@ -31,7 +31,7 @@ connected — omit in standalone):
 
 Pass stable design identifiers in the optional `about` list.
 
-This writes `retros/STORY-001.md` (it attaches to any item id).
+This writes `retros/WORK-001.md` (it attaches to any item id).
 
 ## What to write
 
