@@ -192,6 +192,21 @@ choices made while building it on 2026-10-02 and still open to the user's review
   mode keeps the selected branch and dims everything else. *(Claude:)* fold with the item's toggle or `[` / `]` on the
   selected item, in the graph or the list; the fold state lasts for the session and is not saved; folding keeps the
   viewport; Esc leaves focus mode.
+- **Layout in a narrow tab** *(Claude)*: the tab can be narrow when the chat and tag panels are open, so nothing an
+  action needs may cover a work item.
+  - The tab's actions sit in one bar above the list and the graph, never over them: "AI로 일감 만들기" / "Make work
+    with AI" at the start, then the selected item's actions ("AI로 나누기" / "Split with AI", and choosing or finding a
+    design node for an item that names none), then the judgment inbox button at the end. The bar wraps when it runs
+    out of width.
+  - The side list takes 40% of the tab's width, at least 12rem and at most 20rem.
+  - While the panel that edits a proposal is open, the side list is hidden; closing the panel brings it back. The
+    person's list setting does not change.
+  - Moving the view to a proposal, to the box for typing a new item, or to a newly created item keeps the zoom at 0.8
+    or more. When the target does not fit at that zoom, the view shows the item being split (or the first proposed
+    item) at the start of the visible area. The visible area is the graph minus the part a panel covers.
+  - Focusing a box for typing never scrolls the tab sideways; the graph pans to the box instead.
+  - Fitting the whole graph (opening the tab, or the item set changing) still may zoom down to the design canvases'
+    minimum, as before.
 - **Badge on design canvases** *(user, `D-2026-10-04-A` (3))*: a published design node that work items realize shows
   counts per state on the bottom-right corner of its frame, never one total and never a percent: uphill ("오르막 N",
   what to do is not yet known), downhill ("내리막 N", the work is known and being done), and awaiting judgment
