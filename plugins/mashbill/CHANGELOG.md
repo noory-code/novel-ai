@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - File, folder, tag, and publish routes return 404 when the requested project id differs from the project stored in a flat `.noory/novel` root (W-00000409).
+- The same routes return 404 when a nested project's folder name differs from its stored id (W-00000409).
 
 ## [0.208.0] — 2026-10-09
 

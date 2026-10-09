@@ -13,6 +13,7 @@ if a guard branch is dropped or weakened.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -20,6 +21,7 @@ from starlette.testclient import TestClient
 
 from mashbill.broadcast import BroadcastHub
 from mashbill.file_io import MAX_FILE_BYTES
+from mashbill.git_store import init_workspace_repo
 from mashbill.http_app import create_http_app
 from mashbill.project_io import create_project
 from mashbill.workspace import resolve_plot_root
@@ -46,6 +48,33 @@ def make_project(workspace: Path) -> Path:
     plot_root = resolve_plot_root(str(workspace))
     create_project(plot_root, PROJECT_ID, "Alpha")
     return plot_root
+
+
+def test_nested_project_routes_reject_folder_name_with_mismatched_stored_id(
+    client: TestClient, workspace: Path
+) -> None:
+    plot_root = workspace / ".noory" / "novel"
+    for folder_name, stored_id in (("wrong", "other"), ("alpha", "alpha")):
+        folder = plot_root / folder_name
+        folder.mkdir(parents=True)
+        (folder / "project.json").write_text(json.dumps({"id": stored_id}), encoding="utf-8")
+        (folder / "details.md").write_text(folder_name, encoding="utf-8")
+    init_workspace_repo(workspace)
+
+    for path, params in (
+        ("/api/files", {"project_id": "wrong", "path": "details.md"}),
+        ("/api/projects/wrong/tags", {}),
+        ("/api/projects/wrong/slugs", {}),
+    ):
+        response = client.get(path, params={"project_path": str(workspace), **params})
+        assert response.status_code == 404
+        assert response.json() == {"error": "project not found: wrong"}
+
+    response = client.get(f"/api/files?project_id=alpha&path=details.md&project_path={workspace}")
+    assert response.status_code == 200
+    assert response.json() == {"path": "details.md", "content": "alpha"}
+    assert (plot_root / "alpha" / "project.json").is_file()
+    assert (plot_root / "wrong" / "project.json").is_file()
 
 
 @pytest.mark.parametrize(
