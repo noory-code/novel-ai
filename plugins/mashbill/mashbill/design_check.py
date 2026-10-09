@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from mashbill.models_actors import DesignCheck, DesignCheckState, FeatureNode, ServiceNode
 from mashbill.models_canvas import CanvasDoc
 from mashbill.models_union import SketchNode
+from mashbill.service_features import service_feature_ids
 from mashbill.storage import _canvas_file, _read_json, _write_json
 
 _SERVICE_CONTENT_FIELDS = (
@@ -47,15 +48,11 @@ def _nodes(canvas: CanvasDoc, kind: str) -> dict[str, ServiceNode | FeatureNode]
 
 
 def _service_feature_pairs(canvas: CanvasDoc) -> set[tuple[str, str]]:
-    services = set(_nodes(canvas, "service"))
-    features = set(_nodes(canvas, "feature"))
-    pairs: set[tuple[str, str]] = set()
-    for edge in canvas.edges:
-        if edge.source in services and edge.target in features:
-            pairs.add((edge.source, edge.target))
-        elif edge.target in services and edge.source in features:
-            pairs.add((edge.target, edge.source))
-    return pairs
+    return {
+        (service_id, feature_id)
+        for service_id, feature_ids in service_feature_ids(canvas).items()
+        for feature_id in feature_ids
+    }
 
 
 def _mark_nodes(

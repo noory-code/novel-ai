@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.209.1] — 2026-10-10
+
+### Fixed
+
+- Coach design checks use the shared directed service-to-feature membership rule when reopening service feature splits.
+
 ## [0.209.0] — 2026-10-10
 
 ### Added

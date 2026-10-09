@@ -236,6 +236,36 @@ def test_feature_content_change_reopens_feature_and_service_checks(
     _assert_recheck(plot_root, feature=True)
 
 
+@pytest.mark.parametrize(
+    ("source", "target", "service_rechecks"),
+    [("svc", "feat", True), ("feat", "svc", False)],
+)
+def test_feature_change_only_reopens_service_for_outgoing_membership(
+    tmp_path: Path, source: str, target: str, service_rechecks: bool
+) -> None:
+    plot_root = _setup_design(tmp_path)
+    overview = read_canvas(plot_root, "alpha", "services")
+    write_canvas(
+        plot_root,
+        "alpha",
+        overview.model_copy(
+            update={"edges": [SketchEdge(id="contains", source=source, target=target)]}
+        ),
+    )
+    mcp_tools.set_design_check(str(tmp_path), "alpha", "svc", "checked", 2, 0)
+    overview = read_canvas(plot_root, "alpha", "services")
+    nodes = [
+        node.model_copy(update={"proposed": "A different capability"})
+        if node.id == "feat"
+        else node
+        for node in overview.nodes
+    ]
+
+    write_canvas(plot_root, "alpha", overview.model_copy(update={"nodes": nodes}))
+
+    _assert_recheck(plot_root, service=service_rechecks, feature=True)
+
+
 def test_feature_attachment_reopens_service_check(tmp_path: Path) -> None:
     plot_root = _setup_design(tmp_path)
     overview = read_canvas(plot_root, "alpha", "services")
@@ -367,6 +397,30 @@ def test_any_feature_detail_mutation_reopens_feature_and_service_checks(
     assert isinstance(root, FeatureNode)
     assert root.design_check is not None
     assert root.design_check.state == "recheck"
+
+
+def test_feature_detail_change_does_not_reopen_reverse_edge_service_check(
+    tmp_path: Path,
+) -> None:
+    plot_root = _setup_design(tmp_path, with_detail_flow=True)
+    overview = read_canvas(plot_root, "alpha", "services")
+    write_canvas(
+        plot_root,
+        "alpha",
+        overview.model_copy(
+            update={"edges": [SketchEdge(id="contains", source="feat", target="svc")]}
+        ),
+    )
+    mcp_tools.set_design_check(str(tmp_path), "alpha", "svc", "checked", 2, 0)
+    detail = read_canvas(plot_root, "alpha", "feature", "feat")
+    nodes = [
+        node.model_copy(update={"label": "Changed step"}) if node.id == "step" else node
+        for node in detail.nodes
+    ]
+
+    write_canvas(plot_root, "alpha", detail.model_copy(update={"nodes": nodes}))
+
+    _assert_recheck(plot_root, service=False, feature=True)
 
 
 def test_unchecked_checks_stay_unchecked_when_upstream_changes(tmp_path: Path) -> None:
