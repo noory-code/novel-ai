@@ -101,6 +101,32 @@ def tree(root: Path) -> dict[str, bytes | None]:
     }
 
 
+@pytest.mark.parametrize("name", ["item", "basis"])
+def test_flat_project_rejects_wrong_id_before_provider(setup: tuple[Path, Path], name: str) -> None:
+    workspace, plot_root = setup
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
+    provider = FakeProvider('{"key":"root","goal":"result","accept":"person"}')
+    c = client(provider)
+    body = {"slugs": ["mission"]}
+    if name == "item":
+        body["outcome"] = "result"
+
+    wrong_url = url(workspace, name).replace("/projects/alpha/", "/projects/wrong/")
+    response = c.post(wrong_url, json=body)
+    assert response.status_code == 404
+    assert response.json() == {"error": "project not found: wrong"}
+    assert provider.calls == []
+
+    response = c.post(url(workspace, name), json=body)
+    assert response.status_code == 200
+    if name == "item":
+        assert response.json()["proposal"]["basis"] == ["mission@vP3"]
+        assert len(provider.calls) == 1
+    else:
+        assert response.json() == {"basis": ["mission@vP3"]}
+        assert provider.calls == []
+
+
 def test_item_uses_latest_containing_release_and_never_writes(
     setup: tuple[Path, Path],
 ) -> None:

@@ -11,7 +11,7 @@ from starlette.responses import JSONResponse
 from mashbill.chat_provider import read_selection
 from mashbill.chat_session import chat_registry
 from mashbill.endpoints_common import _ApiError, _error, _require_workspace_root
-from mashbill.folder_io import _project_dir
+from mashbill.storage import _ensure_project
 from mashbill.work_proposals import UnknownSlugError, propose_work_item, published_basis
 from mashbill.workspace import workspace_root_from_plot_root
 
@@ -39,8 +39,9 @@ async def _request_data(
     if not plot_root.is_dir():
         return _error(f"project data not found: {plot_root}", status=404)
     project_id = request.path_params["project_id"]
-    project_dir = _project_dir(plot_root, project_id)
-    if not (project_dir / "project.json").is_file():
+    try:
+        project_dir = _ensure_project(plot_root, project_id)
+    except FileNotFoundError:
         return _error(f"project not found: {project_id}", status=404)
     try:
         body: Any = await request.json()

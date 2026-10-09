@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.206.1] — 2026-10-09
+
+### Fixed
+
+- Work-proposal routes refuse a project id that does not match the flat project (W-00000398).
+
 ## [0.206.0] — 2026-10-09
 
 ### Added
