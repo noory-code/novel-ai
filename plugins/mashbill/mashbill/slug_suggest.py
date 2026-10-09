@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import json
-import re
 from pathlib import Path
 from typing import Any
 
+from mashbill.ai_reply import first_json_object
 from mashbill.format_f import plan_service_release, project_snapshot_nodes
 from mashbill.format_f_slugs import (
     SLUG_TAIL_MAX,
@@ -69,20 +69,8 @@ def build_slug_prompt(rows: list[Any]) -> str:
 
 def parse_slug_reply(raw: str, node_ids: list[str]) -> dict[str, str]:
     """Read the first JSON object and retain only exact, valid requested ids."""
-    cleaned = re.sub(r"```(?:json)?", "", raw, flags=re.IGNORECASE).replace("```", "")
-    decoder = json.JSONDecoder()
-    parsed: object | None = None
-    for index, char in enumerate(cleaned):
-        if char != "{":
-            continue
-        try:
-            parsed, _ = decoder.raw_decode(cleaned[index:])
-        except json.JSONDecodeError:
-            continue
-        if isinstance(parsed, dict):
-            break
-        parsed = None
-    if not isinstance(parsed, dict):
+    parsed = first_json_object(raw)
+    if parsed is None:
         return {}
 
     wanted = set(node_ids)
