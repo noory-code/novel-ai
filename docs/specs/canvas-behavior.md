@@ -232,4 +232,35 @@ choices made while building it on 2026-10-02 and still open to the user's review
   design-node badge whose items await judgment opens the inbox. *(Claude:)* with nothing awaiting judgment the count
   button is hidden and a "일감 상세" / "Work details" button keeps accepted results reachable; the inbox lists the newest
   items first (items carry no time they entered judgment).
+- **AI proposals** *(user, `D-2026-10-09-A` (1): Mashbill proposes once, the app writes to Solera only what the person
+  confirms; the rest Claude, from the self-design features "설계에서 일감 만들기" and "AI가 나눈 일 확정하기")*:
+  - *Making one work item from the design.* "AI로 일감 만들기" asks which published nodes the work serves (the same
+    picker as for a new root) and what result the person wants, in their own words. The app sends
+    `POST /api/projects/{id}/work-proposals/item` to Mashbill with `{"slugs": [slug...], "outcome": str}`; Mashbill reads
+    those nodes from its latest published releases, asks the workspace's chosen provider once (`complete_once`, 120 s),
+    and returns `{"proposal": PlanNode}` with `goal`, `conditions`, `pass_examples`, `fail_examples`, `risks`, `accept`
+    (`person` or `children`), `realizes` (the slugs) and `basis` (`<slug>@vS<N>` per slug). A slug that was never
+    published is refused (`unknown_slug`, 404).
+  - *Splitting a confirmed item.* On an item that is not accepted, protected or cancelled, "AI로 나누기" sends
+    `POST /api/projects/{id}/work-proposals/split` with `{"item": {"goal", "conditions", "pass_examples",
+    "fail_examples", "risks", "realizes", "basis"}, "existing_children": [goal...]}` — the app copies these from Solera,
+    since Mashbill never reads Solera. Mashbill returns `{"proposal": {"items": [PlanNode...]}}`: child results as
+    children, work that only has to finish first as `after_keys`, and nothing that repeats an existing child's goal.
+    Several results may wait for one release item, and a finished release item does not finish them.
+  - *Failure.* No chosen provider (`no_chat_provider`, 409), a failed or timed-out call, or a reply that is not a valid
+    proposal — including one that carries a `gate` — returns `proposal_failed` (502) with the reason. The app keeps the
+    person's input, shows the reason, and offers try again, write it by hand, or cancel; it never retries on its own.
+    Nothing is written either way.
+  - *Showing and confirming.* *(Claude)* A proposal is drawn on the Work tab where it would go — a new root, or under
+    the item being split — with a dashed outline and a "제안" / "Proposal" tag, never by colour alone; its fields can be
+    edited in place, and in a split the person can delete proposed items, move them, or turn a child into an order link
+    before confirming, which is how part of a proposal is taken. The proposal lives only in the app until confirmed or
+    discarded; it is not a draft (`D-2026-10-01-A`), and leaving the tab discards it after a confirmation prompt.
+    Discarding writes nothing and leaves the item being split as it was.
+  - *Before writing.* *(Claude)* The app asks Mashbill for the current release of each slug
+    (`POST /api/projects/{id}/work-proposals/basis`, `{"slugs": [...]}` → `{"basis": [...]}`). If a release changed since
+    the proposal, it shows what changed and offers: propose again on the new design, confirm against the old basis, or
+    discard. It then sends one `POST /api/work/plans` to Solera with a `request_id` made once per proposal. If the
+    result is unknown (no response), it shows "확인 필요" / "Needs check" and sends the same request again, which
+    creates nothing twice.
 - **Not in this version:** deleting items.

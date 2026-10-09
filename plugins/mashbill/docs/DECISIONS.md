@@ -39,6 +39,46 @@
 
 ## Log
 
+### D-2026-10-09-A — Mashbill proposes work items once; the app writes only what the person confirms to Solera
+
+> Extends D-2026-10-02-A: Mashbill now knows the shape of a work-item proposal. It still never calls Solera and
+> never reads Solera's files.
+
+- **What:** (1) *(user)* The AI proposal for work items comes from Mashbill, which already holds the chat providers.
+  The app asks Mashbill for a proposal, shows it, and writes to Solera only what the person confirms. Mashbill never
+  calls Solera and never reads Solera's files; when a big work item is split, the app passes that item's content in
+  the request. (2) *(Claude)* Two proposals, matching the self-design features "설계에서 일감 만들기" and
+  "AI가 나눈 일 확정하기": one work item from published design nodes and the outcome the person states, and a split of
+  a confirmed item into child results and waiting links. Each calls the workspace's chosen provider once through
+  `complete_once`; when no provider is chosen, the call fails, times out, or returns an invalid proposal, the request
+  fails with a reason, writes nothing, and is not retried on its own. A proposal never carries a check command
+  (`gate`): it may only choose `accept: person` or `accept: children`, and Mashbill refuses an AI reply that carries a
+  gate, because the checkbox runs a gate and a person confirms plain-word conditions, not code (D-2026-10-04-A (2)).
+  (3) *(Claude)* A proposal lives only in the app until the person confirms or discards it. It is not a draft
+  (D-2026-10-01-A, D-2026-10-01-F). Before confirming, the app asks Mashbill for the current release of each slug and
+  shows any change against the proposal's `basis`. (4) *(Claude)* Solera work items gain five optional fields the
+  proposal fills and the person confirms: `conditions` (pass conditions in plain words, D-2026-10-04-A (2)),
+  `pass_examples` and `fail_examples`, `risks`, and `basis` (the published releases the item was planned against, as
+  `<slug>@vS<N>` or `<slug>@vP<N>`, D-2026-10-04-B (2)). `basis` is a format F value, not an import label, and
+  `repin` never changes it. (5) *(Claude)* Solera gains one request that creates a whole confirmed tree with its
+  waiting links at once, all or nothing, takes no gate, and recognises a repeated request by its `request_id`, so a
+  confirm whose result is unknown can be sent again without duplicates. The proposal tree and the planned tree have one
+  shape, defined once in Solera `docs/HTTP.md` §Planning a tree and pinned by a test in each package.
+- **Why:** the person should not split work by hand; AI proposes and the person confirms (VISION). The provider code
+  lives in Mashbill only and plugins cannot import each other, so a second copy in Solera would duplicate provider
+  choice, authentication and model settings. The condition behind D-2026-10-02-A — either engine runs and is tested
+  without the other — still holds: Mashbill returns a proposal, Solera writes, and the app joins them.
+- **Alternatives:** Solera calls the AI itself — not chosen by the user: a second provider stack. An agent outside the
+  app splits with `solera-plan` — not chosen: the app could not offer propose-then-confirm, which the self-design flows
+  require. Keep the proposal as a coach draft — not chosen: D-2026-10-01-A keeps only drafts the person chooses, and
+  D-2026-10-01-F already rejected drafts for a one-step propose-and-confirm.
+- **Approval:** (1) Accepted — user, 2026-10-09 ("네, 1번으로 진행해주세요"; novel-workspace Q-00000033).
+  (2)–(5) Pending — Claude's design from the self-design flows, open to the user's review.
+- **Spec impact:** public `docs/specs/canvas-behavior.md` §Work (AI proposals); Solera `docs/SPEC.md` (new fields,
+  planning a tree at once) and `docs/HTTP.md` (`POST /api/work/plans`). Work: novel-workspace W-00000396–W-00000400.
+- **Principles:** DRY (one provider stack); SSOT (Solera alone writes work items and owns their rules); loose coupling
+  (the app composes); Honesty (nothing is written before the person confirms).
+
 ### D-2026-10-08-A — An active work item that has not moved for 7 days counts as "needs a check"
 
 - **What:** (1) An active work item (`doing` or `rework`) whose status, progress phase, phase note

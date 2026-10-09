@@ -262,6 +262,50 @@ Through the HTTP surface only ([HTTP.md](HTTP.md) §Judging a result): `accept`
 `reopen` apply to `accept: person` items only. No CLI command or MCP tool offers
 any of these.
 
+### What the person confirms
+
+An item may carry five optional fields that a person confirms in plain words
+(D-2026-10-09-A (4), D-2026-10-04-A (2)). They are empty by default, and files
+written before they existed load them as empty:
+
+| Field | Shape | Meaning |
+|---|---|---|
+| `conditions` | list of strings | pass conditions in plain words — what must hold for the result to be accepted |
+| `pass_examples` | list of strings | cases that should pass |
+| `fail_examples` | list of strings | cases that should fail |
+| `risks` | list of strings | what could go wrong or what must not be harmed |
+| `basis` | list of strings | the published releases the item was planned against, each `<slug>@vS<N>` or `<slug>@vP<N>` |
+
+`basis` holds format F values (a slug and a release name), not an import label,
+so a work item still stores no import label (format-f §6). It is written when the
+item is created through the HTTP surface and is never changed by `repin`: `repin`
+compares imported labels and reopens stale work, while `basis` records what the
+person confirmed against. Strings in these lists are trimmed; a blank string is
+rejected. A protected item (§Protected items) rejects edits of these fields like
+edits of `goal`.
+
+### Planning a tree at once
+
+The HTTP surface can create a whole confirmed tree in one request
+([HTTP.md](HTTP.md) §Planning a tree): new roots, or new children under one
+existing item, with their order links (D-2026-10-09-A (5)). It exists for the
+app's propose-then-confirm flow, so it never takes a `gate`: every planned item
+takes `accept: person` or `accept: children`, and a person adds a check command
+later only by editing. The engine validates the whole tree with the same rules as
+creating items one by one (parent not a leaf, not protected, not cancelled; order
+links without cycles or waits on an ancestor or descendant) before it writes
+anything. It writes under the workspace lock: the new item files first, then the
+existing parent's `children` list, then the request record; if any write fails it
+removes the new files and restores the parent file to its earlier bytes, so a
+failed request leaves nothing.
+
+A request carries a `request_id`. The engine keeps every planned request in
+`.noory/solera/plans.json` as `{request_id: {"body": <sha-256 of the canonical
+JSON body>, "created": {key: id}}}`, written in the same locked sequence. The same
+`request_id` with the same body returns the recorded ids and creates nothing;
+the same `request_id` with a different body is refused. So an app whose confirm
+had an unknown result can send the same request again without making duplicates.
+
 ## File layout
 
 ```mermaid

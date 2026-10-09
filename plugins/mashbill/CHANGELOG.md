@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.205.5] — 2026-10-09
+
+### Documentation
+
+- Records D-2026-10-09-A: Mashbill proposes work items once and the app writes only what the person confirms to Solera. Not built yet.
+
 ## [0.205.4] — 2026-10-09
 
 ### Fixed

@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.8.2] — 2026-10-09
+
+### Documentation
+
+- Specifies five plain-word fields a person confirms on a work item (`conditions`, `pass_examples`, `fail_examples`, `risks`, `basis`) and `POST /api/work/plans`, which creates a confirmed tree at once without duplicates (D-2026-10-09-A). Not built yet.
+
 ## [8.8.1] — 2026-10-08
 
 ### Fixed

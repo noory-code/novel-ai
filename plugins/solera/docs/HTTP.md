@@ -83,6 +83,8 @@ route below except health; WebSocket failures still use close code 1008 and an E
 | `reopen_not_person` | 400 | Reopen was asked for an item whose `accept` is not `person` (a gate verdict is reopened only by `repin`). | reopen |
 | `reopen_not_done` | 400 | Reopen was asked for an item that is not `done`. | reopen |
 | `cancel_finished` | 400 | Cancel was asked for an item that is already `done` or `cancelled`. | cancel |
+| `invalid_plan` | 400 | A planned tree is malformed: a blank or duplicate `key`, an `after_keys` entry that names no key in the request, or a blank string in `conditions`, `pass_examples`, `fail_examples`, `risks` or `basis`. | POST plans, PATCH item (blank strings) |
+| `request_id_conflict` | 409 | A `request_id` that was already planned arrives with a different body. Nothing is written. | POST plans |
 | `invalid` | 400 | Fallback for a rejection that has no more specific public code. | Any project route |
 
 ## Routes
@@ -93,7 +95,8 @@ route below except health; WebSocket failures still use close code 1008 and an E
 | `GET /api/work` | — | `{"items": [Item...], "progress": {id: Completion}, "ready": [id...], "blocked": [{"id", "waiting_on": [id...], "reasons": [str...], "names_no_design_node": bool}], "current": id \| null}` |
 | `POST /api/work/by-slugs` | `{"slugs": [str...]}` | `{"by_slug": {slug: [id...]}}` — every requested slug is a key (empty list when none); an item matches when its own `realizes` contains the slug |
 | `POST /api/work/items` | `{"parent": id \| null, "goal": str, "level"?: str, "gate"?: str, "realizes"?: [str], "after"?: [id], "accept"?: str}` (`accept` required when there is no `gate`) | `201` Item. `parent: null` = new root (same as `plan`); otherwise same as `add` |
-| `PATCH /api/work/items/{id}` | `{"goal"?: str, "realizes"?: [str], "accept"?: str, "phase"?: str, "phase_note"?: str}` (at least one key) | Item. `accept` may change only while the item is `todo`, `doing` or `rework` (else `accept_locked`); it never finishes a leaf, and on a container the ordinary rollup then applies. A protected item rejects goal/realizes edits (`item_protected`) |
+| `POST /api/work/plans` | `{"request_id": str, "parent": id \| null, "items": [PlanNode...]}` — see "Planning a tree" | `201` `{"created": {key: id}, "items": [Item...]}`; a repeated `request_id` with the same body returns `200` with the recorded `created` and the current items |
+| `PATCH /api/work/items/{id}` | `{"goal"?: str, "realizes"?: [str], "accept"?: str, "phase"?: str, "phase_note"?: str, "conditions"?: [str], "pass_examples"?: [str], "fail_examples"?: [str], "risks"?: [str]}` (at least one key) | Item. `accept` may change only while the item is `todo`, `doing` or `rework` (else `accept_locked`); it never finishes a leaf, and on a container the ordinary rollup then applies. A protected item rejects goal/realizes edits (`item_protected`) |
 | `POST /api/work/items/{id}/accept` | — | `{"item": Item}` — see "Judging a result" |
 | `POST /api/work/items/{id}/reject` | `{"reason": str}` | `{"item": Item}` |
 | `POST /api/work/items/{id}/reopen` | `{"reason": str}` | `{"item": Item}` |
@@ -111,6 +114,56 @@ and items without a gate. `ready` lists only gated leaves that can start now; it
 `blocked[].reasons` is English diagnostic text for agents and logs. Human-facing clients must derive
 translated blocked text from `waiting_on` and `names_no_design_node` instead of displaying or matching
 `reasons`.
+
+## Planning a tree
+
+`POST /api/work/plans` creates a whole confirmed tree at once ([SPEC.md](SPEC.md) §Planning a tree at once,
+D-2026-10-09-A). `parent: null` makes every top-level node a new root; otherwise they become children of that
+existing item, appended in order. The tree is the single shape shared with Mashbill's work proposals (canvas-behavior
+§Work, AI proposals); each package pins the example below in a test.
+
+`PlanNode`:
+
+| Key | Type | Rule |
+|---|---|---|
+| `key` | str | required; unique in the request; names this node for `after_keys` and in `created` |
+| `goal` | str | required, not blank |
+| `accept` | `"person"` \| `"children"` | required. `gate` is not accepted here (`invalid_request`, extra field) |
+| `realizes` | [str] | optional; slugs, as for POST items |
+| `conditions`, `pass_examples`, `fail_examples`, `risks`, `basis` | [str] | optional; no blank strings |
+| `after_keys` | [str] | optional; keys of nodes in this request that must finish first |
+| `after` | [id] | optional; existing item ids that must finish first |
+| `children` | [PlanNode] | optional; a node with `accept: children` needs at least one child |
+
+```json
+{
+  "request_id": "b8f0c1d2-3e4f-4a5b-8c6d-7e8f9a0b1c2d",
+  "parent": null,
+  "items": [
+    {
+      "key": "k1",
+      "goal": "주문자가 가게 메뉴를 보고 주문한다",
+      "accept": "children",
+      "realizes": ["feature/order-food"],
+      "basis": ["feature/order-food@vS2"],
+      "conditions": ["메뉴를 고르면 주문 확인 화면에 같은 메뉴와 가격이 보인다"],
+      "children": [
+        {"key": "k2", "goal": "메뉴 목록을 보인다", "accept": "person",
+         "pass_examples": ["메뉴가 열 개면 열 개가 다 보인다"]},
+        {"key": "k3", "goal": "주문을 확정한다", "accept": "person", "after_keys": ["k2"],
+         "fail_examples": ["품절 메뉴는 주문되지 않는다"], "risks": ["같은 주문이 두 번 들어간다"]}
+      ]
+    }
+  ]
+}
+```
+
+Response `201`: `{"created": {"k1": "<id>", "k2": "<id>", "k3": "<id>"}, "items": [Item...]}` — the created items in
+`created` order. Ids follow the same rules as POST items. Validation errors use the same codes as POST items and move
+(`unknown_parent`, `unknown_predecessor`, `parent_is_leaf`, `item_protected`, `check_cancelled`, `order_cycle`,
+`order_waits_on_ancestor`, `order_waits_on_descendant`, `invalid_realizes_slug`, `duplicate_realizes_slug`) plus
+`invalid_plan` and `request_id_conflict`. Any error writes nothing. Item responses on every route include the five
+confirmed-in-plain-words fields (empty lists when unset).
 
 ## Checking an item
 
