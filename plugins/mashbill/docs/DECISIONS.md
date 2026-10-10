@@ -39,6 +39,33 @@
 
 ## Log
 
+### D-2026-10-10-A — The in-app Codex coach reads no AGENTS.md and no skills from above the workspace
+
+> Applies D-2026-06-21-I (in-app chat is grounded only in the workspace) to the Codex provider, which that entry left
+> untouched.
+
+- **What:** *(Claude, applying the user's D-2026-06-21-I)* A chat turn of the Codex coach runs with
+  `-c project_root_markers=[]` and `-c project_doc_max_bytes=0`. The first makes the workspace folder Codex's project
+  root, so Codex does not walk up to a parent repository for `AGENTS.md` or `.agents/skills`. The second stops Codex
+  from loading any `AGENTS.md`, including the workspace's own, matching the Claude coach, which loads no project-scope
+  `CLAUDE.md` (`--setting-sources local`). Skills kept in the workspace's own `.agents/skills` and Codex's built-in
+  skills still load: they are inside the workspace or part of the provider. The slug-suggestion call already runs in an
+  empty temporary folder and is unchanged.
+- **Why:** A workspace inside a development repository made the Codex coach read the developers' `AGENTS.md` and skills
+  and answer in internal terms (novel-workspace O-00000115, 2026-10-04). D-2026-06-21-I already decided, from the user's
+  report, that the in-app coach talks only from what is in the workspace; only the Claude provider applied it.
+  Verified against codex-cli 0.160.0 on 2026-10-10 in a probe repository: without the flags Codex followed a parent
+  `AGENTS.md` and listed a parent skill; with them it received no `AGENTS.md` and only the workspace's and built-in
+  skills.
+- **Alternatives:** Move the self-design project out of the development workspace — fixes only this project, not a
+  user whose workspace sits inside their own code repository. `--enable skip_host_skill_discovery` — tried, parent skills
+  still loaded. Run the coach in an empty folder like slug suggestion — would also cut the coach off from the
+  workspace files it may read.
+- **Approval:** Claude's application of an accepted user decision (D-2026-06-21-I), open to the user's review.
+- **Spec impact:** `chat_providers/codex.py` turn arguments; pinned by the chat provider argv tests.
+- **Principles:** SSOT (one grounding rule for every coach provider); Honesty (behaviour verified against the installed
+  CLI, not assumed).
+
 ### D-2026-10-09-B — The app imports published releases into Solera, so a work item that reaches no node cannot start in the app either
 
 - **What:** (1) *(Claude, following the user's W-00000320 decision 1 ⓐ — "publish → Solera imports and splits → link

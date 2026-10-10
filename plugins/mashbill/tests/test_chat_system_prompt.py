@@ -383,6 +383,8 @@ def test_codex_attaches_own_mashbill_tools_noninteractively(tmp_path: Path) -> N
     assert "--ignore-user-config" in cmd
 
     overrides = [cmd[i + 1] for i, arg in enumerate(cmd) if arg == "-c"]
+    assert "project_root_markers=[]" in overrides
+    assert "project_doc_max_bytes=0" in overrides
     command_value = next(v for v in overrides if v.startswith("mcp_servers.mashbill.command="))
     args_value = next(v for v in overrides if v.startswith("mcp_servers.mashbill.args="))
     assert json.loads(command_value.split("=", 1)[1]) == "uv"

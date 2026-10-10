@@ -422,6 +422,8 @@ async def test_codex_complete_once_is_ephemeral_without_mcp_or_resume(tmp_path: 
     assert "--model" in process.spawn_args
     assert "gpt-test" in process.spawn_args
     assert "model_reasoning_effort=high" in process.spawn_args
+    assert "project_root_markers=[]" not in process.spawn_args
+    assert "project_doc_max_bytes=0" not in process.spawn_args
     assert "resume" not in process.spawn_args
     assert not any("mcp_servers" in arg for arg in process.spawn_args)
     assert provider.is_first_turn
@@ -1004,6 +1006,10 @@ async def test_codex_second_turn_uses_exec_resume_with_captured_thread_id(
     assert "resume" in captured_b.spawn_args
     assert "tid-xyz" in captured_b.spawn_args
     assert "second" in captured_b.spawn_args
+    for args in (captured_a.spawn_args, captured_b.spawn_args):
+        overrides = [args[i + 1] for i, arg in enumerate(args) if arg == "-c"]
+        assert "project_root_markers=[]" in overrides
+        assert "project_doc_max_bytes=0" in overrides
 
 
 async def test_codex_first_turn_falls_back_to_fresh_exec_when_no_thread_id(

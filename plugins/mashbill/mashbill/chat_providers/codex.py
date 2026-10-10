@@ -116,6 +116,12 @@ class CodexProvider(_SubprocessChatProvider):
             # JSON strings/arrays are valid TOML values and safely preserve
             # spaces in frozen binary paths and plugin-root arguments.
             "--ignore-user-config",
+            # D-2026-10-10-A / D-2026-06-21-I: keep chat grounded in the
+            # workspace without loading parent skills or any AGENTS.md.
+            "-c",
+            "project_root_markers=[]",
+            "-c",
+            "project_doc_max_bytes=0",
             "-c",
             f"mcp_servers.mashbill.command={json.dumps(mcp_entry['command'])}",
             "-c",

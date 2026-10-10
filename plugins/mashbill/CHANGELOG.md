@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.209.2] — 2026-10-10
+
+### Fixed
+
+- Keep in-app Codex coach turns scoped to the workspace without loading parent skills or any `AGENTS.md` (D-2026-10-10-A).
+
 ## [0.209.1] — 2026-10-10
 
 ### Fixed
