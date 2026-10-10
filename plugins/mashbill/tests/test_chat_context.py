@@ -508,6 +508,7 @@ def test_feature_drafts_ask_about_unstated_endings() -> None:
     services_prompt = build_system_prompt("services")
     for phrase in (
         "Draft every step and outcome the person said or a canvas holds",
+        "no guessed ending of any branch",
         "no guessed change elsewhere in the app",
         "draw exactly that draft, adding no node or edge it did not show",
     ):

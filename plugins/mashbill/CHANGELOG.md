@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.213.1] — 2026-10-10
+
+### Fixed
+
+- The feature coach does not guess the ending of any branch, including what remains after "continue later" (D-2026-10-10-D).
+
 ## [0.213.0] — 2026-10-10
 
 ### Changed

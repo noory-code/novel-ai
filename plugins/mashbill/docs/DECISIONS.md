@@ -62,10 +62,13 @@
 ### D-2026-10-10-D — On a feature canvas the coach drafts only what the person said or the canvas holds, and asks the rest
 
 - **What:** *(Claude, carrying out novel-workspace W-00000358)* When the feature canvas coach drafts a flow, the draft
-  carries every step and outcome the person said or a canvas already holds, and nothing else: no guessed failure ending
-  and no guessed change elsewhere in the app. The coach asks about the rest. When the person confirms a draft, the coach
-  draws exactly that draft — no node or edge the draft did not show — and asks before joining anything the draft left
-  open. The rule is two sentences in the feature framing only; the shared playbook and other scopes are unchanged.
+  carries every step and outcome the person said or a canvas already holds, and nothing else: no guessed ending of any
+  branch (failure or not, such as what remains after "continue later") and no guessed change elsewhere in the app. The
+  coach asks about the rest. When the person confirms a draft, the coach draws exactly that draft — no node or edge the
+  draft did not show — and asks before joining anything the draft left open. The rule is two sentences in the feature
+  framing only; the shared playbook and other scopes are unchanged. (Wording widened from "no guessed failure ending" in
+  W-00000420: once the coach received the feature description (D-2026-10-10-E) and drafted its "continue later" branch,
+  two runs in nine guessed what remains after it — "a partly drawn flow remains".)
 - **Why:** In the self-design project the coach drafted "the feature changes to 'flow drawn' in the feature list", a
   result the app does not show; the person caught it (novel-workspace O-00000103, problem 4). Replaying that moment six
   times on the real tool loop (the feature canvas set back to its feature node and actor), the coach wrote failure
