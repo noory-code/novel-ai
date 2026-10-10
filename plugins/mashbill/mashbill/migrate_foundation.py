@@ -12,7 +12,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from mashbill.folder_io import _canvas_file, _project_dir, _project_file, _write_json
+from mashbill.canvas_view import read_canvas_files, write_canvas_files
+from mashbill.folder_io import _canvas_file, _project_dir, _project_file
 from mashbill.migrate_v01_models import _normalise_legacy_node_kinds
 from mashbill.models import ProjectNode
 
@@ -47,7 +48,8 @@ def upgrade_foundation_canvas_if_needed(plot_root: Path, project_id: str) -> boo
     path = _canvas_file(plot_root, project_id, "foundation")
     if not path.exists():
         return False
-    raw = json.loads(path.read_text(encoding="utf-8"))
+    raw = read_canvas_files(path)
+    assert raw is not None
 
     changed = False
 
@@ -84,7 +86,7 @@ def upgrade_foundation_canvas_if_needed(plot_root: Path, project_id: str) -> boo
             changed = True
 
     if changed:
-        _write_json(path, raw)
+        write_canvas_files(path, raw)
     return changed
 
 

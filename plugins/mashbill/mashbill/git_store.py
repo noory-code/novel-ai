@@ -234,7 +234,11 @@ def blueprint_canvas_changed(
             continue
         for path in canvas_root.rglob("*.json"):
             relative_canvas_path = path.relative_to(canvas_root)
-            if _PUBLISHED_DIRNAME in relative_canvas_path.parts or not path.is_file():
+            if (
+                _PUBLISHED_DIRNAME in relative_canvas_path.parts
+                or path.name.endswith(".view.json")
+                or not path.is_file()
+            ):
                 continue
             relative_repo_path = path.resolve().relative_to(workspace_root.resolve())
             repo_path = PurePosixPath(relative_repo_path.as_posix())
@@ -290,7 +294,7 @@ def _is_canvas_json_path(
     canvas_roots: tuple[PurePosixPath, ...],
 ) -> bool:
     """Return whether a tagged path is an included canvas JSON file."""
-    if path.suffix != ".json":
+    if path.suffix != ".json" or path.name.endswith(".view.json"):
         return False
     for root in canvas_roots:
         try:

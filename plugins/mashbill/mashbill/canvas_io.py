@@ -26,6 +26,7 @@ from mashbill.canvas_migrations import (  # noqa: F401
     _migrate_published_slug_to_id,
     collect_foundation_md_warnings,
 )
+from mashbill.canvas_view import read_canvas_files, write_canvas_files
 from mashbill.field_policy import CREATE_TIME_REFS, validated_pick, writable_node_fields
 from mashbill.models import (
     _ALLOWED_KINDS_BY_CANVAS,
@@ -92,7 +93,7 @@ def _drop_retired_kinds(
         if e.get("source") not in retired_ids and e.get("target") not in retired_ids
     ]
     raw = {**raw, "nodes": kept_nodes, "edges": kept_edges}
-    _write_json(_canvas_file(plot_root, project_id, canvas_kind, service_id), raw)
+    write_canvas_files(_canvas_file(plot_root, project_id, canvas_kind, service_id), raw)
     return raw
 
 
@@ -118,7 +119,7 @@ def _drop_dangling_edges(
     if len(kept) == len(edges):
         return raw
     raw = {**raw, "edges": kept}
-    _write_json(_canvas_file(plot_root, project_id, canvas_kind, service_id), raw)
+    write_canvas_files(_canvas_file(plot_root, project_id, canvas_kind, service_id), raw)
     return raw
 
 
@@ -139,7 +140,9 @@ def read_canvas(
 
         upgrade_foundation_canvas_if_needed(plot_root, project_id)
     path = _canvas_file(plot_root, project_id, canvas_kind, service_id)
-    raw = _read_json(path)
+    raw = read_canvas_files(path)
+    if raw is None:
+        raise FileNotFoundError(f"file not found: {path}")
     # v0.13 Phase 0 — project anchor moved to ``ProjectDoc.anchors``. If an
     # old canvas still carries a ``project`` kind node, evict it: copy its
     # position/visual to ProjectDoc.anchors[canvas] and remove from nodes.
@@ -224,7 +227,9 @@ def write_canvas(plot_root: Path, project_id: str, canvas: CanvasDoc) -> CanvasD
     existing_baselines: dict[str, dict[str, Any]] = {}
     if path.is_file():
         try:
-            existing_raw = _read_json(path)
+            existing_raw = read_canvas_files(path)
+            if existing_raw is None:
+                raise FileNotFoundError(f"file not found: {path}")
             existing = CanvasDoc.model_validate(existing_raw)
             existing_baselines = {
                 n.id: n.publish_baseline for n in existing.nodes if n.publish_baseline is not None
@@ -251,7 +256,7 @@ def write_canvas(plot_root: Path, project_id: str, canvas: CanvasDoc) -> CanvasD
     # Foundation typed-text fields. The v0.13 ``_split_foundation_typed_
     # text_to_md`` write-side helper is gone; Pydantic now serialises
     # every field (typed + body) into the JSON output directly.
-    _write_json(path, raw)
+    write_canvas_files(path, raw)
     write_related(related_rechecks)
     try:
         meta = read_project(plot_root, project_id)

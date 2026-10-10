@@ -7,33 +7,13 @@ import json
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from mashbill.canvas_view import _PRESENTATION_FIELDS_BY_COLLECTION
+
 _PUBLISHED_DIRNAME = "published"
 
 # Canvas presentation is not blueprint content. Keep these deny-lists explicit:
 # an unknown future field is content by default, which may cause an extra publish
 # rather than silently omitting a design change.
-_PRESENTATION_FIELDS_BY_COLLECTION = {
-    "nodes": frozenset(
-        {
-            "x",
-            "y",
-            "width",
-            "height",
-            "color",
-            "shape",
-            "icon",
-            "collapsed",
-        }
-    ),
-    "edges": frozenset(
-        {
-            "sourceHandle",
-            "targetHandle",
-            "style",
-        }
-    ),
-}
-
 _INVALID_CANVAS = object()
 
 
@@ -50,7 +30,11 @@ def blueprint_content_fingerprint(workspace_root: Path, project_dir: Path) -> st
                 continue
             for path in canvas_root.rglob("*.json"):
                 relative_canvas_path = path.relative_to(canvas_root)
-                if _PUBLISHED_DIRNAME in relative_canvas_path.parts or not path.is_file():
+                if (
+                    _PUBLISHED_DIRNAME in relative_canvas_path.parts
+                    or path.name.endswith(".view.json")
+                    or not path.is_file()
+                ):
                     continue
                 canvas = _read_canvas_json(path)
                 if canvas is _INVALID_CANVAS:

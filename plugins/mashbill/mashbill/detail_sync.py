@@ -6,10 +6,10 @@ everything, so import sites and tests are unchanged.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from mashbill.canvas_io import list_feature_details, read_canvas, write_canvas  # noqa: F401
+from mashbill.canvas_view import read_canvas_files, write_canvas_files
 from mashbill.models import CanvasDoc
 from mashbill.storage import (  # noqa: F401
     _canvas_file,
@@ -85,7 +85,7 @@ def sync_details_with_overview(plot_root: Path, project_id: str) -> dict[str, li
                 src.model_copy(update={"is_root": False}),
             ],
         )
-        _write_json(
+        write_canvas_files(
             _canvas_file(plot_root, project_id, "feature", service_id=feature_id),
             detail.model_dump(by_alias=True),
         )
@@ -164,9 +164,11 @@ def _detail_has_user_authored_content(detail_dir: Path, feature_id: str) -> bool
     if not detail_path.is_file():
         return False
     try:
-        doc = json.loads(detail_path.read_text(encoding="utf-8"))
+        doc = read_canvas_files(detail_path)
     except (OSError, ValueError):
         # Unreadable / malformed: treat as user content to be safe.
+        return True
+    if doc is None:
         return True
     seeded_ids = {
         feature_id,

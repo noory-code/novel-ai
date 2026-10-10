@@ -12,6 +12,7 @@ from pathlib import Path
 from send2trash import send2trash  # type: ignore[import-untyped]
 
 from mashbill.canvas_io import list_feature_details, read_canvas, write_canvas  # noqa: F401
+from mashbill.canvas_view import write_canvas_files
 from mashbill.models import CanvasDoc, CanvasKind, ProjectDoc
 from mashbill.storage import (  # noqa: F401
     _canvas_file,
@@ -124,7 +125,7 @@ def create_project(
     _write_json(_project_file(plot_root, project_id), proj.model_dump())
 
     for canvas_kind in _PRIMARY_CANVASES:
-        _write_json(
+        write_canvas_files(
             _canvas_file(plot_root, project_id, canvas_kind),
             _blank_canvas(canvas_kind).model_dump(by_alias=True),
         )

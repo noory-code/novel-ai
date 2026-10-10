@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from mashbill.canvas_view import write_canvas_files
 from mashbill.edge_semantics import classify_edge
 from mashbill.models import (
     CanvasDoc,
@@ -212,7 +213,7 @@ def _migrate_parent_id_to_directed_edges(
         return raw
 
     raw = {**raw, "nodes": rebuilt_nodes, "edges": rebuilt_edges}
-    _write_json(_canvas_file(plot_root, project_id, canvas_kind, service_id), raw)
+    write_canvas_files(_canvas_file(plot_root, project_id, canvas_kind, service_id), raw)
     return raw
 
 
@@ -255,7 +256,7 @@ def _migrate_assign_edge_relation(
         return raw
 
     raw = {**raw, "edges": rebuilt_edges}
-    _write_json(_canvas_file(plot_root, project_id, canvas_kind, service_id), raw)
+    write_canvas_files(_canvas_file(plot_root, project_id, canvas_kind, service_id), raw)
     return raw
 
 
@@ -281,7 +282,7 @@ def _drop_disallowed_services_kinds(
     if len(kept) == len(nodes):
         return raw
     raw = {**raw, "nodes": kept}
-    _write_json(_canvas_file(plot_root, project_id, "services"), raw)
+    write_canvas_files(_canvas_file(plot_root, project_id, "services"), raw)
     return raw
 
 
@@ -387,7 +388,7 @@ def _absorb_md_typed_text_into_json(
         changed = True
     if changed:
         raw = {**raw, "nodes": new_nodes}
-        _write_json(_canvas_file(plot_root, project_id, "foundation"), raw)
+        write_canvas_files(_canvas_file(plot_root, project_id, "foundation"), raw)
     return raw
 
 
@@ -442,7 +443,7 @@ def _evict_legacy_project_anchor(
         ]
         if len(kept_edges) != len(edges):
             raw = {**raw, "edges": kept_edges}
-            _write_json(_canvas_file(plot_root, project_id, canvas_kind), raw)
+            write_canvas_files(_canvas_file(plot_root, project_id, canvas_kind), raw)
         return raw
     try:
         proj = read_project(plot_root, project_id)
@@ -451,7 +452,7 @@ def _evict_legacy_project_anchor(
         # validates. Position is unrecoverable but defaults are sensible.
         kept = [n for n in nodes if n.get("kind") != "project"]
         raw = {**raw, "nodes": kept}
-        _write_json(_canvas_file(plot_root, project_id, canvas_kind), raw)
+        write_canvas_files(_canvas_file(plot_root, project_id, canvas_kind), raw)
         return raw
     legacy = legacy_anchors[0]
     anchor = AnchorPlacement(
@@ -477,5 +478,5 @@ def _evict_legacy_project_anchor(
         if e.get("source") not in evicted_ids and e.get("target") not in evicted_ids
     ]
     raw = {**raw, "nodes": kept, "edges": kept_edges}
-    _write_json(_canvas_file(plot_root, project_id, canvas_kind), raw)
+    write_canvas_files(_canvas_file(plot_root, project_id, canvas_kind), raw)
     return raw

@@ -13,6 +13,7 @@ import json
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+from mashbill.canvas_view import write_canvas_files
 from mashbill.folder_io import _canvas_file, _project_dir, _project_file, _write_json
 from mashbill.migrate_builders import (
     _build_actors_canvas,
@@ -125,26 +126,26 @@ def _migrate_one(plot_root: Path, doc: _V01SketchDoc) -> None:
 
     # --- write foundation canvas ---------------------------------------
     foundation_canvas = _build_foundation_canvas(core_root, proj.name)
-    _write_json(
+    write_canvas_files(
         _canvas_file(plot_root, doc.id, "foundation"),
         foundation_canvas.model_dump(by_alias=True),
     )
 
     # --- write actors canvas --------------------------------------------
     actors_canvas = _build_actors_canvas(actor_nodes, actor_root, doc.edges)
-    _write_json(
+    write_canvas_files(
         _canvas_file(plot_root, doc.id, "actors"),
         actors_canvas.model_dump(by_alias=True),
     )
 
     # --- split services into overview + details -------------------------
     overview, detail_canvases = _split_services(service_nodes, service_root, doc.edges)
-    _write_json(
+    write_canvas_files(
         _canvas_file(plot_root, doc.id, "services"),
         overview.model_dump(by_alias=True),
     )
     for detail in detail_canvases:
-        _write_json(
+        write_canvas_files(
             _canvas_file(plot_root, doc.id, "feature", service_id=detail.canvas_id),
             detail.model_dump(by_alias=True),
         )

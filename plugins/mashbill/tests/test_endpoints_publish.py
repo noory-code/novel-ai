@@ -29,6 +29,7 @@ from starlette.testclient import TestClient
 
 from mashbill.blueprint_publish import _bump_blueprint_version
 from mashbill.broadcast import BroadcastHub
+from mashbill.canvas_view import write_canvas_files
 from mashbill.chat_provider import ChatProviderSelection, write_selection
 from mashbill.chat_session import ChatProvider, ChatSessionRegistry, ChatStreamEvent
 from mashbill.folder_io import _project_dir, read_canvas, write_canvas
@@ -92,7 +93,7 @@ def _foundation_canvas(plot_root: Path) -> Path:
 
 
 def _write_canvas(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    write_canvas_files(path, payload)
 
 
 def _publish_seeded_foundation(

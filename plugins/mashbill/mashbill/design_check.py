@@ -8,11 +8,12 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from mashbill.canvas_view import read_canvas_files, write_canvas_files
 from mashbill.models_actors import DesignCheck, DesignCheckState, FeatureNode, ServiceNode
 from mashbill.models_canvas import CanvasDoc
 from mashbill.models_union import SketchNode
 from mashbill.service_features import service_feature_ids
-from mashbill.storage import _canvas_file, _read_json, _write_json
+from mashbill.storage import _canvas_file
 
 _SERVICE_CONTENT_FIELDS = (
     "label",
@@ -124,7 +125,7 @@ def _preserve_omitted_checks(before: CanvasDoc, incoming: CanvasDoc) -> CanvasDo
 
 def _load_canvas(path: Path) -> CanvasDoc | None:
     try:
-        return CanvasDoc.model_validate(_read_json(path))
+        return CanvasDoc.model_validate(read_canvas_files(path))
     except (FileNotFoundError, ValueError, ValidationError):
         return None
 
@@ -282,4 +283,4 @@ def set_design_check(
 def write_related(updates: list[tuple[Path, dict[str, Any]]]) -> None:
     """Persist related-canvas recheck updates after the primary write succeeds."""
     for path, payload in updates:
-        _write_json(path, payload)
+        write_canvas_files(path, payload)
