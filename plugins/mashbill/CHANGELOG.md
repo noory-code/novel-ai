@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.211.1] — 2026-10-10
+
+### Fixed
+
+- Make agreed changes on another canvas in the same feature-coach turn and name what changed there (D-2026-10-10-C, part 2).
+
 ## [0.211.0] — 2026-10-10
 
 ### Added

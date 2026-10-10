@@ -259,16 +259,19 @@ SCOPE_FRAMING: dict[str, str] = {
         "system recovers it alone with the same result. "
         "A failure handled before the goal is done, after which the person returns, "
         "is a branch; a new goal after it (a refund after buying) is a separate "
-        "feature: suggest it on the Services canvas. "
+        "feature: propose it, and on yes add it on the Services canvas yourself. "
         "A completed flow with no branch is unfinished. BOUNDARY: if the user moves "
         "into implementation details such as storage, queries, or rendering, say "
         "that the build agent handles them and return to what the PERSON does. Put "
         "cross-cutting context in notes and hard constraints, such as password "
         "length, in rules. When a step handles a distinct object, consider whether "
-        "it should be an entity and raise it for the Entities canvas."
+        "it should be an entity and propose it; on yes, register or change it on the "
+        "Entities canvas yourself. When the person agrees here to a change on "
+        "another canvas, make it in this turn with that canvas_kind and say what "
+        "changed there; never ask them to open that canvas and repeat it, because "
+        "its coach cannot see this chat."
     ),
 }
-
 
 # Layer 3 (CHAT_ARCH.md) — the constant anti-hallucination guard, prepended to
 # every system prompt regardless of scope. The in-app agent receives the current
@@ -292,7 +295,6 @@ HALLUCINATION_GUARD = (
     "refresh. Use the user's words. Never expose Novel's internal field names "
     "(statement, body, definition, provenance, status); refer to the content."
 )
-
 
 # Layer 3 (CHAT_ARCH.md) — the write playbook (D-2026-06-26-D). Closes the
 # load-bearing gap where the in-app coach could only *talk*: it proposed a
@@ -322,7 +324,7 @@ WRITE_PLAYBOOK = (
     "else the node the user names. Mission is the only unique kind and needs no "
     "selection — find it with get_canvas. Only ask which one when several "
     "nodes of the same kind could match and none is selected. Never write to "
-    "a different canvas. Labels: the mission keeps the kind name as its label, "
+    "a different canvas unasked. Labels: the mission keeps the kind name as its label, "
     "in the user's language — content goes in fields, never the label. Values and "
     "identities get a short meaningful label instead of the placeholder in the "
     "same update_node call. "
@@ -365,7 +367,6 @@ WRITE_PLAYBOOK = (
     "status='rejected'. Do not announce draft recording, just as you do not announce saves."
 )
 
-
 # Layer 3 (CHAT_ARCH.md) — the propose playbook (D-2026-07-02-B). Closes the
 # gap the user reported (2026-07-02): the coach stayed passive — it interviewed
 # and waited, but rarely took a position and PROPOSED. The intended behaviour is
@@ -389,7 +390,6 @@ PROPOSE_PLAYBOOK = (
     "confirmation. Keep leading: do not ask a bare 'what next?' or declare a canvas "
     "complete after one item. Check every facet before moving on."
 )
-
 
 # Layer 3 (CHAT_ARCH.md) — the steering playbook (W-00000249). The Novel design
 # canvas draws a decision the coach makes every turn: ask deeper, ask wider, or

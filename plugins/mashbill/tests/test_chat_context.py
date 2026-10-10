@@ -491,7 +491,16 @@ def test_feature_scope_routes_post_completion_goals_to_services() -> None:
     assert "a new goal after it" in framing
     assert "a refund after buying" in framing
     assert "is a separate feature" in framing
-    assert "suggest it on the services canvas" in framing
+    assert "propose it, and on yes add it on the services canvas yourself" in framing
+
+
+def test_agreed_cross_canvas_changes_are_made_in_the_feature_turn() -> None:
+    for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
+        assert "Never write to a different canvas unasked." in build_system_prompt(scope)
+
+    framing = build_framing_preamble("feature:x")
+    assert "register or change it on the Entities canvas yourself" in framing
+    assert "its coach cannot see this chat" in framing
 
 
 def test_write_playbook_names_the_anchor_as_foundation_parent() -> None:
