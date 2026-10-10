@@ -39,6 +39,25 @@
 
 ## Log
 
+### D-2026-10-10-D — On a feature canvas the coach drafts only what the person said or the canvas holds, and asks the rest
+
+- **What:** *(Claude, carrying out novel-workspace W-00000358)* When the feature canvas coach drafts a flow, every step
+  and outcome in the draft comes from what the person said or what a canvas already holds. Where neither says how
+  something ends — most often how a failure ends — the coach asks instead of writing an ending into the draft. The rule is
+  one sentence in the feature framing only; the shared playbook and other scopes are unchanged.
+- **Why:** In the self-design project the coach drafted "the feature changes to 'flow drawn' in the feature list", a
+  result the app does not show; the person caught it (novel-workspace O-00000103, problem 4). Replaying that moment six
+  times on the real tool loop, the coach wrote failure endings nobody had described as settled draft steps in three runs
+  (for example "only part is drawn → fill the rest by hand"). A person confirming a long draft can miss such a line, and
+  the design then states behaviour that is not true.
+- **Alternatives:** Put the rule in the shared anti-invention guard — the services scopes are at the word budget, and the
+  problem was seen on feature canvases. Let the coach keep proposing endings but mark them as guesses — the person still
+  has to spot and judge each one inside a long draft.
+- **Approval:** Claude's design, open to the user's review.
+- **Spec impact:** feature framing in `chat_context.py` (one sentence).
+- **Principles:** Honesty (the design states only behaviour someone stated); Don't Make Me Think (the person answers a
+  question instead of auditing a draft line by line).
+
 ### D-2026-10-10-C — The coach moves overlapping nodes itself and makes an agreed change on another canvas itself
 
 - **What:** *(Claude, carrying out novel-workspace W-00000357 and W-00000356)* (1) A coach tool `move_node` changes only
