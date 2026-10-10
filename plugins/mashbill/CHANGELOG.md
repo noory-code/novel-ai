@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.212.2] — 2026-10-10
+
+### Fixed
+
+- The feature coach also carries every step and outcome a canvas already holds into its draft, and does not guess a change elsewhere in the app (D-2026-10-10-D); the decision record's measurement counts were corrected.
+
 ## [0.212.1] — 2026-10-10
 
 ### Fixed

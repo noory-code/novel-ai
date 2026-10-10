@@ -504,8 +504,14 @@ def test_agreed_cross_canvas_changes_are_made_in_the_feature_turn() -> None:
 
 
 def test_feature_drafts_ask_about_unstated_endings() -> None:
-    assert "ask instead of writing an ending" in build_system_prompt("feature:x")
-    assert "ask instead of writing an ending" not in build_system_prompt("services")
+    feature_prompt = build_system_prompt("feature:x")
+    services_prompt = build_system_prompt("services")
+    for phrase in (
+        "Draft every step and outcome the person said or a canvas holds",
+        "no guessed change elsewhere in the app",
+    ):
+        assert phrase in feature_prompt
+        assert phrase not in services_prompt
 
 
 def test_write_playbook_names_the_anchor_as_foundation_parent() -> None:

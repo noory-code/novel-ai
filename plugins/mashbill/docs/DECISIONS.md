@@ -41,15 +41,19 @@
 
 ### D-2026-10-10-D — On a feature canvas the coach drafts only what the person said or the canvas holds, and asks the rest
 
-- **What:** *(Claude, carrying out novel-workspace W-00000358)* When the feature canvas coach drafts a flow, every step
-  and outcome in the draft comes from what the person said or what a canvas already holds. Where neither says how
-  something ends — most often how a failure ends — the coach asks instead of writing an ending into the draft. The rule is
-  one sentence in the feature framing only; the shared playbook and other scopes are unchanged.
+- **What:** *(Claude, carrying out novel-workspace W-00000358)* When the feature canvas coach drafts a flow, the draft
+  carries every step and outcome the person said or a canvas already holds, and nothing else: no guessed failure ending
+  and no guessed change elsewhere in the app. The coach asks about the rest. The rule is one sentence in the feature
+  framing only; the shared playbook and other scopes are unchanged.
 - **Why:** In the self-design project the coach drafted "the feature changes to 'flow drawn' in the feature list", a
   result the app does not show; the person caught it (novel-workspace O-00000103, problem 4). Replaying that moment six
-  times on the real tool loop, the coach wrote failure endings nobody had described as settled draft steps in three runs
-  (for example "only part is drawn → fill the rest by hand"). A person confirming a long draft can miss such a line, and
-  the design then states behaviour that is not true.
+  times on the real tool loop (the feature canvas set back to its feature node and actor), the coach wrote failure
+  endings nobody had described as settled draft steps in all six runs (for example "only part is drawn → fill the rest
+  by hand"), and in two of them an end result of the same kind as the original ("the feature shows as drawn on the
+  Services canvas"). A person confirming a long draft can miss such a line, and the design then states behaviour that is
+  not true. A first wording ("draft only … ask instead of writing an ending") cut the guessed endings to one run in six
+  but made the coach leave out endings the canvas already held in four runs in six, so the rule names inclusion as well
+  as exclusion.
 - **Alternatives:** Put the rule in the shared anti-invention guard — the services scopes are at the word budget, and the
   problem was seen on feature canvases. Let the coach keep proposing endings but mark them as guesses — the person still
   has to spot and judge each one inside a long draft.
