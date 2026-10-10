@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -15,7 +16,11 @@ from mashbill.canvas_view import _PRESENTATION_FIELDS_BY_COLLECTION
 def _inline_canvas_fields(root: Path) -> list[str]:
     """Find presentation fields left in semantic canvas files below root."""
     offenders: list[str] = []
-    candidates = [root] if root.is_file() else root.rglob("*.json")
+    candidates = [root] if root.is_file() else []
+    if not candidates:
+        for directory, subdirs, files in os.walk(root):
+            subdirs[:] = [name for name in subdirs if name != ".git"]
+            candidates.extend(Path(directory) / name for name in files if name.endswith(".json"))
     for path in candidates:
         if path.name not in {"canvas.json", "detail.json"} or "published" in path.parts:
             continue
