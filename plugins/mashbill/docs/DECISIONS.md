@@ -39,6 +39,30 @@
 
 ## Log
 
+### D-2026-10-10-C — The coach moves overlapping nodes itself and makes an agreed change on another canvas itself
+
+- **What:** *(Claude, carrying out novel-workspace W-00000357 and W-00000356)* (1) A coach tool `move_node` changes only
+  an existing node's position (`x`, `y`) on a canvas — no other field, no new node. Its description tells the coach to
+  move overlapping nodes itself instead of asking the person to drag them. The position goes to the view file
+  (D-2026-10-10-B), so a move is not a design change. (2) When the person agrees in the current conversation to a change
+  that belongs on another canvas (for example, on a feature canvas, splitting an entity), the coach makes that change
+  itself in the same turn, writing to that canvas, and then names the canvas and what changed. It does not ask the
+  person to open that canvas and repeat the request: the coach there does not see this conversation (per-scope history,
+  D-2026-06-19-E). A write to another canvas the person did not agree to stays forbidden, as before. This widens the one
+  cross-canvas exception of D-2026-07-02-I (entity registration) to any change the person agreed to.
+- **Why:** In the self-design project the coach said "open the entities canvas and say just '환경 설정 나누기'", and the
+  coach there could not act on it; twice it asked the person to move overlapping nodes because no tool could move one
+  (novel-workspace O-00000103, problems 1 and 3). `update_node` accepts only content fields (D-2026-06-26-D) and
+  `create_node` places new nodes itself (D-2026-07-02-L), so nothing moved an existing node.
+- **Alternatives:** Let `update_node` take `x`/`y` — mixes content edits with layout in the one clobber-safe content
+  tool. Carry the agreement into the other canvas's chat as a hand-off note — more machinery, and the person still has to
+  go there. Run auto-layout whenever nodes overlap — moves nodes the person placed on purpose.
+- **Approval:** Claude's design, open to the user's review.
+- **Spec impact:** MCP tool catalog (+`move_node`); coach write playbook in `chat_context.py` (the "never write to a
+  different canvas" line and the feature framing lines that send the person to another canvas).
+- **Principles:** SoC (layout has its own narrow tool); Don't Make Me Think (the person is not sent to repeat what was
+  agreed); Honesty (the coach names the other canvas it changed).
+
 ### D-2026-10-10-B — A canvas keeps its presentation in a view file next to it; the canvas file keeps only meaning
 
 - **What:** *(Claude, carrying out novel-workspace W-00000317)* (1) Each canvas file has a view file beside it with the
