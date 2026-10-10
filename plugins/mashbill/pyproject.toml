@@ -36,6 +36,7 @@ packages = ["mashbill"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = ["allows_inline_canvas(reason): test intentionally leaves legacy inline canvas data"]
 
 [tool.mypy]
 python_version = "3.11"

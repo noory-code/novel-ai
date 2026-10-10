@@ -11,6 +11,7 @@ from mashbill.canvas_view import read_canvas_files, view_file, write_canvas_file
 from mashbill.folder_io import create_project, read_canvas, write_canvas
 from mashbill.models import ActorNode, CanvasDoc, SketchEdge
 from mashbill.storage import _canvas_file
+from tests.conftest import _inline_canvas_fields
 
 
 def _project(tmp_path: Path) -> Path:
@@ -373,6 +374,7 @@ def _raw_canvas_io_offenders(source: str, filename: str) -> list[str]:
 
 
 def test_canvas_storage_helpers_are_the_only_raw_canvas_io() -> None:
+    """Static paths only; argument paths need the runtime guard in conftest.py."""
     package = Path(__file__).resolve().parent.parent / "mashbill"
     offenders = [
         offender
@@ -388,3 +390,13 @@ def test_raw_canvas_io_guard_detects_path_write_text() -> None:
     assert _raw_canvas_io_offenders(
         "def write():\n    " + source.replace("\n", "\n    "), "new.py"
     ) == ["new.py:3"]
+
+
+def test_runtime_guard_detects_argument_path_write_text(tmp_path: Path) -> None:
+    def bypass(path: Path) -> None:
+        path.write_text(json.dumps({"nodes": [{"id": "a", "x": 1}], "edges": []}))
+
+    path = tmp_path / "canvas.json"
+    bypass(path)
+    assert _inline_canvas_fields(tmp_path) == [f"{path}:nodes[0].x"]
+    path.unlink()

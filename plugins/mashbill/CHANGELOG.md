@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Split canvas meaning and presentation into adjacent JSON files on every storage path, with lazy migration of inline presentation (D-2026-10-10-B, parts 1–3).
 - Preserve newer inline presentation over stale view values during migration and guard direct canvas file I/O.
+- Fail tests that leave presentation fields in temporary canvas files, including writes through path arguments.
 
 ## [0.209.2] — 2026-10-10
 
