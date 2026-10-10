@@ -39,6 +39,40 @@
 
 ## Log
 
+### D-2026-10-10-B — A canvas keeps its presentation in a view file next to it; the canvas file keeps only meaning
+
+- **What:** *(Claude, carrying out novel-workspace W-00000317)* (1) Each canvas file has a view file beside it with the
+  same stem: `{kind}/canvas.json` + `{kind}/canvas.view.json`, `services/{feature_id}/detail.json` +
+  `services/{feature_id}/detail.view.json`. The canvas file keeps only meaning. The view file holds the presentation
+  fields — nodes: `x`, `y`, `width`, `height`, `color`, `shape`, `icon`, `collapsed`; edges: `sourceHandle`,
+  `targetHandle`, `style` — keyed by node and edge id: `{"nodes": {id: {...}}, "edges": {id: {...}}}`. The field list
+  is the one D-2026-09-28-B already treats as presentation for publishing; it is defined once and both storage and the
+  publish change check use it. (2) The engine merges the two when it reads a canvas, so every API and MCP response keeps
+  its shape and the viewer is unchanged. Every canvas write goes through one storage function that splits the document
+  and writes the canvas file first, then the view file, each only when its bytes change. A view entry whose node or edge
+  no longer exists is dropped on the next write; a node or edge with no view entry takes the model defaults. The two
+  writes are not one transaction. (3) An existing canvas file that still carries presentation fields is split on first
+  read and written back in the new form. Reading the merged canvas before and after is identical. (4) The publish change
+  check, the git "blueprint changed" check and draft confirmation ignore view files, as they already ignored the fields.
+  The file watcher maps a view-file change to the same canvas. The design check reopens a feature's check only when the
+  feature canvas's meaning changes, as on the services canvas: moving or folding a node is not a change of content or
+  flow (D-2026-10-05-A (6)). Reading a canvas at an older git tag merges both shapes: fields inline (older tags) or a view
+  file beside it.
+- **Why:** Opening a canvas, selecting a node, moving it or folding a branch rewrote the canvas file, so the files AI
+  agents read and the git history mixed screen churn with design changes (novel-workspace O-00000126, O-00000127). The
+  card W-00000317 (2026-09-29) set this split; the anchor position already lives outside the canvas file (in
+  `project.json`) for the same reason.
+- **Alternatives:** Keep presentation inline and stop rewriting on open or select — fixes two triggers but not a drag or
+  a fold. One view file per project — every canvas's moves would collide in one file. A graph database — rejected for
+  now by the user (2026-09-29).
+- **Out of scope:** `update_canvas` over MCP still replaces a whole canvas, so a caller that sends no positions resets
+  them, as before (a missing field and an explicit default cannot be told apart). The anchor stays in `project.json`.
+- **Approval:** Claude's design for an accepted work item, open to the user's review.
+- **Spec impact:** public `docs/specs/storage-publish.md` §Storage layout; Mashbill `SPEC.md`, `DOMAIN.md`,
+  `node-format/README.md` where they say positions are inline.
+- **Principles:** SoC and SSOT (meaning and presentation in separate files, one field list); Fail Fast (a guard test
+  rejects a canvas write that bypasses the split); Postel's Law (older inline files and older tags still read).
+
 ### D-2026-10-10-A — The in-app Codex coach reads no AGENTS.md and no skills from above the workspace
 
 > Applies D-2026-06-21-I (in-app chat is grounded only in the workspace) to the Codex provider, which that entry left

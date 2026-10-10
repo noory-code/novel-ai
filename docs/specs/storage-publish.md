@@ -12,6 +12,11 @@
   `project.json` + per-canvas JSON: `foundation/canvas.json` · `actors/canvas.json` ·
   `services/canvas.json` · `entities/canvas.json` · per-feature detail. Each `canvas.json` has nodes +
   `edges[]` inline. (A legacy nested `{project_id}/` is lazily flattened on open — single project only.)
+- **Meaning and presentation are separate files (`D-2026-10-10-B`).** Each canvas file keeps only meaning; a view file
+  beside it with the same stem (`canvas.view.json`, `detail.view.json`) holds node `x`/`y`/`width`/`height`/`color`/
+  `shape`/`icon`/`collapsed` and edge `sourceHandle`/`targetHandle`/`style`, keyed by id. The engine merges the two on
+  read, so every API and MCP response is unchanged. Moving, resizing or folding a node changes only the view file.
+  An older canvas file with presentation inline is split on first read.
 - The anchor position is outside `canvas.json` — `ProjectDoc.anchors[canvasKind]` (VO).
 - **A workspace = a monorepo**, **a project = one service inside it**. Recursive discovery
   `/api/workspace/projects`.
@@ -26,8 +31,8 @@
 
 ## Storage principle — JSON is the SSOT
 
-- A node's *graph data* (id/kind/position/label/refs/details_path) + *typed text* are all
-  inline in `canvas.json`. **MD files = publish deliverables only** (not the work SSOT).
+- A node's *graph data* (id/kind/label/refs/details_path) + *typed text* are inline in `canvas.json`; its position and
+  other presentation are in the view file beside it. **MD files = publish deliverables only** (not the work SSOT).
 - The filesystem is the SSOT; the Novel UI is one editor on top of it.
 
 ## Publish (2-layer, explicit)
