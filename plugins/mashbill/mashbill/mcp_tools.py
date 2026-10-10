@@ -28,6 +28,7 @@ from mashbill.format_f import publish_service
 from mashbill.git_store import list_tags
 from mashbill.mcp_canvas_tools import create_edge as create_edge
 from mashbill.mcp_canvas_tools import create_node as create_node
+from mashbill.mcp_canvas_tools import move_node as move_node
 from mashbill.mcp_canvas_tools import set_node_references as set_node_references
 from mashbill.mcp_canvas_tools import update_canvas as update_canvas
 from mashbill.mcp_canvas_tools import update_node as update_node
@@ -220,7 +221,14 @@ def get_canvas(
     return doc
 
 
-for _canvas_tool in (update_canvas, update_node, create_node, create_edge, set_node_references):
+for _canvas_tool in (
+    update_canvas,
+    update_node,
+    move_node,
+    create_node,
+    create_edge,
+    set_node_references,
+):
     mcp.tool()(_canvas_tool)
 
 

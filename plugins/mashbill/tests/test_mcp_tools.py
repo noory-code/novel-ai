@@ -33,6 +33,7 @@ _CORE_TOOLS = {
     "get_canvas",
     "update_canvas",
     "update_node",
+    "move_node",
     "set_design_check",
     "create_node",
     "search_project_nodes",
@@ -61,6 +62,17 @@ async def test_registry_exposes_every_core_tool() -> None:
     names = {t.name for t in tools}
     missing = _CORE_TOOLS - names
     assert not missing, f"tool contract lost these verbs: {sorted(missing)}"
+
+
+async def test_move_node_remains_available_to_in_app_coach(monkeypatch: pytest.MonkeyPatch) -> None:
+    from mashbill.mcp_registration import IN_APP_COACH_ENV
+
+    monkeypatch.setenv(IN_APP_COACH_ENV, "1")
+    tools = {tool.name: tool for tool in await mcp_tools.mcp.list_tools()}
+    assert "move_node" in tools
+    assert "When nodes overlap or sit on top of each other" in (
+        tools["move_node"].description or ""
+    )
 
 
 def test_get_canvas_framing_returns_the_scope_system_prompt() -> None:

@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.211.0] — 2026-10-10
+
+### Added
+
+- Add the `move_node` MCP tool to reposition one existing node through its canvas view file without changing design content or drafts (D-2026-10-10-C, part 1).
+
 ## [0.210.1] — 2026-10-10
 
 ### Fixed

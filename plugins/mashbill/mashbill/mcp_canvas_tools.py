@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
+from mashbill.folder_io import read_canvas, write_canvas
 from mashbill.mcp_canvas_write_tools import (
     create_edge_with_draft,
     create_node_with_draft,
@@ -12,6 +14,7 @@ from mashbill.mcp_canvas_write_tools import (
     update_node_with_draft,
 )
 from mashbill.models import CanvasDoc, CanvasKind
+from mashbill.models_foundation import PROJECT_ANCHOR_ID
 from mashbill.tool_log import record_tool_call
 from mashbill.workspace import resolve_plot_root
 
@@ -92,6 +95,50 @@ def update_node(
         draft_id=draft_id,
     )
     return result
+
+
+def move_node(
+    project_path: str,
+    project_id: str,
+    canvas_kind: CanvasKind,
+    node_id: str,
+    x: float,
+    y: float,
+    service_id: str | None = None,
+) -> dict[str, Any]:
+    """Move an existing node, changing only its position (x and y).
+
+    When nodes overlap or sit on top of each other, move them yourself with this
+    tool instead of asking the person to drag them.
+    """
+    if not math.isfinite(x) or not math.isfinite(y):
+        raise ValueError("node position x and y must be finite")
+    if node_id == PROJECT_ANCHOR_ID:
+        raise ValueError("cannot move the project anchor; its position lives in project.json")
+    plot_root = resolve_plot_root(project_path)
+    canvas = read_canvas(plot_root, project_id, canvas_kind, service_id)
+    target = next((node for node in canvas.nodes if node.id == node_id), None)
+    if target is None:
+        raise ValueError(
+            f"node not found on {canvas_kind} canvas: {node_id!r} "
+            "(the project anchor is not a node — it lives in ProjectDoc.anchors)"
+        )
+    nodes = [
+        node.model_copy(update={"x": x, "y": y}) if node.id == node_id else node
+        for node in canvas.nodes
+    ]
+    updated = CanvasDoc.model_validate(
+        canvas.model_copy(update={"nodes": nodes}).model_dump(by_alias=True)
+    )
+    write_canvas(plot_root, project_id, updated)
+    record_tool_call(
+        "move_node",
+        project_id=project_id,
+        canvas=canvas_kind,
+        service_id=service_id,
+        node_id=node_id,
+    )
+    return {"node_id": node_id, "x": x, "y": y}
 
 
 def create_node(
