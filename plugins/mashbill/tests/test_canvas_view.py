@@ -9,7 +9,7 @@ from typing import Any, cast
 
 from mashbill.canvas_view import read_canvas_files, view_file, write_canvas_files
 from mashbill.folder_io import create_project, read_canvas, write_canvas
-from mashbill.models import ActorNode, CanvasDoc, SketchEdge
+from mashbill.models import ActorNode, CanvasDoc, FeatureNode, SketchEdge, StepNode
 from mashbill.storage import _canvas_file
 from tests.conftest import _inline_canvas_fields
 
@@ -22,6 +22,103 @@ def _project(tmp_path: Path) -> Path:
 
 def _stored(path: Path) -> dict[str, Any]:
     return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
+
+
+_NODE_PRESENTATION = {
+    "x": 123.0,
+    "y": 456.0,
+    "width": 180.0,
+    "height": 72.0,
+    "color": "#123456",
+    "shape": "ellipse",
+    "icon": "user",
+    "collapsed": True,
+}
+_EDGE_PRESENTATION = {
+    "sourceHandle": "bottom",
+    "targetHandle": "top",
+    "style": "dashed",
+}
+
+
+def _assert_full_presentation_storage(path: Path, node_id: str = "a") -> None:
+    semantic = _stored(path)
+    view = _stored(view_file(path))
+    assert all(set(node).isdisjoint(_NODE_PRESENTATION) for node in semantic["nodes"])
+    assert all(set(edge).isdisjoint(_EDGE_PRESENTATION) for edge in semantic["edges"])
+    assert view["nodes"][node_id] == _NODE_PRESENTATION
+    assert view["edges"]["e"] == _EDGE_PRESENTATION
+
+
+def _full_actor_canvas() -> CanvasDoc:
+    return CanvasDoc(
+        canvas_id="actors",
+        canvas_kind="actors",
+        nodes=[
+            ActorNode.model_validate({"id": "a", "label": "A", **_NODE_PRESENTATION}),
+            ActorNode(id="b"),
+        ],
+        edges=[
+            SketchEdge(
+                id="e",
+                source="a",
+                target="b",
+                sourceHandle="bottom",
+                targetHandle="top",
+                style="dashed",
+            )
+        ],
+    )
+
+
+def test_round_trip_preserves_every_presentation_field(tmp_path: Path) -> None:
+    root = _project(tmp_path)
+    saved = write_canvas(root, "alpha", _full_actor_canvas())
+    path = _canvas_file(root, "alpha", "actors")
+
+    assert read_canvas(root, "alpha", "actors") == saved
+    _assert_full_presentation_storage(path)
+
+
+def test_legacy_inline_preserves_every_presentation_field(tmp_path: Path) -> None:
+    root = _project(tmp_path)
+    path = _canvas_file(root, "alpha", "actors")
+    original = _full_actor_canvas()
+    path.write_text(json.dumps(original.model_dump(by_alias=True)), encoding="utf-8")
+    view_file(path).unlink()
+
+    assert read_canvas(root, "alpha", "actors") == original
+    _assert_full_presentation_storage(path)
+
+
+def test_feature_detail_round_trip_preserves_every_presentation_field(tmp_path: Path) -> None:
+    root = _project(tmp_path)
+    detail = CanvasDoc(
+        canvas_id="feature",
+        canvas_kind="feature",
+        feature_ref="feature",
+        nodes=[
+            FeatureNode.model_validate({"id": "feature", "label": "Feature", **_NODE_PRESENTATION}),
+            StepNode(id="step"),
+        ],
+        edges=[
+            SketchEdge(
+                id="e",
+                source="feature",
+                target="step",
+                sourceHandle="bottom",
+                targetHandle="top",
+                style="dashed",
+            )
+        ],
+    )
+    saved = write_canvas(root, "alpha", detail)
+    path = _canvas_file(root, "alpha", "feature", "feature")
+
+    assert path.name == "detail.json"
+    assert view_file(path).name == "detail.view.json"
+    assert read_canvas(root, "alpha", "feature", service_id="feature") == saved
+    _assert_full_presentation_storage(path, node_id="feature")
 
 
 def test_round_trip_splits_positions_colors_and_handles(tmp_path: Path) -> None:
