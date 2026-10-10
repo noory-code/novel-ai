@@ -39,6 +39,26 @@
 
 ## Log
 
+### D-2026-10-10-E — On a feature canvas the coach always receives the feature's description from the Services canvas
+
+- **What:** *(Claude, carrying out novel-workspace W-00000420)* For a feature scope (`feature:<feature_id>`), every chat
+  turn's context carries the feature's label and its `proposed` text ("what can be done"), read from that feature's node
+  on the Services canvas, which owns the field (`docs/specs/kinds-fields.md`). It is sent whether or not anything is
+  selected. Nothing else from the Services canvas is added.
+- **Why:** D-2026-10-10-D tells the feature coach to draft every step and outcome "a canvas holds". The feature's
+  description is where branches like "if information is missing, answer one more or continue later" are written, but
+  the feature-scope context carried it only when the person had selected the feature's root node on the detail canvas
+  (`[Selected node details]`), and that root is a copy made when the detail canvas was seeded. With nothing selected the
+  coach saw it only if it happened to open the file itself, and it left those branches out of its draft in eight runs
+  of nine (novel-workspace O-00000128).
+- **Alternatives:** More instruction text — the feature prompt is at 1783 of 1795 words, and the coach cannot draft from
+  text it never sees. Use the detail canvas root copy — it is a seed-time copy and can go stale.
+- **Approval:** Claude's design, open to the user's review.
+- **Spec impact:** feature-scope turn preamble (`chat_selection.py::build_turn_preamble`); `docs/SPEC.md` where it lists
+  the preamble blocks.
+- **Principles:** SSOT (the description comes from the canvas that owns it); Honesty (the coach drafts from what is on
+  the canvas, not from a guess about it).
+
 ### D-2026-10-10-D — On a feature canvas the coach drafts only what the person said or the canvas holds, and asks the rest
 
 - **What:** *(Claude, carrying out novel-workspace W-00000358)* When the feature canvas coach drafts a flow, the draft

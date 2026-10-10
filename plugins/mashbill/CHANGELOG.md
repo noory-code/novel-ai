@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.213.0] — 2026-10-10
+
+### Changed
+
+- On a feature canvas the coach always receives the feature's description from the Services canvas (D-2026-10-10-E).
+
 ## [0.212.3] — 2026-10-10
 
 ### Fixed
