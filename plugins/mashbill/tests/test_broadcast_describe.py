@@ -22,6 +22,22 @@ from mashbill.models import CanvasDoc, IdentityNode, MissionNode
 from mashbill.workspace import resolve_plot_root
 
 
+def test_view_file_has_same_descriptor_as_canvas_file(tmp_path: Path) -> None:
+    from mashbill.canvas_view import view_file
+    from mashbill.project_io import create_project
+    from mashbill.workspace import resolve_plot_root
+
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    for canvas_path in (
+        plot_root / "services" / "canvas.json",
+        plot_root / "services" / "feature-1" / "detail.json",
+    ):
+        assert _describe_change(plot_root, view_file(canvas_path)) == _describe_change(
+            plot_root, canvas_path
+        )
+
+
 def _setup(tmp_path: Path, project_id: str = "alpha") -> Path:
     """Flat layout: ``{tmp}/.noory/plot/`` with ``project.json`` +
     ``foundation/canvas.json`` directly under it (no project_id segment)."""

@@ -38,6 +38,14 @@ def test_export_writes_all_15_kind_schemas(tmp_path: Path) -> None:
         assert (schema_dir / f"{kind}.json").is_file(), f"missing {kind}.json"
 
 
+def test_export_describes_merged_nodes_and_view_file(tmp_path: Path) -> None:
+    export_all_schemas(tmp_path, "proj-1")
+    for kind in ("actor", "mission"):
+        schema = json.loads((tmp_path / "schema" / f"{kind}.json").read_text(encoding="utf-8"))
+        assert "Merged canvas node" in schema["title"]
+        assert "view file" in schema["description"]
+
+
 def test_export_writes_md_template_only_for_foundation_typed_text_kinds(
     tmp_path: Path,
 ) -> None:

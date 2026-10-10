@@ -39,6 +39,7 @@ from mashbill.blueprint_content import (
     _read_canvas_json,
     blueprint_content_fingerprint,
 )
+from mashbill.canvas_view import is_view_file
 from mashbill.tag_names import is_blueprint_version_tag
 
 
@@ -236,7 +237,7 @@ def blueprint_canvas_changed(
             relative_canvas_path = path.relative_to(canvas_root)
             if (
                 _PUBLISHED_DIRNAME in relative_canvas_path.parts
-                or path.name.endswith(".view.json")
+                or is_view_file(path)
                 or not path.is_file()
             ):
                 continue
@@ -294,7 +295,7 @@ def _is_canvas_json_path(
     canvas_roots: tuple[PurePosixPath, ...],
 ) -> bool:
     """Return whether a tagged path is an included canvas JSON file."""
-    if path.suffix != ".json" or path.name.endswith(".view.json"):
+    if path.suffix != ".json" or is_view_file(path):
         return False
     for root in canvas_roots:
         try:

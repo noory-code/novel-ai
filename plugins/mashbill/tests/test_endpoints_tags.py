@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import pytest
 from starlette.testclient import TestClient
@@ -447,6 +448,64 @@ def test_at_tag_returns_frozen_snapshot_with_feature_canvas(
     feature_keys = [k for k in canvases if k.startswith("feature:")]
     assert feature_keys == ["feature:svc1"]
     assert canvases["feature:svc1"]["canvas_id"] == "feature:svc1"
+
+
+def test_at_tag_merges_inline_and_separate_presentation(
+    client: TestClient, workspace: Path
+) -> None:
+    from mashbill.canvas_view import view_file
+
+    plot_root = _make_project(workspace)
+    canvas_path = plot_root / "actors" / "canvas.json"
+    old_view_path = view_file(canvas_path)
+    old_view_path.unlink(missing_ok=True)
+    canvas: dict[str, Any] = {
+        "canvas_id": "actors",
+        "canvas_kind": "actors",
+        "nodes": [{"id": "a", "kind": "actor", "label": "First", "x": 19}],
+        "edges": [],
+    }
+    _write_json(canvas_path, canvas)
+    _write_json(
+        plot_root / "services" / "canvas.json",
+        {
+            "canvas_id": "services",
+            "canvas_kind": "services",
+            "nodes": [{"id": "svc", "kind": "service", "is_root": True}],
+            "edges": [],
+        },
+    )
+    detail_path = plot_root / "services" / "svc" / "detail.json"
+    detail_view_path = view_file(detail_path)
+    detail_view_path.unlink(missing_ok=True)
+    detail: dict[str, Any] = {
+        "canvas_id": "feature:svc",
+        "canvas_kind": "feature",
+        "nodes": [{"id": "step", "kind": "step", "label": "Do it", "collapsed": True}],
+        "edges": [],
+    }
+    _write_json(detail_path, detail)
+    init_workspace_repo(workspace)
+    tag_snapshot(workspace, "inline")
+
+    canvas["nodes"][0].pop("x")
+    _write_json(canvas_path, canvas)
+    _write_json(old_view_path, {"nodes": {"a": {"x": 42}}, "edges": {}})
+    detail["nodes"][0].pop("collapsed")
+    _write_json(detail_path, detail)
+    _write_json(detail_view_path, {"nodes": {"step": {"collapsed": False}}, "edges": {}})
+    tag_snapshot(workspace, "separate")
+
+    for tag, x, collapsed in (("inline", 19, True), ("separate", 42, False)):
+        response = client.get(f"/api/projects/alpha/at-tag/{tag}?project_path={workspace}")
+        assert response.status_code == 200
+        assert response.json()["canvases"]["actors"]["nodes"][0] == {
+            "id": "a",
+            "kind": "actor",
+            "label": "First",
+            "x": x,
+        }
+        assert response.json()["canvases"]["feature:svc"]["nodes"][0]["collapsed"] is collapsed
 
 
 def test_at_tag_skips_canvas_with_corrupt_json(client: TestClient, workspace: Path) -> None:

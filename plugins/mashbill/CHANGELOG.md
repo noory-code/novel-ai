@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.210.1] — 2026-10-10
+
+### Fixed
+
+- Canvas view files are ignored by publish and blueprint change checks, trigger live reload, and merge into tag snapshots; presentation edits leave feature design checks and drafts unchanged (D-2026-10-10-B, part 4).
+- Exported node schemas identify the merged shape and adjacent view file (D-2026-10-10-B, part 4).
+
 ## [0.210.0] — 2026-10-10
 
 ### Changed

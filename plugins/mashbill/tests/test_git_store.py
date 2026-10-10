@@ -43,6 +43,34 @@ def workspace(tmp_path: Path) -> Path:
     return ws
 
 
+def test_blueprint_change_ignores_view_file_and_tracks_canvas_file(workspace: Path) -> None:
+    import json
+
+    from mashbill.canvas_view import view_file
+    from mashbill.git_store import blueprint_canvas_changed
+
+    project_dir = workspace / ".noory" / "novel" / "proj-a"
+    canvas_path = project_dir / "actors" / "canvas.json"
+    canvas_path.parent.mkdir()
+    canvas_path.write_text(
+        json.dumps({"nodes": [{"id": "a", "label": "First"}], "edges": []}), encoding="utf-8"
+    )
+    init_workspace_repo(workspace)
+    tag_snapshot(workspace, "v0.1.0")
+    assert blueprint_canvas_changed(workspace, project_dir, "v0.1.0") is False
+
+    view_file(canvas_path).write_text(
+        json.dumps({"nodes": {"a": {"x": 20}}, "edges": {}}), encoding="utf-8"
+    )
+    tag_snapshot(workspace, "layout-only")
+    assert blueprint_canvas_changed(workspace, project_dir, "v0.1.0") is False
+
+    canvas_path.write_text(
+        json.dumps({"nodes": [{"id": "a", "label": "Second"}], "edges": []}), encoding="utf-8"
+    )
+    assert blueprint_canvas_changed(workspace, project_dir, "v0.1.0") is True
+
+
 # ---------------------------------------------------------------------------
 # init_workspace_repo + is_workspace_repo
 # ---------------------------------------------------------------------------

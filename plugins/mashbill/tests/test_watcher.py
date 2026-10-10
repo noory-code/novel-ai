@@ -29,6 +29,11 @@ def test_is_watched_file_accepts_canonical_json_and_md() -> None:
         assert _is_watched_file(f"/ws/.noory/plot/foundation/{name}") is True
 
 
+def test_is_watched_file_accepts_canvas_view_files() -> None:
+    for name in ("canvas.view.json", "detail.view.json"):
+        assert _is_watched_file(f"/ws/.noory/novel/services/{name}") is True
+
+
 def test_is_watched_file_accepts_per_node_md_under_foundation() -> None:
     # v0.13 Phase 4: every .md directly under a `foundation/` dir propagates,
     # so external edits to a typed-text template reach the viewer.

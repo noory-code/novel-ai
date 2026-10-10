@@ -355,7 +355,7 @@ def test_any_feature_detail_mutation_reopens_feature_and_service_checks(
         detail = detail.model_copy(
             update={
                 "nodes": [
-                    node.model_copy(update={"x": node.x + 1}) if node.id == "step" else node
+                    node.model_copy(update={"label": "Changed step"}) if node.id == "step" else node
                     for node in detail.nodes
                 ]
             }
@@ -397,6 +397,33 @@ def test_any_feature_detail_mutation_reopens_feature_and_service_checks(
     assert isinstance(root, FeatureNode)
     assert root.design_check is not None
     assert root.design_check.state == "recheck"
+
+
+def test_feature_detail_move_does_not_reopen_checks(tmp_path: Path) -> None:
+    plot_root = _setup_design(tmp_path, with_detail_flow=True)
+    detail = read_canvas(plot_root, "alpha", "feature", "feat")
+    moved = detail.model_copy(
+        update={
+            "nodes": [
+                node.model_copy(update={"x": node.x + 1, "collapsed": True})
+                if node.id == "step"
+                else node
+                for node in detail.nodes
+            ]
+        }
+    )
+
+    write_canvas(plot_root, "alpha", CanvasDoc.model_validate(moved.model_dump(by_alias=True)))
+
+    _assert_recheck(plot_root, service=False, feature=False)
+    root = next(
+        node
+        for node in read_canvas(plot_root, "alpha", "feature", "feat").nodes
+        if node.id == "feat"
+    )
+    assert isinstance(root, FeatureNode)
+    assert root.design_check is not None
+    assert root.design_check.state == "checked"
 
 
 def test_feature_detail_change_does_not_reopen_reverse_edge_service_check(

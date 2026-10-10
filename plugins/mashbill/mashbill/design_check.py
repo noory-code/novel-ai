@@ -8,7 +8,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from mashbill.canvas_view import read_canvas_files, write_canvas_files
+from mashbill.canvas_view import read_canvas_files, split, write_canvas_files
 from mashbill.models_actors import DesignCheck, DesignCheckState, FeatureNode, ServiceNode
 from mashbill.models_canvas import CanvasDoc
 from mashbill.models_union import SketchNode
@@ -92,7 +92,7 @@ def _without_design_check(canvas: CanvasDoc) -> dict[str, Any]:
     for node in raw["nodes"]:
         if node.get("kind") == "feature":
             node.pop("design_check", None)
-    return raw
+    return split(raw)[0]
 
 
 def _preserve_omitted_checks(before: CanvasDoc, incoming: CanvasDoc) -> CanvasDoc:

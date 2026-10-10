@@ -198,3 +198,40 @@ def test_publish_blueprint_requires_git_before_writing(
 
     assert not _snapshot_dir(plot_root).exists()
     assert read_project(plot_root, "alpha").blueprint_version == "v0.1.0"
+
+
+def test_blueprint_fingerprint_ignores_view_file_but_tracks_label(
+    project: tuple[Path, Path],
+) -> None:
+    from mashbill.blueprint_content import _canvas_design_content, blueprint_content_fingerprint
+    from mashbill.canvas_view import view_file
+
+    workspace, plot_root = project
+    project_dir = _project_dir(plot_root, "alpha")
+    canvas_path = project_dir / "actors" / "canvas.json"
+    canvas = json.loads(canvas_path.read_text(encoding="utf-8"))
+    canvas["nodes"].append({"id": "actor-1", "kind": "actor", "label": "First"})
+    canvas_path.write_text(json.dumps(canvas), encoding="utf-8")
+    baseline = blueprint_content_fingerprint(workspace, project_dir)
+    baseline_content = _canvas_design_content(canvas)
+
+    moved = json.loads(json.dumps(canvas))
+    moved["nodes"][0].update({"x": 12, "y": 34, "width": 222, "height": 111, "collapsed": True})
+    assert _canvas_design_content(moved) == baseline_content
+    view_file(canvas_path).write_text(
+        json.dumps(
+            {
+                "nodes": {
+                    "actor-1": {"x": 12, "y": 34, "width": 222, "height": 111, "collapsed": True}
+                },
+                "edges": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert blueprint_content_fingerprint(workspace, project_dir) == baseline
+
+    canvas["nodes"][0]["label"] = "Second"
+    canvas_path.write_text(json.dumps(canvas), encoding="utf-8")
+    assert _canvas_design_content(canvas) != baseline_content
+    assert blueprint_content_fingerprint(workspace, project_dir) != baseline

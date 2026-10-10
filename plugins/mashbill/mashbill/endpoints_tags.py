@@ -9,11 +9,13 @@ using ``git show <tag>:<path>`` so the working tree is never touched.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any, cast
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from mashbill.canvas_view import merge, view_file
 from mashbill.endpoints_common import _ApiError, _error, _project_dir_or_404, _require_plot_root
 from mashbill.git_store import (
     GitNotInitializedError,
@@ -143,7 +145,7 @@ async def project_at_tag_endpoint(request: Request) -> JSONResponse:
     # Derive the prefix from the resolved dir so git-show paths match disk.
     plot_data_prefix = folder.relative_to(workspace_root).as_posix()
 
-    def _read_canvas_json(rel: str) -> dict[str, Any] | None:
+    def _read_json_at_tag(rel: str) -> dict[str, Any] | None:
         try:
             raw = read_file_at_tag(workspace_root, tag, f"{plot_data_prefix}/{rel}")
         except FileNotFoundError:
@@ -153,7 +155,14 @@ async def project_at_tag_endpoint(request: Request) -> JSONResponse:
         except json.JSONDecodeError:
             return None
 
-    project_raw = _read_canvas_json("project.json")
+    def _read_canvas_json(rel: str) -> dict[str, Any] | None:
+        canvas = _read_json_at_tag(rel)
+        if canvas is None:
+            return None
+        view = _read_json_at_tag(view_file(Path(rel)).as_posix())
+        return merge(canvas, view) if view is not None else canvas
+
+    project_raw = _read_json_at_tag("project.json")
     if project_raw is None:
         return _error(f"project.json not at tag {tag!r}", status=404)
     canvases: dict[str, dict[str, Any]] = {}

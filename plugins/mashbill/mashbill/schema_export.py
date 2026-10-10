@@ -160,6 +160,11 @@ def _node_canvas_schema(kind: str) -> dict[str, Any]:
             f"typed-text fields ({sorted(typed_text)}) live in the per-node "
             f"MD template, not in JSON."
         )
+    raw["title"] = f"Merged canvas node: {kind}"
+    raw["description"] = (
+        f"Merged canvas node shape for {kind!r}. Presentation fields are stored "
+        "in the adjacent view file. " + raw.get("description", "")
+    )
     return raw
 
 

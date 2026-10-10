@@ -8,6 +8,7 @@ from typing import Any
 
 from starlette.websockets import WebSocket
 
+from mashbill.canvas_view import canvas_file_for_view
 from mashbill.watcher import WorkspaceWatcher
 from mashbill.workspace import enumerate_projects
 
@@ -31,7 +32,7 @@ def _describe_change(plot_root: Path, changed_path: Path) -> dict[str, Any] | No
     outside the root (attachments, leftover files, etc.).
     """
     try:
-        rel = changed_path.relative_to(plot_root)
+        rel = canvas_file_for_view(changed_path).relative_to(plot_root)
     except ValueError:
         return None
     parts = rel.parts

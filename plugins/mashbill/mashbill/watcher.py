@@ -16,6 +16,8 @@ from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 from watchdog.observers.api import BaseObserver
 
+from mashbill.canvas_view import canvas_file_for_view, is_view_file
+
 _log = logging.getLogger(__name__)
 
 
@@ -26,6 +28,8 @@ def _is_watched_file(path: str) -> bool:
     External Obsidian / VS Code edits propagate to any open viewer."""
     p = Path(path)
     if p.name in {"canvas.json", "detail.json", "project.json", "details.md"}:
+        return True
+    if is_view_file(p) and canvas_file_for_view(p).name in {"canvas.json", "detail.json"}:
         return True
     # v0.13 Phase 4: per-node MD templates under foundation/ — match any
     # .md file whose parent directory is named "foundation".

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any
 
 from mashbill.storage import _read_json, _write_json
@@ -17,6 +17,16 @@ _PRESENTATION_FIELDS_BY_COLLECTION = {
 def view_file(path: Path) -> Path:
     """Return the presentation file beside a canvas or detail file."""
     return path.with_name(f"{path.stem}.view.json")
+
+
+def is_view_file(path: PurePath) -> bool:
+    return path.name.endswith(".view.json")
+
+
+def canvas_file_for_view(path: Path) -> Path:
+    if not is_view_file(path):
+        return path
+    return path.with_name(f"{path.name.removesuffix('.view.json')}.json")
 
 
 def split(doc_dict: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:

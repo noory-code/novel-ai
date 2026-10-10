@@ -7,7 +7,7 @@ import json
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from mashbill.canvas_view import _PRESENTATION_FIELDS_BY_COLLECTION
+from mashbill.canvas_view import is_view_file, split
 
 _PUBLISHED_DIRNAME = "published"
 
@@ -32,7 +32,7 @@ def blueprint_content_fingerprint(workspace_root: Path, project_dir: Path) -> st
                 relative_canvas_path = path.relative_to(canvas_root)
                 if (
                     _PUBLISHED_DIRNAME in relative_canvas_path.parts
-                    or path.name.endswith(".view.json")
+                    or is_view_file(path)
                     or not path.is_file()
                 ):
                     continue
@@ -73,8 +73,8 @@ def _canvas_design_content(canvas: Any) -> Any:
     """Return JSON content with presentation-only graph fields removed."""
     if not isinstance(canvas, dict):
         return canvas
-    content = dict(canvas)
-    for collection_name, presentation_fields in _PRESENTATION_FIELDS_BY_COLLECTION.items():
+    content, presentation = split(canvas)
+    for collection_name in presentation:
         collection = content.get(collection_name)
         if not isinstance(collection, list):
             continue
@@ -85,8 +85,6 @@ def _canvas_design_content(canvas: Any) -> Any:
             item_id = item["id"]
             if item_id in by_id:
                 return _INVALID_CANVAS
-            by_id[item_id] = {
-                key: value for key, value in item.items() if key not in presentation_fields
-            }
+            by_id[item_id] = item
         content[collection_name] = by_id
     return content
