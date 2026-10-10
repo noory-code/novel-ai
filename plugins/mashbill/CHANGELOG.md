@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - Split canvas meaning and presentation into adjacent JSON files on every storage path, with lazy migration of inline presentation (D-2026-10-10-B, parts 1–3).
+- Preserve newer inline presentation over stale view values during migration and guard direct canvas file I/O.
 
 ## [0.209.2] — 2026-10-10
 

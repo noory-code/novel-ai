@@ -57,7 +57,7 @@ def merge(semantic_dict: dict[str, Any], view_dict: dict[str, Any]) -> dict[str,
             entry = entries.get(item.get("id"))
             if isinstance(entry, dict):
                 presentation = {key: value for key, value in entry.items() if key in fields}
-                merged_items.append({**item, **presentation})
+                merged_items.append({**presentation, **item})
             else:
                 merged_items.append(item)
         merged[collection] = merged_items
