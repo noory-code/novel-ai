@@ -9,6 +9,8 @@ re-export.
 
 from __future__ import annotations
 
+import hashlib
+
 from mashbill.chat_context import (
     PROPOSE_PLAYBOOK,
     SCOPE_FRAMING,
@@ -17,6 +19,22 @@ from mashbill.chat_context import (
     build_framing_preamble,
     build_system_prompt,
 )
+
+
+def test_system_prompts_match_pre_move_hashes() -> None:
+    """Pin each scope's complete prompt before moving per-canvas framing."""
+    expected = {
+        "foundation": "cc08f7d9a9c37b90eb5f37f7ca4b39b85f6f990bdc21a813352fdc0d3107ffc5",
+        "actors": "4151f30f5f2464874a92604894d8c33e61bad44ea20bbefb7b87fc51ae615395",
+        "services": "698029e93e7c5de39144c633fe75e6dc1125cfb652b75fc8b3442a2366fc0772",
+        "entities": "5955929a6ac40b271864b94cfcb51769c94864abe927275615b36c08f41424f9",
+        "feature:x": "3fb132df1b9487c6bd102eb380ec7d6a17bad426f5a8c0cb34ff27dd9f8943a6",
+        "service:x": "698029e93e7c5de39144c633fe75e6dc1125cfb652b75fc8b3442a2366fc0772",
+        "project": "0325352286ce6668f907736818a4a06573f3f48a3ffb24339de4e20e77fbb25c",
+    }
+    for scope, digest in expected.items():
+        prompt = build_system_prompt(scope)
+        assert hashlib.sha256(prompt.encode()).hexdigest() == digest, scope
 
 
 def test_framing_maps_each_canvas_to_its_vision_phase() -> None:

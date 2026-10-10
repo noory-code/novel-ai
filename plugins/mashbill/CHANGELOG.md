@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.212.0] — 2026-10-10
+
+### Changed
+
+- Move per-canvas coach framing to `mashbill/chat_framing.py` with no text change.
+- Note the test-only fix in 9e78fa4e: the inline-canvas teardown guard skips `.git` and tolerates folders that vanish mid-walk.
+
 ## [0.211.1] — 2026-10-10
 
 ### Fixed

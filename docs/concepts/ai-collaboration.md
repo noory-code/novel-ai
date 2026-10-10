@@ -65,7 +65,7 @@ the deep definition comes later in the home coach). Not created silently — alw
      (the stable skeleton = the prompt-cache prefix, only the dynamic part as suffix) → if too big, **RAG**. The user's
      project is *any size* and the external agent is *any model*, so CAG can't be assumed → runtime selection behind a
      **context-provider abstract seam**. The playbook depends only on the abstraction.
-3. **Per-canvas framing** (the code constant `chat_context.py::_SCOPE_FRAMING`): phase → coach behaviour.
+3. **Per-canvas framing** (the code constant `chat_framing.py::SCOPE_FRAMING`): phase → coach behaviour.
 
 Two inputs are never optional (`D-2026-08-18-E`, `D-2026-08-18-F`). Every scope receives the same short Mission,
 Core-value, and Identity definitions in its system framing. Every turn also receives the current Foundation content,
