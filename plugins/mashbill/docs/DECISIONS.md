@@ -43,8 +43,9 @@
 
 - **What:** *(Claude, carrying out novel-workspace W-00000358)* When the feature canvas coach drafts a flow, the draft
   carries every step and outcome the person said or a canvas already holds, and nothing else: no guessed failure ending
-  and no guessed change elsewhere in the app. The coach asks about the rest. The rule is one sentence in the feature
-  framing only; the shared playbook and other scopes are unchanged.
+  and no guessed change elsewhere in the app. The coach asks about the rest. When the person confirms a draft, the coach
+  draws exactly that draft — no node or edge the draft did not show — and asks before joining anything the draft left
+  open. The rule is two sentences in the feature framing only; the shared playbook and other scopes are unchanged.
 - **Why:** In the self-design project the coach drafted "the feature changes to 'flow drawn' in the feature list", a
   result the app does not show; the person caught it (novel-workspace O-00000103, problem 4). Replaying that moment six
   times on the real tool loop (the feature canvas set back to its feature node and actor), the coach wrote failure
@@ -53,7 +54,10 @@
   Services canvas"). A person confirming a long draft can miss such a line, and the design then states behaviour that is
   not true. A first wording ("draft only … ask instead of writing an ending") cut the guessed endings to one run in six
   but made the coach leave out endings the canvas already held in four runs in six, so the rule names inclusion as well
-  as exclusion.
+  as exclusion. With that rule, after the person said "draw it as is", one drawing turn in three added an edge the
+  confirmed draft did not have (after cancelling with Esc, go on to editing lines); the coach said afterwards that this
+  was not decided. The user judged drawing anything other than the confirmed draft a coach error to fix, not something
+  the person should catch.
 - **Alternatives:** Put the rule in the shared anti-invention guard — the services scopes are at the word budget, and the
   problem was seen on feature canvases. Let the coach keep proposing endings but mark them as guesses — the person still
   has to spot and judge each one inside a long draft.

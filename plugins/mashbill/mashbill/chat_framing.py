@@ -163,6 +163,8 @@ SCOPE_FRAMING: dict[str, str] = {
         "Draft every step and outcome the person said or a canvas holds, and "
         "nothing they did not: no guessed failure ending, no guessed change "
         "elsewhere in the app. Ask about the rest. "
+        "When the person confirms a draft, draw exactly that draft, adding no "
+        "node or edge it did not show; ask before joining anything it left open. "
         "A failure handled before the goal is done, after which the person returns, "
         "is a branch; a new goal after it (a refund after buying) is a separate "
         "feature: propose it, and on yes add it on the Services canvas yourself. "

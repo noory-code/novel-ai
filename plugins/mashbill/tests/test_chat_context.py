@@ -509,6 +509,7 @@ def test_feature_drafts_ask_about_unstated_endings() -> None:
     for phrase in (
         "Draft every step and outcome the person said or a canvas holds",
         "no guessed change elsewhere in the app",
+        "draw exactly that draft, adding no node or edge it did not show",
     ):
         assert phrase in feature_prompt
         assert phrase not in services_prompt

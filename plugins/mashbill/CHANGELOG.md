@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.212.3] — 2026-10-10
+
+### Fixed
+
+- When the person confirms a flow draft, the feature coach draws exactly that draft and asks before joining anything it left open (D-2026-10-10-D).
+
 ## [0.212.2] — 2026-10-10
 
 ### Fixed
