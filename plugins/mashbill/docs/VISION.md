@@ -29,6 +29,16 @@ the product category — belongs to
 [§What Novel is](#what-novel-is--is-not-identity), not here. The product may
 change form without changing this essence.
 
+### The picture Novel aims for — a Feynman diagram
+
+Novel's picture aims to be what a Feynman diagram is to physics: **easy to
+understand at a glance, yet holding everything.** It uses a few symbols, and a
+written rule gives each symbol exactly one meaning. The person sees the whole at
+once; the AI reads the same picture the same way and works from it without
+losing anything. This is how the essence above shows on the canvas: nothing is
+left out, and all of it can be seen. The principle and its rules are
+[PHILOSOPHY P11](https://github.com/noory-code/novel-ai/blob/main/docs/PHILOSOPHY.md#p11-easy-to-read-nothing-left-out-the-feynman-diagram-model).
+
 ---
 
 ## Three-phase cycle (how the essence *works*)

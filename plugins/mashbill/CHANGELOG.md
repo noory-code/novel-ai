@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.213.2] — 2026-10-11
+
+### Documentation
+
+- Record the product direction that Novel's picture aims to be a Feynman diagram: easy to read, nothing left out (D-2026-10-11-A; `docs/VISION.md`, `docs/PHILOSOPHY.md` P11).
+
 ## [0.213.1] — 2026-10-10
 
 ### Fixed

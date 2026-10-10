@@ -14,7 +14,7 @@ Korean: *"서비스는 한 명 또는 여러 명이 이루려는 결과 하나�
 
 ---
 
-## 10 Principles
+## 11 Principles
 
 ### P1. Value Arises in Use
 Value does not live inside a feature. It appears when a person uses a service
@@ -78,6 +78,33 @@ Novel is generic. BANAS is just a validation example. The primitives must be cap
 ### P10. Expression Before Classification
 The primary goal is to help users externalize their thinking. Rigid classification schemes block thought. We ship minimal primitives; everything else is free text on labels and edges.
 
+### P11. Easy to Read, Nothing Left Out (the Feynman-diagram model)
+A Feynman diagram replaces a long calculation with a drawing of a few symbols —
+lines and the points where they meet — and its rules map each symbol to exactly
+one term of the calculation. Anyone can read the drawing, and the drawing holds
+the whole calculation. Novel's canvases follow the same model:
+
+- **Few symbols.** Each canvas has a small, fixed set of kinds and edges
+  ([`specs/kinds-fields.md`](specs/kinds-fields.md)). A person can read a canvas
+  without learning a large vocabulary.
+- **One meaning per symbol.** A written rule says what each kind, field, and edge
+  means and where each fact lives. For example, an outcome lives only on a step's
+  `outcome`; a decision holds no outcome, and its branches are the labels of its
+  outgoing edges. When two shapes could say the same thing, a rule picks one.
+- **Nothing left out.** Every fact the design needs has a place on some canvas,
+  and the canvases together are the whole design. What the person said and what
+  a canvas holds is drawn; what nobody has said is asked, not guessed.
+- **The drawing is the design.** Because each symbol has one meaning, the person,
+  the coach, and the external agent read the same canvas the same way, and the
+  published design can be turned into work without interpretation.
+- **The rules are written and taught.** A notation spreads only when its rules are
+  explicit; Feynman's diagrams spread after Dyson derived and taught their rules. A
+  rule that lives only in someone's head is not part of the notation.
+
+P11 and P10 work together: P10 keeps the *content* free (labels are free text, and
+no domain taxonomy is imposed); P11 keeps the *grammar* exact (what each primitive
+means).
+
 ---
 
 ## Iteration Log
@@ -112,6 +139,7 @@ How we arrived at this philosophy (2026-04-20 session):
 | P8 | Multiple node kinds across canvases; the kind set is the registry's SSOT (D-2026-06-17-D/F/I added `feature` / `note` / `entity`); free labels everywhere |
 | P9 | No BANAS-specific terms in Novel |
 | P10 | Stencil = hint only; labels and connections free |
+| P11 | Kinds and fields registry ([`specs/kinds-fields.md`](specs/kinds-fields.md)) validated on every write; the coach drafts and draws in that grammar and asks about what no one has said (D-2026-10-10-D) |
 
 ---
 
@@ -123,6 +151,7 @@ Novel's model borrows from:
 - **Domain Storytelling** (Hofer & Schwentner) — the "actors connected by labeled arrows" sentence grammar.
 - **Jobs-to-be-Done** (Ulwick, Christensen) — the "value statement" vocabulary for describing what flows.
 - **Service Blueprint** (Shostack) — the layer-of-visibility idea, generalized across our separate canvases (Foundation / Actors / Services / Feature, D-2026-06-16-R).
+- **Feynman diagrams** (Feynman, 1948; rules derived by Dyson) — the aim for the picture as a whole: few symbols, one exact meaning each, easy to read and holding everything (P11, D-2026-10-11-A).
 
 But Novel is **not** any of these. It's a synthesis centered on the Added Value principle.
 

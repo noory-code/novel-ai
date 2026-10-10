@@ -39,6 +39,27 @@
 
 ## Log
 
+### D-2026-10-11-A — Novel's picture aims to be a Feynman diagram: easy to read, nothing left out
+
+- **What:** *(user direction, written by Claude, carrying out novel-workspace W-00000421)* Novel's picture aims to be
+  what a Feynman diagram is to physics: easy to understand at a glance, yet holding everything. Few symbols; a written
+  rule gives each symbol exactly one meaning; every fact the design needs has a place on some canvas; what nobody has
+  said is asked, not guessed; the drawing is the design. `docs/VISION.md` gains §"The picture Novel aims for — a Feynman
+  diagram" under the essence, and `docs/PHILOSOPHY.md` gains P11 (with Feynman diagrams under "Relationship to Other
+  Frameworks"). The essence sentence itself does not change.
+- **Why:** The user, 2026-10-10 → 2026-10-11 (their words): "우리 노블이 가야할 길은 파인만 다이어그램입니다", then, after
+  Claude summarised what a Feynman diagram is (few symbols, one exact meaning each, rules written down and taught): "네
+  맞아요. 그 방향으로 정리해 주세요. 가야할 길이 바로 그거에요", and "우리는 항상 파인만 다이어그램 같은 걸
+  추구해야해요. 이해하기 쉽지만 모든 것이 담겨져있는 그거죠!!! 우리가 추구하는 미션 또한 그건거죠!!" The direction came
+  up while fixing the feature coach (novel-workspace W-00000358): the rule that an outcome lives only on a step left one
+  way to draw a decision's result, and that is what let the person, the coach, and the reviewer agree on the drawing.
+- **Alternatives:** Keep the canvas grammar implicit in code and prompts — the rules then live in heads and tools, not
+  in a notation people can learn.
+- **Approval:** Accepted by user (2026-10-11).
+- **Spec impact:** `docs/VISION.md`, `docs/PHILOSOPHY.md` (P11). Existing grammar specs (`docs/specs/kinds-fields.md`)
+  are the rules P11 refers to.
+- **Principles:** SSOT (one written rule per symbol); MECE (every fact has a place, no two shapes for one fact).
+
 ### D-2026-10-10-E — On a feature canvas the coach always receives the feature's description from the Services canvas
 
 - **What:** *(Claude, carrying out novel-workspace W-00000420)* For a feature scope (`feature:<feature_id>`), every chat
