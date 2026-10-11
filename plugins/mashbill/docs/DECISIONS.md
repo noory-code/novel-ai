@@ -65,7 +65,12 @@
 - **What:** *(Claude, carrying out novel-workspace W-00000420)* For a feature scope (`feature:<feature_id>`), every chat
   turn's context carries the feature's label and its `proposed` text ("what can be done"), read from that feature's node
   on the Services canvas, which owns the field (`docs/specs/kinds-fields.md`). It is sent whether or not anything is
-  selected. Nothing else from the Services canvas is added.
+  selected. Nothing else from the Services canvas is added. The text arrives as numbered items, one per sentence or
+  line, under one guide sentence: each item is a step a canvas holds, drafted in the flow where its wording places it,
+  with an ending it does not state left open on that step. (Numbered in W-00000420, Mashbill 0.213.4: with the text as
+  one line, two runs in nine set whole canvas-held branches aside as "ask after drawing" outside the flow, while good
+  runs kept the branch in the flow and left only its unknown ending open on a numbered step. The placement wording moved
+  here from the feature framing.)
 - **Why:** D-2026-10-10-D tells the feature coach to draft every step and outcome "a canvas holds". The feature's
   description is where branches like "if information is missing, answer one more or continue later" are written, but
   the feature-scope context carried it only when the person had selected the feature's root node on the detail canvas
@@ -86,7 +91,8 @@
   carries every step and outcome the person said or a canvas already holds, and nothing else: no guessed ending of any
   branch (failure or not, such as what remains after "continue later") and no guessed change elsewhere in the app. The
   coach asks about the rest. Each step a canvas holds goes where its own wording places it (for example "if the draft
-  lacks information, answer one more or continue later" goes at the draft check). When the person confirms a draft, the
+  lacks information, answer one more or continue later" goes at the draft check); that guidance travels with the
+  numbered feature description (D-2026-10-10-E), not in the framing. When the person confirms a draft, the
   coach draws exactly that draft — no node or edge the draft did not show — and asks before joining anything the draft
   left open or vague. The rule is two sentences in the feature framing only; the shared playbook and other scopes are
   unchanged. (Wording widened from "no guessed failure ending" in W-00000420: once the coach received the feature

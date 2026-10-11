@@ -508,7 +508,6 @@ def test_feature_drafts_ask_about_unstated_endings() -> None:
     services_prompt = build_system_prompt("services")
     for phrase in (
         "Draft every step and outcome the person said or a canvas holds",
-        "where its wording places it",
         "ask before joining anything it left open or vague",
         "no guessed ending of any branch",
         "no guessed change elsewhere in the app",
@@ -516,6 +515,8 @@ def test_feature_drafts_ask_about_unstated_endings() -> None:
     ):
         assert phrase in feature_prompt
         assert phrase not in services_prompt
+    # Placement guidance travels with the numbered items in [Feature description].
+    assert "where its wording places it" not in feature_prompt
 
 
 def test_write_playbook_names_the_anchor_as_foundation_parent() -> None:

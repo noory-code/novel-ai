@@ -38,15 +38,19 @@ def _project(tmp_path: Path, proposed: str | None) -> Path:
     return plot_root
 
 
+_HEADER = (
+    '[Feature description] "기능 흐름 그리기" (feature_x). Each numbered item is a '
+    "step a canvas holds: draft it in the flow where its wording places it, and "
+    "keep an ending it does not state open on that step."
+)
+
+
 def test_feature_description_without_selection_uses_services_node(tmp_path: Path) -> None:
     plot_root = _project(tmp_path, "Draw each step and outcome")
 
     preamble = build_turn_preamble(plot_root, "feature:feature_x", [])
 
-    assert (
-        '[Feature description] "기능 흐름 그리기" (feature_x): Draw each step and outcome'
-        in preamble
-    )
+    assert f"{_HEADER}\n1. Draw each step and outcome" in preamble
     assert "stale detail copy" not in preamble
     assert preamble.index("[Canvas: feature:feature_x]") < preamble.index("[Feature description]")
     assert "\n\n[Feature description]" in preamble
@@ -85,12 +89,37 @@ def test_feature_description_only_on_feature_scope(tmp_path: Path, scope: str) -
     assert "[Feature description]" not in build_turn_preamble(plot_root, scope, [])
 
 
-def test_feature_description_collapses_internal_newlines(tmp_path: Path) -> None:
-    plot_root = _project(tmp_path, "First branch\n  Second branch\r\nThird branch")
+def test_feature_description_lists_each_sentence_as_a_numbered_item(tmp_path: Path) -> None:
+    """The real self-design description: three sentences, the second holding two
+    branches joined by "-거나" — one sentence stays one item."""
+    plot_root = _project(
+        tmp_path,
+        "사용자는 기능에서 사람이 하는 일과 갈림길, 끝 결과를 정한다. "
+        "초안에 필요한 정보가 부족하면 한 가지씩 더 답하거나 나중에 이어 간다. "
+        "그린 흐름의 선을 고치거나 지울 수 있다.",
+    )
 
     preamble = build_turn_preamble(plot_root, "feature:feature_x", [])
 
     assert (
-        '[Feature description] "기능 흐름 그리기" (feature_x): '
-        "First branch Second branch Third branch"
+        f"{_HEADER}\n"
+        "1. 사용자는 기능에서 사람이 하는 일과 갈림길, 끝 결과를 정한다.\n"
+        "2. 초안에 필요한 정보가 부족하면 한 가지씩 더 답하거나 나중에 이어 간다.\n"
+        "3. 그린 흐름의 선을 고치거나 지울 수 있다."
     ) in preamble
+
+
+def test_feature_description_splits_lines_and_collapses_spaces(tmp_path: Path) -> None:
+    plot_root = _project(tmp_path, "First  branch\n  Second branch\r\n\r\nThird branch")
+
+    preamble = build_turn_preamble(plot_root, "feature:feature_x", [])
+
+    assert f"{_HEADER}\n1. First branch\n2. Second branch\n3. Third branch" in preamble
+
+
+def test_feature_description_keeps_decimal_points_inside_an_item(tmp_path: Path) -> None:
+    plot_root = _project(tmp_path, "Pay 1.5 times the fee. Then leave!  Done?")
+
+    preamble = build_turn_preamble(plot_root, "feature:feature_x", [])
+
+    assert f"{_HEADER}\n1. Pay 1.5 times the fee.\n2. Then leave!\n3. Done?" in preamble

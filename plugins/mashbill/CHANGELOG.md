@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.213.4] — 2026-10-11
+
+### Fixed
+
+- On a feature canvas the coach receives the feature's description as numbered items with one placement guide, so each canvas-held branch goes into the flow with an unknown ending left open instead of being set aside (D-2026-10-10-E).
+
 ## [0.213.3] — 2026-10-11
 
 ### Fixed
