@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 from uuid import uuid4
@@ -23,6 +24,7 @@ from mashbill.chat_context import (
     build_framing_preamble,
     build_system_prompt,
 )
+from mashbill.chat_flow_proposal import append_flow_proposal
 from mashbill.chat_models import list_models
 from mashbill.chat_output_filter import filter_save_announcements
 from mashbill.chat_provider import read_selection
@@ -192,8 +194,15 @@ async def stream_chat_turn(
     """
     start_turn(plot_root, scope)
     seen_turn_id: str | None = None
+    started_at = datetime.now(UTC)
     try:
-        async for event in filter_save_announcements(provider.stream_turn(user_message)):
+        async for event in append_flow_proposal(
+            filter_save_announcements(provider.stream_turn(user_message)),
+            plot_root,
+            project_id,
+            scope,
+            started_at,
+        ):
             if event.turn_id:
                 seen_turn_id = event.turn_id
             payload = event.model_dump()

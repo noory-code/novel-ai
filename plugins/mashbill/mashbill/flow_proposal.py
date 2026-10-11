@@ -11,6 +11,7 @@ lines in one canvas write. One proposal file per feature lives under
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -66,6 +67,7 @@ class FlowProposal(BaseModel):
     edges: list[ProposedEdge] = Field(default_factory=list)
     open_items: list[OpenItem] = Field(default_factory=list)
     omitted: list[Omission] = Field(default_factory=list)
+    proposed_at: str = ""
     drawn: bool = False
 
 
@@ -190,6 +192,7 @@ def propose_flow(
         edges=TypeAdapter(list[ProposedEdge]).validate_python(edges),
         open_items=TypeAdapter(list[OpenItem]).validate_python(open_items),
         omitted=TypeAdapter(list[Omission]).validate_python(omitted),
+        proposed_at=datetime.now(UTC).isoformat(),
     )
     canvas = read_canvas(plot_root, project_id, "feature", feature_id)
     items = feature_description_items(plot_root, project_id, feature_id)
@@ -198,6 +201,19 @@ def propose_flow(
     _check_cover(proposal, items, doc.drawn_items)
     _save(plot_root, project_id, feature_id, doc.model_copy(update={"current": proposal}))
     return render(proposal, canvas, items)
+
+
+def rendering_proposed_since(
+    plot_root: Path, project_id: str, feature_id: str, since: datetime
+) -> str | None:
+    """The rendering of the feature's undrawn proposal if it was recorded at or after ``since``."""
+    proposal = _load(plot_root, project_id, feature_id).current
+    if proposal is None or proposal.drawn or not proposal.proposed_at:
+        return None
+    if datetime.fromisoformat(proposal.proposed_at) < since:
+        return None
+    canvas = read_canvas(plot_root, project_id, "feature", feature_id)
+    return render(proposal, canvas, feature_description_items(plot_root, project_id, feature_id))
 
 
 def draw_proposed_flow(plot_root: Path, project_id: str, feature_id: str) -> dict[str, Any]:

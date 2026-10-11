@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.215.0] — 2026-10-11
+
+### Added
+
+- In the Novel app, a coach turn that records a feature-flow draft ends with the engine's rendering of that draft, so the person confirms exactly what `draw_proposed_flow` will draw; `propose_flow` now also returns `show`, telling the coach who shows the draft (D-2026-10-11-B).
+
 ## [0.214.0] — 2026-10-11
 
 ### Added

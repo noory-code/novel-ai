@@ -48,11 +48,13 @@
   `[Feature description]` (D-2026-10-10-E) neither in a node's or open item's `covers` nor in `omitted` with a reason;
   items covered by an earlier drawn proposal need no cover again. It keeps the latest proposal per feature at
   `.noory/novel/flow_proposals/<feature_id>.json` (engine state: not a `DraftDoc`, not in the wire contract) and
-  returns a rendering the coach shows as the draft. `draw_proposed_flow` writes exactly those nodes and lines in one
+  returns its rendering. In the Novel app the chat layer appends that rendering under the coach's reply when the turn
+  that recorded it completes, and the tool tells the in-app coach not to restate it; elsewhere the tool tells the coach
+  to show it as written. `draw_proposed_flow` writes exactly those nodes and lines in one
   canvas write, leaves open items unjoined, and refuses a missing or already drawn proposal. The feature framing's
   sentence "When the person confirms a draft, draw exactly that draft, adding no node or edge it did not show; ask
-  before joining anything it left open or vague." becomes "Record each flow draft with propose_flow and show the draft
-  it returns; a line without a clear target stays an open item. On confirmation, draw it with draw_proposed_flow, never
+  before joining anything it left open or vague." becomes "Record each flow draft with propose_flow and follow what it
+  returns; a line without a clear target stays an open item. On confirmation, draw it with draw_proposed_flow, never
   node by node."
 - **Why:** With the drawing left to the coach node by node, measured runs drew what the confirmed draft did not show.
   On Mashbill 0.213.4, two runs in nine joined a branch the draft placed nowhere ("코치가 답하지 못함", "하던 단계")
@@ -60,13 +62,17 @@
   lines; the same rule lines appear in the 0.213.0 and 0.213.1 runs. Prose rules did not converge (D-2026-10-10-D).
   Held structure turns "draw exactly the draft" into an engine guarantee and makes a vague target unrecordable as a line.
 - **Limits:** `create_node` and `create_edge` stay available on the feature canvas for edits the person asks for, so a
-  coach that ignores the protocol can still draw node by node. The rendering is returned to the coach, which shows it;
-  the chat layer does not append it, so a reply can still word the draft differently.
+  coach that ignores the protocol can still draw node by node. Outside the app nothing appends the rendering, so the
+  coach's own wording of the draft can still differ from the recorded one.
 - **Alternatives:** More framing prose — two rounds did not reduce the misses (D-2026-10-10-D). Extend `DraftDoc` — it
-  holds proposals the person chose to keep (D-2026-10-01-A) and crosses the wire; a per-turn flow draft is neither. Let
-  the chat layer append the rendering — changes what the person sees; left for the person to decide.
-- **Approval:** Claude's design, open to the user's review.
-- **Spec impact:** `docs/SPEC.md` (feature-flow proposals row); feature framing in `chat_framing.py`.
+  holds proposals the person chose to keep (D-2026-10-01-A) and crosses the wire; a per-turn flow draft is neither.
+  Leave showing the draft to the coach's own words — on 0.214.0 three runs in nine worded it differently from the
+  record (a branch placed in the record but vague in the text, guessed step results only in the record), so the person
+  confirmed text that was not what got drawn.
+- **Approval:** Claude's design, open to the user's review. The app showing the recorded draft was chosen by the user
+  (2026-10-11).
+- **Spec impact:** `docs/SPEC.md` (feature-flow proposals row); feature framing in `chat_framing.py`; the chat turn
+  stream (`chat_flow_proposal.py`).
 - **Principles:** Fail Fast (a vague line fails at recording, not on the canvas); SSOT (the drawing comes from the one
   recorded draft); Honesty (the canvas shows only what the person confirmed).
 

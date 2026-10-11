@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from mashbill.flow_proposal import draw_proposed_flow as draw_flow
 from mashbill.flow_proposal import propose_flow as keep_flow
+from mashbill.mcp_registration import IN_APP_COACH_ENV
 from mashbill.tool_log import record_tool_call
 from mashbill.workspace import resolve_plot_root
 
@@ -19,9 +21,10 @@ def propose_flow(
     open_items: list[dict[str, Any]] | None = None,
     omitted: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Record a feature-flow draft before showing it; returns ``{"rendered": text}``.
+    """Record a feature-flow draft before showing it; returns ``{"rendered", "show"}``.
 
-    Show the person ``rendered`` as the draft. Nothing is drawn until
+    ``show`` says who shows ``rendered`` to the person: inside the Novel app the
+    app shows it under your reply; elsewhere you show it. Nothing is drawn until
     ``draw_proposed_flow``. ``service_id`` is the feature id.
     - ``nodes``: ``{"key", "kind": step|decision|rule|note, "label", "outcome"?,
       "body"?, "covers"?: [item numbers of the [Feature description] it carries]}``.
@@ -47,7 +50,14 @@ def propose_flow(
         omitted or [],
     )
     record_tool_call("propose_flow", project_id=project_id, canvas="feature", service_id=service_id)
-    return {"rendered": rendered}
+    if os.environ.get(IN_APP_COACH_ENV) == "1":
+        show = (
+            "The app shows this draft below your reply; do not restate it. "
+            "Ask the person to confirm it or say what to change."
+        )
+    else:
+        show = "Show the person this draft as written and ask them to confirm it."
+    return {"rendered": rendered, "show": show}
 
 
 def draw_proposed_flow(project_path: str, project_id: str, service_id: str) -> dict[str, Any]:
