@@ -50,7 +50,8 @@
   `.noory/novel/flow_proposals/<feature_id>.json` (engine state: not a `DraftDoc`, not in the wire contract) and
   returns its rendering. In the Novel app the chat layer appends that rendering under the coach's reply when the turn
   that recorded it completes, and the tool tells the in-app coach not to restate it; elsewhere the tool tells the coach
-  to show it as written. `draw_proposed_flow` writes exactly those nodes and lines in one
+  to show it as written. The tool's description limits a step's `outcome` to a result the person said or a canvas
+  holds (0.215.1: on 0.214.0 and 0.215.0 one counter run each wrote "코치가 다시 답한다" after "resend the same message"). `draw_proposed_flow` writes exactly those nodes and lines in one
   canvas write, leaves open items unjoined, and refuses a missing or already drawn proposal. The feature framing's
   sentence "When the person confirms a draft, draw exactly that draft, adding no node or edge it did not show; ask
   before joining anything it left open or vague." becomes "Record each flow draft with propose_flow and follow what it

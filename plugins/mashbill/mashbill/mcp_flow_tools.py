@@ -28,6 +28,8 @@ def propose_flow(
     ``draw_proposed_flow``. ``service_id`` is the feature id.
     - ``nodes``: ``{"key", "kind": step|decision|rule|note, "label", "outcome"?,
       "body"?, "covers"?: [item numbers of the [Feature description] it carries]}``.
+      Put in outcome only a result the person said or a canvas holds;
+      otherwise leave it empty and ask in open_items.
     - ``edges``: ``{"source", "target", "label"?}``; each end is a node key or an
       existing node id on the feature canvas (the actor_ref, the feature root, an
       earlier step). Notes take no lines.

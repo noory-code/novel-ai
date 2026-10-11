@@ -262,3 +262,10 @@ def test_both_tools_log_identifiers_only(tmp_path: Path, monkeypatch: pytest.Mon
     assert all(line["service_id"] == "feature_x" for line in lines)
     assert all("흐름을 정한다" not in json.dumps(line, ensure_ascii=False) for line in lines)
     assert len(lines[1]["node_ids"]) == len(_nodes())
+
+
+async def test_propose_flow_limits_outcome_to_stated_results() -> None:
+    tools = {tool.name: tool for tool in await mcp_tools.mcp.list_tools()}
+    description = tools["propose_flow"].description or ""
+    assert "outcome only a result the person said or a canvas holds" in description
+    assert "otherwise leave it empty and ask in open_items" in description
