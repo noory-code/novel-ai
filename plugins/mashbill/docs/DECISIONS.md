@@ -52,7 +52,8 @@
   that recorded it completes, and the tool tells the in-app coach not to restate it; elsewhere the tool tells the coach
   to show it as written. The tool's description limits a step's `outcome` to a result the person said or a canvas
   holds (0.215.1: on 0.214.0 and 0.215.0 one counter run each wrote "코치가 다시 답한다" after "resend the same message"). It also asks each open item without an example ending of the coach's own (0.215.2: on 0.215.1
-  one run asked "what remains … (e.g. the feature turns into 'a feature with a drawn flow')", the guess O-00000103 began with). `draw_proposed_flow` writes exactly those nodes and lines in one
+  one run asked "what remains … (e.g. the feature turns into 'a feature with a drawn flow')", the guess O-00000103 began with). The outcome is written in the person's or the canvas's words (0.215.3: on 0.215.2 one run turned
+  "write the result on the canvas and save it with Cmd+Enter" into "the result is saved on the canvas at once"). `draw_proposed_flow` writes exactly those nodes and lines in one
   canvas write, leaves open items unjoined, and refuses a missing or already drawn proposal. The feature framing's
   sentence "When the person confirms a draft, draw exactly that draft, adding no node or edge it did not show; ask
   before joining anything it left open or vague." becomes "Record each flow draft with propose_flow and follow what it
