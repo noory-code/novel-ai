@@ -34,7 +34,8 @@ def propose_flow(
       existing node id on the feature canvas (the actor_ref, the feature root, an
       earlier step). Notes take no lines.
     - ``open_items``: ``{"at": key or node id, "question", "covers"?}`` — a branch
-      end nobody stated or a line whose target is unclear.
+      end nobody stated or a line whose target is unclear;
+      ask it plainly, with no ending of your own as an example.
     - ``omitted``: ``{"item", "reason"}`` — a description item the person chose
       to leave out.
     Every description item not yet drawn must appear in some ``covers`` or

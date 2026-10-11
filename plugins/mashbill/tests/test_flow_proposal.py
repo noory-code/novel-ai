@@ -269,3 +269,9 @@ async def test_propose_flow_limits_outcome_to_stated_results() -> None:
     description = tools["propose_flow"].description or ""
     assert "outcome only a result the person said or a canvas holds" in description
     assert "otherwise leave it empty and ask in open_items" in description
+
+
+async def test_propose_flow_asks_open_items_without_a_suggested_ending() -> None:
+    tools = {tool.name: tool for tool in await mcp_tools.mcp.list_tools()}
+    description = tools["propose_flow"].description or ""
+    assert "ask it plainly, with no ending of your own as an example" in description

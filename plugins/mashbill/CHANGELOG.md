@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.215.2] — 2026-10-11
+
+### Fixed
+
+- `propose_flow` tells the coach to ask each open item plainly, without offering an ending of its own as an example (D-2026-10-11-B).
+
 ## [0.215.1] — 2026-10-11
 
 ### Fixed
