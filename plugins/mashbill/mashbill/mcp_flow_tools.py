@@ -33,14 +33,14 @@ def propose_flow(
     - ``edges``: ``{"source", "target", "label"?}``; each end is a node key or an
       existing node id on the feature canvas (the actor_ref, the feature root, an
       earlier step). Notes take no lines.
-    - ``open_items``: ``{"at": key or node id, "question", "covers"?}`` — a branch
+    - ``open_items``: ``{"at": key or node id, "question"}`` — a branch
       end nobody stated or a line whose target is unclear;
       ask it plainly, with no ending of your own as an example.
     - ``omitted``: ``{"item", "reason"}`` — a description item the person chose
       to leave out.
-    Every description item not yet drawn must appear in some ``covers`` or
-    ``omitted``. A new call replaces the feature's undrawn proposal. Errors name
-    what to fix.
+    Every description item not yet drawn must appear in a node's ``covers`` (an
+    open item alone does not place it) or in ``omitted``. A new call replaces
+    the feature's undrawn proposal. Errors name what to fix.
     """
     plot_root = resolve_plot_root(project_path)
     rendered = keep_flow(

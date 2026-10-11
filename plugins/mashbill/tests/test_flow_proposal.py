@@ -149,16 +149,27 @@ def test_propose_names_description_items_left_unplaced(tmp_path: Path) -> None:
     assert "1." not in message.split("\n", 1)[-1]
 
 
-def test_an_open_item_or_a_stated_omission_accounts_for_a_description_item(
+def test_only_a_node_or_a_stated_omission_accounts_for_a_description_item(
     tmp_path: Path,
 ) -> None:
+    """A description item is a step the canvas holds, so it is placed as a node.
+    An open question alone leaves the step out of the flow (W-00000420)."""
     project_path = _project(tmp_path)
     nodes = [{**node, "covers": []} if node["key"] in {"2", "5"} else node for node in _nodes()]
 
+    with pytest.raises(ValueError) as raised:
+        _propose(
+            project_path,
+            nodes=nodes,
+            open_items=[{"at": "1", "question": "정보가 부족하면 어디로 가나", "covers": [2]}],
+            omitted=[{"item": 3, "reason": "사람이 따로 된 기능으로 빼기로 했다"}],
+        )
+    assert "2." in str(raised.value) and "3." not in str(raised.value).split("\n", 1)[-1]
+
     rendered = _propose(
         project_path,
-        nodes=nodes,
-        open_items=[{"at": "1", "question": "정보가 부족하면 어디로 가나", "covers": [2]}],
+        nodes=[{**n, "covers": [2]} if n["key"] == "2" else n for n in nodes],
+        open_items=[{"at": "2", "question": "정보가 부족하면 어디로 가나"}],
         omitted=[{"item": 3, "reason": "사람이 따로 된 기능으로 빼기로 했다"}],
     )["rendered"]
 

@@ -45,7 +45,8 @@
   canvas. `propose_flow` takes the draft as nodes (step, decision, rule, note; each with a draft-local key), lines
   between keys or existing node ids, open items hung on a step, and stated omissions. It refuses a line whose end is no
   key or node id, a line touching a note, an open item on no known step, and a draft that leaves a numbered item of the
-  `[Feature description]` (D-2026-10-10-E) neither in a node's or open item's `covers` nor in `omitted` with a reason;
+  `[Feature description]` (D-2026-10-10-E) neither in a node's `covers` nor in `omitted` with a reason (an open item
+  alone does not place an item: on 0.215.3 one run left two items only as open questions);
   items covered by an earlier drawn proposal need no cover again. It keeps the latest proposal per feature at
   `.noory/novel/flow_proposals/<feature_id>.json` (engine state: not a `DraftDoc`, not in the wire contract) and
   returns its rendering. In the Novel app the chat layer appends that rendering under the coach's reply when the turn

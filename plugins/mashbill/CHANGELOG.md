@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.215.4] — 2026-10-11
+
+### Fixed
+
+- `propose_flow` counts a feature-description item as placed only when a node carries it in `covers` (or it is omitted with a reason); an open question alone no longer places it (D-2026-10-11-B).
+
 ## [0.215.3] — 2026-10-11
 
 ### Fixed

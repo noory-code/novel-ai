@@ -3,7 +3,7 @@
 The feature coach records a flow draft as nodes, lines, open items, and stated
 omissions. Recording checks the draft's shape: every line names a target, notes
 stay edgeless, every open item hangs on a known step, and every numbered item of
-the feature's Services description is placed, left open, or omitted with a
+the feature's Services description is placed as a node or omitted with a
 reason. When the person confirms, drawing writes exactly the proposed nodes and
 lines in one canvas write. One proposal file per feature lives under
 ``flow_proposals/``; it is engine state, not part of the canvas wire contract.
@@ -52,7 +52,6 @@ class OpenItem(BaseModel):
 
     at: str
     question: str = Field(min_length=1)
-    covers: list[int] = Field(default_factory=list)
 
 
 class Omission(BaseModel):
@@ -124,7 +123,6 @@ def _check_shape(proposal: FlowProposal, canvas: CanvasDoc) -> None:
 def _check_cover(proposal: FlowProposal, items: list[str], drawn_items: list[int]) -> None:
     numbers = range(1, len(items) + 1)
     covered = {n for node in proposal.nodes for n in node.covers}
-    covered |= {n for item in proposal.open_items for n in item.covers}
     covered |= {omission.item for omission in proposal.omitted}
     unknown = sorted(covered - set(numbers))
     if unknown:
@@ -134,8 +132,8 @@ def _check_cover(proposal: FlowProposal, items: list[str], drawn_items: list[int
         lines = "\n".join(f"{n}. {items[n - 1]}" for n in missing)
         raise ValueError(
             "the feature description holds these items and the draft does not place them: "
-            "put each in a node's covers, an open item's covers, or omitted with the reason\n"
-            + lines
+            "put each in the covers of the node that carries it (ask in open_items where its "
+            "ending or place is unknown), or in omitted with the reason\n" + lines
         )
 
 
@@ -248,7 +246,6 @@ def draw_proposed_flow(plot_root: Path, project_id: str, feature_id: str) -> dic
         canvas = canvas.model_copy(update={"edges": [*canvas.edges, line]})
     write_canvas(plot_root, project_id, CanvasDoc.model_validate(canvas.model_dump(by_alias=True)))
     accounted = {n for node in proposal.nodes for n in node.covers}
-    accounted |= {n for item in proposal.open_items for n in item.covers}
     accounted |= {omission.item for omission in proposal.omitted}
     _save(
         plot_root,
