@@ -85,11 +85,15 @@
 - **What:** *(Claude, carrying out novel-workspace W-00000358)* When the feature canvas coach drafts a flow, the draft
   carries every step and outcome the person said or a canvas already holds, and nothing else: no guessed ending of any
   branch (failure or not, such as what remains after "continue later") and no guessed change elsewhere in the app. The
-  coach asks about the rest. When the person confirms a draft, the coach draws exactly that draft — no node or edge the
-  draft did not show — and asks before joining anything the draft left open. The rule is two sentences in the feature
-  framing only; the shared playbook and other scopes are unchanged. (Wording widened from "no guessed failure ending" in
-  W-00000420: once the coach received the feature description (D-2026-10-10-E) and drafted its "continue later" branch,
-  two runs in nine guessed what remains after it — "a partly drawn flow remains".)
+  coach asks about the rest. Each step a canvas holds goes where its own wording places it (for example "if the draft
+  lacks information, answer one more or continue later" goes at the draft check). When the person confirms a draft, the
+  coach draws exactly that draft — no node or edge the draft did not show — and asks before joining anything the draft
+  left open or vague. The rule is two sentences in the feature framing only; the shared playbook and other scopes are
+  unchanged. (Wording widened from "no guessed failure ending" in W-00000420: once the coach received the feature
+  description (D-2026-10-10-E) and drafted its "continue later" branch, two runs in nine guessed what remains after it —
+  "a partly drawn flow remains". Then, at the user's request to keep fixing (2026-10-11), "where its wording places it"
+  and "or vague" were added: one run in nine set the canvas branches aside as "still open" without asking where they go,
+  and one drew a return line to a step other than the draft's vague "back to the original step" and said so only after.)
 - **Why:** In the self-design project the coach drafted "the feature changes to 'flow drawn' in the feature list", a
   result the app does not show; the person caught it (novel-workspace O-00000103, problem 4). Replaying that moment six
   times on the real tool loop (the feature canvas set back to its feature node and actor), the coach wrote failure

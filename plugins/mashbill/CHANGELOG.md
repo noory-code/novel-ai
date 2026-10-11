@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.213.3] — 2026-10-11
+
+### Fixed
+
+- The feature coach places each step a canvas holds where its wording places it, and asks before drawing a line the confirmed draft left open or vague (D-2026-10-10-D).
+
 ## [0.213.2] — 2026-10-11
 
 ### Documentation
