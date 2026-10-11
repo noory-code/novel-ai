@@ -508,10 +508,11 @@ def test_feature_drafts_ask_about_unstated_endings() -> None:
     services_prompt = build_system_prompt("services")
     for phrase in (
         "Draft every step and outcome the person said or a canvas holds",
-        "ask before joining anything it left open or vague",
         "no guessed ending of any branch",
         "no guessed change elsewhere in the app",
-        "draw exactly that draft, adding no node or edge it did not show",
+        "Record each flow draft with propose_flow and show the draft it returns",
+        "a line without a clear target stays an open item",
+        "draw it with draw_proposed_flow, never node by node",
     ):
         assert phrase in feature_prompt
         assert phrase not in services_prompt

@@ -34,7 +34,7 @@ from mashbill.models import (
     CanvasKind,
 )
 from mashbill.models_foundation import PROJECT_ANCHOR_ID
-from mashbill.models_union import SketchNodeAdapter
+from mashbill.models_union import SketchNode, SketchNodeAdapter
 from mashbill.placement import KIND_COLORS, _compute_fresh_position, _compute_near_position
 from mashbill.storage import (  # noqa: F401
     _canvas_file,
@@ -404,6 +404,41 @@ def create_node(
             f"creatable kinds: {sorted(allowed)}"
         )
     canvas = read_canvas(plot_root, project_id, canvas_kind, service_id)
+    incoming = fields or {}
+    extra_seed: dict[str, object] = {}
+    create_time_ref = CREATE_TIME_REFS.get(kind)
+    if create_time_ref is not None:
+        # The pick this kind cannot exist without (create_refs). It rides into
+        # the seed BEFORE validation — the model refuses the node without it.
+        ref_field, home_canvas = create_time_ref
+        home = read_canvas(plot_root, project_id, home_canvas)
+        extra_seed[ref_field] = validated_pick(
+            kind, ref_field, home_canvas, incoming.get(ref_field), (n.id for n in home.nodes)
+        )
+    new_node, rejected = build_new_node(canvas, kind, incoming, near, extra_seed)
+    # Re-validate the WHOLE doc (not just the node) so a fresh node can never
+    # break a canvas-level invariant — the same guard update_node relies on.
+    updated = CanvasDoc.model_validate(
+        canvas.model_copy(update={"nodes": [*canvas.nodes, new_node]}).model_dump(by_alias=True)
+    )
+    write_canvas(plot_root, project_id, updated)
+    return {"node": new_node.model_dump(by_alias=True), "rejected_fields": rejected}
+
+
+def build_new_node(
+    canvas: CanvasDoc,
+    kind: str,
+    fields: dict[str, Any],
+    near: str | None,
+    extra_seed: dict[str, object] | None = None,
+) -> tuple[SketchNode, list[str]]:
+    """Mint one node for ``canvas`` without writing it: id, position, kind color,
+    and only the kind's writable fields (the rest come back as rejected names).
+
+    ``extra_seed`` carries a create-time reference that must be present before
+    validation (see :data:`CREATE_TIME_REFS`); those keys are never rejected.
+    """
+    canvas_kind = canvas.canvas_kind
     node_id = f"{kind}_{uuid4().hex[:8]}"
     if near == PROJECT_ANCHOR_ID:
         # B-14 (D-2026-07-03-T): the project anchor is viewer-synthetic (no
@@ -424,33 +459,15 @@ def create_node(
     # passes an explicit color.
     if KIND_COLORS.get(kind):
         seed["color"] = KIND_COLORS[kind]
-    incoming = fields or {}
-    create_time_ref = CREATE_TIME_REFS.get(kind)
-    if create_time_ref is not None:
-        # The pick this kind cannot exist without (create_refs). It rides into
-        # the seed BEFORE validation — the model refuses the node without it.
-        ref_field, home_canvas = create_time_ref
-        home = read_canvas(plot_root, project_id, home_canvas)
-        seed[ref_field] = validated_pick(
-            kind, ref_field, home_canvas, incoming.get(ref_field), (n.id for n in home.nodes)
-        )
+    seed.update(extra_seed or {})
     base = SketchNodeAdapter.validate_python(seed)
     # The create-time pick is already in the seed; keep it out of the
     # rejected list so the caller is not told its accepted field bounced.
-    allowed_fields = set(writable_node_fields(base))
-    if create_time_ref is not None:
-        allowed_fields.add(create_time_ref[0])
-    patch = {k: v for k, v in incoming.items() if k in allowed_fields}
-    rejected = sorted(set(incoming) - allowed_fields)
+    allowed_fields = set(writable_node_fields(base)) | set(extra_seed or {})
+    patch = {k: v for k, v in fields.items() if k in allowed_fields}
+    rejected = sorted(set(fields) - allowed_fields)
     merged = {**base.model_dump(), **patch}
-    new_node = SketchNodeAdapter.validate_python(merged)
-    # Re-validate the WHOLE doc (not just the node) so a fresh node can never
-    # break a canvas-level invariant — the same guard update_node relies on.
-    updated = CanvasDoc.model_validate(
-        canvas.model_copy(update={"nodes": [*canvas.nodes, new_node]}).model_dump(by_alias=True)
-    )
-    write_canvas(plot_root, project_id, updated)
-    return {"node": new_node.model_dump(by_alias=True), "rejected_fields": rejected}
+    return SketchNodeAdapter.validate_python(merged), rejected
 
 
 def list_feature_details(plot_root: Path, project_id: str) -> list[str]:

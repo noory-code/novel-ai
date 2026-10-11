@@ -37,6 +37,8 @@ from mashbill.mcp_context_tools import (
     get_design_principles,
 )
 from mashbill.mcp_draft_tools import record_draft, resolve_draft, update_draft
+from mashbill.mcp_flow_tools import draw_proposed_flow as draw_proposed_flow
+from mashbill.mcp_flow_tools import propose_flow as propose_flow
 from mashbill.mcp_git_tools import delete_project_tag, list_project_tags, tag_project
 from mashbill.mcp_project_tools import rename_project_with_draft
 from mashbill.mcp_publish import publish_blueprint_for_person
@@ -75,6 +77,8 @@ for _tool in (
     record_draft,
     update_draft,
     resolve_draft,
+    propose_flow,
+    draw_proposed_flow,
     set_design_check,
     tag_project,
     list_project_tags,

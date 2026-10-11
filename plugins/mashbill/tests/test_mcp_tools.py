@@ -46,6 +46,8 @@ _CORE_TOOLS = {
     "record_draft",
     "update_draft",
     "resolve_draft",
+    "propose_flow",
+    "draw_proposed_flow",
 }
 
 

@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.214.0] — 2026-10-11
+
+### Added
+
+- MCP `propose_flow` and `draw_proposed_flow`: the feature coach records each flow draft with the engine, which checks that every line names its target and every feature-description item is placed, then draws exactly the confirmed draft in one write (D-2026-10-11-B).
+
 ## [0.213.4] — 2026-10-11
 
 ### Fixed

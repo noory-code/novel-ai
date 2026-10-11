@@ -39,6 +39,37 @@
 
 ## Log
 
+### D-2026-10-11-B — The feature coach hands each flow draft to the engine, and the engine draws exactly it
+
+- **What:** *(Claude, carrying out novel-workspace W-00000423)* Two MCP tools carry a feature flow from draft to
+  canvas. `propose_flow` takes the draft as nodes (step, decision, rule, note; each with a draft-local key), lines
+  between keys or existing node ids, open items hung on a step, and stated omissions. It refuses a line whose end is no
+  key or node id, a line touching a note, an open item on no known step, and a draft that leaves a numbered item of the
+  `[Feature description]` (D-2026-10-10-E) neither in a node's or open item's `covers` nor in `omitted` with a reason;
+  items covered by an earlier drawn proposal need no cover again. It keeps the latest proposal per feature at
+  `.noory/novel/flow_proposals/<feature_id>.json` (engine state: not a `DraftDoc`, not in the wire contract) and
+  returns a rendering the coach shows as the draft. `draw_proposed_flow` writes exactly those nodes and lines in one
+  canvas write, leaves open items unjoined, and refuses a missing or already drawn proposal. The feature framing's
+  sentence "When the person confirms a draft, draw exactly that draft, adding no node or edge it did not show; ask
+  before joining anything it left open or vague." becomes "Record each flow draft with propose_flow and show the draft
+  it returns; a line without a clear target stays an open item. On confirmation, draw it with draw_proposed_flow, never
+  node by node."
+- **Why:** With the drawing left to the coach node by node, measured runs drew what the confirmed draft did not show.
+  On Mashbill 0.213.4, two runs in nine joined a branch the draft placed nowhere ("코치가 답하지 못함", "하던 단계")
+  to one step before asking, and four runs in nine joined rules to steps although the draft listed the rules without
+  lines; the same rule lines appear in the 0.213.0 and 0.213.1 runs. Prose rules did not converge (D-2026-10-10-D).
+  Held structure turns "draw exactly the draft" into an engine guarantee and makes a vague target unrecordable as a line.
+- **Limits:** `create_node` and `create_edge` stay available on the feature canvas for edits the person asks for, so a
+  coach that ignores the protocol can still draw node by node. The rendering is returned to the coach, which shows it;
+  the chat layer does not append it, so a reply can still word the draft differently.
+- **Alternatives:** More framing prose — two rounds did not reduce the misses (D-2026-10-10-D). Extend `DraftDoc` — it
+  holds proposals the person chose to keep (D-2026-10-01-A) and crosses the wire; a per-turn flow draft is neither. Let
+  the chat layer append the rendering — changes what the person sees; left for the person to decide.
+- **Approval:** Claude's design, open to the user's review.
+- **Spec impact:** `docs/SPEC.md` (feature-flow proposals row); feature framing in `chat_framing.py`.
+- **Principles:** Fail Fast (a vague line fails at recording, not on the canvas); SSOT (the drawing comes from the one
+  recorded draft); Honesty (the canvas shows only what the person confirmed).
+
 ### D-2026-10-11-A — Novel's picture aims to be a Feynman diagram: easy to read, nothing left out
 
 - **What:** *(user direction, written by Claude, carrying out novel-workspace W-00000421)* Novel's picture aims to be
@@ -92,7 +123,9 @@
   branch (failure or not, such as what remains after "continue later") and no guessed change elsewhere in the app. The
   coach asks about the rest. Each step a canvas holds goes where its own wording places it (for example "if the draft
   lacks information, answer one more or continue later" goes at the draft check); that guidance travels with the
-  numbered feature description (D-2026-10-10-E), not in the framing. When the person confirms a draft, the
+  numbered feature description (D-2026-10-10-E), not in the framing. The drawing half below is carried by the engine
+  since D-2026-10-11-B (`propose_flow` / `draw_proposed_flow`); its framing sentence was replaced there. When the person
+  confirms a draft, the
   coach draws exactly that draft — no node or edge the draft did not show — and asks before joining anything the draft
   left open or vague. The rule is two sentences in the feature framing only; the shared playbook and other scopes are
   unchanged. (Wording widened from "no guessed failure ending" in W-00000420: once the coach received the feature

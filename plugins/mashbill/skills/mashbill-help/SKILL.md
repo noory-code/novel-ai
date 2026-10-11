@@ -34,6 +34,8 @@ foundation, actors, services, features, entities, and relationships under
   `set_node_references`
 - Drafts the person chose to keep: `record_draft`, `update_draft`, `resolve_draft`
   (record only after the person agrees to keep a proposal)
+- Feature-flow drafts: `propose_flow` (record each flow draft before showing it),
+  `draw_proposed_flow` (draw the confirmed draft exactly)
 - Search and principles: `search_project_nodes`, `get_design_principles`
 - Publication: `publish_project_snapshot_tool`, `publish_service_tool`
 - Milestones: `tag_project`, `list_project_tags`, `delete_project_tag`
