@@ -203,7 +203,9 @@ def read_canvas(
 # v0.23.0+ layout groups by kind + slug: ``<canvas>/published/<kind>/<slug>/vN.M.md``.
 # Same data, better navigation: all versions of a logical document live in
 # one folder, and that folder is grouped under its kind.
-def write_canvas(plot_root: Path, project_id: str, canvas: CanvasDoc) -> CanvasDoc:
+def write_canvas(
+    plot_root: Path, project_id: str, canvas: CanvasDoc, *, design_checks_from_engine: bool = False
+) -> CanvasDoc:
     """Persist ``canvas`` and hand back what was actually saved.
 
     The save path adds things the caller did not send — carried-forward publish
@@ -250,7 +252,9 @@ def write_canvas(plot_root: Path, project_id: str, canvas: CanvasDoc) -> CanvasD
     canvas = _attach_orphan_anchor_spokes(canvas)
     from mashbill.design_check import prepare_rechecks, write_related
 
-    canvas, related_rechecks = prepare_rechecks(plot_root, project_id, existing, canvas)
+    canvas, related_rechecks = prepare_rechecks(
+        plot_root, project_id, existing, canvas, keep_incoming_checks=design_checks_from_engine
+    )
     raw = canvas.model_dump(by_alias=True)
     # v0.17 Phase 1 (D-2026-05-16-A) — JSON is the sole SSOT for
     # Foundation typed-text fields. The v0.13 ``_split_foundation_typed_

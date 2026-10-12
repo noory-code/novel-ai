@@ -100,27 +100,28 @@ def _without_design_check(canvas: CanvasDoc) -> dict[str, Any]:
     return split(raw)[0]
 
 
-def _preserve_omitted_checks(before: CanvasDoc, incoming: CanvasDoc) -> CanvasDoc:
-    """Keep checks when an older client writes no ``design_check`` field."""
+def _carry_stored_checks(before: CanvasDoc | None, incoming: CanvasDoc) -> CanvasDoc:
+    """Replace every incoming ``design_check`` with the stored one (W-00000430).
+
+    A check is written only by ``set_design_check`` and the engine's recheck
+    rules. A whole-canvas write — the coach's ``update_canvas``, a viewer
+    echoing a stale copy, an older client that omits the field — keeps what is
+    stored; a node the store has no check for gets none.
+    """
     previous = {
         node.id: node.design_check
-        for node in before.nodes
-        if isinstance(node, (ServiceNode, FeatureNode)) and node.design_check is not None
+        for node in (before.nodes if before is not None else [])
+        if isinstance(node, (ServiceNode, FeatureNode))
     }
-    if not previous:
-        return incoming
     changed = False
     nodes: list[SketchNode] = []
     for node in incoming.nodes:
-        if (
-            isinstance(node, (ServiceNode, FeatureNode))
-            and node.design_check is None
-            and node.id in previous
-        ):
-            nodes.append(node.model_copy(update={"design_check": previous[node.id]}))
-            changed = True
-        else:
-            nodes.append(node)
+        if isinstance(node, (ServiceNode, FeatureNode)):
+            stored = previous.get(node.id)
+            if node.design_check != stored:
+                node = node.model_copy(update={"design_check": stored})
+                changed = True
+        nodes.append(node)
     if not changed:
         return incoming
     return CanvasDoc.model_validate(
@@ -153,11 +154,18 @@ def prepare_rechecks(
     project_id: str,
     before: CanvasDoc | None,
     incoming: CanvasDoc,
+    *,
+    keep_incoming_checks: bool = False,
 ) -> tuple[CanvasDoc, list[tuple[Path, dict[str, Any]]]]:
-    """Apply all automatic recheck rules before one central canvas write."""
+    """Apply all automatic recheck rules before one central canvas write.
+
+    ``keep_incoming_checks`` is for ``write_design_check`` alone; every other
+    write carries the stored checks.
+    """
+    if not keep_incoming_checks:
+        incoming = _carry_stored_checks(before, incoming)
     if before is None:
         return incoming, []
-    incoming = _preserve_omitted_checks(before, incoming)
     stamp = _now()
     related: list[tuple[Path, dict[str, Any]]] = []
 
@@ -272,6 +280,7 @@ def write_design_check(
         CanvasDoc.model_validate(
             overview.model_copy(update={"nodes": nodes}).model_dump(by_alias=True)
         ),
+        design_checks_from_engine=True,
     )
     saved_node = next(node for node in saved.nodes if node.id == node_id)
     assert isinstance(saved_node, (ServiceNode, FeatureNode))
@@ -292,6 +301,7 @@ def write_design_check(
                 CanvasDoc.model_validate(
                     detail.model_copy(update={"nodes": detail_nodes}).model_dump(by_alias=True)
                 ),
+                design_checks_from_engine=True,
             )
     return saved_node
 

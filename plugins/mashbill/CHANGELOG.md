@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.220.1] — 2026-10-12
+
+### Fixed
+
+- A whole-canvas write (`update_canvas`, `update_node`, `create_node`, the viewer's save) can no longer change a design check; it keeps the stored one (D-2026-10-12-C).
+
 ## [0.220.0] — 2026-10-12
 
 ### Changed

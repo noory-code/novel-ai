@@ -609,3 +609,46 @@ def test_coach_cannot_set_engine_only_states(tmp_path: Path, state: str) -> None
     _setup_design(tmp_path)
     with pytest.raises(ValueError, match="checking or checked"):
         mcp_tools.set_design_check(str(tmp_path), "alpha", "feat", state)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("state", ["recheck", "unchecked", "checked"])
+def test_whole_canvas_writes_cannot_change_a_check(tmp_path: Path, state: str) -> None:
+    """W-00000430: a check belongs to the coach's set_design_check and the
+    engine. A coach that rewrites the whole canvas through update_canvas, or a
+    viewer echoing a stale copy, keeps the stored check whatever it sends."""
+    plot_root = _setup_design(tmp_path)
+    before = _check(plot_root, "feat")
+    raw = read_canvas(plot_root, "alpha", "services").model_dump(by_alias=True)
+    for node in raw["nodes"]:
+        if node["id"] == "feat":
+            node["design_check"] = {
+                "state": state,
+                "found": 9,
+                "remaining": 9,
+                "updated_at": "2030-01-01T00:00:00+00:00",
+            }
+
+    mcp_tools.update_canvas(str(tmp_path), "alpha", raw)
+
+    assert _check(plot_root, "feat") == before
+
+
+def test_whole_canvas_write_cannot_add_a_check_to_an_unchecked_node(tmp_path: Path) -> None:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="services", canvas_kind="services", nodes=[ServiceNode(id="svc", label="S")]
+        ),
+    )
+    raw = read_canvas(plot_root, "alpha", "services").model_dump(by_alias=True)
+    raw["nodes"][0]["design_check"] = {
+        "state": "checked",
+        "updated_at": "2030-01-01T00:00:00+00:00",
+    }
+
+    mcp_tools.update_canvas(str(tmp_path), "alpha", raw)
+
+    assert _node(plot_root, "svc").design_check is None

@@ -183,7 +183,7 @@ The coach runs fixed checks (design-principles §Services, §Feature) and raises
 - **On the canvas:** each service shows its feature-split check and each feature its failure check — unchecked, checking,
   checked, needs re-check — beside the node; a drawn flow and its failure check are shown separately. The coach records a check
   with `set_design_check` (checking when it starts, checked with the problems found and remaining when it ends, never checked for
-  a check it did not run; unchecked and needs re-check are the engine's). The engine turns a checking or checked state back to
+  a check it did not run; unchecked and needs re-check are the engine's, and a whole-canvas write keeps the stored check). The engine turns a checking or checked state back to
   needs re-check when the service, its feature set, or the feature's flow changes — except that drawing a flow draft unchanged
   keeps a feature check the coach recorded after that draft (`D-2026-10-12-C`). Publishing shows how many checks are not
   finished; it does not block.

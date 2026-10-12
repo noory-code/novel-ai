@@ -45,7 +45,10 @@
   `unchecked` and `recheck`, which only the engine sets. (2) `draw_proposed_flow` keeps the feature's check — on the Services
   canvas and its flow canvas — when that check is `checking` or `checked` and was recorded at or after the drawn draft's
   `proposed_at`. A check recorded before the draft, and any other change to the flow, still turn it to `recheck`; the parent
-  service's check reopens as before. The engine-side writer is `design_check.write_design_check`.
+  service's check reopens as before. The engine-side writer is `design_check.write_design_check`. (3) Every other canvas
+  write — the coach's `update_canvas`, `update_node`/`create_node`, the viewer's HTTP save — keeps the stored
+  `design_check` whatever it sends, and a node with no stored check gets none (0.220.1; the save path replaces the
+  earlier "keep the check when an older client omits the field" rule).
 - **Why:** In novel-workspace W-00000424's replays (Mashbill 0.215.4, Codex coach, the '기능 흐름 그리기' scene) the coach
   checked the draft it had recorded, wrote `checked` with found and remaining, then drew exactly that draft (2 of 10 runs);
   drawing turned the check back to `recheck` in the same turn, so every run ended at "needs re-check" although nothing had
