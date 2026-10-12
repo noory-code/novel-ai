@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.216.1] — 2026-10-12
+
+### Fixed
+
+- `propose_services` refuses a set whose services are all on the canvas already, so feature talk no longer ends with a ✓-only service block (D-2026-10-12-A).
+
 ## [0.216.0] — 2026-10-12
 
 ### Added

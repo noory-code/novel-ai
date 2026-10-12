@@ -43,7 +43,9 @@
 
 - **What:** *(Claude, carrying out novel-workspace W-00000425)* Two MCP tools carry a service set from agreement to
   canvas. `propose_services` takes the whole set the coach and the person agreed on — every service, with optional
-  `value_created` and `problem` — and refuses an empty set, a repeated key, or a repeated name. It keeps the latest set at
+  `value_created` and `problem` — and refuses an empty set, a repeated key, a repeated name, or a set whose services
+  are all on the canvas already (0.216.1: on 0.216.0 five of six replayed feature-candidate turns ended with a ✓-only
+  block). It keeps the latest set at
   `.noory/novel/service_proposals/services.json` (engine state, not a `DraftDoc`, not in the wire contract) and returns a
   rendering in which a service already on the Services canvas shows as ✓. In the Novel app the chat layer appends that
   rendering under the coach's reply when the turn that recorded it completes, as for flow drafts (D-2026-10-11-B).

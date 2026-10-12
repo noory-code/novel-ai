@@ -163,3 +163,12 @@ def test_both_tools_log_identifiers_only(tmp_path: Path, monkeypatch: pytest.Mon
     assert all(line["canvas"] == "services" for line in lines)
     assert all("돈 보내기" not in json.dumps(line, ensure_ascii=False) for line in lines)
     assert len(lines[1]["node_ids"]) == len(_set())
+
+
+def test_propose_refuses_a_set_with_nothing_to_add(tmp_path: Path) -> None:
+    """A set whose services are all on the canvas showed a ✓-only block under feature talk
+    (W-00000426: five of six feature-candidate turns)."""
+    project_path = _project(tmp_path, existing=[s["label"] for s in _set()])
+
+    with pytest.raises(ValueError, match="already on the Services canvas"):
+        mcp_tools.propose_services(project_path, "alpha", services=_set())

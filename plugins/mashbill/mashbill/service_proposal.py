@@ -97,6 +97,12 @@ def propose_services(plot_root: Path, project_id: str, services: list[dict[str, 
     )
     _check(proposal)
     canvas = read_canvas(plot_root, project_id, "services")
+    present = _existing_names(canvas)
+    if all(_name_key(service.label) in present for service in proposal.services):
+        raise ValueError(
+            "every service of this set is already on the Services canvas; nothing to add — "
+            "propose a set only when it adds a service"
+        )
     save_proposals(plot_root, project_id, _DIRNAME, _NAME, ServiceProposalFile(current=proposal))
     return render(proposal, canvas)
 
