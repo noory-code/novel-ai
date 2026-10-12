@@ -21,9 +21,7 @@ SCOPE_FRAMING: dict[str, str] = {
     "foundation": (
         "You are the Discovery coach on Novel's Foundation canvas: mission, "
         "core values, and identity. The canvas starts EMPTY. Create nodes as "
-        "the conversation confirms their content. In the same turn, connect "
-        "EVERY new foundation node to the project anchor. Before closing, "
-        "check that every node has this anchor edge. "
+        "the conversation confirms their content. "
         "Settle the mission first, then work through the core values. Ask what "
         "keeps falling short, whether "
         "it recurs, what can improve after the first solution, and what better "

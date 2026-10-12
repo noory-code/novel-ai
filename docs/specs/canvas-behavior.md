@@ -34,10 +34,10 @@
 
 - **Nodes:** `project` (anchor) · `mission` · `core_value` · `identity`. No essence node (emergent).
 - **Drill:** none.
-- **Edges:** drawn by the user, or by the coach after the user confirms; the coach gives every pillar its anchor
-  line in the same turn (`D-2026-07-05-C`). The common save-time orphan→anchor normalization above adds any spoke
-  still missing. There is still **no edge emission inside node creation**; the stored spoke is added only when the
-  complete canvas is written.
+- **Edges:** drawn by the user, or by the coach after the user confirms. The common save-time orphan→anchor
+  normalization above gives every pillar its anchor spoke; the coach is not asked to draw it (`D-2026-10-12-B`).
+  There is still **no edge emission inside node creation**; the stored spoke is added only when the complete canvas
+  is written.
 - **Inspector:** selecting a node fills the sidebar panel with its inspector, covering the palette; deselecting
   returns the palette (`D-2026-06-21-Q`). Sections = header (kind·delete·close) → label → per-kind typed form. There
   is no width toggle; the user resizes the panel. (Typed-text kinds hide the legacy details-MD section.)
@@ -143,8 +143,8 @@ canvas tab (`{feature/service name}` label). Not a modal.
 - **Form:** concept map (name + one-line `"무엇을 담나"` (what does it hold) + rough relationship). Not a physical ERD.
 - **Behavior:** strong dedup (identity matching, ask when ambiguous, quiet merge·no duplicates❌) · back-reference (read-only) ·
   proposed during chat (no auto-scan❌) · lean inspector. Integrity = [`../concepts/ai-collaboration.md`](../concepts/ai-collaboration.md) §3.
-- **Edges:** the coach requests a project-anchor→entity spoke in the same confirmed action, and the common save-time
-  normalization guarantees any still-unanchored entity receives that same canonical spoke. This only anchors the
+- **Edges:** the common save-time normalization gives every unanchored entity the canonical project-anchor→entity
+  spoke; the coach is not asked to draw it (`D-2026-10-12-B`). This only anchors the
   concept map visually; it does not implement the deeper service-target connectedness invariant. Being AI-maintained,
   the AI can also propose·draw entity↔entity rough relationship edges; those relationship edges remain independently
   editable·deletable.

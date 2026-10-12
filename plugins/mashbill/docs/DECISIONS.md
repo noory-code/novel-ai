@@ -39,6 +39,27 @@
 
 ## Log
 
+### D-2026-10-12-B — The coach prompts no longer ask for project-anchor lines; saving draws them
+
+- **What:** *(Claude, carrying out novel-workspace W-00000256)* The Foundation framing drops "In the same turn, connect
+  EVERY new foundation node to the project anchor. Before closing, check that every node has this anchor edge.", and the
+  write playbook drops the Foundation and Entities `create_edge source __project_anchor__ target <new …>` sentences
+  ("Relationship edges remain." goes with them). The Actors framing keeps its family-anchor sentence: it was not part of
+  the measurement. Foundation prompt 1723 → 1657 words; Actors, Services, Entities, and Feature each lose 43 words
+  (Services 1799 → 1756, Feature 1796 → 1753). The 1,800-word budget is unchanged.
+- **Why:** The save-time sweep (D-2026-07-21-C, `canvas_normalization.attach_orphan_anchor_spokes`) already attaches
+  one anchor line to every root node on Foundation, Actors, Services, and Entities. In novel-workspace W-00000256 (36
+  replays, 6 companies × 6, Mashbill 0.199.2) every Foundation and Entities root was anchored in all runs, including the
+  18 without these sentences (Foundation 59/59, Entities 63/63), and those coaches drew almost no anchor lines. The
+  sentences cost 66 words the Foundation prompt needs for measured behaviour.
+- **Alternatives:** Keep the sentences — they do no work the save does not already do. Also drop "Collect the confirmed
+  values and register all of them together in the same turn." — W-00000256 saw coaches save one value per turn with or
+  without it, but removed it together with the value-candidate sentence that did carry weight, so its own effect was
+  not separated; its pinning test records values falling to 2–3 when it alone was removed (D-2026-07-03-K). It stays.
+- **Approval:** Accepted — the user, 2026-10-12 (novel-workspace Q-00000030: root nodes on each canvas, not every node).
+- **Spec impact:** None — the anchor behaviour is the save-time sweep's, pinned by `tests/test_canvas_orphan_sweep.py`.
+- **Principles:** SSOT (the anchor rule lives once, in the save path); KISS (the prompt stops restating code).
+
 ### D-2026-10-12-A — The services coach hands the agreed service set to the engine, which adds every missing service at once
 
 - **What:** *(Claude, carrying out novel-workspace W-00000425)* Two MCP tools carry a service set from agreement to
@@ -1763,6 +1784,8 @@
   (+5); SketchCanvas ceiling 567 → 578 (plumbing).
 
 ### D-2026-07-05-C — foundation: every pillar gets its anchor line in the same turn
+
+> *Superseded by `D-2026-10-12-B`: the save-time sweep anchors every pillar, and the framing no longer asks the coach to.*
 
 - **What:** the foundation framing binds anchor connection to EVERY node
   registration ("EVERY node you register gets its anchor line in the same

@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.218.0] — 2026-10-12
+
+### Changed
+
+- The coach prompts no longer ask the coach to draw project-anchor lines on Foundation and Entities; saving already draws them for every root node (D-2026-10-12-B). The Foundation prompt is 66 words shorter.
+
 ## [0.217.2] — 2026-10-12
 
 ### Tests

@@ -529,14 +529,18 @@ def test_feature_drafts_ask_about_unstated_endings() -> None:
     assert "where its wording places it" not in feature_prompt
 
 
-def test_write_playbook_names_the_anchor_as_foundation_parent() -> None:
-    """B-14 (D-2026-07-03-T): coach-registered foundation pillars floated —
-    partly the tool bug (create_edge rejected the synthetic anchor), partly
-    the prompt never saying WHO a pillar's parent is. The playbook must name
-    __project_anchor__ as the foundation parent so the one-yes covers the
-    spoke too."""
-    p = build_system_prompt("foundation")
-    assert "__project_anchor__" in p
+def test_prompts_leave_anchor_spokes_to_the_save_time_sweep() -> None:
+    """W-256 (D-2026-10-12-B): the save-time sweep attaches the project-anchor
+    spoke to every root node on Foundation and Entities
+    (``canvas_normalization.attach_orphan_anchor_spokes``, pinned by
+    ``test_canvas_orphan_sweep.py``). With the anchor sentences removed, 36
+    replays still anchored every root (foundation 59/59, entities 63/63), so
+    the prompts no longer spend words asking the coach to draw those spokes."""
+    for scope in ("foundation", "services", "entities", "feature:feature_1"):
+        prompt = build_system_prompt(scope)
+        assert "__project_anchor__ target" not in prompt, scope
+        assert "stored anchor edge" not in prompt, scope
+    assert "project anchor" not in build_framing_preamble("foundation")
 
 
 def test_services_framing_discriminates_feature_from_service() -> None:
@@ -556,21 +560,6 @@ def test_entity_relationship_lines_carry_a_verb_label() -> None:
         p = build_system_prompt(scope).lower()
         assert "verb" in p, scope
         assert "unlabeled" in p or "label" in p, scope
-
-
-def test_new_entities_get_a_project_anchor_spoke_in_the_same_action() -> None:
-    """W-87: entity relationship edges alone leave the concept map floating.
-
-    Entity registration can originate from Services, the Entities canvas, or a
-    Feature conversation.  Every such coach must use the existing persisted
-    edge tool in the same confirmed action, without replacing the separate
-    ``create_node`` / ``create_edge`` contract.
-    """
-    expected = "create_edge source __project_anchor__ target <new entity>"
-    for scope in ("services", "entities", "feature:feature_1"):
-        prompt = build_system_prompt(scope)
-        assert "EVERY new entity gets a stored anchor edge" in prompt, scope
-        assert expected in prompt, scope
 
 
 def test_services_framing_draws_entity_relationships() -> None:
@@ -710,18 +699,6 @@ def test_feature_doers_are_wired_not_just_narrowed() -> None:
     framing must carry the explicit write."""
     f = build_framing_preamble("services").lower()
     assert "each feature's doer" in f
-
-
-def test_foundation_every_pillar_gets_anchor_line() -> None:
-    """B-41 (foundation live check 2026-07-05 — first blank-canvas run): the
-    coach anchor-connected only the FIRST node of each kind; the 2nd value
-    and 2nd identity floated, and after being corrected its NEXT new value
-    floated again. Same lesson as the actors families: the rule must bind
-    EVERY registration, in the same turn."""
-    f = build_framing_preamble("foundation").lower()
-    assert "anchor edge" in f
-    assert "same turn" in f
-    assert "every new foundation node" in f
 
 
 def test_actor_is_defined_by_exchange_not_persona_card() -> None:
