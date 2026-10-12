@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.219.1] — 2026-10-12
+
+### Docs
+
+- `SPEC.md` states the single palette grouping rule: a heading only over several items of one kind, with concept info and placement hints on the item.
+
 ## [0.219.0] — 2026-10-12
 
 ### Added

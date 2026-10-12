@@ -312,18 +312,22 @@ behaviour, not data model.)
 
 ## Stencil concept info (ⓘ) (v0.42.0, D-2026-06-06-A)
 
-The Foundation stencil's three section headers (Mission / Core values /
-Identity) each carry an **always-visible ⓘ icon** next to the title.
+Every palette follows one grouping rule (W-00000429): a heading appears only
+over several items of one kind (the feature canvas's actor list); concept
+info and placement hints ride on the item. The Foundation palette's three
+items (Mission / Core values / Identity) and the Entities item each carry an
+**always-visible ⓘ icon** beside the item.
 Clicking it opens a small **popover** with that concept's definition, so a
 user who does not yet know what mission / core value / identity mean can
 learn it in place. Concept SSOT = [`concepts/kinds.md`](https://github.com/noory-code/novel-ai/blob/main/docs/concepts/kinds.md)
 (absorbed the old FOUNDATION_CONCEPT); the popover is a short surface of it.
 
-| Section | Popover text (full text in `stencil.info.*`) |
+| Item | Popover text (full text in `stencil.info.*`) |
 |---|---|
 | Mission | 이 프로젝트가 무엇을 위해 존재하는지 한 문장으로 표현하세요. |
 | Core values | 의사결정의 기준 가치예요. |
-| Identity | 정체성을 나타내는 방식이에요. |
+| Identity | 아이덴티티를 나타내는 방식이에요. |
+| Entity | 서비스가 다루는 데이터 객체예요 (글 / 댓글 / 사용자). |
 
 Copy is **plain + concise** (no metaphors like 뿌리/노력/지향 — D-2026-06-06-A
 copy refinement, user-worded); a newcomer should understand each on first read.
@@ -337,8 +341,8 @@ copy refinement, user-worded); a newcomer should understand each on first read.
   note was redundant clutter. (`stencil.note.addAsManyAsYouNeed` and
   `stencil.note.identityOnePerAspect` deleted.)
 - Implementation: `viewer/src/canvases/stencil/SectionInfo.tsx` (the ⓘ +
-  popover); `Section` gains an optional `info` prop. Foundation-only for
-  now (other canvases' sections pass no `info`).
+  popover); a palette item takes an optional `info`. Pinned by
+  `viewer/tests/stencil-one-grouping-rule.test.tsx`.
 
 ---
 
