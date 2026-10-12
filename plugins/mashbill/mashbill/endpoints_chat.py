@@ -24,9 +24,9 @@ from mashbill.chat_context import (
     build_framing_preamble,
     build_system_prompt,
 )
-from mashbill.chat_flow_proposal import append_flow_proposal
 from mashbill.chat_models import list_models
 from mashbill.chat_output_filter import filter_save_announcements
+from mashbill.chat_proposals import append_proposal
 from mashbill.chat_provider import read_selection
 from mashbill.chat_providers.base import DEFAULT_CHAT_SCOPE, is_valid_scope
 from mashbill.chat_selection import build_turn_preamble
@@ -196,7 +196,7 @@ async def stream_chat_turn(
     seen_turn_id: str | None = None
     started_at = datetime.now(UTC)
     try:
-        async for event in append_flow_proposal(
+        async for event in append_proposal(
             filter_save_announcements(provider.stream_turn(user_message)),
             plot_root,
             project_id,

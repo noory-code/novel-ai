@@ -11,7 +11,7 @@ lines in one canvas write. One proposal file per feature lives under
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -21,7 +21,7 @@ from mashbill.canvas_io import build_new_node, read_canvas, write_canvas
 from mashbill.chat_feature_description import feature_description_items
 from mashbill.edge_io import _build_edge
 from mashbill.models import CanvasDoc
-from mashbill.storage import _ensure_project, _project_dir, _read_json, _write_json
+from mashbill.proposal_store import load_proposals, now_iso, proposed_since, save_proposals
 
 _DIRNAME = "flow_proposals"
 
@@ -76,22 +76,12 @@ class FlowProposalFile(BaseModel):
     drawn_items: list[int] = Field(default_factory=list)
 
 
-def _path(plot_root: Path, project_id: str, feature_id: str) -> Path:
-    if not feature_id or not feature_id.replace("-", "").replace("_", "").isalnum():
-        raise ValueError(f"unsafe feature id: {feature_id!r}")
-    return _project_dir(plot_root, project_id) / _DIRNAME / f"{feature_id}.json"
-
-
 def _load(plot_root: Path, project_id: str, feature_id: str) -> FlowProposalFile:
-    _ensure_project(plot_root, project_id)
-    path = _path(plot_root, project_id, feature_id)
-    if not path.exists():
-        return FlowProposalFile()
-    return FlowProposalFile.model_validate(_read_json(path))
+    return load_proposals(plot_root, project_id, _DIRNAME, feature_id, FlowProposalFile)
 
 
 def _save(plot_root: Path, project_id: str, feature_id: str, doc: FlowProposalFile) -> None:
-    _write_json(_path(plot_root, project_id, feature_id), doc.model_dump())
+    save_proposals(plot_root, project_id, _DIRNAME, feature_id, doc)
 
 
 def _check_shape(proposal: FlowProposal, canvas: CanvasDoc) -> None:
@@ -190,7 +180,7 @@ def propose_flow(
         edges=TypeAdapter(list[ProposedEdge]).validate_python(edges),
         open_items=TypeAdapter(list[OpenItem]).validate_python(open_items),
         omitted=TypeAdapter(list[Omission]).validate_python(omitted),
-        proposed_at=datetime.now(UTC).isoformat(),
+        proposed_at=now_iso(),
     )
     canvas = read_canvas(plot_root, project_id, "feature", feature_id)
     items = feature_description_items(plot_root, project_id, feature_id)
@@ -206,9 +196,7 @@ def rendering_proposed_since(
 ) -> str | None:
     """The rendering of the feature's undrawn proposal if it was recorded at or after ``since``."""
     proposal = _load(plot_root, project_id, feature_id).current
-    if proposal is None or proposal.drawn or not proposal.proposed_at:
-        return None
-    if datetime.fromisoformat(proposal.proposed_at) < since:
+    if proposal is None or proposal.drawn or not proposed_since(proposal.proposed_at, since):
         return None
     canvas = read_canvas(plot_root, project_id, "feature", feature_id)
     return render(proposal, canvas, feature_description_items(plot_root, project_id, feature_id))

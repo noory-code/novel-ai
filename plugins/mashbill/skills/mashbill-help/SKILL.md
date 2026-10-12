@@ -36,6 +36,8 @@ foundation, actors, services, features, entities, and relationships under
   (record only after the person agrees to keep a proposal)
 - Feature-flow drafts: `propose_flow` (record each flow draft before showing it),
   `draw_proposed_flow` (draw the confirmed draft exactly)
+- Service sets: `propose_services` (record the agreed set), `add_proposed_services`
+  (add every missing service of the confirmed set)
 - Search and principles: `search_project_nodes`, `get_design_principles`
 - Publication: `publish_project_snapshot_tool`, `publish_service_tool`
 - Milestones: `tag_project`, `list_project_tags`, `delete_project_tag`

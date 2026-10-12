@@ -39,6 +39,35 @@
 
 ## Log
 
+### D-2026-10-12-A — The services coach hands the agreed service set to the engine, which adds every missing service at once
+
+- **What:** *(Claude, carrying out novel-workspace W-00000425)* Two MCP tools carry a service set from agreement to
+  canvas. `propose_services` takes the whole set the coach and the person agreed on — every service, with optional
+  `value_created` and `problem` — and refuses an empty set, a repeated key, or a repeated name. It keeps the latest set at
+  `.noory/novel/service_proposals/services.json` (engine state, not a `DraftDoc`, not in the wire contract) and returns a
+  rendering in which a service already on the Services canvas shows as ✓. In the Novel app the chat layer appends that
+  rendering under the coach's reply when the turn that recorded it completes, as for flow drafts (D-2026-10-11-B).
+  `add_proposed_services` adds, in one canvas write, every service of the set the canvas lacks, and refuses a missing or
+  already added set; participants are set afterwards with `set_node_references`. The services framing's "IDENTIFY THE
+  FULL SET OF SERVICES FIRST." becomes "IDENTIFY THE FULL SET OF SERVICES FIRST; record it with propose_services.", and the
+  framing budget rises 1795 → 1800 words for it instead of trimming measured wording. The held-proposal store, the "who
+  shows it" instruction, and the turn-end append are shared with flow drafts (`proposal_store.py`, `proposal_show.py`,
+  `chat_proposals.py`). Single-service wording stays on drafts: a service set added through this tool records no
+  `DraftDoc`.
+- **Why:** A coach that walks through services one at a time asked to keep only the newest service and left the rest of
+  the agreed set off the canvas (novel-workspace O-00000123). Replayed live on Mashbill 0.215.4 with the Codex coach, the
+  Toss moment asked to keep only "일상에서 부담 없이 작은 혜택을 받기" in three runs of three while the other six agreed
+  services were not on the canvas. Prose sentences did not fix it: in W-00000394 a sentence that fixed the failure
+  moments broke moments that already worked.
+- **Limits:** `create_node` stays available on the Services canvas, so a coach that ignores the protocol can still add
+  services one by one. A coach outside the app shows the set itself.
+- **Alternatives:** Another framing sentence — W-00000394 measured two and both failed. Record the set as one `DraftDoc`
+  — drafts hold one proposal for one node or name, and the set needs the canvas-wide ✓ check and an all-at-once write.
+- **Approval:** Claude's design, open to the user's review. The budget raise follows the W-00000249/283/316 precedent.
+- **Spec impact:** `docs/SPEC.md` (service-set proposals row); services framing in `chat_framing.py`.
+- **Principles:** SSOT (one held set, one write); Fail Fast (a repeated or empty set fails at recording); AHA (the shared
+  proposal parts were extracted on their second use).
+
 ### D-2026-10-11-B — The feature coach hands each flow draft to the engine, and the engine draws exactly it
 
 - **What:** *(Claude, carrying out novel-workspace W-00000423)* Two MCP tools carry a feature flow from draft to
@@ -76,7 +105,7 @@
 - **Approval:** Claude's design, open to the user's review. The app showing the recorded draft was chosen by the user
   (2026-10-11).
 - **Spec impact:** `docs/SPEC.md` (feature-flow proposals row); feature framing in `chat_framing.py`; the chat turn
-  stream (`chat_flow_proposal.py`).
+  stream (`chat_proposals.py`).
 - **Principles:** Fail Fast (a vague line fails at recording, not on the canvas); SSOT (the drawing comes from the one
   recorded draft); Honesty (the canvas shows only what the person confirmed).
 

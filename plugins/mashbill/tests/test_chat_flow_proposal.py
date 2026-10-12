@@ -165,3 +165,30 @@ def test_the_in_app_coach_is_told_the_app_shows_the_draft(
 
     assert "app shows" in in_app and "do not restate" in in_app
     assert "Show the person this draft" in headless
+
+
+async def test_a_services_turn_that_proposes_a_set_shows_its_rendering(tmp_path: Path) -> None:
+    plot_root, project_path = _project(tmp_path)
+    append_user(plot_root, "alpha", "services", "codex", "u2", "구성을 정리해 주세요")
+
+    class _ServicesCoach(ChatProvider):
+        async def stream_turn(self, user_message: str) -> Any:
+            yield ChatStreamEvent(type="turn_start", turn_id="t2")
+            mcp_tools.propose_services(
+                project_path, "alpha", services=[{"key": "pay", "label": "돈 보내기"}]
+            )
+            yield ChatStreamEvent(type="turn_complete", turn_id="t2", text="구성을 맡겼어요.")
+
+    await stream_chat_turn(
+        _ServicesCoach(),
+        _Hub(),
+        plot_root,
+        "구성을 정리해 주세요",
+        scope="services",
+        project_id="alpha",
+        provider_name="codex",
+        conversation_id=read_conversation(plot_root, "alpha", "services").conversation_id,
+    )
+
+    saved = read_conversation(plot_root, "alpha", "services").messages[-1].text
+    assert saved.startswith("구성을 맡겼어요.") and "[pay] 돈 보내기" in saved and "```" in saved

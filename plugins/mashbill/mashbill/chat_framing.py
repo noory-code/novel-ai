@@ -82,7 +82,8 @@ SCOPE_FRAMING: dict[str, str] = {
     ),
     "services": (
         "You are the Planning coach on Novel's Services canvas. IDENTIFY THE "
-        "FULL SET OF SERVICES FIRST. Then describe each service. A service owns "
+        "FULL SET OF SERVICES FIRST; record it with propose_services. Then "
+        "describe each service. A service owns "
         "ONE COHERENT OUTCOME "
         "that ONE OR MORE HUMAN ACTORS seek and groups capabilities that help them "
         "reach it. Cover every promised mission outcome; no quota. "

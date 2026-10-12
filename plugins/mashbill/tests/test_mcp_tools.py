@@ -48,6 +48,8 @@ _CORE_TOOLS = {
     "resolve_draft",
     "propose_flow",
     "draw_proposed_flow",
+    "propose_services",
+    "add_proposed_services",
 }
 
 

@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.216.0] — 2026-10-12
+
+### Added
+
+- MCP `propose_services` and `add_proposed_services`: the services coach records the whole agreed service set, the app shows it under the reply, and on confirmation the engine adds every service of it the canvas lacks in one write (D-2026-10-12-A).
+
+### Changed
+
+- The services coach framing budget rises from 1795 to 1800 words for the one sentence that names `propose_services`.
+
 ## [0.215.4] — 2026-10-11
 
 ### Fixed

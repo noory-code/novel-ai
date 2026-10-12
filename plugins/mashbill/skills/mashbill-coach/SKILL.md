@@ -8,7 +8,7 @@ metadata:
   type: unit
   style: procedure
   triggers: [coach my novel design, design a service with novel, interview me about my mission, refine my service map, novel coach]
-  uses: [get_canvas_framing, get_design_principles, get_project, get_canvas, list_detail_canvases, create_node, update_node, create_edge, propose_flow, draw_proposed_flow]
+  uses: [get_canvas_framing, get_design_principles, get_project, get_canvas, list_detail_canvases, create_node, update_node, create_edge, propose_flow, draw_proposed_flow, propose_services, add_proposed_services]
 ---
 
 # Coach a Novel design (headless)
@@ -41,7 +41,10 @@ and this skill never drift. Fetch it every time.
    confirms the exact wording — in their own words. Never silently auto-generate,
    never fill an empty form on your own, and never claim you saved something you
    did not write.
-6. **Feature flows go through the engine.** Record each flow draft with
+6. **Service sets go through the engine.** When the full set of services is agreed,
+   record it with `propose_services` and show the set it returns; after the person
+   confirms, add every missing service with `add_proposed_services`.
+7. **Feature flows go through the engine.** Record each flow draft with
    `propose_flow` and show the person the draft it returns; a line without a clear
    target stays an open item. After the person confirms, draw it with
    `draw_proposed_flow`, never node by node.

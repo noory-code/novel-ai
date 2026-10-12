@@ -42,6 +42,8 @@ from mashbill.mcp_flow_tools import propose_flow as propose_flow
 from mashbill.mcp_git_tools import delete_project_tag, list_project_tags, tag_project
 from mashbill.mcp_project_tools import rename_project_with_draft
 from mashbill.mcp_publish import publish_blueprint_for_person
+from mashbill.mcp_service_tools import add_proposed_services as add_proposed_services
+from mashbill.mcp_service_tools import propose_services as propose_services
 from mashbill.migrate import migrate_v01_to_v02
 from mashbill.models import CanvasKind
 from mashbill.models_foundation import PROJECT_ANCHOR_ID
@@ -79,6 +81,8 @@ for _tool in (
     resolve_draft,
     propose_flow,
     draw_proposed_flow,
+    propose_services,
+    add_proposed_services,
     set_design_check,
     tag_project,
     list_project_tags,
