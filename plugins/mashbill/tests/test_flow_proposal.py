@@ -314,6 +314,7 @@ def test_a_change_to_a_drawn_flow_shows_renames_and_removed_lines(tmp_path: Path
 
 def test_drawing_applies_renames_and_removes_lines_with_the_additions(tmp_path: Path) -> None:
     project_path, ids = _drawn_once(tmp_path)
+    before = _canvas(project_path)
     mcp_tools.propose_flow(
         project_path,
         "alpha",
@@ -332,6 +333,20 @@ def test_drawing_applies_renames_and_removes_lines_with_the_additions(tmp_path: 
     assert not any(e.source == ids["2"] and e.target == ids["4"] for e in canvas.edges)
     six = next(i for i, label in labels.items() if label == "결과를 확인한다")
     assert any(e.source == ids["5"] and e.target == six for e in canvas.edges)
+    # Nothing outside the draft changed: every other node keeps its content, every other line stays,
+    # and the only new things are the draft's step and line.
+    old_nodes = {node.id: node.model_dump() for node in before.nodes}
+    for node in canvas.nodes:
+        if node.id in old_nodes and node.id != ids["1"]:
+            assert node.model_dump() == old_nodes[node.id]
+    renamed = next(node for node in canvas.nodes if node.id == ids["1"])
+    assert renamed.model_dump() == {**old_nodes[ids["1"]], "label": "흐름을 말한다"}
+    assert set(old_nodes) - {node.id for node in canvas.nodes} == set()
+    assert {node.id for node in canvas.nodes} - set(old_nodes) == {six}
+    old_lines = {(e.source, e.target, e.label) for e in before.edges}
+    new_lines = {(e.source, e.target, e.label) for e in canvas.edges}
+    assert old_lines - new_lines == {(ids["2"], ids["4"], "나중에")}
+    assert new_lines - old_lines == {(ids["5"], six, "")}
 
 
 def test_renames_and_removals_must_name_what_is_on_the_canvas(tmp_path: Path) -> None:

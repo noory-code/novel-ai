@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.217.2] — 2026-10-12
+
+### Tests
+
+- The drawn-flow change test checks that nothing outside the draft changes: other nodes keep their content and the only removed and added lines are the draft's.
+
 ## [0.217.1] — 2026-10-12
 
 ### Fixed
