@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.217.1] — 2026-10-12
+
+### Fixed
+
+- A flow draft's `✓` line names a step the same draft renames by its new name (D-2026-10-11-B).
+
 ## [0.217.0] — 2026-10-12
 
 ### Added

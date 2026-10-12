@@ -203,7 +203,11 @@ def render(proposal: FlowProposal, canvas: CanvasDoc, items: list[str]) -> str:
         f"⨯ {labels.get(r.source, r.source)} → {labels.get(r.target, r.target)}"
         for r in proposal.remove_edges
     ]
-    out += [f"✓ {p.item}. {items[p.item - 1]} — {labels.get(p.at, p.at)}" for p in proposal.placed]
+    renamed = {r.node: r.label for r in proposal.relabels}
+    out += [
+        f"✓ {p.item}. {items[p.item - 1]} — {renamed.get(p.at, labels.get(p.at, p.at))}"
+        for p in proposal.placed
+    ]
     out += [f"✕ {o.item}. {items[o.item - 1]} — {o.reason}" for o in proposal.omitted]
     return "\n".join(out)
 

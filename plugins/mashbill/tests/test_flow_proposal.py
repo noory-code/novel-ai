@@ -375,3 +375,18 @@ def test_a_description_item_already_on_a_drawn_step_shows_as_present(tmp_path: P
 
     assert "✓ 1. 사용자는 흐름을 정한다. — 흐름을 정한다" in rendered
     assert "✕ 1." not in rendered
+
+
+def test_a_present_item_names_the_step_by_its_new_name(tmp_path: Path) -> None:
+    project_path, ids = _drawn_once(tmp_path)
+
+    rendered = mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[],
+        relabels=[{"node": ids["1"], "label": "흐름을 말한다"}],
+        placed=[{"item": 1, "at": ids["1"]}],
+    )["rendered"]
+
+    assert "✓ 1. 사용자는 흐름을 정한다. — 흐름을 말한다" in rendered
