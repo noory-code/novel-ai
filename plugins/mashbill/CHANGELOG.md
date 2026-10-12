@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.219.0] — 2026-10-12
+
+### Added
+
+- `GET /api/proof` lists the project's Proof decisions (id, title, status) in number order, so the entity inspector can offer them by title. Files that are not `PROOF-<n>.md` or whose frontmatter is malformed are left out; `GET /api/proof/{id}` still reports them.
+
 ## [0.218.1] — 2026-10-12
 
 ### Docs

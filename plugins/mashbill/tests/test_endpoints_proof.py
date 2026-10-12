@@ -92,3 +92,48 @@ def test_get_proof_rejects_bad_id_shape(client: TestClient, workspace: Path) -> 
     response = client.get("/api/proof/proof-42", params={"project_path": str(workspace)})
 
     assert response.status_code == 422
+
+
+def test_list_proofs_returns_ids_and_titles_in_number_order(
+    client: TestClient, workspace: Path
+) -> None:
+    """W-00000429: the entity inspector picks a decision by its title, so the
+    person never has to know or type the ``PROOF-NNN`` form."""
+    _write_proof(workspace, "PROOF-10", "---\ntitle: Ten\nstatus: accepted\n---\nBody\n")
+    _write_proof(workspace, "PROOF-2", "---\ntitle: Two\nstatus: proposed\n---\nBody\n")
+
+    response = client.get("/api/proof", params={"project_path": str(workspace)})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "decisions": [
+            {"id": "PROOF-2", "title": "Two", "status": "proposed"},
+            {"id": "PROOF-10", "title": "Ten", "status": "accepted"},
+        ]
+    }
+
+
+def test_list_proofs_without_a_proof_folder_is_empty_and_creates_nothing(
+    client: TestClient, workspace: Path
+) -> None:
+    response = client.get("/api/proof", params={"project_path": str(workspace)})
+
+    assert response.status_code == 200
+    assert response.json() == {"decisions": []}
+    assert not (workspace / ".noory" / "proof").exists()
+
+
+def test_list_proofs_skips_other_files_and_malformed_decisions(
+    client: TestClient, workspace: Path
+) -> None:
+    """One broken decision file must not hide the others; it stays readable
+    (and fails closed) through ``GET /api/proof/{id}``."""
+    _write_proof(workspace, "PROOF-1", "---\ntitle: One\nstatus: accepted\n---\nBody\n")
+    _write_proof(workspace, "PROOF-3", "no frontmatter\n")
+    (workspace / ".noory" / "proof" / "README.md").write_text("notes\n", encoding="utf-8")
+
+    response = client.get("/api/proof", params={"project_path": str(workspace)})
+
+    assert response.json() == {
+        "decisions": [{"id": "PROOF-1", "title": "One", "status": "accepted"}]
+    }

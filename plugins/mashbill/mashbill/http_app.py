@@ -74,7 +74,7 @@ from mashbill.endpoints_mcp import (
     mcp_register_endpoint,
     mcp_unregister_endpoint,
 )
-from mashbill.endpoints_proof import proof_get_endpoint
+from mashbill.endpoints_proof import proof_get_endpoint, proof_list_endpoint
 from mashbill.endpoints_viewer import viewer_context_endpoint
 from mashbill.workspace import find_viewer_dist, resolve_plot_root
 
@@ -126,6 +126,7 @@ def create_http_app(
 
     routes: list[BaseRoute] = [
         Route("/api/health", health_endpoint),
+        Route("/api/proof", proof_list_endpoint, methods=["GET"]),
         Route("/api/proof/{proof_id}", proof_get_endpoint, methods=["GET"]),
         # v0.4 project + canvas + tag surface
         Route("/api/projects", projects_list_endpoint, methods=["GET"]),

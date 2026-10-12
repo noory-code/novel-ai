@@ -59,3 +59,32 @@ async def proof_get_endpoint(request: Request) -> JSONResponse:
     except (ValueError, yaml.YAMLError) as exc:
         return _error(f"malformed proof frontmatter: {exc}", status=422)
     return JSONResponse(payload)
+
+
+async def proof_list_endpoint(request: Request) -> JSONResponse:
+    """List the project's Proof decisions (id, title, status) in number order.
+
+    The entity inspector offers these by title (W-00000429). A file that is
+    not ``PROOF-<n>.md`` or whose frontmatter is malformed is left out here;
+    ``proof_get_endpoint`` still reports it when asked for directly.
+    """
+    try:
+        plot_root = _require_plot_root(request, create=False)
+    except _ApiError as exc:
+        return exc.response
+
+    proof_root = plot_root.parent / "proof"
+    decisions: list[tuple[int, dict[str, str]]] = []
+    if proof_root.is_dir():
+        for path in proof_root.glob("PROOF-*.md"):
+            proof_id = path.stem
+            if re.fullmatch(PROOF_ID_PATTERN, proof_id) is None:
+                continue
+            try:
+                parsed = _parse_proof_file(path, proof_id)
+            except (OSError, ValueError, yaml.YAMLError):
+                continue
+            entry = {key: parsed[key] for key in ("id", "title", "status")}
+            decisions.append((int(proof_id.removeprefix("PROOF-")), entry))
+    decisions.sort(key=lambda item: item[0])
+    return JSONResponse({"decisions": [entry for _, entry in decisions]})
