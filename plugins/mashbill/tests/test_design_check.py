@@ -10,6 +10,7 @@ from starlette.testclient import TestClient
 
 from mashbill import mcp_tools
 from mashbill.broadcast import BroadcastHub
+from mashbill.design_check import write_design_check
 from mashbill.folder_io import (
     create_project,
     read_canvas,
@@ -504,7 +505,10 @@ def test_unchecked_and_recheck_states_do_not_transition_again(
     tmp_path: Path, state: DesignCheckState
 ) -> None:
     plot_root = _setup_design(tmp_path)
-    mcp_tools.set_design_check(str(tmp_path), "alpha", "svc", state)
+    # Engine-only states arrive through the engine writer, not the coach tool.
+    write_design_check(
+        plot_root, "alpha", "svc", DesignCheck(state=state, updated_at="2026-10-12T00:00:00+00:00")
+    )
     before = _check(plot_root, "svc")
     overview = read_canvas(plot_root, "alpha", "services")
     changed = overview.model_copy(
@@ -596,3 +600,12 @@ def test_old_client_omission_preserves_check_when_content_is_unchanged(tmp_path:
     write_canvas(plot_root, "alpha", CanvasDoc.model_validate(raw))
 
     _assert_recheck(plot_root, service=False)
+
+
+@pytest.mark.parametrize("state", ["recheck", "unchecked"])
+def test_coach_cannot_set_engine_only_states(tmp_path: Path, state: str) -> None:
+    """W-00000430: only the engine turns a check back to recheck or unchecked; a
+    coach that wrote "recheck" itself (one replay) bypassed that rule."""
+    _setup_design(tmp_path)
+    with pytest.raises(ValueError, match="checking or checked"):
+        mcp_tools.set_design_check(str(tmp_path), "alpha", "feat", state)  # type: ignore[arg-type]

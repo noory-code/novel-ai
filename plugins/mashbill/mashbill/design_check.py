@@ -9,7 +9,12 @@ from typing import Any
 from pydantic import ValidationError
 
 from mashbill.canvas_view import read_canvas_files, split, write_canvas_files
-from mashbill.models_actors import DesignCheck, DesignCheckState, FeatureNode, ServiceNode
+from mashbill.models_actors import (
+    CoachDesignCheckState,
+    DesignCheck,
+    FeatureNode,
+    ServiceNode,
+)
 from mashbill.models_canvas import CanvasDoc
 from mashbill.models_union import SketchNode
 from mashbill.service_features import service_feature_ids
@@ -218,7 +223,7 @@ def set_design_check(
     project_path: str,
     project_id: str,
     node_id: str,
-    state: DesignCheckState,
+    state: CoachDesignCheckState,
     found: int | None = None,
     remaining: int | None = None,
 ) -> dict[str, Any]:
@@ -226,13 +231,30 @@ def set_design_check(
 
     Call with ``checking`` when the coach starts a check and ``checked`` with
     ``found`` / ``remaining`` when it finishes. Never set ``checked`` for a
-    check the coach did not run.
+    check the coach did not run. ``recheck`` and ``unchecked`` belong to the
+    engine and are refused.
     """
-    from mashbill.canvas_io import read_canvas, write_canvas
     from mashbill.tool_log import record_tool_call
     from mashbill.workspace import resolve_plot_root
 
+    if state not in ("checking", "checked"):
+        raise ValueError(
+            f"a coach records only checking or checked; got {state!r} "
+            "(the engine sets recheck and unchecked)"
+        )
     plot_root = resolve_plot_root(project_path)
+    check = DesignCheck(state=state, found=found, remaining=remaining, updated_at=_now())
+    saved_node = write_design_check(plot_root, project_id, node_id, check)
+    record_tool_call("set_design_check", project_id=project_id, canvas="services", node_id=node_id)
+    return {"node": saved_node.model_dump(by_alias=True)}
+
+
+def write_design_check(
+    plot_root: Path, project_id: str, node_id: str, check: DesignCheck
+) -> ServiceNode | FeatureNode:
+    """Store ``check`` on a service or feature, mirroring a feature's onto its flow canvas."""
+    from mashbill.canvas_io import read_canvas, write_canvas
+
     overview = read_canvas(plot_root, project_id, "services")
     target = next((node for node in overview.nodes if node.id == node_id), None)
     if target is None:
@@ -242,12 +264,6 @@ def set_design_check(
             "set_design_check only supports service and feature nodes; "
             f"got {target.kind!r} for {node_id!r}"
         )
-    check = DesignCheck(
-        state=state,
-        found=found,
-        remaining=remaining,
-        updated_at=_now(),
-    )
     changed = target.model_copy(update={"design_check": check})
     nodes = [changed if node.id == node_id else node for node in overview.nodes]
     saved = write_canvas(
@@ -258,6 +274,7 @@ def set_design_check(
         ),
     )
     saved_node = next(node for node in saved.nodes if node.id == node_id)
+    assert isinstance(saved_node, (ServiceNode, FeatureNode))
 
     if isinstance(target, FeatureNode):
         detail_path = _canvas_file(plot_root, project_id, "feature", node_id)
@@ -276,8 +293,16 @@ def set_design_check(
                     detail.model_copy(update={"nodes": detail_nodes}).model_dump(by_alias=True)
                 ),
             )
-    record_tool_call("set_design_check", project_id=project_id, canvas="services", node_id=node_id)
-    return {"node": saved_node.model_dump(by_alias=True)}
+    return saved_node
+
+
+def feature_check(plot_root: Path, project_id: str, feature_id: str) -> DesignCheck | None:
+    """The feature's current check as stored on the services canvas."""
+    from mashbill.canvas_io import read_canvas
+
+    overview = read_canvas(plot_root, project_id, "services")
+    node = next((n for n in overview.nodes if n.id == feature_id), None)
+    return node.design_check if isinstance(node, FeatureNode) else None
 
 
 def write_related(updates: list[tuple[Path, dict[str, Any]]]) -> None:

@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, TypeAdapter
 
 from mashbill.canvas_io import build_new_node, read_canvas, write_canvas
 from mashbill.chat_feature_description import feature_description_items
+from mashbill.design_check import feature_check, write_design_check
 from mashbill.edge_io import _build_edge
 from mashbill.models import CanvasDoc
 from mashbill.proposal_store import load_proposals, now_iso, proposed_since, save_proposals
@@ -271,6 +272,17 @@ def draw_proposed_flow(plot_root: Path, project_id: str, feature_id: str) -> dic
         raise ValueError("no flow proposal for this feature; record one with propose_flow")
     if proposal.drawn:
         raise ValueError("this flow proposal is already drawn; propose_flow again for new parts")
+    # W-00000430 — a check the coach recorded after this draft examined what
+    # is about to be drawn; drawing it unchanged must not reopen that check.
+    kept_check = feature_check(plot_root, project_id, feature_id)
+    if not (
+        kept_check is not None
+        and kept_check.state in ("checking", "checked")
+        and proposal.proposed_at
+        and datetime.fromisoformat(kept_check.updated_at)
+        >= datetime.fromisoformat(proposal.proposed_at)
+    ):
+        kept_check = None
     canvas = read_canvas(plot_root, project_id, "feature", feature_id)
     renames = {r.node: r for r in proposal.relabels}
     nodes_now = []
@@ -303,6 +315,8 @@ def draw_proposed_flow(plot_root: Path, project_id: str, feature_id: str) -> dic
         )
         canvas = canvas.model_copy(update={"edges": [*canvas.edges, line]})
     write_canvas(plot_root, project_id, CanvasDoc.model_validate(canvas.model_dump(by_alias=True)))
+    if kept_check is not None:
+        write_design_check(plot_root, project_id, feature_id, kept_check)
     accounted = {n for node in proposal.nodes for n in node.covers}
     accounted |= {omission.item for omission in proposal.omitted}
     accounted |= {placement.item for placement in proposal.placed}

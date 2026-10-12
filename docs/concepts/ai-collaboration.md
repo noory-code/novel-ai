@@ -183,8 +183,10 @@ The coach runs fixed checks (design-principles §Services, §Feature) and raises
 - **On the canvas:** each service shows its feature-split check and each feature its failure check — unchecked, checking,
   checked, needs re-check — beside the node; a drawn flow and its failure check are shown separately. The coach records a check
   with `set_design_check` (checking when it starts, checked with the problems found and remaining when it ends, never checked for
-  a check it did not run). The engine turns a checking or checked state back to needs re-check when the service, its feature
-  set, or the feature's flow changes. Publishing shows how many checks are not finished; it does not block.
+  a check it did not run; unchecked and needs re-check are the engine's). The engine turns a checking or checked state back to
+  needs re-check when the service, its feature set, or the feature's flow changes — except that drawing a flow draft unchanged
+  keeps a feature check the coach recorded after that draft (`D-2026-10-12-C`). Publishing shows how many checks are not
+  finished; it does not block.
 
 ## 3. Registry integrity — strict from the start (not YAGNI, `D-2026-06-19-D`)
 Entities + reference masters (actor/core_value/identity) = the **domain SSOT**, so trusting the playbook alone is

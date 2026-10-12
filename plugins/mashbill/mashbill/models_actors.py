@@ -16,6 +16,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from mashbill.models_kinds import BaseNodeFields
 
 DesignCheckState = Literal["unchecked", "checking", "checked", "recheck"]
+# W-00000430 — the states a coach may record; "unchecked" and "recheck" are the
+# engine's (a new node starts unchecked; an upstream change reopens a check).
+CoachDesignCheckState = Literal["checking", "checked"]
 
 
 class DesignCheck(BaseModel):

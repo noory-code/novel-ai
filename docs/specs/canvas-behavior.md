@@ -96,7 +96,9 @@
   feature its failure check ("실패 점검") as unchecked, checking, checked or needs re-check, in text, beside the node; when a
   checked or re-check state has problems remaining, the count follows ("남은 문제 2"). The person does not edit it: the
   coach records it, and the engine turns checking or checked back to needs re-check when the service's content or feature set
-  changes (service) or the feature's content or flow changes (the feature and its service). The feature canvas shows the
+  changes (service) or the feature's content or flow changes (the feature and its service). Drawing a flow draft unchanged
+  keeps the feature's check when the coach recorded it after that draft (`D-2026-10-12-C`); the service still reopens. Only
+  the engine sets unchecked and needs re-check; the coach records checking or checked. The feature canvas shows the
   feature's failure-check state above the canvas. The publish confirmation shows how many checks are not finished ("점검이
   끝나지 않은 곳 N곳 — 기능 나눔 a, 실패 점검 b") and does not block publishing. *(Claude:)* the marker floats outside the node's
   measured size at the top right, so the work badge keeps the bottom right; a missing state reads as unchecked.

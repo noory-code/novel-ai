@@ -39,6 +39,26 @@
 
 ## Log
 
+### D-2026-10-12-C — A feature check recorded on a flow draft survives drawing that draft; the coach records only checking or checked
+
+- **What:** *(Claude, carrying out novel-workspace W-00000430)* (1) `set_design_check` takes `checking` or `checked` and refuses
+  `unchecked` and `recheck`, which only the engine sets. (2) `draw_proposed_flow` keeps the feature's check — on the Services
+  canvas and its flow canvas — when that check is `checking` or `checked` and was recorded at or after the drawn draft's
+  `proposed_at`. A check recorded before the draft, and any other change to the flow, still turn it to `recheck`; the parent
+  service's check reopens as before. The engine-side writer is `design_check.write_design_check`.
+- **Why:** In novel-workspace W-00000424's replays (Mashbill 0.215.4, Codex coach, the '기능 흐름 그리기' scene) the coach
+  checked the draft it had recorded, wrote `checked` with found and remaining, then drew exactly that draft (2 of 10 runs);
+  drawing turned the check back to `recheck` in the same turn, so every run ended at "needs re-check" although nothing had
+  changed after the check. One run wrote `recheck` itself. O-00000130 had read these calls as writes to the Services canvas
+  during feature talk; all of them targeted the feature under discussion, which D-2026-10-05-A (5)–(6) asks for — the log
+  records `canvas="services"` because a feature's check is stored there.
+- **Alternatives:** Tell the coach to record the check after drawing — a sentence the coach can skip, and the check would then
+  describe the canvas, not the draft the person confirmed. Keep every check through a draw — a draw that applies a draft
+  recorded after the check would keep a check of something else.
+- **Approval:** Claude's design, open to the user's review; the user asked for W-00000430 to be done (2026-10-12).
+- **Spec impact:** public `docs/specs/canvas-behavior.md` design-check state and `docs/concepts/ai-collaboration.md` §2.6.
+- **Principles:** SSOT (the engine alone owns `unchecked`/`recheck`); Fail Fast (a coach-set engine state is refused).
+
 ### D-2026-10-12-B — The coach prompts no longer ask for project-anchor lines; saving draws them
 
 - **What:** *(Claude, carrying out novel-workspace W-00000256)* The Foundation framing drops "In the same turn, connect

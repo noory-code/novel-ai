@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.220.0] — 2026-10-12
+
+### Changed
+
+- `set_design_check` accepts only `checking` and `checked`; `unchecked` and `recheck` are the engine's (D-2026-10-12-C).
+- Drawing a flow draft unchanged keeps the feature's design check when the coach recorded it after that draft; the parent service's check still reopens (D-2026-10-12-C).
+
 ## [0.219.1] — 2026-10-12
 
 ### Docs

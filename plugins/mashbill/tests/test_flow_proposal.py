@@ -405,3 +405,37 @@ def test_a_present_item_names_the_step_by_its_new_name(tmp_path: Path) -> None:
     )["rendered"]
 
     assert "✓ 1. 사용자는 흐름을 정한다. — 흐름을 말한다" in rendered
+
+
+def _feature_check(project_path: str, canvas: str) -> Any:
+    plot_root = resolve_plot_root(project_path)
+    if canvas == "services":
+        doc = read_canvas(plot_root, "alpha", "services")
+    else:
+        doc = read_canvas(plot_root, "alpha", "feature", "feature_x")
+    node = next(n for n in doc.nodes if n.id == "feature_x")
+    assert isinstance(node, FeatureNode)
+    return node.design_check
+
+
+def test_drawing_the_checked_draft_keeps_its_check(tmp_path: Path) -> None:
+    """W-00000430: the coach checks a recorded draft, records ``checked`` and then
+    draws exactly that draft. The check examined what is drawn, so drawing must
+    not turn it back to recheck (two replays lost their check this way)."""
+    p = _project(tmp_path)
+    _propose(p)
+    mcp_tools.set_design_check(p, "alpha", "feature_x", "checked", 2, 2)
+    mcp_tools.draw_proposed_flow(p, "alpha", "feature_x")
+    for canvas in ("services", "feature"):
+        check = _feature_check(p, canvas)
+        assert check is not None, canvas
+        assert (check.state, check.found, check.remaining) == ("checked", 2, 2), canvas
+
+
+def test_a_check_recorded_before_the_draft_reopens_when_it_is_drawn(tmp_path: Path) -> None:
+    p = _project(tmp_path)
+    mcp_tools.set_design_check(p, "alpha", "feature_x", "checked", 1, 0)
+    _propose(p)
+    mcp_tools.draw_proposed_flow(p, "alpha", "feature_x")
+    assert _feature_check(p, "services").state == "recheck"
+    assert _feature_check(p, "feature").state == "recheck"
