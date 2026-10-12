@@ -95,7 +95,11 @@ When a doc has a user-side `actor_ref` wired to an entry step (the
 "subject edge"), `actorAnchoredLayout` runs **first** (dagre layered,
 direction from the subject edge `LR/RL/TB/BT`, actor anchored, steps
 ranked, injection overlays anchored beside their target). Only when no
-subject edge claims the doc does the mindmap path run.
+subject edge claims the doc does the mindmap path run. A node with no
+flow edge (a note, a rule) keeps its position while that spot is clear;
+one that sits on a placed node moves out of the flow — below it for
+LR/RL, to its right for TB/BT — in a row along the flow axis (pinned by
+`viewer/tests/actor-anchored-layout.test.ts`).
 
 ### Wiring (`useAutoLayout.trigger`, priority order)
 1. user-side actor subject edge → `actorAnchoredLayout`
