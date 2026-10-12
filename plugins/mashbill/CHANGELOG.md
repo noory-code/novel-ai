@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.220.2] — 2026-10-12
+
+### Fixed
+
+- `update_canvas` refuses a canvas that changes a design check (record it with `set_design_check`) and returns the canvas as saved instead of the one sent (D-2026-10-12-C).
+
 ## [0.220.1] — 2026-10-12
 
 ### Fixed

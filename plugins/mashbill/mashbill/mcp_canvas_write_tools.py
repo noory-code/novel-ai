@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from mashbill.design_check import sent_check_changes
 from mashbill.draft_write_split import WriteFragment, split_write_by_draft
 from mashbill.folder_io import (
     create_edge,
@@ -34,12 +35,21 @@ def update_canvas_with_draft(
     validated: CanvasDoc,
     draft_id: str | None,
     chat_scope: str,
-) -> tuple[dict[str, list[str]], str | None]:
+) -> tuple[CanvasDoc, dict[str, list[str]], str | None]:
     """Persist a whole canvas, reconcile details, and finish its draft."""
     if draft_id is not None:
         ensure_draft(plot_root, project_id, draft_id)
     service_id = validated.feature_ref if validated.canvas_kind == "feature" else None
     before = read_canvas(plot_root, project_id, validated.canvas_kind, service_id)
+    # W-00000430 — a check is recorded with set_design_check; the engine owns
+    # recheck/unchecked. Refuse a whole-canvas write that tries to change one.
+    changed_checks = sent_check_changes(before, validated)
+    if changed_checks:
+        raise ValueError(
+            "design_check is recorded with set_design_check, not update_canvas; "
+            f"this canvas changes it on {', '.join(changed_checks)}. "
+            "Send the stored check or omit the field."
+        )
 
     def write_and_sync() -> tuple[CanvasDoc, dict[str, list[str]]]:
         saved = write_canvas(plot_root, project_id, validated)
@@ -54,7 +64,7 @@ def update_canvas_with_draft(
         return saved, sync
 
     def rollback() -> None:
-        write_canvas(plot_root, project_id, before)
+        write_canvas(plot_root, project_id, before, design_checks_from_engine=True)
         if validated.canvas_kind == "services":
             sync_details_with_overview(plot_root, project_id)
 
@@ -65,7 +75,7 @@ def update_canvas_with_draft(
         ),
         rollback,
     )
-    return sync, warning
+    return saved, sync, warning
 
 
 def update_node_with_draft(
@@ -128,7 +138,7 @@ def create_node_with_draft(
         return out
 
     def rollback() -> None:
-        write_canvas(plot_root, project_id, before)
+        write_canvas(plot_root, project_id, before, design_checks_from_engine=True)
         if sync_details:
             sync_details_with_overview(plot_root, project_id)
 

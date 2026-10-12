@@ -628,9 +628,39 @@ def test_whole_canvas_writes_cannot_change_a_check(tmp_path: Path, state: str) -
                 "updated_at": "2030-01-01T00:00:00+00:00",
             }
 
-    mcp_tools.update_canvas(str(tmp_path), "alpha", raw)
+    with pytest.raises(ValueError, match="set_design_check"):
+        mcp_tools.update_canvas(str(tmp_path), "alpha", raw)
 
     assert _check(plot_root, "feat") == before
+
+
+@pytest.mark.parametrize("state", ["recheck", "unchecked", "checked"])
+def test_viewer_save_keeps_the_stored_check(tmp_path: Path, state: str) -> None:
+    """A viewer echoing a stale copy is not refused; its check is ignored."""
+    plot_root = _setup_design(tmp_path)
+    before = _check(plot_root, "feat")
+    raw = read_canvas(plot_root, "alpha", "services").model_dump(by_alias=True)
+    for node in raw["nodes"]:
+        if node["id"] == "feat":
+            node["design_check"] = {"state": state, "updated_at": "2030-01-01T00:00:00+00:00"}
+    client = TestClient(create_http_app(hub=BroadcastHub(enable_watchers=False)))
+
+    response = client.put(
+        "/api/projects/alpha/canvases/services", params={"project_path": str(tmp_path)}, json=raw
+    )
+
+    assert response.status_code == 200, response.text
+    assert _check(plot_root, "feat") == before
+
+
+def test_update_canvas_without_check_changes_reports_the_saved_canvas(tmp_path: Path) -> None:
+    plot_root = _setup_design(tmp_path)
+    raw = read_canvas(plot_root, "alpha", "services").model_dump(by_alias=True)
+
+    result = mcp_tools.update_canvas(str(tmp_path), "alpha", raw)
+
+    feat = next(n for n in result["canvas"]["nodes"] if n["id"] == "feat")
+    assert feat["design_check"]["state"] == "checked"
 
 
 def test_whole_canvas_write_cannot_add_a_check_to_an_unchecked_node(tmp_path: Path) -> None:
@@ -649,6 +679,7 @@ def test_whole_canvas_write_cannot_add_a_check_to_an_unchecked_node(tmp_path: Pa
         "updated_at": "2030-01-01T00:00:00+00:00",
     }
 
-    mcp_tools.update_canvas(str(tmp_path), "alpha", raw)
+    with pytest.raises(ValueError, match="set_design_check"):
+        mcp_tools.update_canvas(str(tmp_path), "alpha", raw)
 
     assert _node(plot_root, "svc").design_check is None

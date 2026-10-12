@@ -32,9 +32,11 @@ def update_canvas(
     confirmed when it matches; writes without one do not create a draft."""
     plot_root = resolve_plot_root(project_path)
     validated = CanvasDoc.model_validate(canvas)
-    sync, warning = update_canvas_with_draft(plot_root, project_id, validated, draft_id, chat_scope)
+    saved, sync, warning = update_canvas_with_draft(
+        plot_root, project_id, validated, draft_id, chat_scope
+    )
     result: dict[str, Any] = {
-        "canvas": validated.model_dump(by_alias=True),
+        "canvas": saved.model_dump(by_alias=True),
         "sync": sync,
     }
     if warning is not None:

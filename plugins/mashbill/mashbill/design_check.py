@@ -100,6 +100,25 @@ def _without_design_check(canvas: CanvasDoc) -> dict[str, Any]:
     return split(raw)[0]
 
 
+def sent_check_changes(before: CanvasDoc | None, incoming: CanvasDoc) -> list[str]:
+    """Ids of nodes whose sent ``design_check`` differs from the stored one.
+
+    An omitted check (``None``) is not a change; it is carried (W-00000430).
+    """
+    previous = {
+        node.id: node.design_check
+        for node in (before.nodes if before is not None else [])
+        if isinstance(node, (ServiceNode, FeatureNode))
+    }
+    return [
+        str(node.id)
+        for node in incoming.nodes
+        if isinstance(node, (ServiceNode, FeatureNode))
+        and node.design_check is not None
+        and node.design_check != previous.get(node.id)
+    ]
+
+
 def _carry_stored_checks(before: CanvasDoc | None, incoming: CanvasDoc) -> CanvasDoc:
     """Replace every incoming ``design_check`` with the stored one (W-00000430).
 
