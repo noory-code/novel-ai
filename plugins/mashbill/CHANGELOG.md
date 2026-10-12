@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.217.0] — 2026-10-12
+
+### Added
+
+- `propose_flow` takes `relabels`, `remove_edges`, and `placed`, so a change to a drawn flow shows its renamed steps, deleted lines, and the description items drawn steps already carry in the draft box, and `draw_proposed_flow` applies them in the same write (D-2026-10-11-B).
+
 ## [0.216.1] — 2026-10-12
 
 ### Fixed

@@ -519,7 +519,7 @@ def test_feature_drafts_ask_about_unstated_endings() -> None:
         "Draft every step and outcome the person said or a canvas holds",
         "no guessed ending of any branch",
         "no guessed change elsewhere in the app",
-        "Record each flow draft with propose_flow and follow what it returns",
+        "including renamed steps and removed lines, with propose_flow and follow what it returns",
         "a line without a clear target stays an open item",
         "draw it with draw_proposed_flow, never node by node",
     ):

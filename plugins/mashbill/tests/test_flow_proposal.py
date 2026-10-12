@@ -286,3 +286,92 @@ async def test_propose_flow_asks_open_items_without_a_suggested_ending() -> None
     tools = {tool.name: tool for tool in await mcp_tools.mcp.list_tools()}
     description = tools["propose_flow"].description or ""
     assert "ask it plainly, with no ending of your own as an example" in description
+
+
+def _drawn_once(tmp_path: Path) -> tuple[str, dict[str, str]]:
+    project_path = _project(tmp_path)
+    _propose(project_path)
+    ids = mcp_tools.draw_proposed_flow(project_path, "alpha", "feature_x")["node_ids"]
+    return project_path, ids
+
+
+def test_a_change_to_a_drawn_flow_shows_renames_and_removed_lines(tmp_path: Path) -> None:
+    project_path, ids = _drawn_once(tmp_path)
+
+    rendered = mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[{"key": "6", "kind": "step", "label": "결과를 확인한다"}],
+        edges=[{"source": ids["5"], "target": "6"}],
+        relabels=[{"node": ids["1"], "label": "흐름을 말한다", "outcome": "걸음이 정해진다"}],
+        remove_edges=[{"source": ids["2"], "target": ids["4"]}],
+    )["rendered"]
+
+    assert "~ 흐름을 정한다 → 흐름을 말한다: 걸음이 정해진다" in rendered
+    assert "⨯ 정보가 충분한가? → 나중에 이어 간다" in rendered
+
+
+def test_drawing_applies_renames_and_removes_lines_with_the_additions(tmp_path: Path) -> None:
+    project_path, ids = _drawn_once(tmp_path)
+    mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[{"key": "6", "kind": "step", "label": "결과를 확인한다"}],
+        edges=[{"source": ids["5"], "target": "6"}],
+        relabels=[{"node": ids["1"], "label": "흐름을 말한다"}],
+        remove_edges=[{"source": ids["2"], "target": ids["4"]}],
+    )
+
+    mcp_tools.draw_proposed_flow(project_path, "alpha", "feature_x")
+
+    canvas = _canvas(project_path)
+    labels = {node.id: node.label for node in canvas.nodes}
+    assert labels[ids["1"]] == "흐름을 말한다"
+    assert not any(e.source == ids["2"] and e.target == ids["4"] for e in canvas.edges)
+    six = next(i for i, label in labels.items() if label == "결과를 확인한다")
+    assert any(e.source == ids["5"] and e.target == six for e in canvas.edges)
+
+
+def test_renames_and_removals_must_name_what_is_on_the_canvas(tmp_path: Path) -> None:
+    project_path, ids = _drawn_once(tmp_path)
+
+    with pytest.raises(ValueError, match="no node"):
+        mcp_tools.propose_flow(
+            project_path,
+            "alpha",
+            "feature_x",
+            nodes=[],
+            relabels=[{"node": "step_missing", "label": "x"}],
+        )
+    with pytest.raises(ValueError, match="no line"):
+        mcp_tools.propose_flow(
+            project_path,
+            "alpha",
+            "feature_x",
+            nodes=[],
+            remove_edges=[{"source": ids["4"], "target": ids["1"]}],
+        )
+
+
+def test_a_description_item_already_on_a_drawn_step_shows_as_present(tmp_path: Path) -> None:
+    project_path = _project(tmp_path)
+    plot_root = resolve_plot_root(project_path)
+    # A flow drawn by hand before: its steps carry the items, but no proposal recorded them.
+    canvas = _canvas(project_path)
+    step = mcp_tools.create_node(
+        project_path, "alpha", "feature", "step", {"label": "흐름을 정한다"}, service_id="feature_x"
+    )["node"]["id"]
+    assert read_canvas(plot_root, "alpha", "feature", "feature_x") != canvas
+
+    rendered = mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[{"key": "n", "kind": "step", "label": "새 걸음", "covers": [2, 3]}],
+        placed=[{"item": 1, "at": step}],
+    )["rendered"]
+
+    assert "✓ 1. 사용자는 흐름을 정한다. — 흐름을 정한다" in rendered
+    assert "✕ 1." not in rendered

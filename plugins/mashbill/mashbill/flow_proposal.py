@@ -61,11 +61,36 @@ class Omission(BaseModel):
     reason: str = Field(min_length=1)
 
 
+class Relabel(BaseModel):
+    """A drawn step the draft renames (and, for a step, gives a new outcome)."""
+
+    node: str
+    label: str = Field(min_length=1)
+    outcome: str | None = None
+
+
+class RemovedEdge(BaseModel):
+    """A drawn line the draft deletes."""
+
+    source: str
+    target: str
+
+
+class Placement(BaseModel):
+    """A description item a drawn node already carries."""
+
+    item: int
+    at: str
+
+
 class FlowProposal(BaseModel):
     nodes: list[ProposedNode]
     edges: list[ProposedEdge] = Field(default_factory=list)
     open_items: list[OpenItem] = Field(default_factory=list)
     omitted: list[Omission] = Field(default_factory=list)
+    relabels: list[Relabel] = Field(default_factory=list)
+    remove_edges: list[RemovedEdge] = Field(default_factory=list)
+    placed: list[Placement] = Field(default_factory=list)
     proposed_at: str = ""
     drawn: bool = False
 
@@ -108,12 +133,25 @@ def _check_shape(proposal: FlowProposal, canvas: CanvasDoc) -> None:
     for item in proposal.open_items:
         if item.at not in known:
             raise ValueError(f"open item {item.question!r} hangs on {item.at!r}, no key or node id")
+    for relabel in proposal.relabels:
+        if relabel.node not in existing:
+            raise ValueError(f"rename {relabel.label!r}: no node {relabel.node!r} on this canvas")
+    drawn = {(str(edge.source), str(edge.target)) for edge in canvas.edges}
+    for removed in proposal.remove_edges:
+        if (removed.source, removed.target) not in drawn:
+            raise ValueError(f"no line {removed.source!r} → {removed.target!r} on this canvas")
+    for placement in proposal.placed:
+        if placement.at not in existing:
+            raise ValueError(
+                f"item {placement.item} is placed at {placement.at!r}, no node on this canvas"
+            )
 
 
 def _check_cover(proposal: FlowProposal, items: list[str], drawn_items: list[int]) -> None:
     numbers = range(1, len(items) + 1)
     covered = {n for node in proposal.nodes for n in node.covers}
     covered |= {omission.item for omission in proposal.omitted}
+    covered |= {placement.item for placement in proposal.placed}
     unknown = sorted(covered - set(numbers))
     if unknown:
         raise ValueError(f"no description items numbered {unknown}; items run 1..{len(items)}")
@@ -123,7 +161,8 @@ def _check_cover(proposal: FlowProposal, items: list[str], drawn_items: list[int
         raise ValueError(
             "the feature description holds these items and the draft does not place them: "
             "put each in the covers of the node that carries it (ask in open_items where its "
-            "ending or place is unknown), or in omitted with the reason\n" + lines
+            "ending or place is unknown), in placed when a drawn node already carries it, "
+            "or in omitted with the reason\n" + lines
         )
 
 
@@ -157,6 +196,14 @@ def render(proposal: FlowProposal, canvas: CanvasDoc, items: list[str]) -> str:
         if node.outcome:
             head += f": {node.outcome}"
         out += [head, *under(node.key)]
+    for relabel in proposal.relabels:
+        line = f"~ {labels.get(relabel.node, relabel.node)} → {relabel.label}"
+        out.append(line + (f": {relabel.outcome}" if relabel.outcome else ""))
+    out += [
+        f"⨯ {labels.get(r.source, r.source)} → {labels.get(r.target, r.target)}"
+        for r in proposal.remove_edges
+    ]
+    out += [f"✓ {p.item}. {items[p.item - 1]} — {labels.get(p.at, p.at)}" for p in proposal.placed]
     out += [f"✕ {o.item}. {items[o.item - 1]} — {o.reason}" for o in proposal.omitted]
     return "\n".join(out)
 
@@ -169,6 +216,9 @@ def propose_flow(
     edges: list[dict[str, Any]],
     open_items: list[dict[str, Any]],
     omitted: list[dict[str, Any]],
+    relabels: list[dict[str, Any]] | None = None,
+    remove_edges: list[dict[str, Any]] | None = None,
+    placed: list[dict[str, Any]] | None = None,
 ) -> str:
     """Check and keep a flow draft for ``feature_id``; return its rendering.
 
@@ -180,6 +230,9 @@ def propose_flow(
         edges=TypeAdapter(list[ProposedEdge]).validate_python(edges),
         open_items=TypeAdapter(list[OpenItem]).validate_python(open_items),
         omitted=TypeAdapter(list[Omission]).validate_python(omitted),
+        relabels=TypeAdapter(list[Relabel]).validate_python(relabels or []),
+        remove_edges=TypeAdapter(list[RemovedEdge]).validate_python(remove_edges or []),
+        placed=TypeAdapter(list[Placement]).validate_python(placed or []),
         proposed_at=now_iso(),
     )
     canvas = read_canvas(plot_root, project_id, "feature", feature_id)
@@ -215,6 +268,19 @@ def draw_proposed_flow(plot_root: Path, project_id: str, feature_id: str) -> dic
     if proposal.drawn:
         raise ValueError("this flow proposal is already drawn; propose_flow again for new parts")
     canvas = read_canvas(plot_root, project_id, "feature", feature_id)
+    renames = {r.node: r for r in proposal.relabels}
+    nodes_now = []
+    for existing in canvas.nodes:
+        relabel = renames.get(str(existing.id))
+        if relabel is not None:
+            update: dict[str, Any] = {"label": relabel.label}
+            if relabel.outcome is not None and existing.kind == "step":
+                update["outcome"] = relabel.outcome
+            existing = existing.model_copy(update=update)
+        nodes_now.append(existing)
+    removed = {(r.source, r.target) for r in proposal.remove_edges}
+    edges_now = [e for e in canvas.edges if (str(e.source), str(e.target)) not in removed]
+    canvas = canvas.model_copy(update={"nodes": nodes_now, "edges": edges_now})
     ids: dict[str, str] = {}
     for node in proposal.nodes:
         source = next((e.source for e in proposal.edges if e.target == node.key), None)
@@ -235,6 +301,7 @@ def draw_proposed_flow(plot_root: Path, project_id: str, feature_id: str) -> dic
     write_canvas(plot_root, project_id, CanvasDoc.model_validate(canvas.model_dump(by_alias=True)))
     accounted = {n for node in proposal.nodes for n in node.covers}
     accounted |= {omission.item for omission in proposal.omitted}
+    accounted |= {placement.item for placement in proposal.placed}
     _save(
         plot_root,
         project_id,

@@ -80,7 +80,12 @@
   alone does not place an item: on 0.215.3 one run left two items only as open questions);
   items covered by an earlier drawn proposal need no cover again. It keeps the latest proposal per feature at
   `.noory/novel/flow_proposals/<feature_id>.json` (engine state: not a `DraftDoc`, not in the wire contract) and
-  returns its rendering. In the Novel app the chat layer appends that rendering under the coach's reply when the turn
+  returns its rendering. A draft can also change a drawn flow: `relabels` (rename a drawn step, optionally with a new
+  outcome), `remove_edges` (delete a drawn line), and `placed` (a description item a drawn node already carries), each
+  refused when it names a node or line not on the canvas; the rendering shows them as `~ old → new`, `⨯ source →
+  target`, and `✓ n. item — step`, and drawing applies them in the same write (0.217.0: before it, editing a drawn
+  flow renamed a step and deleted lines outside the box, and items already drawn showed as `✕` omissions). In the Novel
+  app the chat layer appends that rendering under the coach's reply when the turn
   that recorded it completes, and the tool tells the in-app coach not to restate it; elsewhere the tool tells the coach
   to show it as written. The tool's description limits a step's `outcome` to a result the person said or a canvas
   holds (0.215.1: on 0.214.0 and 0.215.0 one counter run each wrote "코치가 다시 답한다" after "resend the same message"). It also asks each open item without an example ending of the coach's own (0.215.2: on 0.215.1

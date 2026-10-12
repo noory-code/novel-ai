@@ -19,6 +19,9 @@ def propose_flow(
     edges: list[dict[str, Any]] | None = None,
     open_items: list[dict[str, Any]] | None = None,
     omitted: list[dict[str, Any]] | None = None,
+    relabels: list[dict[str, Any]] | None = None,
+    remove_edges: list[dict[str, Any]] | None = None,
+    placed: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Record a feature-flow draft before showing it; returns ``{"rendered", "show"}``.
 
@@ -37,6 +40,11 @@ def propose_flow(
       ask it plainly, with no ending of your own as an example.
     - ``omitted``: ``{"item", "reason"}`` — a description item the person chose
       to leave out.
+    - Changing a drawn flow: ``relabels`` ``{"node": id, "label", "outcome"?}``
+      renames drawn steps; ``remove_edges`` ``{"source": id, "target": id}``
+      deletes drawn lines; ``placed`` ``{"item", "at": id}`` marks a description
+      item a drawn node already carries. Put every such change here so the
+      person sees it; do not change the flow outside the draft.
     Every description item not yet drawn must appear in a node's ``covers`` (an
     open item alone does not place it) or in ``omitted``. A new call replaces
     the feature's undrawn proposal. Errors name what to fix.
@@ -50,6 +58,9 @@ def propose_flow(
         edges or [],
         open_items or [],
         omitted or [],
+        relabels,
+        remove_edges,
+        placed,
     )
     record_tool_call("propose_flow", project_id=project_id, canvas="feature", service_id=service_id)
     return {"rendered": rendered, "show": show_instruction("draft")}
