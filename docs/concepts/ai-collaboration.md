@@ -143,6 +143,8 @@ Draft an actor-anchored action flowchart.
 - *Anchor:* "누가 뭘 하려는 거예요?" (who is trying to do what?) *(actor = read-only anchor, who starts / who can; reference principle)*
 - *Happy-path first:* "잘 풀릴 때, 처음부터 끝까지 뭘 하나요? 한 걸음씩 편하게요." (when it goes well, what do you do from start to finish? One step at a time, take it easy.)
 - *Then branches:* "중간에 갈리는 데가 있을까요? '이러면 이쪽'처럼요." (is there a point along the way where it branches? Like "if this, then this way".) *(condition→decision)*
+- *At each decision* (`D-2026-10-15-B`): check that the branches do not overlap and together cover every case, and ask
+  about a missing one. Every loop needs a way to stop or give up.
 - *Then failures* (`D-2026-10-05-A` (4)): at each step that asks an AI or another person, changes content, publishes or deletes,
   needs permission or money, or can finish only partly — "여기서 안 되면 어떻게 하죠?" (what if it can't happen here?), "막아야 하는
   경우는요?" (when must it be stopped?), "중간에 그만두면요?" (what if the person stops midway?), "그사이 다른 데서 바뀌었으면요?"

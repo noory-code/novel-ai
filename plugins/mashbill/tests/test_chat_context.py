@@ -482,6 +482,22 @@ def test_feature_scope_checks_four_failure_directions() -> None:
         assert rule in prompt, rule
 
 
+def test_feature_scope_checks_each_decision_is_mece_and_each_loop_ends() -> None:
+    """W-00000448: in a first-time walk a decision had two overlapping timeout
+    branches and a card retry loop whose only way out was success. The engine
+    refuses only what a machine sees (propose_flow); overlap, missing cases, and
+    a missing give-up are the coach's to ask."""
+    feature = build_system_prompt("feature:x").lower()
+    services = build_system_prompt("services").lower()
+    for rule in (
+        "at each decision, check that the branches do not overlap and together cover every case",
+        "ask about a missing one",
+        "every loop needs a way to stop or give up",
+    ):
+        assert rule in feature, rule
+        assert rule not in services, rule
+
+
 def test_feature_scope_routes_post_completion_goals_to_services() -> None:
     """D-2026-10-05-A (4): recovery stays in the flow; a later goal becomes a feature."""
     framing = build_framing_preamble("feature:x").lower()

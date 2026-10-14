@@ -460,3 +460,62 @@ def test_a_drawn_flow_never_overlaps_its_own_cards(tmp_path: Path) -> None:
                 or b.y + _rendered_height(b) <= a.y
             )
             assert apart, (a.label, a.x, a.y, b.label, b.x, b.y)
+
+
+def test_the_person_sees_numbers_not_the_coach_made_keys(tmp_path: Path) -> None:
+    """O-00000137: keys like [choice] and [timeout] are the coach's own English
+    names. The person reads the rendering under the reply, so it numbers the
+    draft's nodes in display order; ``numbers`` tells the coach which key each
+    number is."""
+    project_path = _project(tmp_path, proposed="")
+    keys = ["select", "choice", "cancel", "timeout"]
+    result = mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[
+            {"key": "select", "kind": "step", "label": "흐름을 정한다"},
+            {"key": "choice", "kind": "decision", "label": "기다릴 것인가?"},
+            {"key": "cancel", "kind": "step", "label": "그만둔다", "outcome": "요청이 없어진다"},
+            {"key": "timeout", "kind": "step", "label": "시간이 지난다"},
+        ],
+        edges=[
+            {"source": "feature_x", "target": "select"},
+            {"source": "select", "target": "choice"},
+            {"source": "choice", "target": "cancel", "label": "아니요"},
+            {"source": "choice", "target": "timeout", "label": "예"},
+        ],
+        open_items=[{"at": "timeout", "question": "시간이 지나면 무엇이 남나요?"}],
+    )
+
+    rendered = result["rendered"]
+    for key in keys:
+        assert key not in rendered
+    assert rendered.splitlines()[:3] == [
+        "흐름 그리기",
+        "  → [1] 흐름을 정한다",
+        "[1] 흐름을 정한다",
+    ]
+    assert "[2] ◇ 기다릴 것인가?" in rendered
+    assert "  → [3] 그만둔다 (아니요)" in rendered
+    assert "[3] 그만둔다: 요청이 없어진다" in rendered
+    assert "[4] 시간이 지난다\n  … 시간이 지나면 무엇이 남나요?" in rendered
+    assert result["numbers"] == {"1": "select", "2": "choice", "3": "cancel", "4": "timeout"}
+
+
+def test_an_item_placed_at_two_drawn_nodes_shows_once(tmp_path: Path) -> None:
+    """The newcomer walk showed one description item as two identical ✓ lines
+    because it was placed at two drawn nodes; the person reads it once, with
+    both nodes."""
+    project_path, ids = _drawn_once(tmp_path)
+
+    rendered = mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[],
+        placed=[{"item": 1, "at": ids["1"]}, {"item": 1, "at": ids["5"]}],
+    )["rendered"]
+
+    present = [line for line in rendered.splitlines() if line.startswith("✓")]
+    assert present == ["✓ 1. 사용자는 흐름을 정한다. — 흐름을 정한다 · 선을 고친다"]

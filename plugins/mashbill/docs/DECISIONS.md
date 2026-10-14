@@ -39,6 +39,44 @@
 
 ## Log
 
+### D-2026-10-15-B — propose_flow refuses branching defects a machine can see; the person reads numbers, not the coach's keys
+
+- **What:** *(Claude, carrying out novel-workspace W-00000448 and O-00000137)* (1) `propose_flow` refuses, in one error
+  that names each defect and what to fix, a draft whose flow as it would stand once drawn has: a decision with fewer
+  than two outgoing lines and no open item on it; a line leaving a decision with no label; two lines leaving one
+  decision with the same label apart from spacing; a loop that no line leaves and that has no open item on any of its
+  steps. An open item stands for the case or the way out still to be asked, so the coach asks instead of inventing an
+  ending. Only defects the draft creates are refused; a defect on the canvas that the draft leaves as it was does
+  not block a draft (`flow_structure.py`). (2) The feature framing adds "At each decision, check that the branches do not overlap and
+  together cover every case; ask about a missing one. Every loop needs a way to stop or give up." (30 words; feature
+  prompt 1753 → 1783, budget 1,800 unchanged, no measured wording touched). (3) `rendered` numbers the draft's nodes
+  `[1]`, `[2]`, … in the coach's order instead of showing its draft-local keys, and the tool also returns `numbers`
+  (shown number → key). Keys stay the draft's internal names for lines and open items. (4) A description item placed
+  at several drawn nodes shows as one `✓ n. item — node · node` line instead of one line per node.
+- **Why:** In novel-workspace W-00000446's first-time-user walk, the '수거 요청' flow had failure branches that were
+  not MECE: one decision had two overlapping timeout branches ("30분 안에 수락하지 않음", "수락 없이 시간대 시작 1시간
+  전이 됨"), the card retry loop could end only by succeeding, and common failures (address outside the service area,
+  cancelling before pickup, nobody home at pickup) were missing. The same walk showed `[choice]`, `[timeout]` and other
+  English keys the coach made up in the block under its reply; the stand-in user did not understand them (3 of 42
+  replies, O-00000137). In the same walk one item placed at two nodes showed as two ✓ lines repeating the item (the walk project's
+  `feature__feature_399bd38f` chat, message 3).
+- **Limits:** None of the walk's three defects is a structural one these checks see. The overlapping branches carry
+  different labels, the retry loop leaves through its success branch, and a missing failure is a question of meaning.
+  The engine catches only drafts that are malformed; overlap, coverage, and a give-up path rest on the framing
+  sentence, which is not measured yet (the card's before/after simulator comparison is not done).
+- **Alternatives:** Refuse an end step with no `outcome` and no open item — it would have caught the walk's dead end
+  "기사님이 배정 변경 안내를 확인한다", but a last step without an outcome is a valid end, and the existing test drafts end
+  on one; refusing it pushes the coach toward invented outcomes, which D-2026-10-11-B's 0.215.1–0.215.3
+  patches removed. Refuse a retry loop whose only way out is the success branch — a machine cannot tell a retry the
+  person may abandon from one that must succeed. Show only labels in `rendered` — the person and the coach would then
+  have no short name for a node; numbers give both one. Check every defect on the canvas — a person's half-drawn
+  decision would block every unrelated draft.
+- **Approval:** Claude's design within W-00000448 and O-00000137, open to the user's review.
+- **Spec impact:** `docs/SPEC.md` feature-flow proposals row; public `docs/concepts/ai-collaboration.md` §2.4; feature
+  framing in `chat_framing.py`.
+- **Principles:** Fail Fast (a malformed branching fails at recording); MECE (each decision's branches split the
+  cases); Honesty (the engine refuses only what it can see; the rest stays the coach's question).
+
 ### D-2026-10-14-C — A save changes only the record it saves; a stray file in the work folder never stops the work tree
 
 - **What:** *(Claude, carrying out novel-workspace W-00000436)* (1) Mashbill: a canvas save writes that canvas's files

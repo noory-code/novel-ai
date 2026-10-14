@@ -11,7 +11,7 @@ generalises the former ``create_master`` (now a thin reference-flow wrapper).
 from __future__ import annotations
 
 from pathlib import Path
-from typing import get_args
+from typing import Any, get_args
 
 import pytest
 
@@ -702,7 +702,7 @@ def test_fresh_foundation_pillars_start_on_their_pinned_side(tmp_path: Path) -> 
 # --- no overlap for coach bursts (W-00000451) --------------------------------
 
 
-def _overlaps(a: dict, b: dict, a_h: float, b_h: float) -> bool:
+def _overlaps(a: dict[str, Any], b: dict[str, Any], a_h: float, b_h: float) -> bool:
     return not (a["y"] + a_h <= b["y"] or b["y"] + b_h <= a["y"])
 
 
@@ -768,7 +768,9 @@ def test_create_node_near_children_never_overlap_when_rendered(tmp_path: Path) -
         assert not _overlaps(a, b, 169.0, 169.0), (a["y"], b["y"])
 
 
-def _rect_overlap(a: dict, b: dict, aw: float, ah: float, bw: float, bh: float) -> bool:
+def _rect_overlap(
+    a: dict[str, Any], b: dict[str, Any], aw: float, ah: float, bw: float, bh: float
+) -> bool:
     return not (
         a["x"] + aw <= b["x"]
         or b["x"] + bw <= a["x"]

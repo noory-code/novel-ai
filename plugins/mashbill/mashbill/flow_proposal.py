@@ -2,10 +2,12 @@
 
 The feature coach records a flow draft as nodes, lines, open items, and stated
 omissions. Recording checks the draft's shape: every line names a target, notes
-stay edgeless, every open item hangs on a known step, and every numbered item of
-the feature's Services description is placed as a node or omitted with a
-reason. When the person confirms, drawing writes exactly the proposed nodes and
-lines in one canvas write. One proposal file per feature lives under
+stay edgeless, every open item hangs on a known step, the branching has no
+defect a machine can see (``flow_structure``), and every numbered item of the
+feature's Services description is placed as a node or omitted with a reason.
+The person reads the draft with its nodes numbered; the coach's keys stay
+internal. When the person confirms, drawing writes exactly the proposed nodes
+and lines in one canvas write. One proposal file per feature lives under
 ``flow_proposals/``; it is engine state, not part of the canvas wire contract.
 """
 
@@ -21,6 +23,7 @@ from mashbill.canvas_io import build_new_node, read_canvas, write_canvas
 from mashbill.chat_feature_description import feature_description_items
 from mashbill.design_check import feature_check, write_design_check
 from mashbill.edge_io import _build_edge
+from mashbill.flow_structure import check_structure
 from mashbill.models import CanvasDoc
 from mashbill.proposal_store import load_proposals, now_iso, proposed_since, save_proposals
 
@@ -148,6 +151,19 @@ def _check_shape(proposal: FlowProposal, canvas: CanvasDoc) -> None:
             )
 
 
+def _check_branching(proposal: FlowProposal, canvas: CanvasDoc) -> None:
+    drawn = {str(node.id): node.kind for node in canvas.nodes}
+    kinds = {**drawn, **{node.key: node.kind for node in proposal.nodes}}
+    names = {str(node.id): f"{str(node.id)!r} ({node.label})" for node in canvas.nodes}
+    names.update({node.key: f"{node.key!r} ({node.label})" for node in proposal.nodes})
+    before = [(str(e.source), str(e.target), e.label) for e in canvas.edges]
+    removed = {(r.source, r.target) for r in proposal.remove_edges}
+    after = [line for line in before if line[:2] not in removed]
+    after += [(e.source, e.target, e.label) for e in proposal.edges]
+    open_at = {item.at for item in proposal.open_items}
+    check_structure(drawn, kinds, names, before, after, open_at)
+
+
 def _check_cover(proposal: FlowProposal, items: list[str], drawn_items: list[int]) -> None:
     numbers = range(1, len(items) + 1)
     covered = {n for node in proposal.nodes for n in node.covers}
@@ -167,14 +183,20 @@ def _check_cover(proposal: FlowProposal, items: list[str], drawn_items: list[int
         )
 
 
+def display_numbers(proposal: FlowProposal) -> dict[str, str]:
+    """The number the person sees for each draft node (in draft order) → its key."""
+    return {str(number): node.key for number, node in enumerate(proposal.nodes, start=1)}
+
+
 def render(proposal: FlowProposal, canvas: CanvasDoc, items: list[str]) -> str:
     """The draft as the person reads it: nodes with their lines and open items."""
     labels = {str(node.id): node.label for node in canvas.nodes}
     labels.update({node.key: node.label for node in proposal.nodes})
-    keys = {node.key for node in proposal.nodes}
+    # The person reads numbers, never the coach's draft-local keys (O-00000137).
+    keys = {key: number for number, key in display_numbers(proposal).items()}
 
     def name(ref: str) -> str:
-        return f"[{ref}] {labels[ref]}" if ref in keys else labels.get(ref, ref)
+        return f"[{keys[ref]}] {labels[ref]}" if ref in keys else labels.get(ref, ref)
 
     def under(ref: str) -> list[str]:
         lines = [
@@ -193,7 +215,7 @@ def render(proposal: FlowProposal, canvas: CanvasDoc, items: list[str]) -> str:
         out += [labels.get(ref, ref), *under(ref)]
     marks = {"decision": "◇ ", "rule": "▣ ", "note": "✎ "}
     for node in proposal.nodes:
-        head = f"[{node.key}] {marks.get(node.kind, '')}{node.label}"
+        head = f"[{keys[node.key]}] {marks.get(node.kind, '')}{node.label}"
         if node.outcome:
             head += f": {node.outcome}"
         out += [head, *under(node.key)]
@@ -205,10 +227,13 @@ def render(proposal: FlowProposal, canvas: CanvasDoc, items: list[str]) -> str:
         for r in proposal.remove_edges
     ]
     renamed = {r.node: r.label for r in proposal.relabels}
-    out += [
-        f"✓ {p.item}. {items[p.item - 1]} — {renamed.get(p.at, labels.get(p.at, p.at))}"
-        for p in proposal.placed
-    ]
+    # One ✓ line per item, naming every drawn node that carries it.
+    places: dict[int, list[str]] = {}
+    for p in proposal.placed:
+        place = renamed.get(p.at, labels.get(p.at, p.at))
+        if place not in places.setdefault(p.item, []):
+            places[p.item].append(place)
+    out += [f"✓ {n}. {items[n - 1]} — {' · '.join(at)}" for n, at in places.items()]
     out += [f"✕ {o.item}. {items[o.item - 1]} — {o.reason}" for o in proposal.omitted]
     return "\n".join(out)
 
@@ -224,11 +249,13 @@ def propose_flow(
     relabels: list[dict[str, Any]] | None = None,
     remove_edges: list[dict[str, Any]] | None = None,
     placed: list[dict[str, Any]] | None = None,
-) -> str:
-    """Check and keep a flow draft for ``feature_id``; return its rendering.
+) -> dict[str, Any]:
+    """Check and keep a flow draft for ``feature_id``.
 
-    A new proposal replaces the feature's previous one. Raises ``ValueError``
-    naming what to fix when the draft's shape or description cover fails.
+    Returns ``{"rendered", "numbers"}``: the rendering the person reads and the
+    number shown for each node → its key. A new proposal replaces the feature's
+    previous one. Raises ``ValueError`` naming what to fix when the draft's
+    shape, branching, or description cover fails.
     """
     proposal = FlowProposal(
         nodes=TypeAdapter(list[ProposedNode]).validate_python(nodes),
@@ -244,9 +271,10 @@ def propose_flow(
     items = feature_description_items(plot_root, project_id, feature_id)
     doc = _load(plot_root, project_id, feature_id)
     _check_shape(proposal, canvas)
+    _check_branching(proposal, canvas)
     _check_cover(proposal, items, doc.drawn_items)
     _save(plot_root, project_id, feature_id, doc.model_copy(update={"current": proposal}))
-    return render(proposal, canvas, items)
+    return {"rendered": render(proposal, canvas, items), "numbers": display_numbers(proposal)}
 
 
 def rendering_proposed_since(

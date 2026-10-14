@@ -17,7 +17,13 @@ from pydantic import BaseModel, Field, TypeAdapter
 
 from mashbill.canvas_io import build_new_node, read_canvas, write_canvas
 from mashbill.models import CanvasDoc
-from mashbill.proposal_store import load_proposals, now_iso, proposed_since, save_proposals
+from mashbill.proposal_store import (
+    load_proposals,
+    name_key,
+    now_iso,
+    proposed_since,
+    save_proposals,
+)
 from mashbill.storage import anchor_obstacles
 
 _DIRNAME = "service_proposals"
@@ -43,12 +49,8 @@ class ServiceProposalFile(BaseModel):
     current: ServiceProposal | None = None
 
 
-def _name_key(label: str) -> str:
-    return " ".join(label.split())
-
-
 def _existing_names(canvas: CanvasDoc) -> set[str]:
-    return {_name_key(node.label) for node in canvas.nodes if node.kind == "service"}
+    return {name_key(node.label) for node in canvas.nodes if node.kind == "service"}
 
 
 def _check(proposal: ServiceProposal) -> None:
@@ -57,7 +59,7 @@ def _check(proposal: ServiceProposal) -> None:
     keys: set[str] = set()
     names: set[str] = set()
     for service in proposal.services:
-        name = _name_key(service.label)
+        name = name_key(service.label)
         if not name:
             raise ValueError(f"service {service.key!r} has an empty name")
         if service.key in keys:
@@ -73,7 +75,7 @@ def render(proposal: ServiceProposal, canvas: CanvasDoc) -> str:
     present = _existing_names(canvas)
     lines: list[str] = []
     for service in proposal.services:
-        name = _name_key(service.label)
+        name = name_key(service.label)
         if name in present:
             lines.append(f"✓ {name}")
             continue
@@ -99,7 +101,7 @@ def propose_services(plot_root: Path, project_id: str, services: list[dict[str, 
     _check(proposal)
     canvas = read_canvas(plot_root, project_id, "services")
     present = _existing_names(canvas)
-    if all(_name_key(service.label) in present for service in proposal.services):
+    if all(name_key(service.label) in present for service in proposal.services):
         raise ValueError(
             "every service of this set is already on the Services canvas; nothing to add — "
             "propose a set only when it adds a service"
@@ -132,7 +134,7 @@ def add_proposed_services(plot_root: Path, project_id: str) -> dict[str, Any]:
     present = _existing_names(canvas)
     ids: dict[str, str] = {}
     for service in proposal.services:
-        name = _name_key(service.label)
+        name = name_key(service.label)
         if name in present:
             continue
         fields = {"label": name, "problem": service.problem, "value_created": service.value_created}

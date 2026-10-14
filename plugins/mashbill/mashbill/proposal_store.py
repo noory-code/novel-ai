@@ -1,4 +1,4 @@
-"""Storage shared by coach proposals the engine holds until the person confirms them.
+"""Storage and helpers shared by coach proposals the engine holds until the person confirms them.
 
 A proposal file lives under ``<project>/<dirname>/<name>.json``. It is engine state, not part of the
 canvas wire contract. Each proposal records when it was proposed so the chat layer can show the
@@ -21,6 +21,11 @@ M = TypeVar("M", bound=BaseModel)
 def now_iso() -> str:
     """The proposal timestamp format: timezone-aware ISO 8601 in UTC."""
     return datetime.now(UTC).isoformat()
+
+
+def name_key(label: str) -> str:
+    """A proposed name or label compared by its words, ignoring spacing."""
+    return " ".join(label.split())
 
 
 def proposed_since(proposed_at: str, since: datetime) -> bool:

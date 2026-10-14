@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.223.0] — 2026-10-15
+
+### Added
+
+- `propose_flow` refuses branching defects a machine can see — a decision with fewer than two branches, an unlabeled or repeated branch label, a loop no line leaves — when the draft creates them; the feature coach checks at each decision that branches do not overlap and cover every case, and that every loop can stop (W-00000448, D-2026-10-15-B).
+
+### Changed
+
+- A flow draft shown to the person numbers its nodes `[1] [2] …` instead of the coach's own keys, `propose_flow` returns the number → key map, and a description item placed at several nodes shows once (O-00000137).
+
 ## [0.222.1] — 2026-10-15
 
 ### Fixed
