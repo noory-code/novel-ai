@@ -142,26 +142,21 @@ _AREAS: dict[str, str] = {
     "services": _SERVICES,
     "features": _FEATURES,
 }
+AREAS: tuple[str, ...] = tuple(_AREAS)
+# Other names a coach asks by: a feature's flow is judged by the feature principles.
+_ALIASES: dict[str, str] = {"flow": "features"}
 
 
 def get_principles(area: str | None = None) -> str:
     """Return the discriminator principles for ``area``, or all areas joined.
 
-    ``area``: mission | values | identity | actors | entities | services |
-    features | None (= everything). Raises ``ValueError`` on an unknown area so
+    ``area``: one of :data:`AREAS` (``flow`` reads as ``features``) or None
+    (= everything). Raises ``ValueError`` naming the areas on an unknown one so
     a typo can't silently return nothing.
     """
     if area is None:
-        areas = (
-            "mission",
-            "values",
-            "identity",
-            "actors",
-            "entities",
-            "services",
-            "features",
-        )
-        return "\n\n".join(_AREAS[key] for key in areas)
-    if area not in _AREAS:
-        raise ValueError(f"unknown area {area!r}; pick one of {sorted(_AREAS)} or omit")
-    return _AREAS[area]
+        return "\n\n".join(_AREAS.values())
+    key = _ALIASES.get(area, area)
+    if key not in _AREAS:
+        raise ValueError(f"unknown area {area!r}; pick one of {list(AREAS)} or omit")
+    return _AREAS[key]

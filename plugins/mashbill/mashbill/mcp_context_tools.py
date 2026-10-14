@@ -10,7 +10,7 @@ from mashbill.tool_log import record_tool_call
 def get_design_principles(area: str | None = None) -> str:
     """Design-quality discriminator questions for judging content strength
     (D-2026-07-03-O/P). ``area``: mission | values | identity | actors |
-    entities | services | features | omitted for all. Consult before challenging
+    entities | services | features (or flow) | omitted for all. Consult before challenging
     weak content."""
     record_tool_call("get_design_principles", area=area)
     return get_principles(area)

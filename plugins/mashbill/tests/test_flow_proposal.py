@@ -95,8 +95,12 @@ def test_propose_returns_a_rendering_of_every_node_line_and_open_item(tmp_path: 
 
     for text in ("흐름을 정한다", "◇ 정보가 충분한가?", "한 가지 더 답한다", "선을 고친다"):
         assert text in rendered
-    assert "→ [3] 한 가지 더 답한다 (부족하다)" in rendered
-    assert "→ [2] 정보가 충분한가?" in rendered
+    # W-00000464 — an arrow to a draft step shows only its number; the step's
+    # name is on its own line once (newcomer walk 2 read every step twice).
+    assert "  → [3] (부족하다)" in rendered
+    assert "  → [2]\n" in rendered
+    for label in ("흐름을 정한다", "정보가 충분한가?", "한 가지 더 답한다", "나중에 이어 간다"):
+        assert rendered.count(label) == 1, label
     assert "… 돌아오면 무엇이 남는지" in rendered
     assert "액터는 읽기 전용이다" in rendered and "세부로 내려가면 되돌린다" in rendered
     # Proposing draws nothing.
@@ -309,6 +313,8 @@ def test_a_change_to_a_drawn_flow_shows_renames_and_removed_lines(tmp_path: Path
     )["rendered"]
 
     assert "~ 흐름을 정한다 → 흐름을 말한다: 걸음이 정해진다" in rendered
+    # A drawn step is not in the draft's numbered list, so it keeps its name.
+    assert rendered.splitlines()[:2] == ["선을 고친다", "  → [1]"]
     assert "⨯ 정보가 충분한가? → 나중에 이어 간다" in rendered
 
 
@@ -493,11 +499,11 @@ def test_the_person_sees_numbers_not_the_coach_made_keys(tmp_path: Path) -> None
         assert key not in rendered
     assert rendered.splitlines()[:3] == [
         "흐름 그리기",
-        "  → [1] 흐름을 정한다",
+        "  → [1]",
         "[1] 흐름을 정한다",
     ]
     assert "[2] ◇ 기다릴 것인가?" in rendered
-    assert "  → [3] 그만둔다 (아니요)" in rendered
+    assert "  → [3] (아니요)" in rendered
     assert "[3] 그만둔다: 요청이 없어진다" in rendered
     assert "[4] 시간이 지난다\n  … 시간이 지나면 무엇이 남나요?" in rendered
     assert result["numbers"] == {"1": "select", "2": "choice", "3": "cancel", "4": "timeout"}

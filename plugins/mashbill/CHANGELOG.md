@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.15] — 2026-10-15
+
+### Changed
+
+- The Codex coach's tool hint lists the argument shapes of the tools it uses most, generated from the tool signatures (`tool_shapes.py`), so it stops guessing argument names (W-00000464).
+- `get_design_principles` reads `flow` as the feature-flow area.
+- The flow draft box names each step once; an arrow to a draft step shows only its number.
+
 ## [0.225.14] — 2026-10-15
 
 ### Fixed

@@ -200,7 +200,8 @@ def render(proposal: FlowProposal, canvas: CanvasDoc, items: list[str]) -> str:
     keys = {key: number for number, key in display_numbers(proposal).items()}
 
     def name(ref: str) -> str:
-        return f"[{keys[ref]}] {labels[ref]}" if ref in keys else labels.get(ref, ref)
+        # A draft node's name is on its own numbered line; an arrow points by number.
+        return f"[{keys[ref]}]" if ref in keys else labels.get(ref, ref)
 
     def under(ref: str) -> list[str]:
         lines = [

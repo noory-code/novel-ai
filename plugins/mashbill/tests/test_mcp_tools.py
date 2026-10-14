@@ -561,3 +561,14 @@ def test_get_canvas_surfaces_the_synthetic_anchor(tmp_path: Path) -> None:
         assert anchors[0]["kind"] == "project"
     ents = mcp_tools.get_canvas(ws, "alpha", "entities")
     assert all(n["id"] != "__project_anchor__" for n in ents["nodes"])
+
+
+def test_flow_area_reads_as_the_feature_principles() -> None:
+    """W-00000464 — in the feature-flow turn of newcomer walk 2 the coach asked
+    for area 'flow'; the feature principles are what a flow is judged by."""
+    from mashbill.coaching_principles import get_principles
+
+    assert get_principles("flow") == get_principles("features")
+    assert get_design_principles(area="flow") == get_principles("features")
+    with pytest.raises(ValueError, match="features"):
+        get_principles("flows")

@@ -27,6 +27,7 @@ from mashbill.chat_providers.base import (
 from mashbill.chat_scope_env import CHAT_SCOPE_ENV
 from mashbill.mcp_registration import IN_APP_COACH_ENV, codex_mashbill_config
 from mashbill.tool_log import TOOL_LOG_ENV
+from mashbill.tool_shapes import tool_shapes
 
 # Reasoning levels codex accepts via `-c model_reasoning_effort=<level>`. The
 # chat model selector encodes the user's pick as "<slug>:<effort>"
@@ -40,10 +41,11 @@ _CODEX_EFFORTS = frozenset({"low", "medium", "high", "xhigh", "max", "ultra"})
 # trips in the newcomer walk, ~8 s each). Stating the call shape removes those
 # lookups (docs/research/coach-codemode/README.md). It rides after the system
 # prompt, outside the shared prompt word budget, because only Codex needs it.
+# W-00000464 — the argument names it points at ride with it (``tool_shapes``).
 CODEX_TOOL_HINT = (
     "Tool calls: in code mode call a Mashbill tool directly as "
     "`await tools.mcp__mashbill__<tool>({...})` with the argument names shown in "
-    "this prompt, without searching ALL_TOOLS for it first."
+    "this prompt, without searching ALL_TOOLS for it first.\n" + tool_shapes()
 )
 # Set to "0" to leave the hint out (simulator A/B runs only).
 CODEX_TOOL_HINT_ENV = "MASHBILL_CODEX_TOOL_HINT"
