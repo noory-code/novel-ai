@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.222.1] — 2026-10-15
+
+### Fixed
+
+- A Codex coach turn's saved reply is its final message only. The commentary Codex writes before its tool work still streams live, but no longer joins the stored reply, which repeated itself in 33 of 42 newcomer-walk turns (W-00000454).
+
 ## [0.222.0] — 2026-10-15
 
 ### Added

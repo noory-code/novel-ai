@@ -181,20 +181,19 @@ class CodexProvider(_SubprocessChatProvider):
             if isinstance(item, dict) and item.get("type") == "agent_message":
                 text = item.get("text")
                 if isinstance(text, str) and text:
-                    # Codex routinely emits TWO agent messages in one turn — a
-                    # short ack before its MCP canvas work, then a
-                    # restate-and-continue after. Joined bare they read as the
-                    # coach stuttering (workspace O-34; every instrumented turn
-                    # of the 2026-08-06 figma plate had exactly this shape).
-                    # Dropping either loses content — the second does not always
-                    # restate the first — so a paragraph break rides IN the
-                    # delta, keeping turn_complete.text exactly the
-                    # concatenation of the deltas (base.py reconciliation
-                    # contract).
-                    if accumulator:
-                        text = "\n\n" + text
+                    # Codex emits a commentary message before its tool work and
+                    # a final answer after (exec JSON has no phase field to tell
+                    # them apart). Every message still streams live as a delta so
+                    # the person sees progress, but a later message makes the
+                    # earlier one commentary: the accumulator — which becomes
+                    # turn_complete.text, what the viewer settles on and what is
+                    # stored — keeps only the latest message. Joining them
+                    # (workspace O-34) repeated the reply in 33 of 42 newcomer-walk
+                    # turns and sometimes contradicted it (W-00000454).
+                    live = "\n\n" + text if accumulator else text
+                    accumulator.clear()
                     accumulator.append(text)
-                    return ChatStreamEvent(type="delta", turn_id=turn_id, text=text)
+                    return ChatStreamEvent(type="delta", turn_id=turn_id, text=live)
         return None
 
     async def complete_once(self, prompt: str, *, model: str | None = None) -> str:
