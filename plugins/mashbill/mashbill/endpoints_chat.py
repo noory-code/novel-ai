@@ -25,10 +25,11 @@ from mashbill.chat_context import (
     build_system_prompt,
 )
 from mashbill.chat_models import list_models
+from mashbill.chat_offcanvas import attach_offcanvas_additions
 from mashbill.chat_output_filter import filter_save_announcements
 from mashbill.chat_proposals import append_proposal
 from mashbill.chat_provider import read_selection
-from mashbill.chat_providers.base import DEFAULT_CHAT_SCOPE, is_valid_scope
+from mashbill.chat_providers.base import DEFAULT_CHAT_SCOPE, CanvasAddition, is_valid_scope
 from mashbill.chat_selection import build_turn_preamble
 from mashbill.chat_session import ChatProvider, ChatSessionRegistry, chat_registry
 from mashbill.chat_store import (
@@ -158,6 +159,7 @@ async def _persist_assistant(
     error: str | None,
     conversation_id: str | None,
     error_code: str | None = None,
+    added_elsewhere: list[CanvasAddition] | None = None,
 ) -> None:
     try:
         append_assistant_to_conversation(
@@ -170,6 +172,7 @@ async def _persist_assistant(
             conversation_id,
             error=error,
             error_code=error_code,
+            added_elsewhere=added_elsewhere,
         )
     except Exception:  # noqa: BLE001 — persistence must not break chat
         _log.exception("chat persist (assistant) failed for %s", plot_root)
@@ -190,19 +193,21 @@ async def stream_chat_turn(
     """Fan provider events out to ``plot_root`` with the requested ``scope``.
 
     Errors become stream events. Assistant persistence is best-effort; completed
-    turns never create drafts implicitly.
+    turns never create drafts implicitly. The terminal event carries the nodes
+    the turn added outside ``scope``'s canvas (D-2026-10-15-A).
     """
     start_turn(plot_root, scope)
     seen_turn_id: str | None = None
     started_at = datetime.now(UTC)
     try:
-        async for event in append_proposal(
+        proposed = append_proposal(
             filter_save_announcements(provider.stream_turn(user_message)),
             plot_root,
             project_id,
             scope,
             started_at,
-        ):
+        )
+        async for event in attach_offcanvas_additions(proposed, plot_root, project_id, scope):
             if event.turn_id:
                 seen_turn_id = event.turn_id
             payload = event.model_dump()
@@ -220,6 +225,7 @@ async def stream_chat_turn(
                     event.error_message,
                     conversation_id,
                     event.error_code,
+                    event.added_elsewhere,
                 )
     except Exception as exc:  # noqa: BLE001 — boundary catch
         _log.exception("chat turn crashed for %s", plot_root)

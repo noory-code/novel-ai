@@ -77,6 +77,43 @@
 - **Principles:** Fail Fast (a malformed branching fails at recording); MECE (each decision's branches split the
   cases); Honesty (the engine refuses only what it can see; the rest stays the coach's question).
 
+### D-2026-10-15-A — The app names what a coach turn added to another canvas, under the reply
+
+- **What:** *(Claude, carrying out novel-workspace W-00000447)* (1) Mashbill: when an in-app chat turn starts, the
+  chat layer reads every canvas's node ids and labels straight from the semantic files (`<canvas>/canvas.json`,
+  `services/<id>/detail.json`), without the migrating `read_canvas`. When the turn ends (`turn_complete` or `error`),
+  it reads them again and sets `added_elsewhere` on that terminal event: one `CanvasAddition` per canvas outside the
+  conversation's own canvas that gained nodes, with `canvas` (the viewer's canvas key: `foundation` / `actors` /
+  `services` / `entities` / `feature:<id>`), `count`, the first three non-empty `labels` in file order, and for a
+  feature canvas `canvas_label` (its feature's name). The same list is saved on the assistant message in
+  `.noory/novel/chat/<scope>.json`; it never enters the reply text or the transcript re-fed to a fresh coach session.
+  The own canvas: `foundation` / `actors` / `entities` / `services` are their canvases, `service:<id>` is `services`,
+  `feature:<id>` is that feature's canvas, and `project` has none, so the project thread reports every canvas. A
+  feature canvas's root node, which shares the feature's id and is seeded when the feature is added to Services, is
+  never counted. A canvas unreadable before or after the turn is left out; one created during the turn counts from
+  empty. (2) Novel app: under a reply carrying `added_elsewhere`, including a reply with no text and a failed one, the
+  chat shows one line per canvas — "엔티티에 '세탁 주문', '결제', '배송' 외 7개를 더했어요." — with an Open button that
+  moves to that canvas (a feature canvas opens beside Services, D-2026-10-14-A) and asks the Work tab's leave guard
+  first. Reopening the conversation shows the same lines from the saved message.
+- **Why:** In a first-time-user walk the coach, talking on Services, created ten entities on the Entities canvas; the
+  person found ten entities they never made, and the coach could not say when they were made. The user (2026-10-14):
+  "엔티티는 자동으로 만들어지는거지.. 사용자에게 말해주고 그래야지" — creating them is fine, the person must be told.
+- **Alternatives:** Ask the coach to mention cross-canvas writes — rejected: the coach's save announcements are banned
+  and stripped (D-2026-07-15-A, D-2026-07-17-A), and prose is not reliable. Log each write tool call from the MCP
+  process with its chat scope — rejected for now: exact attribution, but it needs a new write-side channel from the
+  separate MCP process and every write tool to report; the before/after file comparison needs neither. Announce
+  additions to the conversation's own canvas too — rejected: the person watches them appear. Count the Services
+  canvas as on screen for `feature:<id>` (the split view shows it) — rejected: the focused canvas is the one being
+  worked on, and an extra line is harmless while a missed one is the reported failure.
+- **Approval:** The user asked that the person be told (2026-10-14); the comparison, the own-canvas rule and the
+  wording are Claude's design, open to the user's review.
+- **Spec impact:** `SPEC.md` R7 chat, "Changes on other canvases" row.
+- **Principles:** SSOT (the saved message carries the notice; the viewer only renders it); Fail Fast without failing
+  the turn (a failed read drops the notice, never the reply). Limits: any node added during the turn counts as the
+  turn's — the person's own edit on another canvas, or a turn in another scope running at the same time, is reported
+  too; a feature canvas restored from `services/_archive/` during the turn reports its old nodes as added; a turn that
+  crashes inside the engine (the `chat turn crashed` path) carries no notice.
+
 ### D-2026-10-14-C — A save changes only the record it saves; a stray file in the work folder never stops the work tree
 
 - **What:** *(Claude, carrying out novel-workspace W-00000436)* (1) Mashbill: a canvas save writes that canvas's files

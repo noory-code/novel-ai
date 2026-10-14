@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Literal, Protocol
 from uuid import uuid4
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 ChatStreamEventType = Literal["turn_start", "delta", "turn_complete", "error", "meta"]
 
@@ -78,6 +78,21 @@ def is_valid_scope(raw: str) -> bool:
     return False
 
 
+class CanvasAddition(BaseModel):
+    """Nodes one turn added to a canvas outside its conversation's own canvas.
+
+    ``canvas`` is the viewer's canvas key (``entities`` / ``feature:<id>`` …),
+    ``count`` how many nodes were added, ``labels`` the first few non-empty
+    labels in file order, and ``canvas_label`` the feature's name for a feature
+    canvas (D-2026-10-15-A).
+    """
+
+    canvas: str
+    count: int
+    labels: list[str]
+    canvas_label: str | None = Field(default=None, exclude_if=lambda value: value is None)
+
+
 class ChatStreamEvent(BaseModel):
     """One streamed event in a chat turn.
 
@@ -104,6 +119,11 @@ class ChatStreamEvent(BaseModel):
     scope: str = DEFAULT_CHAT_SCOPE
     # Set only on ``meta`` events — the model id the CLI reported (D-2026-06-21-Z).
     model: str | None = None
+    # Set only on a terminal event (``turn_complete`` / ``error``) whose turn added
+    # nodes outside the conversation's own canvas (D-2026-10-15-A).
+    added_elsewhere: list[CanvasAddition] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
 
 @dataclass(frozen=True)

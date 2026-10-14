@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.224.0] — 2026-10-15
+
+### Added
+
+- A chat turn that adds nodes to a canvas other than its own carries `added_elsewhere` (canvas, count, first labels) on its terminal event and in the saved message, so the app can tell the person; the coach's prose is untouched (W-00000447, D-2026-10-15-A).
+
 ## [0.223.0] — 2026-10-15
 
 ### Added

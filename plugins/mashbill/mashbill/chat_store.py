@@ -17,6 +17,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
+from mashbill.chat_providers.base import CanvasAddition
 from mashbill.storage import _ensure_project, _project_dir, _read_json, _write_json
 
 _CHAT_DIRNAME = "chat"
@@ -33,6 +34,10 @@ class ChatMessageRecord(BaseModel):
     ts: str
     error: str | None = Field(default=None, exclude_if=lambda value: value is None)
     error_code: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    # What the turn added outside the conversation's own canvas (D-2026-10-15-A).
+    added_elsewhere: list[CanvasAddition] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
 
 class ChatConversationDoc(BaseModel):
@@ -148,6 +153,7 @@ def append_assistant(
     *,
     error: str | None = None,
     error_code: str | None = None,
+    added_elsewhere: list[CanvasAddition] | None = None,
 ) -> None:
     """Append the assistant turn to an existing conversation. A no-op when the
     file is absent — an assistant reply with no preceding user message is not a
@@ -163,7 +169,13 @@ def append_assistant(
     doc.updated = now
     doc.messages.append(
         ChatMessageRecord(
-            id=msg_id, role="assistant", text=text, ts=now, error=error, error_code=error_code
+            id=msg_id,
+            role="assistant",
+            text=text,
+            ts=now,
+            error=error,
+            error_code=error_code,
+            added_elsewhere=added_elsewhere,
         )
     )
     _write_json(path, doc.model_dump())
@@ -209,6 +221,7 @@ def append_assistant_to_conversation(
     *,
     error: str | None = None,
     error_code: str | None = None,
+    added_elsewhere: list[CanvasAddition] | None = None,
 ) -> None:
     """Append to the file owning ``conversation_id``, including ended files.
 
@@ -232,6 +245,7 @@ def append_assistant_to_conversation(
             text,
             error=error,
             error_code=error_code,
+            added_elsewhere=added_elsewhere,
         )
         return
     doc = ChatConversationDoc.model_validate(_read_json(path))
@@ -240,7 +254,13 @@ def append_assistant_to_conversation(
     doc.updated = now
     doc.messages.append(
         ChatMessageRecord(
-            id=msg_id, role="assistant", text=text, ts=now, error=error, error_code=error_code
+            id=msg_id,
+            role="assistant",
+            text=text,
+            ts=now,
+            error=error,
+            error_code=error_code,
+            added_elsewhere=added_elsewhere,
         )
     )
     _write_json(path, doc.model_dump())
