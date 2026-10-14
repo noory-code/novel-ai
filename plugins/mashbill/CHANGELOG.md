@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.12] — 2026-10-15
+
+### Changed
+
+- When a whole check ends, the coach says in one plain sentence how many problems it found and how many remain, instead of reciting four counts as slots (W-00000469, O-00000145).
+
 ## [0.225.11] — 2026-10-15
 
 ### Docs

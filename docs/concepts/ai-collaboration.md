@@ -178,8 +178,8 @@ The coach runs fixed checks (design-principles §Services, §Feature) and raises
   entity handled differently); (4) before publishing — everything again. *(W-00000379 measured that examining features one by
   one on the Services canvas left fewer features registered: 13.5 → 8.4 per simulated session.)*
 - **How many:** at most three findings at a time, ordered by what blocks the outcome, what loses content, then what conflicts;
-  ask about the first only. When a whole check ends, say once how many items were checked, how many problems were found, how
-  many are shown now and how many remain — not as a line on every reply.
+  ask about the first only. When a whole check ends, say once, in one plain sentence, how many problems were found and how
+  many remain — not as a line on every reply, and not as a list of separate counts.
 - **Never call an unchecked item fine.** A change upstream turns the related later checks back to "needs re-check". Do not say
   the design is ready to publish while any check is unchecked or needs re-check.
 - **On the canvas:** each service shows its feature-split check and each feature its failure check — unchecked, checking,
