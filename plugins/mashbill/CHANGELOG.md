@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- `create_node` stacks new nodes by their rendered size and never overlaps any card, including one a little to the side or one with a long wrapped title, and a `near` child clears its parent's width, so ten entities made in one coach turn no longer render on top of each other (W-00000451).
+- `create_node`, flow drawing and service proposals place each new card where its rendered rectangle overlaps no other card and no project anchor: sizes are the measured size, or the kind's largest measured card plus the title's wrapped lines, and the anchor at its rendered cap (taller for a very long project name, 340 wide when not round); the first core value starts clear of the anchor and a `near` child clears its parent's width. Limits are in SPEC (W-00000451).
 
 ## [0.221.1] — 2026-10-14
 

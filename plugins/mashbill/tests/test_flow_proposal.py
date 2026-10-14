@@ -439,3 +439,24 @@ def test_a_check_recorded_before_the_draft_reopens_when_it_is_drawn(tmp_path: Pa
     mcp_tools.draw_proposed_flow(p, "alpha", "feature_x")
     assert _feature_check(p, "services").state == "recheck"
     assert _feature_check(p, "feature").state == "recheck"
+
+
+def test_a_drawn_flow_never_overlaps_its_own_cards(tmp_path: Path) -> None:
+    """W-00000451: a flow drawn in one call places each card after the previous
+    one is on the canvas, so no two drawn cards (nor the feature root) overlap
+    at their rendered size."""
+    from mashbill.placement import _rendered_height, _rendered_width
+
+    project_path = _project(tmp_path)
+    _propose(project_path)
+    mcp_tools.draw_proposed_flow(project_path, "alpha", "feature_x")
+    nodes = _canvas(project_path).nodes
+    for i, a in enumerate(nodes):
+        for b in nodes[i + 1 :]:
+            apart = (
+                a.x + _rendered_width(a) <= b.x
+                or b.x + _rendered_width(b) <= a.x
+                or a.y + _rendered_height(a) <= b.y
+                or b.y + _rendered_height(b) <= a.y
+            )
+            assert apart, (a.label, a.x, a.y, b.label, b.x, b.y)
