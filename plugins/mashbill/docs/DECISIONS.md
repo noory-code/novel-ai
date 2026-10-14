@@ -156,7 +156,9 @@
 - **Limits:** None of the walk's three defects is a structural one these checks see. The overlapping branches carry
   different labels, the retry loop leaves through its success branch, and a missing failure is a question of meaning.
   The engine catches only drafts that are malformed; overlap, coverage, and a give-up path rest on the framing
-  sentence, which is not measured yet (the card's before/after simulator comparison is not done).
+  sentence. The card's before/after simulator comparison (5 judged flows per side) moved defects per flow from 4.2
+  to 2.4 and loops with no way out from 0.8 to 0, but a random relabelling of plates gives a gap that wide 22% of
+  the time, so the effect is not established.
 - **Alternatives:** Refuse an end step with no `outcome` and no open item — it would have caught the walk's dead end
   "기사님이 배정 변경 안내를 확인한다", but a last step without an outcome is a valid end, and the existing test drafts end
   on one; refusing it pushes the coach toward invented outcomes, which D-2026-10-11-B's 0.215.1–0.215.3

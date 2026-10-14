@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.11] — 2026-10-15
+
+### Docs
+
+- D-2026-10-15-B records the before/after simulator comparison of flow defects (W-00000448).
+
 ## [0.225.10] — 2026-10-15
 
 ### Fixed
