@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,8 @@ from starlette.websockets import WebSocket
 from mashbill.canvas_view import canvas_file_for_view
 from mashbill.watcher import WorkspaceWatcher
 from mashbill.workspace import enumerate_projects
+
+_log = logging.getLogger(__name__)
 
 _SINGLETON_CANVAS_KINDS = {"foundation", "actors", "services", "entities"}
 
@@ -94,12 +97,21 @@ class BroadcastHub:
         self._enable_watchers = enable_watchers
 
     async def subscribe(self, ws: WebSocket, plot_root: Path) -> None:
+        """Join ``ws`` to the room and make sure the room is watched.
+
+        The watcher is checked on every subscribe, not only when the room
+        is new: a start that failed is retried by the next socket instead
+        of leaving a room that never hears the coach's writes.
+        """
         async with self._lock:
-            if plot_root not in self._subs:
-                self._subs[plot_root] = set()
-                if self._enable_watchers:
+            if self._enable_watchers and plot_root not in self._watchers:
+                try:
                     self._watchers[plot_root] = self._start_watcher(plot_root)
-            self._subs[plot_root].add(ws)
+                except OSError:
+                    _log.exception(
+                        "watcher failed to start on %s; next subscribe retries", plot_root
+                    )
+            self._subs.setdefault(plot_root, set()).add(ws)
 
     async def unsubscribe(self, ws: WebSocket, plot_root: Path) -> None:
         async with self._lock:

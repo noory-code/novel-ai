@@ -44,6 +44,13 @@ class WorkspaceWatcher:
     ``on_change`` is awaited once per debounce window with the set of
     JSON file paths that changed during that window (useful for the
     broadcast layer to infer which project / canvas to report).
+
+    A viewer can subscribe before its project exists, so a missing root is
+    waited for, not created: starting the watcher is a read, and reads never
+    create the data folder (D-2026-07-17-B). While the root is missing the
+    watcher checks for it every ``poll_interval_s``; when it appears the
+    observer arms and reports the watched files already there, which were
+    written before anything was watching.
     """
 
     def __init__(
@@ -52,28 +59,60 @@ class WorkspaceWatcher:
         on_change: Callable[[set[Path]], Awaitable[None]],
         loop: asyncio.AbstractEventLoop,
         debounce_ms: int = 200,
+        poll_interval_s: float = 0.5,
     ) -> None:
         self._plot_root = plot_root
         self._on_change = on_change
         self._loop = loop
         self._debounce = debounce_ms / 1000.0
         self._timer: asyncio.TimerHandle | None = None
+        self._poll_interval = poll_interval_s
         self._observer: BaseObserver | None = None
+        self._pending: asyncio.TimerHandle | None = None
         self._changed: set[Path] = set()
 
     def start(self) -> None:
-        if self._observer is not None:
+        if self._observer is not None or self._pending is not None:
             return
+        if self._plot_root.is_dir():
+            self._arm()
+        else:
+            _log.info("watcher waiting for %s to exist", self._plot_root)
+            self._wait()
+
+    def _wait(self) -> None:
+        self._pending = self._loop.call_later(self._poll_interval, self._check_root)
+
+    def _check_root(self) -> None:
+        self._pending = None
+        if not self._plot_root.is_dir():
+            self._wait()
+            return
+        try:
+            self._arm()
+        except Exception:
+            # A timer callback has no caller to fail to: an escaped error
+            # would leave the watcher neither armed nor waiting, for good.
+            _log.exception("watcher failed to start on %s; retrying", self._plot_root)
+            self._wait()
+            return
+        for path in self._plot_root.rglob("*"):
+            if path.is_file() and _is_watched_file(str(path)):
+                self._schedule_fire(path)
+
+    def _arm(self) -> None:
         handler = _Handler(self._record)
         observer = Observer()
         target = self._plot_root
-        target.mkdir(exist_ok=True)
         observer.schedule(handler, str(target), recursive=True)
         observer.start()
         self._observer = observer
         _log.info("watcher started on %s", target)
 
     def stop(self) -> None:
+        if self._pending is not None:
+            self._pending.cancel()
+            self._pending = None
         if self._observer is not None:
             self._observer.stop()
             self._observer.join(timeout=2)

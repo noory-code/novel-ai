@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
+import pytest
 from watchdog.events import (
     DirModifiedEvent,
     FileCreatedEvent,
@@ -153,14 +154,14 @@ async def test_safe_call_swallows_callback_errors() -> None:
 # --- start / stop lifecycle --------------------------------------------------
 
 
-def test_start_creates_root_and_observer_then_stop_clears(tmp_path: Path) -> None:
+def test_start_on_existing_root_arms_observer_then_stop_clears(tmp_path: Path) -> None:
     root = tmp_path / "plot"
+    root.mkdir()
     loop = asyncio.new_event_loop()
     try:
         w = WorkspaceWatcher(root, _noop_on_change, loop, debounce_ms=10)
         assert w._observer is None
         w.start()
-        assert root.exists(), "start() creates the watched root if missing"
         assert w._observer is not None
         # idempotent: a second start() is a no-op.
         existing = w._observer
@@ -170,6 +171,83 @@ def test_start_creates_root_and_observer_then_stop_clears(tmp_path: Path) -> Non
         assert w._observer is None
     finally:
         loop.close()
+
+
+async def test_start_on_missing_root_waits_without_creating_it(tmp_path: Path) -> None:
+    # D-2026-07-17-B: a read never creates the data folder, and the watcher is
+    # started by a read (a viewer socket). Missing parents must not fail it.
+    root = tmp_path / "ws" / ".noory" / "novel"
+    w = WorkspaceWatcher(root, _noop_on_change, asyncio.get_running_loop(), poll_interval_s=0.01)
+    try:
+        w.start()
+        await asyncio.sleep(0.05)
+        assert not (tmp_path / "ws").exists()
+        assert w._observer is None
+    finally:
+        w.stop()
+
+
+async def test_missing_root_arms_once_it_appears_and_reports_files_already_there(
+    tmp_path: Path,
+) -> None:
+    # Files written between the folder appearing and the observer arming
+    # would otherwise be missed, so arming reports what is already there.
+    calls: list[set[Path]] = []
+
+    async def on_change(paths: set[Path]) -> None:
+        calls.append(set(paths))
+
+    root = tmp_path / ".noory" / "novel"
+    w = WorkspaceWatcher(
+        root, on_change, asyncio.get_running_loop(), debounce_ms=10, poll_interval_s=0.01
+    )
+    try:
+        w.start()
+        canvas = root / "foundation" / "canvas.json"
+        canvas.parent.mkdir(parents=True)
+        canvas.write_text("{}")
+        (root / "foundation" / "scratch.txt").write_text("")
+        await asyncio.sleep(0.2)
+        assert w._observer is not None
+        assert calls and canvas in set().union(*calls)
+        assert all(p.name != "scratch.txt" for c in calls for p in c)
+    finally:
+        w.stop()
+
+
+async def test_stop_cancels_a_pending_wait(tmp_path: Path) -> None:
+    root = tmp_path / "novel"
+    w = WorkspaceWatcher(root, _noop_on_change, asyncio.get_running_loop(), poll_interval_s=0.01)
+    w.start()
+    w.stop()
+    root.mkdir()
+    await asyncio.sleep(0.05)
+    assert w._observer is None, "a stopped watcher must not arm later"
+
+
+async def test_deferred_start_failure_keeps_waiting_and_retries(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "novel"
+    w = WorkspaceWatcher(root, _noop_on_change, asyncio.get_running_loop(), poll_interval_s=0.01)
+    real_arm = w._arm
+    attempts: list[int] = []
+
+    def flaky_arm() -> None:
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise RuntimeError("observer refused the path")
+        real_arm()
+
+    monkeypatch.setattr(w, "_arm", flaky_arm)
+    try:
+        w.start()
+        root.mkdir()
+        await asyncio.sleep(0.1)
+        assert len(attempts) >= 2
+        assert w._observer is not None, "a failed deferred arm must retry, not go silent"
+    finally:
+        w.stop()
 
 
 async def _noop_on_change(_paths: set[Path]) -> None:

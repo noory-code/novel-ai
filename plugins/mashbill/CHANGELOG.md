@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.14] — 2026-10-15
+
+### Fixed
+
+- A viewer that subscribes before the project folder exists now receives the coach's writes once the folder appears: the watcher waits for a missing folder instead of failing, a failed watcher start no longer leaves a room without a watcher, and subscribing never creates `.noory/novel` (W-00000463, D-2026-07-17-B).
+
 ## [0.225.13] — 2026-10-15
 
 ### Fixed
