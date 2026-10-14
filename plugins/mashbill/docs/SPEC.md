@@ -70,7 +70,8 @@ turn never piles them on top of each other.
 Limits: placement decides where a node starts. A later drag by a person, a
 later edit that makes a card taller, or two creates that race each other
 (last-write-wins, D-2026-06-27-B) can still overlap cards; the sizes it counts
-are measured at the default zoom and font.
+are measured at the default zoom and font. Card faces stay text-bound because the
+viewer renders an image in a face as its alt text.
 
 **Save-time anchor orphan normalization (D-2026-07-21-C, W-91).** Before
 `canvas_io.write_canvas` serializes a primary canvas, it adds one canonical
