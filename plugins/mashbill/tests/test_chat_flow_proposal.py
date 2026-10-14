@@ -83,9 +83,9 @@ def _propose(project_path: str) -> dict[str, Any]:
         project_path,
         "alpha",
         "feature_x",
-        nodes=[{"key": "1", "kind": "step", "label": "흐름을 정한다", "covers": [1]}],
-        edges=[{"source": "feature_x", "target": "1"}],
-        open_items=[{"at": "1", "question": "그다음은 무엇인가요?"}],
+        nodes=[{"key": "settle", "kind": "step", "label": "흐름을 정한다", "covers": [1]}],
+        edges=[{"source": "feature_x", "target": "settle"}],
+        open_items=[{"at": "settle", "question": "그다음은 무엇인가요?"}],
     )
 
 
@@ -113,6 +113,8 @@ async def test_a_turn_that_records_a_proposal_shows_its_rendering(tmp_path: Path
     saved = read_conversation(plot_root, "alpha", _SCOPE).messages[-1].text
     assert saved.startswith("초안을 맡겼어요.\n")
     assert "```\n" in saved and "[1] 흐름을 정한다" in saved and "… 그다음은 무엇인가요?" in saved
+    # O-00000137: the block under the reply shows numbers, never the coach's own key.
+    assert "settle" not in saved
     complete = next(p for p in hub.payloads if p.get("type") == "turn_complete")
     assert complete["text"] == saved
     streamed = "".join(p["text"] for p in hub.payloads if p.get("type") == "delta")
