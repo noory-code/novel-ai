@@ -41,12 +41,25 @@ _DEFAULT_RENDER_WIDTH = 340.0
 # Space between stacked cards, and between a parent and its child column.
 _STACK_GAP = 24.0
 _CHILD_GAP = 40.0
+# The card title is not clamped: at the 340 px width cap it wraps about every
+# 23 Korean characters, 20 px a line (measured: 20 chars → 96, 40 → 116,
+# 80 → 156, 160 → 216 for an entity). Counting 18 per line stays on the safe side.
+_TITLE_CHARS_PER_LINE = 18
+_TITLE_LINE_HEIGHT = 20.0
+
+
+def _expected_height(kind: str, label: str) -> float:
+    """How tall a ``kind`` card titled ``label`` renders at most: the kind's
+    one-line-title ceiling plus a line for each extra wrapped title line."""
+    lines = max(1, -(-len(label) // _TITLE_CHARS_PER_LINE))
+    base = _RENDER_HEIGHT.get(kind, _DEFAULT_RENDER_HEIGHT)
+    return base + _TITLE_LINE_HEIGHT * (lines - 1)
 
 
 def _rendered_height(node: SketchNode) -> float:
-    """How tall ``node`` is on screen: its measured height, or its kind's
-    ceiling while it still carries the stub height."""
-    return max(node.height, _RENDER_HEIGHT.get(node.kind, _DEFAULT_RENDER_HEIGHT))
+    """How tall ``node`` is on screen: its measured height, or what its kind
+    and title render at while it still carries the stub height."""
+    return max(node.height, _expected_height(node.kind, node.label or ""))
 
 
 def _rendered_width(node: SketchNode) -> float:
@@ -58,12 +71,12 @@ def _bottom(node: SketchNode) -> float:
     return node.y + _rendered_height(node)
 
 
-def _first_free_y(existing: list[SketchNode], x: float, y: float, kind: str) -> float:
+def _first_free_y(existing: list[SketchNode], x: float, y: float, kind: str, label: str) -> float:
     """Push ``y`` down until a ``kind`` card at ``(x, y)`` overlaps no card on
     the canvas — the guarantee W-00000451 adds on top of every heuristic. Cards
     beside the new one count too: a card renders up to 340 wide, so one a
     little to the side still covers the spot."""
-    height = _RENDER_HEIGHT.get(kind, _DEFAULT_RENDER_HEIGHT)
+    height = _expected_height(kind, label)
     width = _RENDER_WIDTH.get(kind, _DEFAULT_RENDER_WIDTH)
     in_path = sorted(
         (n for n in existing if n.x < x + width and x < n.x + _rendered_width(n)),
@@ -94,7 +107,9 @@ _FIRST_OF_KIND_XY: dict[str, tuple[float, float]] = {
 }
 
 
-def _compute_fresh_position(existing: list[SketchNode], kind: str) -> tuple[float, float]:
+def _compute_fresh_position(
+    existing: list[SketchNode], kind: str, label: str = ""
+) -> tuple[float, float]:
     """Where a new ``kind`` node is dropped on a canvas that already holds
     ``existing`` nodes.
 
@@ -112,12 +127,12 @@ def _compute_fresh_position(existing: list[SketchNode], kind: str) -> tuple[floa
     if same_kind:
         x = min(n.x for n in same_kind)
         y = max(_bottom(n) for n in same_kind) + _STACK_GAP
-        return x, _first_free_y(existing, x, y, kind)
+        return x, _first_free_y(existing, x, y, kind, label)
     pinned = _FIRST_OF_KIND_XY.get(kind)
     if pinned is not None:
-        return pinned[0], _first_free_y(existing, pinned[0], pinned[1], kind)
+        return pinned[0], _first_free_y(existing, pinned[0], pinned[1], kind, label)
     y = _FRESH_Y0 + _FRESH_DY * len(existing)
-    return _FRESH_X, _first_free_y(existing, _FRESH_X, y, kind)
+    return _FRESH_X, _first_free_y(existing, _FRESH_X, y, kind, label)
 
 
 # A child column belongs to ONE anchor: siblings stack from the anchor's y; a
@@ -126,7 +141,7 @@ _NEAR_BAND = 400.0
 
 
 def _compute_near_position(
-    existing: list[SketchNode], anchor: SketchNode, kind: str
+    existing: list[SketchNode], anchor: SketchNode, kind: str, label: str = ""
 ) -> tuple[float, float]:
     """Place a new node beside ``anchor``, stacked below earlier siblings.
 
@@ -141,7 +156,7 @@ def _compute_near_position(
         n for n in existing if abs(n.x - child_x) < 1.0 and abs(n.y - anchor.y) < _NEAR_BAND
     ]
     y = max(_bottom(n) for n in siblings) + _STACK_GAP if siblings else anchor.y
-    return child_x, _first_free_y(existing, child_x, y, kind)
+    return child_x, _first_free_y(existing, child_x, y, kind, label)
 
 
 # Kind default colors — MIRRORS the viewer stencil palette

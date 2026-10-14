@@ -55,7 +55,9 @@ node below its same-kind cluster (or below earlier siblings when `near` names a
 parent) by each card's rendered height plus a 24 px gap. A card the viewer has
 measured uses its measured size; a card still at the stub size uses its kind's
 largest rendered card (`placement._RENDER_HEIGHT` / `_RENDER_WIDTH`, measured
-from real canvases, because card text is line-clamped). A `near` child column
+from real canvases; the face fields are cut to 60 or 120 characters) plus 20 px
+for each extra line its title wraps to (the title is not cut; counted at 18
+characters a line, measured at about 23 at the 340 px width cap). A `near` child column
 starts right of the parent's rendered width plus 40 px. The final position is
 then pushed down until the new card's rectangle overlaps no card on the canvas,
 including cards a little to the side, so a coach that creates many nodes in one

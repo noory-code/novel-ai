@@ -451,9 +451,9 @@ def build_new_node(
         anchor = next((n for n in canvas.nodes if n.id == near), None)
         if anchor is None:
             raise ValueError(f"near anchor not on the {canvas_kind!r} canvas: {near!r}")
-        x, y = _compute_near_position(canvas.nodes, anchor, kind)
+        x, y = _compute_near_position(canvas.nodes, anchor, kind, str(fields.get("label") or ""))
     else:
-        x, y = _compute_fresh_position(canvas.nodes, kind)
+        x, y = _compute_fresh_position(canvas.nodes, kind, str(fields.get("label") or ""))
     seed: dict[str, object] = {"id": node_id, "kind": kind, "x": x, "y": y}
     # B-23 — same kind, same color: apply the kind palette unless the caller
     # passes an explicit color.

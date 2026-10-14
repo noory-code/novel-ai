@@ -817,3 +817,19 @@ def test_create_node_near_child_sits_clear_of_its_parent(tmp_path: Path) -> None
     ]
     assert f["x"] >= 340.0
     assert abs(f["y"] - 0.0) < 1.0  # still beside the parent, not pushed below it
+
+
+def test_create_node_counts_wrapped_title_lines(tmp_path: Path) -> None:
+    """W-00000451 review: the card title is not clamped, so a long title wraps
+    and the card grows (measured: 20 chars → 96, 40 → 116, 80 → 156, 160 → 216
+    for an entity at the 340 px width cap). The next node must clear it."""
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(canvas_id="entities", canvas_kind="entities", nodes=[]),
+    )
+    long_title = ("가나다라마바사아자차카타파하" * 20)[:160]
+    first = create_node(plot_root, "alpha", "entities", "entity", {"label": long_title})["node"]
+    nxt = create_node(plot_root, "alpha", "entities", "entity", {"label": "다음"})["node"]
+    assert nxt["y"] >= first["y"] + 216.0
