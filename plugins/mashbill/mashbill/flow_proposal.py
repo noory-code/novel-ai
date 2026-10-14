@@ -288,6 +288,22 @@ def rendering_proposed_since(
     return render(proposal, canvas, feature_description_items(plot_root, project_id, feature_id))
 
 
+def reader_names(plot_root: Path, project_id: str, feature_id: str) -> dict[str, str]:
+    """``[key]`` the coach may write → what the person reads for the feature's latest draft.
+
+    An undrawn draft is shown under the reply with numbers, so a key reads as its
+    number; a drawn draft is no longer shown, so a key reads as its step name
+    (O-00000137). All-digit keys are left alone: they look like shown numbers.
+    """
+    proposal = _load(plot_root, project_id, feature_id).current
+    if proposal is None:
+        return {}
+    if proposal.drawn:
+        return {f"[{n.key}]": f"'{n.label}'" for n in proposal.nodes if not n.key.isdigit()}
+    numbers = display_numbers(proposal).items()
+    return {f"[{key}]": f"[{number}]" for number, key in numbers if not key.isdigit()}
+
+
 def draw_proposed_flow(plot_root: Path, project_id: str, feature_id: str) -> dict[str, Any]:
     """Write exactly the kept proposal's nodes and lines in one canvas write.
 

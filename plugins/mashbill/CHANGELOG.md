@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.1] — 2026-10-15
+
+### Fixed
+
+- A feature-flow draft key the coach writes into its reply (for example `[timeout]`) now reads as what the person sees: the shown number while the draft is undrawn, the step name once drawn — in the streamed text and the saved reply alike (W-00000458, O-00000137).
+
 ## [0.225.0] — 2026-10-15
 
 ### Added

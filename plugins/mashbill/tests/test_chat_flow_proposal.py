@@ -194,3 +194,57 @@ async def test_a_services_turn_that_proposes_a_set_shows_its_rendering(tmp_path:
 
     saved = read_conversation(plot_root, "alpha", "services").messages[-1].text
     assert saved.startswith("구성을 맡겼어요.") and "[1] 돈 보내기" in saved and "```" in saved
+
+
+class _KeyQuotingCoach(ChatProvider):
+    """Writes its own draft key into the reply, as the walk's coach did (O-00000137)."""
+
+    def __init__(self, project_path: str, draw: bool) -> None:
+        self._project_path = project_path
+        self._draw = draw
+
+    async def stream_turn(self, user_message: str) -> Any:
+        yield ChatStreamEvent(type="turn_start", turn_id="t1")
+        _propose(self._project_path)
+        if self._draw:
+            mcp_tools.draw_proposed_flow(self._project_path, "alpha", "feature_x")
+        reply = "[settle] 갈래를 봐 주세요. [1]과 [other]는 그대로예요."
+        yield ChatStreamEvent(type="delta", turn_id="t1", text=reply)
+        yield ChatStreamEvent(type="turn_complete", turn_id="t1", text=reply)
+
+
+async def _quoting_turn(plot_root: Path, project_path: str, draw: bool) -> _Hub:
+    hub = _Hub()
+    await stream_chat_turn(
+        _KeyQuotingCoach(project_path, draw),
+        hub,
+        plot_root,
+        "흐름을 제안해 주세요",
+        scope=_SCOPE,
+        project_id="alpha",
+        provider_name="codex",
+        conversation_id=read_conversation(plot_root, "alpha", _SCOPE).conversation_id,
+    )
+    return hub
+
+
+async def test_a_draft_key_the_coach_writes_reads_as_the_shown_number(tmp_path: Path) -> None:
+    plot_root, project_path = _project(tmp_path)
+
+    hub = await _quoting_turn(plot_root, project_path, draw=False)
+
+    saved = read_conversation(plot_root, "alpha", _SCOPE).messages[-1].text
+    assert saved.startswith("[1] 갈래를 봐 주세요. [1]과 [other]는 그대로예요.")
+    assert "settle" not in saved
+    streamed = "".join(p["text"] for p in hub.payloads if p.get("type") == "delta")
+    assert streamed == saved
+
+
+async def test_a_draft_key_of_a_drawn_draft_reads_as_its_step_name(tmp_path: Path) -> None:
+    plot_root, project_path = _project(tmp_path)
+
+    await _quoting_turn(plot_root, project_path, draw=True)
+
+    saved = read_conversation(plot_root, "alpha", _SCOPE).messages[-1].text
+    # No draft box is shown once drawn, so a number would point at nothing.
+    assert saved == "'흐름을 정한다' 갈래를 봐 주세요. [1]과 [other]는 그대로예요."
