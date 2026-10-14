@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.222.0] — 2026-10-15
+
+### Added
+
+- The Codex coach's turn carries the Mashbill tool call shape after the system prompt, so it calls tools without first searching `ALL_TOOLS` (W-00000450). `MASHBILL_CODEX_TOOL_HINT=0` leaves it out for simulator A/B runs.
+
 ## [0.221.2] — 2026-10-14
 
 ### Fixed

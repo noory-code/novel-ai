@@ -35,6 +35,19 @@ from mashbill.tool_log import TOOL_LOG_ENV
 # Mirrors the effort levels the Codex model catalogue reports (supported_reasoning_levels).
 _CODEX_EFFORTS = frozenset({"low", "medium", "high", "xhigh", "max", "ultra"})
 
+# W-00000450 — Codex runs the coach in code mode: it calls MCP tools from a
+# small script and looked up each tool's shape first (32 of 121 model round
+# trips in the newcomer walk, ~8 s each). Stating the call shape removes those
+# lookups (docs/research/coach-codemode/README.md). It rides after the system
+# prompt, outside the shared prompt word budget, because only Codex needs it.
+CODEX_TOOL_HINT = (
+    "Tool calls: in code mode call a Mashbill tool directly as "
+    "`await tools.mcp__mashbill__<tool>({...})` with the argument names shown in "
+    "this prompt, without searching ALL_TOOLS for it first."
+)
+# Set to "0" to leave the hint out (simulator A/B runs only).
+CODEX_TOOL_HINT_ENV = "MASHBILL_CODEX_TOOL_HINT"
+
 
 class CodexProvider(_SubprocessChatProvider):
     """``codex exec --json`` driver with thread-id continuity."""
@@ -97,6 +110,8 @@ class CodexProvider(_SubprocessChatProvider):
         # positional arg — so the Layer-3 system prompt (Lever 2) rides in front
         # of the user message via the base ``_prepend_system`` fallback.
         message = self._prepend_system(user_message)
+        if self._system_prompt and os.environ.get(CODEX_TOOL_HINT_ENV) != "0":
+            message = f"{self._system_prompt}\n\n{CODEX_TOOL_HINT}\n\n{user_message}"
         mcp_entry = codex_mashbill_config()["mcp_servers"]["mashbill"]
         command = [
             self._cli_path,
