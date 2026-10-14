@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.6] — 2026-10-15
+
+### Tests
+
+- An all-digit draft key is left alone in the coach's reply, drawn or not, because it cannot be told apart from the number the person saw (W-00000458).
+
 ## [0.225.5] — 2026-10-15
 
 ### Fixed

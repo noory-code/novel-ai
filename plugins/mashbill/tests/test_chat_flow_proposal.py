@@ -355,3 +355,31 @@ async def test_a_long_draft_key_cut_at_its_period_still_reads_as_the_number(
     deltas = [e.text for e in out if e.type == "delta"]
     assert not any("branch" in piece for piece in deltas)
     assert "".join(deltas) == "갈래 [1]를 봐 주세요."
+
+
+def test_an_all_digit_draft_key_is_left_alone(tmp_path: Path) -> None:
+    # "[2]" could be the key or the number the person saw in the box; neither
+    # reading can be told apart, so the reply keeps it (W-00000458).
+    from mashbill.flow_proposal import reader_names
+
+    plot_root, project_path = _project(tmp_path)
+    mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[
+            {"key": "settle", "kind": "step", "label": "흐름을 정한다", "covers": [1]},
+            {"key": "2", "kind": "step", "label": "마친다"},
+        ],
+        edges=[
+            {"source": "feature_x", "target": "settle"},
+            {"source": "settle", "target": "2"},
+        ],
+    )
+
+    undrawn = reader_names(plot_root, "alpha", "feature_x")
+    mcp_tools.draw_proposed_flow(project_path, "alpha", "feature_x")
+    drawn = reader_names(plot_root, "alpha", "feature_x")
+
+    assert undrawn == {"[settle]": "[1]"}
+    assert drawn == {"[settle]": "'흐름을 정한다'"}
