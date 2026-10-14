@@ -29,7 +29,14 @@ class Problem:
 
 def audit_workspace(ws: Workspace) -> list[Problem]:
     """Return every referential-integrity problem in the workspace (possibly empty)."""
-    problems: list[Problem] = []
+    problems: list[Problem] = [
+        Problem(
+            "foreign-item-file",
+            f"{name}: not a work item name, skipped (a synced folder's conflict copy? "
+            "merge it into the item it copies, then delete it)",
+        )
+        for name in ws.foreign_item_files()
+    ]
 
     parsed: dict[str, WorkItem] = {}
     for item_id in ws.list_items():

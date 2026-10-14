@@ -234,6 +234,7 @@ async def work_endpoint(request: Request) -> Response:
             "ready": ready,
             "blocked": _blocked_json(blocked),
             "current": current,
+            "skipped_files": ws.foreign_item_files(),
         }
     )
 

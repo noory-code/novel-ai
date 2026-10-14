@@ -11,6 +11,7 @@ import logging
 import os
 import shutil
 import socket
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -102,6 +103,34 @@ def gitignored_dirs(workspace_root: Path) -> frozenset[str]:
     return frozenset(names)
 
 
+def last_edited(project_dir: Path) -> str | None:
+    """The newest modification time of any file in a project's data folder, as
+    an ISO-8601 UTC string, or ``None`` for an empty folder (D-2026-10-14-C)."""
+    newest = 0.0
+    for current, _dirs, files in os.walk(project_dir):
+        for name in files:
+            try:
+                newest = max(newest, (Path(current) / name).stat().st_mtime)
+            except OSError:
+                continue
+    if newest == 0.0:
+        return None
+    return datetime.fromtimestamp(newest, UTC).isoformat()
+
+
+def with_last_edited(project: ProjectDoc, project_dir: Path) -> ProjectDoc:
+    """``project`` with ``updated`` set to when its data was last edited.
+
+    A canvas save no longer rewrites ``project.json`` (D-2026-10-14-C), so the
+    stored ``updated`` only moves on project-level changes. Listings report the
+    later of that and the newest file time, without writing anything.
+    """
+    edited = last_edited(project_dir)
+    if edited is None or edited <= project.updated:
+        return project
+    return project.model_copy(update={"updated": edited})
+
+
 def enumerate_projects(plot_root: Path) -> list[ProjectDoc]:
     """Read the valid project(s) under a Novel data root, newest first.
 
@@ -127,7 +156,7 @@ def enumerate_projects(plot_root: Path) -> list[ProjectDoc]:
         try:
             pid = _read_json(flat).get("id")
             if isinstance(pid, str):
-                return [read_project(plot_root, pid)]
+                return [with_last_edited(read_project(plot_root, pid), plot_root)]
         except (FileNotFoundError, ValueError):
             pass
         return out
@@ -136,7 +165,7 @@ def enumerate_projects(plot_root: Path) -> list[ProjectDoc]:
         if not child.is_dir() or child.name == "sketches":
             continue
         try:
-            out.append(read_project(plot_root, child.name))
+            out.append(with_last_edited(read_project(plot_root, child.name), child))
         except (FileNotFoundError, ValueError):
             continue
     out.sort(key=lambda p: p.updated, reverse=True)

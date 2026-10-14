@@ -126,6 +126,10 @@ def _atomic_write_text(path: Path, text: str | bytes) -> None:
         temporary_path.unlink(missing_ok=True)
 
 
+def _is_item_name(name: str) -> bool:
+    return bool(_PATH_NAME_RE.fullmatch(name)) and name != ".."
+
+
 def validate_path_name(name: str) -> str:
     """Return a safe single path component or reject it before path composition."""
     if not _PATH_NAME_RE.fullmatch(name) or name == "..":
@@ -202,9 +206,18 @@ class Workspace:
         return parse_feedback(self.feedback_path(feedback_id).read_text(), feedback_id=feedback_id)
 
     def list_items(self) -> list[str]:
+        """Ids of the work items in ``items/``. A ``.md`` file whose name is not a
+        valid id (a synced folder's conflict copy such as ``STORY-001 2.md``) is
+        skipped here and reported by :meth:`foreign_item_files` (D-2026-10-14-C)."""
         if not self.items_dir.is_dir():
             return []
-        return sorted(p.stem for p in self.items_dir.glob("*.md"))
+        return sorted(p.stem for p in self.items_dir.glob("*.md") if _is_item_name(p.stem))
+
+    def foreign_item_files(self) -> list[str]:
+        """File names in ``items/`` that end in ``.md`` but are not work items."""
+        if not self.items_dir.is_dir():
+            return []
+        return sorted(p.name for p in self.items_dir.glob("*.md") if not _is_item_name(p.stem))
 
     def list_feedback(self) -> list[str]:
         if not self.feedback_dir.is_dir():

@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.221.0] — 2026-10-14
+
+### Changed
+
+- A canvas save no longer rewrites `project.json`, so two machines editing different canvases or nodes of a synced project do not collide on it. Project listings report `updated` as the later of the stored value and the newest file time in the project's data folder, without writing (D-2026-10-14-C).
+
 ## [0.220.6] — 2026-10-14
 
 ### Changed

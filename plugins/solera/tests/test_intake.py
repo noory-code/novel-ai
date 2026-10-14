@@ -415,9 +415,7 @@ def test_import_release_copies_service_and_its_project_slice(tmp_path: Path) -> 
 def test_import_release_keeps_service_category_in_copy_and_loaded_manifest(tmp_path: Path) -> None:
     published = tmp_path / "published"
     _write_bundle(published, "_project/vP1", _project_manifest())
-    vs_dir = _write_bundle(
-        published, "auth/vS1", _service_manifest(category="category/identity")
-    )
+    vs_dir = _write_bundle(published, "auth/vS1", _service_manifest(category="category/identity"))
     ws = Workspace(tmp_path / "ws")
 
     imported = import_release(ws, vs_dir, label="auth")

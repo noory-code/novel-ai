@@ -209,6 +209,7 @@ def test_work_returns_empty_state_without_creating_a_workspace(
         "ready": [],
         "blocked": [],
         "current": None,
+        "skipped_files": [],
     }
     assert not (tmp_path / ".noory").exists()
 

@@ -262,14 +262,10 @@ def write_canvas(
     # every field (typed + body) into the JSON output directly.
     write_canvas_files(path, raw)
     write_related(related_rechecks)
-    try:
-        meta = read_project(plot_root, project_id)
-    except FileNotFoundError:
-        return canvas
-    # v0.13 Phase 0: project label SSOT is ProjectDoc.name; no longer derived
-    # from a per-canvas project node (the node is gone). Renames go through
-    # ``rename_project`` directly. We just bump updated below.
-    write_project(plot_root, meta)
+    # D-2026-10-14-C — a canvas save changes that canvas only. ``project.json``
+    # is not rewritten, so two machines editing different canvases or nodes do
+    # not collide on it; "last edited" is read from file times instead
+    # (``workspace.last_edited``).
     return canvas
 
 

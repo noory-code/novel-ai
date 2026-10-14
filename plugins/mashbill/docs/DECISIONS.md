@@ -39,6 +39,30 @@
 
 ## Log
 
+### D-2026-10-14-C — A save changes only the record it saves; a stray file in the work folder never stops the work tree
+
+- **What:** *(Claude, carrying out novel-workspace W-00000436)* (1) Mashbill: a canvas save writes that canvas's files
+  only; it no longer rewrites `project.json` to bump `updated`. `updated` now moves on project-level changes (rename,
+  anchors, publish). Project listings (`enumerate_projects`, `discover_projects`, `list_projects`) report `updated` as
+  the later of the stored value and the newest modification time of any file in the project's data folder
+  (`workspace.last_edited`), without writing it, so "most recently edited first" keeps its meaning. (2) Solera: a `.md`
+  file in `items/` whose name is not a valid work-item id is skipped by `list_items` instead of failing every load,
+  listed by `Workspace.foreign_item_files()`, reported by the audit as `foreign-item-file`, and returned by
+  `GET /api/work` as `skipped_files`; the app's work tab names those files.
+- **Why:** novel-workspace W-00000378 (`docs/research/multi-device-sync.md` in the private workspace) let two copies of a
+  real project edit different nodes through the engine and merged them with git: every pair collided on
+  `project.json` because each save bumped `updated`. A synced folder's conflict copy (`STORY-001 2.md`) made Solera
+  raise `InvalidNameError` and load nothing. The user's direction (2026-10-05) is that project data stays the user's
+  and can be used on several machines and backed up.
+- **Alternatives:** Keep `updated` in `project.json` and merge it automatically — every sync tool would need a custom
+  rule for one field. Move "last edited" into a per-machine store — listings on a fresh machine would lose the order.
+  Delete or rename the stray file — it may hold the only copy of an edit; the person merges it.
+- **Approval:** Claude's design within the user's direction (2026-10-05) and "추천대로 갑시다" (2026-10-14); open to the
+  user's review.
+- **Spec impact:** Solera `docs/HTTP.md` `GET /api/work`.
+- **Principles:** SSOT (a record changes in its own file only); Fail Fast without failing everything (the stray file is
+  named, the rest loads).
+
 ### D-2026-10-14-B — A project that has never chosen a coach starts with Codex
 
 - **What:** *(Claude, carrying out novel-workspace W-00000435)* When the chat dock has read the project's saved coach

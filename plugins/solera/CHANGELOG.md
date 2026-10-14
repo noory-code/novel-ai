@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.11.0] — 2026-10-14
+
+### Changed
+
+- A `.md` file in `items/` whose name is not a work-item id (a synced folder's conflict copy such as `STORY-001 2.md`) is skipped instead of failing every load of the work tree. `Workspace.foreign_item_files()` lists such files, the audit reports each as `foreign-item-file`, and `GET /api/work` returns them as `skipped_files` (D-2026-10-14-C).
+
 ## [8.10.2] — 2026-10-10
 
 ### Tests
