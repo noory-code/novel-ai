@@ -873,3 +873,24 @@ def test_create_node_avoids_a_moved_project_anchor(tmp_path: Path) -> None:
     # grows with the project name up to its 200 px cap (measured: a 42-char name
     # renders 200×200), so placement must clear the cap.
     assert not _rect_overlap(node, {"x": 200.0, "y": 100.0}, 340.0, 96.0, 200.0, 200.0), node
+
+
+def test_create_node_clears_a_tall_anchor_with_a_very_long_project_name(tmp_path: Path) -> None:
+    """W-00000451 fifth review: the round anchor's width is capped at 200 but a
+    very long project name makes it taller (measured: 100 chars 200×200,
+    200 chars 200×316). Placement counts the name's wrapped lines."""
+    from mashbill.models_canvas import AnchorPlacement
+    from mashbill.storage import read_project, write_project
+
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(canvas_id="entities", canvas_kind="entities", nodes=[]),
+    )
+    project = read_project(plot_root, "alpha")
+    anchors = dict(project.anchors)
+    anchors["entities"] = AnchorPlacement(x=200.0, y=100.0)
+    write_project(plot_root, project.model_copy(update={"anchors": anchors, "name": "가" * 200}))
+    node = create_node(plot_root, "alpha", "entities", "entity", {"label": "주문"})["node"]
+    assert not _rect_overlap(node, {"x": 200.0, "y": 100.0}, 340.0, 96.0, 200.0, 316.0), node

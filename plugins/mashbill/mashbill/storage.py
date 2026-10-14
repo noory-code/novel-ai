@@ -109,6 +109,12 @@ def write_project(plot_root: Path, project: ProjectDoc) -> None:
 
 # The largest the viewer renders the round project anchor (W-00000451).
 _ANCHOR_RENDER_CAP = 200.0
+# Past the cap's width a long name wraps and the card grows taller (measured:
+# 100 chars 200×200, 200 chars 200×316). Counted at 11 characters a line,
+# 16 px a line, plus 44 px of padding — on the safe side of the measurement.
+_ANCHOR_CHARS_PER_LINE = 11
+_ANCHOR_LINE_HEIGHT = 16.0
+_ANCHOR_PADDING = 44.0
 
 
 def anchor_obstacles(
@@ -119,11 +125,15 @@ def anchor_obstacles(
     The viewer draws the anchor from ``ProjectDoc.anchors``; it is not a canvas
     node, so placement would otherwise put a new card on top of it
     (W-00000451). Canvases without an anchor (feature detail) have none."""
-    anchor = read_project(plot_root, project_id).anchors.get(canvas_kind)
+    project = read_project(plot_root, project_id)
+    anchor = project.anchors.get(canvas_kind)
     if anchor is None:
         return ()
-    # A round card grows with the project name up to the viewer's 200 px cap
-    # (``max-w-[200px]`` + square), and the stored size is the 150 default until
-    # the viewer measures it — so clear the cap.
-    side = _ANCHOR_RENDER_CAP
-    return ((anchor.x, anchor.y, max(anchor.width, side), max(anchor.height, side)),)
+    # A round card grows with the project name up to the viewer's 200 px width
+    # cap (``max-w-[200px]`` + square), then grows taller as the name wraps; the
+    # stored size is the 150 default until the viewer measures it.
+    lines = -(-len(project.name or "") // _ANCHOR_CHARS_PER_LINE)
+    height = max(_ANCHOR_RENDER_CAP, _ANCHOR_PADDING + _ANCHOR_LINE_HEIGHT * lines)
+    return (
+        (anchor.x, anchor.y, max(anchor.width, _ANCHOR_RENDER_CAP), max(anchor.height, height)),
+    )
