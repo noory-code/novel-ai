@@ -239,7 +239,12 @@ def render(proposal: FlowProposal, canvas: CanvasDoc, items: list[str]) -> str:
             places[p.item].append(place)
     out += [f"✓ {n}. {items[n - 1]} — {' · '.join(at)}" for n, at in places.items()]
     out += [f"✕ {o.item}. {items[o.item - 1]} — {o.reason}" for o in proposal.omitted]
-    return "\n".join(out)
+    text = "\n".join(out)
+    # The coach's own wording (questions, labels, reasons) may quote a key too.
+    for key, number in keys.items():
+        if not key.isdigit():
+            text = text.replace(f"[{key}]", f"[{number}]")
+    return text
 
 
 def propose_flow(

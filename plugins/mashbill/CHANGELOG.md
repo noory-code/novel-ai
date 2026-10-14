@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.10] — 2026-10-15
+
+### Fixed
+
+- A draft key the coach quotes inside the draft's own wording (an open question, a label, a reason) shows as its number in the rendered draft too (W-00000458).
+
 ## [0.225.9] — 2026-10-15
 
 ### Fixed

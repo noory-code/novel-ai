@@ -399,3 +399,37 @@ def test_a_draft_key_with_a_bracket_is_refused(tmp_path: Path, key: str) -> None
             nodes=[{"key": key, "kind": "step", "label": "흐름을 정한다", "covers": [1]}],
             edges=[{"source": "feature_x", "target": key}],
         )
+
+
+async def test_a_draft_key_inside_the_drafts_own_text_reads_as_the_number(
+    tmp_path: Path,
+) -> None:
+    # The coach writes the open items too; a key quoted there shows in the box.
+    plot_root, project_path = _project(tmp_path)
+
+    class _Coach2(ChatProvider):
+        async def stream_turn(self, user_message: str) -> Any:
+            yield ChatStreamEvent(type="turn_start", turn_id="t1")
+            mcp_tools.propose_flow(
+                project_path,
+                "alpha",
+                "feature_x",
+                nodes=[{"key": "settle", "kind": "step", "label": "흐름을 정한다", "covers": [1]}],
+                edges=[{"source": "feature_x", "target": "settle"}],
+                open_items=[{"at": "settle", "question": "[settle] 다음은 무엇인가요?"}],
+            )
+            yield ChatStreamEvent(type="turn_complete", turn_id="t1", text="초안이에요.")
+
+    await stream_chat_turn(
+        _Coach2(),
+        _Hub(),
+        plot_root,
+        "흐름을 제안해 주세요",
+        scope=_SCOPE,
+        project_id="alpha",
+        provider_name="codex",
+        conversation_id=read_conversation(plot_root, "alpha", _SCOPE).conversation_id,
+    )
+
+    saved = read_conversation(plot_root, "alpha", _SCOPE).messages[-1].text
+    assert "settle" not in saved and "[1] 다음은 무엇인가요?" in saved
