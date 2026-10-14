@@ -39,6 +39,23 @@
 
 ## Log
 
+### D-2026-10-14-B — A project that has never chosen a coach starts with Codex
+
+- **What:** *(Claude, carrying out novel-workspace W-00000435)* When the chat dock has read the project's saved coach
+  choice and it is empty, and the codex CLI is installed, the dock picks codex and saves it to the project's
+  `chat-provider` file exactly as a radio click would. A project whose file already names a coach keeps it. With codex
+  not installed nothing is chosen, as before. Registration is not required (D-2026-09-29-A).
+- **Why:** The user (2026-10-14): "코치는 코덱스로 쓰세요", then "이제 코치는 코덱스로 하구요". Coach quality is
+  measured with the Codex coach, and the user judges Codex's Korean writing the better fit for the coach's job.
+- **Alternatives:** Default in the engine when the file is missing — the engine cannot tell whether the CLI is
+  installed at read time without the dock's install check, and an explicit null would become indistinguishable from
+  "never chosen". Leave the dock empty and only change the user's own project — new projects would still start with
+  no coach.
+- **Approval:** The user asked for Codex as the coach (2026-10-14); the empty-choice rule is Claude's design, open to
+  the user's review.
+- **Spec impact:** `SPEC.md` Provider selection row.
+- **Principles:** SSOT (the choice still lives in one file per project); Fail Fast (no pick when codex is not installed).
+
 ### D-2026-10-14-A — A feature's canvas opens beside the Services canvas, not as a tab
 
 - **What:** *(Claude, carrying out novel-workspace W-00000432)* (1) Pressing a feature on the Services canvas splits the
