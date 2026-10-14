@@ -451,7 +451,7 @@ def build_new_node(
         anchor = next((n for n in canvas.nodes if n.id == near), None)
         if anchor is None:
             raise ValueError(f"near anchor not on the {canvas_kind!r} canvas: {near!r}")
-        x, y = _compute_near_position(canvas.nodes, anchor)
+        x, y = _compute_near_position(canvas.nodes, anchor, kind)
     else:
         x, y = _compute_fresh_position(canvas.nodes, kind)
     seed: dict[str, object] = {"id": node_id, "kind": kind, "x": x, "y": y}

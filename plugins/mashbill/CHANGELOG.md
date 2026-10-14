@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.221.2] — 2026-10-14
+
+### Fixed
+
+- `create_node` stacks new nodes by their rendered height and never overlaps a card in the same column, so ten entities made in one coach turn no longer render on top of each other (W-00000451).
+
 ## [0.221.1] — 2026-10-14
 
 ### Changed

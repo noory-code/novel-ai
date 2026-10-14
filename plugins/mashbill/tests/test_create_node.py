@@ -29,6 +29,7 @@ from mashbill.models import (
     ActorRefNode,
     CanvasDoc,
     CoreValueNode,
+    EntityNode,
     FeatureNode,
     IdentityNode,
     MissionNode,
@@ -696,3 +697,72 @@ def test_fresh_foundation_pillars_start_on_their_pinned_side(tmp_path: Path) -> 
     i = create_node(plot_root, "alpha", "foundation", "identity", {"label": "면"})
     assert v["node"]["x"] < 0
     assert i["node"]["x"] > 0
+
+
+# --- no overlap for coach bursts (W-00000451) --------------------------------
+
+
+def _overlaps(a: dict, b: dict, a_h: float, b_h: float) -> bool:
+    return not (a["y"] + a_h <= b["y"] or b["y"] + b_h <= a["y"])
+
+
+def test_create_node_burst_of_entities_never_overlaps_when_rendered(tmp_path: Path) -> None:
+    """W-00000451 (newcomer walk, user "정렬이 문제다"): the coach made ten
+    entities in one turn and they rendered on top of each other — the engine
+    stacked them 80 apart while an entity card renders up to 96 tall. A fresh
+    node is stored at the stub height (36) until the viewer measures it, so the
+    stacking step must assume the kind's rendered height, not the stored one."""
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(canvas_id="entities", canvas_kind="entities", nodes=[]),
+    )
+    made = [
+        create_node(plot_root, "alpha", "entities", "entity", {"label": f"데이터 {i}"})["node"]
+        for i in range(10)
+    ]
+    rendered = 96.0  # tallest entity card seen in the walk and the sim corpus
+    for a, b in zip(made, made[1:]):
+        assert a["x"] == b["x"]
+        assert not _overlaps(a, b, rendered, rendered), (a["y"], b["y"])
+
+
+def test_create_node_stacks_below_a_measured_taller_sibling(tmp_path: Path) -> None:
+    """A sibling the viewer already measured taller than its kind's usual card
+    (a long feature) must not be overlapped by the next node of its kind."""
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="entities",
+            canvas_kind="entities",
+            nodes=[EntityNode(id="e1", label="긴 데이터", x=160.0, y=120.0, height=240.0)],
+        ),
+    )
+    nxt = create_node(plot_root, "alpha", "entities", "entity", {"label": "다음"})["node"]
+    assert nxt["y"] >= 120.0 + 240.0
+
+
+def test_create_node_near_children_never_overlap_when_rendered(tmp_path: Path) -> None:
+    """Features placed beside their service stack by the rendered feature
+    height (up to 169), not a fixed 80 step."""
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="services",
+            canvas_kind="services",
+            nodes=[ServiceNode(id="s1", label="송금", x=0.0, y=0.0)],
+        ),
+    )
+    made = [
+        create_node(plot_root, "alpha", "services", "feature", {"label": f"기능 {i}"}, near="s1")[
+            "node"
+        ]
+        for i in range(4)
+    ]
+    for a, b in zip(made, made[1:]):
+        assert not _overlaps(a, b, 169.0, 169.0), (a["y"], b["y"])
