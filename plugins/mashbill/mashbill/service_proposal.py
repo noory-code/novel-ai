@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field, TypeAdapter
 from mashbill.canvas_io import build_new_node, read_canvas, write_canvas
 from mashbill.models import CanvasDoc
 from mashbill.proposal_store import load_proposals, now_iso, proposed_since, save_proposals
+from mashbill.storage import anchor_obstacles
 
 _DIRNAME = "service_proposals"
 _NAME = "services"
@@ -135,7 +136,13 @@ def add_proposed_services(plot_root: Path, project_id: str) -> dict[str, Any]:
         if name in present:
             continue
         fields = {"label": name, "problem": service.problem, "value_created": service.value_created}
-        node, _ = build_new_node(canvas, "service", fields, None)
+        node, _ = build_new_node(
+            canvas,
+            "service",
+            fields,
+            None,
+            obstacles=anchor_obstacles(plot_root, project_id, "services"),
+        )
         ids[service.key] = str(node.id)
         canvas = canvas.model_copy(update={"nodes": [*canvas.nodes, node]})
     write_canvas(plot_root, project_id, CanvasDoc.model_validate(canvas.model_dump(by_alias=True)))

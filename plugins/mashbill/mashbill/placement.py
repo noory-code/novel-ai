@@ -71,23 +71,34 @@ def _bottom(node: SketchNode) -> float:
     return node.y + _rendered_height(node)
 
 
-def _first_free_y(existing: list[SketchNode], x: float, y: float, kind: str, label: str) -> float:
+# (x, y, width, height) of a card the new node must not cover.
+Rect = tuple[float, float, float, float]
+
+
+def _first_free_y(
+    existing: list[SketchNode],
+    x: float,
+    y: float,
+    kind: str,
+    label: str,
+    obstacles: tuple[Rect, ...] = (),
+) -> float:
     """Push ``y`` down until a ``kind`` card at ``(x, y)`` overlaps no card on
     the canvas — the guarantee W-00000451 adds on top of every heuristic. Cards
     beside the new one count too: a card renders up to 340 wide, so one a
-    little to the side still covers the spot."""
+    little to the side still covers the spot. ``obstacles`` are cards that are
+    not canvas nodes, such as the project anchor the viewer draws."""
     height = _expected_height(kind, label)
     width = _RENDER_WIDTH.get(kind, _DEFAULT_RENDER_WIDTH)
-    in_path = sorted(
-        (n for n in existing if n.x < x + width and x < n.x + _rendered_width(n)),
-        key=lambda n: n.y,
-    )
+    rects = [(n.x, n.y, _rendered_width(n), _rendered_height(n)) for n in existing]
+    rects.extend(obstacles)
+    in_path = sorted((r for r in rects if r[0] < x + width and x < r[0] + r[2]), key=lambda r: r[1])
     moved = True
     while moved:
         moved = False
-        for n in in_path:
-            if y < _bottom(n) and n.y < y + height:
-                y = _bottom(n) + _STACK_GAP
+        for rx, ry, _rw, rh in in_path:
+            if y < ry + rh and ry < y + height:
+                y = ry + rh + _STACK_GAP
                 moved = True
     return y
 
@@ -100,15 +111,17 @@ def _first_free_y(existing: list[SketchNode], x: float, y: float, kind: str, lab
 # Coordinates = the retired seeds' spots (the layout SSOT around the 0,0
 # anchor). These kinds exist only on the foundation canvas, so keying on
 # kind alone is safe.
+# W-00000451: core_value moved from x -340 to -455 so its 340 px card clears
+# the default anchor (-75..75) by 40 px; mission and identity already clear it.
 _FIRST_OF_KIND_XY: dict[str, tuple[float, float]] = {
     "mission": (-100.0, -220.0),
-    "core_value": (-340.0, -40.0),
+    "core_value": (-455.0, -40.0),
     "identity": (140.0, -45.0),
 }
 
 
 def _compute_fresh_position(
-    existing: list[SketchNode], kind: str, label: str = ""
+    existing: list[SketchNode], kind: str, label: str = "", obstacles: tuple[Rect, ...] = ()
 ) -> tuple[float, float]:
     """Where a new ``kind`` node is dropped on a canvas that already holds
     ``existing`` nodes.
@@ -127,12 +140,12 @@ def _compute_fresh_position(
     if same_kind:
         x = min(n.x for n in same_kind)
         y = max(_bottom(n) for n in same_kind) + _STACK_GAP
-        return x, _first_free_y(existing, x, y, kind, label)
+        return x, _first_free_y(existing, x, y, kind, label, obstacles)
     pinned = _FIRST_OF_KIND_XY.get(kind)
     if pinned is not None:
-        return pinned[0], _first_free_y(existing, pinned[0], pinned[1], kind, label)
+        return pinned[0], _first_free_y(existing, pinned[0], pinned[1], kind, label, obstacles)
     y = _FRESH_Y0 + _FRESH_DY * len(existing)
-    return _FRESH_X, _first_free_y(existing, _FRESH_X, y, kind, label)
+    return _FRESH_X, _first_free_y(existing, _FRESH_X, y, kind, label, obstacles)
 
 
 # A child column belongs to ONE anchor: siblings stack from the anchor's y; a
@@ -141,7 +154,11 @@ _NEAR_BAND = 400.0
 
 
 def _compute_near_position(
-    existing: list[SketchNode], anchor: SketchNode, kind: str, label: str = ""
+    existing: list[SketchNode],
+    anchor: SketchNode,
+    kind: str,
+    label: str = "",
+    obstacles: tuple[Rect, ...] = (),
 ) -> tuple[float, float]:
     """Place a new node beside ``anchor``, stacked below earlier siblings.
 
@@ -156,7 +173,7 @@ def _compute_near_position(
         n for n in existing if abs(n.x - child_x) < 1.0 and abs(n.y - anchor.y) < _NEAR_BAND
     ]
     y = max(_bottom(n) for n in siblings) + _STACK_GAP if siblings else anchor.y
-    return child_x, _first_free_y(existing, child_x, y, kind, label)
+    return child_x, _first_free_y(existing, child_x, y, kind, label, obstacles)
 
 
 # Kind default colors — MIRRORS the viewer stencil palette

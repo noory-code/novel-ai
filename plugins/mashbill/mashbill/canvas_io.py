@@ -43,6 +43,7 @@ from mashbill.storage import (  # noqa: F401
     _project_file,
     _read_json,
     _write_json,
+    anchor_obstacles,
     read_project,
     write_project,
 )
@@ -415,7 +416,8 @@ def create_node(
         extra_seed[ref_field] = validated_pick(
             kind, ref_field, home_canvas, incoming.get(ref_field), (n.id for n in home.nodes)
         )
-    new_node, rejected = build_new_node(canvas, kind, incoming, near, extra_seed)
+    obstacles = anchor_obstacles(plot_root, project_id, canvas_kind)
+    new_node, rejected = build_new_node(canvas, kind, incoming, near, extra_seed, obstacles)
     # Re-validate the WHOLE doc (not just the node) so a fresh node can never
     # break a canvas-level invariant — the same guard update_node relies on.
     updated = CanvasDoc.model_validate(
@@ -431,12 +433,14 @@ def build_new_node(
     fields: dict[str, Any],
     near: str | None,
     extra_seed: dict[str, object] | None = None,
+    obstacles: tuple[tuple[float, float, float, float], ...] = (),
 ) -> tuple[SketchNode, list[str]]:
     """Mint one node for ``canvas`` without writing it: id, position, kind color,
     and only the kind's writable fields (the rest come back as rejected names).
 
     ``extra_seed`` carries a create-time reference that must be present before
     validation (see :data:`CREATE_TIME_REFS`); those keys are never rejected.
+    ``obstacles`` are cards that are not canvas nodes (:func:`anchor_obstacles`).
     """
     canvas_kind = canvas.canvas_kind
     node_id = f"{kind}_{uuid4().hex[:8]}"
@@ -451,9 +455,12 @@ def build_new_node(
         anchor = next((n for n in canvas.nodes if n.id == near), None)
         if anchor is None:
             raise ValueError(f"near anchor not on the {canvas_kind!r} canvas: {near!r}")
-        x, y = _compute_near_position(canvas.nodes, anchor, kind, str(fields.get("label") or ""))
+        label = str(fields.get("label") or "")
+        x, y = _compute_near_position(canvas.nodes, anchor, kind, label, obstacles)
     else:
-        x, y = _compute_fresh_position(canvas.nodes, kind, str(fields.get("label") or ""))
+        x, y = _compute_fresh_position(
+            canvas.nodes, kind, str(fields.get("label") or ""), obstacles
+        )
     seed: dict[str, object] = {"id": node_id, "kind": kind, "x": x, "y": y}
     # B-23 — same kind, same color: apply the kind palette unless the caller
     # passes an explicit color.

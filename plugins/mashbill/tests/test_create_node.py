@@ -833,3 +833,40 @@ def test_create_node_counts_wrapped_title_lines(tmp_path: Path) -> None:
     first = create_node(plot_root, "alpha", "entities", "entity", {"label": long_title})["node"]
     nxt = create_node(plot_root, "alpha", "entities", "entity", {"label": "다음"})["node"]
     assert nxt["y"] >= first["y"] + 216.0
+
+
+def test_create_node_first_core_value_clears_the_project_anchor(tmp_path: Path) -> None:
+    """W-00000451 third review: the project anchor is a card the viewer adds
+    (default -75,-75, 150×150), not a canvas node, so placement never saw it —
+    the first core value (pinned left, 340 wide) covered it."""
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(canvas_id="foundation", canvas_kind="foundation", nodes=[]),
+    )
+    for kind, label in (("core_value", "신뢰"), ("mission", "미션"), ("identity", "정체성")):
+        node = create_node(plot_root, "alpha", "foundation", kind, {"label": label})["node"]
+        h = {"core_value": 84.0, "mission": 90.0, "identity": 108.0}[kind]
+        anchor = {"x": -75.0, "y": -75.0}
+        assert not _rect_overlap(node, anchor, 340.0, h, 150.0, 150.0), (kind, node)
+
+
+def test_create_node_avoids_a_moved_project_anchor(tmp_path: Path) -> None:
+    """A person may drag the anchor into the entity stack's path; the next
+    entity must still clear it."""
+    from mashbill.models_canvas import AnchorPlacement
+    from mashbill.storage import read_project, write_project
+
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(canvas_id="entities", canvas_kind="entities", nodes=[]),
+    )
+    project = read_project(plot_root, "alpha")
+    anchors = dict(project.anchors)
+    anchors["entities"] = AnchorPlacement(x=200.0, y=100.0)
+    write_project(plot_root, project.model_copy(update={"anchors": anchors}))
+    node = create_node(plot_root, "alpha", "entities", "entity", {"label": "주문"})["node"]
+    assert not _rect_overlap(node, {"x": 200.0, "y": 100.0}, 340.0, 96.0, 150.0, 150.0), node

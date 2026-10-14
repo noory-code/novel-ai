@@ -60,7 +60,9 @@ for each extra line its title wraps to (the title is not cut; counted at 18
 characters a line, measured at about 23 at the 340 px width cap). A `near` child column
 starts right of the parent's rendered width plus 40 px. The final position is
 then pushed down until the new card's rectangle overlaps no card on the canvas,
-including cards a little to the side, so a coach that creates many nodes in one
+including cards a little to the side and the project anchor the viewer draws
+from `ProjectDoc.anchors` (`storage.anchor_obstacles`); the first core value's
+pinned spot is x -455 so its 340 px card clears the default anchor, so a coach that creates many nodes in one
 turn never piles them on top of each other.
 
 **Save-time anchor orphan normalization (D-2026-07-21-C, W-91).** Before

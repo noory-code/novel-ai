@@ -105,3 +105,17 @@ def write_project(plot_root: Path, project: ProjectDoc) -> None:
         _project_file(plot_root, project.id),
         refreshed.model_dump(),
     )
+
+
+def anchor_obstacles(
+    plot_root: Path, project_id: str, canvas_kind: CanvasKind
+) -> tuple[tuple[float, float, float, float], ...]:
+    """The project anchor's card on ``canvas_kind`` as a placement obstacle.
+
+    The viewer draws the anchor from ``ProjectDoc.anchors``; it is not a canvas
+    node, so placement would otherwise put a new card on top of it
+    (W-00000451). Canvases without an anchor (feature detail) have none."""
+    anchor = read_project(plot_root, project_id).anchors.get(canvas_kind)
+    if anchor is None:
+        return ()
+    return ((anchor.x, anchor.y, anchor.width, anchor.height),)
