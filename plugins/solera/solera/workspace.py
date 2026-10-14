@@ -214,10 +214,18 @@ class Workspace:
         return sorted(p.stem for p in self.items_dir.glob("*.md") if _is_item_name(p.stem))
 
     def foreign_item_files(self) -> list[str]:
-        """File names in ``items/`` that end in ``.md`` but are not work items."""
+        """File names in ``items/`` that are not ``<item id>.md``, whatever their
+        extension. Hidden files (a write in progress, ``.<name>.XXXX.tmp``) are
+        left out."""
         if not self.items_dir.is_dir():
             return []
-        return sorted(p.name for p in self.items_dir.glob("*.md") if not _is_item_name(p.stem))
+        return sorted(
+            p.name
+            for p in self.items_dir.iterdir()
+            if p.is_file()
+            and not p.name.startswith(".")
+            and not (p.suffix == ".md" and _is_item_name(p.stem))
+        )
 
     def list_feedback(self) -> list[str]:
         if not self.feedback_dir.is_dir():

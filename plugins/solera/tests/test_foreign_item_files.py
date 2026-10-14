@@ -38,6 +38,15 @@ def test_loading_skips_a_conflict_copy_and_keeps_every_real_item(tmp_path: Path)
     assert ws.foreign_item_files() == ["STORY-001 2.md"]
 
 
+def test_any_other_file_in_the_items_folder_is_listed_too(tmp_path: Path) -> None:
+    ws = _workspace_with_conflict_copy(tmp_path)
+    (ws.items_dir / "STORY-001 2.txt").write_text("stray")
+    (ws.items_dir / "notes").write_text("stray")
+    (ws.items_dir / ".STORY-002.md.ab12.tmp").write_text("a write in progress")
+    assert sorted(load_items(ws)) == ["STORY-001", "STORY-002"]
+    assert ws.foreign_item_files() == ["STORY-001 2.md", "STORY-001 2.txt", "notes"]
+
+
 def test_the_audit_names_the_conflict_copy(tmp_path: Path) -> None:
     ws = _workspace_with_conflict_copy(tmp_path)
     problems = audit_workspace(ws)

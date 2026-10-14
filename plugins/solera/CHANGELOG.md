@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.11.1] — 2026-10-14
+
+### Changed
+
+- `foreign_item_files()` and `skipped_files` name every non-hidden file in `items/` that is not `<item id>.md`, whatever its extension (D-2026-10-14-C).
+
 ## [8.11.0] — 2026-10-14
 
 ### Changed

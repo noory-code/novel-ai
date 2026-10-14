@@ -45,10 +45,14 @@
   only; it no longer rewrites `project.json` to bump `updated`. `updated` now moves on project-level changes (rename,
   anchors, publish). Project listings (`enumerate_projects`, `discover_projects`, `list_projects`) report `updated` as
   the later of the stored value and the newest modification time of any file in the project's data folder
-  (`workspace.last_edited`), without writing it, so "most recently edited first" keeps its meaning. (2) Solera: a `.md`
-  file in `items/` whose name is not a valid work-item id is skipped by `list_items` instead of failing every load,
-  listed by `Workspace.foreign_item_files()`, reported by the audit as `foreign-item-file`, and returned by
-  `GET /api/work` as `skipped_files`; the app's work tab names those files.
+  (`workspace.last_edited`), without writing it, so "most recently edited first" keeps its meaning on the machine
+  where the edits happen. Trade-off: files just received by `git clone`/`checkout` or a synced folder carry the
+  receive time, so right after receiving, the order follows when each project arrived. A last-edited stamp inside the
+  data would travel across machines but would itself become a field two machines both rewrite. (2) Solera: a `.md`
+  file in `items/` whose name is not a valid work-item id is skipped by `list_items` instead of failing every load.
+  Every non-hidden file in `items/` that is not `<item id>.md`, whatever its extension, is listed by
+  `Workspace.foreign_item_files()`, reported by the audit as `foreign-item-file`, and returned by `GET /api/work` as
+  `skipped_files`; the app's work tab names those files.
 - **Why:** novel-workspace W-00000378 (`docs/research/multi-device-sync.md` in the private workspace) let two copies of a
   real project edit different nodes through the engine and merged them with git: every pair collided on
   `project.json` because each save bumped `updated`. A synced folder's conflict copy (`STORY-001 2.md`) made Solera

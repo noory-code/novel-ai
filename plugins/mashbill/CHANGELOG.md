@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.221.1] — 2026-10-14
+
+### Changed
+
+- Docs: D-2026-10-14-C names the listing trade-off (files just received by git or a synced folder carry the receive time) and that Solera reports every stray file in `items/`.
+
 ## [0.221.0] — 2026-10-14
 
 ### Changed
