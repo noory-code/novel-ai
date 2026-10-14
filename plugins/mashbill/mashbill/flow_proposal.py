@@ -121,6 +121,10 @@ def _check_shape(proposal: FlowProposal, canvas: CanvasDoc) -> None:
             raise ValueError(f"key {node.key!r} is already a node id on this canvas")
         if node.key in keys:
             raise ValueError(f"key {node.key!r} is used twice")
+        if "[" in node.key or "]" in node.key:
+            # The reply shows a key as "[key]" (O-00000137); a bracket inside
+            # it could not be found and renamed whole.
+            raise ValueError(f"key {node.key!r} has a bracket; use letters, digits, - _ .")
         keys.add(node.key)
     notes = {node.key for node in proposal.nodes if node.kind == "note"}
     notes |= {node_id for node_id, node in existing.items() if node.kind == "note"}

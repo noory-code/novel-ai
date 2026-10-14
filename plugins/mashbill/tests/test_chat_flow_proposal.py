@@ -383,3 +383,19 @@ def test_an_all_digit_draft_key_is_left_alone(tmp_path: Path) -> None:
 
     assert undrawn == {"[settle]": "[1]"}
     assert drawn == {"[settle]": "'흐름을 정한다'"}
+
+
+@pytest.mark.parametrize("key", ["foo]bar.v2", "[settle", "a[b]"])
+def test_a_draft_key_with_a_bracket_is_refused(tmp_path: Path, key: str) -> None:
+    # The reply shows a key as "[key]"; a bracket inside it could not be found
+    # or renamed whole, so propose_flow refuses it (W-00000458).
+    _, project_path = _project(tmp_path)
+
+    with pytest.raises(ValueError, match="bracket"):
+        mcp_tools.propose_flow(
+            project_path,
+            "alpha",
+            "feature_x",
+            nodes=[{"key": key, "kind": "step", "label": "흐름을 정한다", "covers": [1]}],
+            edges=[{"source": "feature_x", "target": key}],
+        )

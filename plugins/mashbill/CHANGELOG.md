@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.8] — 2026-10-15
+
+### Changed
+
+- `propose_flow` refuses a draft key that contains `[` or `]`, since the reply shows keys as `[key]` and such a key could not be renamed whole (W-00000458).
+
 ## [0.225.7] — 2026-10-15
 
 ### Fixed
