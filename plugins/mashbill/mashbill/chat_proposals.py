@@ -57,19 +57,19 @@ def _renamed(text: str, names: dict[str, str]) -> str:
     return text
 
 
-_HELD_KEY_LIMIT = 64
-
-
-def _split_open_key(text: str) -> tuple[str, str]:
-    """Split off a trailing ``[`` that is not closed yet, so a key is renamed whole.
+def _split_open_key(text: str, names: dict[str, str]) -> tuple[str, str]:
+    """Split off a trailing unclosed ``[…`` that begins a draft key, so it is renamed whole.
 
     The stream is buffered to sentence ends upstream, so a key with a period
-    (``[choice.v2]``) arrives in two pieces. A long unclosed tail is plain text.
+    (``[choice.v2]``) arrives in two pieces. A tail that begins no key is text.
     """
     cut = text.rfind("[")
-    if cut == -1 or "]" in text[cut:] or len(text) - cut > _HELD_KEY_LIMIT:
+    if cut == -1:
         return text, ""
-    return text[:cut], text[cut:]
+    tail = text[cut:]
+    if "]" in tail or not any(key.startswith(tail) for key in names):
+        return text, ""
+    return text[:cut], tail
 
 
 async def append_proposal(
@@ -87,7 +87,9 @@ async def append_proposal(
     held = ""  # an unclosed "[…" kept back until the piece that closes it arrives
     async for event in events:
         if event.type == "delta" and project_id:
-            text, held = _split_open_key(held + event.text)
+            text = held + event.text
+            names = _reader_names(plot_root, project_id, scope) if "[" in text else {}
+            text, held = _split_open_key(text, names)
             if not text:
                 continue
             event = event.model_copy(update={"text": text})

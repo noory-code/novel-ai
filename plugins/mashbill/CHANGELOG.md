@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.5] — 2026-10-15
+
+### Fixed
+
+- The held-back unclosed `[` tail has no length cap: it is held exactly when it begins one of the current draft's keys, so a long key split at its period is renamed whole too (W-00000458).
+
 ## [0.225.4] — 2026-10-15
 
 ### Fixed

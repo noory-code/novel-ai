@@ -322,3 +322,36 @@ async def test_a_draft_key_cut_at_its_own_period_still_reads_as_the_number(
     assert not any("choice" in piece for piece in deltas)
     assert "".join(deltas) == "갈래 [1]를 봐 주세요. 끝 ["
     assert out[-1].type == "turn_complete" and out[-1].text == "갈래 [1]를 봐 주세요. 끝 ["
+
+
+async def test_a_long_draft_key_cut_at_its_period_still_reads_as_the_number(
+    tmp_path: Path,
+) -> None:
+    from datetime import UTC, datetime
+
+    from mashbill.chat_proposals import append_proposal
+
+    plot_root, project_path = _project(tmp_path)
+    key = "branch" + "x" * 80 + ".v2"
+    mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[{"key": key, "kind": "step", "label": "흐름을 정한다", "covers": [1]}],
+        edges=[{"source": "feature_x", "target": key}],
+        open_items=[{"at": key, "question": "그다음은 무엇인가요?"}],
+    )
+    pieces = ["갈래 [branch" + "x" * 80 + ".", "v2]를 봐 주세요."]
+
+    async def events() -> Any:
+        for piece in pieces:
+            yield ChatStreamEvent(type="delta", turn_id="t1", text=piece)
+        yield ChatStreamEvent(type="turn_complete", turn_id="t1", text="".join(pieces))
+
+    out = [
+        e async for e in append_proposal(events(), plot_root, "alpha", _SCOPE, datetime.now(UTC))
+    ]
+
+    deltas = [e.text for e in out if e.type == "delta"]
+    assert not any("branch" in piece for piece in deltas)
+    assert "".join(deltas) == "갈래 [1]를 봐 주세요."
