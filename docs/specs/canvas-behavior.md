@@ -107,8 +107,12 @@
 
 ## Feature canvas — Execution (formerly Service-Detail)
 
-A **UX flowchart** opened by clicking a feature (action → branch → outcome, action altitude). Opens as a dynamic
-canvas tab (`{feature/service name}` label). Not a modal.
+A **UX flowchart** opened by clicking a feature (action → branch → outcome, action altitude). It opens **beside the
+Services canvas**, not as a tab or a modal (`D-2026-10-14-A`): the Services canvas stays on the left, the feature's
+canvas opens on the right under its name and a ✕, and a divider sets the widths. Pressing another feature swaps the
+right pane; the pane stays through tab changes and closes only by its ✕ or a project change. Of the two canvases, the
+one pressed last is focused: the palette, inspector, chat scope, canvas shortcuts and palette drops follow it, and the
+other lets go of its selection.
 
 - **Anchor:** **none.** A hidden root-service node is the layout-hub fallback.
 - **Nodes:** `step` (action) · `decision` (branch ◇) · flow edge · `note` (global context with no edges) ·

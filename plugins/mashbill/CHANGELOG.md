@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.220.3] — 2026-10-14
+
+### Changed
+
+- Docs: a feature's canvas opens beside the Services canvas instead of as a tab; the canvas pressed last is focused and alone takes the palette, inspector, chat scope, shortcuts and drops (D-2026-10-14-A).
+
 ## [0.220.2] — 2026-10-12
 
 ### Fixed

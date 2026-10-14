@@ -39,6 +39,33 @@
 
 ## Log
 
+### D-2026-10-14-A — A feature's canvas opens beside the Services canvas, not as a tab
+
+- **What:** *(Claude, carrying out novel-workspace W-00000432)* (1) Pressing a feature on the Services canvas splits the
+  Services tab: the Services canvas stays on the left and the feature's flow canvas opens on the right, headed by the
+  feature's name and a ✕. A drag-able divider sets the two widths; each pane keeps at least 200px. Pressing another feature
+  swaps what the right pane shows. (2) The `{feature}` tab after the canvas tabs is removed; the tab bar always holds the
+  five canvas tabs. (3) Of the two canvases on screen, the one pressed last is the **focused** canvas, marked by a thin
+  accent bar. The palette, the inspector, the chat scope, the selection the chat receives, the window-wide canvas
+  shortcuts (Cmd+A/C/V/D, Delete), and palette drops follow it; the other canvas lets go of its selection and open
+  inspector and takes no shortcut or drop. Opening a feature focuses its pane. (4) The pane survives every navigation —
+  another tab, a jump to an actor or a node, undo and redo landing on a canvas — and closes only by its ✕ or a project
+  change. Coming back to Services shows it with the Services canvas focused. A `?detail=` link on another tab shows that
+  tab; the pane waits on Services.
+- **Why:** The user (2026-10-12): "기능캔버스는 서비스 캔버스 오른쪽 옆에 뜨는 걸로요" — confirmed as both canvases visible
+  side by side. The tab hid the Services canvas while drawing a feature's flow, so the person lost sight of the service and
+  its other features.
+- **Alternatives:** Keep the `{feature}` tab as a second way in — two routes to one canvas, and the tab would show the
+  canvas without the Services canvas the user asked to keep beside it. Close the pane on every tab change — the person
+  would lose the feature they were working on by glancing at another canvas.
+- **Approval:** The user asked for the layout (2026-10-12); removing the tab and the focus rule are Claude's design, open to
+  the user's review.
+- **Supersedes:** D-2026-06-15-H (1) — the feature as a dynamic canvas tab.
+- **Spec impact:** public `docs/specs/canvas-behavior.md` Services drill and Feature canvas; `SPEC.md` conversation scope
+  and "What ServiceDetail is".
+- **Principles:** SSOT (one route to a feature's canvas); Fail Fast (a canvas that is not focused refuses shortcuts and
+  drops instead of acting on the wrong canvas).
+
 ### D-2026-10-12-C — A feature check recorded on a flow draft survives drawing that draft; the coach records only checking or checked
 
 - **What:** *(Claude, carrying out novel-workspace W-00000430)* (1) `set_design_check` takes `checking` or `checked` and refuses
@@ -4963,6 +4990,8 @@
 
 ### D-2026-06-15-H — Service-detail opens as a dynamic canvas tab; chat switcher reverts to two tabs (supersedes D-2026-06-15-E)
 
+> **#1 dynamic tab SUPERSEDED by [D-2026-10-14-A]** — a feature's canvas opens beside the Services canvas.
+>
 > **#2 drill SUPERSEDED by [D-2026-06-15-L].** H #2 said actor_ref jumps to
 > the actor master on double-click; the fix only covered the routing hook's
 > single-click path, so the jump still fired via two ungated double-click
