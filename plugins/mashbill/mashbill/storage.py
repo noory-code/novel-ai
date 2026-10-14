@@ -107,6 +107,10 @@ def write_project(plot_root: Path, project: ProjectDoc) -> None:
     )
 
 
+# The largest the viewer renders the round project anchor (W-00000451).
+_ANCHOR_RENDER_CAP = 200.0
+
+
 def anchor_obstacles(
     plot_root: Path, project_id: str, canvas_kind: CanvasKind
 ) -> tuple[tuple[float, float, float, float], ...]:
@@ -118,4 +122,8 @@ def anchor_obstacles(
     anchor = read_project(plot_root, project_id).anchors.get(canvas_kind)
     if anchor is None:
         return ()
-    return ((anchor.x, anchor.y, anchor.width, anchor.height),)
+    # A round card grows with the project name up to the viewer's 200 px cap
+    # (``max-w-[200px]`` + square), and the stored size is the 150 default until
+    # the viewer measures it — so clear the cap.
+    side = _ANCHOR_RENDER_CAP
+    return ((anchor.x, anchor.y, max(anchor.width, side), max(anchor.height, side)),)

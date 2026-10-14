@@ -869,4 +869,7 @@ def test_create_node_avoids_a_moved_project_anchor(tmp_path: Path) -> None:
     anchors["entities"] = AnchorPlacement(x=200.0, y=100.0)
     write_project(plot_root, project.model_copy(update={"anchors": anchors}))
     node = create_node(plot_root, "alpha", "entities", "entity", {"label": "주문"})["node"]
-    assert not _rect_overlap(node, {"x": 200.0, "y": 100.0}, 340.0, 96.0, 150.0, 150.0), node
+    # The anchor is stored at 150 until the viewer measures it, but a round card
+    # grows with the project name up to its 200 px cap (measured: a 42-char name
+    # renders 200×200), so placement must clear the cap.
+    assert not _rect_overlap(node, {"x": 200.0, "y": 100.0}, 340.0, 96.0, 200.0, 200.0), node

@@ -61,7 +61,8 @@ characters a line, measured at about 23 at the 340 px width cap). A `near` child
 starts right of the parent's rendered width plus 40 px. The final position is
 then pushed down until the new card's rectangle overlaps no card on the canvas,
 including cards a little to the side and the project anchor the viewer draws
-from `ProjectDoc.anchors` (`storage.anchor_obstacles`); the first core value's
+from `ProjectDoc.anchors` (`storage.anchor_obstacles`, counted at the round card's 200 px
+rendered cap until the viewer measures it, because it grows with the project name); the first core value's
 pinned spot is x -455 so its 340 px card clears the default anchor, so a coach that creates many nodes in one
 turn never piles them on top of each other.
 
