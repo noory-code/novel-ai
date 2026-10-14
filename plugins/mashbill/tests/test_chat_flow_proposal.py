@@ -248,3 +248,42 @@ async def test_a_draft_key_of_a_drawn_draft_reads_as_its_step_name(tmp_path: Pat
     saved = read_conversation(plot_root, "alpha", _SCOPE).messages[-1].text
     # No draft box is shown once drawn, so a number would point at nothing.
     assert saved == "'흐름을 정한다' 갈래를 봐 주세요. [1]과 [other]는 그대로예요."
+
+
+async def test_a_draft_key_split_across_streamed_pieces_still_reads_as_the_number(
+    tmp_path: Path,
+) -> None:
+    plot_root, project_path = _project(tmp_path)
+
+    class _ChunkingCoach(ChatProvider):
+        """Streams token pieces, as the Claude coach does; a key spans two pieces.
+
+        The save-announcement filter upstream buffers the stream to sentence
+        boundaries, so a key without a terminator reaches the renaming whole.
+        """
+
+        async def stream_turn(self, user_message: str) -> Any:
+            yield ChatStreamEvent(type="turn_start", turn_id="t1")
+            _propose(project_path)
+            pieces = ["갈래 [set", "tle]를 봐 주세요. [", "끝"]
+            for piece in pieces:
+                yield ChatStreamEvent(type="delta", turn_id="t1", text=piece)
+            yield ChatStreamEvent(type="turn_complete", turn_id="t1", text="".join(pieces))
+
+    hub = _Hub()
+    await stream_chat_turn(
+        _ChunkingCoach(),
+        hub,
+        plot_root,
+        "흐름을 제안해 주세요",
+        scope=_SCOPE,
+        project_id="alpha",
+        provider_name="claude-code",
+        conversation_id=read_conversation(plot_root, "alpha", _SCOPE).conversation_id,
+    )
+
+    deltas = [p["text"] for p in hub.payloads if p.get("type") == "delta"]
+    assert not any("set" in piece for piece in deltas)
+    saved = read_conversation(plot_root, "alpha", _SCOPE).messages[-1].text
+    assert saved.startswith("갈래 [1]를 봐 주세요. [끝")
+    assert "".join(deltas) == saved

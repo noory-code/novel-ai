@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.3] — 2026-10-15
+
+### Tests
+
+- A draft key split across streamed pieces still reaches the person as the shown number, because the stream is buffered to sentence boundaries before renaming (W-00000458).
+
 ## [0.225.2] — 2026-10-15
 
 ### Fixed
