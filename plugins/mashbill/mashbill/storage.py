@@ -115,6 +115,9 @@ _ANCHOR_RENDER_CAP = 200.0
 _ANCHOR_CHARS_PER_LINE = 11
 _ANCHOR_LINE_HEIGHT = 16.0
 _ANCHOR_PADDING = 44.0
+# A rectangular card's width cap and title characters per line (same as placement).
+_RECT_RENDER_CAP = 340.0
+_RECT_CHARS_PER_LINE = 18
 
 
 def anchor_obstacles(
@@ -132,8 +135,13 @@ def anchor_obstacles(
     # A round card grows with the project name up to the viewer's 200 px width
     # cap (``max-w-[200px]`` + square), then grows taller as the name wraps; the
     # stored size is the 150 default until the viewer measures it.
-    lines = -(-len(project.name or "") // _ANCHOR_CHARS_PER_LINE)
-    height = max(_ANCHOR_RENDER_CAP, _ANCHOR_PADDING + _ANCHOR_LINE_HEIGHT * lines)
-    return (
-        (anchor.x, anchor.y, max(anchor.width, _ANCHOR_RENDER_CAP), max(anchor.height, height)),
-    )
+    # A non-round anchor (the patch endpoint accepts a shape) renders like any
+    # rectangular card: up to 340 px wide, so more characters fit a line.
+    round_card = anchor.shape in ("circle", "ellipse")
+    width_cap = _ANCHOR_RENDER_CAP if round_card else _RECT_RENDER_CAP
+    per_line = _ANCHOR_CHARS_PER_LINE if round_card else _RECT_CHARS_PER_LINE
+    lines = -(-len(project.name or "") // per_line)
+    height = _ANCHOR_PADDING + _ANCHOR_LINE_HEIGHT * lines
+    if round_card:
+        height = max(_ANCHOR_RENDER_CAP, height)
+    return ((anchor.x, anchor.y, max(anchor.width, width_cap), max(anchor.height, height)),)

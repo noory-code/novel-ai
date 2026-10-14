@@ -63,9 +63,14 @@ then pushed down until the new card's rectangle overlaps no card on the canvas,
 including cards a little to the side and the project anchor the viewer draws
 from `ProjectDoc.anchors` (`storage.anchor_obstacles`, counted at the round card's 200 px
 rendered width cap and at least 200 px tall, taller as a long project name wraps at 11
-characters a line, until the viewer measures it); the first core value's
+characters a line, until the viewer measures it; a non-round anchor counts at a
+rectangular card's 340 px width cap); the first core value's
 pinned spot is x -455 so its 340 px card clears the default anchor, so a coach that creates many nodes in one
 turn never piles them on top of each other.
+Limits: placement decides where a node starts. A later drag by a person, a
+later edit that makes a card taller, or two creates that race each other
+(last-write-wins, D-2026-06-27-B) can still overlap cards; the sizes it counts
+are measured at the default zoom and font.
 
 **Save-time anchor orphan normalization (D-2026-07-21-C, W-91).** Before
 `canvas_io.write_canvas` serializes a primary canvas, it adds one canonical
