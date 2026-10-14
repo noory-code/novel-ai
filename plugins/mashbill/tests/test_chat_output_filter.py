@@ -254,3 +254,75 @@ def test_stream_preserves_punctuation_at_delta_boundaries(
     assert deltas == full
     assert complete.text == full
     assert deltas == complete.text
+
+
+async def test_whole_message_commentary_without_a_period_streams_before_the_answer() -> None:
+    # Codex delivers each message whole, and its commentary often ends without a
+    # sentence terminator. The filter must pass it on while the tool work runs,
+    # not hold it until the final answer arrives.
+    answer_ready = asyncio.Event()
+
+    async def gen() -> AsyncIterator[ChatStreamEvent]:
+        yield ChatStreamEvent(type="turn_start", turn_id="t5")
+        yield ChatStreamEvent(type="delta", turn_id="t5", text="셸로 파일 개수를 세겠습니다")
+        await answer_ready.wait()
+        yield ChatStreamEvent(type="delta", turn_id="t5", text="\n\n파일은 세 개예요.")
+        yield ChatStreamEvent(type="turn_complete", turn_id="t5", text="파일은 세 개예요.")
+
+    stream = filter_save_announcements(gen(), whole_messages=True)
+    assert (await anext(stream)).type == "turn_start"
+    commentary = await asyncio.wait_for(anext(stream), timeout=1)
+    assert commentary.type == "delta"
+    assert commentary.text == "셸로 파일 개수를 세겠습니다"
+
+    answer_ready.set()
+    rest = [event async for event in stream]
+    deltas = [event.text for event in rest if event.type == "delta"]
+    complete = next(event for event in rest if event.type == "turn_complete")
+    assert deltas == ["\n\n파일은 세 개예요."]  # the answer streams once, not resent
+    assert complete.text == "파일은 세 개예요."
+
+
+def test_whole_message_save_announcement_is_stripped() -> None:
+    raw = [
+        ChatStreamEvent(type="turn_start", turn_id="t6"),
+        ChatStreamEvent(type="delta", turn_id="t6", text="미션 좋네요, 저장했어요"),
+        ChatStreamEvent(type="delta", turn_id="t6", text="\n\n저장했어요. 이제 가치를 볼까요?"),
+        ChatStreamEvent(type="turn_complete", turn_id="t6", text="저장했어요. 이제 가치를 볼까요?"),
+    ]
+
+    async def _run() -> list[ChatStreamEvent]:
+        async def gen() -> AsyncIterator[ChatStreamEvent]:
+            for event in raw:
+                yield event
+
+        return [e async for e in filter_save_announcements(gen(), whole_messages=True)]
+
+    out = asyncio.run(_run())
+    deltas = "".join(event.text for event in out if event.type == "delta")
+    complete = next(event for event in out if event.type == "turn_complete")
+    assert "저장했어요" not in deltas
+    assert deltas.startswith("미션 좋네요")
+    assert deltas.count("이제 가치를 볼까요?") == 1
+    assert complete.text == "이제 가치를 볼까요?"
+
+
+def test_whole_message_fully_stripped_leaves_no_stray_separator() -> None:
+    raw = [
+        ChatStreamEvent(type="turn_start", turn_id="t7"),
+        ChatStreamEvent(type="delta", turn_id="t7", text="저장했어요"),
+        ChatStreamEvent(type="delta", turn_id="t7", text="\n\n다음은 가치예요."),
+        ChatStreamEvent(type="delta", turn_id="t7", text="\n\n저장했어요."),
+        ChatStreamEvent(type="turn_complete", turn_id="t7", text="저장했어요."),
+    ]
+
+    async def _run() -> list[ChatStreamEvent]:
+        async def gen() -> AsyncIterator[ChatStreamEvent]:
+            for event in raw:
+                yield event
+
+        return [e async for e in filter_save_announcements(gen(), whole_messages=True)]
+
+    out = asyncio.run(_run())
+    assert [event.text for event in out if event.type == "delta"] == ["다음은 가치예요."]
+    assert next(event for event in out if event.type == "turn_complete").text == ""

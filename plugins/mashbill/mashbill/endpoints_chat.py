@@ -201,7 +201,10 @@ async def stream_chat_turn(
     started_at = datetime.now(UTC)
     try:
         proposed = append_proposal(
-            filter_save_announcements(provider.stream_turn(user_message)),
+            filter_save_announcements(
+                provider.stream_turn(user_message),
+                whole_messages=provider.streams_whole_messages,
+            ),
             plot_root,
             project_id,
             scope,

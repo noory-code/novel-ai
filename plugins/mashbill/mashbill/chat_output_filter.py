@@ -3,10 +3,11 @@
 Three prompt passes (B-6, D-2026-07-14-B, D-2026-07-15-A) could not reliably stop
 the sonnet coach from reporting the save ("미션 좋네요, 저장했어요"). The reply
 STREAMS token-by-token, so a transcript-only strip would let the user still SEE
-it. :func:`filter_save_announcements` buffers the stream to sentence boundaries and
-runs :func:`strip_save_announcement` on each completed sentence before it is
-broadcast — dropping the save-report clause while keeping the coach's content, and
-cleaning the provider's authoritative ``turn_complete.text`` so a late subscriber
+it. :func:`filter_save_announcements` buffers a token stream to sentence
+boundaries (a whole-message stream, per message) and runs
+:func:`strip_save_announcement` on each completed unit before it is broadcast —
+dropping the save-report clause while keeping the coach's content, and cleaning
+the provider's authoritative ``turn_complete.text`` so a late subscriber
 reconciles to the final post-tool reply.
 
 Language scope: Korean (the coach speaks the user's language; every observed leak
@@ -132,14 +133,22 @@ def strip_save_announcement(text: str) -> str:
 
 async def filter_save_announcements(
     events: AsyncIterator[ChatStreamEvent],
+    *,
+    whole_messages: bool = False,
 ) -> AsyncIterator[ChatStreamEvent]:
     """Sentence-buffer the coach stream and drop save-report clauses live.
 
-    Deltas are held until a sentence terminator lands, so a clause split across
-    chunks ("...저" | "장했어요.") is judged whole. ``turn_complete.text`` is the
-    authoritative full cleaned reply from the event's own text. The deltas
-    concatenate to that when possible; a late subscriber always reconciles to
-    the completion text.
+    A token-streaming provider's deltas are held until a sentence terminator
+    lands, so a clause split across chunks ("...저" | "장했어요.") is judged
+    whole. ``turn_complete.text`` is the authoritative full cleaned reply from
+    the event's own text. The deltas concatenate to that when possible; a late
+    subscriber always reconciles to the completion text.
+
+    With ``whole_messages`` (see ``ChatProvider.streams_whole_messages``) each
+    delta is one complete message: it is cleaned and sent on arrival, so a
+    message without a final terminator reaches the person while the provider
+    keeps working. The completion text is then the latest message, which has
+    already streamed, so nothing is re-sent before it.
 
     Original separators cross delta boundaries unchanged; the filter never
     inserts a space between emitted pieces.
@@ -157,10 +166,14 @@ async def filter_save_announcements(
         if ev.type == "delta":
             buffer += ev.text
             matches = list(_SENT_SPLIT.finditer(buffer))
-            if matches:
-                cut = matches[-1].end()
+            if whole_messages or matches:
+                cut = len(buffer) if whole_messages else matches[-1].end()
                 complete, buffer = buffer[:cut], buffer[cut:]
                 cleaned = strip_save_announcement(complete)
+                if whole_messages and (not emitted or not cleaned.strip()):
+                    # A message is never only the separator before it, and the
+                    # first text sent carries no separator.
+                    cleaned = cleaned.lstrip()
                 if cleaned:
                     if removed_before_emission and not emitted:
                         cleaned = cleaned.lstrip(" \t")
@@ -175,7 +188,9 @@ async def filter_save_announcements(
             # the same full text when possible; then reconcile completion to the
             # provider's authoritative text. Already-emitted pre-tool deltas cannot
             # be retracted, and an empty completion must not produce an empty delta.
-            if full_cleaned.startswith(emitted):
+            if whole_messages:
+                tail = ""
+            elif full_cleaned.startswith(emitted):
                 tail = full_cleaned[len(emitted) :]
             else:  # whitespace drift — resend the authoritative text as one delta
                 emitted = ""

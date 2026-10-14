@@ -39,6 +39,23 @@
 
 ## Log
 
+### D-2026-10-15-C — A Codex coach turn stores its final message; commentary streams live
+
+- **What:** *(Claude, novel-workspace W-00000454)* Codex writes a commentary message before its tool work and a final
+  answer after; `codex exec --json` carries no phase to tell them apart. Every message still streams live as a delta,
+  but a later message makes the earlier one commentary: `turn_complete.text` — what the viewer settles on and what is
+  stored — keeps only the latest message. `CodexProvider.streams_whole_messages` is `True`, so the save-announcement
+  filter cleans each whole message on arrival instead of buffering to a sentence boundary, and skips its end-of-turn
+  re-send; Claude Code keeps sentence buffering for split chunks.
+- **Why:** joined (workspace O-34) the stored reply repeated itself in 33 of 42 newcomer-walk turns and sometimes
+  contradicted itself in one reply. With sentence buffering, a commentary without a final period reached the person
+  only together with the answer, and the answer streamed twice before `turn_complete` settled it.
+- **Alternatives:** keep the join (rejected: the walk evidence); drop commentary entirely (rejected: it shows progress
+  while the coach works); a message-boundary flag on `ChatStreamEvent` (rejected: a wire change).
+- **Approval:** Accepted — Claude (lead), 2026-10-15, from the newcomer walk (W-00000446); reverses O-34's join.
+- **Spec impact:** none (provider stream mechanics; D-2026-07-17-A's buffering now applies to providers that stream
+  partial chunks).
+
 ### D-2026-10-15-B — propose_flow refuses branching defects a machine can see; the person reads numbers, not the coach's keys
 
 - **What:** *(Claude, carrying out novel-workspace W-00000448 and O-00000137)* (1) `propose_flow` refuses, in one error
@@ -95,6 +112,8 @@
   chat shows one line per canvas — "엔티티에 '세탁 주문', '결제', '배송' 외 7개를 더했어요." — with an Open button that
   moves to that canvas (a feature canvas opens beside Services, D-2026-10-14-A) and asks the Work tab's leave guard
   first. Reopening the conversation shows the same lines from the saved message.
+  The viewer also leaves out the line for the canvas the person is looking at when the reply is shown (a past
+  conversation reopened on another canvas); the stored list is unchanged, so the line shows when read from elsewhere.
 - **Why:** In a first-time-user walk the coach, talking on Services, created ten entities on the Entities canvas; the
   person found ten entities they never made, and the coach could not say when they were made. The user (2026-10-14):
   "엔티티는 자동으로 만들어지는거지.. 사용자에게 말해주고 그래야지" — creating them is fine, the person must be told.

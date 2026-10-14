@@ -52,6 +52,9 @@ CODEX_TOOL_HINT_ENV = "MASHBILL_CODEX_TOOL_HINT"
 class CodexProvider(_SubprocessChatProvider):
     """``codex exec --json`` driver with thread-id continuity."""
 
+    # Each delta is one completed ``agent_message`` (see :meth:`_parse_line`).
+    streams_whole_messages = True
+
     def __init__(
         self,
         workspace_root: Path,

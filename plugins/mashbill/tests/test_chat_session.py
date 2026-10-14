@@ -972,6 +972,13 @@ async def test_codex_saved_reply_is_the_final_message_not_the_commentary(
     assert complete.text == "첫 가치는 이렇게 제안해요."
 
 
+def test_only_codex_streams_whole_messages(tmp_path: Path) -> None:
+    # Codex yields one delta per completed agent message; Claude Code streams
+    # token fragments. The save-announcement filter buffers only the latter.
+    assert CodexProvider(workspace_root=tmp_path).streams_whole_messages is True
+    assert ClaudeCodeProvider(workspace_root=tmp_path).streams_whole_messages is False
+
+
 async def test_codex_second_turn_uses_exec_resume_with_captured_thread_id(
     tmp_path: Path,
 ) -> None:

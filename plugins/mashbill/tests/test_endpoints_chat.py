@@ -145,6 +145,42 @@ async def test_stream_chat_turn_broadcasts_each_event(tmp_path: Path) -> None:
     assert deltas == last_payload["text"]  # stream and reconcile text agree
 
 
+async def test_stream_chat_turn_broadcasts_whole_message_commentary_while_tools_run(
+    tmp_path: Path,
+) -> None:
+    # A provider that streams whole messages (Codex) sends commentary with no
+    # final period before its tool work; the person sees it during that work.
+    ws = tmp_path / "ws"
+    ws.mkdir()
+    hub = _FakeHub()
+    commentary_sent = asyncio.Event()
+    answer_ready = asyncio.Event()
+
+    class _WholeMessageProvider(ChatProvider):
+        streams_whole_messages = True
+
+        async def stream_turn(self, user_message: str) -> Any:
+            yield ChatStreamEvent(type="turn_start", turn_id="t-c")
+            yield ChatStreamEvent(type="delta", turn_id="t-c", text="파일 개수를 세겠습니다")
+            commentary_sent.set()
+            await answer_ready.wait()
+            yield ChatStreamEvent(type="delta", turn_id="t-c", text="\n\n세 개예요.")
+            yield ChatStreamEvent(type="turn_complete", turn_id="t-c", text="세 개예요.")
+
+    turn = asyncio.create_task(stream_chat_turn(_WholeMessageProvider(), hub, ws, "세어 줘"))
+    await asyncio.wait_for(commentary_sent.wait(), timeout=1)
+    await asyncio.sleep(0)
+    broadcast = [payload["text"] for (_, _, payload) in hub.events if payload["type"] == "delta"]  # type: ignore[index]
+    assert broadcast == ["파일 개수를 세겠습니다"]
+
+    answer_ready.set()
+    await asyncio.wait_for(turn, timeout=1)
+    last_payload = hub.events[-1][2]
+    assert last_payload is not None
+    assert last_payload["type"] == "turn_complete"
+    assert last_payload["text"] == "세 개예요."
+
+
 async def test_stream_chat_turn_stamps_scope_on_every_event(
     tmp_path: Path,
 ) -> None:

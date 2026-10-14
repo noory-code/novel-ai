@@ -155,6 +155,11 @@ class _SubprocessFactory(Protocol):
 class ChatProvider(ABC):
     """Drives one external CLI for one workspace."""
 
+    # True when every ``delta`` carries one complete message, never a fragment of
+    # one. The save-announcement filter then judges each delta on arrival instead
+    # of holding text until a sentence terminator lands.
+    streams_whole_messages: bool = False
+
     @abstractmethod
     def stream_turn(self, user_message: str) -> AsyncIterator[ChatStreamEvent]:
         """Send one user message, yield assistant stream events.
