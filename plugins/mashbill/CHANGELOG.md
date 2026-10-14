@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.7] — 2026-10-15
+
+### Fixed
+
+- Calling `create_edge` again for a nesting line that already exists clears a stale anchor spoke left by an older engine (W-00000459, D-2026-10-15-F).
+- A self-loop no longer removes its node's anchor spoke (W-00000461).
+
 ## [0.225.6] — 2026-10-15
 
 ### Tests

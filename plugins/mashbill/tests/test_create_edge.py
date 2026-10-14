@@ -16,8 +16,16 @@ from pathlib import Path
 
 import pytest
 
-from mashbill.folder_io import create_edge, create_node, create_project, read_canvas
+from mashbill.folder_io import (
+    create_edge,
+    create_node,
+    create_project,
+    read_canvas,
+    write_canvas,
+)
 from mashbill.models import CanvasKind
+from mashbill.models_foundation import PROJECT_ANCHOR_ID
+from mashbill.models_union import SketchEdge
 from mashbill.workspace import resolve_plot_root
 
 
@@ -222,3 +230,36 @@ def test_value_exchange_between_actors_keeps_both_anchor_spokes(tmp_path: Path) 
     create_edge(plot_root, "alpha", "actors", a["node"]["id"], b["node"]["id"], label="상품")
 
     assert _anchor_targets(plot_root, "actors") == {a["node"]["id"], b["node"]["id"]}
+
+
+def test_repeating_a_nesting_line_retires_a_spoke_left_by_an_older_engine(
+    tmp_path: Path,
+) -> None:
+    """A canvas saved before D-2026-10-15-F can hold both the inheritance line and
+    the member's stale anchor spoke; drawing the same line again clears the spoke."""
+    plot_root = _setup(tmp_path)
+    family = create_node(plot_root, "alpha", "actors", "actor", {"label": "동네 파트너"})
+    fid = family["node"]["id"]
+    member = create_node(plot_root, "alpha", "actors", "actor", {"label": "세탁소"}, near=fid)
+    mid = member["node"]["id"]
+    first = create_edge(plot_root, "alpha", "actors", mid, fid)
+    canvas = read_canvas(plot_root, "alpha", "actors")
+    stale = SketchEdge(id="edge_stale", source=PROJECT_ANCHOR_ID, target=mid)
+    write_canvas(plot_root, "alpha", canvas.model_copy(update={"edges": [*canvas.edges, stale]}))
+    assert mid in _anchor_targets(plot_root, "actors")
+
+    again = create_edge(plot_root, "alpha", "actors", mid, fid)
+
+    assert again["existing"] is True and again["edge"]["id"] == first["edge"]["id"]
+    assert _anchor_targets(plot_root, "actors") == {fid}
+
+
+def test_a_self_loop_keeps_the_node_spoke(tmp_path: Path) -> None:
+    """A loop nests nothing, so the node keeps its place under the anchor."""
+    plot_root = _setup(tmp_path)
+    group = create_node(plot_root, "alpha", "services", "category", {"label": "주문"})
+    gid = group["node"]["id"]
+
+    create_edge(plot_root, "alpha", "services", gid, gid)
+
+    assert _anchor_targets(plot_root, "services") == {gid}

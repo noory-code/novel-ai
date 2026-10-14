@@ -100,6 +100,18 @@ def create_edge(
     canvas = read_canvas(plot_root, project_id, canvas_kind, service_id)
     for existing in canvas.edges:
         if existing.source == source_id and existing.target == target_id and existing.directed:
+            # A canvas saved before D-2026-10-15-F can still carry the child's
+            # spoke beside this line; drawing the line again clears it.
+            stale = anchor_spokes_retired_by(canvas, existing)
+            if stale:
+                kept_edges = [e for e in canvas.edges if e.id not in stale]
+                write_canvas(
+                    plot_root,
+                    project_id,
+                    CanvasDoc.model_validate(
+                        canvas.model_copy(update={"edges": kept_edges}).model_dump(by_alias=True)
+                    ),
+                )
             return {"edge": existing.model_dump(by_alias=True), "existing": True}
     edge = _build_edge(canvas, source_id, target_id, label)
     retired = anchor_spokes_retired_by(canvas, edge)

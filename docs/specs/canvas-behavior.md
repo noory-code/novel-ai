@@ -22,8 +22,10 @@
   Actors=`actor`, Services=`category/service`, and Entities=`entity`; Feature canvases are excluded because they have
   no project anchor. Existing anchor and parent edges are preserved, so nested nodes are not re-rooted and repeated
   saves are idempotent. `create_node` remains bare; this is write-time normalization, never read-time repair.
-  Because a node created before its parent line receives a spoke, `create_edge` removes the child's anchor edge when
-  it adds an Actors `inheritance` or Services containment edge, so the child stays nested (`D-2026-10-15-F`).
+  Because a node created before its parent line receives a spoke, adding an Actors `inheritance` or Services
+  containment edge removes the child's anchor edge in the same write, whether the line comes from `create_edge` or is
+  drawn by hand, so the child stays nested; a self-loop nests nothing (`D-2026-10-15-F`). On Services a line between a
+  category and a service makes the category the parent.
 - **Blank-canvas start (`D-2026-07-04-P`).** `create_project` writes the four primary canvases empty: no seed
   nodes and no seed edges, only the project anchor. An auto-created feature detail canvas holds only its root
   feature node. The old content minimums (Foundation ≥1 mission / ≥1 identity, Actors ≥2 actors, Feature ≥1

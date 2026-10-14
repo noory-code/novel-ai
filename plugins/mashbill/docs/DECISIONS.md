@@ -51,11 +51,14 @@
   two roles, but the viewer drew them outside it: the D-2026-07-21-C save sweep ran inside `create_node`'s write,
   before the parent line existed, so each member got an anchor spoke, and nothing removed it when `create_edge`
   nested it. The viewer's mind-map layout follows the first link from the anchor, so the members became top-level.
-- **Limits:** A membership line drawn by hand in the viewer saves through the whole-canvas write and still keeps the
-  child's spoke. Canvases that already carry a stale spoke are not repaired, and a repeated `create_edge` on an
-  existing edge returns early without removing one. A spoke someone drew by hand to a node that `create_edge` later
-  nests is removed too, following the canon rule that a nested node has no spoke. Whether the coach now asks before
-  grouping is pinned by wording only, not measured.
+- **Limits:** The viewer applies the same rule when the person draws a nesting line by hand (novel-workspace
+  W-00000461), and on the Services canvas a line between a category and a service makes the category the parent
+  whichever way it was dragged. Paths that still keep a stale spoke: changing a line's relation in the viewer's edge
+  inspector, clipboard paste, and a coach `update_canvas` whole-canvas write. Canvases are not repaired on read;
+  calling `create_edge` again for a nesting line that already exists clears a stale spoke. A self-loop nests nothing
+  and retires no spoke. A spoke someone drew by hand to a node that is later nested is removed too, following the
+  canon rule that a nested node has no spoke. Whether the coach asks before grouping is pinned by wording and was
+  checked in three live Codex-coach conversations (it asked in all three), not measured at scale.
 - **Alternatives:** Removing spokes in the save sweep for every nested node — it would also cover the viewer path,
   but the sweep's contract is that existing anchor edges are preserved, and changing it reaches every canvas write.
   Delaying the sweep until the parent line exists — `create_node` and `create_edge` are separate tool calls, so the

@@ -36,7 +36,9 @@ def anchor_spokes_retired_by(canvas: CanvasDoc, edge: SketchEdge) -> set[str]:
     hierarchy = fold_endpoints(edge, canvas.canvas_kind)
     if hierarchy is None or PROJECT_ANCHOR_ID in hierarchy:
         return set()
-    _, child_id = hierarchy
+    parent_id, child_id = hierarchy
+    if parent_id == child_id:  # a loop nests nothing; the node keeps its place
+        return set()
     return {
         existing.id
         for existing in canvas.edges
