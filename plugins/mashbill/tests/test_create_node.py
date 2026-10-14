@@ -766,3 +766,54 @@ def test_create_node_near_children_never_overlap_when_rendered(tmp_path: Path) -
     ]
     for a, b in zip(made, made[1:]):
         assert not _overlaps(a, b, 169.0, 169.0), (a["y"], b["y"])
+
+
+def _rect_overlap(a: dict, b: dict, aw: float, ah: float, bw: float, bh: float) -> bool:
+    return not (
+        a["x"] + aw <= b["x"]
+        or b["x"] + bw <= a["x"]
+        or a["y"] + ah <= b["y"]
+        or b["y"] + bh <= a["y"]
+    )
+
+
+def test_create_node_avoids_a_card_in_a_nearby_column(tmp_path: Path) -> None:
+    """W-00000451 review: a card a little to the side (not the same x) still
+    covers the new card's spot, because cards render up to 340 wide. Here the
+    mission was dragged into the core-value stack's path."""
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="foundation",
+            canvas_kind="foundation",
+            nodes=[
+                CoreValueNode(id="cv1", label="신뢰", x=-340.0, y=-40.0),
+                MissionNode(id="m1", label="미션", statement="s", x=-200.0, y=60.0),
+            ],
+        ),
+    )
+    nxt = create_node(plot_root, "alpha", "foundation", "core_value", {"label": "속도"})["node"]
+    assert not _rect_overlap(nxt, {"x": -200.0, "y": 60.0}, 340.0, 84.0, 340.0, 90.0), nxt
+    assert not _rect_overlap(nxt, {"x": -340.0, "y": -40.0}, 340.0, 84.0, 340.0, 84.0), nxt
+
+
+def test_create_node_near_child_sits_clear_of_its_parent(tmp_path: Path) -> None:
+    """A child placed beside its parent must clear the parent's rendered width
+    (a service card renders 340 wide), not overlap it."""
+    plot_root = _setup(tmp_path)
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="services",
+            canvas_kind="services",
+            nodes=[ServiceNode(id="s1", label="송금", x=0.0, y=0.0)],
+        ),
+    )
+    f = create_node(plot_root, "alpha", "services", "feature", {"label": "연락처 송금"}, near="s1")[
+        "node"
+    ]
+    assert f["x"] >= 340.0
+    assert abs(f["y"] - 0.0) < 1.0  # still beside the parent, not pushed below it

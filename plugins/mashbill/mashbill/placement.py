@@ -35,10 +35,12 @@ _RENDER_HEIGHT: dict[str, float] = {
     "note": 72.0,
 }
 _DEFAULT_RENDER_HEIGHT = 120.0
-# Space between stacked cards.
+# The widest card each kind renders at (same source as _RENDER_HEIGHT).
+_RENDER_WIDTH: dict[str, float] = {"actor_ref": 120.0, "step": 360.0}
+_DEFAULT_RENDER_WIDTH = 340.0
+# Space between stacked cards, and between a parent and its child column.
 _STACK_GAP = 24.0
-# Nodes whose x differs by less than this share a column.
-_COLUMN_TOLERANCE = 1.0
+_CHILD_GAP = 40.0
 
 
 def _rendered_height(node: SketchNode) -> float:
@@ -47,19 +49,30 @@ def _rendered_height(node: SketchNode) -> float:
     return max(node.height, _RENDER_HEIGHT.get(node.kind, _DEFAULT_RENDER_HEIGHT))
 
 
+def _rendered_width(node: SketchNode) -> float:
+    """How wide ``node`` is on screen, the same way as :func:`_rendered_height`."""
+    return max(node.width, _RENDER_WIDTH.get(node.kind, _DEFAULT_RENDER_WIDTH))
+
+
 def _bottom(node: SketchNode) -> float:
     return node.y + _rendered_height(node)
 
 
 def _first_free_y(existing: list[SketchNode], x: float, y: float, kind: str) -> float:
-    """Push ``y`` down until a ``kind`` card at ``(x, y)`` overlaps no card in
-    its column — the guarantee W-00000451 adds on top of every heuristic."""
+    """Push ``y`` down until a ``kind`` card at ``(x, y)`` overlaps no card on
+    the canvas — the guarantee W-00000451 adds on top of every heuristic. Cards
+    beside the new one count too: a card renders up to 340 wide, so one a
+    little to the side still covers the spot."""
     height = _RENDER_HEIGHT.get(kind, _DEFAULT_RENDER_HEIGHT)
-    column = sorted((n for n in existing if abs(n.x - x) < _COLUMN_TOLERANCE), key=lambda n: n.y)
+    width = _RENDER_WIDTH.get(kind, _DEFAULT_RENDER_WIDTH)
+    in_path = sorted(
+        (n for n in existing if n.x < x + width and x < n.x + _rendered_width(n)),
+        key=lambda n: n.y,
+    )
     moved = True
     while moved:
         moved = False
-        for n in column:
+        for n in in_path:
             if y < _bottom(n) and n.y < y + height:
                 y = _bottom(n) + _STACK_GAP
                 moved = True
@@ -107,9 +120,6 @@ def _compute_fresh_position(existing: list[SketchNode], kind: str) -> tuple[floa
     return _FRESH_X, _first_free_y(existing, _FRESH_X, y, kind)
 
 
-# Child column offset for ``near`` placement — right of the anchor, wide enough
-# to clear the default node width comfortably.
-_NEAR_DX = 260.0
 # A child column belongs to ONE anchor: siblings stack from the anchor's y; a
 # node further than this from the anchor's y is another anchor's child.
 _NEAR_BAND = 400.0
@@ -124,7 +134,9 @@ def _compute_near_position(
     kind-clustering piled every feature of EVERY service into one global column.
     A child belongs beside ITS parent — one column per anchor (right of it),
     siblings stacking downward within the anchor's band."""
-    child_x = anchor.x + _NEAR_DX
+    # Right of the parent's rendered card (W-00000451), not a fixed offset
+    # narrower than the card.
+    child_x = anchor.x + _rendered_width(anchor) + _CHILD_GAP
     siblings = [
         n for n in existing if abs(n.x - child_x) < 1.0 and abs(n.y - anchor.y) < _NEAR_BAND
     ]

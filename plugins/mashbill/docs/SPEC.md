@@ -50,15 +50,16 @@ drop on their pinned side (mission top / core value left / identity
 right — `placement._FIRST_OF_KIND_XY`, one side SSOT with
 `edge_io.anchor_side_by_kind`, D-2026-07-04-D).
 
-**Created nodes never overlap in their column (W-00000451).** `create_node`
-stacks a new node below its same-kind cluster (or below earlier siblings when
-`near` names a parent) by each card's rendered height plus a 24 px gap. A card
-the viewer has measured uses its measured height; a card still at the stub
-height uses its kind's tallest rendered card (`placement._RENDER_HEIGHT`,
-measured from real canvases, because card text is line-clamped). The final
-position is then pushed down until the new card overlaps no card in its column,
-so a coach that creates many nodes in one turn never piles them on top of each
-other.
+**Created nodes never overlap (W-00000451).** `create_node` stacks a new
+node below its same-kind cluster (or below earlier siblings when `near` names a
+parent) by each card's rendered height plus a 24 px gap. A card the viewer has
+measured uses its measured size; a card still at the stub size uses its kind's
+largest rendered card (`placement._RENDER_HEIGHT` / `_RENDER_WIDTH`, measured
+from real canvases, because card text is line-clamped). A `near` child column
+starts right of the parent's rendered width plus 40 px. The final position is
+then pushed down until the new card's rectangle overlaps no card on the canvas,
+including cards a little to the side, so a coach that creates many nodes in one
+turn never piles them on top of each other.
 
 **Save-time anchor orphan normalization (D-2026-07-21-C, W-91).** Before
 `canvas_io.write_canvas` serializes a primary canvas, it adds one canonical
