@@ -43,8 +43,10 @@
 
 - **What:** *(Claude, carrying out novel-workspace W-00000435)* When the chat dock has read the project's saved coach
   choice and it is empty, and the codex CLI is installed, the dock picks codex and saves it to the project's
-  `chat-provider` file exactly as a radio click would. A project whose file already names a coach keeps it. With codex
-  not installed nothing is chosen, as before. Registration is not required (D-2026-09-29-A).
+  `chat-provider` file exactly as a radio click would. A project whose file names a coach installed on this machine
+  keeps it. A project whose chosen coach is not installed here has its choice cleared, as before (D-2026-09-29-A), and
+  then counts as having no coach, so it starts with codex when codex is installed. With codex not installed nothing is
+  chosen, as before. Registration is not required (D-2026-09-29-A).
 - **Why:** The user (2026-10-14): "코치는 코덱스로 쓰세요", then "이제 코치는 코덱스로 하구요". Coach quality is
   measured with the Codex coach, and the user judges Codex's Korean writing the better fit for the coach's job.
 - **Alternatives:** Default in the engine when the file is missing — the engine cannot tell whether the CLI is
