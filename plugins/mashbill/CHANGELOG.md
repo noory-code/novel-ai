@@ -4,11 +4,17 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.13] — 2026-10-15
+
+### Fixed
+
+- The check-count sentence keeps all four counts D-2026-10-05-A pins (checked, found, shown now, remaining); 0.225.12 had dropped two (W-00000469).
+
 ## [0.225.12] — 2026-10-15
 
 ### Changed
 
-- When a whole check ends, the coach says in one plain sentence how many problems it found and how many remain, instead of reciting four counts as slots (W-00000469, O-00000145).
+- When a whole check ends, the coach says its four counts (checked, found, shown now, remaining) in one plain sentence instead of reciting them as slots (W-00000469, O-00000145).
 
 ## [0.225.11] — 2026-10-15
 
