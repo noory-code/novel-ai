@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.4] — 2026-10-15
+
+### Fixed
+
+- A draft key the stream splits at its own period (`[choice.v2]`) is held back until its closing bracket arrives, so it is renamed whole while streaming too (W-00000458).
+
 ## [0.225.3] — 2026-10-15
 
 ### Tests

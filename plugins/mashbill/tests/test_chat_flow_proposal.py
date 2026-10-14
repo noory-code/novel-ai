@@ -287,3 +287,38 @@ async def test_a_draft_key_split_across_streamed_pieces_still_reads_as_the_numbe
     saved = read_conversation(plot_root, "alpha", _SCOPE).messages[-1].text
     assert saved.startswith("갈래 [1]를 봐 주세요. [끝")
     assert "".join(deltas) == saved
+
+
+async def test_a_draft_key_cut_at_its_own_period_still_reads_as_the_number(
+    tmp_path: Path,
+) -> None:
+    # The sentence buffer upstream splits after a period, so a key such as
+    # "choice.v2" reaches the renaming in two pieces; the open "[" is held back.
+    from datetime import UTC, datetime
+
+    from mashbill.chat_proposals import append_proposal
+
+    plot_root, project_path = _project(tmp_path)
+    mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[{"key": "choice.v2", "kind": "step", "label": "흐름을 정한다", "covers": [1]}],
+        edges=[{"source": "feature_x", "target": "choice.v2"}],
+        open_items=[{"at": "choice.v2", "question": "그다음은 무엇인가요?"}],
+    )
+    pieces = ["갈래 [choice.", "v2]를 봐 주세요.", " 끝 ["]
+
+    async def events() -> Any:
+        for piece in pieces:
+            yield ChatStreamEvent(type="delta", turn_id="t1", text=piece)
+        yield ChatStreamEvent(type="turn_complete", turn_id="t1", text="".join(pieces))
+
+    out = [
+        e async for e in append_proposal(events(), plot_root, "alpha", _SCOPE, datetime.now(UTC))
+    ]
+
+    deltas = [e.text for e in out if e.type == "delta"]
+    assert not any("choice" in piece for piece in deltas)
+    assert "".join(deltas) == "갈래 [1]를 봐 주세요. 끝 ["
+    assert out[-1].type == "turn_complete" and out[-1].text == "갈래 [1]를 봐 주세요. 끝 ["
