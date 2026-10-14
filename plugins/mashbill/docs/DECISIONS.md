@@ -39,6 +39,52 @@
 
 ## Log
 
+### D-2026-10-15-E — Every coach turn names the controls the viewer has on screen
+
+- **What:** *(Claude, carrying out novel-workspace W-00000457 and O-00000136)* The viewer reports, with its live
+  context (`POST /api/viewer/context`, new body field `controls`), the labels of the buttons rendered on the canvas
+  control bar, the canvas toolbar, and the open feature pane's header, read from the rendered buttons and followed as they appear, hide, or relabel.
+  The engine keeps up to 24 distinct labels of up to 60 characters in the viewer-context file, returns them from
+  `get_viewer_context` as `controls`, and `build_turn_preamble` adds one line after the active-canvas map:
+  `[Screen controls] Buttons on the canvas: …. When pointing to a canvas button or display, name only these; the
+  canvas has no other.` (`chat_screen_controls.py`). The line speaks only of the canvas, so the coach can still point
+  to the tabs or the publish window. Without a live report that carries controls the line is
+  left out.
+- **Why:** In novel-workspace W-00000446's first-time-user walk the Codex coach told the person to look at a zoom
+  percentage display on the feature canvas. The canvas has zoom buttons but no percentage display; nothing in the
+  prompt or the turn context said which controls the screen has, and the coach's search of
+  its tools found nothing, so it guessed.
+- **Limits:** The list covers the canvas control bar (zoom in, zoom out, fit view, lock, layout, direction, and the
+  work canvas's own buttons), the canvas toolbar (undo, redo, work progress), and the open feature pane's close
+  button. The canvas tabs, the publish button, the chat dock, the sidebar, context menus, and the inspector are not
+  reported. The report is debounced (150 ms), so a message sent right after switching canvas can carry the previous
+  canvas's list. A harness that posts no viewer context, such as
+  the simulator, gets no line. Whether the line stops the guessing is not measured.
+- **Alternatives:** A rule in the system prompt naming the controls — it would put viewer wording in the engine and go
+  stale when the viewer changes. A list written by hand in the viewer — it would drift from what renders. Carrying the
+  controls in the chat request body — the viewer-context report already reaches both the in-app turn and the external
+  agent, so one carrier serves both.
+- **Approval:** Claude's design within W-00000457, open to the user's review.
+- **Spec impact:** `docs/SPEC.md` rows "Screen controls" and "MCP-path context".
+- **Principles:** SSOT (the viewer owns its controls' wording; the engine only relays it); Honesty (the coach points
+  only to what is on screen).
+
+### D-2026-10-15-D — The person reads a service set with numbers, not the coach's keys
+
+- **What:** *(Claude, carrying out novel-workspace W-00000457)* `propose_services` renders every service as `[n]`,
+  numbered 1, 2, … in the order the coach listed them, instead of the coach's `key`; a service already on the canvas
+  shows as `[n] ✓ label`. The tool also returns `numbers` (shown number → key). Keys stay the set's internal names
+  (`add_proposed_services` still returns `service_ids` by key).
+- **Why:** The same first-time-user walk that led to D-2026-10-15-B showed the coach's made-up English keys in the
+  block under its reply; D-2026-10-15-B fixed the feature-flow block, and the service-set block still showed keys.
+- **Alternatives:** Number only the services still to add — the numbers would be contiguous, but the block is
+  rendered again at the end of the turn against the canvas as it is then, so a service added in between would shift
+  the numbers away from the `numbers` the coach was given. Numbering by the coach's order does not depend on the
+  canvas. Show labels only — the person and the coach would have no short name for a service.
+- **Approval:** Claude's design within W-00000457, open to the user's review.
+- **Spec impact:** `docs/SPEC.md` service-set proposals row.
+- **Principles:** Consistency (service sets and flow drafts number their items the same way).
+
 ### D-2026-10-15-C — A Codex coach turn stores its final message; commentary streams live
 
 - **What:** *(Claude, novel-workspace W-00000454)* Codex writes a commentary message before its tool work and a final

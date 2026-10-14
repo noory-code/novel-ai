@@ -25,6 +25,7 @@ from typing import Any
 from mashbill.canvas_io import read_canvas
 from mashbill.chat_context import SELECTION_DETAIL_CAP, build_context_preamble
 from mashbill.chat_feature_description import render_feature_description
+from mashbill.chat_screen_controls import render_screen_controls
 from mashbill.chat_services_map import render_services_map_lines
 from mashbill.draft_store import list_drafts
 from mashbill.field_policy import writable_node_fields
@@ -91,8 +92,8 @@ def build_turn_preamble(
     """Assemble the per-turn user-message context — the context-provider seam.
 
     Single place that builds "what the agent should see this turn" (D-2026-06-17-L):
-    current Foundation → active-canvas map → feature description → cross-canvas registry → write
-    target → selected-node detail, joined in that order (empty parts skipped).
+    current Foundation → active-canvas map → screen controls → feature description → cross-canvas
+    registry → write target → selected-node detail, joined in that order (empty parts skipped).
     Open drafts are inserted after the write target and before selected-node detail.
     The Layer-3 system prompt
     is delivered separately (``build_system_prompt``); this is the Layer-2
@@ -120,16 +121,14 @@ def build_turn_preamble(
     foundation = render_foundation_context(plot_root)
     canvas_map = render_canvas_map(plot_root, scope, selection)
     context = canvas_map or build_context_preamble(scope, selection)
+    controls = render_screen_controls(plot_root)
     feature_description = render_feature_description(plot_root, scope)
     registry = render_cross_canvas_registry(plot_root, scope)
     target = render_write_target(plot_root, scope, project_path)
     open_drafts = render_open_drafts(plot_root, scope)
     detail = render_selection_detail(plot_root, scope, selection)
-    return "\n\n".join(
-        p
-        for p in (foundation, context, feature_description, registry, target, open_drafts, detail)
-        if p
-    )
+    parts = (foundation, context, controls, feature_description, registry, target, open_drafts)
+    return "\n\n".join(p for p in (*parts, detail) if p)
 
 
 def render_open_drafts(plot_root: Path, scope: str) -> str:

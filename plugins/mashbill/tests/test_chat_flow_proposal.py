@@ -191,4 +191,4 @@ async def test_a_services_turn_that_proposes_a_set_shows_its_rendering(tmp_path:
     )
 
     saved = read_conversation(plot_root, "alpha", "services").messages[-1].text
-    assert saved.startswith("구성을 맡겼어요.") and "[pay] 돈 보내기" in saved and "```" in saved
+    assert saved.startswith("구성을 맡겼어요.") and "[1] 돈 보내기" in saved and "```" in saved

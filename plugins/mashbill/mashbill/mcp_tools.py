@@ -287,6 +287,7 @@ def get_viewer_context(project_path: str) -> dict[str, Any]:
           "active_canvas": "<scope>" | null,   # e.g. "foundation",
                                                 # "feature:<id>"
           "selection": [{"id", "kind", "label"}, ...],
+          "controls": ["<label>", ...],         # controls on the screen now
           "framing": "<canvas coaching system prompt>",  # guard + tone +
                                                 # the canvas's coaching playbook
                                                 # (same as in-app, Phase 3)
@@ -297,8 +298,9 @@ def get_viewer_context(project_path: str) -> dict[str, Any]:
         }
 
     When ``has_viewer`` is false (no viewer open, or the last report is stale)
-    ``active_canvas`` is null, ``selection`` is empty, and ``context`` is empty —
-    do NOT treat an old selection as the user's current one.
+    ``active_canvas`` is null, ``selection`` and ``controls`` are empty, and
+    ``context`` is empty — do NOT treat an old selection as the user's current
+    one.
     """
     plot_root = resolve_plot_root(project_path)
     context = read_viewer_context(plot_root, now=time.time())

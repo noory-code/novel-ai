@@ -2,9 +2,10 @@
 
 The services coach records the whole set of services it and the person agreed on. Recording
 renders the set; a service whose name is already on the Services canvas is marked as present
-instead of proposed again. When the person confirms, adding writes every proposed service the
-canvas lacks in one canvas write, so no agreed service is left behind when the coach goes on to
-describe one of them (D-2026-10-12-A).
+instead of proposed again. The person reads the set with its services numbered in the coach's
+order; the coach's keys stay internal (D-2026-10-15-D). When the person confirms, adding writes
+every proposed service the canvas lacks in one canvas write, so no agreed service is left behind
+when the coach goes on to describe one of them (D-2026-10-12-A).
 """
 
 from __future__ import annotations
@@ -70,16 +71,25 @@ def _check(proposal: ServiceProposal) -> None:
         names.add(name)
 
 
+def display_numbers(proposal: ServiceProposal) -> dict[str, str]:
+    """The number the person sees for each service (in the coach's order) → its key."""
+    return {str(number): service.key for number, service in enumerate(proposal.services, start=1)}
+
+
 def render(proposal: ServiceProposal, canvas: CanvasDoc) -> str:
-    """The set as the person reads it: services to add, and ✓ for those already on the canvas."""
+    """The set as the person reads it: services to add, and ✓ for those already on the canvas.
+
+    Every service carries its number from :func:`display_numbers`, never the coach's key, so the
+    numbers the coach was given match the block shown later whatever the canvas holds then.
+    """
     present = _existing_names(canvas)
     lines: list[str] = []
-    for service in proposal.services:
+    for number, service in enumerate(proposal.services, start=1):
         name = name_key(service.label)
         if name in present:
-            lines.append(f"✓ {name}")
+            lines.append(f"[{number}] ✓ {name}")
             continue
-        head = f"[{service.key}] {name}"
+        head = f"[{number}] {name}"
         if service.value_created:
             head += f": {service.value_created}"
         lines.append(head)
@@ -92,8 +102,14 @@ def _load(plot_root: Path, project_id: str) -> ServiceProposalFile:
     return load_proposals(plot_root, project_id, _DIRNAME, _NAME, ServiceProposalFile)
 
 
-def propose_services(plot_root: Path, project_id: str, services: list[dict[str, Any]]) -> str:
-    """Check and keep the agreed service set; return its rendering. Replaces an unadded set."""
+def propose_services(
+    plot_root: Path, project_id: str, services: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Check and keep the agreed service set. Replaces an unadded set.
+
+    Returns ``{"rendered", "numbers"}``: the rendering the person reads and the number shown for
+    each service → its key.
+    """
     proposal = ServiceProposal(
         services=TypeAdapter(list[ProposedService]).validate_python(services),
         proposed_at=now_iso(),
@@ -107,7 +123,7 @@ def propose_services(plot_root: Path, project_id: str, services: list[dict[str, 
             "propose a set only when it adds a service"
         )
     save_proposals(plot_root, project_id, _DIRNAME, _NAME, ServiceProposalFile(current=proposal))
-    return render(proposal, canvas)
+    return {"rendered": render(proposal, canvas), "numbers": display_numbers(proposal)}
 
 
 def rendering_proposed_since(plot_root: Path, project_id: str, since: datetime) -> str | None:

@@ -16,16 +16,23 @@ def propose_services(
 ) -> dict[str, Any]:
     """Record the full service set agreed for the Services canvas.
 
-    Returns ``{"rendered", "show"}``; ``show`` says who shows ``rendered`` to the person.
-    Pass every service of the set, including ones already on the canvas (they show as ✓ and
-    are not added again). ``services``: ``{"key", "label", "value_created"?, "problem"?}``.
+    Returns ``{"rendered", "show", "numbers"}``; ``show`` says who shows ``rendered`` to the
+    person. ``rendered`` numbers the services [1], [2], … in your order and never shows your
+    keys; ``numbers`` maps each shown number to your key, so "2번" from the person is
+    ``numbers["2"]``. Pass every service of the set, including ones already on the canvas (they
+    show as ✓ and are not added again). ``services``: ``{"key", "label", "value_created"?,
+    "problem"?}``.
     Nothing is added until ``add_proposed_services``. A new call replaces a set not yet added.
     Errors name what to fix.
     """
     plot_root = resolve_plot_root(project_path)
-    rendered = keep_services(plot_root, project_id, services)
+    kept = keep_services(plot_root, project_id, services)
     record_tool_call("propose_services", project_id=project_id, canvas="services")
-    return {"rendered": rendered, "show": show_instruction("service set")}
+    return {
+        "rendered": kept["rendered"],
+        "show": show_instruction("service set"),
+        "numbers": kept["numbers"],
+    }
 
 
 def add_proposed_services(project_path: str, project_id: str) -> dict[str, Any]:

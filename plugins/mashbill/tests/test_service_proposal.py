@@ -64,12 +64,23 @@ def test_propose_renders_the_whole_set_and_adds_nothing(tmp_path: Path) -> None:
     rendered = mcp_tools.propose_services(project_path, "alpha", services=_set())["rendered"]
 
     for line in (
-        "[pay] 돈 보내기: 문자 보내듯 쉽게 돈을 보낸다",
-        "[invest] 주식 투자",
-        "[reward] 혜택·리워드",
+        "[1] 돈 보내기: 문자 보내듯 쉽게 돈을 보낸다",
+        "[3] 주식 투자",
+        "[4] 혜택·리워드",
     ):
         assert line in rendered
     assert _labels(project_path) == []
+
+
+def test_the_person_reads_numbers_and_the_coach_gets_the_keys(tmp_path: Path) -> None:
+    """The coach's keys are often English names it made up; the person reads numbers."""
+    project_path = _project(tmp_path)
+
+    result = mcp_tools.propose_services(project_path, "alpha", services=_set())
+
+    for key in ("pay", "asset", "invest", "reward"):
+        assert f"[{key}]" not in result["rendered"]
+    assert result["numbers"] == {"1": "pay", "2": "asset", "3": "invest", "4": "reward"}
 
 
 def test_propose_marks_services_already_on_the_canvas(tmp_path: Path) -> None:
@@ -77,7 +88,9 @@ def test_propose_marks_services_already_on_the_canvas(tmp_path: Path) -> None:
 
     rendered = mcp_tools.propose_services(project_path, "alpha", services=_set())["rendered"]
 
-    assert "✓ 돈 보내기" in rendered
+    # Numbers follow the coach's order, so they stay the same whatever the canvas holds.
+    assert "[1] ✓ 돈 보내기" in rendered
+    assert "[2] 자산·소비 관리: 지출과 자산을 한눈에 본다" in rendered
     assert "[pay]" not in rendered
 
 

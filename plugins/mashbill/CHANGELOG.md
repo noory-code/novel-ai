@@ -4,6 +4,16 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.0] — 2026-10-15
+
+### Added
+
+- The viewer reports the canvas buttons it actually rendered with its viewer context; the coach's turn context carries them as a `[Screen controls]` line, so the coach names only real controls (W-00000457, O-00000136, D-2026-10-15-E).
+
+### Changed
+
+- A service-set proposal shown to the person numbers its services `[1] [2] …` instead of the coach's own keys, and `propose_services` returns the number → key map (W-00000457, D-2026-10-15-D).
+
 ## [0.224.1] — 2026-10-15
 
 ### Fixed
