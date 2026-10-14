@@ -53,8 +53,9 @@
   nested it. The viewer's mind-map layout follows the first link from the anchor, so the members became top-level.
 - **Limits:** The viewer applies the same rule when the person draws a nesting line by hand (novel-workspace
   W-00000461), and on the Services canvas a line between a category and a service makes the category the parent
-  whichever way it was dragged. Paths that still keep a stale spoke: changing a line's relation in the viewer's edge
-  inspector, clipboard paste, and a coach `update_canvas` whole-canvas write. Canvases are not repaired on read;
+  whichever way it was dragged. A coach `update_canvas` whole-canvas write applies it to every nesting line not already
+  stored. Paths that still keep a stale spoke: changing a line's relation in the viewer's edge inspector and
+  clipboard paste. Canvases are not repaired on read;
   calling `create_edge` again for a nesting line that already exists clears a stale spoke. A self-loop nests nothing
   and retires no spoke. A spoke someone drew by hand to a node that is later nested is removed too, following the
   canon rule that a nested node has no spoke. Whether the coach asks before grouping is pinned by wording and was

@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from mashbill.canvas_normalization import retire_spokes_for_new_nesting
 from mashbill.folder_io import read_canvas, write_canvas
 from mashbill.mcp_canvas_write_tools import (
     create_edge_with_draft,
@@ -32,6 +33,11 @@ def update_canvas(
     confirmed when it matches; writes without one do not create a draft."""
     plot_root = resolve_plot_root(project_path)
     validated = CanvasDoc.model_validate(canvas)
+    if validated.canvas_kind in ("actors", "services"):
+        # D-2026-10-15-F: a nesting line written here retires the child's spoke.
+        validated = retire_spokes_for_new_nesting(
+            read_canvas(plot_root, project_id, validated.canvas_kind), validated
+        )
     saved, sync, warning = update_canvas_with_draft(
         plot_root, project_id, validated, draft_id, chat_scope
     )

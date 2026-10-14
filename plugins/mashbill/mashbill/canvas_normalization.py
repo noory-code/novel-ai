@@ -46,6 +46,24 @@ def anchor_spokes_retired_by(canvas: CanvasDoc, edge: SketchEdge) -> set[str]:
     }
 
 
+def retire_spokes_for_new_nesting(previous: CanvasDoc | None, incoming: CanvasDoc) -> CanvasDoc:
+    """Drop the spokes that nesting lines new to ``incoming`` make obsolete.
+
+    A whole-canvas write (the coach's ``update_canvas``) can nest a node the
+    same way ``create_edge`` does; only a line absent from ``previous`` counts,
+    so re-saving a canvas never strips a spoke beside a line already stored.
+    """
+    stored = {(e.source, e.target) for e in previous.edges} if previous else set()
+    retired: set[str] = set()
+    for edge in incoming.edges:
+        if (edge.source, edge.target) not in stored:
+            retired |= anchor_spokes_retired_by(incoming, edge)
+    if not retired:
+        return incoming
+    kept = [e for e in incoming.edges if e.id not in retired]
+    return incoming.model_copy(update={"edges": kept})
+
+
 def attach_orphan_anchor_spokes(canvas: CanvasDoc) -> CanvasDoc:
     """Attach one canonical anchor spoke to each pure top-level orphan.
 

@@ -263,3 +263,33 @@ def test_a_self_loop_keeps_the_node_spoke(tmp_path: Path) -> None:
     create_edge(plot_root, "alpha", "services", gid, gid)
 
     assert _anchor_targets(plot_root, "services") == {gid}
+
+
+def test_a_nesting_line_written_through_update_canvas_drops_the_child_spoke(
+    tmp_path: Path,
+) -> None:
+    """The coach can also nest by rewriting the whole canvas (update_canvas);
+    a nesting line new to the canvas retires the child's spoke there too, while
+    a spoke beside a nesting line that was already stored is left as it was."""
+    from mashbill import mcp_tools
+
+    plot_root = _setup(tmp_path)
+    family = create_node(plot_root, "alpha", "actors", "actor", {"label": "동네 파트너"})
+    fid = family["node"]["id"]
+    member = create_node(plot_root, "alpha", "actors", "actor", {"label": "세탁소"})
+    mid = member["node"]["id"]
+    assert _anchor_targets(plot_root, "actors") == {fid, mid}
+    canvas = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    canvas["edges"].append(
+        {"id": "edge_nest", "source": mid, "target": fid, "relation": "inheritance"}
+    )
+
+    mcp_tools.update_canvas(str(tmp_path), "alpha", canvas)
+
+    assert _anchor_targets(plot_root, "actors") == {fid}
+    # Re-saving the same canvas with a hand-restored spoke keeps that spoke:
+    # only a line new to the canvas retires one.
+    again = read_canvas(plot_root, "alpha", "actors").model_dump(by_alias=True)
+    again["edges"].append({"id": "edge_back", "source": PROJECT_ANCHOR_ID, "target": mid})
+    mcp_tools.update_canvas(str(tmp_path), "alpha", again)
+    assert _anchor_targets(plot_root, "actors") == {fid, mid}

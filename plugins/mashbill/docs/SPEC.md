@@ -90,7 +90,9 @@ from the sweep, so when `create_edge` adds an Actors `inheritance` or Services
 containment edge it removes the child's anchor edge in the same write
 (`canvas_normalization.anchor_spokes_retired_by`); the child then stays nested.
 Calling it again for a nesting line that already exists clears a stale spoke,
-and a self-loop retires none.
+and a self-loop retires none. `update_canvas` applies the same rule to each
+nesting line absent from the stored canvas
+(`canvas_normalization.retire_spokes_for_new_nesting`).
 
 - **Effective project path** — per-project server I/O (canvas read/write,
   anchors, tags, publish) addresses `<root>/<project dir>`, not the bare
