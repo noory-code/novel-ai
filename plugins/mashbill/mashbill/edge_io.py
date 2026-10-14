@@ -12,6 +12,7 @@ from typing import Any
 from uuid import uuid4
 
 from mashbill.canvas_io import read_canvas, write_canvas
+from mashbill.canvas_normalization import anchor_spokes_retired_by
 from mashbill.models import CanvasDoc, CanvasKind
 from mashbill.models_union import SketchEdge
 
@@ -90,14 +91,21 @@ def create_edge(
     the whole ``CanvasDoc``, writes atomically. **Idempotent**: an existing
     directed ``source→target`` edge is returned as-is, never duplicated —
     a retried confirmation can't stripe the canvas with parallel lines.
+
+    A hierarchy edge that nests its child (actors inheritance, services
+    containment) removes the child's project-anchor spoke in the same write:
+    ``create_node`` already saved the child as a top-level orphan with a
+    spoke, and canon gives a nested node none (O-00000142).
     """
     canvas = read_canvas(plot_root, project_id, canvas_kind, service_id)
     for existing in canvas.edges:
         if existing.source == source_id and existing.target == target_id and existing.directed:
             return {"edge": existing.model_dump(by_alias=True), "existing": True}
     edge = _build_edge(canvas, source_id, target_id, label)
+    retired = anchor_spokes_retired_by(canvas, edge)
+    kept = [e for e in canvas.edges if e.id not in retired]
     updated = CanvasDoc.model_validate(
-        canvas.model_copy(update={"edges": [*canvas.edges, edge]}).model_dump(by_alias=True)
+        canvas.model_copy(update={"edges": [*kept, edge]}).model_dump(by_alias=True)
     )
     write_canvas(plot_root, project_id, updated)
     return {"edge": edge.model_dump(by_alias=True), "existing": False}

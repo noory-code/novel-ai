@@ -5,6 +5,7 @@ from __future__ import annotations
 from mashbill.edge_semantics import fold_endpoints
 from mashbill.models import CanvasDoc
 from mashbill.models_foundation import PROJECT_ANCHOR_ID
+from mashbill.models_union import SketchEdge
 
 # W-91: only kinds that may be roots on a primary canvas receive a missing
 # project-anchor spoke. This is narrower than ``_ALLOWED_KINDS_BY_CANVAS``:
@@ -20,6 +21,27 @@ ROOT_KINDS_BY_CANVAS: dict[str, frozenset[str]] = {
     "services": frozenset({"category", "service"}),
     "entities": frozenset({"entity"}),
 }
+
+
+def anchor_spokes_retired_by(canvas: CanvasDoc, edge: SketchEdge) -> set[str]:
+    """Ids of anchor spokes that ``edge`` makes obsolete by nesting its child.
+
+    Canon (canvas-behavior.md): an actor with an inheritance parent, or a
+    service under a group, is nested and has no anchor spoke. A node created
+    before its parent line already got a spoke from the save-time sweep, so the
+    hierarchy edge that nests it retires that spoke in the same write.
+    """
+    if canvas.canvas_kind not in ("actors", "services"):
+        return set()
+    hierarchy = fold_endpoints(edge, canvas.canvas_kind)
+    if hierarchy is None or PROJECT_ANCHOR_ID in hierarchy:
+        return set()
+    _, child_id = hierarchy
+    return {
+        existing.id
+        for existing in canvas.edges
+        if {existing.source, existing.target} == {PROJECT_ANCHOR_ID, child_id}
+    }
 
 
 def attach_orphan_anchor_spokes(canvas: CanvasDoc) -> CanvasDoc:

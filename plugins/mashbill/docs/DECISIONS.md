@@ -39,6 +39,32 @@
 
 ## Log
 
+### D-2026-10-15-F — A line that nests a node removes its anchor spoke; the actors coach asks before adding a family
+
+- **What:** *(Claude, carrying out novel-workspace W-00000459 and O-00000142)* `create_edge` removes the child's
+  project-anchor edge in the same write when it adds an Actors `inheritance` edge or a Services containment edge
+  (`canvas_normalization.anchor_spokes_retired_by`). The Actors coach framing now treats a family the person did
+  not ask for as a proposal: it asks first and creates the family only on yes, and it proposes (not performs)
+  grouping same-nature families.
+- **Why:** In novel-workspace W-00000446's first-time-user walk the Actors coach created a family "동네 파트너" the
+  person never asked for, because the framing ordered it to group same-nature roles. Its reply said the family held
+  two roles, but the viewer drew them outside it: the D-2026-07-21-C save sweep ran inside `create_node`'s write,
+  before the parent line existed, so each member got an anchor spoke, and nothing removed it when `create_edge`
+  nested it. The viewer's mind-map layout follows the first link from the anchor, so the members became top-level.
+- **Limits:** A membership line drawn by hand in the viewer saves through the whole-canvas write and still keeps the
+  child's spoke. Canvases that already carry a stale spoke are not repaired, and a repeated `create_edge` on an
+  existing edge returns early without removing one. A spoke someone drew by hand to a node that `create_edge` later
+  nests is removed too, following the canon rule that a nested node has no spoke. Whether the coach now asks before
+  grouping is pinned by wording only, not measured.
+- **Alternatives:** Removing spokes in the save sweep for every nested node — it would also cover the viewer path,
+  but the sweep's contract is that existing anchor edges are preserved, and changing it reaches every canvas write.
+  Delaying the sweep until the parent line exists — `create_node` and `create_edge` are separate tool calls, so the
+  engine cannot know a parent line is coming.
+- **Approval:** Claude's design within W-00000459, open to the user's review.
+- **Spec impact:** `docs/SPEC.md` save-sweep paragraph; public `docs/specs/canvas-behavior.md` write-time spoke rule.
+- **Principles:** SSOT (canon already says a nested node has no spoke); Fail Fast (the fix sits where the nesting
+  line is written).
+
 ### D-2026-10-15-E — Every coach turn names the controls the viewer has on screen
 
 - **What:** *(Claude, carrying out novel-workspace W-00000457 and O-00000136)* The viewer reports, with its live

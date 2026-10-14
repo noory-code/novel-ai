@@ -227,7 +227,9 @@ def create_edge(
     AND its line — a registered node must never float unconnected. Both
     endpoints must already exist on the canvas; the id and the edge's
     ``relation`` are minted server-side. Idempotent — an existing directed
-    source→target line is returned, never duplicated. Every other node and
+    source→target line is returned, never duplicated. A line that nests a
+    node under a parent (an actor under its family, a service under its
+    group) also removes that node's project-anchor line; every other node and
     edge is left untouched. Do NOT use ``update_canvas`` just to add a line.
     A matching supplied ``draft_id`` is confirmed; omitting it does not create
     a draft.

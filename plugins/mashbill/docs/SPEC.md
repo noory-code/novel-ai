@@ -85,7 +85,10 @@ no containment hierarchy, so their essence/concept relationship edges do not
 masquerade as parents. Existing anchor incidence in either stored direction
 suppresses a new spoke. The sweep is idempotent, changes edges only, and runs
 on write only: `create_node` still chooses no edge, and `read_canvas` never
-repairs user-visible state.
+repairs user-visible state. A node created before its parent line gets a spoke
+from the sweep, so when `create_edge` adds an Actors `inheritance` or Services
+containment edge it removes the child's anchor edge in the same write
+(`canvas_normalization.anchor_spokes_retired_by`); the child then stays nested.
 
 - **Effective project path** — per-project server I/O (canvas read/write,
   anchors, tags, publish) addresses `<root>/<project dir>`, not the bare

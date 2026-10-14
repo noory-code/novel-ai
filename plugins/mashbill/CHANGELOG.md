@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.2] — 2026-10-15
+
+### Fixed
+
+- `create_edge` removes the child's project-anchor edge when it nests an actor under its family or a service under its group, so the viewer draws the member inside its group (W-00000459, O-00000142, D-2026-10-15-F).
+- The Actors coach asks before adding a role family the person did not ask for, and proposes grouping instead of doing it (W-00000459, D-2026-10-15-F).
+
 ## [0.225.1] — 2026-10-15
 
 ### Fixed

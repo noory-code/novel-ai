@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from mashbill.folder_io import create_edge, create_node, create_project, read_canvas
+from mashbill.models import CanvasKind
 from mashbill.workspace import resolve_plot_root
 
 
@@ -169,3 +170,55 @@ def test_create_edge_actors_labeled_edge_is_flow_and_floats(tmp_path: Path) -> N
     assert out["edge"]["relation"] == "flow"
     assert out["edge"]["sourceHandle"] is None
     assert out["edge"]["targetHandle"] is None
+
+
+def _anchor_targets(plot_root: Path, canvas_kind: CanvasKind) -> set[str]:
+    canvas = read_canvas(plot_root, "alpha", canvas_kind)
+    return {e.target for e in canvas.edges if e.source == "__project_anchor__"}
+
+
+def test_nesting_an_actor_under_its_family_drops_its_anchor_spoke(tmp_path: Path) -> None:
+    """O-00000142 (newcomer walk, 2026-10-14): the coach registered 세탁소 with
+    ``create_node(near=<family>)`` and then ``create_edge(세탁소 → family)``.
+    ``create_node``'s write already gave the still-unparented 세탁소 a save-time
+    anchor spoke, and the later inheritance line left it in place, so the
+    canvas laid 세탁소 out beside the family instead of under it. Canon: an
+    actor with an inheritance parent stays nested and has no anchor spoke."""
+    plot_root = _setup(tmp_path)
+    family = create_node(plot_root, "alpha", "actors", "actor", {"label": "동네 파트너"})
+    fid = family["node"]["id"]
+    member = create_node(plot_root, "alpha", "actors", "actor", {"label": "세탁소"}, near=fid)
+    mid = member["node"]["id"]
+
+    out = create_edge(plot_root, "alpha", "actors", mid, fid)
+
+    assert out["edge"]["relation"] == "inheritance"
+    assert _anchor_targets(plot_root, "actors") == {fid}
+    # A later write must not hand the nested actor its spoke back.
+    other = create_node(plot_root, "alpha", "actors", "actor", {"label": "손님"})
+    assert _anchor_targets(plot_root, "actors") == {fid, other["node"]["id"]}
+
+
+def test_nesting_a_service_under_its_group_drops_its_anchor_spoke(tmp_path: Path) -> None:
+    """Same sequence on the Services canvas: canon says a service already
+    parented by a group (category) has no anchor spoke."""
+    plot_root = _setup(tmp_path)
+    group = create_node(plot_root, "alpha", "services", "category", {"label": "주문"})
+    gid = group["node"]["id"]
+    service = create_node(plot_root, "alpha", "services", "service", {"label": "수거"}, near=gid)
+
+    create_edge(plot_root, "alpha", "services", gid, service["node"]["id"])
+
+    assert _anchor_targets(plot_root, "services") == {gid}
+
+
+def test_value_exchange_between_actors_keeps_both_anchor_spokes(tmp_path: Path) -> None:
+    """A labeled line between actors is a value exchange, not membership: both
+    actors stay top-level roles and keep their anchor spokes."""
+    plot_root = _setup(tmp_path)
+    a = create_node(plot_root, "alpha", "actors", "actor", {"label": "판매자"})
+    b = create_node(plot_root, "alpha", "actors", "actor", {"label": "구매자"})
+
+    create_edge(plot_root, "alpha", "actors", a["node"]["id"], b["node"]["id"], label="상품")
+
+    assert _anchor_targets(plot_root, "actors") == {a["node"]["id"], b["node"]["id"]}

@@ -749,6 +749,21 @@ def test_actors_framing_creates_only_confirmed_human_roles() -> None:
     assert "when the conversation identifies it" not in framing
 
 
+def test_actors_family_the_person_did_not_name_is_asked_first() -> None:
+    """O-00000142 (newcomer walk, 2026-10-14): the person asked for four roles
+    and the coach also created a fifth node, the family "동네 파트너", because
+    the framing told it to put same-nature families under one parent. Canon
+    (ai-collaboration §0, kinds principle 3): every node is proposed and then
+    confirmed. Grouping stays wanted, but as a proposal."""
+    f = build_framing_preamble("actors").lower()
+    assert "a family the person did not ask for is a proposal" in f
+    assert "create it only on yes" in f
+    assert "propose putting same-nature families under one parent" in f
+    assert "propose combining same-nature groups" in f
+    assert ". put same-nature families" not in f
+    assert "and combine same-nature groups" not in f
+
+
 def test_actors_hierarchy_arrow_points_at_the_family() -> None:
     """B-34 (user live-watch 2026-07-04): fold buttons sat on LEAF actors —
     the coach drew family → actor while the stored fold convention is
