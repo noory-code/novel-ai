@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.220.6] — 2026-10-14
+
+### Changed
+
+- Docs: a project whose chosen coach is not installed switches to Codex in one save instead of a clear followed by a Codex save (D-2026-10-14-B).
+
 ## [0.220.5] — 2026-10-14
 
 ### Changed
