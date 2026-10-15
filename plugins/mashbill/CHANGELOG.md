@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.25] — 2026-10-15
+
+### Changed
+
+- Tests pin the exact spots the engine gives walk 3's twelve entities, which the viewer's layout test counts lines on (novel-workspace W-00000483).
+
 ## [0.225.24] — 2026-10-15
 
 ### Fixed

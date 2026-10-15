@@ -151,3 +151,18 @@ def test_other_kinds_still_stack_24_apart(tmp_path: Path) -> None:
     )
     nxt = create_node(plot_root, "alpha", "actors", "actor", {"label": "회원"})["node"]
     assert (nxt["x"], nxt["y"]) == (160.0, 120.0 + 96.0 + 24.0)
+
+
+# The viewer's layout test (novel viewer `tests/entity-layout-walk.test.ts`,
+# `WALK3.newEngine`) counts lines behind boxes on these exact spots. They are
+# what this engine makes for walk 3; change both files together.
+WALK3_ENGINE_SPOTS = [
+    (165.0, -23.0), (-455.0, -23.0), (165.0, 133.0), (-455.0, 133.0),
+    (165.0, 289.0), (-455.0, 289.0), (165.0, 445.0), (-455.0, 445.0),
+    (165.0, 601.0), (-455.0, 601.0), (165.0, 757.0), (-455.0, 757.0),
+]
+
+
+def test_walk3_engine_spots_are_the_ones_the_viewer_test_counts(tmp_path: Path) -> None:
+    made = _walk3(tmp_path)
+    assert [(n["x"], n["y"]) for n in made] == WALK3_ENGINE_SPOTS
