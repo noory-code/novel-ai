@@ -161,6 +161,10 @@ closes a pane that shows another feature.
   concept map visually; it does not implement the deeper service-target connectedness invariant. Being AI-maintained,
   the AI can also propose·draw entity↔entity rough relationship edges; those relationship edges remain independently
   editable·deletable.
+- **Layout:** a new entity goes into one of two columns beside the project anchor, joining the shorter column 60 px
+  below the entity above it, so a line between two entities has room for its name between the arrowheads. When the
+  coach adds entities or a line between two of them, the canvas lays them out again with linked entities next to
+  each other and the same 60 px between neighbours (novel-workspace W-00000483).
 
 ## Work tab — Execution (Solera work-item graph)
 

@@ -723,9 +723,11 @@ def test_create_node_burst_of_entities_never_overlaps_when_rendered(tmp_path: Pa
         for i in range(10)
     ]
     rendered = 96.0  # tallest entity card seen in the walk and the sim corpus
-    for a, b in zip(made, made[1:]):
-        assert a["x"] == b["x"]
-        assert not _overlaps(a, b, rendered, rendered), (a["y"], b["y"])
+    # Entities fill two columns beside the anchor (W-00000483), so any two of
+    # them, not only successive ones, must stay apart.
+    for i, a in enumerate(made):
+        for b in made[i + 1 :]:
+            assert not _rect_overlap(a, b, 340.0, rendered, 340.0, rendered), (a, b)
 
 
 def test_create_node_stacks_below_a_measured_taller_sibling(tmp_path: Path) -> None:
@@ -738,10 +740,16 @@ def test_create_node_stacks_below_a_measured_taller_sibling(tmp_path: Path) -> N
         CanvasDoc(
             canvas_id="entities",
             canvas_kind="entities",
-            nodes=[EntityNode(id="e1", label="긴 데이터", x=160.0, y=120.0, height=240.0)],
+            nodes=[
+                EntityNode(id="e1", label="긴 데이터", x=160.0, y=120.0, height=240.0),
+                # The other column beside the anchor already holds one, so the
+                # next entity joins e1's column (W-00000483).
+                EntityNode(id="e2", label="왼쪽", x=-455.0, y=120.0),
+            ],
         ),
     )
     nxt = create_node(plot_root, "alpha", "entities", "entity", {"label": "다음"})["node"]
+    assert nxt["x"] == 160.0
     assert nxt["y"] >= 120.0 + 240.0
 
 
@@ -833,7 +841,11 @@ def test_create_node_counts_wrapped_title_lines(tmp_path: Path) -> None:
     )
     long_title = ("가나다라마바사아자차카타파하" * 20)[:160]
     first = create_node(plot_root, "alpha", "entities", "entity", {"label": long_title})["node"]
+    # The second entity starts the column on the anchor's other side
+    # (W-00000483); the third joins the long one's column.
+    create_node(plot_root, "alpha", "entities", "entity", {"label": "왼쪽"})
     nxt = create_node(plot_root, "alpha", "entities", "entity", {"label": "다음"})["node"]
+    assert nxt["x"] == first["x"]
     assert nxt["y"] >= first["y"] + 216.0
 
 

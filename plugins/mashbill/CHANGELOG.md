@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.24] — 2026-10-15
+
+### Fixed
+
+- Entities made by `create_node` go into two columns beside the project anchor, each new one joining the shorter column 60 px below the one above, so a line between two entities has room for its name between the arrowheads; other kinds are unchanged (novel-workspace W-00000483).
+
 ## [0.225.23] — 2026-10-15
 
 ### Changed

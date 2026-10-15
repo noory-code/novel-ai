@@ -52,7 +52,10 @@ right — `placement._FIRST_OF_KIND_XY`, one side SSOT with
 
 **Created nodes never overlap (W-00000451).** `create_node` stacks a new
 node below its same-kind cluster (or below earlier siblings when `near` names a
-parent) by each card's rendered height plus a 24 px gap. A card the viewer has
+parent) by each card's rendered height plus a 24 px gap. An entity instead joins
+the shorter of two columns beside the project anchor, 60 px below the entity above
+(arrow clearance, label gap and a 20 px line name on each side), including pushes
+past a card in the way (`placement._compute_entity_position`, W-00000483). A card the viewer has
 measured uses its measured size; a card still at the stub size uses its kind's
 largest rendered card (`placement._RENDER_HEIGHT` / `_RENDER_WIDTH`, measured
 from real canvases; the face fields are cut to 60 or 120 characters) plus 20 px

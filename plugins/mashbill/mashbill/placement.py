@@ -41,6 +41,11 @@ _DEFAULT_RENDER_WIDTH = 340.0
 # Space between stacked cards, and between a parent and its child column.
 _STACK_GAP = 24.0
 _CHILD_GAP = 40.0
+# W-00000483 — entities are joined by named lines, so two stacked entities keep
+# room for a line between them: its name (20 px tall) 2 px off each box and
+# 18 px off each handle, where an arrowhead ends. Mirrors the viewer's line
+# geometry (novel/viewer/src/canvases/edges/edgeGeometry.ts).
+_ENTITY_GAP = 18.0 + 2.0 + 20.0 + 2.0 + 18.0
 # The card title is not clamped: at the 340 px width cap it wraps about every
 # 23 Korean characters, 20 px a line (measured: 20 chars → 96, 40 → 116,
 # 80 → 156, 160 → 216 for an entity). Counting 18 per line stays on the safe side.
@@ -82,12 +87,14 @@ def _first_free_y(
     kind: str,
     label: str,
     obstacles: tuple[Rect, ...] = (),
+    gap: float = _STACK_GAP,
 ) -> float:
     """Push ``y`` down until a ``kind`` card at ``(x, y)`` overlaps no card on
     the canvas — the guarantee W-00000451 adds on top of every heuristic. Cards
     beside the new one count too: a card renders up to 340 wide, so one a
     little to the side still covers the spot. ``obstacles`` are cards that are
-    not canvas nodes, such as the project anchor the viewer draws."""
+    not canvas nodes, such as the project anchor the viewer draws. A card
+    pushed past another keeps ``gap`` below it."""
     height = _expected_height(kind, label)
     width = _RENDER_WIDTH.get(kind, _DEFAULT_RENDER_WIDTH)
     rects = [(n.x, n.y, _rendered_width(n), _rendered_height(n)) for n in existing]
@@ -98,7 +105,7 @@ def _first_free_y(
         moved = False
         for rx, ry, _rw, rh in in_path:
             if y < ry + rh and ry < y + height:
-                y = ry + rh + _STACK_GAP
+                y = ry + rh + gap
                 moved = True
     return y
 
@@ -120,6 +127,41 @@ _FIRST_OF_KIND_XY: dict[str, tuple[float, float]] = {
 }
 
 
+# The project anchor's card when the canvas hands in none: its default spot
+# (``AnchorPlacement``) at the round card's 200 px render cap.
+_DEFAULT_ANCHOR: Rect = (-75.0, -75.0, 200.0, 200.0)
+
+
+def _compute_entity_position(
+    existing: list[SketchNode], label: str, obstacles: tuple[Rect, ...]
+) -> tuple[float, float]:
+    """Where a new entity goes (W-00000483): in one of two columns flanking the
+    project anchor, the shorter one (right first), under that column's lowest
+    entity with room for a named line between them (``_ENTITY_GAP``).
+
+    Every entity has a line from the anchor, and entities point at each other.
+    In two short columns each box faces the anchor with a clear side, and a
+    column is half as tall as one stack, so fewer lines between two of its
+    boxes run behind the boxes in between. ``obstacles`` is the anchor's card
+    (``storage.anchor_obstacles``); the first box of a column sits level with
+    its middle."""
+    ax, ay, aw, ah = obstacles[0] if obstacles else _DEFAULT_ANCHOR
+    middle_x = ax + aw / 2
+    entities = [n for n in existing if n.kind == "entity"]
+    right = [n for n in entities if n.x + _rendered_width(n) / 2 >= middle_x]
+    left = [n for n in entities if n.x + _rendered_width(n) / 2 < middle_x]
+    on_right = len(right) <= len(left)
+    column = right if on_right else left
+    if column:
+        x = min(n.x for n in column)
+        y = max(_bottom(n) for n in column) + _ENTITY_GAP
+    else:
+        width = _RENDER_WIDTH.get("entity", _DEFAULT_RENDER_WIDTH)
+        x = ax + aw + _CHILD_GAP if on_right else ax - _CHILD_GAP - width
+        y = ay + ah / 2 - _expected_height("entity", label) / 2
+    return x, _first_free_y(existing, x, y, "entity", label, obstacles, _ENTITY_GAP)
+
+
 def _compute_fresh_position(
     existing: list[SketchNode], kind: str, label: str = "", obstacles: tuple[Rect, ...] = ()
 ) -> tuple[float, float]:
@@ -135,7 +177,10 @@ def _compute_fresh_position(
     (``_FIRST_OF_KIND_XY``), else uses the generic drop lane, staggered by total
     node count so distinct first-of-kind creates don't overlap. Best-effort —
     last-write-wins means two *concurrent* creates can still collide (named
-    limit, D-2026-06-27-B)."""
+    limit, D-2026-06-27-B). Entities flank the anchor instead
+    (:func:`_compute_entity_position`)."""
+    if kind == "entity":
+        return _compute_entity_position(existing, label, obstacles)
     same_kind = [n for n in existing if n.kind == kind]
     if same_kind:
         x = min(n.x for n in same_kind)
