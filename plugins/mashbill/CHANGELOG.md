@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - The coach's reference rule points a step's data to `ref_entity_ids` in the flow draft itself (word-neutral) (novel-workspace W-00000500).
 - `propose_flow` takes `ref_entity_ids` on a draft step and on a relabel of a drawn step; recording and drawing refuse it on any other kind and refuse an id that is no entity on the entities canvas (naming the entities), `rendered` shows a step's entities as `  ⇢ 예약, 강아지`, and `draw_proposed_flow` sets the drawn step's `ref_entity_ids` (novel-workspace W-00000500, D-2026-10-15-O).
+### Changed
+
+- Without the service-name record the `[Project]` line calls each drawn service's publish state unknown instead of "not published yet" (novel-workspace W-00000490).
+
 ## [0.225.34] — 2026-10-15
 
 ### Changed

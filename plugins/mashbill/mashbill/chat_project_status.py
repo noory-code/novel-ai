@@ -43,13 +43,18 @@ def _service_lines(plot_root: Path, project_id: str, project_dir: Path) -> list[
         }
     except (OSError, ValueError):
         releases = {}
+    slugs: dict[str, str] | None
     try:
         slugs = read_slug_store(plot_root, project_id)
     except (OSError, ValueError):
-        slugs = {}
+        slugs = None
     lines = []
     for node in read_canvas(plot_root, project_id, "services").nodes:
         if node.kind != "service":
+            continue
+        if slugs is None:
+            # Which release is this service's cannot be told without the record.
+            lines.append(f"{node.label} publish state unknown")
             continue
         release = releases.pop(slugs.get(node.id, "").removeprefix("service/"), None)
         lines.append(f"{node.label} {release or 'not published yet'}")

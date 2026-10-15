@@ -140,6 +140,19 @@ def test_an_unreadable_slug_record_keeps_the_published_releases(
     def _unreadable(_plot_root: Path, _project_id: str) -> dict[str, str]:
         raise ValueError("_slugs.json is broken")
 
+    write_canvas(
+        plot_root,
+        "academy",
+        CanvasDoc(
+            canvas_id="services",
+            canvas_kind="services",
+            nodes=[ServiceNode(id="s_fee", label="수강료 관리", x=0.0, y=0.0)],
+        ),
+    )
     monkeypatch.setattr(chat_project_status, "read_slug_store", _unreadable)
     line = render_project_status(plot_root)
     assert "tuition-management vS1" in line
+    # Without the name record the engine cannot tell which drawn service a
+    # release belongs to, so it does not call a drawn service unpublished.
+    assert "수강료 관리 not published yet" not in line
+    assert "수강료 관리 publish state unknown" in line
