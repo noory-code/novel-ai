@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.226.3] — 2026-10-16
+
+### Changed
+
+- A design check in progress that still has changed parts shows them in the coach's turn context, so a multi-turn re-check stays on what changed (novel-workspace W-00000508 review).
+
 ## [0.226.2] — 2026-10-16
 
 ### Changed
@@ -11,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Derive work-item and split-child feature links from AI-declared coverage, and report chosen features no proposed result covers with reasons (novel-workspace W-00000507, D-2026-10-16-B).
 
 - A design check the coach marks `checking` keeps its list of what changed until the check is recorded `checked` (novel-workspace W-00000508 live probe).
+
 
 ## [0.226.1] — 2026-10-16
 

@@ -315,6 +315,22 @@ def test_recheck_context_names_changed_parts_and_limits_review(tmp_path: Path) -
     assert "Review only the changed parts." in rendered
 
 
+def test_a_recheck_in_progress_still_names_what_changed(tmp_path: Path) -> None:
+    """The coach records ``checking`` and asks the person a question; the next
+    turn still shows what changed, so the re-check stays on those parts."""
+    plot_root = _setup(tmp_path)
+    check = DesignCheck(state="checking", updated_at="2026-10-16T00:00:00+00:00", changed=["Pay"])
+    _write_services_map_canvas(
+        plot_root,
+        [ServiceNode(id="svc1", label="Billing"), FeatureNode(id="f1", label="Checkout")],
+        [SketchEdge(id="e1", source="svc1", target="f1")],
+    )
+    write_design_check(plot_root, "alpha", "f1", check)
+    rendered = render_canvas_map(plot_root, "services", [])
+    assert "실패 점검: checking — changed: Pay" in rendered
+    assert "Review only the changed parts." in rendered
+
+
 def test_services_map_repeats_shared_feature_and_selected_mark(tmp_path: Path) -> None:
     plot_root = _setup(tmp_path)
     _write_services_map_canvas(

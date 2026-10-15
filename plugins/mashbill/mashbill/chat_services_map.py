@@ -16,9 +16,9 @@ def render_check_context(node: SketchNode) -> str:
         return ""
     name = "기능 나눔" if isinstance(node, ServiceNode) else "실패 점검"
     check = node.design_check
-    if check.state == "recheck":
+    if check.state == "recheck" or (check.state == "checking" and check.changed):
         changed = ", ".join(check.changed) or "unknown"
-        return f" {name}: recheck — changed: {changed}. Review only the changed parts."
+        return f" {name}: {check.state} — changed: {changed}. Review only the changed parts."
     return f" {name}: {check.state}"
 
 
