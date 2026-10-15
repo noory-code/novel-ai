@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.19] — 2026-10-15
+
+### Changed
+
+- The coach no longer mentions a "build agent" (storage and details are decided when the product is built), answers every question and remark in a message, and says work items appear only after the person asks the work tab's AI for a proposal and accepts it; the foundation and actors coaches carry the publish path too (W-00000475, W-00000471, D-2026-10-15-H).
+
 ## [0.225.18] — 2026-10-15
 
 ### Added

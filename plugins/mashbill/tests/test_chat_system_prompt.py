@@ -137,7 +137,7 @@ def test_feature_framing_is_happy_path_first_with_altitude_guard() -> None:
     f = build_framing_preamble("feature:svc1").lower()
     assert "execution" in f
     assert "main successful sequence" in f
-    assert "build agent" in f  # implementation belongs to the build agent
+    assert "decided when it is built" in f  # implementation is left to building
     assert "from start to finish, one step at a time" in f
     assert "then ask where outcomes differ" in f
     assert "finally ask what remains for the person when the flow ends" in f
@@ -172,7 +172,7 @@ def test_entity_boundary_is_inlined_for_services_and_entities() -> None:
             "state changes independently",
             "embedded value",
             "not one-to-one",
-            "build agent",
+            "storage is decided when it is built",
         ):
             assert rule in prompt, (scope, rule)
 
@@ -467,9 +467,11 @@ def test_services_coach_says_how_a_flow_opens_and_what_a_service_publish_carries
     sp = build_system_prompt("services")
     assert "suggest each feature canvas, which opens when its node here is clicked." in sp
     assert (
-        "When finishing or publishing, say features reach work items only after the "
-        "project is published, then their service from its panel."
+        "When finishing or publishing, say features become work items only after the "
+        "project, then their service from its panel, is published and the work tab's "
+        "AI proposal is accepted."
     ) in sp
+    assert "reach work items" not in sp
     assert build_system_prompt("service:svc_1") == sp
 
 
@@ -486,6 +488,12 @@ def test_entities_and_project_coaches_know_the_publish_path() -> None:
     assert "service is then published from its panel" in lowered
     assert "service's node on the services canvas is clicked" in lowered
     assert "work tab" in lowered
+    # A publish creates no work item; the person asks the work tab's AI and
+    # accepts its proposal (newcomer walk 3, 6b).
+    assert "work items do not appear on their own" in lowered
+    assert "asks the work tab's ai for work items from the published design" in lowered
+    assert "accepts its proposal" in lowered
+    assert "turns the published design into work items" not in lowered
     assert "[screen controls]" in lowered
     # The engine describes controls by what they do; the labels are the viewer's.
     for label in ("설계도 발행", "서비스 발행", "일감"):
@@ -500,8 +508,65 @@ def test_project_coach_says_how_a_flow_opens_but_stays_without_canvas_coaching()
     assert build_framing_preamble("project") == ""
 
 
-def test_the_publish_path_stays_out_of_the_other_canvases() -> None:
+def test_the_publish_path_stays_out_of_the_canvases_without_room() -> None:
+    # Services carries its own short form; feature:x has no room under the word cap.
     from mashbill.chat_framing import PUBLISH_PATH
 
-    for scope in ("foundation", "actors", "services", "feature:x"):
+    for scope in ("services", "service:x", "feature:x"):
         assert PUBLISH_PATH not in build_system_prompt(scope), scope
+
+
+@pytest.mark.parametrize("scope", ["foundation", "actors", "entities", "project"])
+def test_a_person_can_publish_from_any_tab_so_these_coaches_know_the_whole_path(
+    scope: str,
+) -> None:
+    # W-471 review: the publish button sits beside the tabs, so a person can
+    # publish from any canvas and its coach must know what comes after.
+    from mashbill.chat_framing import PUBLISH_PATH
+
+    sp = build_system_prompt(scope)
+    assert PUBLISH_PATH in sp, scope
+    assert "the project publish button beside the tabs" in sp, scope
+    assert "the person asks the work tab's AI for work items" in sp, scope
+
+
+@pytest.mark.parametrize("scope", ["services", "service:x"])
+def test_services_coach_points_to_the_work_tab_after_publishing(scope: str) -> None:
+    sp = build_system_prompt(scope)
+    assert "then their service from its panel, is published" in sp
+    assert "the work tab's AI proposal is accepted" in sp
+
+
+def test_feature_coach_has_no_publish_path() -> None:
+    sp = build_system_prompt("feature:x")
+    assert "the project publish button beside the tabs" not in sp
+    assert "work tab" not in sp
+
+
+# --- plain words and complete replies (novel-workspace W-00000475) ----------
+#
+# In the third first-time-user walk the coach told the person that a "빌드
+# 에이전트" decides storage, because the framing said so in English, and it
+# skipped two remarks that sat beside another request in the same message
+# (O-00000161).
+
+
+@pytest.mark.parametrize(
+    "scope", ["foundation", "actors", "services", "service:x", "entities", "feature:x"]
+)
+def test_canvas_coaches_never_tell_the_person_about_a_build_agent(scope: str) -> None:
+    prompt = build_system_prompt(scope).lower()
+    ban = "do not impose jargon such as 'build agent'."
+    assert ban in prompt, scope
+    assert "build agent" not in prompt.replace(ban, ""), scope
+
+
+def test_project_coach_never_names_a_build_agent() -> None:
+    assert "build agent" not in build_system_prompt("project").lower()
+
+
+@pytest.mark.parametrize(
+    "scope", ["foundation", "actors", "services", "entities", "feature:x", "project"]
+)
+def test_every_coach_answers_each_question_and_remark_in_a_message(scope: str) -> None:
+    assert "Answer every question and remark in a message." in build_system_prompt(scope)

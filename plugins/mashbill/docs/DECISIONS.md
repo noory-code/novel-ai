@@ -57,8 +57,9 @@
 - **Why:** In novel-workspace newcomer walk 2 the coach asked the person where a feature's flow canvas was, never
   mentioned the work tab after the publish, and nobody said that a project publish leaves services and features out
   of the work-item list.
-- **Limits:** Foundation, actors and feature conversations do not carry the publish path; the feature prompt has no
-  room under the 1800-word cap. The chat dock, sidebar, context menus, the rest of the inspector, and the version
+- **Limits:** The feature conversation does not carry the publish path; its prompt has no room under the 1800-word
+  cap. (W-00000475 added `PUBLISH_PATH` to the foundation and actors framings and made it say that work items appear
+  only when the person asks the work tab's AI for a proposal and accepts it.) The chat dock, sidebar, context menus, the rest of the inspector, and the version
   menu options are not reported. Whether the guidance stops the walk-2 confusion is not measured.
 - **Alternatives:** A shared block in every scope — the feature prompt has no room. App-flow text in the per-turn
   `[Screen controls]` line — repeats it every turn. Korean labels in the prompt — viewer wording that

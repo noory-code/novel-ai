@@ -25,11 +25,14 @@ from mashbill.chat_framing import SCOPE_FRAMING as SCOPE_FRAMING
 SELECTION_DETAIL_CAP = 20
 
 # Reply wording is a separate contract from WRITE_PLAYBOOK's canvas-text rule.
-# It applies even to ``project`` scope, which intentionally receives no canvas
-# coaching playbooks. Prior assistant turns can contain durable decisions, but
-# their wording is not a style guide for the next process.
+# It also asks for a complete reply: a remark beside another request still gets
+# its answer (newcomer walk 3, W-00000475). It applies even to ``project``
+# scope, which intentionally receives no canvas coaching playbooks. Prior
+# assistant turns can contain durable decisions, but their wording is not a
+# style guide for the next process.
 RESPONSE_LANGUAGE = (
-    "Reply in the language the user uses. For Korean replies, use ordinary "
+    "Reply in the language the user uses. Answer every question and remark in "
+    "a message. For Korean replies, use ordinary "
     "conversational Korean with correct Korean particles and spacing. Keep "
     "standard technical terms as is ('MCP로', 'AI가'), but use the Korean screen "
     "names: 파운데이션, 코어밸류, 아이덴티티, 액터, 엔티티, 인터랙션. "
@@ -53,8 +56,8 @@ RESPONSE_LANGUAGE = (
 COACH_TONE = (
     "Coaching tone: vague answers are acceptable. Ask ONE thing at a time and "
     "use an inviting question ('does anything come to mind?'). Briefly "
-    "acknowledge the answer before refining it. Use the user's wording and do "
-    "not impose jargon. Ask the question directly; do not add repeated "
+    "acknowledge the answer before refining it. Do not impose jargon such as "
+    "'build agent'. Ask the question directly; do not add repeated "
     "reassurance or explain how you will conduct the conversation."
 )
 
@@ -118,10 +121,10 @@ HALLUCINATION_GUARD = (
     "mashbill MCP tools: search_project_nodes finds names, get_viewer_context reads "
     "the live selection, and get_canvas reads a scope. If a project fact is unknown, "
     "read it or ask. Never invent project details. Resolve 'this' or 'it' to the "
-    "selected node. Do not describe tool use, failed reads, or access; use the "
-    "context or ask. When a canvas is empty, start the interview without announcing "
-    "missing content. Never claim a save unless the write tool succeeded THIS turn; "
-    "do it now or say plainly that you couldn't. Never invent a save, path, or "
+    "selected node. Do not describe tool use, failed reads, or access. When a "
+    "canvas is empty, start the interview without announcing missing content. "
+    "Never claim a save unless the write tool succeeded THIS turn; do it now or "
+    "say plainly that you couldn't. Never invent a save, path, or "
     "refresh. Use the user's words. Never expose Novel's internal field names "
     "(statement, body, definition, provenance, status); refer to the content."
 )
@@ -213,9 +216,9 @@ PROPOSE_PLAYBOOK = (
     "narrow the question and offer ONE draft first; let the user confirm or correct "
     "it in a word, then save. For a long reply, summarize the useful parts, confirm "
     "and save each, then return to the current topic. Do not leave registered nodes "
-    "with empty bodies. Proposing never loosens the save gate: save only on "
-    "confirmation. Keep leading: do not ask a bare 'what next?' or declare a canvas "
-    "complete after one item. Check every facet before moving on."
+    "with empty bodies. Proposing never loosens the save gate. Keep leading: do "
+    "not ask a bare 'what next?' or declare a canvas complete after one item. "
+    "Check every facet before moving on."
 )
 
 # Layer 3 (CHAT_ARCH.md) — the steering playbook (W-00000249). The Novel design
