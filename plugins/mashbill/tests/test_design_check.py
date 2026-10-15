@@ -179,6 +179,34 @@ def test_turning_a_flow_arrow_off_reopens_the_feature_check(tmp_path: Path) -> N
     _assert_recheck(plot_root, service=False, feature=True)
 
 
+def test_reordering_a_step_reopens_the_feature_check(tmp_path: Path) -> None:
+    plot_root = _setup_design(tmp_path, with_detail_flow=True)
+    detail = read_canvas(plot_root, "alpha", "feature", "feat")
+    nodes = [
+        node.model_copy(update={"order": 2}) if node.id == "step" else node for node in detail.nodes
+    ]
+    write_canvas(plot_root, "alpha", detail.model_copy(update={"nodes": nodes}))
+    _assert_recheck(plot_root, service=False, feature=True)
+    assert _check(plot_root, "feat").changed == ["Type"]
+
+
+@pytest.mark.parametrize(
+    ("field", "named"),
+    [("problem", "Write together (problem)"), ("value_created", "Write together (value created)")],
+)
+def test_service_content_change_names_which_part_changed(
+    tmp_path: Path, field: str, named: str
+) -> None:
+    plot_root = _setup_design(tmp_path)
+    overview = read_canvas(plot_root, "alpha", "services")
+    nodes = [
+        node.model_copy(update={field: "Something new"}) if node.id == "svc" else node
+        for node in overview.nodes
+    ]
+    write_canvas(plot_root, "alpha", overview.model_copy(update={"nodes": nodes}))
+    assert _check(plot_root, "svc").changed == [named]
+
+
 def test_added_feature_records_change_on_service(tmp_path: Path) -> None:
     plot_root = _setup_design(tmp_path)
     overview = read_canvas(plot_root, "alpha", "services")
@@ -646,7 +674,7 @@ def test_unchecked_stays_put_and_recheck_accumulates(
         assert after == before
     else:
         assert after.state == "recheck"
-        assert after.changed == ["Write together"]
+        assert after.changed == ["Write together (problem)"]
 
 
 def test_recheck_keeps_last_check_counts(tmp_path: Path) -> None:

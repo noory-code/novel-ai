@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.226.6] — 2026-10-16
+
+### Changed
+
+- Reordering a step on a feature canvas reopens that feature's failure check, and a service check reopened by a problem or value change now records which of the two changed (novel-workspace W-00000508).
+
 ## [0.226.5] — 2026-10-16
 
 ### Changed

@@ -22,6 +22,7 @@ from mashbill.service_features import service_feature_ids
 from mashbill.storage import _canvas_file
 
 _SERVICE_CONTENT_FIELDS = ("problem", "value_created")
+_SERVICE_FIELD_NAMES = {"problem": "problem", "value_created": "value created"}
 _FEATURE_CONTENT_FIELDS = ("label", "proposed")
 
 
@@ -78,7 +79,7 @@ def _flow_changes(before: CanvasDoc, incoming: CanvasDoc) -> list[str]:
         _name(new_nodes[node_id] if node_id in new_nodes else old_nodes[node_id])
         for node_id in sorted(old_nodes.keys() ^ new_nodes.keys())
     ]
-    fields = ("label", "body", "outcome", "polarity")
+    fields = ("label", "body", "outcome", "polarity", "order")
     for node_id in sorted(old_nodes.keys() & new_nodes.keys()):
         old, new = old_nodes[node_id], new_nodes[node_id]
         if old.kind != new.kind or any(
@@ -236,10 +237,14 @@ def prepare_rechecks(
         service_changes: dict[str, list[str]] = {}
         feature_changes: dict[str, list[str]] = {}
         for node_id in sorted(old_services.keys() & new_services.keys()):
-            if _content(old_services[node_id], _SERVICE_CONTENT_FIELDS) != _content(
-                new_services[node_id], _SERVICE_CONTENT_FIELDS
-            ):
-                service_changes[node_id] = [_name(new_services[node_id])]
+            old_service, new_service = old_services[node_id], new_services[node_id]
+            parts = [
+                f"{_name(new_service)} ({_SERVICE_FIELD_NAMES[field]})"
+                for field in _SERVICE_CONTENT_FIELDS
+                if getattr(old_service, field, None) != getattr(new_service, field, None)
+            ]
+            if parts:
+                service_changes[node_id] = parts
         for node_id in sorted(old_features.keys() & new_features.keys()):
             if _content(old_features[node_id], _FEATURE_CONTENT_FIELDS) != _content(
                 new_features[node_id], _FEATURE_CONTENT_FIELDS
