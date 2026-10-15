@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.226.4] — 2026-10-16
+
+### Changed
+
+- A flow change made while a design check is in progress keeps the check `checking` and adds the change to its list of what changed (novel-workspace W-00000508 review).
+
 ## [0.226.3] — 2026-10-16
 
 ### Changed

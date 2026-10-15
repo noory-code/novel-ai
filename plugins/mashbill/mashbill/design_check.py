@@ -34,9 +34,14 @@ def _rechecked(
 ) -> DesignCheck | None:
     # Only a finished check reopens; a check in progress covers the edits made
     # during it (W-00000489, newcomer walk 5).
-    if check is None or check.state not in ("checked", "recheck"):
+    if check is None or check.state == "unchecked":
         return check
     merged = list(dict.fromkeys([*check.changed, *changed]))
+    if check.state == "checking":
+        # The check in progress keeps its state; the new change joins its list.
+        if merged == check.changed:
+            return check
+        return check.model_copy(update={"updated_at": updated_at, "changed": merged})
     return check.model_copy(
         update={"state": "recheck", "updated_at": updated_at, "changed": merged}
     )

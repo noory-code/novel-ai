@@ -150,6 +150,22 @@ def test_step_text_reopens_only_feature_and_accumulates_changed(tmp_path: Path) 
     assert _check(plot_root, "feat").changed == []
 
 
+def test_edits_during_a_check_in_progress_join_what_changed(tmp_path: Path) -> None:
+    """A check in progress stays ``checking`` when the flow changes again, but
+    the new change joins its list, so the re-check covers it too."""
+    plot_root = _setup_design(tmp_path, with_detail_flow=True)
+    mcp_tools.set_design_check(str(tmp_path), "alpha", "feat", "checking")
+    detail = read_canvas(plot_root, "alpha", "feature", "feat")
+    nodes = [
+        node.model_copy(update={"label": "Pay"}) if node.id == "step" else node
+        for node in detail.nodes
+    ]
+    write_canvas(plot_root, "alpha", detail.model_copy(update={"nodes": nodes}))
+    check = _check(plot_root, "feat")
+    assert check.state == "checking"
+    assert check.changed == ["Pay"]
+
+
 def test_added_feature_records_change_on_service(tmp_path: Path) -> None:
     plot_root = _setup_design(tmp_path)
     overview = read_canvas(plot_root, "alpha", "services")
