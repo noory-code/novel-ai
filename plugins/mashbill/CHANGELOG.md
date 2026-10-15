@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.30] — 2026-10-15
+
+### Changed
+
+- Decision log: D-2026-10-15-L records that canvas control buttons take the theme's colours, superseding D-2026-06-13-F's fixed arrange-icon stroke (novel-workspace W-00000491).
+
 ## [0.225.29] — 2026-10-15
 
 ### Changed

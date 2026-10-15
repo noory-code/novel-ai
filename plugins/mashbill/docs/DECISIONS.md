@@ -39,6 +39,22 @@
 
 ## Log
 
+### D-2026-10-15-L — Canvas control buttons take the theme's surface and text colour
+
+- **What:** *(Claude, carrying out novel-workspace W-00000491)* The viewer's `styles.css` gives
+  `.react-flow__controls .react-flow__controls-button` the theme's `--surface` background, `--fg` colour and `--line`
+  border, with a `--surface-muted` hover. The arrange icon draws with `currentColor` again, like the zoom and fit icons.
+- **Why:** In novel-workspace newcomer walk 5 (dark theme) the zoom, fit and whole-flow icons were nearly invisible:
+  React Flow paints the buttons `#fefefe` and sets no colour, so the lucide icons took the dark theme's light text
+  colour (about 1.2:1). Only the arrange icon was readable, because of its fixed dark stroke. On the themed surface a
+  fixed dark stroke would vanish in the dark theme instead.
+- **Supersedes:** D-2026-06-13-F's fixed `#1a1a1a` stroke. Its aim stands: every control icon reads in every theme
+  (the viewer test `canvas-controls-theme` requires 4.5:1 for `--fg` on `--surface` and `--surface-muted` in both
+  themes).
+- **Amends:** D-2026-05-11-A's "no React Flow overrides" for this one rule; cursors are untouched.
+- **Approval:** Claude's design within W-00000491, open to the user's review; it changes how a user-accepted fix works.
+- **Principles:** Consistency (one rule for every control button); Accessibility (contrast at least 4.5:1).
+
 ### D-2026-10-15-K — An in-app coach writes a feature's flow and records a check only in that feature's conversation
 
 - **What:** *(Claude, carrying out novel-workspace W-00000489)* (1) When the in-app chat sets `MASHBILL_CHAT_SCOPE`,
