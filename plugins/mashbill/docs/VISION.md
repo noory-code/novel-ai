@@ -109,11 +109,14 @@ deliverable, and it is the source the AI reads and works from.
 > fields* are in `concepts/`.
 
 - **essence** = the **emergent whole** of the 3 Foundation kinds (mission, core value, identity). No separate node — the core is the mission, the anchor is name-only (a visual grouping).
-- **mission** = a commitment to decide what needs to improve in people's lives or society, then keep
-  putting solutions into the world and refining them.
-- **core value** = a value that decides what takes priority when choices conflict.
+- **mission** = the business's mission, as management defines it: the value the service delivers by solving its
+  customers' problem, and a commitment to keep putting solutions into the world and refining them. The founder's
+  own operating convenience is not a mission.
+- **core value** = an enduring principle that decides what takes priority when choices conflict. An operating rule
+  or policy applies a value; it is not one.
 - **identity** = the attitude and way the service consistently behaves while it is designed, built, and
-  shown to users (AI-drafted, person-confirmed). If it conflicts with a core value, the core value wins.
+  shown to users (AI-drafted, person-confirmed): its character across every screen and message, not one
+  feature's behaviour. If it conflicts with a core value, the core value wins.
 - **actor** = a relational *role* (not a person or persona). Hierarchy (operator/user→subordinate, inheritance) + give-and-take.
 - **service** = one coherent outcome that one or more human actors seek, together
   with the capabilities that help them reach it. Multi-actor value exchange is

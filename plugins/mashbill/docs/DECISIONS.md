@@ -39,6 +39,32 @@
 
 ## Log
 
+### D-2026-10-15-J — Mission, core value and identity are coached by their business meaning
+
+- **What:** *(user direction, carried out in novel-workspace W-00000486)* A mission is the business's mission as
+  management defines it: the value the service delivers by solving its customers' problem, kept improving as
+  solutions are released and revised. The founder's own operating convenience is a goal or a feature, not a
+  mission. A core value is an enduring principle; an operating rule or policy applies a value and is not one.
+  Identity is the service's character across every screen and message, not one feature's behaviour. The
+  Foundation coach asks whose problem the service solves and what value they get once it is solved, and before
+  writing a statement that misses its meaning it asks the discriminating question once and offers a reframe; the
+  person decides. The shared definition every coach receives (`FOUNDATION_GUIDE`), the Foundation framing, the
+  design principles (`coaching_principles.py`), and the public canon (`docs/VISION.md`,
+  `docs/concepts/design-principles.md`) carry it.
+- **Why:** In novel-workspace newcomer walks 3–5 the coach proposed and recorded the founder's operating pain as
+  the mission ("손님은 자기 일정에 맞춰 꽃을 즐기고, 오늘꽃방은 변경 연락에 덜 매달리며 꽃을 준비한다";
+  "원장과 선생님의 반복 관리 업무를 줄여 학생을 살필 시간을 늘린다"), an operating policy as a core value
+  ("변경은 이틀 전까지만") and one feature's behaviour as identity. The user (2026-10-15): "경영학에서 기업의
+  미션으로 봐야하는데", "문제해결을 통한 전달 가치", "자유롭게 쓸 수는 있겠지만.. 코치가 코칭을 제대로 해줘야죠".
+- **Refines:** D-2026-08-18-D (mission as a continuing commitment to improve) — the continuing commitment stays;
+  whose improvement and in what terms are now fixed to the customers and the value delivered.
+- **Limits:** The coach still writes what the person finally chooses. Whether the coach proposes stronger missions
+  is measured in W-00000486 on three ideas, two runs each; a full sim comparison is not run.
+- **Approval:** The direction is the user's (2026-10-15); the wording is Claude's, open to the user's review.
+- **Principles:** SSOT (canon, shared prompt and principles say the same meaning); MECE (mission = value to
+  customers, core value = principle, identity = character; goals, policies and feature rules belong to services and
+  features); Fail Fast (the coach questions a weak statement before writing it).
+
 ### D-2026-10-15-I — A publish check item opens its own node, closing an unrelated feature pane
 
 - **What:** *(Claude, carrying out novel-workspace W-00000476)* Pressing an unfinished check in the blueprint publish

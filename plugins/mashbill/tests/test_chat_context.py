@@ -899,3 +899,35 @@ def test_every_canvas_merges_equal_counts_and_promises_only_this_conversation() 
         prompt = build_system_prompt(scope).lower()
         assert "merge equal counts" in prompt, scope
         assert "promise only what this conversation will do" in prompt, scope
+
+
+def test_foundation_coaches_mission_values_identity_by_their_business_meaning() -> None:
+    """W-00000486 (user, 2026-10-15): a mission is the value a business delivers by
+    solving a problem, as management defines it. Newcomer walks 3-5 recorded the
+    founder's own convenience as the mission ("변경 연락에 덜 매달린다"), an
+    operating policy as a core value ("변경은 이틀 전까지") and one feature's
+    behaviour as identity ("변경 마감을 미리 알려 준다")."""
+    shared = build_system_prompt("services").lower()
+    assert "value the service delivers by solving" in shared
+    foundation = build_system_prompt("foundation").lower()
+    for rule in (
+        "value the service delivers by solving",
+        "the founder's own convenience is not a mission",
+        "an operating rule or policy is not a core value",
+        "one feature's behaviour is not an identity",
+        "before writing a statement that misses its meaning",
+    ):
+        assert rule in foundation, rule
+
+
+def test_design_principles_name_the_business_meaning_and_weak_forms() -> None:
+    from mashbill.coaching_principles import get_principles
+
+    principles = get_principles(None)
+    for phrase in (
+        "문제를 해결해 전달하는 가치",
+        "운영 편의",
+        "운영 정책",
+        "기능 하나의 동작",
+    ):
+        assert phrase in principles, phrase

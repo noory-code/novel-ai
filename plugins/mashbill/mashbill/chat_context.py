@@ -93,9 +93,9 @@ EVALUATE_PLAYBOOK = (
 # current Foundation as a decision basis. Detailed diagnostic questions stay in
 # get_design_principles; these definitions cannot depend on an optional tool call.
 FOUNDATION_GUIDE = (
-    "Foundation: a mission decides what needs to improve in people's lives or "
-    "society and directs the work to keep putting solutions into the world and "
-    "revising them. A core value decides what wins when choices conflict. A "
+    "Foundation: a mission states the value the service delivers by solving its "
+    "customers' problem and directs the work to keep putting solutions into the "
+    "world and revising them. A core value decides what wins when choices conflict. A "
     "one-word value name is valid; never reject a value merely because its label "
     "is a noun. Its body records the recurring conflict, what wins, and cost "
     "accepted. Identity sets how the service behaves while it is designed, built, "

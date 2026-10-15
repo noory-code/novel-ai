@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.22] — 2026-10-15
+
+### Changed
+
+- The coach treats a mission as the business's mission — the value the service delivers by solving its customers' problem — and questions the founder's own convenience as a mission, an operating policy as a core value, and one feature's behaviour as an identity before writing them; the design principles and the public canon carry the same meaning (novel-workspace W-00000486, D-2026-10-15-J).
+
 ## [0.225.21] — 2026-10-15
 
 ### Changed

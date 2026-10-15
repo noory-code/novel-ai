@@ -475,7 +475,7 @@ def test_design_principles_serve_discriminators_per_area() -> None:
     assert "이름만 보고 가치가 아니라고 판단하지 않는다" in values
     assert "충돌 상황" in values and "무엇을 감수" in values
     mission = get_principles("mission")
-    assert "무엇이 더 나아져야 하는지" in mission
+    assert "문제를 해결해 전달하는 가치" in mission  # W-00000486 (user, 2026-10-15)
     assert "해결 방법을 계속 내놓고 고쳐 가는" in mission
     # CD-2026-07-25-A was REVERTED (W-121). Values really do get filed as identity
     # lines (novel-workspace O-00000019), but two probe passes over the corpus

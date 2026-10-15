@@ -57,7 +57,7 @@ def test_foundation_prompt_uses_agreed_mission_and_core_value_definitions() -> N
     prompt = build_system_prompt("foundation").lower()
 
     for mission_rule in (
-        "what needs to improve",
+        "value the service delivers by solving",
         "keep putting solutions into the world and revising them",
     ):
         assert mission_rule in prompt, mission_rule
@@ -81,7 +81,7 @@ def test_every_chat_scope_receives_mission_and_core_value_definitions() -> None:
     for scope in ("foundation", "actors", "services", "entities", "feature:x", "project"):
         prompt = build_system_prompt(scope).lower()
         for rule in (
-            "what needs to improve",
+            "value the service delivers by solving",
             "keep putting solutions into the world and revising them",
             "when choices conflict",
             "recurring conflict",

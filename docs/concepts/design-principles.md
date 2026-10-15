@@ -15,6 +15,13 @@
 
 ## Mission — discrimination criteria
 
+- **Value delivered by solving a problem** (user, 2026-10-15, D-2026-10-15-J): A mission is the business's mission
+  as management defines it — the value the service delivers by solving its customers' problem, stated by the need
+  it meets rather than the product (a market-oriented, not product-oriented, definition). Discriminate: "Whose
+  problem does this service solve, and what value do they get once it is solved?"
+- **Not the founder's own convenience**: Fewer rescheduling messages or less admin for the operator is a goal or
+  a feature of the service, not the reason the business exists. Discriminate: "Who gets the value in this
+  sentence — the customers, or us who run it?"
 - **Better, not merely different**: A good mission states what in people's lives or society needs to improve.
   "Things will change" has no direction. Discriminate: "Whose what needs to become better, and in what way?"
 - **A continuing commitment, not a finish line**: The condition can keep arising even after one solution works.
@@ -27,10 +34,14 @@
 
 **Example pair**: Strong — "People and AI never lose sight of the essence or where the current work fits into
 the whole" (the better state is clear while the solution may change). Weak — "provide an AI canvas" (a current
-solution, not the improvement) · "change the world" (no direction for what should become better).
+solution, not the improvement) · "change the world" (no direction for what should become better) · "the owner
+spends less time on rescheduling messages" (the operator's convenience, not value to customers).
 
 ## Core value — discrimination criteria
 
+- **A principle, not an operating rule**: A core value is an enduring principle that guides many decisions. A
+  policy such as "changes are accepted until two days before delivery" applies a value; it is not one.
+  Discriminate: "If this rule changed, what principle would still decide?"
 - **A real conflict, not a preference**: A core value earns its place when choices cannot all be kept.
   Discriminate: "What are the two choices, and when do they actually conflict?"
 - **A one-word name, with the full choice in the body**: The name may be one word such as "Essence". Never
@@ -55,6 +66,9 @@ mission wins; slower delivery is accepted. Weak — "Honesty: always be honest" 
 
 ## Identity — discrimination criteria
 
+- **The service's character, not one feature's behaviour**: Identity shows across every screen and message. A
+  guideline that only describes one feature ("announce the change deadline in advance") is that feature's rule.
+  Discriminate: "Does this guideline show in every screen and message, or only in one feature?"
 - **Standing behavior, not only a voice**: Identity sets the attitude and way the service behaves while it
   is designed, built, and shown to users. Discriminate: "Can we tell what the service will do differently
   because of this guideline?"
