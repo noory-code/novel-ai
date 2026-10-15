@@ -39,6 +39,17 @@
 
 ## Log
 
+### D-2026-10-15-M — Asked to put a proposal on the canvas, the coach writes it without asking about a draft
+
+- **What:** *(Claude, carrying out novel-workspace W-00000495)* `WRITE_PLAYBOOK`: when the person asks to put a
+  proposal on the canvas ("올려 주세요"), the coach writes it in that reply without asking and without a draft. The
+  draft question ("초안으로 남길까요?") stays for a proposal the person only accepts or chooses.
+- **Why:** In novel-workspace newcomer walks 1-6 the coach answered "올려 주세요" with "초안으로 남길까요?" and wrote
+  nothing in that turn (five times in walk 6 alone, 20 times in walks 1-4); it once apologised and asked again twice.
+- **Amends:** D-2026-10-01-A — the draft question no longer precedes a write the person asked for.
+- **Approval:** Accepted — user, 2026-10-15 (Q-00000040; "네네" to writing at once when the person asks for it).
+- **Principles:** Don't Make Me Think; Clear Feedback (the asked-for write happens in the reply that answers it).
+
 ### D-2026-10-15-L — Canvas control buttons take the theme's surface and text colour
 
 - **What:** *(Claude, carrying out novel-workspace W-00000491)* The viewer's `styles.css` gives
@@ -62,8 +73,8 @@
   changes steps, decisions or lines on a feature canvas are refused unless the scope is `feature:<that id>`; the
   error tells the coach to ask the person to open that feature's canvas. `set_design_check` accepts a feature's check
   only from `feature:<id>` and a service's only from `services` or `service:<id>`. An outside agent (no env scope)
-  is not restricted; a tool argument never narrows it. `update_node` and `set_node_references` stay open from any
-  conversation. (2) `propose_flow` refuses a draft node that repeats a drawn node's kind and name, and a step or
+  is not restricted; a tool argument never narrows it. `update_node` on a feature canvas is refused the same way;
+  `set_node_references` stays open from any conversation. (2) `propose_flow` refuses a draft node that repeats a drawn node's kind and name, and a step or
   decision left with no line into it (a new node once the canvas has lines, or a drawn node whose last incoming line
   the draft removes); open items do not excuse it. (3) An edit reopens only a finished check (`checked` →
   `recheck`); a check in progress stays `checking`.
@@ -72,8 +83,7 @@
   entities chat. In walk 5 the coach drew a decision nobody led into and removed the only line into a step, and its
   own in-progress check flipped to recheck when it drew.
 - **Limits:** A draft cannot remove nodes, so dropping a branch with its step is refused; the coach falls back to a
-  whole-canvas write. The project conversation can no longer record checks. `update_node` from another conversation
-  can still rewrite a step's text.
+  whole-canvas write. The project conversation can no longer record checks.
 - **Amends:** D-2026-10-15-B (refusal list), D-2026-10-12-C (2) (only `checked` turns to `recheck`), D-2026-10-05-A
   (5)–(6) (which conversation records which check).
 - **Approval:** Claude's design within W-00000489, open to the user's review.

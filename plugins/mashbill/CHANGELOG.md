@@ -4,6 +4,14 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.31] — 2026-10-15
+
+### Changed
+
+- Asked to put a proposal on the canvas, the coach writes it in that reply without asking about a draft; the draft question stays for a proposal the person only accepts (novel-workspace W-00000495, D-2026-10-15-M).
+- An in-app coach rewrites a feature step's text with `update_node` only in that feature's conversation (novel-workspace W-00000489, D-2026-10-15-K).
+- The `[Project]` line still names every service when the publish folder cannot be read (novel-workspace W-00000490).
+
 ## [0.225.30] — 2026-10-15
 
 ### Changed

@@ -238,10 +238,11 @@ def test_write_playbook_requires_a_reply_after_the_final_tool_call() -> None:
 def test_write_playbook_records_drafts_only_after_explicit_consent() -> None:
     draft_rule = (
         " Drafts: during discussion, show and refine concrete proposals in chat without "
-        "recording them. If the person accepts or chooses an unkept proposal, do not write "
-        "it in that reply; first ask whether to keep it as a draft (for example, '초안으로 "
-        "남길까요?'). If they agree, call record_draft, then write it with the returned "
-        "draft_id; if they decline, write it without a draft. Use canvas_kind='project' for "
+        "recording them. When the person asks to put it on the canvas, write it in that "
+        "reply without asking. If they only accept or choose an unkept proposal, ask whether "
+        "to keep a draft ('초안으로 남길까요?'); if they agree, call record_draft, then write "
+        "with the returned draft_id; otherwise write without a draft. "
+        "Use canvas_kind='project' for "
         "a new project name. If the person agrees "
         "to revise a kept draft later, call update_draft instead of recording another. "
         "When they agree to apply a kept draft from [Open drafts], do not ask again; pass "
@@ -260,11 +261,17 @@ def test_write_playbook_records_drafts_only_after_explicit_consent() -> None:
     )
 
 
-def test_write_playbook_asks_before_writing_an_accepted_unkept_proposal() -> None:
+def test_write_playbook_writes_at_once_when_asked_to_put_it_on_the_canvas() -> None:
+    """Newcomer walks 1-6: the person said "캔버스에 올려 주세요" and the coach asked
+    "초안으로 남길까요?" instead of writing, five times in walk 6 alone. The user
+    chose to write at once when asked (2026-10-15, Q-00000040, D-2026-10-15-M); the
+    draft question stays for a proposal the person only accepts."""
     assert (
-        "accepts or chooses an unkept proposal, do not write it in that reply; "
-        "first ask whether to keep it as a draft" in WRITE_PLAYBOOK
+        "When the person asks to put it on the canvas, write it in that reply without asking."
+        in WRITE_PLAYBOOK
     )
+    assert "If they only accept or choose an unkept proposal, ask whether" in WRITE_PLAYBOOK
+    assert "do not write it in that reply" not in WRITE_PLAYBOOK
 
 
 def test_write_playbook_has_create_branch(tmp_path: Path) -> None:

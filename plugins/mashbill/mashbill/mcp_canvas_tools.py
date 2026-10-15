@@ -98,6 +98,8 @@ def update_node(
     (the project anchor is not a node). Only call this after the user confirms —
     never to finalise something they haven't agreed to. Pass [Write target]
     ``chat_scope``; omitting ``draft_id`` does not create a draft."""
+    if canvas_kind == "feature" and service_id is not None:
+        refuse_foreign_flow_write(service_id)
     plot_root = resolve_plot_root(project_path)
     result = update_node_with_draft(
         plot_root,

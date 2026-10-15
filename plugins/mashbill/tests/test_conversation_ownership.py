@@ -227,11 +227,11 @@ def test_the_features_own_conversation_and_an_outside_agent_draw_its_flow(
     assert len(_feature(project_path, _SIBLING).nodes) == 3
 
 
-def test_another_conversation_still_links_entities_and_edits_a_drawn_steps_text(
+def test_another_conversation_still_links_entities_to_a_drawn_step(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The person asked the entities coach to link entities to steps (12:29:42),
-    and to keep earlier sends (12:31:03): both reach existing steps, not the flow."""
+    """The person asked the entities coach to link entities to steps (12:29:42):
+    a reference reaches an existing step, not the flow."""
     project_path = _project(tmp_path)
     monkeypatch.setenv(_SCOPE, f"feature:{_FEATURE}")
     step = _draw_flow(project_path)["assign"]
@@ -245,18 +245,34 @@ def test_another_conversation_still_links_entities_and_edits_a_drawn_steps_text(
         {"ref_entity_ids": [_ENTITY]},
         service_id=_FEATURE,
     )
-    mcp_tools.update_node(
-        project_path,
-        "alpha",
-        "feature",
-        step,
-        {"body": "이전 배정 내역도 남긴다."},
-        service_id=_FEATURE,
-    )
 
     node = next(n for n in _feature(project_path).nodes if n.id == step)
     assert node.model_dump()["ref_entity_ids"] == [_ENTITY]
-    assert node.model_dump()["body"] == "이전 배정 내역도 남긴다."
+
+
+def test_another_conversation_cannot_rewrite_a_drawn_steps_text(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A step's text is part of the flow: the entities coach rewriting it is
+    the same foreign flow write as drawing a step there."""
+    project_path = _project(tmp_path)
+    monkeypatch.setenv(_SCOPE, f"feature:{_FEATURE}")
+    step = _draw_flow(project_path)["assign"]
+    before = next(n for n in _feature(project_path).nodes if n.id == step).model_dump()["body"]
+    monkeypatch.setenv(_SCOPE, "entities")
+
+    with pytest.raises(ValueError, match="open that feature's canvas"):
+        mcp_tools.update_node(
+            project_path,
+            "alpha",
+            "feature",
+            step,
+            {"body": "이전 배정 내역도 남긴다."},
+            service_id=_FEATURE,
+        )
+
+    node = next(n for n in _feature(project_path).nodes if n.id == step)
+    assert node.model_dump()["body"] == before
 
 
 # --- design checks ---------------------------------------------------------

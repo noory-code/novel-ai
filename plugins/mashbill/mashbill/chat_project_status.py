@@ -34,11 +34,15 @@ def latest_blueprint_version(project_dir: Path) -> str | None:
 def _service_lines(plot_root: Path, project_id: str, project_dir: Path) -> list[str]:
     """``label vS2`` per service on the canvas, ``label not published yet`` for one
     never published, then any published service no longer on the canvas by slug."""
-    releases = {
-        service: str(manifest.get("release", ""))
-        for service, _folder, manifest in latest_service_releases(project_dir)
-    }
-    slugs = read_slug_store(plot_root, project_id)
+    try:
+        releases = {
+            service: str(manifest.get("release", ""))
+            for service, _folder, manifest in latest_service_releases(project_dir)
+        }
+        slugs = read_slug_store(plot_root, project_id)
+    except (OSError, ValueError):
+        # An unreadable publish record still leaves every service named.
+        releases, slugs = {}, {}
     lines = []
     for node in read_canvas(plot_root, project_id, "services").nodes:
         if node.kind != "service":
@@ -58,10 +62,17 @@ def render_project_status(plot_root: Path) -> str:
     services: list[str] = []
     try:
         project_dir = _project_dir(plot_root, project_id)
-        blueprint = latest_blueprint_version(project_dir)
-        services = _service_lines(plot_root, project_id, project_dir)
     except (OSError, ValueError):
-        pass
+        project_dir = None
+    if project_dir is not None:
+        try:
+            blueprint = latest_blueprint_version(project_dir)
+        except (OSError, ValueError):
+            blueprint = None
+        try:
+            services = _service_lines(plot_root, project_id, project_dir)
+        except (OSError, ValueError):
+            services = []
     return (
         f"[Project] id {project_id}; blueprint: {blueprint or 'not published yet'}; "
         f"services: {', '.join(services) if services else 'none yet'}."

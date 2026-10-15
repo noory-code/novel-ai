@@ -11,6 +11,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
+from mashbill import chat_project_status
 from mashbill.chat_project_status import render_project_status
 from mashbill.chat_selection import build_turn_preamble
 from mashbill.folder_io import create_project, write_canvas
@@ -98,3 +101,27 @@ def test_unreadable_release_does_not_break_the_turn(tmp_path: Path) -> None:
     (folder / "manifest.json").write_text("{not json", encoding="utf-8")
     line = render_project_status(plot_root)
     assert line.startswith("[Project] id academy")
+
+
+def test_an_unreadable_publish_folder_still_lists_each_service(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reading the publish folder fails: the services on the canvas are still
+    named, each as not published yet."""
+    plot_root = _project(tmp_path)
+    write_canvas(
+        plot_root,
+        "academy",
+        CanvasDoc(
+            canvas_id="services",
+            canvas_kind="services",
+            nodes=[ServiceNode(id="s_fee", label="수강료 관리", x=0.0, y=0.0)],
+        ),
+    )
+
+    def _unreadable(_project_dir: Path) -> list[object]:
+        raise OSError("permission denied")
+
+    monkeypatch.setattr(chat_project_status, "latest_service_releases", _unreadable)
+    line = render_project_status(plot_root)
+    assert "수강료 관리 not published yet" in line
