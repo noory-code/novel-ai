@@ -1,9 +1,9 @@
 """Environment contract for an in-app coach turn's chat scope.
 
-An in-app coach turn's tool server carries the turn's conversation scope in
-``MASHBILL_CHAT_SCOPE``. A feature's flow and its check belong to that
-feature's conversation, and a service's check to the Services conversation;
-writes from any other in-app conversation are refused (W-00000489). An outside
+An in-app coach turn's tool server carries its scope in
+``MASHBILL_CHAT_SCOPE``. A feature's flow and its check require that
+feature's canvas to be open; a service's check requires the Services canvas.
+Writes from other in-app turn scopes are refused (W-00000489). An outside
 agent's tool server has no scope and is not restricted.
 """
 
@@ -35,8 +35,8 @@ def refuse_foreign_flow_write(feature_id: str) -> None:
     scope = _turn_scope()
     if scope and scope != f"feature:{feature_id}":
         raise ValueError(
-            f"this is the {scope!r} conversation; the flow of feature {feature_id!r} "
-            f"is drawn only in that feature's own conversation. {_OPEN_FEATURE}"
+            f"this turn is in the {scope!r} tab; the flow of feature {feature_id!r} "
+            f"is drawn only while that feature's canvas is open. {_OPEN_FEATURE}"
         )
 
 
@@ -47,12 +47,12 @@ def refuse_foreign_check(node_id: str, node_kind: str) -> None:
         return
     if node_kind == "feature" and scope != f"feature:{node_id}":
         raise ValueError(
-            f"this is the {scope!r} conversation; the check of feature {node_id!r} "
-            f"is recorded only in that feature's own conversation. {_OPEN_FEATURE}"
+            f"this turn is in the {scope!r} tab; the check of feature {node_id!r} "
+            f"is recorded only while that feature's canvas is open. {_OPEN_FEATURE}"
         )
     if node_kind == "service" and scope not in ("services", f"service:{node_id}"):
         raise ValueError(
-            f"this is the {scope!r} conversation; the check of service {node_id!r} "
-            "is recorded only in the Services conversation. Ask the person to open "
+            f"this turn is in the {scope!r} tab; the check of service {node_id!r} "
+            "is recorded only while the Services canvas is open. Ask the person to open "
             "the Services canvas and continue there."
         )

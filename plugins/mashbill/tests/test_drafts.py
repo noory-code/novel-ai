@@ -145,6 +145,45 @@ def test_record_draft_tracks_current_conversation_across_reset(tmp_path: Path) -
     )
 
 
+def test_draft_scope_is_provenance_but_conversation_id_is_project_wide(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    append_user(plot_root, "alpha", "foundation", "codex", "u1", "Start")
+    append_user(plot_root, "alpha", "actors", "codex", "u2", "Actors")
+    conversation_id = read_conversation(plot_root, "alpha", "project").conversation_id
+
+    draft = _record(str(tmp_path), chat_scope="actors")
+    saved = read_draft(plot_root, "alpha", str(draft["draft_id"]))
+
+    assert saved.chat_scope == "actors"
+    assert saved.chat_conversation_id == conversation_id
+
+
+def test_legacy_draft_link_survives_first_project_materialization(tmp_path: Path) -> None:
+    plot_root, _ = _project(tmp_path)
+    chat = plot_root / "chat"
+    chat.mkdir()
+    (chat / "foundation.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "scope": "foundation",
+                "conversation_id": "old-scope-id",
+                "created": "2026-01-01",
+                "updated": "2026-01-01",
+                "messages": [{"id": "u1", "role": "user", "text": "old", "ts": "2026-01-01"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    draft = _record(str(tmp_path), chat_scope="foundation")
+    linked_id = read_draft(plot_root, "alpha", str(draft["draft_id"])).chat_conversation_id
+
+    append_user(plot_root, "alpha", "actors", "codex", "u2", "new")
+
+    assert linked_id == read_conversation(plot_root, "alpha", "project").conversation_id
+    assert linked_id != "old-scope-id"
+
+
 def test_concurrent_record_draft_calls_do_not_lose_records(tmp_path: Path) -> None:
     plot_root, _ = _project(tmp_path)
 

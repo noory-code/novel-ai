@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.226.0] — 2026-10-15
+
+### Changed
+
+- Store one coach conversation per project, with the canvas scope recorded on every turn and a fresh provider given bounded project history (novel-workspace W-00000504, D-2026-10-15-P).
+- Preserve per-scope chat files as legacy history, merge them on first send, and serialize project sends, resets and reopens (novel-workspace W-00000504).
+
 ## [0.225.35] — 2026-10-15
 
 ### Added

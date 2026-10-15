@@ -32,7 +32,7 @@ from mashbill.chat_store import (
     list_conversations,
     read_conversation,
 )
-from mashbill.chat_turn_state import turn_in_progress
+from mashbill.chat_turn_state import try_start_turn, turn_in_progress
 from mashbill.endpoints_chat import (
     build_context_preamble,
     build_framing_preamble,
@@ -359,28 +359,23 @@ async def test_stream_chat_turn_releases_scope_when_cancelled(tmp_path: Path) ->
     assert not turn_in_progress(ws, "actors")
 
 
-async def test_stream_chat_turn_keeps_scope_active_until_overlapping_turns_finish(
+async def test_project_guard_rejects_other_scope_until_turn_finishes(
     tmp_path: Path,
 ) -> None:
     ws = tmp_path / "ws"
     ws.mkdir()
     started_one, release_one = asyncio.Event(), asyncio.Event()
-    started_two, release_two = asyncio.Event(), asyncio.Event()
     first = asyncio.create_task(
-        stream_chat_turn(_BlockingProvider(started_one, release_one), _FakeHub(), ws, "one")
+        stream_chat_turn(
+            _BlockingProvider(started_one, release_one), _FakeHub(), ws, "one", "foundation"
+        )
     )
-    second = asyncio.create_task(
-        stream_chat_turn(_BlockingProvider(started_two, release_two), _FakeHub(), ws, "two")
-    )
-    await asyncio.gather(started_one.wait(), started_two.wait())
-
+    await started_one.wait()
+    assert not try_start_turn(ws, "actors")
+    assert turn_in_progress(ws, "actors")
     release_one.set()
     await first
-    assert turn_in_progress(ws, "project")
-
-    release_two.set()
-    await second
-    assert not turn_in_progress(ws, "project")
+    assert not turn_in_progress(ws, "actors")
 
 
 # ---------------------------------------------------------------------------
@@ -808,9 +803,7 @@ def _scope_aware_client(
     return client, registry
 
 
-def test_chat_send_keys_session_by_scope(workspace: Path) -> None:
-    """Two sends to the same workspace+provider but different scopes create
-    two distinct registry sessions."""
+def test_chat_send_does_not_cache_provider_by_scope(workspace: Path) -> None:
     client, registry = _scope_aware_client(workspace)
     _select_provider(client, workspace, "codex")
 
@@ -830,7 +823,7 @@ def test_chat_send_keys_session_by_scope(workspace: Path) -> None:
             "scope": "actors",
         },
     )
-    assert registry.session_count() == 2
+    assert registry.session_count() == 0
 
 
 def test_chat_send_defaults_missing_scope_to_project(workspace: Path) -> None:
@@ -842,17 +835,15 @@ def test_chat_send_defaults_missing_scope_to_project(workspace: Path) -> None:
         "/api/chat/send",
         json={"project_path": str(workspace), "message": "a"},
     )
-    # Re-sending with explicit "project" must reuse the same session.
+    # Every send uses a fresh provider, even for the same scope.
     client.post(
         "/api/chat/send",
         json={"project_path": str(workspace), "message": "b", "scope": "project"},
     )
-    assert registry.session_count() == 1
+    assert registry.session_count() == 0
 
 
-def test_chat_send_keys_session_per_service_instance(workspace: Path) -> None:
-    """Layer 1 (CHAT_ARCH.md): two feature canvases get their own
-    threads — ``feature:<id>`` keys a distinct session per service."""
+def test_chat_send_uses_fresh_provider_for_feature_instances(workspace: Path) -> None:
     client, registry = _scope_aware_client(workspace)
     _select_provider(client, workspace, "codex")
 
@@ -872,9 +863,9 @@ def test_chat_send_keys_session_per_service_instance(workspace: Path) -> None:
             "scope": "feature:svc_two",
         },
     )
-    assert registry.session_count() == 2
+    assert registry.session_count() == 0
 
-    # Re-sending to the first service reuses its thread, not a third one.
+    # Returning to a feature still starts a fresh provider.
     client.post(
         "/api/chat/send",
         json={
@@ -883,7 +874,7 @@ def test_chat_send_keys_session_per_service_instance(workspace: Path) -> None:
             "scope": "feature:svc_one",
         },
     )
-    assert registry.session_count() == 2
+    assert registry.session_count() == 0
 
 
 def test_chat_send_accepts_feature_instance_scope(workspace: Path) -> None:
@@ -917,9 +908,11 @@ def test_chat_send_rejects_invalid_scope(workspace: Path) -> None:
     assert "scope" in resp.json()["error"]
 
 
-def test_chat_reset_scopes_to_given_scope(workspace: Path) -> None:
-    """Reset wipes only the named scope's session; other scopes survive (Q3)."""
+def test_chat_reset_archives_project_conversation(workspace: Path) -> None:
+    """Reset applies to the project regardless of the request's turn scope."""
     client, registry = _scope_aware_client(workspace)
+    root = resolve_plot_root(str(workspace))
+    create_project(root, "alpha", "Alpha")
     _select_provider(client, workspace, "codex")
     client.post(
         "/api/chat/send",
@@ -929,24 +922,26 @@ def test_chat_reset_scopes_to_given_scope(workspace: Path) -> None:
         "/api/chat/send",
         json={"project_path": str(workspace), "message": "b", "scope": "actors"},
     )
-    assert registry.session_count() == 2
+    assert len(read_conversation(root, "alpha", "project").messages) == 4
 
     resp = client.post(
         "/api/chat/reset",
         json={"project_path": str(workspace), "scope": "foundation"},
     )
     assert resp.status_code == 200
-    assert registry.session_count() == 1
+    assert registry.session_count() == 0
+    assert not (root / "chat" / "project.json").exists()
+    assert len(list_conversations(root, "alpha")) == 1
 
 
-async def test_chat_reset_rejects_active_scope_but_allows_other_scope(
+async def test_chat_reset_rejects_any_scope_while_turn_runs(
     workspace: Path,
 ) -> None:
     plot_root = resolve_plot_root(str(workspace))
     create_project(plot_root, "alpha", "Alpha")
     append_user(plot_root, "alpha", "foundation", "codex", "u1", "Foundation topic")
     append_user(plot_root, "alpha", "actors", "codex", "u2", "Actors topic")
-    foundation_path = plot_root / "chat" / "foundation.json"
+    foundation_path = plot_root / "chat" / "project.json"
     foundation_before = foundation_path.read_bytes()
     started = asyncio.Event()
     release = asyncio.Event()
@@ -990,7 +985,7 @@ async def test_chat_reset_rejects_active_scope_but_allows_other_scope(
     assert blocked.status_code == 409
     assert blocked.json() == {"error": "turn in progress", "code": "turn_in_progress"}
     assert foundation_while_blocked == foundation_before
-    assert other_scope.status_code == 200
+    assert other_scope.status_code == 409
     assert foundation_after_other_reset == foundation_before
     assert after_turn.status_code == 200
     assert not foundation_path.exists()
@@ -1237,7 +1232,7 @@ def test_chat_send_notifies_when_user_persistence_fails(
         },
     )
 
-    assert response.status_code == 202
+    assert response.status_code == 500
     assert hub.events == [
         (
             plot_root,
@@ -1315,8 +1310,8 @@ def test_chat_send_continues_when_persistence_failure_notification_fails(
         },
     )
 
-    assert response.status_code == 202
-    assert len(provider.calls) == 1
+    assert response.status_code == 500
+    assert len(provider.calls) == 0
 
 
 def test_chat_send_captures_conversation_id_before_streaming(
@@ -1372,6 +1367,102 @@ def test_chat_send_persists_user_message(app_client: TestClient, workspace: Path
     assert doc.title == "define the mission"
 
 
+def test_successive_scopes_get_fresh_providers_and_project_history(workspace: Path) -> None:
+    root = resolve_plot_root(str(workspace))
+    create_project(root, "alpha", "Alpha")
+    providers: list[_CannedProvider] = []
+
+    def factory(_root: Path, _name: str) -> ChatProvider:
+        provider = _CannedProvider([ChatStreamEvent(type="turn_complete", turn_id="t", text="ok")])
+        providers.append(provider)
+        return provider
+
+    client = TestClient(
+        create_http_app(
+            hub=BroadcastHub(enable_watchers=False),
+            chat_registry_instance=ChatSessionRegistry(factory=factory),
+        )
+    )
+    _select_provider(client, workspace, "codex")
+    for scope, message in (("foundation", "first topic"), ("entities", "second topic")):
+        response = client.post(
+            "/api/chat/send",
+            json={
+                "project_path": str(workspace),
+                "scope": scope,
+                "message": message,
+            },
+        )
+        assert response.status_code == 202
+
+    assert len(providers) == 2
+    assert providers[0] is not providers[1]
+    assert providers[0].chat_scopes == ["foundation"]
+    assert providers[1].chat_scopes == ["entities"]
+    assert "[foundation] user: first topic" in providers[1].calls[0]
+    assert providers[1].calls[0].count("second topic") == 1
+    assert [m.scope for m in read_conversation(root, "alpha", "project").messages] == [
+        "foundation",
+        "foundation",
+        "entities",
+        "entities",
+    ]
+
+
+async def test_send_guard_precedes_second_send_reset_and_reopen(workspace: Path) -> None:
+    root = resolve_plot_root(str(workspace))
+    create_project(root, "alpha", "Alpha")
+    append_user(root, "alpha", "project", "codex", "old", "old topic")
+    ended_id = archive_current_conversation(root, "alpha", "project")
+    assert ended_id is not None
+    started, release = asyncio.Event(), asyncio.Event()
+    registry = ChatSessionRegistry(factory=lambda _root, _name: _BlockingProvider(started, release))
+    app = create_http_app(hub=BroadcastHub(enable_watchers=False), chat_registry_instance=registry)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://engine"
+    ) as client:
+        selected = await client.put(
+            f"/api/chat/provider?project_path={workspace}", json={"provider": "codex"}
+        )
+        assert selected.status_code == 200
+        first = await client.post(
+            "/api/chat/send",
+            json={
+                "project_path": str(workspace),
+                "scope": "foundation",
+                "message": "first",
+            },
+        )
+        assert first.status_code == 202
+        await asyncio.wait_for(started.wait(), timeout=1)
+        before = (root / "chat" / "project.json").read_bytes()
+        second = await client.post(
+            "/api/chat/send",
+            json={
+                "project_path": str(workspace),
+                "scope": "entities",
+                "message": "second",
+            },
+        )
+        reset = await client.post(
+            "/api/chat/reset",
+            json={
+                "project_path": str(workspace),
+                "scope": "entities",
+            },
+        )
+        reopen = await client.post(
+            "/api/chat/conversations/reopen",
+            json={
+                "project_path": str(workspace),
+                "id": ended_id,
+            },
+        )
+        assert [r.status_code for r in (second, reset, reopen)] == [409, 409, 409]
+        assert (root / "chat" / "project.json").read_bytes() == before
+        release.set()
+
+
 def test_conversations_list_endpoint(app_client: TestClient, workspace: Path) -> None:
     plot_root = resolve_plot_root(str(workspace))
     create_project(plot_root, "alpha", "Alpha")
@@ -1380,7 +1471,8 @@ def test_conversations_list_endpoint(app_client: TestClient, workspace: Path) ->
     assert resp.status_code == 200
     rows = resp.json()["conversations"]
     assert len(rows) == 1
-    assert rows[0]["scope"] == "services"
+    assert rows[0]["scope"] == "project"
+    assert rows[0]["legacy"] is False
     assert rows[0]["title"] == "the refund flow"
     assert (
         rows[0]["conversation_id"]
@@ -1460,8 +1552,8 @@ def test_conversation_reopen_swaps_files_resets_session_and_refeeds_history(
     assert response.status_code == 200
     assert response.json() == {
         "reopened": True,
-        "id": "foundation.json",
-        "scope": "foundation",
+        "id": "project.json",
+        "scope": "project",
     }
     assert registry.session_count() == 0
     assert read_conversation(plot_root, "alpha", "foundation").title == "chosen history"

@@ -97,7 +97,7 @@ def _record_new_draft(
         status="proposed",
         origin="recorded",
         chat_scope=chat_scope,
-        chat_conversation_id=current_conversation_id(plot_root, project_id, chat_scope),
+        chat_conversation_id=current_conversation_id(plot_root, project_id, "project"),
         resolved_node_ids=[],
     )
     _write_json(_draft_path(plot_root, project_id, draft.id), draft.model_dump())

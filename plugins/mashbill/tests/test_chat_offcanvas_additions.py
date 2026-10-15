@@ -147,7 +147,7 @@ async def test_entities_made_from_the_services_canvas_are_reported_and_saved(
     assert "엔티티0" not in read_recent_transcript(plot_root, "alpha", "services")
 
 
-async def test_nodes_added_to_the_conversations_own_canvas_are_not_reported(
+async def test_nodes_added_to_the_turns_own_canvas_are_not_reported(
     tmp_path: Path,
 ) -> None:
     plot_root, project_path = _project(tmp_path)
@@ -156,7 +156,7 @@ async def test_nodes_added_to_the_conversations_own_canvas_are_not_reported(
 
     assert all("added_elsewhere" not in p for p in hub.payloads)
     raw = json.loads(
-        (_project_dir(plot_root, "alpha") / "chat" / "entities.json").read_text("utf-8")
+        (_project_dir(plot_root, "alpha") / "chat" / "project.json").read_text("utf-8")
     )
     assert "added_elsewhere" not in raw["messages"][-1]
 

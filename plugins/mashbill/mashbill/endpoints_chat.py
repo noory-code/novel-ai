@@ -42,9 +42,8 @@ from mashbill.chat_store import (
     read_conversation_by_id,
     read_recent_transcript,
     reopen_conversation,
-    scope_to_filename,
 )
-from mashbill.chat_turn_state import finish_turn, start_turn, turn_in_progress
+from mashbill.chat_turn_state import finish_turn, start_turn, try_start_turn, turn_in_progress
 from mashbill.mcp_registration import ProviderName
 from mashbill.workspace import enumerate_projects, resolve_plot_root
 
@@ -95,14 +94,7 @@ async def chat_models_endpoint(request: Request) -> JSONResponse:
 
 
 def _read_scope(body: dict[str, Any]) -> str | None:
-    """Pull ``scope`` from a request body.
-
-    Missing → the shared ``project`` bucket (Postel, Q1). Present but not a
-    well-formed scope → ``None`` to signal the caller should 400 (Fail Fast on
-    a typo before it silently creates an unreachable session). A valid scope is
-    a base member or a parametric ``feature:<id>`` (Layer 1,
-    D-2026-06-15-B), returned verbatim as the session key.
-    """
+    """Return a validated turn scope, defaulting to ``project``."""
     raw = body.get("scope")
     if raw is None:
         return DEFAULT_CHAT_SCOPE
@@ -117,6 +109,10 @@ _log = logging.getLogger(__name__)
 # the existing project_changed payload uses ``"project_changed"``.
 _CHAT_EVENT = "chat_stream_event"
 _PERSIST_FAILED_EVENT = "chat_persist_failed"
+
+
+def _turn_conflict() -> JSONResponse:
+    return JSONResponse({"error": "turn in progress", "code": "turn_in_progress"}, status_code=409)
 
 
 def _hub_from_request(request: Request) -> BroadcastHub | None:
@@ -189,6 +185,7 @@ async def stream_chat_turn(
     provider_name: str = "",
     model: str | None = None,
     conversation_id: str | None = None,
+    guard_acquired: bool = False,
 ) -> None:
     """Fan provider events out to ``plot_root`` with the requested ``scope``.
 
@@ -196,7 +193,8 @@ async def stream_chat_turn(
     turns never create drafts implicitly. The terminal event carries the nodes
     the turn added outside ``scope``'s canvas (D-2026-10-15-A).
     """
-    start_turn(plot_root, scope)
+    if not guard_acquired:
+        start_turn(plot_root, scope)
     seen_turn_id: str | None = None
     started_at = datetime.now(UTC)
     try:
@@ -291,6 +289,8 @@ async def chat_send_endpoint(request: Request) -> JSONResponse:
         plot_root = resolve_plot_root(project_path)
     except (FileNotFoundError, NotADirectoryError) as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
+    if turn_in_progress(plot_root, scope):
+        return _turn_conflict()
 
     # The workspace's persisted CLI choice drives which provider runs the
     # turn. Without a choice the dock should be in its "pick a CLI" state
@@ -309,7 +309,7 @@ async def chat_send_endpoint(request: Request) -> JSONResponse:
         return JSONResponse({"error": "broadcast hub not configured"}, status_code=500)
 
     registry = _registry_from_request(request)
-    provider = registry.get_or_create(plot_root, selection.provider, scope)
+    provider = registry.one_shot(plot_root, selection.provider)
     # Apply the workspace's model override (D-2026-06-16-C) before the turn —
     # ``None`` / empty leaves the CLI on its own configured default.
     provider.set_model(selection.model)
@@ -331,19 +331,18 @@ async def chat_send_endpoint(request: Request) -> JSONResponse:
     preamble = build_turn_preamble(plot_root, scope, selection_nodes, project_path=project_path)
 
     project_id = _project_id_for(plot_root)
-    # D-2026-06-26-F — re-feed the saved transcript on a FRESH CLI session. An app
-    # / engine restart wipes the in-memory session registry, so the next turn's
-    # coach starts with zero memory and re-asks what was already decided (and, with
-    # nothing concrete to write, fabricates a save). Resume keeps memory within a
-    # live session, so only the first turn of a fresh provider needs the history.
+    # Every turn gets a fresh CLI process with bounded, scope-labelled project history.
     history = ""
-    if project_id is not None and provider.is_first_turn:
+    if project_id is not None:
         history = read_recent_transcript(plot_root, project_id, scope)
     full_message = "\n\n".join(p for p in (history, preamble, message) if p)
 
+    if not try_start_turn(plot_root, scope):
+        return _turn_conflict()
+
     # Persist the user's turn before scheduling (D-2026-06-26-B) — the raw
     # ``message`` (not the context-injected ``full_message``), engine-side so it
-    # survives a viewer crash. Best-effort: a write failure never blocks the turn.
+    # survives a viewer crash. A failed write is surfaced before scheduling.
     conversation_id = None
     if project_id is not None:
         try:
@@ -356,9 +355,11 @@ async def chat_send_endpoint(request: Request) -> JSONResponse:
                 message,
             )
             conversation_id = current_conversation_id(plot_root, project_id, scope)
-        except Exception:  # noqa: BLE001 — persistence must not break chat
+        except Exception:  # noqa: BLE001 — persistence boundary
             _log.exception("chat persist (user) failed for %s", plot_root)
             await _notify_persist_failed(hub, plot_root, project_id, scope, "user")
+            finish_turn(plot_root, scope)
+            return JSONResponse({"error": "chat persistence failed"}, status_code=500)
 
     asyncio.create_task(
         stream_chat_turn(
@@ -371,6 +372,7 @@ async def chat_send_endpoint(request: Request) -> JSONResponse:
             selection.provider,
             selection.model,
             conversation_id=conversation_id,
+            guard_acquired=True,
         )
     )
     return JSONResponse({"accepted": True}, status_code=202)
@@ -442,29 +444,27 @@ async def chat_conversation_reopen_endpoint(request: Request) -> JSONResponse:
     project_id = _project_id_for(plot_root)
     if project_id is None:
         return JSONResponse({"error": "conversation not found"}, status_code=404)
+    if turn_in_progress(plot_root, DEFAULT_CHAT_SCOPE):
+        return _turn_conflict()
     try:
-        doc = read_conversation_by_id(plot_root, project_id, conversation_id)
+        read_conversation_by_id(plot_root, project_id, conversation_id)
     except (FileNotFoundError, json.JSONDecodeError, ValidationError):
         return JSONResponse({"error": "conversation not found"}, status_code=404)
     except ValueError:
         return JSONResponse({"error": "invalid conversation id"}, status_code=400)
-    if turn_in_progress(plot_root, doc.scope):
-        return JSONResponse(
-            {"error": "turn in progress", "code": "turn_in_progress"}, status_code=409
-        )
     try:
-        doc = reopen_conversation(plot_root, project_id, conversation_id)
+        reopen_conversation(plot_root, project_id, conversation_id)
     except (FileNotFoundError, json.JSONDecodeError, ValidationError):
         return JSONResponse({"error": "conversation not found"}, status_code=404)
     except ValueError:
         return JSONResponse({"error": "invalid conversation id"}, status_code=400)
     registry = _registry_from_request(request)
-    registry.reset(plot_root, scope=doc.scope)
+    registry.reset(plot_root)
     return JSONResponse(
         {
             "reopened": True,
-            "id": scope_to_filename(doc.scope),
-            "scope": doc.scope,
+            "id": "project.json",
+            "scope": DEFAULT_CHAT_SCOPE,
         }
     )
 
@@ -486,14 +486,10 @@ async def chat_reset_endpoint(request: Request) -> JSONResponse:
     except (FileNotFoundError, NotADirectoryError) as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
     if turn_in_progress(plot_root, scope):
-        return JSONResponse(
-            {"error": "turn in progress", "code": "turn_in_progress"}, status_code=409
-        )
+        return _turn_conflict()
     registry = _registry_from_request(request)
     project_id = _project_id_for(plot_root)
     if project_id is not None:
         archive_current_conversation(plot_root, project_id, scope)
-    # Wipe only the active canvas thread across all providers (Q3); other
-    # scopes' conversations survive.
-    registry.reset(plot_root, scope=scope)
+    registry.reset(plot_root)
     return JSONResponse({"reset": True})

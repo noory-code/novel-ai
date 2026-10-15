@@ -2,32 +2,34 @@
 
 from __future__ import annotations
 
-from collections import Counter
 from pathlib import Path
 
-_TurnKey = tuple[Path, str]
-_active_turns: Counter[_TurnKey] = Counter()
+_active_turns: set[Path] = set()
 
 
-def _key(plot_root: Path, scope: str) -> _TurnKey:
-    return plot_root.resolve(), scope
+def _key(plot_root: Path, scope: str) -> Path:
+    return plot_root.resolve()
+
+
+def try_start_turn(plot_root: Path, scope: str) -> bool:
+    """Reserve the project before any send mutation or scheduling."""
+    key = _key(plot_root, scope)
+    if key in _active_turns:
+        return False
+    _active_turns.add(key)
+    return True
 
 
 def start_turn(plot_root: Path, scope: str) -> None:
-    """Mark one more live turn for a workspace scope."""
-    _active_turns[_key(plot_root, scope)] += 1
+    """Mark a directly invoked stream turn as active."""
+    _active_turns.add(_key(plot_root, scope))
 
 
 def finish_turn(plot_root: Path, scope: str) -> None:
-    """Release one live turn without clearing an overlapping turn."""
-    key = _key(plot_root, scope)
-    remaining = _active_turns[key] - 1
-    if remaining > 0:
-        _active_turns[key] = remaining
-    else:
-        _active_turns.pop(key, None)
+    """Release the project's live turn."""
+    _active_turns.discard(_key(plot_root, scope))
 
 
 def turn_in_progress(plot_root: Path, scope: str) -> bool:
-    """Return whether the workspace scope currently has a streaming turn."""
-    return _active_turns[_key(plot_root, scope)] > 0
+    """Return whether the project has any streaming turn."""
+    return _key(plot_root, scope) in _active_turns

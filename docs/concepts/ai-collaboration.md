@@ -44,10 +44,10 @@ the deep definition comes later in the home coach). Not created silently — alw
 
 ## 1. Chat structure (3 layers)
 
-1. **Thread (per-scope history separation) — selection-driven** (`D-2026-06-19-E`): a selected `service`/
-   `feature` node gets its own thread (`service:<id>`/`feature:<id>`); if nothing is selected, it's
-   per-canvas (`foundation`/`actors`/`services`/`entities`/`project`). Only service/feature
-   nodes are thread keys — other selections are layer-2 context (preventing thread sprawl).
+1. **Conversation and turn scope** (`D-2026-10-15-P`): one project conversation holds the coach history.
+   Each turn records its active scope: `service:<id>` or `feature:<id>` for a selected service or open
+   feature, otherwise `foundation`/`actors`/`services`/`entities`/`project`. Scope controls that turn's
+   framing, context, screen controls and write permissions; moving canvases keeps the shared history.
 2. **Context (every turn)** — two aspects, *finding* + *delivering* (delivering `D-2026-06-17-L` / finding `D-2026-06-20-P`):
    - **Finding (what goes in):** the data is *already a graph*, so we follow the connections and pick via **graph traversal**
      (no similarity search ❌, no vector DB needed — the edges the user drew *are* the meaning). Entry points (the starting

@@ -38,7 +38,9 @@ def test_append_user_creates_file_with_title(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     append_user(plot_root, pid, "foundation", "claude-code", "user_1", "Define the mission")
     doc = read_conversation(plot_root, pid, "foundation")
-    assert doc.scope == "foundation"
+    assert doc.scope == "project"
+    assert doc.schema_version == 2
+    assert doc.messages[0].scope == "foundation"
     assert doc.provider == "claude-code"
     assert doc.title == "Define the mission"  # first user message
     assert doc.conversation_id is not None
@@ -93,7 +95,7 @@ def test_append_assistant_appends_and_bumps_updated(tmp_path: Path) -> None:
 def test_rewriting_legacy_messages_does_not_add_null_error_keys(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     append_user(plot_root, pid, "foundation", "codex", "user_1", "Hi")
-    path = plot_root / "chat" / "foundation.json"
+    path = plot_root / "chat" / "project.json"
     before = json.loads(path.read_text(encoding="utf-8"))
     assert "error" not in before["messages"][0]
 
@@ -119,7 +121,7 @@ def test_error_message_round_trips_through_conversation_file(tmp_path: Path) -> 
 
     message = read_conversation(plot_root, pid, "foundation").messages[-1]
     assert message.error == "CLI stdout failed"
-    raw = json.loads((plot_root / "chat" / "foundation.json").read_text(encoding="utf-8"))
+    raw = json.loads((plot_root / "chat" / "project.json").read_text(encoding="utf-8"))
     assert raw["messages"][-1]["error"] == "CLI stdout failed"
 
 
@@ -169,12 +171,10 @@ def test_append_assistant_to_unknown_conversation_falls_back_to_current(
 def test_parametric_scope_filename_and_roundtrip(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     append_user(plot_root, pid, "service:abc123", "codex", "user_1", "Refund flow")
-    # ':' is sanitised to '__' on disk, fs-safe
-    assert (plot_root / "chat" / "service__abc123.json").exists()
-    # round-trips back through read + list
-    assert read_conversation(plot_root, pid, "service:abc123").scope == "service:abc123"
+    assert (plot_root / "chat" / "project.json").exists()
+    assert read_conversation(plot_root, pid, "service:abc123").messages[0].scope == "service:abc123"
     scopes = [c["scope"] for c in list_conversations(plot_root, pid)]
-    assert "service:abc123" in scopes
+    assert scopes == ["project"]
 
 
 def test_traversal_in_scope_id_is_rejected(tmp_path: Path) -> None:
@@ -194,8 +194,9 @@ def test_list_sorted_by_updated_desc(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
     append_user(plot_root, pid, "foundation", "claude-code", "user_1", "first")
     append_user(plot_root, pid, "actors", "claude-code", "user_2", "second")
-    scopes = [c["scope"] for c in list_conversations(plot_root, pid)]
-    assert scopes == ["actors", "foundation"]  # newest-updated first
+    rows = list_conversations(plot_root, pid)
+    assert [c["scope"] for c in rows] == ["project"]
+    assert read_conversation(plot_root, pid, "project").messages[-1].scope == "actors"
 
 
 def test_read_missing_conversation_raises(tmp_path: Path) -> None:
@@ -222,9 +223,9 @@ def test_archive_current_moves_messages_and_clears_recent_transcript(tmp_path: P
     ended_id = archive_current_conversation(plot_root, pid, "foundation")
 
     assert ended_id is not None
-    assert ended_id.startswith("foundation__")
+    assert ended_id.startswith("project__")
     assert ended_id.endswith("Z.json")
-    assert not (plot_root / "chat" / "foundation.json").exists()
+    assert not (plot_root / "chat" / "project.json").exists()
     assert read_recent_transcript(plot_root, pid, "foundation") == ""
     assert read_conversation_by_id(plot_root, pid, ended_id).messages[0].text == "the old mission"
 
@@ -239,9 +240,10 @@ def test_list_includes_current_and_ended_with_ids_newest_first(tmp_path: Path) -
 
     assert [row["title"] for row in rows] == ["new question", "old question"]
     assert [row["ended"] for row in rows] == [False, True]
-    assert rows[0]["id"] == "foundation.json"
+    assert rows[0]["id"] == "project.json"
     assert rows[1]["id"] == ended_id
-    assert all(row["scope"] == "foundation" for row in rows)
+    assert all(row["scope"] == "project" for row in rows)
+    assert all(row["legacy"] is False for row in rows)
     assert all(row["conversation_id"] for row in rows)
     assert rows[0]["conversation_id"] != rows[1]["conversation_id"]
 
@@ -261,56 +263,75 @@ def test_reopen_swaps_current_and_ended_conversations(tmp_path: Path) -> None:
 
     reopened = reopen_conversation(plot_root, pid, chosen_id)
 
-    assert reopened.scope == "foundation"
-    assert reopened.conversation_id == chosen_conversation_id
+    assert reopened.scope == "project"
+    assert reopened.conversation_id != chosen_conversation_id
     current = read_conversation(plot_root, pid, "foundation")
     assert current.title == "chosen old question"
-    assert current.conversation_id == chosen_conversation_id
+    assert current.conversation_id == reopened.conversation_id
     rows = list_conversations(plot_root, pid)
     assert {(row["title"], row["ended"]) for row in rows} == {
         ("chosen old question", False),
+        ("chosen old question", True),
         ("current question", True),
     }
     transcript = read_recent_transcript(plot_root, pid, "foundation")
     assert "chosen old question" in transcript
     assert "current question" not in transcript
-    assert {row["conversation_id"] for row in rows} == {
-        chosen_conversation_id,
-        current_conversation_id,
-    }
+    assert len({row["conversation_id"] for row in rows}) == 3
 
 
-def test_legacy_conversation_without_id_reads_and_gets_id_on_append(tmp_path: Path) -> None:
+def test_legacy_conversation_without_id_is_read_without_write_then_materialized(
+    tmp_path: Path,
+) -> None:
     plot_root, pid = _project(tmp_path)
-    append_user(plot_root, pid, "foundation", "codex", "u1", "legacy question")
     path = plot_root / "chat" / "foundation.json"
-    raw = json.loads(path.read_text(encoding="utf-8"))
-    raw.pop("conversation_id")
+    path.parent.mkdir()
+    raw = {
+        "schema_version": 1,
+        "scope": "foundation",
+        "created": "2026-01-01",
+        "updated": "2026-01-01",
+        "messages": [{"id": "u1", "role": "user", "text": "legacy question", "ts": "2026-01-01"}],
+    }
     path.write_text(json.dumps(raw), encoding="utf-8")
+    original = path.read_bytes()
 
-    assert read_conversation(plot_root, pid, "foundation").conversation_id is None
+    assert read_conversation(plot_root, pid, "foundation").messages[0].scope == "foundation"
     assert list_conversations(plot_root, pid)[0]["conversation_id"] is None
+    assert path.read_bytes() == original
 
     append_user(plot_root, pid, "foundation", "codex", "u2", "continued")
 
     assigned = read_conversation(plot_root, pid, "foundation").conversation_id
     assert assigned is not None
     assert chat_store.current_conversation_id(plot_root, pid, "foundation") == assigned
+    assert path.read_bytes() == original
 
 
-def test_current_conversation_id_backfills_legacy_current_file(tmp_path: Path) -> None:
+def test_current_conversation_id_does_not_backfill_legacy_current_file(tmp_path: Path) -> None:
     plot_root, pid = _project(tmp_path)
-    append_user(plot_root, pid, "foundation", "codex", "u1", "legacy question")
     path = plot_root / "chat" / "foundation.json"
-    raw = json.loads(path.read_text(encoding="utf-8"))
-    raw.pop("conversation_id")
-    path.write_text(json.dumps(raw), encoding="utf-8")
+    path.parent.mkdir()
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "scope": "foundation",
+                "created": "2026-01-01",
+                "updated": "2026-01-01",
+                "messages": [{"id": "u1", "role": "user", "text": "legacy", "ts": "2026-01-01"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    original = path.read_bytes()
 
     assigned = chat_store.current_conversation_id(plot_root, pid, "foundation")
 
     assert assigned is not None
     assert read_conversation(plot_root, pid, "foundation").conversation_id == assigned
-    assert chat_store.current_conversation_id(plot_root, pid, "actors") is None
+    assert chat_store.current_conversation_id(plot_root, pid, "actors") == assigned
+    assert path.read_bytes() == original
 
 
 def test_archive_empty_current_is_noop(tmp_path: Path) -> None:

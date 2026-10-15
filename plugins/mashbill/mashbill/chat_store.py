@@ -1,11 +1,7 @@
-"""Chat conversation persistence — the disk SSOT for chat (D-2026-06-26-B).
+"""Project chat persistence and legacy history (D-2026-10-15-P).
 
-In-memory chat sessions died on an app restart and the user lost real work. This
-module shadows each live chat scope to one current file under the project at
-``.noory/novel/chat/<scope>.json``, so conversations survive a restart and travel
-with the project. Ended conversations sit beside it with a UTC timestamp suffix.
-The **engine is the sole writer** (no viewer race): the user message is appended
-when a turn is sent, the assistant message on ``turn_complete``.
+The engine writes one current conversation at ``chat/project.json``. Each
+message carries the scope of its turn; older per-scope files remain history.
 """
 
 from __future__ import annotations
@@ -17,7 +13,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-from mashbill.chat_providers.base import CanvasAddition
+from mashbill.chat_migration import legacy_doc, materialize, synthesize
+from mashbill.chat_providers.base import DEFAULT_CHAT_SCOPE, CanvasAddition
 from mashbill.storage import _ensure_project, _project_dir, _read_json, _write_json
 
 _CHAT_DIRNAME = "chat"
@@ -32,16 +29,17 @@ class ChatMessageRecord(BaseModel):
     role: str  # "user" | "assistant"
     text: str
     ts: str
+    scope: str = DEFAULT_CHAT_SCOPE
     error: str | None = Field(default=None, exclude_if=lambda value: value is None)
     error_code: str | None = Field(default=None, exclude_if=lambda value: value is None)
-    # What the turn added outside the conversation's own canvas (D-2026-10-15-A).
+    # What the turn added outside its own canvas (D-2026-10-15-A).
     added_elsewhere: list[CanvasAddition] | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
 
 
 class ChatConversationDoc(BaseModel):
-    schema_version: int = 1
+    schema_version: int = 2
     conversation_id: str | None = None
     scope: str
     provider: str = ""
@@ -76,7 +74,8 @@ def _chat_dir(plot_root: Path, project_id: str) -> Path:
 
 
 def _conversation_path(plot_root: Path, project_id: str, scope: str) -> Path:
-    return _chat_dir(plot_root, project_id) / scope_to_filename(scope)
+    scope_to_filename(scope)  # validate even though current storage is project-wide
+    return _chat_dir(plot_root, project_id) / "project.json"
 
 
 def _conversation_id_path(plot_root: Path, project_id: str, conversation_id: str) -> Path:
@@ -119,18 +118,19 @@ def _ensure_conversation_id(doc: ChatConversationDoc) -> str:
 def append_user(
     plot_root: Path, project_id: str, scope: str, provider: str, msg_id: str, text: str
 ) -> None:
-    """Append the user turn — creating the conversation file on first send
-    (this is the empty-conversation guard: a scope merely clicked into never
-    writes). ``title`` is set once from the first user message."""
+    """Append a scoped user turn to the current project conversation."""
     _ensure_project(plot_root, project_id)
     path = _conversation_path(plot_root, project_id, scope)
+    converted = None
+    if path.exists() or not _has_v2_history(path.parent):
+        converted = materialize(path.parent, _archive_path(path))
     now = _now()
-    if path.exists():
-        doc = ChatConversationDoc.model_validate(_read_json(path))
+    if converted is not None:
+        doc = ChatConversationDoc.model_validate(converted)
     else:
         doc = ChatConversationDoc(
             conversation_id=uuid4().hex,
-            scope=scope,
+            scope=DEFAULT_CHAT_SCOPE,
             provider=provider,
             title=text.strip()[:_TITLE_CAP],
             created=now,
@@ -139,7 +139,7 @@ def append_user(
     _ensure_conversation_id(doc)
     doc.provider = provider
     doc.updated = now
-    doc.messages.append(ChatMessageRecord(id=msg_id, role="user", text=text, ts=now))
+    doc.messages.append(ChatMessageRecord(id=msg_id, role="user", text=text, ts=now, scope=scope))
     _write_json(path, doc.model_dump())
 
 
@@ -155,9 +155,7 @@ def append_assistant(
     error_code: str | None = None,
     added_elsewhere: list[CanvasAddition] | None = None,
 ) -> None:
-    """Append the assistant turn to an existing conversation. A no-op when the
-    file is absent — an assistant reply with no preceding user message is not a
-    real conversation."""
+    """Append the assistant reply to the current project conversation."""
     _ensure_project(plot_root, project_id)
     path = _conversation_path(plot_root, project_id, scope)
     if not path.exists():
@@ -173,6 +171,7 @@ def append_assistant(
             role="assistant",
             text=text,
             ts=now,
+            scope=scope,
             error=error,
             error_code=error_code,
             added_elsewhere=added_elsewhere,
@@ -205,7 +204,7 @@ def find_conversation_path_by_conversation_id(
             doc = ChatConversationDoc.model_validate(_read_json(path))
         except Exception:  # noqa: BLE001 — one bad chat file must not block lookup
             continue
-        if doc.scope == scope and doc.conversation_id == conversation_id:
+        if doc.conversation_id == conversation_id:
             return path
     return None
 
@@ -258,6 +257,7 @@ def append_assistant_to_conversation(
             role="assistant",
             text=text,
             ts=now,
+            scope=scope,
             error=error,
             error_code=error_code,
             added_elsewhere=added_elsewhere,
@@ -267,23 +267,40 @@ def append_assistant_to_conversation(
 
 
 def read_conversation(plot_root: Path, project_id: str, scope: str) -> ChatConversationDoc:
-    """The full transcript for ``scope``. Raises ``FileNotFoundError`` (→ 404)
-    when no conversation has been saved."""
+    """Read the project transcript; ``scope`` validates the caller's turn scope."""
     path = _conversation_path(plot_root, project_id, scope)
-    return ChatConversationDoc.model_validate(_read_json(path))
+    if path.exists():
+        try:
+            raw = _read_json(path)
+            if raw.get("schema_version") == 2:
+                return ChatConversationDoc.model_validate(raw)
+        except ValueError:
+            pass
+    elif _has_v2_history(path.parent):
+        raise FileNotFoundError(path)
+    merged = synthesize(path.parent)
+    if merged is None:
+        raise FileNotFoundError(path)
+    return ChatConversationDoc.model_validate(merged)
+
+
+def _has_v2_history(chat_dir: Path) -> bool:
+    for path in chat_dir.glob("project__*.json"):
+        try:
+            if _read_json(path).get("schema_version") == 2:
+                return True
+        except (OSError, ValueError):
+            continue
+    return False
 
 
 def current_conversation_id(plot_root: Path, project_id: str, scope: str) -> str | None:
-    """Return the current conversation's durable id, backfilling legacy files."""
-    path = _conversation_path(plot_root, project_id, scope)
-    if not path.exists():
+    """Return the current project's durable id without modifying legacy files."""
+    try:
+        doc = read_conversation(plot_root, project_id, scope)
+    except FileNotFoundError:
         return None
-    doc = ChatConversationDoc.model_validate(_read_json(path))
-    if doc.conversation_id is not None:
-        return doc.conversation_id
-    conversation_id = _ensure_conversation_id(doc)
-    _write_json(path, doc.model_dump())
-    return conversation_id
+    return doc.conversation_id
 
 
 def read_conversation_by_id(
@@ -291,7 +308,9 @@ def read_conversation_by_id(
 ) -> ChatConversationDoc:
     """Read a current or ended conversation by the opaque id from the list API."""
     path = _conversation_id_path(plot_root, project_id, conversation_id)
-    return ChatConversationDoc.model_validate(_read_json(path))
+    raw = _read_json(path)
+    converted = raw if raw.get("schema_version") == 2 else legacy_doc(raw)
+    return ChatConversationDoc.model_validate(converted)
 
 
 def archive_current_conversation(plot_root: Path, project_id: str, scope: str) -> str | None:
@@ -303,8 +322,12 @@ def archive_current_conversation(plot_root: Path, project_id: str, scope: str) -
     _ensure_project(plot_root, project_id)
     current_path = _conversation_path(plot_root, project_id, scope)
     if not current_path.exists():
-        return None
-    doc = ChatConversationDoc.model_validate(_read_json(current_path))
+        if _has_v2_history(current_path.parent) or not synthesize(current_path.parent):
+            return None
+        materialize(current_path.parent, _archive_path(current_path))
+    elif _read_json(current_path).get("schema_version") != 2:
+        materialize(current_path.parent, _archive_path(current_path))
+    doc = read_conversation(plot_root, project_id, scope)
     if not doc.messages:
         return None
     archive_path = _archive_path(current_path)
@@ -318,25 +341,39 @@ def reopen_conversation(
     """Make one ended conversation current, archiving the displaced current one."""
     _ensure_project(plot_root, project_id)
     ended_path = _conversation_id_path(plot_root, project_id, conversation_id)
-    doc = ChatConversationDoc.model_validate(_read_json(ended_path))
-    current_path = _conversation_path(plot_root, project_id, doc.scope)
+    raw = _read_json(ended_path)
+    converted = raw if raw.get("schema_version") == 2 else legacy_doc(raw)
+    doc = ChatConversationDoc.model_validate(converted)
+    current_path = _conversation_path(plot_root, project_id, DEFAULT_CHAT_SCOPE)
     if ended_path == current_path:
-        raise ValueError("conversation is already current")
-    archive_current_conversation(plot_root, project_id, doc.scope)
-    ended_path.replace(current_path)
+        if raw.get("schema_version") == 2:
+            raise ValueError("conversation is already current")
+        original = ended_path.read_bytes()
+        materialize(current_path.parent, _archive_path(current_path))
+        ended_path = next(
+            path
+            for path in current_path.parent.glob("project__*.json")
+            if path.read_bytes() == original
+        )
+    archive_current_conversation(plot_root, project_id, DEFAULT_CHAT_SCOPE)
+    doc.conversation_id = uuid4().hex
+    doc.scope = DEFAULT_CHAT_SCOPE
+    _write_json(current_path, doc.model_dump())
     return doc
 
 
 def read_recent_transcript(
-    plot_root: Path, project_id: str, scope: str, max_chars: int = 8000
+    plot_root: Path,
+    project_id: str,
+    scope: str,
+    max_chars: int = 12000,
+    *,
+    exclude_message_id: str | None = None,
 ) -> str:
-    """Render the saved transcript for ``scope`` as a plain ``role: text`` block,
-    most-recent-bounded to ``max_chars`` (D-2026-06-26-F).
+    """Render bounded project history with each message's turn scope.
 
-    Re-fed to a FRESH coach session so it continues from what's already decided
-    instead of re-asking. Returns ``""`` when no conversation is saved yet (a
-    brand-new thread genuinely starts from scratch). Keeps the newest messages
-    when over budget — the tail is what the next turn builds on.
+    The header, labels and text together fit ``max_chars``. Failed replies
+    and ``exclude_message_id`` are omitted from the fresh provider's prompt.
     """
     try:
         doc = read_conversation(plot_root, project_id, scope)
@@ -344,23 +381,31 @@ def read_recent_transcript(
         return ""
     if not doc.messages:
         return ""
-    picked: list[str] = []
-    total = 0
-    for m in reversed(doc.messages):
-        if m.error is not None:
-            continue
-        line = f"{m.role}: {m.text.strip()}"
-        if total + len(line) > max_chars and picked:
-            break
-        picked.append(line)
-        total += len(line)
-    picked.reverse()
     header = (
-        "[Earlier in this conversation — continue from here; what is already "
+        "[Earlier in this project — continue from here; what is already "
         "agreed below is settled, do not re-ask it. Treat earlier messages as "
         "facts and decisions only; do not imitate the wording or style of earlier "
         "assistant replies]"
     )
+    budget = max_chars - len(header) - 1
+    if budget <= 0:
+        return header[:max_chars]
+    picked: list[str] = []
+    total = 0
+    for m in reversed(doc.messages):
+        if m.id == exclude_message_id:
+            continue
+        if m.error is not None:
+            continue
+        line = f"[{m.scope}] {m.role}: {m.text.strip()}"
+        remaining = budget - total - (1 if picked else 0)
+        if len(line) > remaining and picked:
+            break
+        picked.append(line[:remaining] if len(line) > remaining else line)
+        total += len(picked[-1]) + (1 if len(picked) > 1 else 0)
+    if not picked:
+        return ""
+    picked.reverse()
     return header + "\n" + "\n".join(picked)
 
 
@@ -373,8 +418,10 @@ def list_conversations(plot_root: Path, project_id: str) -> list[dict[str, Any]]
     rows: list[dict[str, Any]] = []
     for path in chat_dir.glob("*.json"):
         try:
-            doc = ChatConversationDoc.model_validate(_read_json(path))
-            current_name = scope_to_filename(doc.scope)
+            raw = _read_json(path)
+            doc = ChatConversationDoc.model_validate(raw)
+            current_name = "project.json"
+            legacy = raw.get("schema_version", 1) != 2
         except Exception:  # noqa: BLE001 — a bad file must not break the list
             continue
         rows.append(
@@ -386,7 +433,8 @@ def list_conversations(plot_root: Path, project_id: str) -> list[dict[str, Any]]
                 "provider": doc.provider,
                 "updated": doc.updated,
                 "message_count": len(doc.messages),
-                "ended": path.name != current_name,
+                "ended": legacy or path.name != current_name,
+                "legacy": legacy,
             }
         )
     rows.sort(key=lambda r: r["updated"], reverse=True)

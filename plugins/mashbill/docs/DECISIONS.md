@@ -39,6 +39,14 @@
 
 ## Log
 
+### D-2026-10-15-P — One coach conversation per project; each turn keeps its scope
+
+- **What:** The engine stores one current chat at `.noory/novel/chat/project.json` (schema v2). Every user and assistant message records the scope of its turn. The request and WebSocket `scope` still identify that turn's tab or canvas. Every turn starts a fresh provider with at most 12,000 characters of scope-labelled project history, excluding failed replies and the current user message. A project guard rejects another send, reset or reopen while a turn runs. Legacy per-scope files are read into a synthetic project transcript without writes; first send copies an old `project.json` to unique history before writing v2. Legacy files remain history, and reopening imports a copy into a new current project conversation. Draft `chat_scope` remains provenance and filter while its conversation ID points to the project chat.
+- **Why:** Newcomer walks 1–7 showed that moving among canvases split one design discussion into separate memories. A single visible and persisted project conversation lets the coach carry decisions across tabs while each turn's scope still controls framing, screen context and write permissions.
+- **Amends:** D-2026-06-13-H, D-2026-06-26-B, D-2026-06-26-F, D-2026-06-15-H, D-2026-10-10-C, and the conversation wording of D-2026-10-15-K. The flow and check refusal rules remain tied to the turn scope.
+- **Approval:** Accepted — user, 2026-10-15 (Q-00000039, "추천대로 합시다" to one conversation per project).
+- **Principles:** SSOT (one project transcript); MECE (conversation identity and turn authority have distinct owners); Fail Fast (project guard and failed migration stop a send); Preserve User Data (legacy sources remain untouched).
+
 ### D-2026-10-15-O — A flow draft's steps name the entities they touch
 
 - **What:** *(Claude, carrying out novel-workspace W-00000500)* `propose_flow` takes `ref_entity_ids` on a draft
@@ -107,7 +115,7 @@
 - **Approval:** Claude's design within W-00000491, open to the user's review; it changes how a user-accepted fix works.
 - **Principles:** Consistency (one rule for every control button); Accessibility (contrast at least 4.5:1).
 
-### D-2026-10-15-K — An in-app coach writes a feature's flow and records a check only in that feature's conversation
+### D-2026-10-15-K — An in-app coach writes a feature's flow and records a check only from that feature's turn scope
 
 - **What:** *(Claude, carrying out novel-workspace W-00000489)* (1) When the in-app chat sets `MASHBILL_CHAT_SCOPE`,
   `propose_flow`, `draw_proposed_flow`, `create_node` for a step or decision, `create_edge`, and `update_canvas` that
@@ -115,7 +123,7 @@
   error tells the coach to ask the person to open that feature's canvas. `set_design_check` accepts a feature's check
   only from `feature:<id>` and a service's only from `services` or `service:<id>`. An outside agent (no env scope)
   is not restricted; a tool argument never narrows it. `update_node` on a feature canvas is refused the same way;
-  `set_node_references` stays open from any conversation. (2) `propose_flow` refuses a draft node that repeats a drawn node's kind and name, and a step or
+  `set_node_references` stays open from any turn scope. (2) `propose_flow` refuses a draft node that repeats a drawn node's kind and name, and a step or
   decision left with no line into it (a new node once the canvas has lines, or a drawn node whose last incoming line
   the draft removes); open items do not excuse it. (3) An edit reopens only a finished check (`checked` →
   `recheck`); a check in progress stays `checking`.
