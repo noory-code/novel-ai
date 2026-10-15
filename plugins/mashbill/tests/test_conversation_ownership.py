@@ -218,6 +218,24 @@ def test_another_conversation_cannot_rewrite_a_steps_text_through_the_whole_canv
         mcp_tools.update_canvas(project_path, "alpha", canvas)
 
 
+def test_another_conversation_cannot_add_a_copy_of_a_drawn_line(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A second line with the same ends and name but a new id is a change to
+    the flow, even though the set of (source, target, name) looks the same."""
+    project_path = _project(tmp_path)
+    monkeypatch.setenv(_SCOPE, f"feature:{_FEATURE}")
+    _draw_flow(project_path)
+    canvas = _feature(project_path).model_dump(by_alias=True)
+    copy = dict(canvas["edges"][0])
+    copy["id"] = "edge_copy"
+    canvas["edges"].append(copy)
+    monkeypatch.setenv(_SCOPE, "entities")
+
+    with pytest.raises(ValueError, match="open that feature's canvas"):
+        mcp_tools.update_canvas(project_path, "alpha", canvas)
+
+
 def test_another_conversation_may_still_move_a_step(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

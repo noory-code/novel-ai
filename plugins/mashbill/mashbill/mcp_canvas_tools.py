@@ -30,13 +30,14 @@ _FLOW_KINDS = frozenset({"step", "decision"})
 _FLOW_TEXT = ("label", "body", "outcome", "polarity")
 
 
-def _flow(canvas: CanvasDoc) -> tuple[set[tuple[str, ...]], set[tuple[str, str, str]]]:
+def _flow(canvas: CanvasDoc) -> tuple[set[tuple[str, ...]], list[tuple[str, str, str]]]:
     nodes = {
         (str(n.id), str(n.kind), *(str(getattr(n, field, "") or "") for field in _FLOW_TEXT))
         for n in canvas.nodes
         if n.kind in _FLOW_KINDS
     }
-    lines = {(str(e.source), str(e.target), e.label) for e in canvas.edges}
+    # Counted, not a set: a copy of a drawn line under a new id is a change.
+    lines = sorted((str(e.source), str(e.target), e.label) for e in canvas.edges)
     return nodes, lines
 
 

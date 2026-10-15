@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- A whole-canvas write that adds a copy of a drawn flow line under a new id is refused outside that feature's conversation (novel-workspace W-00000489).
 - The `[Project]` line keeps the published releases when the service-name record cannot be read (novel-workspace W-00000490).
 - The feature coach asks the failure cases it still sees in one question, never re-asks a case (or its variant) already answered in the conversation, and when the person says the flow is enough it asks no more failure cases, records the unasked ones as the check's remaining items and names them in one line; a node's text states what the node is and what the person decided, never the coach's counter-points or why it proposed it, and a counter-stance note keeps only a reason the person gave; replies keep the person's polite level (해요 when they write 해요) (novel-workspace W-00000497, D-2026-10-15-N).
 - A finished check's result names the items checked and problems found, and shown now or remaining only if different, replacing "merge equal counts", which still yielded one number as three slots ("3개 … 모두 말씀드리며, 아직 3개") in newcomer walk 6 (novel-workspace W-00000484).
