@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.28] — 2026-10-15
+
+### Changed
+
+- `propose_flow` refuses a draft node that repeats a drawn node of the same kind and name, and a draft that leaves a step or decision with no line into it (open items do not excuse it). An in-app coach draws a feature's flow and records a feature's check only in that feature's conversation, and a service's check only in the Services conversation; outside agents are unrestricted. A check in progress is no longer reopened by edits (novel-workspace W-00000489, D-2026-10-15-K).
+
 ## [0.225.27] — 2026-10-15
 
 ### Added

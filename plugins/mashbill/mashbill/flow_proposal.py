@@ -153,6 +153,39 @@ def _check_shape(proposal: FlowProposal, canvas: CanvasDoc) -> None:
             raise ValueError(
                 f"item {placement.item} is placed at {placement.at!r}, no node on this canvas"
             )
+    _check_repeats(proposal, canvas)
+
+
+def _same_text(label: str) -> str:
+    return " ".join(label.split())
+
+
+def _check_repeats(proposal: FlowProposal, canvas: CanvasDoc) -> None:
+    """Refuse draft nodes that restate a drawn node (W-00000489).
+
+    Drawing appends every draft node, so a node whose kind and label (spacing
+    aside) match a drawn node, as the canvas will stand after ``relabels``,
+    would be a second copy of that card.
+    """
+    renamed = {relabel.node: relabel.label for relabel in proposal.relabels}
+    drawn: dict[tuple[str, str], str] = {}
+    for node in canvas.nodes:
+        text = _same_text(renamed.get(str(node.id), node.label))
+        if text:
+            drawn.setdefault((node.kind, text), str(node.id))
+    repeats = [
+        f"key {node.key!r} repeats drawn {node.kind} {drawn[key]} ({node.label!r})"
+        for node in proposal.nodes
+        if (key := (node.kind, _same_text(node.label))) in drawn
+    ]
+    if repeats:
+        raise ValueError(
+            "these draft nodes are already drawn on this canvas:\n"
+            + "\n".join(repeats)
+            + "\nPropose only nodes that are new: point lines at the drawn id instead, "
+            "rename a drawn node with relabels (or update_node for its text), "
+            "and put a description item a drawn node carries in placed."
+        )
 
 
 def _check_branching(proposal: FlowProposal, canvas: CanvasDoc) -> None:

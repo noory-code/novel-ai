@@ -153,6 +153,13 @@ def test_entities_framing_enforces_identity_dedup() -> None:
     assert "never" in f  # never finalise silently / never auto-scan
 
 
+def test_entities_framing_leaves_feature_flows_to_their_own_conversation() -> None:
+    """W-00000489 (newcomer walk 4, N2): asked to link entities to steps, the
+    entities coach created a one-step flow on eight feature canvases."""
+    f = build_framing_preamble("entities")
+    assert "Link entities only to existing steps; never draw a feature's flow from here." in f
+
+
 def test_entities_framing_asks_before_merging_existing_duplicates() -> None:
     f = build_framing_preamble("entities")
     rule = (

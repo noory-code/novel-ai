@@ -4,8 +4,11 @@ A decision needs at least two branches, each branch names its case, no two
 branches of one decision name the same case, and every loop has a line leaving
 it. An open item on a decision stands for its missing branch, and an open item
 on a step inside a loop stands for its way out, so the coach asks instead of
-guessing. A step with no outgoing line is a valid end. Whether branches overlap
-in meaning or miss a case is not visible here; the coach asks about that.
+guessing. A step with no outgoing line is a valid end. Every step and decision
+also needs a way in: a draft may not take the last line into a drawn one, nor
+add one nothing leads into once the canvas has lines, and an open item does not
+stand for a way in (W-00000489). Whether branches overlap in meaning or miss a
+case is not visible here; the coach asks about that.
 """
 
 from __future__ import annotations
@@ -68,9 +71,44 @@ def _trapped_loops(lines: list[Line], open_at: set[str]) -> list[Defect]:
     return found
 
 
+def _flow(kinds: Mapping[str, str], lines: Iterable[Line]) -> list[Line]:
+    return [line for line in lines if "note" not in (kinds.get(line[0]), kinds.get(line[1]))]
+
+
 def _defects(kinds: Mapping[str, str], lines: list[Line], open_at: set[str]) -> list[Defect]:
-    flow = [line for line in lines if "note" not in (kinds.get(line[0]), kinds.get(line[1]))]
+    flow = _flow(kinds, lines)
     return _decision_defects(kinds, flow, open_at) + _trapped_loops(flow, open_at)
+
+
+def _unreached(
+    drawn_kinds: Mapping[str, str],
+    kinds: Mapping[str, str],
+    before: list[Line],
+    after: list[Line],
+) -> list[Defect]:
+    """Steps and decisions the draft leaves with no way in.
+
+    A drawn one loses its last incoming line; a new one gets none although the
+    canvas already has a line to or from a step or decision (before that, a
+    draft's first node is the flow's entry; a feature-root-to-actor line is not
+    a flow). A drawn entry never had an incoming line, so it is not named.
+    """
+    old = _flow(drawn_kinds, before)
+    into_before = {target for _, target, _ in old}
+    sequenced = any(
+        drawn_kinds.get(end) in ("step", "decision") for line in old for end in line[:2]
+    )
+    into_after = {target for _, target, _ in _flow(kinds, after)}
+    found: list[Defect] = []
+    for node, kind in kinds.items():
+        if kind not in ("step", "decision") or node in into_after:
+            continue
+        if node in drawn_kinds:
+            if node in into_before:
+                found.append(("cut", node))
+        elif sequenced:
+            found.append(("unreached", node))
+    return found
 
 
 def _message(defect: Defect, name: Mapping[str, str]) -> str:
@@ -85,6 +123,16 @@ def _message(defect: Defect, name: Mapping[str, str]) -> str:
         return (
             f"line {name[node]} → {name[rest[0]]} leaves a decision with no label: "
             "name the case it takes"
+        )
+    if code == "cut":
+        return (
+            f"the draft removes the last line into {name[node]}: keep it, or draw the "
+            "line that reaches it now"
+        )
+    if code == "unreached":
+        return (
+            f"nothing leads into {name[node]}: draw the line that reaches it, or leave it "
+            "out of this draft and ask in open_items where it happens"
         )
     if code == "same":
         return (
@@ -114,9 +162,12 @@ def check_structure(
     in ``before`` (for example a person's half-drawn decision) is not the
     draft's and does not refuse it.
     """
-    old = set(_defects(drawn_kinds, list(before), set()))
-    new = [d for d in _defects(kinds, list(after), open_at) if d not in old]
+    before, after = list(before), list(after)
+    old = set(_defects(drawn_kinds, before, set()))
+    new = [d for d in _defects(kinds, after, open_at) if d not in old]
+    new += _unreached(drawn_kinds, kinds, before, after)
     if new:
         raise ValueError(
-            "fix the flow's branches:\n" + "\n".join(f"- {_message(d, names)}" for d in new)
+            "fix the flow's lines and branches:\n"
+            + "\n".join(f"- {_message(d, names)}" for d in new)
         )

@@ -39,6 +39,31 @@
 
 ## Log
 
+### D-2026-10-15-K — An in-app coach writes a feature's flow and records a check only in that feature's conversation
+
+- **What:** *(Claude, carrying out novel-workspace W-00000489)* (1) When the in-app chat sets `MASHBILL_CHAT_SCOPE`,
+  `propose_flow`, `draw_proposed_flow`, `create_node` for a step or decision, `create_edge`, and `update_canvas` that
+  changes steps, decisions or lines on a feature canvas are refused unless the scope is `feature:<that id>`; the
+  error tells the coach to ask the person to open that feature's canvas. `set_design_check` accepts a feature's check
+  only from `feature:<id>` and a service's only from `services` or `service:<id>`. An outside agent (no env scope)
+  is not restricted; a tool argument never narrows it. `update_node` and `set_node_references` stay open from any
+  conversation. (2) `propose_flow` refuses a draft node that repeats a drawn node's kind and name, and a step or
+  decision left with no line into it (a new node once the canvas has lines, or a drawn node whose last incoming line
+  the draft removes); open items do not excuse it. (3) An edit reopens only a finished check (`checked` →
+  `recheck`); a check in progress stays `checking`.
+- **Why:** In novel-workspace newcomer walk 4 the coach re-proposed a drawn flow and drew seven duplicate cards; the
+  entities coach created a one-step placeholder flow on eight features and closed a feature's failure check from the
+  entities chat. In walk 5 the coach drew a decision nobody led into and removed the only line into a step, and its
+  own in-progress check flipped to recheck when it drew.
+- **Limits:** A draft cannot remove nodes, so dropping a branch with its step is refused; the coach falls back to a
+  whole-canvas write. The project conversation can no longer record checks. `update_node` from another conversation
+  can still rewrite a step's text.
+- **Amends:** D-2026-10-15-B (refusal list), D-2026-10-12-C (2) (only `checked` turns to `recheck`), D-2026-10-05-A
+  (5)–(6) (which conversation records which check).
+- **Approval:** Claude's design within W-00000489, open to the user's review.
+- **Principles:** Fail Fast (refuse the write that would mislead); SSOT (each feature's flow has one owning
+  conversation); MECE.
+
 ### D-2026-10-15-J — Mission, core value and identity are coached by their business meaning
 
 - **What:** *(user direction, carried out in novel-workspace W-00000486)* A mission is the business's mission as

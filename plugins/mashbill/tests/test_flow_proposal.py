@@ -309,13 +309,13 @@ def test_a_change_to_a_drawn_flow_shows_renames_and_removed_lines(tmp_path: Path
         nodes=[{"key": "6", "kind": "step", "label": "결과를 확인한다"}],
         edges=[{"source": ids["5"], "target": "6"}],
         relabels=[{"node": ids["1"], "label": "흐름을 말한다", "outcome": "걸음이 정해진다"}],
-        remove_edges=[{"source": ids["2"], "target": ids["4"]}],
+        remove_edges=[{"source": ids["3"], "target": ids["2"]}],
     )["rendered"]
 
     assert "~ 흐름을 정한다 → 흐름을 말한다: 걸음이 정해진다" in rendered
     # A drawn step is not in the draft's numbered list, so it keeps its name.
     assert rendered.splitlines()[:2] == ["선을 고친다", "  → [1]"]
-    assert "⨯ 정보가 충분한가? → 나중에 이어 간다" in rendered
+    assert "⨯ 한 가지 더 답한다 → 정보가 충분한가?" in rendered
 
 
 def test_drawing_applies_renames_and_removes_lines_with_the_additions(tmp_path: Path) -> None:
@@ -328,7 +328,7 @@ def test_drawing_applies_renames_and_removes_lines_with_the_additions(tmp_path: 
         nodes=[{"key": "6", "kind": "step", "label": "결과를 확인한다"}],
         edges=[{"source": ids["5"], "target": "6"}],
         relabels=[{"node": ids["1"], "label": "흐름을 말한다"}],
-        remove_edges=[{"source": ids["2"], "target": ids["4"]}],
+        remove_edges=[{"source": ids["3"], "target": ids["2"]}],
     )
 
     mcp_tools.draw_proposed_flow(project_path, "alpha", "feature_x")
@@ -336,7 +336,7 @@ def test_drawing_applies_renames_and_removes_lines_with_the_additions(tmp_path: 
     canvas = _canvas(project_path)
     labels = {node.id: node.label for node in canvas.nodes}
     assert labels[ids["1"]] == "흐름을 말한다"
-    assert not any(e.source == ids["2"] and e.target == ids["4"] for e in canvas.edges)
+    assert not any(e.source == ids["3"] and e.target == ids["2"] for e in canvas.edges)
     six = next(i for i, label in labels.items() if label == "결과를 확인한다")
     assert any(e.source == ids["5"] and e.target == six for e in canvas.edges)
     # Nothing outside the draft changed: every other node keeps its content, every other line stays,
@@ -351,7 +351,7 @@ def test_drawing_applies_renames_and_removes_lines_with_the_additions(tmp_path: 
     assert {node.id for node in canvas.nodes} - set(old_nodes) == {six}
     old_lines = {(e.source, e.target, e.label) for e in before.edges}
     new_lines = {(e.source, e.target, e.label) for e in canvas.edges}
-    assert old_lines - new_lines == {(ids["2"], ids["4"], "나중에")}
+    assert old_lines - new_lines == {(ids["3"], ids["2"], "")}
     assert new_lines - old_lines == {(ids["5"], six, "")}
 
 
@@ -525,3 +525,284 @@ def test_an_item_placed_at_two_drawn_nodes_shows_once(tmp_path: Path) -> None:
 
     present = [line for line in rendered.splitlines() if line.startswith("✓")]
     assert present == ["✓ 1. 사용자는 흐름을 정한다. — 흐름을 정한다 · 선을 고친다"]
+
+
+# W-00000489 (newcomer walk 4, N1) — the '형제 할인' coach drew its flow, then
+# sent the whole flow again with the same keys and labels; drawing added a
+# second copy of five cards beside the first.
+_SIBLING = "feature_68cdcb85"
+
+
+def _sibling_project(tmp_path: Path) -> str:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id="services",
+            canvas_kind="services",
+            nodes=[
+                FeatureNode(
+                    id=_SIBLING,
+                    label="형제 할인을 적용해 수강료 정하기",
+                    proposed="원장이 학생별 수강료를 정한다. 형제 중 둘째부터 10% 할인한다.",
+                )
+            ],
+        ),
+    )
+    write_canvas(
+        plot_root,
+        "alpha",
+        CanvasDoc(
+            canvas_id=_SIBLING,
+            canvas_kind="feature",
+            feature_ref=_SIBLING,
+            nodes=[FeatureNode(id=_SIBLING, label="형제 할인을 적용해 수강료 정하기")],
+        ),
+    )
+    return str(tmp_path)
+
+
+def _walk4_first_draw(project_path: str) -> dict[str, str]:
+    """The 12:23:28 draft, proposed and drawn in one exec."""
+    mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        _SIBLING,
+        nodes=[
+            {
+                "key": "set_fee",
+                "kind": "step",
+                "label": "원장이 매달 25일에 다음 달 학생별 수강료를 정한다",
+                "covers": [1],
+            },
+            {
+                "key": "sibling_rule",
+                "kind": "rule",
+                "label": "보호자 연락처가 같으면 형제로 본다",
+                "body": "먼저 등록한 아이를 첫째로 보고, 둘째부터 수강료를 10% 할인한다.",
+                "covers": [2],
+            },
+            {"key": "absence_rule", "kind": "rule", "label": "결석이 많아도 수강료는 깎지 않는다"},
+            {"key": "send_bill", "kind": "step", "label": "학부모에게 청구 문자를 보낸다"},
+            {"key": "sent_check", "kind": "decision", "label": "청구 문자를 모두 보냈나요?"},
+            {
+                "key": "retry",
+                "kind": "step",
+                "label": "원장이 문자가 안 간 집만 확인하고 다시 보낸다",
+            },
+            {
+                "key": "done",
+                "kind": "step",
+                "label": "청구 목록에 ‘보냄’으로 남는다",
+                "outcome": "모든 집에 청구 문자를 보내고 청구 목록에서 ‘보냄’을 확인한다.",
+            },
+        ],
+        edges=[
+            {"source": "set_fee", "target": "send_bill"},
+            {"source": "send_bill", "target": "sent_check"},
+            {"source": "sent_check", "target": "done", "label": "모두 보냄"},
+            {"source": "sent_check", "target": "retry", "label": "안 간 집이 있음"},
+            {"source": "retry", "target": "sent_check"},
+        ],
+        open_items=[
+            {
+                "at": "retry",
+                "question": "다시 보내도 문자가 안 가면 언제 재전송을 멈추고 어떻게 처리하나요?",
+            }
+        ],
+    )
+    ids: dict[str, str] = mcp_tools.draw_proposed_flow(project_path, "alpha", _SIBLING)["node_ids"]
+    return ids
+
+
+def test_restating_a_drawn_flow_is_refused_and_points_at_the_drawn_nodes(
+    tmp_path: Path,
+) -> None:
+    """The 12:24:57 re-send: same keys, five labels unchanged, two reworded."""
+    project_path = _sibling_project(tmp_path)
+    ids = _walk4_first_draw(project_path)
+    before = _canvas_of(project_path)
+
+    with pytest.raises(ValueError) as refused:
+        mcp_tools.propose_flow(
+            project_path,
+            "alpha",
+            _SIBLING,
+            nodes=[
+                {
+                    "key": "set_fee",
+                    "kind": "step",
+                    "label": "원장이 매달 25일에 다음 달 학생별 수강료를 정한다",
+                    "covers": [1],
+                },
+                {
+                    "key": "sibling_rule",
+                    "kind": "rule",
+                    "label": "보호자 연락처가 같으면 형제이며, 먼저 등록한 아이가 첫째다",
+                    "body": "둘째부터 수강료를 10% 할인한다.",
+                    "covers": [2],
+                },
+                {
+                    "key": "absence_rule",
+                    "kind": "rule",
+                    "label": "결석이 많아도 수강료는  깎지 않는다",
+                },
+                {"key": "send_bill", "kind": "step", "label": "학부모에게 청구 문자를 보낸다"},
+                {"key": "sent_check", "kind": "decision", "label": "청구 문자를 모두 보냈나요?"},
+                {
+                    "key": "retry",
+                    "kind": "step",
+                    "label": "원장이 문자가 안 간 집만 확인하고 한 번 더 보낸다",
+                },
+                {
+                    "key": "retry_check",
+                    "kind": "decision",
+                    "label": "두 번째 발송에서도 문자가 안 간 집이 있나요?",
+                },
+                {
+                    "key": "phone_needed",
+                    "kind": "step",
+                    "label": "두 번 모두 문자가 안 간 집은 ‘전화 필요’로 표시하고 발송을 멈춘다",
+                },
+                {
+                    "key": "phone",
+                    "kind": "step",
+                    "label": "원장이 ‘전화 필요’인 집에 직접 전화한다",
+                },
+                {
+                    "key": "done",
+                    "kind": "step",
+                    "label": "청구 목록에 ‘보냄’으로 남는다",
+                    "outcome": "모든 집에 청구 문자를 보내고 청구 목록에서 ‘보냄’을 확인한다.",
+                },
+            ],
+            edges=[
+                {"source": "set_fee", "target": "send_bill"},
+                {"source": "send_bill", "target": "sent_check"},
+                {"source": "sent_check", "target": "done", "label": "모두 보냄"},
+                {"source": "sent_check", "target": "retry", "label": "안 간 집이 있음"},
+                {"source": "retry", "target": "retry_check"},
+                {"source": "retry_check", "target": "done", "label": "없음"},
+                {"source": "retry_check", "target": "phone_needed", "label": "있음"},
+                {"source": "phone_needed", "target": "phone"},
+            ],
+            remove_edges=[{"source": ids["send_bill"], "target": ids["sent_check"]}],
+            open_items=[
+                {"at": "phone", "question": "직접 전화한 뒤에는 청구 목록에 무엇으로 표시하나요?"}
+            ],
+        )
+
+    message = str(refused.value)
+    # Every restated card is named with the drawn id to use instead (spacing ignored).
+    for key in ("set_fee", "absence_rule", "send_bill", "sent_check", "done"):
+        assert repr(key) in message, key
+        assert ids[key] in message, key
+    # A reworded card is a new card, not a repeat.
+    for key in ("sibling_rule", "retry"):
+        assert ids[key] not in message, key
+    assert "relabels" in message
+    # Nothing was drawn and the kept proposal is still the drawn one.
+    assert _canvas_of(project_path) == before
+    with pytest.raises(ValueError, match="already drawn"):
+        mcp_tools.draw_proposed_flow(project_path, "alpha", _SIBLING)
+
+
+def test_the_change_written_against_the_drawn_flow_draws_only_the_new_cards(
+    tmp_path: Path,
+) -> None:
+    """The same change sent the way the refusal asks: renames for the two
+    reworded cards, only the three new cards, and lines to the drawn ids."""
+    project_path = _sibling_project(tmp_path)
+    ids = _walk4_first_draw(project_path)
+    before = {node.id for node in _canvas_of(project_path).nodes}
+
+    mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        _SIBLING,
+        nodes=[
+            {
+                "key": "retry_check",
+                "kind": "decision",
+                "label": "두 번째 발송에서도 문자가 안 간 집이 있나요?",
+            },
+            {
+                "key": "phone_needed",
+                "kind": "step",
+                "label": "두 번 모두 문자가 안 간 집은 ‘전화 필요’로 표시하고 발송을 멈춘다",
+            },
+            {"key": "phone", "kind": "step", "label": "원장이 ‘전화 필요’인 집에 직접 전화한다"},
+        ],
+        edges=[
+            {"source": ids["retry"], "target": "retry_check"},
+            {"source": "retry_check", "target": ids["done"], "label": "없음"},
+            {"source": "retry_check", "target": "phone_needed", "label": "있음"},
+            {"source": "phone_needed", "target": "phone"},
+        ],
+        relabels=[
+            {
+                "node": ids["sibling_rule"],
+                "label": "보호자 연락처가 같으면 형제이며, 먼저 등록한 아이가 첫째다",
+            },
+            {"node": ids["retry"], "label": "원장이 문자가 안 간 집만 확인하고 한 번 더 보낸다"},
+        ],
+        remove_edges=[{"source": ids["retry"], "target": ids["sent_check"]}],
+        open_items=[
+            {"at": "phone", "question": "직접 전화한 뒤에는 청구 목록에 무엇으로 표시하나요?"}
+        ],
+    )
+    added = mcp_tools.draw_proposed_flow(project_path, "alpha", _SIBLING)["node_ids"]
+
+    canvas = _canvas_of(project_path)
+    assert {node.id for node in canvas.nodes} - before == set(added.values())
+    assert len(added) == 3
+    labels = [(node.kind, node.label) for node in canvas.nodes]
+    assert len(labels) == len(set(labels))
+
+
+def test_a_new_card_may_take_the_name_a_drawn_card_is_renamed_away_from(
+    tmp_path: Path,
+) -> None:
+    project_path, ids = _drawn_once(tmp_path)
+
+    mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[{"key": "6", "kind": "step", "label": "흐름을 정한다"}],
+        edges=[{"source": ids["5"], "target": "6"}],
+        relabels=[{"node": ids["1"], "label": "흐름을 말한다"}],
+    )
+    mcp_tools.draw_proposed_flow(project_path, "alpha", "feature_x")
+
+    labels = [node.label for node in _canvas(project_path).nodes]
+    assert labels.count("흐름을 정한다") == 1
+    assert "흐름을 말한다" in labels
+
+
+def test_a_card_of_another_kind_may_share_a_drawn_name(tmp_path: Path) -> None:
+    project_path, ids = _drawn_once(tmp_path)
+
+    mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[{"key": "n2", "kind": "note", "label": "흐름을 정한다"}],
+    )
+
+
+def _canvas_of(project_path: str) -> CanvasDoc:
+    return read_canvas(resolve_plot_root(project_path), "alpha", "feature", _SIBLING)
+
+
+def test_a_check_in_progress_stays_checking_when_its_draft_is_drawn(tmp_path: Path) -> None:
+    """W-00000489 (newcomer walk 5, NEW-11): the coach recorded 'checking', then
+    proposed and drew; the draw turned its own check in progress to recheck."""
+    p = _project(tmp_path)
+    mcp_tools.set_design_check(p, "alpha", "feature_x", "checking")
+    _propose(p)
+    mcp_tools.draw_proposed_flow(p, "alpha", "feature_x")
+    for canvas in ("services", "feature"):
+        assert _feature_check(p, canvas).state == "checking", canvas

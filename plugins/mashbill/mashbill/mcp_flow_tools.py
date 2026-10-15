@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from mashbill.chat_scope_env import refuse_foreign_flow_write
 from mashbill.flow_proposal import draw_proposed_flow as draw_flow
 from mashbill.flow_proposal import propose_flow as keep_flow
 from mashbill.proposal_show import show_instruction
@@ -52,9 +53,12 @@ def propose_flow(
     open item alone does not place it) or in ``omitted``. A decision needs two or
     more labeled lines with different labels, and a loop needs a line leaving
     it; an open item on the decision or on a step in the loop stands for what is
-    still unknown. A step with no outgoing line is an end. A new call replaces
+    still unknown. A step with no outgoing line is an end. Every step and
+    decision needs a line into it; an open item does not stand for one. Never
+    restate a drawn node: point at its id. A new call replaces
     the feature's undrawn proposal. Errors name what to fix.
     """
+    refuse_foreign_flow_write(service_id)
     plot_root = resolve_plot_root(project_path)
     kept = keep_flow(
         plot_root,
@@ -84,6 +88,7 @@ def draw_proposed_flow(project_path: str, project_id: str, service_id: str) -> d
     "open_items": [{"at": step label, "question"}]}``. Fails when there is no
     proposal or it was already drawn.
     """
+    refuse_foreign_flow_write(service_id)
     plot_root = resolve_plot_root(project_path)
     result = draw_flow(plot_root, project_id, service_id)
     record_tool_call(

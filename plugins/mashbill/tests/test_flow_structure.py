@@ -16,7 +16,7 @@ import pytest
 
 from mashbill import mcp_tools
 from mashbill.folder_io import create_project, write_canvas
-from mashbill.models import CanvasDoc, FeatureNode
+from mashbill.models import ActorRefNode, CanvasDoc, FeatureNode, SketchEdge
 from mashbill.workspace import resolve_plot_root
 
 
@@ -268,3 +268,168 @@ def test_a_draft_branch_repeating_a_drawn_branch_label_is_refused(tmp_path: Path
             project_path,
             edges=[*_edges(), {"source": drawn["decision"], "target": "quit", "label": "있다"}],
         )
+
+
+# W-00000489 (newcomer walk 5, NEW-1) — '구독 신청': the coach drew a decision
+# nothing led into (12:34:27) and removed the only line into '확정 문자'
+# (12:35:46), each time with open items on the loose node, and drew both in
+# the same turn.
+def _subscription(project_path: str) -> dict[str, str]:
+    """The 12:33:17 first draft on a canvas with no lines (description items left out)."""
+    mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[
+            {"key": "entry", "kind": "step", "label": "손님이 인스타 링크를 보고 들어온다"},
+            {"key": "date", "kind": "step", "label": "손님이 첫 배송 날짜를 고른다"},
+            {"key": "flowers", "kind": "note", "label": "꽃을 고르는 방식 안내"},
+            {"key": "pay", "kind": "step", "label": "손님이 입금한다"},
+            {"key": "check", "kind": "step", "label": "꽃집 사장이 입금을 확인한다"},
+            {"key": "sms", "kind": "step", "label": "꽃집 사장이 확정 문자를 보낸다"},
+        ],
+        edges=[
+            {"source": "entry", "target": "date"},
+            {"source": "date", "target": "pay"},
+            {"source": "pay", "target": "check"},
+            {"source": "check", "target": "sms"},
+        ],
+        open_items=[{"at": "flowers", "question": "꽃을 고르는 방식은 어느 단계에서 안내하나요?"}],
+    )
+    ids: dict[str, str] = mcp_tools.draw_proposed_flow(project_path, "alpha", "feature_x")[
+        "node_ids"
+    ]
+    return ids
+
+
+def test_a_new_decision_nothing_leads_into_is_refused_even_with_open_items(
+    tmp_path: Path,
+) -> None:
+    project_path = _project(tmp_path)
+    ids = _subscription(project_path)
+
+    with pytest.raises(ValueError, match="nothing leads into") as refused:
+        mcp_tools.propose_flow(
+            project_path,
+            "alpha",
+            "feature_x",
+            nodes=[
+                {"key": "paid", "kind": "decision", "label": "신청 후 3일까지 입금했나요?"},
+                {"key": "cancel", "kind": "step", "label": "꽃집 사장이 신청을 취소한다"},
+                {
+                    "key": "delivery",
+                    "kind": "decision",
+                    "label": "첫 배송일까지 이틀도 안 남았나요?",
+                },
+                {"key": "postpone", "kind": "step", "label": "꽃집 사장이 첫 배송을 미룬다"},
+                {"key": "payment_rule", "kind": "rule", "label": "입금은 신청 후 3일까지 기다린다"},
+            ],
+            remove_edges=[{"source": ids["pay"], "target": ids["check"]}],
+            edges=[
+                {"source": ids["pay"], "target": "paid"},
+                {"source": "paid", "target": ids["check"], "label": "예"},
+                {"source": "paid", "target": "cancel", "label": "아니요"},
+                {"source": "delivery", "target": "postpone", "label": "예"},
+            ],
+            open_items=[
+                {
+                    "at": "delivery",
+                    "question": "남은 시간은 신청할 때와 입금 확인할 때 중 언제 확인하나요?",
+                },
+                {"at": "delivery", "question": "이틀 이상 남았으면 어느 단계로 이어지나요?"},
+                {"at": "postpone", "question": "다음 배송일로 미룬 뒤 어느 단계로 이어지나요?"},
+            ],
+        )
+
+    message = str(refused.value)
+    assert "첫 배송일까지 이틀도 안 남았나요?" in message
+    # Reached nodes, a rule, and the drawn entry step are not named.
+    for label in ("신청 후 3일까지", "꽃집 사장이 신청을 취소한다", "입금은", "인스타 링크"):
+        assert label not in message, label
+
+
+def test_removing_the_only_line_into_a_drawn_step_is_refused_even_with_open_items(
+    tmp_path: Path,
+) -> None:
+    project_path = _project(tmp_path)
+    ids = _subscription(project_path)
+    # The canvas as walk 5 left it at 12:34:31: a decision drawn loose beside the flow.
+    delivery = mcp_tools.create_node(
+        project_path,
+        "alpha",
+        "feature",
+        "decision",
+        {"label": "첫 배송일까지 이틀도 안 남았나요?"},
+        service_id="feature_x",
+    )["node"]["id"]
+    postpone = mcp_tools.create_node(
+        project_path,
+        "alpha",
+        "feature",
+        "step",
+        {"label": "꽃집 사장이 첫 배송을 다음 배송일로 미룬다"},
+        service_id="feature_x",
+    )["node"]["id"]
+    mcp_tools.create_edge(
+        project_path, "alpha", "feature", delivery, postpone, label="예", service_id="feature_x"
+    )
+
+    # 12:35:46: the line 입금 확인 → 확정 문자 is cut while its replacement is still a question.
+    with pytest.raises(ValueError, match="꽃집 사장이 확정 문자를 보낸다"):
+        mcp_tools.propose_flow(
+            project_path,
+            "alpha",
+            "feature_x",
+            nodes=[],
+            remove_edges=[{"source": ids["check"], "target": ids["sms"]}],
+            edges=[{"source": ids["check"], "target": delivery}],
+            open_items=[
+                {"at": delivery, "question": "이틀 이상 남았으면 바로 확정 문자를 보내나요?"},
+                {"at": postpone, "question": "미룬 뒤 그 날짜로 확정 문자를 보내나요?"},
+            ],
+        )
+
+    # 12:36:29: the same change with the lines that reach 확정 문자 is recorded.
+    assert "rendered" in mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[],
+        remove_edges=[{"source": ids["check"], "target": ids["sms"]}],
+        edges=[
+            {"source": ids["check"], "target": delivery},
+            {"source": delivery, "target": ids["sms"], "label": "아니요 · 이틀 이상 남음"},
+            {"source": postpone, "target": ids["sms"]},
+        ],
+    )
+
+
+def test_a_first_draft_beside_an_actor_line_keeps_its_entry(tmp_path: Path) -> None:
+    """A line between the feature root and its actor is not a flow yet, so the
+    first draft's entry step needs no line into it."""
+    project_path = _project(tmp_path)
+    write_canvas(
+        resolve_plot_root(project_path),
+        "alpha",
+        CanvasDoc(
+            canvas_id="feature_x",
+            canvas_kind="feature",
+            feature_ref="feature_x",
+            nodes=[
+                FeatureNode(id="feature_x", label="카드 등록"),
+                ActorRefNode(id="actor_ref_x", label="손님", ref_actor_id="actor_x"),
+            ],
+            edges=[SketchEdge(id="edge_x", source="feature_x", target="actor_ref_x")],
+        ),
+    )
+
+    assert "rendered" in mcp_tools.propose_flow(
+        project_path,
+        "alpha",
+        "feature_x",
+        nodes=[
+            {"key": "entry", "kind": "step", "label": "손님이 인스타 링크를 보고 들어온다"},
+            {"key": "pay", "kind": "step", "label": "손님이 입금한다"},
+        ],
+        edges=[{"source": "entry", "target": "pay"}],
+    )

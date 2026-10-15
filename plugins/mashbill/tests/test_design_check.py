@@ -545,7 +545,8 @@ def test_recheck_keeps_last_check_counts(tmp_path: Path) -> None:
     assert after.updated_at != before.updated_at
 
 
-def test_checking_state_transitions_to_recheck(tmp_path: Path) -> None:
+def test_a_check_in_progress_stays_checking_when_the_design_changes(tmp_path: Path) -> None:
+    """W-00000489 (walk 5, NEW-11): a check in progress covers the edits made during it."""
     plot_root = _setup_design(tmp_path)
     mcp_tools.set_design_check(str(tmp_path), "alpha", "svc", "checking", 1, 1)
     overview = read_canvas(plot_root, "alpha", "services")
@@ -560,7 +561,7 @@ def test_checking_state_transitions_to_recheck(tmp_path: Path) -> None:
 
     write_canvas(plot_root, "alpha", changed)
 
-    assert _check(plot_root, "svc").state == "recheck"
+    assert _check(plot_root, "svc").state == "checking"
 
 
 def test_mcp_node_writer_goes_through_recheck_boundary(tmp_path: Path) -> None:

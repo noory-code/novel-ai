@@ -6,6 +6,7 @@ import math
 from typing import Any
 
 from mashbill.canvas_normalization import retire_spokes_for_new_nesting
+from mashbill.chat_scope_env import refuse_foreign_flow_write
 from mashbill.folder_io import read_canvas, write_canvas
 from mashbill.mcp_canvas_write_tools import (
     create_edge_with_draft,
@@ -18,6 +19,16 @@ from mashbill.models import CanvasDoc, CanvasKind
 from mashbill.models_foundation import PROJECT_ANCHOR_ID
 from mashbill.tool_log import record_tool_call
 from mashbill.workspace import resolve_plot_root
+
+# Kinds that make up a feature's flow; their nodes and the canvas's lines are
+# written only from that feature's conversation (W-00000489).
+_FLOW_KINDS = frozenset({"step", "decision"})
+
+
+def _flow(canvas: CanvasDoc) -> tuple[set[tuple[str, str, str]], set[tuple[str, str, str]]]:
+    nodes = {(str(n.id), str(n.kind), n.label) for n in canvas.nodes if n.kind in _FLOW_KINDS}
+    lines = {(str(e.source), str(e.target), e.label) for e in canvas.edges}
+    return nodes, lines
 
 
 def update_canvas(
@@ -33,6 +44,10 @@ def update_canvas(
     confirmed when it matches; writes without one do not create a draft."""
     plot_root = resolve_plot_root(project_path)
     validated = CanvasDoc.model_validate(canvas)
+    if validated.canvas_kind == "feature" and validated.feature_ref is not None:
+        stored = read_canvas(plot_root, project_id, "feature", validated.feature_ref)
+        if _flow(stored) != _flow(validated):
+            refuse_foreign_flow_write(validated.feature_ref)
     if validated.canvas_kind in ("actors", "services"):
         # D-2026-10-15-F: a nesting line written here retires the child's spoke.
         validated = retire_spokes_for_new_nesting(
@@ -190,6 +205,8 @@ def create_node(
     canvas stays visually grouped (D-2026-07-02-L).
     Pass [Write target] ``chat_scope``; omitting ``draft_id`` does not create a draft.
     Returns ``{"node": <new node dict>, "rejected_fields": [...]}``."""
+    if canvas_kind == "feature" and kind in _FLOW_KINDS and service_id is not None:
+        refuse_foreign_flow_write(service_id)
     plot_root = resolve_plot_root(project_path)
     result = create_node_with_draft(
         plot_root,
@@ -240,6 +257,8 @@ def create_edge(
     A matching supplied ``draft_id`` is confirmed; omitting it does not create
     a draft.
     """
+    if canvas_kind == "feature" and service_id is not None:
+        refuse_foreign_flow_write(service_id)
     plot_root = resolve_plot_root(project_path)
     result = create_edge_with_draft(
         plot_root,

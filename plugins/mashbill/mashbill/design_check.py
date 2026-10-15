@@ -36,7 +36,9 @@ def _now() -> str:
 
 
 def _rechecked(check: DesignCheck | None, updated_at: str) -> DesignCheck | None:
-    if check is None or check.state in ("unchecked", "recheck"):
+    # Only a finished check reopens; a check in progress covers the edits made
+    # during it (W-00000489, newcomer walk 5).
+    if check is None or check.state != "checked":
         return check
     return check.model_copy(update={"state": "recheck", "updated_at": updated_at})
 
@@ -261,6 +263,8 @@ def set_design_check(
     check the coach did not run. ``recheck`` and ``unchecked`` belong to the
     engine and are refused.
     """
+    from mashbill.canvas_io import read_canvas
+    from mashbill.chat_scope_env import refuse_foreign_check
     from mashbill.tool_log import record_tool_call
     from mashbill.workspace import resolve_plot_root
 
@@ -270,6 +274,11 @@ def set_design_check(
             "(the engine sets recheck and unchecked)"
         )
     plot_root = resolve_plot_root(project_path)
+    overview = read_canvas(plot_root, project_id, "services")
+    target = next((node for node in overview.nodes if node.id == node_id), None)
+    if target is not None:
+        # W-00000489 — a check belongs to the conversation that runs it.
+        refuse_foreign_check(node_id, target.kind)
     check = DesignCheck(state=state, found=found, remaining=remaining, updated_at=_now())
     saved_node = write_design_check(plot_root, project_id, node_id, check)
     record_tool_call("set_design_check", project_id=project_id, canvas="services", node_id=node_id)

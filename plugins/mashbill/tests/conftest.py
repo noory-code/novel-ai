@@ -1,4 +1,4 @@
-"""Shared test guards for stored canvas files."""
+"""Shared test guards for stored canvas files and the coach-turn environment."""
 
 from __future__ import annotations
 
@@ -41,6 +41,16 @@ def _inline_canvas_fields(root: Path) -> list[str]:
                         for field in sorted(fields & item.keys())
                     )
     return offenders
+
+
+@pytest.fixture(autouse=True)
+def _outside_a_coach_turn(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run every test as an outside agent unless it sets a conversation scope.
+
+    An in-app coach turn's tool server carries ``MASHBILL_CHAT_SCOPE``, and
+    writes outside that conversation are refused (W-00000489).
+    """
+    monkeypatch.delenv("MASHBILL_CHAT_SCOPE", raising=False)
 
 
 @pytest.fixture(autouse=True)
