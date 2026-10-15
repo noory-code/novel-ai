@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.20] — 2026-10-15
+
+### Changed
+
+- Docs: D-2026-10-15-I records that a publish check item opens its own node and may close an unrelated feature pane (an exception to D-2026-10-14-A); the Korean glossary names the side panel's saved points 남겨 둔 시점 (novel-workspace W-00000476, W-00000480).
+
 ## [0.225.19] — 2026-10-15
 
 ### Changed

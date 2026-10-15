@@ -65,9 +65,8 @@ Short label / button text. Already settled.
 | (unset) | (미지정) |
 | (none) | (없음) |
 | (none yet) | (아직 없음) |
-| Mark session… | 세션 기록… |
 | New project | 새 프로젝트 |
-| Session tags | 세션 태그 |
+| Saved points (blueprint versions and named points) | 남겨 둔 시점 |
 
 ## 3. Hint sentences — review process
 

@@ -39,6 +39,22 @@
 
 ## Log
 
+### D-2026-10-15-I — A publish check item opens its own node, closing an unrelated feature pane
+
+- **What:** *(Claude, carrying out novel-workspace W-00000476)* Pressing an unfinished check in the blueprint publish
+  dialog shows the Services tab with that node selected. A service item closes a feature pane that shows another
+  feature; a feature item opens that feature's flow beside the Services canvas, unfocused, with the feature card
+  selected. This one navigation departs from D-2026-10-14-A (4) (the pane survives every navigation) and (3) (opening a
+  feature focuses its pane).
+- **Why:** In novel-workspace newcomer walk 3 a check item opened the Services canvas beside an unrelated feature left
+  open earlier, with nothing selected, so the person could not find what to check.
+- **Limits:** Because the feature pane opens unfocused, the inspector and the chat follow the Services canvas with the
+  feature card selected; whether the coach runs the failure check from that scope is not verified.
+- **Alternatives:** Keep the pane and only select the node — the unrelated flow stays beside it and reads as the item.
+  Focus the opened feature pane — the app drops the Services selection when a feature pane is focused.
+- **Approval:** Claude's design within W-00000476, open to the user's review.
+- **Principles:** Don't Make Me Think (the item lands on its node); Fail Fast.
+
 ### D-2026-10-15-H — The coach is told the canvas tabs and the publish buttons, and how a design becomes work items
 
 - **What:** *(Claude, carrying out novel-workspace W-00000471)* The viewer-context report (`POST /api/viewer/context`)
@@ -314,7 +330,7 @@
   inspector and takes no shortcut or drop. Opening a feature focuses its pane. (4) The pane survives every navigation —
   another tab, a jump to an actor or a node, undo and redo landing on a canvas — and closes only by its ✕ or a project
   change. Coming back to Services shows it with the Services canvas focused. A `?detail=` link on another tab shows that
-  tab; the pane waits on Services.
+  tab; the pane waits on Services. (A publish check item is the one exception to (3) and (4), D-2026-10-15-I.)
 - **Why:** The user (2026-10-12): "기능캔버스는 서비스 캔버스 오른쪽 옆에 뜨는 걸로요" — confirmed as both canvases visible
   side by side. The tab hid the Services canvas while drawing a feature's flow, so the person lost sight of the service and
   its other features.
