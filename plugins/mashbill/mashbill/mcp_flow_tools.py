@@ -33,9 +33,13 @@ def propose_flow(
     ``numbers["3"]``. Nothing is drawn until ``draw_proposed_flow``.
     ``service_id`` is the feature id.
     - ``nodes``: ``{"key", "kind": step|decision|rule|note, "label", "outcome"?,
-      "body"?, "covers"?: [item numbers of the [Feature description] it carries]}``.
+      "body"?, "covers"?: [item numbers of the [Feature description] it carries],
+      "ref_entity_ids"?: [entity ids]}``.
       Put in outcome only a result the person said or a canvas holds, in their words;
-      otherwise leave it empty and ask in open_items.
+      otherwise leave it empty and ask in open_items. Give each step in
+      ``ref_entity_ids`` the ids of the entities-canvas entities it creates,
+      reads, or changes, so each entity shows where it is used; only a step
+      takes them, and an id that is no entity is refused with the entities named.
     - ``edges``: ``{"source", "target", "label"?}``; each end is a node key or an
       existing node id on the feature canvas (the actor_ref, the feature root, an
       earlier step). Notes take no lines.
@@ -44,11 +48,13 @@ def propose_flow(
       ask it plainly, with no ending of your own as an example.
     - ``omitted``: ``{"item", "reason"}`` — a description item the person chose
       to leave out.
-    - Changing a drawn flow: ``relabels`` ``{"node": id, "label", "outcome"?}``
-      renames drawn steps; ``remove_edges`` ``{"source": id, "target": id}``
-      deletes drawn lines; ``placed`` ``{"item", "at": id}`` marks a description
-      item a drawn node already carries. Put every such change here so the
-      person sees it; do not change the flow outside the draft.
+    - Changing a drawn flow: ``relabels`` ``{"node": id, "label", "outcome"?,
+      "ref_entity_ids"?}`` renames drawn steps (keep the label to only relink;
+      ``ref_entity_ids`` replaces the step's entities); ``remove_edges``
+      ``{"source": id, "target": id}`` deletes drawn lines; ``placed``
+      ``{"item", "at": id}`` marks a description item a drawn node already carries.
+      Put every such change here so the person sees it; do not change the flow
+      outside the draft.
     Every description item not yet drawn must appear in a node's ``covers`` (an
     open item alone does not place it) or in ``omitted``. A decision needs two or
     more labeled lines with different labels, and a loop needs a line leaving

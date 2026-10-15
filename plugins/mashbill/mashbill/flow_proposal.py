@@ -5,7 +5,9 @@ omissions. Recording checks the draft's shape: every line names a target, notes
 stay edgeless, every open item hangs on a known step, the branching has no
 defect a machine can see (``flow_structure``), and every numbered item of the
 feature's Services description is placed as a node or omitted with a reason.
-The person reads the draft with its nodes numbered; the coach's keys stay
+A step may name the entities it touches; recording and drawing refuse an id
+that is no entity on the entities canvas. The person reads the draft with its
+nodes numbered; the coach's keys stay
 internal. When the person confirms, drawing writes exactly the proposed nodes
 and lines in one canvas write. One proposal file per feature lives under
 ``flow_proposals/``; it is engine state, not part of the canvas wire contract.
@@ -26,6 +28,7 @@ from mashbill.edge_io import _build_edge
 from mashbill.flow_structure import check_structure
 from mashbill.models import CanvasDoc
 from mashbill.proposal_store import load_proposals, now_iso, proposed_since, save_proposals
+from mashbill.references import refuse_unknown_entities, step_entity_labels
 
 _DIRNAME = "flow_proposals"
 
@@ -41,6 +44,8 @@ class ProposedNode(BaseModel):
     outcome: str = ""
     body: str = ""
     covers: list[int] = Field(default_factory=list)
+    # The entities a step touches (W-00000500); drawing sets the step's ref_entity_ids.
+    ref_entity_ids: list[str] = Field(default_factory=list)
 
 
 class ProposedEdge(BaseModel):
@@ -66,11 +71,13 @@ class Omission(BaseModel):
 
 
 class Relabel(BaseModel):
-    """A drawn step the draft renames (and, for a step, gives a new outcome)."""
+    """A drawn step the draft renames (and, for a step, gives a new outcome or entities)."""
 
     node: str
     label: str = Field(min_length=1)
     outcome: str | None = None
+    # Replaces a drawn step's ref_entity_ids; None leaves them as they are.
+    ref_entity_ids: list[str] | None = None
 
 
 class RemovedEdge(BaseModel):
@@ -156,6 +163,30 @@ def _check_shape(proposal: FlowProposal, canvas: CanvasDoc) -> None:
     _check_repeats(proposal, canvas)
 
 
+def _entities(plot_root: Path, project_id: str, proposal: FlowProposal) -> dict[str, str]:
+    """Entity id → label, read only when the draft links an entity."""
+    linked = any(n.ref_entity_ids for n in proposal.nodes)
+    linked |= any(r.ref_entity_ids is not None for r in proposal.relabels)
+    return step_entity_labels(plot_root, project_id) if linked else {}
+
+
+def _check_links(proposal: FlowProposal, canvas: CanvasDoc, known: dict[str, str]) -> None:
+    """Refuse an entity link on anything but a step, or to an id that is no entity."""
+    drawn = {str(node.id): node.kind for node in canvas.nodes}
+    links: list[tuple[str, str | None, list[str]]] = [
+        (f"key {n.key!r}", n.kind, n.ref_entity_ids) for n in proposal.nodes if n.ref_entity_ids
+    ]
+    links += [
+        (f"rename of {r.node!r}", drawn.get(r.node), r.ref_entity_ids)
+        for r in proposal.relabels
+        if r.ref_entity_ids is not None
+    ]
+    for where, kind, ref_ids in links:
+        if kind != "step":
+            raise ValueError(f"{where} is a {kind}: only a step links entities (ref_entity_ids)")
+        refuse_unknown_entities(where, ref_ids, known)
+
+
 def _same_text(label: str) -> str:
     return " ".join(label.split())
 
@@ -225,8 +256,16 @@ def display_numbers(proposal: FlowProposal) -> dict[str, str]:
     return {str(number): node.key for number, node in enumerate(proposal.nodes, start=1)}
 
 
-def render(proposal: FlowProposal, canvas: CanvasDoc, items: list[str]) -> str:
-    """The draft as the person reads it: nodes with their lines and open items."""
+def render(
+    proposal: FlowProposal,
+    canvas: CanvasDoc,
+    items: list[str],
+    entities: dict[str, str] | None = None,
+) -> str:
+    """The draft as the person reads it: nodes with their lines and open items.
+
+    ``entities`` (id → label) names a step's linked entities on a ``  ⇢`` line.
+    """
     labels = {str(node.id): node.label for node in canvas.nodes}
     labels.update({node.key: node.label for node in proposal.nodes})
     # The person reads numbers, never the coach's draft-local keys (O-00000137).
@@ -245,6 +284,10 @@ def render(proposal: FlowProposal, canvas: CanvasDoc, items: list[str]) -> str:
         lines += [f"  … {item.question}" for item in proposal.open_items if item.at == ref]
         return lines
 
+    def linked(ref_ids: list[str]) -> list[str]:
+        # A rename that clears a step's entities shows "—" (an empty list).
+        return [f"  ⇢ {', '.join((entities or {}).get(i, i) for i in ref_ids) or '—'}"]
+
     out: list[str] = []
     for ref in dict.fromkeys(
         [e.source for e in proposal.edges if e.source not in keys]
@@ -256,10 +299,16 @@ def render(proposal: FlowProposal, canvas: CanvasDoc, items: list[str]) -> str:
         head = f"[{keys[node.key]}] {marks.get(node.kind, '')}{node.label}"
         if node.outcome:
             head += f": {node.outcome}"
-        out += [head, *under(node.key)]
+        out += [
+            head,
+            *(linked(node.ref_entity_ids) if node.ref_entity_ids else []),
+            *under(node.key),
+        ]
     for relabel in proposal.relabels:
         line = f"~ {labels.get(relabel.node, relabel.node)} → {relabel.label}"
         out.append(line + (f": {relabel.outcome}" if relabel.outcome else ""))
+        if relabel.ref_entity_ids is not None:
+            out += linked(relabel.ref_entity_ids)
     out += [
         f"⨯ {labels.get(r.source, r.source)} → {labels.get(r.target, r.target)}"
         for r in proposal.remove_edges
@@ -314,10 +363,13 @@ def propose_flow(
     items = feature_description_items(plot_root, project_id, feature_id)
     doc = _load(plot_root, project_id, feature_id)
     _check_shape(proposal, canvas)
+    entities = _entities(plot_root, project_id, proposal)
+    _check_links(proposal, canvas, entities)
     _check_branching(proposal, canvas)
     _check_cover(proposal, items, doc.drawn_items)
     _save(plot_root, project_id, feature_id, doc.model_copy(update={"current": proposal}))
-    return {"rendered": render(proposal, canvas, items), "numbers": display_numbers(proposal)}
+    rendered = render(proposal, canvas, items, entities)
+    return {"rendered": rendered, "numbers": display_numbers(proposal)}
 
 
 def rendering_proposed_since(
@@ -328,7 +380,8 @@ def rendering_proposed_since(
     if proposal is None or proposal.drawn or not proposed_since(proposal.proposed_at, since):
         return None
     canvas = read_canvas(plot_root, project_id, "feature", feature_id)
-    return render(proposal, canvas, feature_description_items(plot_root, project_id, feature_id))
+    items = feature_description_items(plot_root, project_id, feature_id)
+    return render(proposal, canvas, items, _entities(plot_root, project_id, proposal))
 
 
 def reader_names(plot_root: Path, project_id: str, feature_id: str) -> dict[str, str]:
@@ -371,6 +424,8 @@ def draw_proposed_flow(plot_root: Path, project_id: str, feature_id: str) -> dic
     ):
         kept_check = None
     canvas = read_canvas(plot_root, project_id, "feature", feature_id)
+    # An entity removed since the draft was recorded must not be linked.
+    _check_links(proposal, canvas, _entities(plot_root, project_id, proposal))
     renames = {r.node: r for r in proposal.relabels}
     nodes_now = []
     for existing in canvas.nodes:
@@ -379,6 +434,8 @@ def draw_proposed_flow(plot_root: Path, project_id: str, feature_id: str) -> dic
             update: dict[str, Any] = {"label": relabel.label}
             if relabel.outcome is not None and existing.kind == "step":
                 update["outcome"] = relabel.outcome
+            if relabel.ref_entity_ids is not None and existing.kind == "step":
+                update["ref_entity_ids"] = list(dict.fromkeys(relabel.ref_entity_ids))
             existing = existing.model_copy(update=update)
         nodes_now.append(existing)
     removed = {(r.source, r.target) for r in proposal.remove_edges}
@@ -394,6 +451,11 @@ def draw_proposed_flow(plot_root: Path, project_id: str, feature_id: str) -> dic
         if node.kind == "step":
             fields["outcome"] = node.outcome
         built, _ = build_new_node(canvas, node.kind, fields, near)
+        if node.ref_entity_ids:
+            # A reference is no writable field of build_new_node (D-2026-07-02-N).
+            built = built.model_copy(
+                update={"ref_entity_ids": list(dict.fromkeys(node.ref_entity_ids))}
+            )
         ids[node.key] = str(built.id)
         canvas = canvas.model_copy(update={"nodes": [*canvas.nodes, built]})
     for edge in proposal.edges:

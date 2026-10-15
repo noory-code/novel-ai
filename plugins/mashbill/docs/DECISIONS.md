@@ -39,6 +39,21 @@
 
 ## Log
 
+### D-2026-10-15-O — A flow draft's steps name the entities they touch
+
+- **What:** *(Claude, carrying out novel-workspace W-00000500)* `propose_flow` takes `ref_entity_ids` on a draft
+  step and on a relabel of a drawn step. Recording and drawing refuse the field on any other kind and refuse an id
+  that is no entity on the entities canvas, naming the entities; `rendered` shows a step's entities as
+  `  ⇢ 예약, 강아지`; `draw_proposed_flow` sets the drawn step's `ref_entity_ids` (a relabel's list replaces it).
+  Decisions, rules and notes take no entities: only `StepNode` carries `ref_entity_ids`.
+- **Why:** In novel-workspace newcomer walk 6 the coach drew two flows (24 steps) and linked none to an entity, so
+  every entity card read "인터랙션 0개" (O-00000176): the draft had no place for entities, and linking needed a
+  separate `set_node_references` call per step that the coach never made.
+- **Amends:** D-2026-10-11-B — the flow draft carries a step's entity links; `set_node_references` stays for links
+  outside a draft.
+- **Approval:** Claude's design within W-00000500, open to the user's review.
+- **Principles:** Fail Fast (an unknown id is refused when the draft is recorded and again when it is drawn); SSOT
+  (the entity home comes from `references._REF_FIELDS`).
 ### D-2026-10-15-N — The feature coach asks failure cases together and stops when told; node text is the node, not the coach's reasoning; replies keep the person's polite level
 
 - **What:** *(Claude, carrying out novel-workspace W-00000497)* (1) The feature framing asks the failure cases the

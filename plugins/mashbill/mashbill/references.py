@@ -96,3 +96,21 @@ def set_node_references(
     )
     write_canvas(plot_root, project_id, updated)
     return {"node": new_node.model_dump(by_alias=True)}
+
+
+def step_entity_labels(plot_root: Path, project_id: str) -> dict[str, str]:
+    """Every entity a step may link (its ``ref_entity_ids`` home) → its label."""
+    home_canvas, expected_kind = _REF_FIELDS["step"]["ref_entity_ids"]
+    home = read_canvas(plot_root, project_id, home_canvas)  # type: ignore[arg-type]
+    return {n.id: n.label or n.id for n in home.nodes if n.kind == expected_kind}
+
+
+def refuse_unknown_entities(where: str, ref_ids: list[str], known: dict[str, str]) -> None:
+    """Raise naming the known entities when any of ``ref_ids`` is not one of them."""
+    unknown = [ref_id for ref_id in ref_ids if ref_id not in known]
+    if unknown:
+        names = ", ".join(f"{ref_id} ({label})" for ref_id, label in known.items())
+        raise ValueError(
+            f"{where}: {unknown} are no entity ids; the entities are: "
+            + (names or "none yet (add them on the entities canvas first)")
+        )
