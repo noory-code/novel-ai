@@ -39,6 +39,32 @@
 
 ## Log
 
+### D-2026-10-15-N — The feature coach asks failure cases together and stops when told; node text is the node, not the coach's reasoning; replies keep the person's polite level
+
+- **What:** *(Claude, carrying out novel-workspace W-00000497)* (1) The feature framing asks the failure cases the
+  coach still sees in one question, an exception to "ask about the first" finding; it never re-asks a case, or its
+  variant, the person already answered in this conversation, and applies that answer. When the person says the flow
+  is enough ("이 정도면 된 것 같아요", "끝낼게요"), the coach asks no further failure case, calls `set_design_check`
+  with `remaining` set to the unasked cases, and names them in one line. (2) `WRITE_PLAYBOOK`: a node's text states
+  what it is and what the person decided, never alternatives the coach raised or why it proposed it;
+  `ASK_DIRECTION_PLAYBOOK` saves into the note only a reason the person gave. (3) `RESPONSE_LANGUAGE`: the reply
+  matches the person's polite level in every reply, never switching from 해요 to 합니다; its good examples are now
+  해요 ("미션에서 가치로 옮겼어요", "결정할 때 쓰는 기준이에요"). Every canvas prompt stays at or under 1,800 words
+  (foundation 1799, actors 1782, services 1797, entities 1748, feature 1800); the room came from tightening
+  existing sentences without dropping a rule.
+- **Why:** In novel-workspace newcomer walk 6 the feature coach asked one more failure case per turn (payment
+  fails, slot taken, slot taken during payment, refund not instant) after the person said "이 기능은 이 정도면 된
+  것 같아요", re-asked the slot clash they had answered, and stopped only at "끝낼게요". The 운영자 actor's
+  description held the coach's counter-point ("각자 따로 두면 세 역할을 바로 볼 수 있지만…") because the steering
+  rule saved "that reason" after a bare yes. The person wrote 해요 throughout, but the services and feature
+  coaches answered in 합니다.
+- **Amends:** D-2026-10-05-A (4): its four failure directions are now asked together, not one finding per turn
+  (`EVALUATE_PLAYBOOK`'s "ask about the first" yields to it on the feature canvas); W-00000249's steering note
+  (only the person's reason is saved).
+- **Approval:** Claude's design within W-00000497, open to the user's review.
+- **Principles:** Don't Make Me Think (one question covers the open cases; a stop is honoured); SSOT (a node holds
+  what it is, the chat holds the reasoning); Consistency (one polite level per conversation).
+
 ### D-2026-10-15-M — Asked to put a proposal on the canvas, the coach writes it without asking about a draft
 
 - **What:** *(Claude, carrying out novel-workspace W-00000495)* `WRITE_PLAYBOOK`: when the person asks to put a

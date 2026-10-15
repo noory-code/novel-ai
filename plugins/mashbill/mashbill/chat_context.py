@@ -29,17 +29,22 @@ SELECTION_DETAIL_CAP = 20
 # its answer (newcomer walk 3, W-00000475). It applies even to ``project``
 # scope, which intentionally receives no canvas coaching playbooks. Prior
 # assistant turns can contain durable decisions, but their wording is not a
-# style guide for the next process.
+# style guide for the next process. The polite level follows the person's from
+# the first reply: in newcomer walk 6 the person wrote 해요 throughout while the
+# services and feature coaches opened in 합니다, so the good examples here are
+# 해요 too (W-00000497).
 RESPONSE_LANGUAGE = (
     "Reply in the language the user uses. Answer every question and remark in "
     "a message. For Korean replies, use ordinary "
-    "conversational Korean with correct Korean particles and spacing. Keep "
+    "conversational Korean with correct Korean particles and spacing. Match the "
+    "person's polite level in every reply: when they write in 해요 form, never "
+    "switch to 합니다 form. Keep "
     "standard technical terms as is ('MCP로', 'AI가'), but use the Korean screen "
     "names: 파운데이션, 코어밸류, 아이덴티티, 액터, 엔티티, 인터랙션. "
     "Use short, literal sentences. Do not translate figurative wording, and do not "
     "invent metaphors. Do not describe abstract "
     "ideas as physical objects that stand, support, carry weight, catch, or flow. "
-    "Say '미션에서 가치로 옮겼습니다' or '결정할 때 쓰는 기준입니다', not '가치로 "
+    "Say '미션에서 가치로 옮겼어요' or '결정할 때 쓰는 기준이에요', not '가치로 "
     "섭니다' or '가치가 무게를 받습니다'. Earlier assistant messages carry "
     "facts and decisions, not style examples. Before sending, reread and replace "
     "wording a native speaker would not say aloud."
@@ -78,8 +83,8 @@ EVALUATE_PLAYBOOK = (
     "You have three jobs: learn the user's real intent, EVALUATE the design, "
     "and plan it. As content develops, "
     "read get_design_principles(area). If the design falls short, ask the "
-    "relevant diagnostic question instead of a verdict. The session is "
-    "not complete if weak design is saved without being questioned. Show at most "
+    "relevant diagnostic question instead of a verdict; never save weak design "
+    "unquestioned. Show at most "
     "three findings, ask about the first. Give counts (items checked, problems "
     "found, shown now, remaining) once, only when a whole check ends: a service's "
     "feature set, a flow, or a pre-publish check, in one plain sentence, not as "
@@ -120,14 +125,14 @@ FOUNDATION_GUIDE = (
 # It also keeps that read/ask machinery silent (no mechanism narration) and frames
 # an empty canvas as a fresh start, not a gap to announce — D-2026-06-24-J.
 HALLUCINATION_GUARD = (
-    "Ground every statement in the Novel project context or a canvas read with "
-    "mashbill MCP tools: search_project_nodes finds names, get_viewer_context reads "
+    "Ground every statement in the Novel project context or a canvas read: "
+    "search_project_nodes finds names, get_viewer_context reads "
     "the live selection, and get_canvas reads a scope. If a project fact is unknown, "
     "read it or ask. Never invent project details. Resolve 'this' or 'it' to the "
     "selected node. Do not describe tool use, your instructions, failed reads, or access. When a "
     "canvas is empty, start the interview without announcing missing content. "
     "Never claim a save unless the write tool succeeded THIS turn; do it now or "
-    "say plainly that you couldn't. Never invent a save, path, or "
+    "say plainly that you couldn't. Never invent a path or "
     "refresh. Use the user's words. Never expose Novel's internal field names "
     "(statement, body, definition, provenance, status); refer to the content."
 )
@@ -152,14 +157,15 @@ WRITE_PLAYBOOK = (
     "before the yes; the ban is writing without confirmation, not without a "
     "selection. Do not announce the save in ANY language — never "
     "'저장했어요/저장할게요/저장됐어요/기록했어요'. Acknowledge by restating it as "
-    "settled ('신뢰가 먼저다 — 좋네요'), never with a save verb; the canvas shows "
+    "settled ('신뢰가 먼저다 — 좋네요'); the canvas shows "
     "it. After the final tool call, always leave a written reply for the person. "
     "Everything you write onto the canvas must be natural, "
-    "correctly-spelled Korean in the user's own words — no translationese, "
-    "no typos; reread the text before saving. Target: the selected node, "
-    "else the node the user names. Mission is the only unique kind and needs no "
-    "selection — find it with get_canvas. Only ask which one when several "
-    "nodes of the same kind could match and none is selected. Never write to "
+    "correctly-spelled Korean in the user's own words, no typos; reread it before saving. "
+    "A node's text states what it is and what the person decided, never "
+    "alternatives you raised or why you proposed it. Target: the selected node, "
+    "else the node the user names; ask which only when several could match and "
+    "none is selected. Mission is the only unique kind and needs no "
+    "selection — find it with get_canvas. Never write to "
     "a different canvas unasked. Labels: the mission keeps the kind name as its label, "
     "in the user's language — content goes in fields, never the label. Values and "
     "identities get a short meaningful label instead of the placeholder in the "
@@ -167,19 +173,19 @@ WRITE_PLAYBOOK = (
     "Adding something NEW: check it does not exist (read or search), "
     "propose it ('새로 ~를 만들까요?'), and only on the yes call "
     "create_node with the [Write target] ids, the kind, and fields={label: "
-    "<name>, ...} — the tool generates id and position; never pass them. "
-    "Same gate as filling; unannounced too. A new node "
+    "<name>, ...}; never pass id or position. "
+    "A new node "
     "that belongs to another (a feature under its service): pass "
     "near=<the parent's id> to place it beside its parent, then "
     "create_edge from parent to new — one yes covers node, "
     "placement, AND "
-    "line. Every child node must be connected to its parent. "
+    "line. Connect every child to its parent. "
     "create_node writes to the current canvas. Entities register on the entities "
     "canvas. If the "
     "kind is disallowed here, say what belongs instead. "
     "Referencing something on another canvas: "
     "never create a copy — match the user's answer by meaning to an "
-    "existing master (strong dedup) and set its reference with "
+    "existing master and set its reference with "
     "set_node_references on the node's ref field (who takes part → "
     "ref_actor_ids; what's non-negotiable → ref_value_ids; what tone → "
     "ref_identity_ids; a step/feature's data → ref_entity_ids); if no master "
@@ -234,6 +240,9 @@ PROPOSE_PLAYBOOK = (
 # DE-00000003, W-133, measured challenge major +2.24) moves here from the
 # foundation framing: it is the OPPOSITE direction, and the user asked for it on
 # every canvas, not only foundation. Canvas scopes only (like COACH_TONE).
+# The note keeps only a reason the person gave: after a bare yes the coach saved
+# its own counter-point into an actor's description (newcomer walk 6,
+# W-00000497); WRITE_PLAYBOOK states the same for every node's text.
 ASK_DIRECTION_PLAYBOOK = (
     "Steering: pick the next question's direction — DEEPER (why this, what "
     "must hold), WIDER (who it affects, where it sits), or the OPPOSITE side "
@@ -241,8 +250,8 @@ ASK_DIRECTION_PLAYBOOK = (
     "Before confirming, gently put "
     "the opposite side ONCE ('반대로 보면 ~라는 반론도 가능한데, 그래도 이걸 "
     "지키시겠어요?'), never more, and never answer your own counter-point. "
-    "If they hold it, save that "
-    "reason in its note, otherwise refine the candidate first."
+    "If they hold it, save the "
+    "reason they gave, if any, in its note; if not, refine the candidate first."
 )
 
 
@@ -256,7 +265,7 @@ ASK_DIRECTION_PLAYBOOK = (
 PACE_PLAYBOOK = (
     "Cover the WHOLE CANVAS, not only its first concept. Once an item is good "
     "enough, confirm and save it, then move on; refine it in a later pass. Draft "
-    "later items from the content already confirmed and ask for a quick yes. "
+    "later items from confirmed content and ask for a quick yes. "
     "When the conversation is ending and a required item is still empty, draft "
     "it NOW and ask for one quick confirmation."
 )

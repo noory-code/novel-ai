@@ -257,7 +257,7 @@ def test_write_playbook_records_drafts_only_after_explicit_consent() -> None:
     assert "whenever you show the person a concrete draft" not in WRITE_PLAYBOOK
     existing = WRITE_PLAYBOOK[: -len(draft_rule)]
     assert hashlib.sha256(existing.encode()).hexdigest() == (
-        "9cf3b86fca375ded163082fe0f7e16299f5cd2460345af4467b6dcdb5827f999"
+        "c0d6cfb75fdf7e5299106bec6818a340aad75fedf218be5baa603c85a65525a9"
     )
 
 

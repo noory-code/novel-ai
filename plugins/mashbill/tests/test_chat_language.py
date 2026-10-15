@@ -33,8 +33,8 @@ def test_every_coach_scope_carries_the_response_language_rules() -> None:
         assert "Do not translate figurative wording" in prompt, scope
         assert "do not invent metaphors" in prompt, scope
         assert "Do not describe abstract ideas as physical objects" in prompt, scope
-        assert "미션에서 가치로 옮겼습니다" in prompt, scope
-        assert "결정할 때 쓰는 기준입니다" in prompt, scope
+        assert "미션에서 가치로 옮겼어요" in prompt, scope
+        assert "결정할 때 쓰는 기준이에요" in prompt, scope
         assert "가치로 섭니다" in prompt, scope
         assert "가치가 무게를 받습니다" in prompt, scope
         assert "reread" in prompt, scope

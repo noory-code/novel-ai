@@ -840,7 +840,15 @@ def test_system_prompt_stays_under_saturation_budget() -> None:
     The budget still forces compress-before-add:
     content is pinned by the phrase guards in this file and
     ``test_chat_system_prompt.py``; this test pins the SIZE."""
-    for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
+    for scope in (
+        "foundation",
+        "actors",
+        "services",
+        "entities",
+        "feature:x",
+        "service:x",
+        "project",
+    ):
         words = len(build_system_prompt(scope).split())
         assert words <= 1800, f"{scope}: {words} words > 1800 budget"
 
@@ -951,3 +959,46 @@ def test_coach_does_not_cite_its_instructions_and_names_the_work_item_button() -
         # Walk 4: no service panel was open, so the coach borrowed the project
         # publish label for the service publish.
         assert "describe any other by what it does" in prompt, scope
+
+
+def test_feature_scope_asks_failure_cases_together_and_stops_when_told() -> None:
+    """Newcomer walk 6 (W-00000497): the feature coach asked one more failure
+    case per turn (payment fails, slot taken, slot taken during payment, refund
+    not instant) after the person said "이 정도면 된 것 같아요", re-asked the
+    slot clash they had answered, and stopped only at "끝낼게요"."""
+    feature = build_system_prompt("feature:x").lower()
+    services = build_system_prompt("services").lower()
+    for rule in (
+        "unlike other findings, ask the failure cases you still see in one question",
+        "never re-ask a case, or its variant, already answered here; apply that answer",
+        "'이 정도면 된 것 같아요', '끝낼게요'",
+        "ask no further failure case",
+        "set_design_check remaining to the unasked cases and name them in one line",
+    ):
+        assert rule in feature, rule
+        assert rule not in services, rule
+
+
+def test_node_text_states_what_the_node_is_not_the_coach_reasoning() -> None:
+    """Newcomer walk 6 (W-00000497): the 운영자 actor's description carried the
+    coach's counter-point ("각자 따로 두면 세 역할을 바로 볼 수 있지만…")
+    because the steering rule said to save "that reason" when the person held a
+    choice; the person had only said yes."""
+    for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
+        prompt = build_system_prompt(scope).lower()
+        assert (
+            "a node's text states what it is and what the person decided, "
+            "never alternatives you raised or why you proposed it"
+        ) in prompt, scope
+        assert "save the reason they gave, if any, in its note" in prompt, scope
+        assert "save that reason in its note" not in prompt, scope
+
+
+def test_every_scope_keeps_the_persons_polite_level() -> None:
+    """Newcomer walk 6 (W-00000497): the person wrote 해요 throughout, but the
+    services and feature coaches answered in 합니다 ("하겠습니다", "말씀하신
+    순서입니다"), switching from the 해요 the earlier coaches used."""
+    for scope in ("foundation", "actors", "services", "entities", "feature:x", "project"):
+        prompt = build_system_prompt(scope)
+        assert "Match the person's polite level in every reply" in prompt, scope
+        assert "when they write in 해요 form, never switch to 합니다 form" in prompt, scope

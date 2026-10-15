@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.34] — 2026-10-15
+
+### Changed
+
+- The feature coach asks the failure cases it still sees in one question, never re-asks a case (or its variant) already answered in the conversation, and when the person says the flow is enough it asks no more failure cases, records the unasked ones as the check's remaining items and names them in one line; a node's text states what the node is and what the person decided, never the coach's counter-points or why it proposed it, and a counter-stance note keeps only a reason the person gave; replies keep the person's polite level (해요 when they write 해요) (novel-workspace W-00000497, D-2026-10-15-N).
+- The 1,800-word prompt budget test now covers the work tab's `project` scope too, so every prompt the app sends is under the cap (novel-workspace W-00000495 review).
+
 ## [0.225.33] — 2026-10-15
 
 ### Changed
