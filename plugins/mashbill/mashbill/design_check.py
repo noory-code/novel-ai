@@ -21,9 +21,9 @@ from mashbill.models_union import SketchNode
 from mashbill.service_features import service_feature_ids
 from mashbill.storage import _canvas_file
 
-_SERVICE_CONTENT_FIELDS = ("problem", "value_created")
-_SERVICE_FIELD_NAMES = {"problem": "problem", "value_created": "value created"}
-_FEATURE_CONTENT_FIELDS = ("label", "proposed")
+# Content fields whose change reopens a check, each with the word the coach reads in ``changed``.
+_SERVICE_CONTENT_FIELDS = {"problem": "problem", "value_created": "value created"}
+_FEATURE_CONTENT_FIELDS = {"label": "name", "proposed": "purpose"}
 
 
 def _now() -> str:
@@ -48,8 +48,15 @@ def _rechecked(
     )
 
 
-def _content(node: ServiceNode | FeatureNode, fields: tuple[str, ...]) -> tuple[Any, ...]:
-    return tuple(getattr(node, field) for field in fields)
+def _changed_parts(
+    old: ServiceNode | FeatureNode, new: ServiceNode | FeatureNode, fields: dict[str, str]
+) -> list[str]:
+    """``"<name> (<part>)"`` for each content field that differs, so a recheck says what moved."""
+    return [
+        f"{_name(new)} ({part})"
+        for field, part in fields.items()
+        if getattr(old, field, None) != getattr(new, field, None)
+    ]
 
 
 def _nodes(canvas: CanvasDoc, kind: str) -> dict[str, ServiceNode | FeatureNode]:
@@ -237,24 +244,24 @@ def prepare_rechecks(
         service_changes: dict[str, list[str]] = {}
         feature_changes: dict[str, list[str]] = {}
         for node_id in sorted(old_services.keys() & new_services.keys()):
-            old_service, new_service = old_services[node_id], new_services[node_id]
-            parts = [
-                f"{_name(new_service)} ({_SERVICE_FIELD_NAMES[field]})"
-                for field in _SERVICE_CONTENT_FIELDS
-                if getattr(old_service, field, None) != getattr(new_service, field, None)
-            ]
+            parts = _changed_parts(
+                old_services[node_id], new_services[node_id], _SERVICE_CONTENT_FIELDS
+            )
             if parts:
                 service_changes[node_id] = parts
         for node_id in sorted(old_features.keys() & new_features.keys()):
-            if _content(old_features[node_id], _FEATURE_CONTENT_FIELDS) != _content(
-                new_features[node_id], _FEATURE_CONTENT_FIELDS
-            ):
-                feature_changes[node_id] = [_name(new_features[node_id])]
+            parts = _changed_parts(
+                old_features[node_id], new_features[node_id], _FEATURE_CONTENT_FIELDS
+            )
+            if parts:
+                feature_changes[node_id] = parts
         for service_id, feature_id in sorted(old_pairs | new_pairs):
-            if (service_id, feature_id) in old_pairs ^ new_pairs or feature_id in feature_changes:
+            if (service_id, feature_id) in old_pairs ^ new_pairs:
                 feature = new_features.get(feature_id) or old_features.get(feature_id)
                 if feature is not None:
                     service_changes.setdefault(service_id, []).append(_name(feature))
+            elif feature_id in feature_changes:
+                service_changes.setdefault(service_id, []).extend(feature_changes[feature_id])
         incoming, changed_features = _mark_nodes(incoming, service_changes, feature_changes, stamp)
         for changed_feature_id in changed_features:
             update = _detail_update(

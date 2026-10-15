@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.226.7] — 2026-10-16
+
+### Changed
+
+- A check reopened by a feature name or purpose change records which of the two changed, on the feature and on its service (novel-workspace W-00000508).
+
 ## [0.226.6] — 2026-10-16
 
 ### Changed

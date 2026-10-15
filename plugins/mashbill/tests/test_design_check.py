@@ -357,6 +357,27 @@ def test_feature_content_change_reopens_feature_and_service_checks(
 
 
 @pytest.mark.parametrize(
+    ("field", "value", "named"),
+    [
+        ("label", "Renamed feature", "Renamed feature (name)"),
+        ("proposed", "A different capability", "Draft (purpose)"),
+    ],
+)
+def test_feature_content_change_names_which_part_changed(
+    tmp_path: Path, field: str, value: str, named: str
+) -> None:
+    plot_root = _setup_design(tmp_path)
+    overview = read_canvas(plot_root, "alpha", "services")
+    nodes = [
+        node.model_copy(update={field: value}) if node.id == "feat" else node
+        for node in overview.nodes
+    ]
+    write_canvas(plot_root, "alpha", overview.model_copy(update={"nodes": nodes}))
+    assert _check(plot_root, "feat").changed == [named]
+    assert _check(plot_root, "svc").changed == [named]
+
+
+@pytest.mark.parametrize(
     ("node_id", "field", "value"),
     [
         ("svc", "ref_actor_ids", ["actor-2"]),
