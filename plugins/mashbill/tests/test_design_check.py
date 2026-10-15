@@ -430,6 +430,87 @@ def test_feature_change_only_reopens_service_for_outgoing_membership(
     _assert_recheck(plot_root, service=service_rechecks, feature=True)
 
 
+def _setup_two_services(tmp_path: Path) -> Path:
+    plot_root = resolve_plot_root(str(tmp_path))
+    create_project(plot_root, "alpha", "Alpha")
+    overview = CanvasDoc(
+        canvas_id="services",
+        canvas_kind="services",
+        nodes=[
+            ServiceNode(id="svc", label="Write together"),
+            FeatureNode(id="feat", label="Draft"),
+            ServiceNode(id="svc2", label="Share"),
+            FeatureNode(id="feat2", label="Publish"),
+        ],
+        edges=[
+            SketchEdge(id="contains", source="svc", target="feat"),
+            SketchEdge(id="contains2", source="svc2", target="feat2"),
+        ],
+    )
+    write_canvas(plot_root, "alpha", overview)
+    sync_details_with_overview(plot_root, "alpha")
+    detail = read_canvas(plot_root, "alpha", "feature", "feat")
+    detail = CanvasDoc.model_validate(
+        detail.model_copy(
+            update={
+                "nodes": [*detail.nodes, StepNode(id="step", label="Type")],
+                "edges": [SketchEdge(id="flow", source="feat", target="step")],
+            }
+        ).model_dump(by_alias=True)
+    )
+    write_canvas(plot_root, "alpha", detail)
+    for node_id in ("svc", "feat", "svc2", "feat2"):
+        mcp_tools.set_design_check(str(tmp_path), "alpha", node_id, "checked", 2, 0)
+    return plot_root
+
+
+@pytest.mark.parametrize("change", ["flow", "service_problem", "feature_purpose", "attach"])
+def test_a_change_leaves_other_services_and_features_checked(tmp_path: Path, change: str) -> None:
+    plot_root = _setup_two_services(tmp_path)
+    if change == "flow":
+        detail = read_canvas(plot_root, "alpha", "feature", "feat")
+        nodes = [
+            node.model_copy(update={"label": "Type fast"}) if node.id == "step" else node
+            for node in detail.nodes
+        ]
+        write_canvas(plot_root, "alpha", detail.model_copy(update={"nodes": nodes}))
+    else:
+        overview = read_canvas(plot_root, "alpha", "services")
+        if change == "attach":
+            update: dict[str, object] = {
+                "nodes": [*overview.nodes, FeatureNode(id="new", label="Comment")],
+                "edges": [
+                    *overview.edges,
+                    SketchEdge(id="contains-new", source="svc", target="new"),
+                ],
+            }
+        else:
+            node_id, field = (
+                ("svc", "problem") if change == "service_problem" else ("feat", "proposed")
+            )
+            update = {
+                "nodes": [
+                    node.model_copy(update={field: "Something new"}) if node.id == node_id else node
+                    for node in overview.nodes
+                ]
+            }
+        write_canvas(plot_root, "alpha", overview.model_copy(update=update))
+    assert _check(plot_root, "svc2").state == "checked"
+    assert _check(plot_root, "feat2").state == "checked"
+    reopened = {
+        node_id for node_id in ("svc", "feat") if _check(plot_root, node_id).state == "recheck"
+    }
+    assert (
+        reopened
+        == {
+            "flow": {"feat"},
+            "service_problem": {"svc"},
+            "feature_purpose": {"svc", "feat"},
+            "attach": {"svc"},
+        }[change]
+    )
+
+
 def test_feature_attachment_reopens_service_check(tmp_path: Path) -> None:
     plot_root = _setup_design(tmp_path)
     overview = read_canvas(plot_root, "alpha", "services")

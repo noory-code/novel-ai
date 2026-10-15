@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.226.8] — 2026-10-16
+
+### Changed
+
+- Tests pin that a design change leaves every other service and feature check as it was (novel-workspace W-00000508).
+
 ## [0.226.7] — 2026-10-16
 
 ### Changed
