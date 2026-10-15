@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.27] — 2026-10-15
+
+### Added
+
+- Every coach turn starts with a `[Project]` line naming the project id, the newest blueprint version and each service's newest release ("not published yet" / "none yet" otherwise), so the work tab's coach knows what was published (novel-workspace W-00000490).
+
 ## [0.225.26] — 2026-10-15
 
 ### Changed

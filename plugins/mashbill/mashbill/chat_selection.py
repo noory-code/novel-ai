@@ -25,6 +25,7 @@ from typing import Any
 from mashbill.canvas_io import read_canvas
 from mashbill.chat_context import SELECTION_DETAIL_CAP, build_context_preamble
 from mashbill.chat_feature_description import render_feature_description
+from mashbill.chat_project_status import render_project_status
 from mashbill.chat_screen_controls import render_screen_controls
 from mashbill.chat_services_map import render_services_map_lines
 from mashbill.draft_store import list_drafts
@@ -92,8 +93,8 @@ def build_turn_preamble(
     """Assemble the per-turn user-message context — the context-provider seam.
 
     Single place that builds "what the agent should see this turn" (D-2026-06-17-L):
-    current Foundation → active-canvas map → screen controls → feature description → cross-canvas
-    registry → write target → selected-node detail, joined in that order (empty parts skipped).
+    project status → Foundation → active-canvas map → screen controls → feature description
+    → cross-canvas registry → write target → selected-node detail, in order (empty skipped).
     Open drafts are inserted after the write target and before selected-node detail.
     The Layer-3 system prompt
     is delivered separately (``build_system_prompt``); this is the Layer-2
@@ -128,7 +129,7 @@ def build_turn_preamble(
     open_drafts = render_open_drafts(plot_root, scope)
     detail = render_selection_detail(plot_root, scope, selection)
     parts = (foundation, context, controls, feature_description, registry, target, open_drafts)
-    return "\n\n".join(p for p in (*parts, detail) if p)
+    return "\n\n".join(p for p in (render_project_status(plot_root), *parts, detail) if p)
 
 
 def render_open_drafts(plot_root: Path, scope: str) -> str:
