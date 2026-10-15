@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.29] — 2026-10-15
+
+### Changed
+
+- The `[Project]` turn line lists every service on the services canvas with its newest release, or "not published yet" for one never published, so a coach does not read one published service as the whole project (novel-workspace W-00000490).
+
 ## [0.225.28] — 2026-10-15
 
 ### Changed

@@ -13,7 +13,9 @@ from pathlib import Path
 
 from mashbill.chat_project_status import render_project_status
 from mashbill.chat_selection import build_turn_preamble
-from mashbill.folder_io import create_project
+from mashbill.folder_io import create_project, write_canvas
+from mashbill.format_f_slugs import write_slug_store
+from mashbill.models import CanvasDoc, ServiceNode
 from mashbill.workspace import resolve_plot_root
 
 
@@ -41,7 +43,7 @@ def test_unpublished_project_says_nothing_is_published_yet(tmp_path: Path) -> No
     line = render_project_status(_project(tmp_path))
     assert line.startswith("[Project] id academy")
     assert "blueprint: not published yet" in line
-    assert "services published: none yet" in line
+    assert "services: none yet" in line
 
 
 def test_published_blueprint_and_services_are_named(tmp_path: Path) -> None:
@@ -56,7 +58,31 @@ def test_published_blueprint_and_services_are_named(tmp_path: Path) -> None:
     )
     line = render_project_status(plot_root)
     assert "blueprint: v0.2.0" in line
-    assert "services published: tuition-management vS1" in line
+    assert "services: tuition-management vS1" in line
+
+
+def test_every_service_on_the_canvas_says_whether_it_is_published(tmp_path: Path) -> None:
+    """A service drawn but never published reads 'not published yet', so the
+    coach does not take one published service for the whole project."""
+    plot_root = _project(tmp_path)
+    write_canvas(
+        plot_root,
+        "academy",
+        CanvasDoc(
+            canvas_id="services",
+            canvas_kind="services",
+            nodes=[
+                ServiceNode(id="s_fee", label="수강료 관리", x=0.0, y=0.0),
+                ServiceNode(id="s_att", label="출결 확인", x=0.0, y=200.0),
+            ],
+        ),
+    )
+    write_slug_store(plot_root, "academy", {"s_fee": "service/tuition-management"})
+    _release(plot_root, "_project", "vP1", {"blueprint_version": "v0.1.0"})
+    _release(plot_root, "tuition-management", "vS1", {"service": "service/tuition-management"})
+    line = render_project_status(plot_root)
+    assert "수강료 관리 vS1" in line
+    assert "출결 확인 not published yet" in line
 
 
 def test_every_scope_carries_the_project_line(tmp_path: Path) -> None:
