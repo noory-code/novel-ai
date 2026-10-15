@@ -975,7 +975,7 @@ def test_feature_scope_asks_failure_cases_together_and_stops_when_told() -> None
         "never re-ask a case, or its variant, already answered here; apply that answer",
         "'이 정도면 된 것 같아요', '끝낼게요'",
         "ask no further failure case",
-        "set_design_check remaining to the unasked cases and name them in one line",
+        "set_design_check checked, remaining = unasked count; name those cases in one line",
     ):
         assert rule in feature, rule
         assert rule not in services, rule
@@ -992,7 +992,9 @@ def test_node_text_states_what_the_node_is_not_the_coach_reasoning() -> None:
             "a node's text states what it is and what the person decided, "
             "never alternatives you raised or why you proposed it"
         ) in prompt, scope
-        assert "save the reason they gave, if any, in its note" in prompt, scope
+        assert "note only their stated reason; otherwise refine the candidate first" in prompt, (
+            scope
+        )
         assert "save that reason in its note" not in prompt, scope
 
 

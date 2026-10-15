@@ -45,13 +45,13 @@
   coach still sees in one question, an exception to "ask about the first" finding; it never re-asks a case, or its
   variant, the person already answered in this conversation, and applies that answer. When the person says the flow
   is enough ("이 정도면 된 것 같아요", "끝낼게요"), the coach asks no further failure case, calls `set_design_check`
-  with `remaining` set to the unasked cases, and names them in one line. (2) `WRITE_PLAYBOOK`: a node's text states
+  with `checked` and `remaining` set to the number of unasked cases, and names them in one line. (2) `WRITE_PLAYBOOK`: a node's text states
   what it is and what the person decided, never alternatives the coach raised or why it proposed it;
-  `ASK_DIRECTION_PLAYBOOK` saves into the note only a reason the person gave. (3) `RESPONSE_LANGUAGE`: the reply
+  `ASK_DIRECTION_PLAYBOOK` notes only a reason the person stated. (3) `RESPONSE_LANGUAGE`: the reply
   matches the person's polite level in every reply, never switching from 해요 to 합니다; its good examples are now
   해요 ("미션에서 가치로 옮겼어요", "결정할 때 쓰는 기준이에요"). Every canvas prompt stays at or under 1,800 words
-  (foundation 1799, actors 1782, services 1797, entities 1748, feature 1800); the room came from tightening
-  existing sentences without dropping a rule.
+  (foundation 1793, actors 1776, services 1791, entities 1742, feature 1800, project 509, which the budget test
+  now covers); the room came from tightening existing sentences without dropping a rule.
 - **Why:** In novel-workspace newcomer walk 6 the feature coach asked one more failure case per turn (payment
   fails, slot taken, slot taken during payment, refund not instant) after the person said "이 기능은 이 정도면 된
   것 같아요", re-asked the slot clash they had answered, and stopped only at "끝낼게요". The 운영자 actor's

@@ -252,8 +252,8 @@ ASK_DIRECTION_PLAYBOOK = (
     "Before confirming, gently put "
     "the opposite side ONCE ('반대로 보면 ~라는 반론도 가능한데, 그래도 이걸 "
     "지키시겠어요?'), never more, and never answer your own counter-point. "
-    "If they hold it, save the "
-    "reason they gave, if any, in its note; if not, refine the candidate first."
+    "If they hold it, note only their stated "
+    "reason; otherwise refine the candidate first."
 )
 
 
