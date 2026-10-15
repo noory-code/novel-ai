@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.21] — 2026-10-15
+
+### Changed
+
+- The coach merges equal counts when it reports a finished check (no more "found 1, showing 1, 1 remaining" as three slots) and promises only what the current conversation will do, since another canvas's conversation never sees the promise (novel-workspace W-00000484).
+
 ## [0.225.20] — 2026-10-15
 
 ### Changed

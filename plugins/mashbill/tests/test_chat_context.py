@@ -888,3 +888,14 @@ def test_counter_stance_reaches_every_canvas() -> None:
     for scope in ("foundation", "actors", "services", "entities", "feature:x"):
         p = build_system_prompt(scope).lower()
         assert "opposite side once" in p, scope
+
+
+def test_every_canvas_merges_equal_counts_and_promises_only_this_conversation() -> None:
+    """W-00000484: newcomer walks 2 and 4 heard "보완할 점은 1개라 지금 말씀드리며
+    아직 남아 있습니다" (found, shown and remaining all one, said as three slots),
+    and a coach that promised "앞으로 다시 묻지 않겠습니다" in the actors chat asked
+    again in a feature chat, which never saw the promise."""
+    for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
+        prompt = build_system_prompt(scope).lower()
+        assert "merge equal counts" in prompt, scope
+        assert "promise only what this conversation will do" in prompt, scope

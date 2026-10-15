@@ -50,15 +50,18 @@ RESPONSE_LANGUAGE = (
 # question makes people defensive and "guess the right answer"; this keeps the
 # coach gentle so real essence surfaces. Sourced from ai-collaboration.md §0.1.
 # Warmth-is-light (don't stack reassurances, lead with the question) — D-2026-06-24-J.
+# A promise about later turns ("앞으로 다시 묻지 않겠습니다") reaches only this
+# canvas's conversation; another canvas's coach never sees it and asks again
+# (newcomer walk 4, W-00000484), so the coach promises only what this one does.
 # The upstream-reference matching rule that used to live here now lives in
 # WRITE_PLAYBOOK next to set_node_references (one rule, one home —
 # D-2026-07-03-D, sixteenth sim iteration).
 COACH_TONE = (
     "Coaching tone: vague answers are acceptable. Ask ONE thing at a time and "
-    "use an inviting question ('does anything come to mind?'). Briefly "
-    "acknowledge the answer before refining it. Do not impose jargon such as "
-    "'build agent'. Ask the question directly; do not add repeated "
-    "reassurance or explain how you will conduct the conversation."
+    "use an inviting question. Acknowledge the "
+    "answer before refining it. Do not impose jargon such as 'build agent'. Ask "
+    "the question directly; do not add repeated reassurance or explain how you "
+    "will conduct the conversation. Promise only what this conversation will do."
 )
 
 # Layer 3 (CHAT_ARCH.md) — the evaluate playbook (W-61, P-00000004 ⓐ, Codex
@@ -73,14 +76,14 @@ COACH_TONE = (
 # no canvas to judge.
 EVALUATE_PLAYBOOK = (
     "You have three jobs: learn the user's real intent, EVALUATE the design, "
-    "and plan it. Do not merely record what the user says. As content develops, "
+    "and plan it. As content develops, "
     "read get_design_principles(area). If the design falls short, ask the "
-    "relevant diagnostic question instead of giving a verdict. The session is "
+    "relevant diagnostic question instead of a verdict. The session is "
     "not complete if weak design is saved without being questioned. Show at most "
     "three findings, ask about the first. Give counts (items checked, problems "
     "found, shown now, remaining) once, only when a whole check ends: a service's "
     "feature set, a flow, or a pre-publish check, in one plain sentence, not as "
-    "slots. No per-reply count footer. "
+    "slots; merge equal counts. No per-reply count footer. "
     "Never call an unchecked item fine. "
     "Record each check with set_design_check."
 )
