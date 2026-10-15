@@ -191,7 +191,7 @@ async def work_proposal_item_endpoint(request: Request) -> JSONResponse:
         proposal = await propose_work_item(slugs, outcome, releases, provider, model)
     except Exception as exc:
         return _proposal_error(exc)
-    return JSONResponse({"proposal": proposal})
+    return JSONResponse(proposal)
 
 
 async def work_proposal_split_endpoint(request: Request) -> JSONResponse:
@@ -222,4 +222,4 @@ async def work_proposal_split_endpoint(request: Request) -> JSONResponse:
         proposal = await propose_work_split(item, existing_children, releases, provider, model)
     except Exception as exc:
         return _proposal_error(exc)
-    return JSONResponse({"proposal": proposal})
+    return JSONResponse(proposal)

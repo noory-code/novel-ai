@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from mashbill.ai_reply import first_json_object
+from mashbill.work_coverage import assign_coverage
 
 WORK_PROPOSAL_TIMEOUT_SECONDS = 120.0
 SPLIT_PROPOSAL_TIMEOUT_SECONDS = 180.0
@@ -25,6 +26,11 @@ NODE_PROPOSAL_PROMPT = (
 
 _PROMPT = (
     "Propose ONE work item from the published design and the person's desired outcome. "
+    "The work item must aim to deliver EVERY chosen feature in its goal and pass conditions "
+    "or in proposed children. Each PlanNode must include covered: the chosen feature slugs "
+    "that its result actually covers; the root's covered includes its children's results. "
+    "Never claim coverage just because a feature was chosen. If any chosen feature cannot "
+    "be covered, include uncovered: [{slug, reason}] for every such feature. "
     "Reply in the person's language (Korean for Korean input), using plain words and no code. "
     "Return only one JSON PlanNode object with key, goal, accept, conditions, "
     "pass_examples, fail_examples, and risks. accept must be person or children. "
@@ -32,12 +38,16 @@ _PROMPT = (
     "one child; children and after_keys are optional only for accept children. "
     "Each child is a PlanNode. after_keys name keys in this reply. "
     "Never include a check command or a gate key anywhere. "
-    "Do not include realizes or basis; Mashbill supplies those.\n\n"
+    "Do not include realizes or basis; Mashbill derives those from covered.\n\n"
 )
 
 _SPLIT_PROMPT = (
     "Split the confirmed big work item into child RESULTS. Each child is part of the big "
-    "result that a person or its children finish. Return only a JSON object with "
+    "result that a person or its children finish. Each PlanNode must include covered: only "
+    "the parent's feature slugs its result actually covers. The union of children's covered "
+    "slugs must equal the parent's feature slugs; if that is impossible, include uncovered: "
+    "[{slug, reason}] for each parent feature no child covers. "
+    "Return only a JSON object with "
     '{"items": [PlanNode...]}, with at least one item. Each PlanNode needs key, goal, '
     "accept (person or children), conditions, pass_examples, fail_examples, and risks. "
     "Use children only for parts of the big result; work that only has to finish first "
@@ -45,7 +55,7 @@ _SPLIT_PROMPT = (
     "and a finished release item does not finish them. after_keys must name keys in this reply. "
     "Never repeat a goal already in existing_children. Use plain words in the person's "
     "language, never a check command, and never a gate key anywhere. Do not include "
-    "realizes or basis on children; they reach the design through the parent.\n\n"
+    "realizes or basis on children; Mashbill derives realizes from covered.\n\n"
 )
 
 _SERVICE_RELEASE = re.compile(r"vS([1-9][0-9]*)\Z")
@@ -56,6 +66,7 @@ _FIELDS = frozenset(
         "goal",
         "accept",
         "realizes",
+        "covered",
         "basis",
         "conditions",
         "pass_examples",
@@ -281,7 +292,10 @@ def _design_paths(slug: str, folder: Path) -> list[Path]:
 def build_work_prompt(
     slugs: list[str], outcome: str, basis: list[tuple[str, Path, dict[str, Any]]]
 ) -> str:
-    sections = [f"Person's desired outcome:\n{outcome}\n"]
+    sections = [
+        "Chosen slugs:\n" + json.dumps(slugs, ensure_ascii=False) + "\n",
+        f"Person's desired outcome:\n{outcome}\n",
+    ]
     sections.extend(_published_design_sections(slugs, basis))
     return _PROMPT + "\n".join(sections)
 
@@ -304,6 +318,7 @@ def build_split_prompt(
 ) -> str:
     sections = [
         "Confirmed parent item:\n" + json.dumps(item, ensure_ascii=False) + "\n",
+        "Parent slugs:\n" + json.dumps(item.get("realizes", []), ensure_ascii=False) + "\n",
         "existing_children:\n" + json.dumps(existing_children, ensure_ascii=False) + "\n",
     ]
     slugs = [pin.rsplit("@", 1)[0] for pin, _, _ in basis]
@@ -350,6 +365,7 @@ def validate_plan_node(node: Any, *, known_keys: set[str] | None = None) -> dict
         keys.add(key)
         for field in (
             "realizes",
+            "covered",
             "basis",
             "conditions",
             "pass_examples",
@@ -445,9 +461,12 @@ async def propose_work_item(
         raise ValueError("reply is not valid JSON")
     if _has_gate(node):
         raise ValueError("gate is forbidden")
-    node["realizes"] = slugs
+    reported = node.pop("uncovered", None)
+    validate_plan_node(node)
+    uncovered = assign_coverage([node], slugs, reported)
     node["basis"] = [pin for pin, _, _ in basis]
-    return validate_plan_node(node)
+    validate_plan_node(node)
+    return {"proposal": node, **({"uncovered": uncovered} if uncovered else {})}
 
 
 async def propose_work_split(
@@ -464,4 +483,8 @@ async def propose_work_split(
     reply = first_json_object(raw) if isinstance(raw, str) else None
     if reply is None:
         raise ValueError("reply is not valid JSON")
-    return validate_split_proposal(reply, existing_children)
+    reported = reply.pop("uncovered", None)
+    proposal = validate_split_proposal(reply, existing_children)
+    chosen = item.get("realizes", [])
+    uncovered = assign_coverage(proposal["items"], chosen, reported)
+    return {"proposal": proposal, **({"uncovered": uncovered} if uncovered else {})}

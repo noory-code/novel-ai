@@ -142,6 +142,10 @@ def test_step_text_reopens_only_feature_and_accumulates_changed(tmp_path: Path) 
     nodes = [*detail.nodes, StepNode(id="step-2", label="Choose time")]
     write_canvas(plot_root, "alpha", detail.model_copy(update={"nodes": nodes}))
     assert _check(plot_root, "feat").changed == ["Pay", "Choose time"]
+    # A re-check in progress keeps what changed: the next turn still knows
+    # what to look at (W-00000508 live probe). Only a finished check clears it.
+    mcp_tools.set_design_check(str(tmp_path), "alpha", "feat", "checking")
+    assert _check(plot_root, "feat").changed == ["Pay", "Choose time"]
     mcp_tools.set_design_check(str(tmp_path), "alpha", "feat", "checked", 1, 0)
     assert _check(plot_root, "feat").changed == []
 

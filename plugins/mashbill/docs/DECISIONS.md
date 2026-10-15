@@ -39,6 +39,15 @@
 
 ## Log
 
+### D-2026-10-16-B — Work proposals name the features each result delivers
+
+- **What:** An AI work-item proposal must aim to deliver every feature the person chose, in its goal and pass conditions or in proposed children. Each proposed item declares the chosen feature slugs it covers; Mashbill uses only those slugs for `realizes`. In an AI split, each child declares only the parent features it covers. Mashbill computes the features no proposed item covers and returns each with the AI's reason, while refusing any slug outside the chosen or parent set.
+- **Why:** In newcomer walk 5 (NEW-5), the work-item proposal linked every chosen feature even when the result addressed only some; split children had no explicit feature coverage. These links would imply delivery that the proposal did not promise.
+- **Amends:** D-2026-10-09-A (2).
+- **Approval:** Decided by principle on 2026-10-16 (the person's chosen features are what the item must deliver; Q-00000043), open to the user's review.
+- **Spec impact:** `docs/SPEC.md` work-item proposals row.
+- **Principles:** SSOT (the proposal's declared coverage owns `realizes`); MECE (the uncovered list accounts for every chosen feature outside the covered union); Fail Fast (unknown feature slugs and missing reasons fail the proposal).
+
 ### D-2026-10-16-A — Recheck only the design touched by a change
 
 - **What:** A feature flow edit reopens only that feature's finished failure check when a step or decision is added, removed, or its label, body, outcome, or polarity changes, or when a line's source, target, or label changes. Entity references and visual fields reopen nothing. On Services, a service's finished feature-split check reopens for its own purpose (`problem` or `value_created`) or a change to its feature membership, feature name, or feature purpose (`proposed`). A feature's own finished failure check reopens there for its name or purpose, not its actor references. Each reopened check records the changed node or feature labels/ids, accumulates further edits, and clears that list when the coach records a new check. The turn context names the changed parts and tells the coach to review only those parts.

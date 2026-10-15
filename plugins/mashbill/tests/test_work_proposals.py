@@ -105,7 +105,9 @@ def tree(root: Path) -> dict[str, bytes | None]:
 def test_flat_project_rejects_wrong_id_before_provider(setup: tuple[Path, Path], name: str) -> None:
     workspace, plot_root = setup
     write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
-    provider = FakeProvider('{"key":"root","goal":"result","accept":"person"}')
+    provider = FakeProvider(
+        '{"key":"root","goal":"result","accept":"person","covered":["mission"]}'
+    )
     c = client(provider)
     body: dict[str, Any] = {"slugs": ["mission"]}
     if name == "item":
@@ -142,6 +144,7 @@ def test_item_uses_latest_containing_release_and_never_writes(
                 "pass_examples": [],
                 "fail_examples": [],
                 "risks": [],
+                "covered": ["feature/retired", "feature/order-food", "mission"],
                 "realizes": ["wrong"],
                 "basis": ["wrong@vS9"],
             }
@@ -179,6 +182,152 @@ def test_item_uses_latest_containing_release_and_never_writes(
     assert tree(plot_root) == before
 
 
+def test_item_reports_chosen_features_it_cannot_cover(setup: tuple[Path, Path]) -> None:
+    workspace, plot_root = setup
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
+    selected = [
+        "feature/order-food",
+        "feature/retired",
+        "mission",
+        "actor/customer",
+        "entity/order",
+    ]
+    provider = FakeProvider(
+        json.dumps(
+            {
+                "key": "root",
+                "goal": "주문 흐름",
+                "accept": "person",
+                "covered": selected[:2],
+                "uncovered": [
+                    {"slug": slug, "reason": "이 결과의 범위 밖입니다"} for slug in selected[2:]
+                ],
+            }
+        )
+    )
+
+    response = client(provider).post(
+        url(workspace, "item"), json={"slugs": selected, "outcome": "주문 흐름"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["proposal"]["realizes"] == selected[:2]
+    assert response.json()["uncovered"] == [
+        {"slug": slug, "reason": "이 결과의 범위 밖입니다"} for slug in selected[2:]
+    ]
+    assert "EVERY chosen feature" in provider.calls[0][0]
+    assert "covered" in provider.calls[0][0]
+
+
+def test_item_refuses_unknown_covered_slug(setup: tuple[Path, Path]) -> None:
+    workspace, plot_root = setup
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
+    provider = FakeProvider(
+        json.dumps(
+            {"key": "root", "goal": "주문", "accept": "person", "covered": ["feature/unknown"]}
+        )
+    )
+    response = client(provider).post(
+        url(workspace, "item"), json={"slugs": ["feature/order-food"], "outcome": "주문"}
+    )
+    assert response.status_code == 502
+    assert "feature/unknown" in response.json()["reason"]
+
+
+def test_item_child_coverage_counts_only_when_parent_includes_it(setup: tuple[Path, Path]) -> None:
+    workspace, plot_root = setup
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
+    node = {
+        "key": "root",
+        "goal": "주문",
+        "accept": "children",
+        "covered": ["feature/order-food", "mission"],
+        "children": [
+            {"key": "a", "goal": "주문", "accept": "person", "covered": ["feature/order-food"]},
+            {"key": "b", "goal": "미션", "accept": "person", "covered": ["mission"]},
+        ],
+    }
+    c = client(FakeProvider(json.dumps(node)))
+    body = {"slugs": ["feature/order-food", "mission"], "outcome": "주문"}
+    response = c.post(url(workspace, "item"), json=body)
+    assert response.status_code == 200
+    assert response.json()["proposal"]["realizes"] == body["slugs"]
+    assert [child["realizes"] for child in response.json()["proposal"]["children"]] == [
+        ["feature/order-food"],
+        ["mission"],
+    ]
+    assert "uncovered" not in response.json()
+
+    node["covered"] = ["feature/order-food"]
+    response = client(FakeProvider(json.dumps(node))).post(url(workspace, "item"), json=body)
+    assert response.status_code == 502
+    assert "parent" in response.json()["reason"]
+
+
+def test_item_refuses_gap_without_reason(setup: tuple[Path, Path]) -> None:
+    workspace, plot_root = setup
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
+    provider = FakeProvider(
+        json.dumps(
+            {"key": "root", "goal": "주문", "accept": "person", "covered": ["feature/order-food"]}
+        )
+    )
+    response = client(provider).post(
+        url(workspace, "item"),
+        json={"slugs": ["feature/order-food", "mission"], "outcome": "주문"},
+    )
+    assert response.status_code == 502
+    assert "uncovered" in response.json()["reason"]
+
+
+def test_split_children_cover_only_their_features_and_report_gap(
+    setup: tuple[Path, Path],
+) -> None:
+    workspace, plot_root = setup
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
+    body = split_body()
+    body["item"]["realizes"] = ["feature/order-food", "mission", "entity/order"]
+    provider = FakeProvider(
+        json.dumps(
+            {
+                "items": [
+                    {
+                        "key": "a",
+                        "goal": "주문",
+                        "accept": "person",
+                        "covered": ["feature/order-food"],
+                    },
+                    {"key": "b", "goal": "미션", "accept": "person", "covered": ["mission"]},
+                ],
+                "uncovered": [{"slug": "entity/order", "reason": "자료 결과가 없습니다"}],
+            }
+        )
+    )
+    response = client(provider).post(url(workspace, "split"), json=body)
+    assert response.status_code == 200
+    assert [item["realizes"] for item in response.json()["proposal"]["items"]] == [
+        ["feature/order-food"],
+        ["mission"],
+    ]
+    assert response.json()["uncovered"] == [
+        {"slug": "entity/order", "reason": "자료 결과가 없습니다"}
+    ]
+    assert "union" in provider.calls[0][0]
+
+
+def test_split_refuses_unknown_child_slug(setup: tuple[Path, Path]) -> None:
+    workspace, plot_root = setup
+    write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
+    provider = FakeProvider(
+        json.dumps(
+            {"items": [{"key": "a", "goal": "주문", "accept": "person", "covered": ["mission"]}]}
+        )
+    )
+    response = client(provider).post(url(workspace, "split"), json=split_body())
+    assert response.status_code == 502
+    assert "mission" in response.json()["reason"]
+
+
 @pytest.mark.parametrize(
     "reply_prefix, reply_suffix",
     [
@@ -196,6 +345,7 @@ def test_item_reads_json_object_in_provider_reply(
         "goal": "주문하기",
         "accept": "person",
         "conditions": ["주문을 확인한다"],
+        "covered": ["mission"],
     }
     provider = FakeProvider(reply_prefix + json.dumps(node) + reply_suffix)
 
@@ -205,7 +355,7 @@ def test_item_reads_json_object_in_provider_reply(
 
     assert response.status_code == 200
     assert response.json()["proposal"] == {
-        **node,
+        **{key: value for key, value in node.items() if key != "covered"},
         "realizes": ["mission"],
         "basis": ["mission@vP3"],
     }
@@ -460,12 +610,18 @@ def split_body() -> dict[str, Any]:
 def split_reply() -> dict[str, Any]:
     return {
         "items": [
-            {"key": "k2", "goal": "메뉴 목록을 보인다", "accept": "person"},
+            {
+                "key": "k2",
+                "goal": "메뉴 목록을 보인다",
+                "accept": "person",
+                "covered": ["feature/order-food"],
+            },
             {
                 "key": "k3",
                 "goal": "주문을 확정한다",
                 "accept": "person",
                 "after_keys": ["k2"],
+                "covered": ["feature/unknown"],
                 "realizes": ["wrong"],
                 "basis": ["wrong@vS9"],
             },
@@ -485,12 +641,18 @@ def test_split_uses_design_and_is_read_only(setup: tuple[Path, Path]) -> None:
     assert response.json() == {
         "proposal": {
             "items": [
-                {"key": "k2", "goal": "메뉴 목록을 보인다", "accept": "person"},
+                {
+                    "key": "k2",
+                    "goal": "메뉴 목록을 보인다",
+                    "accept": "person",
+                    "realizes": ["feature/order-food"],
+                },
                 {
                     "key": "k3",
                     "goal": "주문을 확정한다",
                     "accept": "person",
                     "after_keys": ["k2"],
+                    "realizes": ["feature/unknown"],
                 },
             ]
         }
@@ -514,7 +676,9 @@ def test_split_works_without_published_realizes_and_reads_fence(setup: tuple[Pat
     workspace, plot_root = setup
     write_selection(plot_root, ChatProviderSelection(provider="claude-code"))
     before = tree(plot_root)
-    provider = FakeProvider("```json\n" + json.dumps(split_reply()) + "\n```")
+    reply = split_reply()
+    reply["items"][0]["covered"] = []
+    provider = FakeProvider("```json\n" + json.dumps(reply) + "\n```")
     body = split_body()
     body["item"]["realizes"] = ["feature/unknown"]
 

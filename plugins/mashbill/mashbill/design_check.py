@@ -308,7 +308,17 @@ def set_design_check(
     if target is not None:
         # W-00000489 — a check belongs to the conversation that runs it.
         refuse_foreign_check(node_id, target.kind)
-    check = DesignCheck(state=state, found=found, remaining=remaining, updated_at=_now())
+    # A re-check in progress keeps the list of what changed; a finished check clears it.
+    carried = (
+        list(target.design_check.changed)
+        if state == "checking"
+        and isinstance(target, (ServiceNode, FeatureNode))
+        and target.design_check is not None
+        else []
+    )
+    check = DesignCheck(
+        state=state, found=found, remaining=remaining, changed=carried, updated_at=_now()
+    )
     saved_node = write_design_check(plot_root, project_id, node_id, check)
     record_tool_call("set_design_check", project_id=project_id, canvas="services", node_id=node_id)
     return {"node": saved_node.model_dump(by_alias=True)}
