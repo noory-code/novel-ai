@@ -26,9 +26,9 @@ PUBLISH_PATH = (
     "actors, and entities; publish it first. Services and features reach work items "
     "only when each service is then published from its panel, which opens when the "
     "service's node on the Services canvas is clicked. Work items do not appear on "
-    "their own: after a publish, the person asks the work tab's AI for work items "
-    "from the published design and accepts its proposal. Call tabs and buttons by "
-    "the labels in [Screen controls]."
+    "their own: after a publish, the person presses the work tab's AI work-item button "
+    "and accepts its proposal. Name only tabs and buttons listed in [Screen controls]; "
+    "describe any other by what it does."
 )
 
 

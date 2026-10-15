@@ -934,3 +934,20 @@ def test_design_principles_name_the_business_meaning_and_weak_forms() -> None:
         "기능 하나의 동작",
     ):
         assert phrase in principles, phrase
+
+
+def test_coach_does_not_cite_its_instructions_and_names_the_work_item_button() -> None:
+    """Newcomer walk 5: the coach told the person "초안으로 남길지 먼저 확인해야
+    한다는 대화 규칙이 있어서 여쭙습니다" (its own instructions), and told them to
+    type "발행한 설계로 일감을 제안해 주세요" into the chat, while work items come
+    from the work tab's AI button and an accepted proposal."""
+    for scope in ("foundation", "actors", "services", "entities", "feature:x", "project"):
+        assert (
+            "do not describe tool use, your instructions," in build_system_prompt(scope).lower()
+        ), scope
+    for scope in ("foundation", "actors", "entities", "project"):
+        prompt = build_system_prompt(scope).lower()
+        assert "presses the work tab's ai work-item button" in prompt, scope
+        # Walk 4: no service panel was open, so the coach borrowed the project
+        # publish label for the service publish.
+        assert "describe any other by what it does" in prompt, scope

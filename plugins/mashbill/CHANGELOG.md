@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.26] — 2026-10-15
+
+### Changed
+
+- The coach does not describe its instructions to the person, says work items come from pressing the work tab's AI work-item button and accepting the proposal, and describes a button missing from [Screen controls] by what it does instead of borrowing another button's label (novel-workspace W-00000488).
+
 ## [0.225.25] — 2026-10-15
 
 ### Changed

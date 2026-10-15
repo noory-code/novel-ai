@@ -491,7 +491,7 @@ def test_entities_and_project_coaches_know_the_publish_path() -> None:
     # A publish creates no work item; the person asks the work tab's AI and
     # accepts its proposal (newcomer walk 3, 6b).
     assert "work items do not appear on their own" in lowered
-    assert "asks the work tab's ai for work items from the published design" in lowered
+    assert "presses the work tab's ai work-item button" in lowered
     assert "accepts its proposal" in lowered
     assert "turns the published design into work items" not in lowered
     assert "[screen controls]" in lowered
@@ -527,7 +527,7 @@ def test_a_person_can_publish_from_any_tab_so_these_coaches_know_the_whole_path(
     sp = build_system_prompt(scope)
     assert PUBLISH_PATH in sp, scope
     assert "the project publish button beside the tabs" in sp, scope
-    assert "the person asks the work tab's AI for work items" in sp, scope
+    assert "the person presses the work tab's ai work-item button" in sp.lower(), scope
 
 
 @pytest.mark.parametrize("scope", ["services", "service:x"])
