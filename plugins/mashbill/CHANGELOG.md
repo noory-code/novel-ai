@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.32] — 2026-10-15
+
+### Changed
+
+- The `[Screen controls]` line explains a label the viewer marks ` (icon)`: the button shows only an icon, its name appears on hover, and the coach points to it by its place and look (novel-workspace W-00000494).
+
 ## [0.225.31] — 2026-10-15
 
 ### Changed

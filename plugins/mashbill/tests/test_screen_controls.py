@@ -268,3 +268,21 @@ def test_the_external_agent_reads_the_tabs_too(tmp_path: Path) -> None:
     assert ctx["tabs"] == _TABS
     assert ctx["page_controls"] == _PAGE
     assert "Canvas tabs:" in ctx["context"]
+
+
+def test_an_icon_only_button_is_pointed_to_by_its_place(tmp_path: Path) -> None:
+    """Newcomer walk 5: the coach said "'기능 캔버스 닫기'를 누르면" for a button
+    that shows only ✕, and the person could not find it (O-00000172). The viewer
+    marks such a label " (icon)"; the line tells the coach what the mark means."""
+    _post(tmp_path, ["확대 (icon)", "일감 진행"])
+    line = render_screen_controls(resolve_plot_root(str(tmp_path)))
+    assert (
+        "A label marked (icon) is a button that shows only an icon; its name appears "
+        "when the pointer rests on it. Point to it by where it is and what it looks like, "
+        "and do not say the word (icon)." in line
+    )
+
+
+def test_no_icon_note_without_an_icon_only_button(tmp_path: Path) -> None:
+    _post(tmp_path, ["일감 진행"])
+    assert "(icon)" not in render_screen_controls(resolve_plot_root(str(tmp_path)))

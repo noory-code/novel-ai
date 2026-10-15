@@ -9,6 +9,10 @@ canvas, and the buttons outside the canvas (beside the tabs, in an open panel).
 This module turns them into one ``[Screen controls]`` line. The labels are the
 viewer's own wording; the engine adds none.
 
+A button that shows only an icon reaches the engine with its accessible name
+marked " (icon)" (the viewer's ``ICON_ONLY_MARK``): the person sees no words,
+so the line tells the coach to point to it by its place and look.
+
 The tabs and the canvas buttons are always rendered, so the line tells the
 coach to name only those. The buttons outside the canvas come and go with the
 selection (a service's publish button shows only while that service's panel is
@@ -21,6 +25,13 @@ import time
 from pathlib import Path
 
 from mashbill.viewer_context import read_viewer_context
+
+ICON_ONLY_MARK = " (icon)"
+_ICON_NOTE = (
+    "A label marked (icon) is a button that shows only an icon; its name appears "
+    "when the pointer rests on it. Point to it by where it is and what it looks like, "
+    "and do not say the word (icon)."
+)
 
 
 def _guard(has_tabs: bool, has_canvas: bool) -> str:
@@ -53,4 +64,6 @@ def render_screen_controls(plot_root: Path) -> str:
         parts.append(_guard(bool(tabs), bool(controls)))
     if page:
         parts.append(f"Buttons beside the tabs or in an open panel right now: {', '.join(page)}.")
+    if any(str(label).endswith(ICON_ONLY_MARK) for label in (*controls, *page)):
+        parts.append(_ICON_NOTE)
     return " ".join(parts)
