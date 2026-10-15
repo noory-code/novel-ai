@@ -116,7 +116,9 @@ Services canvas**, not as a tab or a modal (`D-2026-10-14-A`): the Services canv
 canvas opens on the right under its name and a ✕, and a divider sets the widths. Pressing another feature swaps the
 right pane; the pane stays through tab changes and closes only by its ✕ or a project change. Of the two canvases, the
 one pressed last is focused: the palette, inspector, chat scope, canvas shortcuts and palette drops follow it, and the
-other lets go of its selection.
+other lets go of its selection. An unfinished check in the blueprint publish dialog is the one exception
+(`D-2026-10-15-I`): it selects its node on the Services canvas, opens a feature item's flow beside it unfocused, and
+closes a pane that shows another feature.
 
 - **Anchor:** **none.** A hidden root-service node is the layout-hub fallback.
 - **Nodes:** `step` (action) · `decision` (branch ◇) · flow edge · `note` (global context with no edges) ·
