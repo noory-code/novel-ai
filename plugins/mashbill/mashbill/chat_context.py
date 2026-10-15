@@ -30,7 +30,8 @@ SELECTION_DETAIL_CAP = 20
 RESPONSE_LANGUAGE = (
     "Reply in the language the user uses. For Korean replies, use ordinary "
     "conversational Korean with correct Korean particles and spacing. Keep "
-    "standard technical terms in their normal form, such as 'MCP로' and 'AI가'. "
+    "standard technical terms as is ('MCP로', 'AI가'), but use the Korean screen "
+    "names: 파운데이션, 코어밸류, 아이덴티티, 액터, 엔티티, 인터랙션. "
     "Use short, literal sentences. Do not translate figurative wording, and do not "
     "invent metaphors. Do not describe abstract "
     "ideas as physical objects that stand, support, carry weight, catch, or flow. "

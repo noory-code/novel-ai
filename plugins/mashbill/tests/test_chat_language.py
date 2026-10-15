@@ -40,6 +40,33 @@ def test_every_coach_scope_carries_the_response_language_rules() -> None:
         assert "reread" in prompt, scope
 
 
+# The viewer's Korean labels (`ko.json` `tabs.*` and `kind.*`), which follow
+# I18N_KO_GLOSSARY.md §1. The engine cannot read the viewer bundle (R8), so these
+# literals mirror it. Only the names a model would otherwise translate or leave
+# in English are listed; 미션·서비스·기능 come out right unprompted.
+_SCREEN_NAMES = ("파운데이션", "코어밸류", "아이덴티티", "액터", "엔티티", "인터랙션")
+
+
+def test_korean_replies_use_the_names_on_the_screen() -> None:
+    """O-00000151: a Korean reply said "Foundation" twice and called a core value
+    "핵심 가치" while the palette says 코어밸류. The reply contract names the
+    screen's Korean words, in every scope."""
+    for scope in _COACH_SCOPES:
+        prompt = build_system_prompt(scope)
+        assert "Korean screen names" in prompt, scope
+        for name in _SCREEN_NAMES:
+            assert name in prompt, (scope, name)
+
+
+def test_korean_principles_name_core_values_as_the_screen_does() -> None:
+    """The design-principles tool payload is Korean the coach quotes, so it must
+    not teach the retired spellings (I18N_KO_GLOSSARY.md §1)."""
+    principles = get_principles(None)
+    assert "코어밸류를 확인하는 기준" in principles
+    for retired in ("핵심 가치", "정체성", "행위자", "토대"):
+        assert retired not in principles, retired
+
+
 def test_coach_instructions_do_not_model_figurative_shorthand() -> None:
     """Known English metaphors must not remain as wording for the coach to copy."""
     prompts = "\n".join(build_system_prompt(scope) for scope in _COACH_SCOPES).lower()

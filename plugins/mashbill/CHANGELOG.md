@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.17] — 2026-10-15
+
+### Changed
+
+- Korean coach replies use the screen's Korean names (파운데이션, 코어밸류, 아이덴티티, 액터, 엔티티, 인터랙션) instead of English names or other spellings, and the design-principles payload names core values 코어밸류 as the palette does (W-00000472, O-00000151).
+
 ## [0.225.16] — 2026-10-15
 
 ### Added
