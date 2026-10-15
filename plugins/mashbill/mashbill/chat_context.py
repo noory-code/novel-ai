@@ -78,17 +78,19 @@ COACH_TONE = (
 # so judging is first-class. Evaluation knowledge lives in get_design_principles
 # (the MCP tool, D-2026-07-03-O), not inlined here, to hold the prompt budget.
 # Canvas scopes only (like COACH_TONE) — the cross-canvas ``project`` scope has
-# no canvas to judge.
+# no canvas to judge. The count sentence names no slot for a number already
+# said: "merge equal counts" still yielded "3개 … 모두 말씀드리며, 아직 3개"
+# (newcomer walk 6, W-00000484).
 EVALUATE_PLAYBOOK = (
     "You have three jobs: learn the user's real intent, EVALUATE the design, "
     "and plan it. As content develops, "
     "read get_design_principles(area). If the design falls short, ask the "
-    "relevant diagnostic question instead of a verdict; never save weak design "
+    "diagnostic question instead of a verdict; never save weak design "
     "unquestioned. Show at most "
-    "three findings, ask about the first. Give counts (items checked, problems "
-    "found, shown now, remaining) once, only when a whole check ends: a service's "
-    "feature set, a flow, or a pre-publish check, in one plain sentence, not as "
-    "slots; merge equal counts. No per-reply count footer. "
+    "three findings, ask about the first. Report once, only when a whole check "
+    "ends (a service's feature set, a flow, or a pre-publish check), in one plain "
+    "sentence, not as slots: items checked, problems found, and shown now or "
+    "remaining only if different. No per-reply count footer. "
     "Never call an unchecked item fine. "
     "Record each check with set_design_check."
 )

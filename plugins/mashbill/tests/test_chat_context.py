@@ -905,7 +905,9 @@ def test_every_canvas_merges_equal_counts_and_promises_only_this_conversation() 
     again in a feature chat, which never saw the promise."""
     for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
         prompt = build_system_prompt(scope).lower()
-        assert "merge equal counts" in prompt, scope
+        # Walk 6 replaced "merge equal counts" (it still produced three slots);
+        # test_check_result_never_repeats_one_number_as_slots pins the new rule.
+        assert "only if different" in prompt, scope
         assert "promise only what this conversation will do" in prompt, scope
 
 
@@ -1002,3 +1004,18 @@ def test_every_scope_keeps_the_persons_polite_level() -> None:
         prompt = build_system_prompt(scope)
         assert "Match the person's polite level in every reply" in prompt, scope
         assert "when they write in 해요 form, never switch to 합니다 form" in prompt, scope
+
+
+def test_check_result_never_repeats_one_number_as_slots() -> None:
+    """Newcomer walk 6 (W-00000484): after "merge equal counts" the services
+    coach still said "빠진 기능 후보가 3개 있어 모두 말씀드리며, 아직 3개를
+    정해야 합니다" — found, shown and remaining as three slots of one number.
+    The rule names only items checked and problems found, and shown now or
+    remaining only when they differ."""
+    for scope in ("foundation", "actors", "services", "entities", "feature:x", "service:x"):
+        prompt = build_system_prompt(scope).lower()
+        assert (
+            "not as slots: items checked, problems found, and shown now or remaining "
+            "only if different"
+        ) in prompt, scope
+        assert "merge equal counts" not in prompt, scope
