@@ -86,6 +86,7 @@ def test_design_check_round_trips_on_service_and_feature() -> None:
         state="checked",
         found=4,
         remaining=1,
+        changed=["step"],
         updated_at="2026-10-05T12:34:56+00:00",
     )
     for node in (
@@ -98,8 +99,70 @@ def test_design_check_round_trips_on_service_and_feature() -> None:
             "state": "checked",
             "found": 4,
             "remaining": 1,
+            "changed": ["step"],
             "updated_at": "2026-10-05T12:34:56+00:00",
         }
+
+
+def test_old_design_check_json_without_changed_loads(tmp_path: Path) -> None:
+    plot_root = _setup_design(tmp_path)
+    path = _canvas_file(plot_root, "alpha", "services")
+    raw = path.read_text(encoding="utf-8")
+    import json
+
+    data = json.loads(raw)
+    for node in data["nodes"]:
+        node["design_check"].pop("changed", None)
+    path.write_text(json.dumps(data), encoding="utf-8")
+    assert _check(plot_root, "feat").changed == []
+
+
+def test_entity_link_change_reopens_nothing(tmp_path: Path) -> None:
+    plot_root = _setup_design(tmp_path, with_detail_flow=True)
+    detail = read_canvas(plot_root, "alpha", "feature", "feat")
+    nodes = [
+        node.model_copy(update={"ref_entity_ids": ["entity-1"]}) if node.id == "step" else node
+        for node in detail.nodes
+    ]
+    write_canvas(plot_root, "alpha", detail.model_copy(update={"nodes": nodes}))
+    _assert_recheck(plot_root, service=False, feature=False)
+
+
+def test_step_text_reopens_only_feature_and_accumulates_changed(tmp_path: Path) -> None:
+    plot_root = _setup_design(tmp_path, with_detail_flow=True)
+    detail = read_canvas(plot_root, "alpha", "feature", "feat")
+    nodes = [
+        node.model_copy(update={"label": "Pay"}) if node.id == "step" else node
+        for node in detail.nodes
+    ]
+    write_canvas(plot_root, "alpha", detail.model_copy(update={"nodes": nodes}))
+    _assert_recheck(plot_root, service=False, feature=True)
+    assert _check(plot_root, "feat").changed == ["Pay"]
+    detail = read_canvas(plot_root, "alpha", "feature", "feat")
+    nodes = [*detail.nodes, StepNode(id="step-2", label="Choose time")]
+    write_canvas(plot_root, "alpha", detail.model_copy(update={"nodes": nodes}))
+    assert _check(plot_root, "feat").changed == ["Pay", "Choose time"]
+    mcp_tools.set_design_check(str(tmp_path), "alpha", "feat", "checked", 1, 0)
+    assert _check(plot_root, "feat").changed == []
+
+
+def test_added_feature_records_change_on_service(tmp_path: Path) -> None:
+    plot_root = _setup_design(tmp_path)
+    overview = read_canvas(plot_root, "alpha", "services")
+    write_canvas(
+        plot_root,
+        "alpha",
+        overview.model_copy(
+            update={
+                "nodes": [*overview.nodes, FeatureNode(id="new", label="Payment")],
+                "edges": [
+                    *overview.edges,
+                    SketchEdge(id="contains-new", source="svc", target="new"),
+                ],
+            }
+        ),
+    )
+    assert _check(plot_root, "svc").changed == ["Payment"]
 
 
 @pytest.mark.parametrize("state", ["unchecked", "checking", "checked", "recheck"])
@@ -191,12 +254,8 @@ def test_set_design_check_syncs_feature_overview_and_detail(tmp_path: Path) -> N
 @pytest.mark.parametrize(
     ("field", "value"),
     [
-        ("label", "Renamed service"),
         ("problem", "A new problem"),
         ("value_created", "A new value"),
-        ("ref_actor_ids", ["actor-2"]),
-        ("ref_value_ids", ["value-2"]),
-        ("ref_identity_ids", ["identity-2"]),
     ],
 )
 def test_service_content_change_reopens_service_check(
@@ -219,7 +278,6 @@ def test_service_content_change_reopens_service_check(
     [
         ("label", "Renamed feature"),
         ("proposed", "A different capability"),
-        ("ref_actor_ids", ["actor-2"]),
     ],
 )
 def test_feature_content_change_reopens_feature_and_service_checks(
@@ -235,6 +293,29 @@ def test_feature_content_change_reopens_feature_and_service_checks(
     write_canvas(plot_root, "alpha", overview.model_copy(update={"nodes": nodes}))
 
     _assert_recheck(plot_root, feature=True)
+
+
+@pytest.mark.parametrize(
+    ("node_id", "field", "value"),
+    [
+        ("svc", "ref_actor_ids", ["actor-2"]),
+        ("svc", "ref_value_ids", ["value-2"]),
+        ("svc", "ref_identity_ids", ["identity-2"]),
+        ("feat", "ref_actor_ids", ["actor-2"]),
+        ("svc", "label", "New service name"),
+    ],
+)
+def test_services_reference_or_service_name_edit_reopens_nothing(
+    tmp_path: Path, node_id: str, field: str, value: object
+) -> None:
+    plot_root = _setup_design(tmp_path)
+    overview = read_canvas(plot_root, "alpha", "services")
+    nodes = [
+        node.model_copy(update={field: value}) if node.id == node_id else node
+        for node in overview.nodes
+    ]
+    write_canvas(plot_root, "alpha", overview.model_copy(update={"nodes": nodes}))
+    _assert_recheck(plot_root, service=False, feature=False)
 
 
 @pytest.mark.parametrize(
@@ -343,9 +424,7 @@ def test_feature_removal_reopens_its_service_check(tmp_path: Path) -> None:
     "mutation",
     ["node_create", "node_update", "node_delete", "edge_create", "edge_update", "edge_delete"],
 )
-def test_any_feature_detail_mutation_reopens_feature_and_service_checks(
-    tmp_path: Path, mutation: str
-) -> None:
+def test_flow_mutation_reopens_only_feature_check(tmp_path: Path, mutation: str) -> None:
     plot_root = _setup_design(tmp_path, with_detail_flow=True)
     detail = read_canvas(plot_root, "alpha", "feature", "feat")
     if mutation == "node_create":
@@ -392,7 +471,7 @@ def test_any_feature_detail_mutation_reopens_feature_and_service_checks(
 
     write_canvas(plot_root, "alpha", CanvasDoc.model_validate(detail.model_dump(by_alias=True)))
 
-    _assert_recheck(plot_root, feature=True)
+    _assert_recheck(plot_root, service=False, feature=True)
     detail_after = read_canvas(plot_root, "alpha", "feature", "feat")
     root = next(node for node in detail_after.nodes if node.id == "feat")
     assert isinstance(root, FeatureNode)
@@ -406,7 +485,14 @@ def test_feature_detail_move_does_not_reopen_checks(tmp_path: Path) -> None:
     moved = detail.model_copy(
         update={
             "nodes": [
-                node.model_copy(update={"x": node.x + 1, "collapsed": True})
+                node.model_copy(
+                    update={
+                        "x": node.x + 1,
+                        "width": node.width + 10,
+                        "color": "#ff0000",
+                        "collapsed": True,
+                    }
+                )
                 if node.id == "step"
                 else node
                 for node in detail.nodes
@@ -501,7 +587,7 @@ def test_services_visual_only_change_does_not_reopen_checks(tmp_path: Path) -> N
 
 
 @pytest.mark.parametrize("state", ["unchecked", "recheck"])
-def test_unchecked_and_recheck_states_do_not_transition_again(
+def test_unchecked_stays_put_and_recheck_accumulates(
     tmp_path: Path, state: DesignCheckState
 ) -> None:
     plot_root = _setup_design(tmp_path)
@@ -522,7 +608,12 @@ def test_unchecked_and_recheck_states_do_not_transition_again(
 
     write_canvas(plot_root, "alpha", changed)
 
-    assert _check(plot_root, "svc") == before
+    after = _check(plot_root, "svc")
+    if state == "unchecked":
+        assert after == before
+    else:
+        assert after.state == "recheck"
+        assert after.changed == ["Write together"]
 
 
 def test_recheck_keeps_last_check_counts(tmp_path: Path) -> None:

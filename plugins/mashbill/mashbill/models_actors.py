@@ -27,6 +27,7 @@ class DesignCheck(BaseModel):
     state: DesignCheckState
     found: int | None = Field(default=None, ge=0)
     remaining: int | None = Field(default=None, ge=0)
+    changed: list[str] = Field(default_factory=list)
     updated_at: str
 
 

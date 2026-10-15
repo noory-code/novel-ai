@@ -24,6 +24,7 @@ from mashbill.chat_selection import (
     render_selection_detail,
     render_write_target,
 )
+from mashbill.design_check import write_design_check
 from mashbill.draft_store import record_draft, resolve_draft
 from mashbill.folder_io import create_project, write_canvas
 from mashbill.models import (
@@ -32,6 +33,7 @@ from mashbill.models import (
     CategoryNode,
     CoreValueNode,
     DecisionNode,
+    DesignCheck,
     EntityNode,
     FeatureNode,
     IdentityNode,
@@ -279,6 +281,7 @@ def test_services_map_groups_features_and_keeps_flow_summary(tmp_path: Path) -> 
             SketchEdge(id="e3", source="svc2", target="f2"),
         ],
     )
+
     write_canvas(plot_root, "alpha", _feature_canvas_with_steps("f1", "Write a post", 3))
 
     assert render_canvas_map(plot_root, "services", []) == "\n".join(
@@ -294,6 +297,22 @@ def test_services_map_groups_features_and_keeps_flow_summary(tmp_path: Path) -> 
             '기능 3개 가운데 흐름이 그려진 것 1개. 아직 안 그린 기능: "Share", "Export"',
         ]
     )
+
+
+def test_recheck_context_names_changed_parts_and_limits_review(tmp_path: Path) -> None:
+    plot_root = _setup(tmp_path)
+    check = DesignCheck(
+        state="recheck", updated_at="2026-10-16T00:00:00+00:00", changed=["Pay", "Choose time"]
+    )
+    _write_services_map_canvas(
+        plot_root,
+        [ServiceNode(id="svc1", label="Billing"), FeatureNode(id="f1", label="Checkout")],
+        [SketchEdge(id="e1", source="svc1", target="f1")],
+    )
+    write_design_check(plot_root, "alpha", "f1", check)
+    rendered = render_canvas_map(plot_root, "services", [])
+    assert "실패 점검: recheck — changed: Pay, Choose time" in rendered
+    assert "Review only the changed parts." in rendered
 
 
 def test_services_map_repeats_shared_feature_and_selected_mark(tmp_path: Path) -> None:

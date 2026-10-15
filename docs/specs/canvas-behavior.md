@@ -99,9 +99,13 @@
 - **Design-check state** *(user, `D-2026-10-05-A` (6))*: each service shows its feature-split check ("기능 나눔") and each
   feature its failure check ("실패 점검") as unchecked, checking, checked or needs re-check, in text, beside the node; when a
   checked or re-check state has problems remaining, the count follows ("남은 문제 2"). The person does not edit it: the
-  coach records it, and the engine turns checking or checked back to needs re-check when the service's content or feature set
-  changes (service) or the feature's content or flow changes (the feature and its service). Drawing a flow draft unchanged
-  keeps the feature's check when the coach recorded it after that draft (`D-2026-10-12-C`); the service still reopens. Only
+  coach records it. The engine reopens only a finished (`checked`) check: a service's feature-split check when its own purpose
+  (`problem` or `value_created`), feature membership, or a member feature's name or purpose changes; a feature's failure check
+  when its name or purpose changes on Services, or when its flow's steps, decisions, or lines change on its feature canvas.
+  Entity links and visual fields reopen nothing; a feature flow edit never reopens the parent service's check. A `recheck`
+  carries the changed node or feature labels/ids across edits until the coach records a new check, and the coach reviews only
+  those changed parts. Drawing a flow draft unchanged keeps the feature's check when the coach recorded it after that draft
+  (`D-2026-10-12-C`). Only
   the engine sets unchecked and needs re-check; the coach records checking or checked, and a whole-canvas write keeps the
   stored check whatever it sends. The feature canvas shows the
   feature's failure-check state above the canvas. The publish confirmation shows how many checks are not finished ("점검이

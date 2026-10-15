@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.226.1] — 2026-10-16
+
+### Changed
+
+- Reopen only the finished design checks touched by service membership, purpose, or feature flow edits; keep changed node and feature names through further edits and show them to the coach for focused review (novel-workspace W-00000508, D-2026-10-16-A).
+
 ## [0.226.0] — 2026-10-15
 
 ### Changed

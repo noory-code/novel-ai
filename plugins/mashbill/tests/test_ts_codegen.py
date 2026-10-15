@@ -41,4 +41,5 @@ def test_generator_emits_design_check_value_object() -> None:
     out = generate_wire_ts()
     assert "interface DesignCheck" in out
     assert 'state: "unchecked" | "checking" | "checked" | "recheck";' in out
+    assert "changed: string[];" in out
     assert "design_check: DesignCheck | null;" in out

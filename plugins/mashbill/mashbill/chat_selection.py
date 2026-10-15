@@ -27,7 +27,7 @@ from mashbill.chat_context import SELECTION_DETAIL_CAP, build_context_preamble
 from mashbill.chat_feature_description import render_feature_description
 from mashbill.chat_project_status import render_project_status
 from mashbill.chat_screen_controls import render_screen_controls
-from mashbill.chat_services_map import render_services_map_lines
+from mashbill.chat_services_map import render_check_context, render_services_map_lines
 from mashbill.draft_store import list_drafts
 from mashbill.field_policy import writable_node_fields
 from mashbill.models_canvas import CanvasDoc, CanvasKind
@@ -289,6 +289,8 @@ def render_selection_detail(plot_root: Path, scope: str, selection: Any) -> str:
         if node is None:
             continue
         lines = [f'{node.kind} "{node.label}" ({node.id}):']
+        if check_line := render_check_context(node):
+            lines.append(check_line.strip())
         content = render_node_content(node.model_dump())
         if content:
             lines.append(content)
@@ -339,14 +341,17 @@ def render_canvas_map(plot_root: Path, scope: str, selection: Any) -> str:
             mark = " [selected]" if node.id in selected_ids else ""
             flow = _render_feature_flow_state(plot_root, project_id, node, flow_counts.get(node.id))
             prefix = "  -" if nested else "-"
-            return f'{prefix} {node.kind} "{node.label}" ({node.id}){flow}{mark}'
+            check = render_check_context(node)
+            return f'{prefix} {node.kind} "{node.label}" ({node.id}){flow}{check}{mark}'
 
         lines.extend(render_services_map_lines(canvas, CANVAS_MAP_CAP, render_line))
     else:
         for node in canvas.nodes[:CANVAS_MAP_CAP]:
             mark = " [selected]" if node.id in selected_ids else ""
             flow = _render_feature_flow_state(plot_root, project_id, node, flow_counts.get(node.id))
-            lines.append(f'- {node.kind} "{node.label}" ({node.id}){flow}{mark}')
+            lines.append(
+                f'- {node.kind} "{node.label}" ({node.id}){flow}{render_check_context(node)}{mark}'
+            )
         if len(canvas.nodes) > CANVAS_MAP_CAP:
             lines.append(f"…and {len(canvas.nodes) - CANVAS_MAP_CAP} more")
     if feature_nodes:

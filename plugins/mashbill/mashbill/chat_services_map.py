@@ -4,9 +4,22 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from mashbill.models_actors import FeatureNode, ServiceNode
 from mashbill.models_canvas import CanvasDoc
 from mashbill.models_union import SketchNode
 from mashbill.service_features import service_feature_ids
+
+
+def render_check_context(node: SketchNode) -> str:
+    """Show a coach the check state and the limited scope of a recheck."""
+    if not isinstance(node, (ServiceNode, FeatureNode)) or node.design_check is None:
+        return ""
+    name = "기능 나눔" if isinstance(node, ServiceNode) else "실패 점검"
+    check = node.design_check
+    if check.state == "recheck":
+        changed = ", ".join(check.changed) or "unknown"
+        return f" {name}: recheck — changed: {changed}. Review only the changed parts."
+    return f" {name}: {check.state}"
 
 
 def render_services_map_lines(

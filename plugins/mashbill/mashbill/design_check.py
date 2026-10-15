@@ -8,7 +8,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from mashbill.canvas_view import read_canvas_files, split, write_canvas_files
+from mashbill.canvas_view import read_canvas_files, write_canvas_files
 from mashbill.models_actors import (
     CoachDesignCheckState,
     DesignCheck,
@@ -16,31 +16,30 @@ from mashbill.models_actors import (
     ServiceNode,
 )
 from mashbill.models_canvas import CanvasDoc
+from mashbill.models_composition import DecisionNode, StepNode
 from mashbill.models_union import SketchNode
 from mashbill.service_features import service_feature_ids
 from mashbill.storage import _canvas_file
 
-_SERVICE_CONTENT_FIELDS = (
-    "label",
-    "problem",
-    "value_created",
-    "ref_actor_ids",
-    "ref_value_ids",
-    "ref_identity_ids",
-)
-_FEATURE_CONTENT_FIELDS = ("label", "proposed", "ref_actor_ids")
+_SERVICE_CONTENT_FIELDS = ("problem", "value_created")
+_FEATURE_CONTENT_FIELDS = ("label", "proposed")
 
 
 def _now() -> str:
     return datetime.now(UTC).isoformat()
 
 
-def _rechecked(check: DesignCheck | None, updated_at: str) -> DesignCheck | None:
+def _rechecked(
+    check: DesignCheck | None, updated_at: str, changed: list[str]
+) -> DesignCheck | None:
     # Only a finished check reopens; a check in progress covers the edits made
     # during it (W-00000489, newcomer walk 5).
-    if check is None or check.state != "checked":
+    if check is None or check.state not in ("checked", "recheck"):
         return check
-    return check.model_copy(update={"state": "recheck", "updated_at": updated_at})
+    merged = list(dict.fromkeys([*check.changed, *changed]))
+    return check.model_copy(
+        update={"state": "recheck", "updated_at": updated_at, "changed": merged}
+    )
 
 
 def _content(node: ServiceNode | FeatureNode, fields: tuple[str, ...]) -> tuple[Any, ...]:
@@ -63,23 +62,62 @@ def _service_feature_pairs(canvas: CanvasDoc) -> set[tuple[str, str]]:
     }
 
 
+def _name(node: SketchNode) -> str:
+    return node.label or node.id
+
+
+def _flow_changes(before: CanvasDoc, incoming: CanvasDoc) -> list[str]:
+    old_nodes = {n.id: n for n in before.nodes if isinstance(n, (StepNode, DecisionNode))}
+    new_nodes = {n.id: n for n in incoming.nodes if isinstance(n, (StepNode, DecisionNode))}
+    changed = [
+        _name(new_nodes[node_id] if node_id in new_nodes else old_nodes[node_id])
+        for node_id in sorted(old_nodes.keys() ^ new_nodes.keys())
+    ]
+    fields = ("label", "body", "outcome", "polarity")
+    for node_id in sorted(old_nodes.keys() & new_nodes.keys()):
+        old, new = old_nodes[node_id], new_nodes[node_id]
+        if old.kind != new.kind or any(
+            getattr(old, f, None) != getattr(new, f, None) for f in fields
+        ):
+            changed.append(_name(new))
+    old_edges = {e.id: e for e in before.edges}
+    new_edges = {e.id: e for e in incoming.edges}
+    for edge_id in sorted(old_edges.keys() | new_edges.keys()):
+        old_edge, new_edge = old_edges.get(edge_id), new_edges.get(edge_id)
+        if (
+            old_edge is None
+            or new_edge is None
+            or (old_edge.source, old_edge.target, old_edge.label)
+            != (new_edge.source, new_edge.target, new_edge.label)
+        ):
+            edge = new_edge or old_edge
+            assert edge is not None
+            changed.append(edge.label or edge.id)
+    return list(dict.fromkeys(changed))
+
+
 def _mark_nodes(
     canvas: CanvasDoc,
-    service_ids: set[str],
-    feature_ids: set[str],
+    service_changes: dict[str, list[str]],
+    feature_changes: dict[str, list[str]],
     updated_at: str,
 ) -> tuple[CanvasDoc, set[str]]:
     changed_features: set[str] = set()
     changed = False
     nodes: list[SketchNode] = []
     for node in canvas.nodes:
-        should_mark = (node.kind == "service" and node.id in service_ids) or (
-            node.kind == "feature" and node.id in feature_ids
+        should_mark = (node.kind == "service" and node.id in service_changes) or (
+            node.kind == "feature" and node.id in feature_changes
         )
         if not should_mark or not isinstance(node, (ServiceNode, FeatureNode)):
             nodes.append(node)
             continue
-        design_check = _rechecked(node.design_check, updated_at)
+        names = (
+            service_changes.get(node.id, [])
+            if node.kind == "service"
+            else feature_changes.get(node.id, [])
+        )
+        design_check = _rechecked(node.design_check, updated_at, names)
         if design_check == node.design_check:
             nodes.append(node)
             continue
@@ -92,14 +130,6 @@ def _mark_nodes(
     return CanvasDoc.model_validate(
         canvas.model_copy(update={"nodes": nodes}).model_dump(by_alias=True)
     ), changed_features
-
-
-def _without_design_check(canvas: CanvasDoc) -> dict[str, Any]:
-    raw = canvas.model_dump(by_alias=True)
-    for node in raw["nodes"]:
-        if node.get("kind") == "feature":
-            node.pop("design_check", None)
-    return split(raw)[0]
 
 
 def sent_check_changes(before: CanvasDoc | None, incoming: CanvasDoc) -> list[str]:
@@ -158,13 +188,13 @@ def _load_canvas(path: Path) -> CanvasDoc | None:
 
 
 def _detail_update(
-    plot_root: Path, project_id: str, feature_id: str, updated_at: str
+    plot_root: Path, project_id: str, feature_id: str, updated_at: str, changed: list[str]
 ) -> tuple[Path, dict[str, Any]] | None:
     path = _canvas_file(plot_root, project_id, "feature", feature_id)
     detail = _load_canvas(path)
     if detail is None:
         return None
-    marked, _ = _mark_nodes(detail, set(), {feature_id}, updated_at)
+    marked, _ = _mark_nodes(detail, {}, {feature_id: changed}, updated_at)
     if marked == detail:
         return None
     return path, marked.model_dump(by_alias=True)
@@ -198,52 +228,51 @@ def prepare_rechecks(
         old_pairs = _service_feature_pairs(before)
         new_pairs = _service_feature_pairs(incoming)
 
-        service_ids = {
-            node_id
-            for node_id in old_services.keys() & new_services.keys()
-            if _content(old_services[node_id], _SERVICE_CONTENT_FIELDS)
-            != _content(new_services[node_id], _SERVICE_CONTENT_FIELDS)
-        }
-        feature_ids = {
-            node_id
-            for node_id in old_features.keys() & new_features.keys()
-            if _content(old_features[node_id], _FEATURE_CONTENT_FIELDS)
-            != _content(new_features[node_id], _FEATURE_CONTENT_FIELDS)
-        }
-        changed_feature_set = old_features.keys() ^ new_features.keys()
-        affected_pairs = {
-            pair
-            for pair in old_pairs | new_pairs
-            if pair in old_pairs ^ new_pairs
-            or pair[1] in feature_ids
-            or pair[1] in changed_feature_set
-        }
-        service_ids.update(service_id for service_id, _ in affected_pairs)
-        incoming, changed_features = _mark_nodes(incoming, service_ids, feature_ids, stamp)
+        service_changes: dict[str, list[str]] = {}
+        feature_changes: dict[str, list[str]] = {}
+        for node_id in sorted(old_services.keys() & new_services.keys()):
+            if _content(old_services[node_id], _SERVICE_CONTENT_FIELDS) != _content(
+                new_services[node_id], _SERVICE_CONTENT_FIELDS
+            ):
+                service_changes[node_id] = [_name(new_services[node_id])]
+        for node_id in sorted(old_features.keys() & new_features.keys()):
+            if _content(old_features[node_id], _FEATURE_CONTENT_FIELDS) != _content(
+                new_features[node_id], _FEATURE_CONTENT_FIELDS
+            ):
+                feature_changes[node_id] = [_name(new_features[node_id])]
+        for service_id, feature_id in sorted(old_pairs | new_pairs):
+            if (service_id, feature_id) in old_pairs ^ new_pairs or feature_id in feature_changes:
+                feature = new_features.get(feature_id) or old_features.get(feature_id)
+                if feature is not None:
+                    service_changes.setdefault(service_id, []).append(_name(feature))
+        incoming, changed_features = _mark_nodes(incoming, service_changes, feature_changes, stamp)
         for changed_feature_id in changed_features:
-            update = _detail_update(plot_root, project_id, changed_feature_id, stamp)
+            update = _detail_update(
+                plot_root,
+                project_id,
+                changed_feature_id,
+                stamp,
+                feature_changes[changed_feature_id],
+            )
             if update is not None:
                 related.append(update)
         return incoming, related
 
-    if incoming.canvas_kind != "feature" or _without_design_check(before) == _without_design_check(
-        incoming
-    ):
+    if incoming.canvas_kind != "feature":
         return incoming, []
 
-    feature_id = incoming.feature_ref
-    assert feature_id is not None
-    incoming, _ = _mark_nodes(incoming, set(), {feature_id}, stamp)
+    changes = _flow_changes(before, incoming)
+    if not changes:
+        return incoming, []
+
+    detail_feature_id = incoming.feature_ref
+    assert detail_feature_id is not None
+    incoming, _ = _mark_nodes(incoming, {}, {detail_feature_id: changes}, stamp)
     overview_path = _canvas_file(plot_root, project_id, "services")
     overview = _load_canvas(overview_path)
     if overview is None:
         return incoming, []
-    parent_services = {
-        service_id
-        for service_id, child_id in _service_feature_pairs(overview)
-        if child_id == feature_id
-    }
-    overview, _ = _mark_nodes(overview, parent_services, {feature_id}, stamp)
+    overview, _ = _mark_nodes(overview, {}, {detail_feature_id: changes}, stamp)
     related.append((overview_path, overview.model_dump(by_alias=True)))
     return incoming, related
 

@@ -39,6 +39,15 @@
 
 ## Log
 
+### D-2026-10-16-A — Recheck only the design touched by a change
+
+- **What:** A feature flow edit reopens only that feature's finished failure check when a step or decision is added, removed, or its label, body, outcome, or polarity changes, or when a line's source, target, or label changes. Entity references and visual fields reopen nothing. On Services, a service's finished feature-split check reopens for its own purpose (`problem` or `value_created`) or a change to its feature membership, feature name, or feature purpose (`proposed`). A feature's own finished failure check reopens there for its name or purpose, not its actor references. Each reopened check records the changed node or feature labels/ids, accumulates further edits, and clears that list when the coach records a new check. The turn context names the changed parts and tells the coach to review only those parts.
+- **Why:** In newcomer walks 4–5, a local flow edit or entity link reopened unrelated checks and prompted a full review at service publish. The recheck should follow only the design evidence that changed.
+- **Amends:** D-2026-10-12-C (2) and the broader recheck rules in D-2026-10-05-A (6) and D-2026-10-15-K (3). Only a finished (`checked`) check first enters `recheck`; later edits extend its change list.
+- **Approval:** Accepted — user, 2026-10-16 (Q-00000042, "변경과 관련된 것만 봐야지").
+- **Spec impact:** `docs/specs/canvas-behavior.md` Design-check state row.
+- **Principles:** SSOT (the engine owns recheck state and changed parts); MECE (service membership and feature failure evidence have separate triggers); Preserve User Data (old check JSON loads without `changed`).
+
 ### D-2026-10-15-P — One coach conversation per project; each turn keeps its scope
 
 - **What:** The engine stores one current chat at `.noory/novel/chat/project.json` (schema v2). Every user and assistant message records the scope of its turn. The request and WebSocket `scope` still identify that turn's tab or canvas. Every turn starts a fresh provider with at most 12,000 characters of scope-labelled project history, excluding failed replies and the current user message. A project guard rejects another send, reset or reopen while a turn runs. Legacy per-scope files are read into a synthetic project transcript without writes; first send copies an old `project.json` to unique history before writing v2. Legacy files remain history, and reopening imports a copy into a new current project conversation. Draft `chat_scope` remains provenance and filter while its conversation ID points to the project chat.
