@@ -916,6 +916,9 @@ def test_foundation_coaches_mission_values_identity_by_their_business_meaning() 
         "an operating rule or policy is not a core value",
         "one feature's behaviour is not an identity",
         "before writing a statement that misses its meaning",
+        # Questions once, offers a reframe, then follows the person's choice:
+        # the person may still write freely (user, 2026-10-15).
+        "ask the discriminating question once and offer a reframe; the person decides",
     ):
         assert rule in foundation, rule
 

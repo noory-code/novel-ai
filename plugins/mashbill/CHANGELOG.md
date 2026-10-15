@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.23] — 2026-10-15
+
+### Changed
+
+- Tests pin the Foundation coach's rule to question a statement that misses its meaning once, offer a reframe, and follow the person's decision (novel-workspace W-00000486).
+
 ## [0.225.22] — 2026-10-15
 
 ### Changed
