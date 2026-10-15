@@ -166,6 +166,19 @@ def test_edits_during_a_check_in_progress_join_what_changed(tmp_path: Path) -> N
     assert check.changed == ["Pay"]
 
 
+def test_turning_a_flow_arrow_off_reopens_the_feature_check(tmp_path: Path) -> None:
+    """On a feature canvas an arrow is the order of steps; a line without it has
+    no order, so turning it on or off changes the flow."""
+    plot_root = _setup_design(tmp_path, with_detail_flow=True)
+    detail = read_canvas(plot_root, "alpha", "feature", "feat")
+    edges = [
+        edge.model_copy(update={"directed": False}) if edge.id == "flow" else edge
+        for edge in detail.edges
+    ]
+    write_canvas(plot_root, "alpha", detail.model_copy(update={"edges": edges}))
+    _assert_recheck(plot_root, service=False, feature=True)
+
+
 def test_added_feature_records_change_on_service(tmp_path: Path) -> None:
     plot_root = _setup_design(tmp_path)
     overview = read_canvas(plot_root, "alpha", "services")

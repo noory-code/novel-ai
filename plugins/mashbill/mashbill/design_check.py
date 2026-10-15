@@ -92,8 +92,8 @@ def _flow_changes(before: CanvasDoc, incoming: CanvasDoc) -> list[str]:
         if (
             old_edge is None
             or new_edge is None
-            or (old_edge.source, old_edge.target, old_edge.label)
-            != (new_edge.source, new_edge.target, new_edge.label)
+            or (old_edge.source, old_edge.target, old_edge.label, old_edge.directed)
+            != (new_edge.source, new_edge.target, new_edge.label, new_edge.directed)
         ):
             edge = new_edge or old_edge
             assert edge is not None

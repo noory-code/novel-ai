@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.226.5] — 2026-10-16
+
+### Changed
+
+- On a feature canvas, turning a line's arrow on or off reopens that feature's failure check: the arrow is the order of steps (novel-workspace W-00000508).
+
 ## [0.226.4] — 2026-10-16
 
 ### Changed
