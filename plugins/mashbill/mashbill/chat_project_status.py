@@ -34,15 +34,19 @@ def latest_blueprint_version(project_dir: Path) -> str | None:
 def _service_lines(plot_root: Path, project_id: str, project_dir: Path) -> list[str]:
     """``label vS2`` per service on the canvas, ``label not published yet`` for one
     never published, then any published service no longer on the canvas by slug."""
+    # Each record is read on its own: one that cannot be read still leaves
+    # every service named, and keeps what the other record says.
     try:
         releases = {
             service: str(manifest.get("release", ""))
             for service, _folder, manifest in latest_service_releases(project_dir)
         }
+    except (OSError, ValueError):
+        releases = {}
+    try:
         slugs = read_slug_store(plot_root, project_id)
     except (OSError, ValueError):
-        # An unreadable publish record still leaves every service named.
-        releases, slugs = {}, {}
+        slugs = {}
     lines = []
     for node in read_canvas(plot_root, project_id, "services").nodes:
         if node.kind != "service":

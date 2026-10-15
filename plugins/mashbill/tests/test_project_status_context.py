@@ -125,3 +125,21 @@ def test_an_unreadable_publish_folder_still_lists_each_service(
     monkeypatch.setattr(chat_project_status, "latest_service_releases", _unreadable)
     line = render_project_status(plot_root)
     assert "수강료 관리 not published yet" in line
+
+
+def test_an_unreadable_slug_record_keeps_the_published_releases(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The service-name record cannot be read: a published service still shows
+    its release (by its folder name), and a drawn service is not wrongly
+    called unpublished because of it."""
+    plot_root = _project(tmp_path)
+    _release(plot_root, "_project", "vP1", {"blueprint_version": "v0.1.0"})
+    _release(plot_root, "tuition-management", "vS1", {"service": "service/tuition-management"})
+
+    def _unreadable(_plot_root: Path, _project_id: str) -> dict[str, str]:
+        raise ValueError("_slugs.json is broken")
+
+    monkeypatch.setattr(chat_project_status, "read_slug_store", _unreadable)
+    line = render_project_status(plot_root)
+    assert "tuition-management vS1" in line
