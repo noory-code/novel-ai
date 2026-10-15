@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import Any
 
 from mashbill.chat_framing import ENTITY_BOUNDARY as ENTITY_BOUNDARY
+from mashbill.chat_framing import FLOW_OPENS, PUBLISH_PATH
 from mashbill.chat_framing import SCOPE_FRAMING as SCOPE_FRAMING
 
 # Layer 2 (CHAT_ARCH.md) — how many selected nodes to spell out in the
@@ -268,11 +269,15 @@ def build_system_prompt(scope: str) -> str:
     message — rather than glued into the user message where the model treats it
     as mere conversation. The cross-canvas ``project`` scope (and any unknown
     base) has no canvas coaching, so it gets the three universal blocks but no
-    tone, evaluate/propose/write playbook, or per-canvas framing.
+    tone, evaluate/propose/write playbook, or per-canvas framing. The
+    ``project`` scope is also the work tab's conversation, so it adds the way
+    from a design to work items (:data:`FLOW_OPENS`, :data:`PUBLISH_PATH`).
     """
     shared = f"{RESPONSE_LANGUAGE}\n\n{HALLUCINATION_GUARD}\n\n{FOUNDATION_GUIDE}"
     framing = build_framing_preamble(scope)
     if not framing:
+        if scope == "project":
+            return f"{shared}\n\n{FLOW_OPENS}{PUBLISH_PATH}"
         return shared
     return (
         f"{shared}\n\n{COACH_TONE}\n\n"

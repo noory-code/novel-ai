@@ -9,6 +9,23 @@ ENTITY_BOUNDARY = (
     "one-to-one; the build agent decides storage. "
 )
 
+# novel-workspace W-00000471 — the way from a design to work items. A project
+# publish leaves services and features out; each service is published on its
+# own after it (a service release builds on the latest project snapshot,
+# ``format_f.publish_service``), and the work tab turns what was published into
+# work items. The coach
+# describes each control by what it does and takes its label from the viewer's
+# ``[Screen controls]`` line (D-2026-10-15-E), so no viewer wording lives here.
+FLOW_OPENS = "A feature's flow canvas opens when its node on the Services canvas is clicked. "
+PUBLISH_PATH = (
+    "Publishing: the project publish button beside the tabs saves the foundation, "
+    "actors, and entities; publish it first. Services and features reach work items "
+    "only when each service is then published from its panel, which opens when the "
+    "service's node on the Services canvas is clicked. After a publish, point to the "
+    "work tab, which turns the published design into work items. Call tabs and "
+    "buttons by the labels in [Screen controls]."
+)
+
 
 # Layer 3 (CHAT_ARCH.md) — per-canvas system framing. Each base scope maps to a
 # VISION.md phase + the coach's interview for that canvas. Code constants, not
@@ -118,9 +135,12 @@ SCOPE_FRAMING: dict[str, str] = {
         "entities is unfinished; check before moving to the next service. Say "
         "briefly ('데이터는 제가 정리해둘게요'). Match existing entities by "
         "identity before creation. The canvas map ends with a feature flow summary. "
-        "Count and name features without flows; suggest each feature canvas. Do not "
+        "Count and name features without flows; suggest each feature canvas, which "
+        "opens when its node here is clicked. Do not "
         "draw flows yourself on this canvas. Mention only at next steps or when "
-        "finishing/publishing, not every turn."
+        "finishing/publishing, not every turn. When finishing or publishing, say "
+        "features reach work items only after the project is published, then their "
+        "service from its panel."
     ),
     "entities": (
         "You maintain Novel's Entities canvas: the conceptual list of data "
@@ -145,7 +165,7 @@ SCOPE_FRAMING: dict[str, str] = {
         "steps, services, and features. Defend that intent, but follow the user's "
         "final decision and never decide for them. You may propose approximate "
         "relationship edges. Label every edge with its verb (리뷰 —남긴다→ 상품); "
-        "an unlabeled edge is unfinished. Ask for review before finalizing."
+        "an unlabeled edge is unfinished. Ask for review before finalizing. " + PUBLISH_PATH
     ),
     "feature": (
         "You are the Execution coach on Novel's Feature canvas. Draft an "

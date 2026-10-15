@@ -89,13 +89,18 @@ def test_get_canvas_framing_returns_the_scope_system_prompt() -> None:
         assert get_canvas_framing(scope) == build_system_prompt(scope)
     # A per-service thread resolves to the services framing (DRY), not empty.
     assert get_canvas_framing("service:abc123") == build_system_prompt("service:abc123")
-    # A framed scope is a strict superset of the universal cross-canvas
-    # ``project`` scope — proving the composed prompt carries the playbooks
-    # (incl. the WRITE gate: "no silent auto-generation", VISION AICollaboration)
-    # the headless coach needs to be first-class.
-    guard_only = get_canvas_framing("project")
+    # A framed scope is a strict superset of the universal blocks the
+    # cross-canvas ``project`` scope opens with — proving the composed prompt
+    # carries the playbooks (incl. the WRITE gate: "no silent auto-generation",
+    # VISION AICollaboration) the headless coach needs to be first-class. The
+    # ``project`` scope adds only the way from a design to work items
+    # (novel-workspace W-00000471).
+    from mashbill.chat_context import FOUNDATION_GUIDE, HALLUCINATION_GUARD, RESPONSE_LANGUAGE
+
+    universal = f"{RESPONSE_LANGUAGE}\n\n{HALLUCINATION_GUARD}\n\n{FOUNDATION_GUIDE}"
+    assert get_canvas_framing("project").startswith(universal)
     framed = get_canvas_framing("foundation")
-    assert guard_only in framed and len(framed) > len(guard_only)
+    assert universal in framed and len(framed) > len(universal)
 
 
 def test_create_list_get_project_roundtrip(tmp_path: Path) -> None:

@@ -287,7 +287,9 @@ def get_viewer_context(project_path: str) -> dict[str, Any]:
           "active_canvas": "<scope>" | null,   # e.g. "foundation",
                                                 # "feature:<id>"
           "selection": [{"id", "kind", "label"}, ...],
-          "controls": ["<label>", ...],         # controls on the screen now
+          "controls": ["<label>", ...],         # buttons on the canvas now
+          "tabs": ["<label>", ...],             # the canvas tabs
+          "page_controls": ["<label>", ...],    # buttons outside the canvas
           "framing": "<canvas coaching system prompt>",  # guard + tone +
                                                 # the canvas's coaching playbook
                                                 # (same as in-app, Phase 3)
@@ -298,7 +300,7 @@ def get_viewer_context(project_path: str) -> dict[str, Any]:
         }
 
     When ``has_viewer`` is false (no viewer open, or the last report is stale)
-    ``active_canvas`` is null, ``selection`` and ``controls`` are empty, and
+    ``active_canvas`` is null, ``selection`` and the control lists are empty, and
     ``context`` is empty — do NOT treat an old selection as the user's current
     one.
     """

@@ -33,7 +33,8 @@ from mashbill.chat_context import build_system_prompt
 TTL_SECONDS = 90.0
 
 # The controls the viewer reports land in every coach turn's context, so their
-# number and length stay bounded.
+# number and length stay bounded. Each group (canvas buttons, tabs, the buttons
+# outside the canvas) is capped on its own.
 CONTROLS_CAP = 24
 CONTROL_LABEL_CAP = 60
 
@@ -46,6 +47,8 @@ def _empty(updated_at: float | None = None) -> dict[str, Any]:
         "active_canvas": None,
         "selection": [],
         "controls": [],
+        "tabs": [],
+        "page_controls": [],
         "framing": "",
         "updated_at": updated_at,
         "stale": True,
@@ -80,20 +83,25 @@ def write_viewer_context(
     selection: list[dict[str, Any]],
     now: float,
     controls: list[str] | None = None,
+    tabs: list[str] | None = None,
+    page_controls: list[str] | None = None,
     base_dir: Path | None = None,
 ) -> None:
     """Atomically record the viewer's latest context for ``plot_root``.
 
-    ``controls`` are the labels of the controls the viewer has on screen; the
-    viewer owns their wording. Last-writer-wins: the temp-file + ``os.replace``
-    swap means a reader never sees a half-written file, and the most recent
-    write is what the agent reads.
+    ``controls`` are the labels of the buttons on the canvas, ``tabs`` the
+    canvas tabs, and ``page_controls`` the buttons outside the canvas (beside
+    the tabs, in an open panel); the viewer owns their wording.
+    Last-writer-wins: the temp-file + ``os.replace`` swap means a reader never
+    sees a half-written file, and the most recent write is what the agent reads.
     """
     path = _context_path(plot_root, base_dir)
     payload = {
         "scope": scope,
         "selection": selection,
         "controls": sanitize_controls(controls),
+        "tabs": sanitize_controls(tabs),
+        "page_controls": sanitize_controls(page_controls),
         "updated_at": now,
     }
     tmp = path.parent / f"{path.name}.{os.getpid()}.tmp"
@@ -110,11 +118,12 @@ def read_viewer_context(
 ) -> dict[str, Any]:
     """Read the viewer's latest context for ``plot_root``.
 
-    Returns the live ``{active_canvas, selection, controls, framing,
-    updated_at, stale: False, has_viewer: True}`` when a fresh report exists;
-    otherwise the empty / stale shape (carrying ``updated_at`` when a stale
-    report's age is known). A report without ``controls`` (an older viewer, a
-    harness without a screen) reads as no controls.
+    Returns the live ``{active_canvas, selection, controls, tabs,
+    page_controls, framing, updated_at, stale: False, has_viewer: True}`` when a
+    fresh report exists; otherwise the empty / stale shape (carrying
+    ``updated_at`` when a stale report's age is known). A report without one of
+    the control groups (an older viewer, a harness without a screen) reads as
+    none of that group.
     """
     path = _context_path(plot_root, base_dir)
     try:
@@ -143,6 +152,8 @@ def read_viewer_context(
         "active_canvas": scope,
         "selection": selection,
         "controls": sanitize_controls(data.get("controls")),
+        "tabs": sanitize_controls(data.get("tabs")),
+        "page_controls": sanitize_controls(data.get("page_controls")),
         # MCP-path parity (Phase 3): hand the external agent the SAME system
         # prompt the in-app path uses — guard + coach tone + the canvas's
         # coaching playbook — so the primary path is never context-poorer than

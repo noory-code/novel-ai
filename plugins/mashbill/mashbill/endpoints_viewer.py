@@ -1,12 +1,14 @@
 """Viewer-context bridge endpoint (D-2026-06-15-D).
 
 ``POST /api/viewer/context`` — the viewer reports its live canvas context
-(active scope + node selection + the labels of the controls it has on screen)
+(active scope + node selection + the labels of the canvas buttons, the canvas
+tabs, and the buttons outside the canvas it has on screen)
 so the external MCP agent can read it via ``get_viewer_context`` and every
 coach turn can name the real controls. Body::
 
     {"project_path": "<abs path>", "scope": "<ChatScope>", "selection": [...],
-     "controls": ["<label>", ...]}
+     "controls": ["<label>", ...], "tabs": ["<label>", ...],
+     "page_controls": ["<label>", ...]}
 
 The server stamps ``updated_at`` (its own ``time.time()`` — same machine as the
 reader, so the clock is shared) and writes the rendezvous file. Returns
@@ -63,6 +65,8 @@ async def viewer_context_endpoint(request: Request) -> JSONResponse:
         scope=scope,
         selection=_sanitize_selection(body.get("selection")),
         controls=sanitize_controls(body.get("controls")),
+        tabs=sanitize_controls(body.get("tabs")),
+        page_controls=sanitize_controls(body.get("page_controls")),
         now=time.time(),
     )
     return JSONResponse({"accepted": True}, status_code=202)

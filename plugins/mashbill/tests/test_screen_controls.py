@@ -141,3 +141,130 @@ def test_the_external_agent_reads_the_controls_too(tmp_path: Path) -> None:
 
     assert ctx["controls"] == _CONTROLS
     assert "[Screen controls]" in ctx["context"]
+
+
+# --- tabs and the buttons beside them (novel-workspace W-00000471) ----------
+#
+# In the second first-time-user walk the coach did not know the canvas tabs or
+# the publish buttons: it asked the person where the flow canvas was, and after
+# a publish it never pointed to the work tab (O-00000146, O-00000148). The
+# viewer now also reports the tab labels and the buttons outside the canvas
+# (the project publish beside the tabs, a selected service's publish), and the
+# line names them as tabs and buttons.
+
+_TABS = ["파운데이션", "액터", "서비스", "엔티티", "일감"]
+_PAGE = ["설계도 발행", "📤 서비스 발행"]
+
+
+def _post_screen(tmp_path: Path, *, controls: object, tabs: object, page_controls: object) -> None:
+    client = TestClient(create_http_app(hub=BroadcastHub(enable_watchers=False)))
+    resp = client.post(
+        "/api/viewer/context",
+        json={
+            "project_path": str(tmp_path),
+            "scope": "services",
+            "selection": [],
+            "controls": controls,
+            "tabs": tabs,
+            "page_controls": page_controls,
+        },
+    )
+    assert resp.status_code == 202
+
+
+def test_the_store_keeps_the_tabs_and_page_controls(tmp_path: Path) -> None:
+    base = tmp_path / "rt"
+    base.mkdir()
+    write_viewer_context(
+        tmp_path,
+        scope="services",
+        selection=[],
+        controls=_CONTROLS,
+        tabs=_TABS,
+        page_controls=_PAGE,
+        now=1000.0,
+        base_dir=base,
+    )
+
+    ctx = read_viewer_context(tmp_path, now=1001.0, base_dir=base)
+
+    assert ctx["tabs"] == _TABS
+    assert ctx["page_controls"] == _PAGE
+
+
+def test_a_report_without_tabs_reads_as_none(tmp_path: Path) -> None:
+    base = tmp_path / "rt"
+    base.mkdir()
+    write_viewer_context(tmp_path, scope="foundation", selection=[], now=1000.0, base_dir=base)
+
+    ctx = read_viewer_context(tmp_path, now=1001.0, base_dir=base)
+    assert ctx["tabs"] == [] and ctx["page_controls"] == []
+    empty = read_viewer_context(tmp_path / "none", now=1.0, base_dir=base)
+    assert empty["tabs"] == [] and empty["page_controls"] == []
+
+
+def test_the_endpoint_trims_and_caps_tabs_and_page_controls(tmp_path: Path) -> None:
+    long_label = "가" * (CONTROL_LABEL_CAP + 5)
+    _post_screen(
+        tmp_path,
+        controls=[],
+        tabs=[" 일감 ", "일감", 3, long_label],
+        page_controls=[f"버튼 {i}" for i in range(CONTROLS_CAP + 10)],
+    )
+
+    ctx = read_viewer_context(resolve_plot_root(str(tmp_path)), now=time.time())
+
+    assert ctx["tabs"] == ["일감", "가" * CONTROL_LABEL_CAP]
+    assert len(ctx["page_controls"]) == CONTROLS_CAP
+
+
+def test_the_line_names_tabs_canvas_buttons_and_page_buttons_apart(tmp_path: Path) -> None:
+    _post_screen(tmp_path, controls=_CONTROLS, tabs=_TABS, page_controls=_PAGE)
+
+    line = render_screen_controls(resolve_plot_root(str(tmp_path)))
+
+    assert line.startswith("[Screen controls]")
+    assert "Canvas tabs: 파운데이션, 액터, 서비스, 엔티티, 일감." in line
+    assert "Buttons on the canvas: 확대, 축소, 화면에 맞추기, 되돌리기." in line
+    assert "설계도 발행, 📤 서비스 발행" in line
+    # The tabs and canvas buttons are always rendered, so the coach names only
+    # these; the page buttons come and go with the selection, so the guard does
+    # not forbid a publish button that is not on screen this moment.
+    guard, page = line.split("name only these", 1)
+    assert "설계도 발행" not in guard
+    assert "설계도 발행" in page
+    assert "the screen has no other" not in line
+
+
+def test_the_line_shows_with_only_tabs(tmp_path: Path) -> None:
+    """The work tab has no design-canvas toolbar but still has the tabs."""
+    _post_screen(tmp_path, controls=[], tabs=_TABS, page_controls=["설계도 발행"])
+
+    line = render_screen_controls(resolve_plot_root(str(tmp_path)))
+
+    assert "Canvas tabs: 파운데이션, 액터, 서비스, 엔티티, 일감." in line
+    assert "Buttons on the canvas" not in line
+    assert "설계도 발행" in line
+
+
+def test_an_older_viewer_keeps_the_canvas_only_line(tmp_path: Path) -> None:
+    _post(tmp_path, _CONTROLS)
+
+    line = render_screen_controls(resolve_plot_root(str(tmp_path)))
+
+    assert line == (
+        "[Screen controls] Buttons on the canvas: 확대, 축소, 화면에 맞추기, 되돌리기. "
+        "When pointing to a canvas button or display, name only these; the canvas has no other."
+    )
+
+
+def test_the_external_agent_reads_the_tabs_too(tmp_path: Path) -> None:
+    from mashbill.mcp_tools import get_viewer_context
+
+    _post_screen(tmp_path, controls=_CONTROLS, tabs=_TABS, page_controls=_PAGE)
+
+    ctx = get_viewer_context(str(tmp_path))
+
+    assert ctx["tabs"] == _TABS
+    assert ctx["page_controls"] == _PAGE
+    assert "Canvas tabs:" in ctx["context"]

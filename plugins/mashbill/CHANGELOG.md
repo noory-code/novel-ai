@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.18] — 2026-10-15
+
+### Added
+
+- The viewer context carries the canvas tabs (`tabs`) and the publish buttons outside the canvas (`page_controls`), and `[Screen controls]` names them; the coach knows that a feature's flow opens from its node on the Services canvas, that the project publish goes first and each service is then published from its panel, and that the work tab turns the published design into work items (W-00000471, D-2026-10-15-H).
+
 ## [0.225.17] — 2026-10-15
 
 ### Changed

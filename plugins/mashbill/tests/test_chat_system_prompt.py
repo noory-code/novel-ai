@@ -452,3 +452,56 @@ def test_codex_prepends_system_prompt_to_message(tmp_path: Path) -> None:
 def test_codex_message_unchanged_when_system_prompt_unset(tmp_path: Path) -> None:
     p = CodexProvider(workspace_root=tmp_path)
     assert p._build_command("hi")[-1] == "hi"
+
+
+# --- the way from design to work items (novel-workspace W-00000471) ---------
+#
+# In the second first-time-user walk the coach asked the person where a
+# feature's flow canvas was, never pointed to the work tab after a publish, and
+# nobody said that a project publish leaves services and features out of the
+# work-item list (O-00000146, O-00000148). The coach describes the controls by
+# what they do; the labels come from the viewer's [Screen controls] line.
+
+
+def test_services_coach_says_how_a_flow_opens_and_what_a_service_publish_carries() -> None:
+    sp = build_system_prompt("services")
+    assert "suggest each feature canvas, which opens when its node here is clicked." in sp
+    assert (
+        "When finishing or publishing, say features reach work items only after the "
+        "project is published, then their service from its panel."
+    ) in sp
+    assert build_system_prompt("service:svc_1") == sp
+
+
+def test_entities_and_project_coaches_know_the_publish_path() -> None:
+    from mashbill.chat_framing import PUBLISH_PATH
+
+    for scope in ("entities", "project"):
+        sp = build_system_prompt(scope)
+        assert PUBLISH_PATH in sp, scope
+    lowered = PUBLISH_PATH.lower()
+    assert "foundation, actors, and entities" in lowered
+    # A service release builds on the latest project snapshot, so the order matters.
+    assert "publish it first" in lowered
+    assert "service is then published from its panel" in lowered
+    assert "service's node on the services canvas is clicked" in lowered
+    assert "work tab" in lowered
+    assert "[screen controls]" in lowered
+    # The engine describes controls by what they do; the labels are the viewer's.
+    for label in ("설계도 발행", "서비스 발행", "일감"):
+        assert label not in PUBLISH_PATH
+
+
+def test_project_coach_says_how_a_flow_opens_but_stays_without_canvas_coaching() -> None:
+    sp = build_system_prompt("project")
+    assert "A feature's flow canvas opens when its node on the Services canvas is clicked." in sp
+    assert COACH_TONE not in sp
+    assert WRITE_PLAYBOOK not in sp
+    assert build_framing_preamble("project") == ""
+
+
+def test_the_publish_path_stays_out_of_the_other_canvases() -> None:
+    from mashbill.chat_framing import PUBLISH_PATH
+
+    for scope in ("foundation", "actors", "services", "feature:x"):
+        assert PUBLISH_PATH not in build_system_prompt(scope), scope

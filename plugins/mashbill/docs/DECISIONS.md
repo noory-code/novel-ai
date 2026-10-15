@@ -39,6 +39,33 @@
 
 ## Log
 
+### D-2026-10-15-H — The coach is told the canvas tabs and the publish buttons, and how a design becomes work items
+
+- **What:** *(Claude, carrying out novel-workspace W-00000471)* The viewer-context report (`POST /api/viewer/context`)
+  carries two more label groups beside `controls` (still the canvas buttons): `tabs` (the canvas tab strip) and
+  `page_controls` (the project publish trigger beside the tabs, and a selected service's publish button while its
+  panel shows it). The engine cleans and caps each group like `controls` (24 labels of 60 characters). The
+  `[Screen controls]` line names the tabs and the canvas buttons and tells the coach to name only those, which are
+  always rendered; it lists the outside buttons as on screen now without forbidding others, because they come and
+  go with the selection. A report with only `controls` gets the D-2026-10-15-E line unchanged. The system prompt
+  gains `FLOW_OPENS` and `PUBLISH_PATH` (`chat_framing.py`), which describe controls by what they do: a feature's
+  flow canvas opens from its node on the Services canvas; the project publish saves foundation, actors and entities
+  and goes first; services and features reach work items only when each service is then published from its panel
+  (a service release builds on the latest project snapshot); after a publish the coach points to the work tab. The
+  entities framing and the `project` scope (the work tab's chat) carry both; the services framing carries a short
+  form of each.
+- **Why:** In novel-workspace newcomer walk 2 the coach asked the person where a feature's flow canvas was, never
+  mentioned the work tab after the publish, and nobody said that a project publish leaves services and features out
+  of the work-item list.
+- **Limits:** Foundation, actors and feature conversations do not carry the publish path; the feature prompt has no
+  room under the 1800-word cap. The chat dock, sidebar, context menus, the rest of the inspector, and the version
+  menu options are not reported. Whether the guidance stops the walk-2 confusion is not measured.
+- **Alternatives:** A shared block in every scope — the feature prompt has no room. App-flow text in the per-turn
+  `[Screen controls]` line — repeats it every turn. Korean labels in the prompt — viewer wording that
+  D-2026-10-15-E keeps out of the engine. One flat label list — the engine would call the tabs and publish buttons
+  "buttons on the canvas".
+- **Approval:** Claude's design within W-00000471, open to the user's review.
+
 ### D-2026-10-15-G — The work tab reads a basis pin's blueprint version through its own lookup route
 
 - **What:** *(Claude, carrying out novel-workspace W-00000468)* `POST /api/projects/{id}/work-proposals/versions`
@@ -101,8 +128,8 @@
   its tools found nothing, so it guessed.
 - **Limits:** The list covers the canvas control bar (zoom in, zoom out, fit view, lock, layout, direction, and the
   work canvas's own buttons), the canvas toolbar (undo, redo, work progress), and the open feature pane's close
-  button. The canvas tabs, the publish button, the chat dock, the sidebar, context menus, and the inspector are not
-  reported. The report is debounced (150 ms), so a message sent right after switching canvas can carry the previous
+  button. D-2026-10-15-H adds the canvas tabs and the publish buttons; the chat dock, the sidebar, context menus, and
+  the rest of the inspector are not reported. The report is debounced (150 ms), so a message sent right after switching canvas can carry the previous
   canvas's list. A harness that posts no viewer context, such as
   the simulator, gets no line. Whether the line stops the guessing is not measured.
 - **Alternatives:** A rule in the system prompt naming the controls — it would put viewer wording in the engine and go
