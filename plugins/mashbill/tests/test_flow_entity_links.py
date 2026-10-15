@@ -251,3 +251,14 @@ async def test_the_coach_reads_where_a_step_names_its_entities() -> None:
     (shape,) = [line for line in tool_shapes().splitlines() if "propose_flow(" in line]
     assert "covers?:[int], ref_entity_ids?:[str]}" in shape
     assert "relabels?:[{node, label, outcome?, ref_entity_ids?:[str]}]" in shape
+
+
+def test_the_coach_is_told_to_link_entities_inside_the_flow_draft() -> None:
+    """Newcomer walk 6: 0 of 24 drawn steps named an entity. The write rule
+    now points a step's data to the draft itself, not only to a later
+    set_node_references call."""
+    from mashbill.chat_context import WRITE_PLAYBOOK
+
+    assert "a step/feature's data → ref_entity_ids, in a flow draft via propose_flow)" in (
+        WRITE_PLAYBOOK
+    )
