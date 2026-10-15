@@ -15,6 +15,7 @@ from mashbill.mcp_registration import ProviderName
 from mashbill.storage import _ensure_project
 from mashbill.work_proposals import (
     UnknownSlugError,
+    blueprint_versions,
     latest_service_releases,
     propose_nodes,
     propose_work_item,
@@ -155,6 +156,21 @@ async def work_proposal_basis_endpoint(request: Request) -> JSONResponse:
     except UnknownSlugError as exc:
         return _coded_error("unknown_slug", f"unknown slug: {exc}", 404)
     return JSONResponse({"basis": [pin for pin, _, _ in releases]})
+
+
+async def work_proposal_versions_endpoint(request: Request) -> JSONResponse:
+    project = _project_data(request)
+    if isinstance(project, JSONResponse):
+        return project
+    _, project_dir = project
+    try:
+        body: Any = await request.json()
+    except (json.JSONDecodeError, UnicodeError):
+        return _error("invalid JSON body")
+    pins = body.get("pins") if isinstance(body, dict) else None
+    if not isinstance(pins, list) or any(not isinstance(pin, str) for pin in pins):
+        return _error("'pins' must be a list of strings")
+    return JSONResponse({"versions": blueprint_versions(project_dir, pins)})
 
 
 async def work_proposal_item_endpoint(request: Request) -> JSONResponse:

@@ -227,6 +227,36 @@ def published_basis(project_dir: Path, slugs: list[str]) -> list[tuple[str, Path
     return result
 
 
+def blueprint_versions(project_dir: Path, pins: list[str]) -> dict[str, str | None]:
+    """Map each ``slug@release`` pin to the blueprint version it was published under.
+
+    A ``vP`` pin reads that snapshot's ``blueprint_version``; a ``vS`` pin reads the one of the
+    ``vP`` it is ``based_on``. A pin whose release does not list its slug, or whose version is
+    not recorded, maps to ``None``.
+    """
+    releases = _release_dirs(project_dir / "published")
+    project_versions: dict[str, str | None] = {}
+    for _, _, manifest in releases:
+        if manifest.get("scope") == "project":
+            recorded = manifest.get("blueprint_version")
+            project_versions[manifest["release"]] = recorded if isinstance(recorded, str) else None
+    versions: dict[str, str | None] = {}
+    for pin in pins:
+        slug, _, release = pin.rpartition("@")
+        version: str | None = None
+        for _, _, manifest in releases:
+            if manifest["release"] != release or not any(
+                isinstance(element, dict) and element.get("id") == slug
+                for element in manifest["elements"]
+            ):
+                continue
+            snapshot = release if manifest["scope"] == "project" else manifest.get("based_on")
+            version = project_versions.get(snapshot) if isinstance(snapshot, str) else None
+            break
+        versions[pin] = version
+    return versions
+
+
 def _design_paths(slug: str, folder: Path) -> list[Path]:
     design = folder / "design"
     kind, _, tail = slug.partition("/")

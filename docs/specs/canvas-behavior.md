@@ -268,8 +268,8 @@ choices made while building it on 2026-10-02 and still open to the user's review
     `POST /api/projects/{id}/work-proposals/item` to Mashbill with `{"slugs": [slug...], "outcome": str}`; Mashbill reads
     those nodes from its latest published releases, asks the workspace's chosen provider once (`complete_once`, 120 s),
     and returns `{"proposal": PlanNode}` with `goal`, `conditions`, `pass_examples`, `fail_examples`, `risks`, `accept`
-    (`person` or `children`), `realizes` (the slugs) and `basis` (`<slug>@vS<N>` per slug). A slug that was never
-    published is refused (`unknown_slug`, 404).
+    (`person` or `children`), `realizes` (the slugs) and `basis` (`<slug>@vS<N>`, or `<slug>@vP<N>` for a project
+    element, per slug). A slug that was never published is refused (`unknown_slug`, 404).
   - *Splitting a confirmed item.* On an item that is not accepted, protected or cancelled, "AI로 나누기" sends
     `POST /api/projects/{id}/work-proposals/split` with `{"item": {"goal", "conditions", "pass_examples",
     "fail_examples", "risks", "realizes", "basis"}, "existing_children": [goal...]}` — the app copies these from Solera,
@@ -286,6 +286,13 @@ choices made while building it on 2026-10-02 and still open to the user's review
     before confirming, which is how part of a proposal is taken. The proposal lives only in the app until confirmed or
     discarded; it is not a draft (`D-2026-10-01-A`), and leaving the tab discards it after a confirmation prompt.
     Discarding writes nothing and leaves the item being split as it was.
+  - *Showing the basis.* *(Claude)* The app shows each basis entry as the node's name and the blueprint version the
+    person published (`v0.2.0`), not the internal release id. It asks Mashbill
+    (`POST /api/projects/{id}/work-proposals/versions`, `{"pins": [...]}` → `{"versions": {pin: version}}`), which
+    reads the version from the `vP` snapshot the pin names or, for a `vS` pin, from its `based_on` snapshot. A pin
+    whose release does not list its slug, or whose snapshot records no version, maps to `null`, and the app shows the
+    release id instead. The read writes nothing and never blocks confirming. When a changed release keeps the same
+    blueprint version, the change notice shows the release ids so the change stays visible.
   - *Before writing.* *(Claude)* The app asks Mashbill for the current release of each slug
     (`POST /api/projects/{id}/work-proposals/basis`, `{"slugs": [...]}` → `{"basis": [...]}`). If a release changed since
     the proposal, it shows what changed and offers: propose again on the new design, confirm against the old basis, or

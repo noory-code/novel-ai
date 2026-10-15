@@ -4,6 +4,12 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.16] — 2026-10-15
+
+### Added
+
+- `POST /api/projects/{id}/work-proposals/versions` maps work-item basis pins (`slug@vP<N>` / `slug@vS<N>`) to the human blueprint version (`v0.2.0`), so the work tab shows the version a person knows instead of the release id; unknown pins map to null (W-00000468, D-2026-10-15-G).
+
 ## [0.225.15] — 2026-10-15
 
 ### Changed

@@ -39,6 +39,21 @@
 
 ## Log
 
+### D-2026-10-15-G — The work tab reads a basis pin's blueprint version through its own lookup route
+
+- **What:** *(Claude, carrying out novel-workspace W-00000468)* `POST /api/projects/{id}/work-proposals/versions`
+  takes `{"pins": [...]}` and returns `{"versions": {pin: "v0.2.0" | null}}`. A vP pin resolves to that manifest's
+  `blueprint_version`; a vS pin to the `blueprint_version` of its `based_on` vP. A release that does not list the
+  slug, a missing release, or a malformed pin gives null. The route reads only.
+- **Why:** In novel-workspace newcomer walk 2 the work tab showed a basis as "견주 · vP1" while the header showed
+  v0.2.0; the person cannot connect the two. Stored pins can be older than the latest release, so the lookup must
+  resolve any release, not only the current one.
+- **Alternatives:** Add vP entries to `published-releases` — the viewer sends every entry there to Solera's import,
+  which accepts only service releases. Add a version to each vS entry — misses project pins (`mission@vP1`) and older
+  releases.
+- **Approval:** Claude's design within W-00000468, open to the user's review.
+- **Spec impact:** `docs/specs/canvas-behavior.md` AI proposals, "Showing the basis".
+
 ### D-2026-10-15-F — A line that nests a node removes its anchor spoke; the actors coach asks before adding a family
 
 - **What:** *(Claude, carrying out novel-workspace W-00000459 and O-00000142)* `create_edge` removes the child's

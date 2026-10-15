@@ -131,3 +131,6 @@ from mashbill.endpoints_work_proposals import (
 from mashbill.endpoints_work_proposals import (
     work_proposal_split_endpoint as work_proposal_split_endpoint,
 )
+from mashbill.endpoints_work_proposals import (
+    work_proposal_versions_endpoint as work_proposal_versions_endpoint,
+)

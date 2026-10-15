@@ -255,6 +255,90 @@ def test_basis_read_is_ordered_and_pure(setup: tuple[Path, Path]) -> None:
     assert tree(plot_root) == before
 
 
+def stamp_versions(plot_root: Path) -> None:
+    """Give the fixture releases blueprint versions and vP links, plus a second service's vS1."""
+    published = plot_root / "published"
+    for release, extra in (
+        ("_project/vP1", {"blueprint_version": "v0.1.0"}),
+        ("_project/vP3", {"blueprint_version": "v0.2.0"}),
+        ("order/vS1", {"based_on": "vP1"}),
+        ("order/vS2", {"based_on": "vP3"}),
+    ):
+        path = published / release / "manifest.json"
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        path.write_text(json.dumps({**manifest, **extra}), encoding="utf-8")
+    pay = published / "pay" / "vS1"
+    pay.mkdir(parents=True)
+    (pay / "manifest.json").write_text(
+        json.dumps(
+            {
+                "scope": "service",
+                "release": "vS1",
+                "based_on": "vP3",
+                "elements": [{"id": "service/pay"}, {"id": "feature/pay"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_versions_map_each_pin_to_its_blueprint_version(setup: tuple[Path, Path]) -> None:
+    workspace, plot_root = setup
+    stamp_versions(plot_root)
+    before = tree(plot_root)
+    pins = [
+        "mission@vP3",
+        "mission@vP1",
+        "feature/retired@vS1",
+        "feature/order-food@vS2",
+        "feature/pay@vS1",
+        "feature/unknown@vS1",
+        "entity/order@vP1",
+        "feature/order-food@vS9",
+        "no-release",
+    ]
+    response = client().post(url(workspace, "versions"), json={"pins": pins})
+    assert response.status_code == 200
+    assert response.json() == {
+        "versions": {
+            "mission@vP3": "v0.2.0",
+            "mission@vP1": "v0.1.0",
+            "feature/retired@vS1": "v0.1.0",
+            "feature/order-food@vS2": "v0.2.0",
+            "feature/pay@vS1": "v0.2.0",
+            "feature/unknown@vS1": None,
+            "entity/order@vP1": None,
+            "feature/order-food@vS9": None,
+            "no-release": None,
+        }
+    }
+    assert tree(plot_root) == before
+
+
+def test_versions_are_null_without_blueprint_version_or_vp_link(
+    setup: tuple[Path, Path],
+) -> None:
+    workspace, _ = setup
+    response = client().post(
+        url(workspace, "versions"), json={"pins": ["mission@vP3", "feature/order-food@vS2"]}
+    )
+    assert response.status_code == 200
+    assert response.json() == {"versions": {"mission@vP3": None, "feature/order-food@vS2": None}}
+
+
+def test_versions_rejects_bad_input_and_wrong_project(setup: tuple[Path, Path]) -> None:
+    workspace, plot_root = setup
+    before = tree(plot_root)
+    c = client()
+    bad: list[Any] = [{}, {"pins": "mission@vP3"}, {"pins": [1]}, []]
+    for body in bad:
+        assert c.post(url(workspace, "versions"), json=body).status_code == 400
+    assert c.post(url(workspace, "versions"), json={"pins": []}).json() == {"versions": {}}
+    wrong = url(workspace, "versions").replace("/projects/alpha/", "/projects/wrong/")
+    assert c.post(wrong, json={"pins": ["mission@vP3"]}).status_code == 404
+    assert tree(plot_root) == before
+
+
 def test_item_rejects_blank_outcome_without_writing(setup: tuple[Path, Path]) -> None:
     workspace, plot_root = setup
     before = tree(plot_root)
@@ -354,7 +438,7 @@ def test_work_proposal_routes_are_registered() -> None:
         for route in app.routes
         if hasattr(route, "methods")
     }
-    for name in ("item", "basis", "split"):
+    for name in ("item", "basis", "split", "versions"):
         assert (f"/api/projects/{{project_id}}/work-proposals/{name}", ("POST",)) in paths
 
 
