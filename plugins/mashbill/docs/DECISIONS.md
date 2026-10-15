@@ -70,7 +70,7 @@
 
 - **What:** *(Claude, carrying out novel-workspace W-00000489)* (1) When the in-app chat sets `MASHBILL_CHAT_SCOPE`,
   `propose_flow`, `draw_proposed_flow`, `create_node` for a step or decision, `create_edge`, and `update_canvas` that
-  changes steps, decisions or lines on a feature canvas are refused unless the scope is `feature:<that id>`; the
+  changes steps, decisions (their text included) or lines on a feature canvas are refused unless the scope is `feature:<that id>`; the
   error tells the coach to ask the person to open that feature's canvas. `set_design_check` accepts a feature's check
   only from `feature:<id>` and a service's only from `services` or `service:<id>`. An outside agent (no env scope)
   is not restricted; a tool argument never narrows it. `update_node` on a feature canvas is refused the same way;

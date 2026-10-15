@@ -4,6 +4,13 @@ All notable changes to Novel are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.225.33] — 2026-10-15
+
+### Changed
+
+- A plain yes to an unkept proposal meets the draft question before the write; the draft sentence now says it comes first (novel-workspace W-00000495, D-2026-10-15-M).
+- An in-app coach's whole-canvas write that changes a feature step's text is refused outside that feature's conversation, as `update_node` already is; moving a card stays open (novel-workspace W-00000489, D-2026-10-15-K).
+
 ## [0.225.32] — 2026-10-15
 
 ### Changed

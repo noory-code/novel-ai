@@ -239,9 +239,9 @@ def test_write_playbook_records_drafts_only_after_explicit_consent() -> None:
     draft_rule = (
         " Drafts: during discussion, show and refine concrete proposals in chat without "
         "recording them. When the person asks to put it on the canvas, write it in that "
-        "reply without asking. If they only accept or choose an unkept proposal, ask whether "
+        "reply without asking. If they only say yes to an unkept proposal, first ask whether "
         "to keep a draft ('초안으로 남길까요?'); if they agree, call record_draft, then write "
-        "with the returned draft_id; otherwise write without a draft. "
+        "with its draft_id; otherwise write without a draft. "
         "Use canvas_kind='project' for "
         "a new project name. If the person agrees "
         "to revise a kept draft later, call update_draft instead of recording another. "
@@ -270,7 +270,9 @@ def test_write_playbook_writes_at_once_when_asked_to_put_it_on_the_canvas() -> N
         "When the person asks to put it on the canvas, write it in that reply without asking."
         in WRITE_PLAYBOOK
     )
-    assert "If they only accept or choose an unkept proposal, ask whether" in WRITE_PLAYBOOK
+    # A plain yes ('좋아요') to an unkept proposal still meets the draft question
+    # before the Saving rule's write: the draft rule says it comes first.
+    assert "If they only say yes to an unkept proposal, first ask whether" in WRITE_PLAYBOOK
     assert "do not write it in that reply" not in WRITE_PLAYBOOK
 
 

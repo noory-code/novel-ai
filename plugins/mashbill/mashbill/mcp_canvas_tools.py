@@ -25,8 +25,17 @@ from mashbill.workspace import resolve_plot_root
 _FLOW_KINDS = frozenset({"step", "decision"})
 
 
-def _flow(canvas: CanvasDoc) -> tuple[set[tuple[str, str, str]], set[tuple[str, str, str]]]:
-    nodes = {(str(n.id), str(n.kind), n.label) for n in canvas.nodes if n.kind in _FLOW_KINDS}
+# What a flow says: a card's text, not its place, size or entity links
+# (set_node_references links entities from any conversation).
+_FLOW_TEXT = ("label", "body", "outcome", "polarity")
+
+
+def _flow(canvas: CanvasDoc) -> tuple[set[tuple[str, ...]], set[tuple[str, str, str]]]:
+    nodes = {
+        (str(n.id), str(n.kind), *(str(getattr(n, field, "") or "") for field in _FLOW_TEXT))
+        for n in canvas.nodes
+        if n.kind in _FLOW_KINDS
+    }
     lines = {(str(e.source), str(e.target), e.label) for e in canvas.edges}
     return nodes, lines
 

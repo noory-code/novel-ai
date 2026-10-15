@@ -200,6 +200,40 @@ def test_another_conversation_cannot_rewrite_a_feature_flow_whole(
     assert [node.id for node in _feature(project_path).nodes] == [_FEATURE]
 
 
+def test_another_conversation_cannot_rewrite_a_steps_text_through_the_whole_canvas(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The same text rewrite refused for update_node is refused when it comes
+    as a whole-canvas write that keeps every id, kind, name and line."""
+    project_path = _project(tmp_path)
+    monkeypatch.setenv(_SCOPE, f"feature:{_FEATURE}")
+    step = _draw_flow(project_path)["assign"]
+    canvas = _feature(project_path).model_dump(by_alias=True)
+    for node in canvas["nodes"]:
+        if node["id"] == step:
+            node["body"] = "이전 배정 내역도 남긴다."
+    monkeypatch.setenv(_SCOPE, "entities")
+
+    with pytest.raises(ValueError, match="open that feature's canvas"):
+        mcp_tools.update_canvas(project_path, "alpha", canvas)
+
+
+def test_another_conversation_may_still_move_a_step(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Moving a card changes no part of the flow."""
+    project_path = _project(tmp_path)
+    monkeypatch.setenv(_SCOPE, f"feature:{_FEATURE}")
+    step = _draw_flow(project_path)["assign"]
+    canvas = _feature(project_path).model_dump(by_alias=True)
+    for node in canvas["nodes"]:
+        if node["id"] == step:
+            node["x"] = float(node.get("x") or 0.0) + 40.0
+    monkeypatch.setenv(_SCOPE, "entities")
+
+    mcp_tools.update_canvas(project_path, "alpha", canvas)
+
+
 def test_a_feature_conversation_cannot_draw_another_features_flow(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
